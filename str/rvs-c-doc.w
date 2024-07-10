@@ -1065,6 +1065,10 @@ assign rvs-line-rec = recid(ub.c-rvs-line)
         varlog
       }
     end.
+    when {&test-asi}
+    then do:
+      varlog = yes .
+    end .
     otherwise do:
       message
         vss-workfile vss-revision vss-description skip

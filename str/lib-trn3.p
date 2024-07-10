@@ -2314,6 +2314,7 @@ procedure lib-trn3_reclcptr :
         where buf-next_rvs-doc.obj-type   = tt_doc-line.obj-type
           and buf-next_rvs-doc.obj-code   = tt_doc-line.obj-code
           and buf-next_rvs-doc.status_    = {&fact}
+          and buf-next_rvs-doc.rvs-type  <> {&test-asi}
           and buf-next_rvs-doc.fact-order > tt_doc-line.fact-order
       on error undo, return error substitute( "lib-trn3_reclcptr. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
       :
@@ -2820,10 +2821,11 @@ procedure lib-trn3_avrgdens :
               by buf_rvs-doc.fact-order
             on error undo, return error substitute( "&1 (lib-trn3_avrgdens). &2 ", vss-workfile, return-value )
             :
-                /* сверку до и сверку после пропускаем */
-              if buf_rvs-doc.rvs-type  = {&rvs-before-doc} or 
-                 buf_rvs-doc.rvs-type  = {&rvs-after-doc}
-                 then next rvsdoc.
+              /* сверку до и сверку после пропускаем (как и документы проверки корректности работы АСИ) */
+              if buf_rvs-doc.rvs-type  = {&rvs-before-doc}
+              or buf_rvs-doc.rvs-type  = {&rvs-after-doc}
+              or buf_rvs-doc.rvs-type  = {&test-asi}
+                then next rvsdoc.
                  
               assign
                 v-num-rvs = v-num-rvs + 1
@@ -2978,6 +2980,8 @@ procedure lib-trn3_avrgdens :
               by buf_rvs-doc.fact-order
             on error undo, return error substitute( "&1 (lib-trn3_avrgdens). &2 ", vss-workfile, return-value )
             :
+              if buf_rvs-doc.rvs-type = {&test-asi} then next .
+              
               if buf_rvs-line.state-density <> ?
                 and buf_rvs-doc.rvs-type <> {&rvs-shift}
               then do:

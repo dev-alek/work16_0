@@ -210,7 +210,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                 )
         on error undo main-block, return error
         :
-          if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0 then do:
+          if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0
+          or buf_rvs-doc.rvs-type = {&test-asi}
+          then do:
             next.
           end.
           for each buf_rvs-line no-lock
@@ -279,7 +281,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                 )
         on error undo main-block, return error
         :
-          if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0 then do:
+          if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0
+          or buf_rvs-doc.rvs-type = {&test-asi}
+          then do:
             next.
           end.
           for each buf_rvs-line no-lock
@@ -357,7 +361,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                   )
           on error undo main-block, return error
           :
-            if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0 then do:
+            if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0
+            or buf_rvs-doc.rvs-type = {&test-asi}
+            then do:
               next.
             end.
             for each buf_rvs-line no-lock
@@ -422,6 +428,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                 )
         on error undo main-block, return error
         :
+          if buf_rvs-doc.rvs-type = {&test-asi} then next .
+          
           for each buf_rvs-line no-lock
             where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
               and buf_rvs-line.obj-type = buf_pl-gds.obj-type

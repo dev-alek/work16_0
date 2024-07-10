@@ -202,8 +202,9 @@ do
     end.
 
     /* проверяем, что все товары по сверке заблокированы */
-    if g#news = false then 
-    do:
+    if g#news = false
+    and ub.rvs-doc.rvs-type <> {&test-asi}
+    then do:
         run str/chk-rvs.p (input recid(ub.rvs-doc)) no-error.
         if error-status :error then 
         do:
@@ -223,6 +224,7 @@ do
         or ( ub.rvs-doc.status_ = {&fact}
         and g#news = false
         )
+    and ub.rvs-doc.rvs-type <> {&test-asi}
         then 
     do:
         run trg/lock-rvs.p
@@ -323,6 +325,7 @@ do
     end.
 
     if ub.rvs-doc.rvs-type <> {&rvs-before-doc}
+        and ub.rvs-doc.rvs-type <> {&test-asi}
         and ( ub.rvs-doc.status_ = {&fact}
         or ( ub.rvs-doc.status_ = {&g___new}
         and not new( ub.rvs-doc )
@@ -344,6 +347,7 @@ do
     end.
 
     if  ub.rvs-doc.status_ = {&fact}
+    and ub.rvs-doc.rvs-type <> {&test-asi}
     and not g#news
     then do: 
         v-mess = return-value.  
@@ -459,7 +463,10 @@ do
     end.
   
     /* проверка на воду и отправка емайлов */
-    if ub.rvs-doc.status_ = {&fact} and g#news then 
+    if ub.rvs-doc.status_ = {&fact}
+    and ub.rvs-doc.rvs-type <> {&test-asi}
+    and g#news
+      then 
     do:
         run str/rvs-wt-email.p(ub.rvs-doc.rvs-code) no-error.
         if error-status:error then
@@ -472,6 +479,7 @@ do
         v-new-rvs-doc = new(ub.rvs-doc)
         .
     if v-new-rvs-doc = true
+    and ub.rvs-doc.rvs-type <> {&test-asi}
     and not g#news
     then do:
         run trg/userlog.p (
@@ -712,12 +720,12 @@ procedure change-status-fact :
 
             define variable l-shift-on             as logical no-undo .
             { gbl/objat.i
-        ub.rvs-doc.obj-type
-        ub.rvs-doc.obj-code
-        "'shift-on=request'"
-        l-shift-on
-        no-error
-      }
+              ub.rvs-doc.obj-type
+              ub.rvs-doc.obj-code
+              "'shift-on=request'"
+              l-shift-on
+              no-error
+            }
             if error-status :error then 
             do:
                 message
@@ -825,34 +833,38 @@ procedure change-status-fact :
             end.
             
             */
-            run clcavrgd in this-procedure (input rvs-doc.rvs-code)  no-error.
-            if error-status:error then 
-            do:
-                message
-                    vss-workfile vss-revision vss-description skip
-                    "Ошибка при расчете веса по средней плотности" skip
-                    "Закрываемая сверка" skip
-                    {&tabulation} "Документ сверки"   ub.rvs-doc.rvs-code skip
-                    {&tabulation} "Тип сверки"        ub.rvs-doc.rvs-type skip
-                    return-value                 skip
-                    error-status:get-message(1)  skip
-                    error-status:get-message(2)  skip
-                    error-status:get-message(3)
-                    view-as alert-box error .
-                undo , return error .
-            end.
+            if ub.rvs-doc.rvs-type <> {&test-asi}
+            then do :
+              run clcavrgd in this-procedure (input rvs-doc.rvs-code)  no-error.
+              if error-status:error then 
+              do:
+                  message
+                      vss-workfile vss-revision vss-description skip
+                      "Ошибка при расчете веса по средней плотности" skip
+                      "Закрываемая сверка" skip
+                      {&tabulation} "Документ сверки"   ub.rvs-doc.rvs-code skip
+                      {&tabulation} "Тип сверки"        ub.rvs-doc.rvs-type skip
+                      return-value                 skip
+                      error-status:get-message(1)  skip
+                      error-status:get-message(2)  skip
+                      error-status:get-message(3)
+                      view-as alert-box error .
+                  undo , return error .
+              end.
+            end .
         end.
+        
         { gbl/rum-runa.i
-      ?
-      this-procedure:handle
-      ?
-        {&edoc-proc_event_rvs-doc}
-      " buffer buf-old_rvs-doc:handle "
-      " buffer ub.rvs-doc:handle "
-      ''
-      ''
-      no-error
-      }
+        ?
+        this-procedure:handle
+        ?
+          {&edoc-proc_event_rvs-doc}
+        " buffer buf-old_rvs-doc:handle "
+        " buffer ub.rvs-doc:handle "
+        ''
+        ''
+        no-error
+        }
         if error-status :error
             then
         do:
@@ -861,7 +873,8 @@ procedure change-status-fact :
                 , vss-workfile
                 , return-value
                 , error-status :get-message ( 1 ) ).
-        end.
+          end.
+        
     
     end. /*do*/
 end procedure. /* change-status-act */

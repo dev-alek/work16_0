@@ -6247,6 +6247,7 @@ then do:
   for each cad_rvs-doc where cad_rvs-doc.obj-type = parobj-type and                 ~
                              cad_rvs-doc.obj-code = parobj-code and                 ~
                              cad_rvs-doc.status_  ~{&znak} {&fact} and              ~
+                             cad_rvs-doc.rvs-type ne ~{&test-asi} and               ~
                              cad_rvs-doc.out-code <> pardoc-code no-lock ,          ~
       first cad_rvs-line where cad_rvs-line.gds-code = cad_goods.gds-code   and     ~
                                cad_rvs-line.rvs-code = cad_rvs-doc.rvs-code and     ~

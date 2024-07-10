@@ -21,7 +21,7 @@ $Date$
 $Workfile$
 $Archive$
 
-История документов сверок
+История документов проверки корректности работы АСИ в резервуаре
 
 Автор: Шаланин Сергей
 Дата создания: 10/07/16
@@ -47,7 +47,7 @@ define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
 define variable vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
 define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
 define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
-define variable vss-description AS CHAR NO-UNDO INIT "История документов сверок":U.
+define variable vss-description AS CHAR NO-UNDO INIT "История документов проверки корректности работы АСИ в резервуаре":U.
 { cmp/vssrevis.i }
 
 { cmp/str-glbl.i }
@@ -72,8 +72,8 @@ define variable br-handle as handle no-undo.
 
 define variable rvs-rec          as   recid            no-undo.
 define variable varlog           as   logical          no-undo.
-define variable filter-label as character no-undo init "История док-тов сверок" .
-define variable filter-label0 as character no-undo init "История док-тов сверок" .
+define variable filter-label as character no-undo init "История док-тов проверки корректности работы АСИ в резервуаре" .
+define variable filter-label0 as character no-undo init "История док-тов проверки корректности работы АСИ в резервуаре" .
 define variable filter-point0 as character no-undo init "rvscdocs" .
 define variable filter-point as character no-undo init "rvscdocs" .
 define variable sort-column-name as character no-undo .
@@ -289,7 +289,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(88.38) SKIP(0.06)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
-         TITLE "История документов сверки"
+         TITLE "История документов проверки корректности работы АСИ в резервуаре"
          DEFAULT-BUTTON b-lkp.
 
 
@@ -368,81 +368,6 @@ DO:
      IF NOT AVAIL x_c-rvs-doc THEN RETURN NO-apply.
     br-handle = {&browse-name}:handle.
     {&no-rvs}
-    case x_c-rvs-doc.rvs-type
-        :
-        when {&rvs-before-doc}
-        or 
-        when {&rvs-after-doc}
-        then 
-            do:
-                { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_rvs-on-doc_lookup':U
-        {&cntxt-object}
-        x_c-rvs-doc.host-code
-        x_c-rvs-doc.obj-type
-        x_c-rvs-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
-            end.
-        when {&rvs-shift} then 
-            do:
-                { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_rvs-shift_lookup':U
-        {&cntxt-object}
-        x_c-rvs-doc.host-code
-        x_c-rvs-doc.obj-type
-        x_c-rvs-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
-            end.
-        when {&rvs-control} then 
-            do:
-                { gbl/chk-actg.i
-        v-cntxt-db-num
-        v-cntxt-userid
-        {&action-head-code-main}
-        'actn_rvs-control_lookup':U
-        {&cntxt-object}
-        x_c-rvs-doc.host-code
-        x_c-rvs-doc.obj-type
-        x_c-rvs-doc.obj-code
-        0
-        0
-        0
-        true
-        varlog
-      }
-            end.
-        otherwise 
-        do:
-            message
-                vss-workfile vss-revision vss-description skip
-                "Неизвестный тип документа сверки" skip
-                "Тип документа сверки" x_c-rvs-doc.rvs-type skip
-                "Код документа сверки" x_c-rvs-doc.rvs-code skip
-                view-as alert-box error .
-            undo, return no-apply .
-        end.
-    end case .
-    
-        if varlog <> yes then 
-        do: 
-            return no-apply. 
-        end.
   ASSIGN
   rvs-rec = RECID( x_c-rvs-doc )
   next-prev = '':U
@@ -451,7 +376,7 @@ DO:
     DO WHILE next-prev = '':U:
         
          if NOT available x_c-rvs-doc then do:
-        message "Неправильно выбран документ сверки." view-as alert-box ERROR.
+        message "Неправильно выбран документ проверки корректности работы АСИ в резервуаре." view-as alert-box ERROR.
         return no-apply.
       end.
       
@@ -550,63 +475,6 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BR-docs Dialog-Frame                      */
-/*ON VALUE-CHANGED OF BR-docs IN FRAME Dialog-Frame                                   */
-/*DO:                                                                                 */
-/*    define buffer buf-oper for ub.clients.                                          */
-/*    define buffer buf-deliver for ub.clients.                                       */
-/*    define buffer buf-receiver for ub.clients.                                      */
-/*                                                                                    */
-/*      if available X_c-rvs-doc then do:                                             */
-/*        FIND buf-oper NO-LOCK WHERE                                                 */
-/*                buf-oper.obj-type = X_c-rvs-doc.obj-type AND                        */
-/*                buf-oper.obj-code = X_c-rvs-doc.obj-code NO-ERROR.                  */
-/*        FIND buf-deliver NO-LOCK WHERE                                              */
-/*                buf-deliver.obj-type = {&prs} AND                                   */
-/*                buf-deliver.obj-code = X_c-wth-doc.deliver NO-ERROR.                */
-/*        FIND buf-receiver NO-LOCK WHERE                                             */
-/*                buf-receiver.obj-type = {&prs} AND                                  */
-/*                buf-receiver.obj-code = X_c-wth-doc.receiver NO-ERROR.              */
-/*        assign                                                                      */
-/*        ed-notes = X_c-wth-doc.PS                                                   */
-/*        v_operator = ( IF AVAIL buf-oper THEN buf-oper.obj-name ELSE "":U ).        */
-/*        v_deliver = ( IF AVAIL buf-deliver THEN buf-deliver.obj-name ELSE "":U ).   */
-/*        v_receiver = ( IF AVAIL buf-receiver THEN buf-receiver.obj-name ELSE "":U ).*/
-/*        .                                                                           */
-/*        { gbl/usrfulnm.i                                                            */
-/*        X_c-wth-doc.creid                                                           */
-/*        v_creid }                                                                   */
-/*                                                                                    */
-/*    end.                                                                            */
-/*    else do:                                                                        */
-/*        assign                                                                      */
-/*        ed-notes = '':U                                                             */
-/*        v_operator = '':U                                                           */
-/*        v_deliver = '':U                                                            */
-/*        v_receiver = '':U                                                           */
-/*        v_creid = '':U                                                              */
-/*        .                                                                           */
-/*    end.                                                                            */
-/*    display                                                                         */
-/*    ed-notes                                                                        */
-/*    v_creid                                                                         */
-/*    v_deliver                                                                       */
-/*    v_operator                                                                      */
-/*    v_receiver                                                                      */
-/*    with frame {&frame-name}.                                                       */
-/*  /*                                                                                */
-/*  IF p-doc-rec <> RECID( X_c-wth-doc ) THEN DO:                                     */
-/*    ASSIGN sch-num = 0.                                                             */
-/*    HIDE sch-num IN FRAME {&FRAME-NAME}.                                            */
-/*  END.                                                                              */
-/*  */                                                                                */
-/*                                                                                    */
-/*                                                                                    */
-/*END.                                                                                */
-/*                         */
-/*/* _UIB-CODE-BLOCK-END */*/
-/*&ANALYZE-RESUME          */
 
 
 &Scoped-define SELF-NAME m_list
@@ -888,7 +756,7 @@ define input  parameter p-find-condition as character no-undo .
 
 define variable l-query-was-opened as logical no-undo .
 define variable title0 as character no-undo.
-title0 = "История документов сверки".
+title0 = "История документов проверки корректности работы АСИ в резервуаре".
 define variable sort-column-phrase as character no-undo .
 
 case sort-column-name :
@@ -956,14 +824,14 @@ WHEN {&g___object} THEN DO:
       X_c-rvs-doc.host-code = v-cntxt-host-code-obj AND ~
       X_c-rvs-doc.obj-type  = v-cntxt-obj-type  AND ~
       X_c-rvs-doc.obj-code  = v-cntxt-obj-code  AND ~
-      X_c-rvs-doc.rvs-type <> vartest-asi       AND ~
+      X_c-rvs-doc.rvs-type  = vartest-asi       AND ~
       X_c-rvs-doc.is-del = yes and ~
      x_c-rvs-doc.action = integer({&hn-delete})
       ~ "
     &dyn_where-cond = " substitute(' X_c-rvs-doc.host-code = &1 AND ~
       X_c-rvs-doc.obj-type  = &2&3&2  AND ~
       X_c-rvs-doc.obj-code  = &4  AND  ~
-      X_c-rvs-doc.rvs-type <> &2&5&2
+      X_c-rvs-doc.rvs-type  = &2&5&2
       X_c-rvs-doc.is-del = yes ', v-cntxt-host-code-obj, ~{&double-quote~}, v-cntxt-obj-type, v-cntxt-obj-code, vartest-asi )  "
 
     &use-ind    = " USE-INDEX stat-fact "

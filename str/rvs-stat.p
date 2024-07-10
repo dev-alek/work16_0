@@ -90,9 +90,35 @@ do transaction
     and buf_rvs-doc.rvs-type <> {&rvs-control}
     and buf_rvs-doc.rvs-type <> {&rvs-before-doc}
     and buf_rvs-doc.rvs-type <> {&rvs-after-doc}
+    and buf_rvs-doc.rvs-type <> {&test-asi}
     then do:
       undo tr, return error substitute("Смена статуса документа сверки. Неизвестный тип документа сверки &1.", buf_rvs-doc.rvs-type).
     end.
+    
+    if buf_rvs-doc.rvs-type = {&test-asi}
+    then do :
+      for each buf_rvs-line no-lock
+          where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+          on error undo, return error return-value
+      :
+        find first rvs-line-attr no-lock
+             where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+               and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+               and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+               and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+               and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+               and rvs-line-attr.attr-code = "test-asi-diff" no-error.
+        if not available rvs-line-attr
+        or (available rvs-line-attr and  (rvs-line-attr.attr-value = "" or decimal(rvs-line-attr.attr-value) = ?)) 
+        then do :
+          undo tr, return error substitute("Закрытие невозможно. Не выполнен расчёт проверки по резервуару &1.", buf_rvs-line.pl-code).
+        end.
+      end .
+      assign
+        buf_rvs-doc.status_ = {&fact}
+      .
+      return .
+    end .
 
     /*Поиск последней сменной сверки*/
     for last last-rvs-doc no-lock

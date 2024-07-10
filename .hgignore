@@ -1,7 +1,6 @@
 .project
 .propath
 .dbconnection
-test
 test_all
 cmp/code.md5
 cmp/actn.enc

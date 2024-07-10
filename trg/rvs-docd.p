@@ -125,42 +125,42 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
         end.
     end.
 
-  if ub.rvs-doc.status_ = {&fact} then do:
-  run adm/shattri.p (
-       input "get":U
-      ,input ub.rvs-doc.obj-type
-      ,input ub.rvs-doc.obj-code
-      ,input {&attr-nakl_par}
-      ,input  "date-close-period"
-      ,output v-value-character
-      ,output v-date-close-period
-      ,output v-value-decimal
-      ,output v-value-integer
-      ,output v-value-logical
-      ,output v-value-type
-      ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
-      ) no-error .
-  if error-status :error then v-date-close-period = date('').
-      if v-date-close-period <> date('') then do:
-          if ub.rvs-doc.fact-date < v-date-close-period
-          then do:
-            message  substitute(
-              "Дата закрытия сверки &1 более ранняя, чем дата закрытия периода &2
-              Дата закрытия сверки     &3 &2
-              Дата закрытия периода    &4 &2
-              Объект &5 &6 "
-              ,
-              ub.rvs-doc.rvs-code  ,
-              {&new-line}  ,
-              string ( ub.rvs-doc.fact-date , "99/99/9999" ) ,
-              string ( v-date-close-period,   "99/99/9999") ,
-                        x_obj-group.obj-type ,
-                        x_obj-group.obj-code  ) view-as alert-box information .
-              return.
-          end.
-      end.
-
-
+  if ub.rvs-doc.status_ = {&fact}
+  and ub.rvs-doc.rvs-type <> {&test-asi}
+  then do:
+    run adm/shattri.p (
+         input "get":U
+        ,input ub.rvs-doc.obj-type
+        ,input ub.rvs-doc.obj-code
+        ,input {&attr-nakl_par}
+        ,input  "date-close-period"
+        ,output v-value-character
+        ,output v-date-close-period
+        ,output v-value-decimal
+        ,output v-value-integer
+        ,output v-value-logical
+        ,output v-value-type
+        ,INPUT-OUTPUT TABLE thbjattr_thbj-attr
+        ) no-error .
+    if error-status :error then v-date-close-period = date('').
+    if v-date-close-period <> date('') then do:
+        if ub.rvs-doc.fact-date < v-date-close-period
+        then do:
+          message  substitute(
+            "Дата закрытия сверки &1 более ранняя, чем дата закрытия периода &2
+            Дата закрытия сверки     &3 &2
+            Дата закрытия периода    &4 &2
+            Объект &5 &6 "
+            ,
+            ub.rvs-doc.rvs-code  ,
+            {&new-line}  ,
+            string ( ub.rvs-doc.fact-date , "99/99/9999" ) ,
+            string ( v-date-close-period,   "99/99/9999") ,
+                      x_obj-group.obj-type ,
+                      x_obj-group.obj-code  ) view-as alert-box information .
+            return.
+        end.
+    end.
   end.
 
   for each ub.doc-attr exclusive-lock
@@ -184,7 +184,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   :
     delete ub.rvs-line-pump.
   end.
-define variable v-result as integer no-undo.
+  
+  if ub.rvs-doc.rvs-type <> {&test-asi}
+  then do :
+    define variable v-result as integer no-undo.
 
     if v-mess = "" then v-result = 0.
     else v-result = 1 .
@@ -234,7 +237,7 @@ define variable v-result as integer no-undo.
             view-as alert-box.
         return no-apply.
     end.
-
+  end . /* if ub.rvs-doc.rvs-type <> {&test-asi} */
 
   /* посылаем команду на удаление документа сверки */
   if g#db-num <> 0 then do:
@@ -263,9 +266,10 @@ define variable v-result as integer no-undo.
                                    ).
     end.
   end.
-  if ub.rvs-doc.status_ = {&fact} then 
-  do:
-  { gbl/rum-runa.i
+  if ub.rvs-doc.status_ = {&fact}
+  and ub.rvs-doc.rvs-type <> {&test-asi}
+  then do:
+    { gbl/rum-runa.i
       ?
       this-procedure:handle
       ?
@@ -275,7 +279,7 @@ define variable v-result as integer no-undo.
       ''
       ''
       no-error
-      }
+    }
     if error-status :error
       then
     do:

@@ -162,12 +162,12 @@ procedure lib-rvs_place-sh : /* place-sh */
     on error undo, return error return-value
     :
       
-          IF CAN-FIND( FIRST doc-attr
+      IF CAN-FIND( FIRST doc-attr
       WHERE doc-attr.doc-code  = p-rvs-code
         AND doc-attr.attr-code = "rvs-auto":U
         AND doc-attr.attr-value = "Yes":U and  p-rvs-full = yes and buf_place.is-meas = no
       NO-LOCK)
-  THEN next.
+      THEN next.
         
       run gds-attr-value in this-procedure
         ( input  buf_pl-gds.gds-code
@@ -647,8 +647,13 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
   define buffer crl_prev_rvs-doc for ub.rvs-doc.
   define buffer buf_place        for ub.place.
 
-
-
+  define variable c-value as character no-undo.
+  define variable c-type as character no-undo.
+  
+  /* для вирт рез */
+  define variable is-vir as logical no-undo.
+  define variable v-value as character no-undo.
+  define variable v-ok as logical no-undo.
 
   do on error undo, return error return-value :
 
@@ -681,6 +686,98 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
     then do:
       return 'Товар не является жидким топливом' .
     end.
+    
+    if p-rvs-type = {&test-asi}
+    then do :
+      &scop proc-name gds-attr-value
+      {&run_proc_attr-lib}
+        (input  p-gds-code
+        ,input  {&attr-fuel-type}
+        ,output c-value
+        ,output c-type)
+      no-error.
+      if c-value = 'lgas':U
+      or c-value = 'metan':U
+      or c-value = 'propan':U
+      then do :
+        return substitute('GAS! Проверка корректности работы АСИ в резервуаре НП возможна только по резервуарам с НП. Выбранный резервуар с типом топлива &1 не может быть добавлен в документ!', c-value).
+      end .
+      find first buf_place no-lock  where buf_place.obj-type = p-obj-type
+                                      and buf_place.obj-code = p-obj-code
+                                      and buf_place.pl-code  = p-pl-code
+                                      no-error .
+      if not available buf_place
+      then do :
+        return error return-value .
+      end .
+      if not buf_place.is-meas
+      then do :
+        return substitute('NMS! Проверка корректности работы АСИ в резервуаре НП возможна только по измеряемым резервуарам. Выбранный резервуар неизмеряемый и не может быть добавлен в документ!', c-value).
+      end .
+      /* Для виртуального резервуара */
+      run placelib_get-attr(input {&place-virtual}
+                       ,input buf_place.obj-code
+                       ,input buf_place.obj-type
+                       ,input buf_place.pl-code
+                       ,output v-value
+                       ,output v-ok) no-error.
+      is-vir = if (v-ok and logical(v-value)) then true else false.
+      if is-vir
+      then do :
+        return substitute('VIR! Проверка корректности работы АСИ в резервуаре НП не возможна по виртуальным резервуарам. Выбранный резервуар виртуальный и не может быть добавлен в документ!', c-value).
+      end .
+      
+      find first buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code = p-rvs-code
+          and buf_rvs-line.obj-type = p-obj-type
+          and buf_rvs-line.obj-code = p-obj-code
+          and buf_rvs-line.pl-code  = p-pl-code
+          and buf_rvs-line.gds-code = p-gds-code
+      no-error .
+      if not available buf_rvs-line
+      then do :
+        create buf_rvs-line.
+        assign
+          buf_rvs-line.rvs-code      = p-rvs-code
+          buf_rvs-line.obj-type      = p-obj-type
+          buf_rvs-line.obj-code      = p-obj-code
+          buf_rvs-line.pl-code       = p-pl-code
+          buf_rvs-line.gds-code      = p-gds-code
+          buf_rvs-line.rvs-prev-code = ?
+          buf_rvs-line.measure-qnty = ?
+          buf_rvs-line.brutto-qnty = ?
+          buf_rvs-line.measure-cli-qnty = ?
+          buf_rvs-line.brutto-cli-qnty = ?
+          buf_rvs-line.density = ?
+          buf_rvs-line.temperature = ?
+          buf_rvs-line.level-total = ?
+          buf_rvs-line.level-petrol = ?
+          buf_rvs-line.level-water = ?
+          buf_rvs-line.temp-layer1 = ?
+          buf_rvs-line.temp-layer2 = ?
+          buf_rvs-line.temp-layer3 = ?
+          buf_rvs-line.measure-tc-qnty = ?
+          buf_rvs-line.brutto-tc-qnty = ?
+          buf_rvs-line.state-measure-qnty = ?
+          buf_rvs-line.state-brutto-qnty = ?
+          buf_rvs-line.state-measure-cli-qnty = ?
+          buf_rvs-line.state-brutto-cli-qnty = ?
+          buf_rvs-line.state-density = ?
+          buf_rvs-line.state-temperature = ?
+          buf_rvs-line.state-level-total = ?
+          buf_rvs-line.state-level-petrol = ?
+          buf_rvs-line.state-level-water = ?
+          buf_rvs-line.state-temp-layer1 = ?
+          buf_rvs-line.state-temp-layer2 = ?
+          buf_rvs-line.state-temp-layer3 = ?
+          buf_rvs-line.state-measure-tc-qnty = ?
+          buf_rvs-line.state-brutto-tc-qnty = ?
+          buf_rvs-line.add-qnty       = ?
+          buf_rvs-line.state-add-qnty = ?
+        .
+      end .
+      return .
+    end .
 
     { gbl/ptrlprop.i run p-obj-type p-obj-code }
 
@@ -715,6 +812,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
             and contr_rvs-doc.shift-date = p-cur_shift-obj_shift-date
             and contr_rvs-doc.shift-num  = p-cur_shift-obj_shift-num
             and contr_rvs-doc.status_    = {&fact}
+            and contr_rvs-doc.rvs-type  <> {&test-asi}
           by contr_rvs-doc.fact-order
         on error undo, return error return-value
         :
@@ -1054,7 +1152,8 @@ procedure lib-rvs_crrvslnp : /* create-rvs-line-pump */
                      contr_rvs-doc.obj-code   = p-obj-code                 and
                      contr_rvs-doc.shift-date = p-cur_shift-obj_shift-date and
                      contr_rvs-doc.shift-num  = p-cur_shift-obj_shift-num  and
-                     contr_rvs-doc.status_    = {&fact}
+                     contr_rvs-doc.status_    = {&fact}                    and
+                     contr_rvs-doc.rvs-type  <> {&test-asi}
             :
               find first prev_rvs-line-pump no-lock
                 where prev_rvs-line-pump.rvs-code    = contr_rvs-doc.rvs-code
@@ -2121,6 +2220,59 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
     no-error.
   
   { gbl/ptrlprop.i run p-obj-type p-obj-code }
+  
+  find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = bf_rvs-line.rvs-code .
+  
+  if buf_rvs-doc.rvs-type = {&test-asi}
+  then do :
+    assign
+      bf_rvs-line.measure-qnty           = tt-meas.measure-qnty
+      bf_rvs-line.brutto-qnty            = tt-meas.brutto-qnty
+      bf_rvs-line.measure-cli-qnty       = tt-meas.measure-cli-qnty
+      bf_rvs-line.brutto-cli-qnty        = tt-meas.brutto-cli-qnty
+      bf_rvs-line.level-total            = tt-meas.level-total
+      bf_rvs-line.level-petrol           = tt-meas.level-petrol
+      bf_rvs-line.level-water            = tt-meas.level-water
+      bf_rvs-line.temp-layer1            = tt-meas.temp-layer1
+      bf_rvs-line.temp-layer2            = tt-meas.temp-layer2
+      bf_rvs-line.temp-layer3            = tt-meas.temp-layer3
+      bf_rvs-line.measure-tc-qnty        = tt-meas.measure-tc-qnty
+      bf_rvs-line.brutto-tc-qnty         = tt-meas.brutto-tc-qnty
+      bf_rvs-line.temperature            = tt-meas.temperature    
+      bf_rvs-line.density                = if tt-meas.density > 0 then tt-meas.density else  bf_rvs-line.state-density
+      bf_rvs-line.brutto-cli-qnty        = if bf_rvs-line.brutto-cli-qnty <> 0 then bf_rvs-line.brutto-cli-qnty else bf_rvs-line.brutto-qnty * bf_rvs-line.density     
+      bf_rvs-line.measure-cli-qnty       = if bf_rvs-line.measure-cli-qnty <> 0 then bf_rvs-line.measure-cli-qnty else bf_rvs-line.measure-qnty * bf_rvs-line.density
+    
+      bf_rvs-line.state-level-total = 0
+      bf_rvs-line.state-level-water = 0
+      bf_rvs-line.state-density = 0
+      bf_rvs-line.state-temperature = ?
+    .
+    
+    if tt-meas.water-qnty <> ?
+    then do :
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+             and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+             and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+             and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "measure-water-qnty" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+          rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+          rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+          rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+          rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+          rvs-line-attr.attr-code = "measure-water-qnty"
+        .
+      end.
+      rvs-line-attr.attr-value = string(tt-meas.water-qnty) .
+    end .  
+    return .
+  end .
 
   assign
     bf_rvs-line.measure-qnty           = tt-meas.measure-qnty
@@ -2819,6 +2971,7 @@ then do:
                 AND crl_prev_rvs-doc.shift-date = rvs-doc.shift-date 
                 AND crl_prev_rvs-doc.shift-num  = rvs-doc.shift-num
                 AND crl_prev_rvs-doc.status_    = {&fact}
+                AND crl_prev_rvs-doc.rvs-type  <> {&test-asi}
                 /* and contr_rvs-doc.rvs-type = {&rvs-control} */
                 BY crl_prev_rvs-doc.fact-order DESC
                 ON ERROR UNDO, RETURN ERROR RETURN-VALUE
@@ -5407,6 +5560,7 @@ define variable p-prev-rvs-date as logical no-undo.
                 AND crl_prev_rvs-doc.shift-date = rvs-doc.shift-date 
                 AND crl_prev_rvs-doc.shift-num  = rvs-doc.shift-num
                 AND crl_prev_rvs-doc.status_    = {&fact}
+                AND crl_prev_rvs-doc.rvs-type  <> {&test-asi}
                 /* and contr_rvs-doc.rvs-type = {&rvs-control} */
                 BY crl_prev_rvs-doc.fact-order DESC
                 ON ERROR UNDO, RETURN ERROR RETURN-VALUE
@@ -5608,6 +5762,12 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
           v-chk-act = 'actn_rvs-control_fact':U
         .
       end.
+      when {&test-asi}
+      then do:
+        assign
+          v-chk-act = 'no-ckeck':U
+        .
+      end.
       otherwise do:
         message
           vss-workfile vss-revision vss-description skip
@@ -5618,7 +5778,9 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
         undo, return error return-value .
       end.
     end case .
-    if not g#auto then do:
+    if not g#auto
+    and v-chk-act <> 'no-ckeck':U
+    then do:
       { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
@@ -5687,20 +5849,23 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
       end.
 
       /* прописывание оборота по документам в атрибуты */
-      define variable v-ok    as logical      no-undo.
-      run str/rvs-attr.p
-        ( input rc_rvs-doc.rvs-code
-        , input rc_rvs-doc.obj-type
-        , input rc_rvs-doc.obj-code
-        , output v-ok
-        ) no-error.
-      if error-status :error
-        or v-ok = false
-      then do:
-         /*
-         undo tr, return error SUBSTITUTE( "Ошибка прописывания остатков. &1", return-value ) .
-         */
-      end.
+      if rc_rvs-doc.rvs-type <> {&test-asi}
+      then do :
+        define variable v-ok    as logical      no-undo.
+        run str/rvs-attr.p
+          ( input rc_rvs-doc.rvs-code
+          , input rc_rvs-doc.obj-type
+          , input rc_rvs-doc.obj-code
+          , output v-ok
+          ) no-error.
+        if error-status :error
+          or v-ok = false
+        then do:
+           /*
+           undo tr, return error SUBSTITUTE( "Ошибка прописывания остатков. &1", return-value ) .
+           */
+        end.
+      end .
 
       run str/rvs-stat.p
         ( input parparentproc

@@ -158,7 +158,8 @@ do on error undo, return error :
              ub.rvs-doc.obj-code   = p-obj-code   and
              ub.rvs-doc.shift-date = p-shift-date and
              ub.rvs-doc.shift-num  = p-shift-num  and
-             ub.rvs-doc.status_    = {&fact}
+             ub.rvs-doc.status_    = {&fact}      and
+             ub.rvs-doc.rvs-type  <> {&test-asi}
       , each ub.rvs-line no-lock where
              ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code and
              ub.rvs-line.obj-type = ub.rvs-doc.obj-type and
@@ -192,7 +193,8 @@ do on error undo, return error :
              ub.rvs-doc.obj-code    = p-obj-code        and
              ub.rvs-doc.status_     = {&fact}           and
              ub.rvs-doc.fact-order <= d_fact-order      and
-             ub.rvs-doc.fact-order >= d_fact-order-prev
+             ub.rvs-doc.fact-order >= d_fact-order-prev and 
+             ub.rvs-doc.rvs-type   <> {&test-asi}
       , each ub.rvs-line no-lock where
              ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code and
              ub.rvs-line.obj-type = ub.rvs-doc.obj-type and
@@ -248,7 +250,8 @@ do on error undo, return error :
              ub.rvs-doc.obj-type    = p-obj-type        and
              ub.rvs-doc.obj-code    = p-obj-code        and
              ub.rvs-doc.status_     = {&fact}           and
-             ub.rvs-doc.fact-order >= d_fact-order-prev
+             ub.rvs-doc.fact-order >= d_fact-order-prev and
+             ub.rvs-doc.rvs-type   <> {&test-asi}
       , each ub.rvs-line no-lock where
              ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code and
              ub.rvs-line.obj-type = ub.rvs-doc.obj-type and
