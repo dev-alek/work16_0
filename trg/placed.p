@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 72f0e5104d0d, 1337, rls $
+$Author: EShklyar $
+$Date: Sat Apr 28 13:31:57 2018 +0300 $
+$Workfile: placed.p $
+$Archive: trg/placed.p $
 
 Триггер на удаление place
 
@@ -17,11 +17,11 @@ Creation date: 03/24/08
 
 TRIGGER PROCEDURE FOR DELETE OF ub.place.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: 72f0e5104d0d, 1337, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U.
+define variable vss-date        as character no-undo initial "$Date: Sat Apr 28 13:31:57 2018 +0300 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: placed.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: trg/placed.p $":U.
 define variable vss-description as character no-undo initial "Триггер на удаление place":U.
 { cmp/vssrevis.i "substitute('&1|&2|&3'
                          , ub.place.obj-type
@@ -164,7 +164,7 @@ do
         end.
     end.
 
-    { gbl/rum-runa.i
+   { gbl/rum-runa.i
     ?
     this-procedure:handle
     ?
@@ -183,8 +183,14 @@ do
             , vss-workfile
             , return-value
             , error-status :get-message ( 1 ) ).
-    end.
+    end.  
   
-  
-  
+define buffer buf_place-attr for ub.place-attr .
+for each buf_place-attr exclusive-lock where
+            buf_place-attr.pl-code  = ub.place.pl-code  and
+            buf_place-attr.obj-type = ub.place.obj-type and
+            buf_place-attr.obj-code = ub.place.obj-code:
+            delete buf_place-attr.  
+end.
+
 end. /* Main-Block */
