@@ -1817,23 +1817,29 @@ define buffer bf_place for ub.place .
       then do :
         find first dens_sr-izmerenia no-lock where dens_sr-izmerenia.node-code = v-mi-dnst no-error.
         if not available dens_sr-izmerenia then do :
-/*          message                                                                      */
-/*          "Ошибка работы с библиотекой ПО МИ "                                         */
-/*          substitute( 'Не найдено средство измерения с кодом &1', pl-dens-sr-izm ) skip*/
-/*          view-as alert-box error.                                                     */
-/*          undo _trpomi, return no-apply.*/
+          message
+          "Ошибка работы с библиотекой ПОкМИ "
+          substitute( 'Не найдено средство измерения с кодом &1', pl-dens-sr-izm ) skip
+          view-as alert-box error.
+          undo _trpomi, return no-apply.
         end.
         else do :
-          message 'Для показателя "Плотность" настройки вспомогательного средства измерения не применяются. Применяются параметры и настройки библиотеки ПОкМИ.' view-as alert-box information .
+/*          BTS-146                                                                                                                                                                               */
+/*          message 'Для показателя "Плотность" настройки вспомогательного средства измерения не применяются. Применяются параметры и настройки библиотеки ПОкМИ.' view-as alert-box information .*/
 /*          assign                                                           */
 /*            ToolType               = dens_sr-izmerenia.sr-type-id          */
 /*            DeltaAbs_R             = dens_sr-izmerenia.sr-abs-err-dens     */
 /*            DeltaOtn_R             = dens_sr-izmerenia.sr-relative-err-dens*/
 /*          .                                                                */
+          assign
+            DeltaAbs_R_SUG         = dens_sr-izmerenia.sr-abs-err-dens-lgas-liquid
+            DeltaAbs_R_SUG-vapor   = dens_sr-izmerenia.sr-abs-err-dens-lgas-vapor
+          .
         end.
       end .
-      DeltaAbs_R_SUG       = 0 .
-      DeltaAbs_R_SUG-vapor = 0 .
+/*      BTS-146                   */
+/*      DeltaAbs_R_SUG       = 0 .*/
+/*      DeltaAbs_R_SUG-vapor = 0 .*/
     end .
     
 /*    if pl-rvd-temp                                                                                                           */
