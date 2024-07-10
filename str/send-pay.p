@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7b0cc5f31b3c, 1617, rls $
+$Author: SSlivenko $
+$Date: Tue Nov 06 04:41:38 2018 +0300 $
+$Workfile: send-pay.p $
+$Archive: str/send-pay.p $
 
 пересылка кодов оплат на кассу
 
@@ -27,12 +27,13 @@ DEFINE INPUT PARAMETER rid-list as char no-undo.
 define input parameter p-log-file-name as character no-undo .
 define input-output parameter p-view-log as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7b0cc5f31b3c, 1617, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Nov 06 04:41:38 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: send-pay.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/send-pay.p $":U .
 define variable vss-description as character no-undo init "Пересылка видов оплат на кассы".
+define variable rdlist as int64 no-undo .
 { cmp/vssrevis.i }
 
 { cmp/trg-def.i }
@@ -113,6 +114,7 @@ define buffer buf_cash-pay-attr for ub.cash-pay-attr.
       END. /* FOR EACh cash-pay*/
     end.
     else do:
+
       if rid-list eq "*"
       then  do:
         create tt-cash-pay.
@@ -123,10 +125,13 @@ define buffer buf_cash-pay-attr for ub.cash-pay-attr.
        else
         _selective:
         DO ii = 1 to NUm-ENTRIES(rid-list):
+        rdlist =  int64(entry(ii, rid-list)).
           FIND FIRST ub.cash-pay No-LOCK WHERE
-                    recid(ub.cash-pay) = integer(entry(ii, rid-list)) No-ERROR.
+                    recid(ub.cash-pay) = rdlist No-ERROR.
+
           IF avail ub.cash-pay then do:
-  &scop metka _selective
+
+          &scop metka _selective
           {&check-cp-is-use}.
             { str/putc-5.i }
           end.
