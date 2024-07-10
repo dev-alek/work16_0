@@ -940,6 +940,14 @@ end.
   then do :
     RUN gds-attr-write (v-nbc, {&attr-item-matter-mark}, string(p-GdsObj:pay-flag)).  
   end.
+
+  if p-GdsObj:method-flag ne ?
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-type-method-calc}, p-GdsObj:method-flag).  
+  end.
+  else do :
+    RUN gds-attr-delete (v-nbc, {&attr-type-method-calc}, output v-attr-del).
+  end.
   
   if p-GdsObj:enbl-exc = 1
   then do :

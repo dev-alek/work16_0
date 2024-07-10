@@ -275,6 +275,15 @@ cash-gds.alpha1     = loc-goods.alpha1.
                                          ,output v-type) no-error.
 cash-gds.office-type = v-oss.
 
+  run gds-attr-value in this-procedure  ( input cash-gds.gds-code
+                                         ,input {&attr-type-method-calc}
+                                         ,output v-oss
+                                         ,output v-type) no-error.
+if v-oss <> "" then
+  assign
+    cash-gds.CalculationMethod = int(entry(1,v-oss,","))
+    cash-gds.CalculationMethodRestr = if num-entries(v-oss,",") > 1 then int(entry(2,v-oss,",")) else 0
+  .
 
 
 assign

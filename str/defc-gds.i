@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 47e5c2a27e63, 2885, rls $
+$Author: VRukavishnikov $
+$Date: Пн ноя 22 19:49:11 2021 +0300 $
+$Workfile: defc-gds.i $
+$Archive: str/defc-gds.i $
 
 определение временной таблицы  с информацией по товару
 
@@ -16,7 +16,7 @@ Creation date: 04/13/06
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: defc-gds.i $ $Revision: 47e5c2a27e63, 2885, rls $".
 
 DEFINE {1} TEMP-TABLE cash-gds no-undo
 FIELD gds-code          like ub.goods.gds-code
@@ -59,6 +59,8 @@ FIELD fbr-grp-code-0   as integer /*код группы ресторана */
 FIELD fbr-grp-code     as integer /*код группы прайс-листа ресторана*/
 FIELD office           as integer /*услуга*/
 field office-type      as character /*тип услуги*/
+FIELD CalculationMethod      as integer  /* признак способа расчета */
+FIELD CalculationMethodRestr as integer  /* ограничение на признак способа расчета */
 FIELD price-sale       like ub.price-list.price-sale
 FIELD unit-type        like ub.units.type
 FIELD unit-cli-type    like ub.units.type
@@ -130,4 +132,4 @@ rule-num
 .
 
 
-/* $Workfile$ e n d */
+/* $Workfile: defc-gds.i $ e n d */

@@ -20,11 +20,11 @@ DEFINE TEMP-TABLE tt-cash-pay NO-UNDO LIKE cash-pay.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 537a1f69ef2b, 3262, rls $
+$Author: EShklyar $
+$Date: 2023/02/10 14:22:49 $
+$Workfile: cashpayi.w $
+$Archive: ref/cashpayi.w $
 
 Карточка кассового вида платежа
 
@@ -50,11 +50,11 @@ define input parameter p-obj-code like ub.clients.obj-code no-undo.
 define input-output parameter par-ri   as recid no-undo.
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 537a1f69ef2b, 3262, rls $":u .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":u .
+define variable vss-date        as character no-undo init "$Date: 2023/02/10 14:22:49 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: cashpayi.w $":u .
+define variable vss-archive     as character no-undo init "$Archive: ref/cashpayi.w $":u .
 define variable vss-description as character no-undo init "Карточка кассового вида платежа" .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -201,6 +201,7 @@ DEFINE VARIABLE cb-prop           AS CHARACTER FORMAT "X(256)":U INITIAL "0"
    "Топливная карта","4",
    "Талоны","5",
    "QR-код","6",
+   "Предоплата (Аванс)","7",
    "Топливные купоны","13",
    "Виртуальная топливная карта","14",
    "Бонусная карта","15",	

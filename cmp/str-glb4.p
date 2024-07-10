@@ -472,6 +472,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Признак предмета расчета */
 { cmp/cr-prep.i 1 attr-item-matter-mark     item-matter-mark     " " item-matter-mark     }
 
+/* Признак способа расчета */
+{ cmp/cr-prep.i 1 attr-type-method-calc     type-method-calc     " " type-method-calc     }
+
 /* cash-book-id */
 { cmp/cr-prep.i 1 attr-cash-book-id     cash-book-id     " " cash-book-id     }
 
@@ -609,6 +612,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-mark-type}~
 ,{&bef-attr-emrc-type}~
 ,{&bef-attr-item-matter-mark}~
+,{&bef-attr-type-method-calc}~
 ,{&bef-attr-group-np}~
 ,{&bef-attr-fuel-type}~
 ,{&bef-attr-is-loyalty-payment}~
@@ -668,6 +672,11 @@ attr-office-type
 { cmp/cr-prepc.i 1 prop-list-attr-item-matter-mark 
 "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19"
 attr-item-matter-mark
+}
+
+{ cmp/cr-prepc.i 1 prop-list-attr-type-method-calc 
+"1,2,3,4,5,6,7"
+attr-type-method-calc
 }
 
 /* Группы НП */
