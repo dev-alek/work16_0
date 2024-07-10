@@ -106,8 +106,10 @@ define variable vss-description as character no-undo init "Библиотека процедур д
   define variable mType                as character no-undo.
   define variable mValueVne            as character no-undo.
   define variable mTypeVne             as character no-undo.
+  define variable mValueAvans          as character no-undo.
+  define variable mTypeAvans           as character no-undo.
   define variable mTypePay             as character no-undo.
-
+  define variable taxVne               as logical   no-undo .
   define buffer buf_shift-obj for ub.shift-obj.
   { str/dia2auto.i }
   { rul/seterror.i }
@@ -178,6 +180,16 @@ define variable vss-description as character no-undo init "Библиотека процедур д
   DEFINE TEMP-TABLE tt0-fin-doc-attr NO-UNDO LIKE ub.fin-doc-attr.
   DEFINE TEMP-TABLE tt0-fin-doc-tax NO-UNDO LIKE ub.fin-doc-tax.
   DEFINE TEMP-TABLE tt0-payment NO-UNDO LIKE ub.payment.
+  
+  define temp-table tt-cashbookAttr no-undo 
+    field cashbookid as int64
+    field vneCli     as character
+    field vneCorr    as character
+    field avansCli   as character
+    field avansCorr  as character
+    index pi cashbookid
+    .
+  
   define temp-table tt-cashBookOst no-undo
     field cashbookid as int64
     field ost        as decimal 
@@ -191,7 +203,14 @@ define variable vss-description as character no-undo init "Библиотека процедур д
     field osnpko     as decimal
     field osnrko     as decimal 
     index pi cashbookid.
-    
+
+  define temp-table tt-cashBookOstAvans no-undo
+    field cashbookid as int64
+    field ost        as decimal 
+    field osnpko     as decimal
+    field osnrko     as decimal 
+    index pi cashbookid.
+        
   define temp-table temp-fin-sum no-undo
     field cash-desk        as integer
     field curr-code        as integer
@@ -225,7 +244,24 @@ define variable vss-description as character no-undo init "Библиотека процедур д
     index pi is unique primary
     num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid pay-type
     .
-    
+
+  define temp-table temp-fin-sumAvans no-undo
+    field cash-desk        as integer
+    field curr-code        as integer
+    field tot-sum          as decimal
+    field tot-base         as decimal
+    field tot-rubl         as decimal
+    field is-petrol        as logical
+    field cashbookid       as int64
+    field is-expense_cash  as logical
+    field num-expense_cash as int
+    field pay-type         as char
+    field contr-kb         as integer   init ?
+    field fin-type         as character 
+    index pi is unique primary
+    num-expense_cash is-expense_cash cash-desk curr-code is-petrol cashbookid pay-type
+    .
+        
   define temp-table temp-gds no-undo
     field with-vat     as logical   init yes
     field b-code       as integer
@@ -287,7 +323,38 @@ define variable vss-description as character no-undo init "Библиотека процедур д
     pay-type
     /*is-petrol*/
     .
-    
+
+  define temp-table temp-gdsAvans no-undo
+    field with-vat     as logical   init yes
+    field b-code       as integer
+    field node-code    as integer
+    field doc-code     as character
+    field doc-kind     as character
+    field gds-code     as integer
+    field artic        as character
+    field prod-type    as character
+    field prod-code    as integer
+    field eff-doc-qnty as decimal
+    field tot-r-b      as decimal
+    field tot-rubl     as decimal
+    field tot-base     as decimal
+    field tot-doc      as decimal
+    field vat-base     as decimal
+    field vat-rubl     as decimal
+    field vat-doc      as decimal
+    field curr-code    as integer
+    field cash-desk    as integer
+    field pay-type     as char
+    field is-petrol    as logical
+    index pi is unique primary
+    cash-desk
+    b-code
+    doc-kind
+    curr-code
+    pay-type
+    /*is-petrol*/
+    .
+        
   define temp-table temp-tax no-undo
     field with-vat         as logical init yes
     field curr-code        as integer
@@ -345,7 +412,36 @@ define variable vss-description as character no-undo init "Библиотека процедур д
     cashbookId
     pay-type
     .
-    
+
+  define temp-table temp-taxAvans no-undo
+    field with-vat         as logical init yes
+    field curr-code        as integer
+    field vat-pc           as decimal
+    field slt-pc           as decimal
+    field vat-base         as decimal
+    field vat-rubl         as decimal
+    field vat-doc          as decimal
+    field sum-base         as decimal
+    field sum-rubl         as decimal
+    field sum-doc          as decimal
+    field cash-desk        as integer
+    field is-petrol        as logical
+    field cashbookId       as int64
+    field is-expense_cash  as logical
+    field pay-type         as char
+    field num-expense_cash as int
+    index pi is unique primary
+    num-expense_cash
+    is-expense_cash
+    cash-desk
+    curr-code
+    vat-pc
+    slt-pc
+    is-petrol
+    cashbookId
+    pay-type
+    .
+        
   define temp-table temp-z-number no-undo
     field z-number  as integer
     field cash-desk as integer
@@ -388,31 +484,35 @@ procedure proc-main :
   define variable v-vat-pc        as integer   no-undo .
   define variable v-slt-pc        as integer   no-undo .
 
-  define buffer buf_inkas               for ub.inkas.
-  define buffer buf_inkas-pay-desk      for ub.inkas-pay-desk.
-  define buffer buf_cash-pay            for ub.cash-pay.
-  define buffer buf_temp-fin-sum        for temp-fin-sum.
-  define buffer buf_temp-fin-sum-Pko    for temp-fin-sum.
-  define buffer buf_temp-fin-sumVne     for temp-fin-sumVne.
-  define buffer buf_temp-fin-sumVne-Pko for temp-fin-sumVne.
-  define buffer buf_chk-gds-pay         for ub.chk-gds-pay.
-  define buffer buf_chk-doc             for ub.chk-doc.
-  define buffer buf_chk-pay             for ub.chk-pay.
-  define buffer buf_chk-pay-attr        for ub.chk-pay-attr.
-  define buffer buf_temp-gds            for temp-gds.
-  define buffer buf_temp-gdsVne         for temp-gdsVne.
-  define buffer buf_bar-code            for ub.bar-code.
-  define buffer buf_goods               for ub.goods.
-  define buffer buf_sale-doc            for ub.sale-doc.
-  define buffer buf_trn-doc             for ub.trn-doc.
-  define buffer buf_doc-line            for ub.doc-line.
-  define buffer buf_gds-dtl             for ub.gds-dtl.
-  define buffer buf_temp-tax            for temp-tax.
-  define buffer buf_temp-taxVne         for temp-taxVne.  
-  define buffer buf_fin-doc             for ub.fin-doc.
-  define buffer buf_sysconf             for ub.sysconf.
-  define buffer buf_shift-staff         for ub.shift-staff.
-  define buffer buf_chk-gds             for ub.chk-gds.
+  define buffer buf_inkas                 for ub.inkas.
+  define buffer buf_inkas-pay-desk        for ub.inkas-pay-desk.
+  define buffer buf_cash-pay              for ub.cash-pay.
+  define buffer buf_temp-fin-sum          for temp-fin-sum.
+  define buffer buf_temp-fin-sum-Pko      for temp-fin-sum.
+  define buffer buf_temp-fin-sumVne       for temp-fin-sumVne.
+  define buffer buf_temp-fin-sumVne-Pko   for temp-fin-sumVne.
+  define buffer buf_temp-fin-sumAvans     for temp-fin-sumAvans.
+  define buffer buf_temp-fin-sumAvans-Pko for temp-fin-sumAvans.
+  define buffer buf_chk-gds-pay           for ub.chk-gds-pay.
+  define buffer buf_chk-doc               for ub.chk-doc.
+  define buffer buf_chk-pay               for ub.chk-pay.
+  define buffer buf_chk-pay-attr          for ub.chk-pay-attr.
+  define buffer buf_temp-gds              for temp-gds.
+  define buffer buf_temp-gdsVne           for temp-gdsVne.
+  define buffer buf_temp-gdsAvans         for temp-gdsAvans.
+  define buffer buf_bar-code              for ub.bar-code.
+  define buffer buf_goods                 for ub.goods.
+  define buffer buf_sale-doc              for ub.sale-doc.
+  define buffer buf_trn-doc               for ub.trn-doc.
+  define buffer buf_doc-line              for ub.doc-line.
+  define buffer buf_gds-dtl               for ub.gds-dtl.
+  define buffer buf_temp-tax              for temp-tax.
+  define buffer buf_temp-taxVne           for temp-taxVne.  
+  define buffer buf_temp-taxAvans         for temp-taxAvans.    
+  define buffer buf_fin-doc               for ub.fin-doc.
+  define buffer buf_sysconf               for ub.sysconf.
+  define buffer buf_shift-staff           for ub.shift-staff.
+  define buffer buf_chk-gds               for ub.chk-gds.
   mCashBook = new ibs.th.ref.cashbookstorage () .
       
       
@@ -488,6 +588,31 @@ procedure proc-main :
     /*      {&display-message}.                                                                                                               */
     /*      undo, return error .                                                                                                              */
     /*    end.                                                                                                                                */
+ 
+    /* Посмотрим заполнены ли параметры для кассовых книг */
+
+    for each ub.CashBook no-lock:
+      create tt-cashbookAttr .
+      assign 
+        tt-cashbookAttr.cashbookid = ub.CashBook.id .
+      for first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = ub.CashBook.id and
+        ub.CashBookRule.Code = "Vnecli-code":
+        tt-cashbookAttr.vneCli = ub.CashBookRule.RuleValue .
+      end.
+      for first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = ub.CashBook.id and
+        ub.CashBookRule.Code = "corrPkoVne":
+        tt-cashbookAttr.vneCorr = ub.CashBookRule.RuleValue .
+      end.
+      for first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = ub.CashBook.id and
+        ub.CashBookRule.Code = "Avanscli-code":
+        tt-cashbookAttr.avansCli = ub.CashBookRule.RuleValue .
+      end.
+      for first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = ub.CashBook.id and
+        ub.CashBookRule.Code = "corrPkoAvans":
+        tt-cashbookAttr.avansCorr = ub.CashBookRule.RuleValue .
+      end.         
+    end.
+ 
     /*перезаполним с учетом  требований ЮКОС*/
     find first buf_shift-staff no-lock
       where buf_shift-staff.obj-type   = buf_shift-obj.obj-type
@@ -691,7 +816,13 @@ procedure proc-main :
                 ,input {&attr-item-matter-mark}
                 ,output mValueVne
                 ,output mTypeVne) no-error.                     
-                       
+
+              run gds-attr-value in this-procedure (
+                input buf_chk-gds-pay.gds-code
+                ,input {&attr-type-method-calc}
+                ,output mValueAvans
+                ,output mTypeAvans) no-error.        
+                                       
               if p-by-petrol-goods then 
               do: /*проверяем товар на топливность*/
                 run check-petrol in this-procedure (
@@ -699,7 +830,7 @@ procedure proc-main :
                   output is-petrolium
                   ).
               end.       
-              define variable msum as decimal no-undo.
+              define variable msum    as decimal no-undo.
               define variable msumVne as decimal no-undo.
               case buf_chk-gds-pay.curr-code:
                 when 0 then 
@@ -727,6 +858,10 @@ procedure proc-main :
               do :
                 find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
               end.
+              find first tt-cashbookAttr where tt-cashbookAttr.cashbookid = ub.CashBook.id no-error .
+              if not (tt-cashbookAttr.vneCli <> "" and tt-cashbookAttr.vneCorr <> "") then mValueVne = "" .
+              if not (tt-cashbookAttr.avansCli <> "" and tt-cashbookAttr.avansCorr <> "") then mValueAvans = "" .
+               
               if available ub.CashBook
                 then 
               do :
@@ -741,48 +876,8 @@ procedure proc-main :
                 p-by-pril = ub.CashBook.RulePril */
                 .
               end.   
-              if mValueVne <> "15" then 
-              do:    
-                find first buf_temp-fin-sum
-                  where buf_temp-fin-sum.curr-code = buf_cash-pay.curr-code
-                  and (p-by-cash-desk    = no or buf_temp-fin-sum.cash-desk = buf_inkas-pay-desk.pay-desk)
-                  and (p-by-petrol-goods = no or buf_temp-fin-sum.is-petrol = is-petrolium)
-                  and buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
-                  and buf_temp-fin-sum.is-expense_cash = (msum < 0 and mTypePay eq "cash" )
-                  and buf_temp-fin-sum.pay-type eq mTypePay
-                  no-error.
-                if not available buf_temp-fin-sum then 
-                do:
-                  create buf_temp-fin-sum.
-                  assign
-                    buf_temp-fin-sum.curr-code       = buf_cash-pay.curr-code
-                    buf_temp-fin-sum.cash-desk       = (if p-by-cash-desk
-                                                      then buf_inkas-pay-desk.pay-desk
-                                                      else 0)
-                    buf_temp-fin-sum.is-petrol       = (if p-by-petrol-goods
-                                                      then is-petrolium
-                                                      else no)
-                    buf_temp-fin-sum.cashbookid      = (if available ub.CashBook then ub.CashBook.id else 0)
-                    buf_temp-fin-sum.is-expense_cash = msum < 0 and mTypePay eq "cash"
-                    buf_temp-fin-sum.pay-type        = mTypePay
-                        
-                    .
-                end.
-                assign
-                  buf_temp-fin-sum.tot-rubl = buf_temp-fin-sum.tot-rubl + (if v-curr-r-b = {&r-b-rubl}
-                                                                        then buf_chk-gds-pay.tot-r-b
-                                                                        else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
-                                                                        )
-                  buf_temp-fin-sum.tot-base = buf_temp-fin-sum.tot-base + (if v-curr-r-b = {&r-b-base}
-                                                                        then buf_chk-gds-pay.tot-r-b
-                                                                        else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
-                                                                        )
-                  buf_temp-fin-sum.tot-sum  = buf_temp-fin-sum.tot-sum + msum
-                    
-                  .
-              end .
-              else 
-              do:
+              if mValueVne = "15" then 
+              do:  
                 /* Внереалиционный доход */
                 find first buf_temp-fin-sumVne
                   where buf_temp-fin-sumVne.curr-code = buf_cash-pay.curr-code
@@ -820,85 +915,97 @@ procedure proc-main :
                                                                         )
                   buf_temp-fin-sumVne.tot-sum  = buf_temp-fin-sumVne.tot-sum + msum
                     
-                  .                    
+                  .       
+              end .
+              else 
+              do:
+                /* Аванс */
+                if mValueAvans > "" then do:
+                                  find first buf_temp-fin-sumAvans
+                  where buf_temp-fin-sumAvans.curr-code = buf_cash-pay.curr-code
+                  and (p-by-cash-desk    = no or buf_temp-fin-sumAvans.cash-desk = buf_inkas-pay-desk.pay-desk)
+                  and (p-by-petrol-goods = no or buf_temp-fin-sumAvans.is-petrol = is-petrolium)
+                  and buf_temp-fin-sumAvans.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
+                  and buf_temp-fin-sumAvans.is-expense_cash = (msum < 0 and mTypePay eq "cash" )
+                  and buf_temp-fin-sumAvans.pay-type eq mTypePay
+                  no-error.
+                if not available buf_temp-fin-sumAvans then 
+                do:
+                  create buf_temp-fin-sumAvans.
+                  assign
+                    buf_temp-fin-sumAvans.curr-code       = buf_cash-pay.curr-code
+                    buf_temp-fin-sumAvans.cash-desk       = (if p-by-cash-desk
+                                                      then buf_inkas-pay-desk.pay-desk
+                                                      else 0)
+                    buf_temp-fin-sumAvans.is-petrol       = (if p-by-petrol-goods
+                                                      then is-petrolium
+                                                      else no)
+                    buf_temp-fin-sumAvans.cashbookid      = (if available ub.CashBook then ub.CashBook.id else 0)
+                    buf_temp-fin-sumAvans.is-expense_cash = msum < 0 and mTypePay eq "cash"
+                    buf_temp-fin-sumAvans.pay-type        = mTypePay
+                        
+                    .
+                end.
+                assign
+                  buf_temp-fin-sumAvans.tot-rubl = buf_temp-fin-sumAvans.tot-rubl + (if v-curr-r-b = {&r-b-rubl}
+                                                                        then buf_chk-gds-pay.tot-r-b
+                                                                        else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
+                                                                        )
+                  buf_temp-fin-sumAvans.tot-base = buf_temp-fin-sumAvans.tot-base + (if v-curr-r-b = {&r-b-base}
+                                                                        then buf_chk-gds-pay.tot-r-b
+                                                                        else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                                                        )
+                  buf_temp-fin-sumAvans.tot-sum  = buf_temp-fin-sumAvans.tot-sum + msum
+                    
+                  .       
+                  
+                end.
+                else do:
+                find first buf_temp-fin-sum
+                  where buf_temp-fin-sum.curr-code = buf_cash-pay.curr-code
+                  and (p-by-cash-desk    = no or buf_temp-fin-sum.cash-desk = buf_inkas-pay-desk.pay-desk)
+                  and (p-by-petrol-goods = no or buf_temp-fin-sum.is-petrol = is-petrolium)
+                  and buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
+                  and buf_temp-fin-sum.is-expense_cash = (msum < 0 and mTypePay eq "cash" )
+                  and buf_temp-fin-sum.pay-type eq mTypePay
+                  no-error.
+                if not available buf_temp-fin-sum then 
+                do:
+                  create buf_temp-fin-sum.
+                  assign
+                    buf_temp-fin-sum.curr-code       = buf_cash-pay.curr-code
+                    buf_temp-fin-sum.cash-desk       = (if p-by-cash-desk
+                                                      then buf_inkas-pay-desk.pay-desk
+                                                      else 0)
+                    buf_temp-fin-sum.is-petrol       = (if p-by-petrol-goods
+                                                      then is-petrolium
+                                                      else no)
+                    buf_temp-fin-sum.cashbookid      = (if available ub.CashBook then ub.CashBook.id else 0)
+                    buf_temp-fin-sum.is-expense_cash = msum < 0 and mTypePay eq "cash"
+                    buf_temp-fin-sum.pay-type        = mTypePay
+                        
+                    .
+                end.
+                assign
+                  buf_temp-fin-sum.tot-rubl = buf_temp-fin-sum.tot-rubl + (if v-curr-r-b = {&r-b-rubl}
+                                                                        then buf_chk-gds-pay.tot-r-b
+                                                                        else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
+                                                                        )
+                  buf_temp-fin-sum.tot-base = buf_temp-fin-sum.tot-base + (if v-curr-r-b = {&r-b-base}
+                                                                        then buf_chk-gds-pay.tot-r-b
+                                                                        else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                                                        )
+                  buf_temp-fin-sum.tot-sum  = buf_temp-fin-sum.tot-sum + msum
+                    
+                  .
+               
               end.  
-                                          
+             end.                            
                     
                   
             end.
           end.
-          if mValueVne <> "15" then 
-          do:
-            FOR EACH buf_chk-doc NO-LOCK where buf_chk-doc.out-code = buf_inkas-pay-desk.inkas-code
-              AND buf_chk-doc.pay-desk = buf_inkas-pay-desk.pay-desk
-              AND buf_chk-doc.cashier  = buf_inkas-pay-desk.cashier,
-              EACH buf_chk-pay NO-LOCK
-              where buf_chk-pay.doc-code = buf_chk-doc.doc-code
-              AND  buf_chk-pay.pay-code = buf_inkas-pay-desk.pay-code
-              AND  buf_chk-pay.curr-code = buf_inkas-pay-desk.curr-code,
-              FIRST buf_chk-pay-attr NO-LOCK
-              WHERE buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code
-              AND buf_chk-pay-attr.line-num = buf_chk-pay.line-num
-              AND buf_chk-pay-attr.attr-code = "autotank-sum-return":
-              assign
-                buf_temp-fin-sum.tot-sum  = buf_temp-fin-sum.tot-sum  - decimal(buf_chk-pay-attr.attr-value)
-                buf_temp-fin-sum.tot-rubl = buf_temp-fin-sum.tot-rubl - decimal(buf_chk-pay-attr.attr-value)
-                buf_temp-fin-sum.tot-base = buf_temp-fin-sum.tot-base - decimal(buf_chk-pay-attr.attr-value)
-                .      /* автотанк только на рублевых объектах  */
-              find first buf_chk-gds no-lock
-                where buf_chk-gds.doc-code = buf_chk-doc.doc-code
-                no-error.
-              if available buf_chk-gds then 
-              do:
-                find first buf_bar-code no-lock where
-                  buf_bar-code.b-code = buf_chk-gds.b-code no-error.
-                if available buf_bar-code then 
-                do:
-                  find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
-                  if available buf_goods then 
-                  do:
-                    { gbl/pftxvalg.i buf_goods.gds-code {&vat-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-vat-pc no-error }
-                    { gbl/pftxvalg.i buf_goods.gds-code {&slt-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-slt-pc no-error }
-                  end.
-                end.
-              end.
-
-              find first temp-autotank where temp-autotank.curr-code =  buf_inkas-pay-desk.curr-code
-                and temp-autotank.vat-pc    =  v-vat-pc
-                and temp-autotank.slt-pc    =  v-slt-pc
-                and temp-autotank.pay-desk = (if p-by-cash-desk
-                then buf_inkas-pay-desk.pay-desk
-                else 0)
-                and temp-autotank.is-petrol = (if p-by-petrol-goods
-                then buf_temp-fin-sum.is-petrol
-                else no)
-                no-error.
-              if not available temp-autotank then 
-              do:
-                create temp-autotank.
-                assign
-                  temp-autotank.curr-code = buf_inkas-pay-desk.curr-code
-                  temp-autotank.vat-pc    = v-vat-pc
-                  temp-autotank.slt-pc    = v-slt-pc
-                  temp-autotank.pay-desk  = (if p-by-cash-desk
-                                        then buf_inkas-pay-desk.pay-desk
-                                        else 0)
-                  temp-autotank.is-petrol = (if p-by-petrol-goods
-                                        then buf_temp-fin-sum.is-petrol
-                                        else no)
-                  .
-              end.
-
-              assign
-                temp-autotank.sum-return = temp-autotank.sum-return - decimal(buf_chk-pay-attr.attr-value)
-                .
-            END.
-
-          /*найдем НДС - для этого надо пройти по всем размазам с этим типом касс платежа
-          найти doc-line и
-          */
-          end.
-          else 
+          if mValueVne = "15" then 
           do:
             FOR EACH buf_chk-doc NO-LOCK where buf_chk-doc.out-code = buf_inkas-pay-desk.inkas-code
               AND buf_chk-doc.pay-desk = buf_inkas-pay-desk.pay-desk
@@ -928,8 +1035,8 @@ procedure proc-main :
                   find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
                   if available buf_goods then 
                   do:
-                { gbl/pftxvalg.i buf_goods.gds-code {&vat-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-vat-pc no-error }
-                { gbl/pftxvalg.i buf_goods.gds-code {&slt-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-slt-pc no-error }
+                    { gbl/pftxvalg.i buf_goods.gds-code {&vat-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-vat-pc no-error }
+                    { gbl/pftxvalg.i buf_goods.gds-code {&slt-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-slt-pc no-error }
                   end.
                 end.
               end.
@@ -965,6 +1072,144 @@ procedure proc-main :
                 .
             END.
           end.
+          else 
+          do:
+            if mValueAvans > "" then 
+            do:
+                          FOR EACH buf_chk-doc NO-LOCK where buf_chk-doc.out-code = buf_inkas-pay-desk.inkas-code
+              AND buf_chk-doc.pay-desk = buf_inkas-pay-desk.pay-desk
+              AND buf_chk-doc.cashier  = buf_inkas-pay-desk.cashier,
+              EACH buf_chk-pay NO-LOCK
+              where buf_chk-pay.doc-code = buf_chk-doc.doc-code
+              AND  buf_chk-pay.pay-code = buf_inkas-pay-desk.pay-code
+              AND  buf_chk-pay.curr-code = buf_inkas-pay-desk.curr-code,
+              FIRST buf_chk-pay-attr NO-LOCK
+              WHERE buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code
+              AND buf_chk-pay-attr.line-num = buf_chk-pay.line-num
+              AND buf_chk-pay-attr.attr-code = "autotank-sum-return":
+              assign
+                buf_temp-fin-sumAvans.tot-sum  = buf_temp-fin-sumAvans.tot-sum  - decimal(buf_chk-pay-attr.attr-value)
+                buf_temp-fin-sumAvans.tot-rubl = buf_temp-fin-sumAvans.tot-rubl - decimal(buf_chk-pay-attr.attr-value)
+                buf_temp-fin-sumAvans.tot-base = buf_temp-fin-sumAvans.tot-base - decimal(buf_chk-pay-attr.attr-value)
+                .      /* автотанк только на рублевых объектах  */
+              find first buf_chk-gds no-lock
+                where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                no-error.
+              if available buf_chk-gds then 
+              do:
+                find first buf_bar-code no-lock where
+                  buf_bar-code.b-code = buf_chk-gds.b-code no-error.
+                if available buf_bar-code then 
+                do:
+                  find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
+                  if available buf_goods then 
+                  do:
+                    { gbl/pftxvalg.i buf_goods.gds-code {&vat-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-vat-pc no-error }
+                    { gbl/pftxvalg.i buf_goods.gds-code {&slt-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-slt-pc no-error }
+                  end.
+                end.
+              end.
+
+              find first temp-autotank where temp-autotank.curr-code =  buf_inkas-pay-desk.curr-code
+                and temp-autotank.vat-pc    =  v-vat-pc
+                and temp-autotank.slt-pc    =  v-slt-pc
+                and temp-autotank.pay-desk = (if p-by-cash-desk
+                then buf_inkas-pay-desk.pay-desk
+                else 0)
+                and temp-autotank.is-petrol = (if p-by-petrol-goods
+                then buf_temp-fin-sumAvans.is-petrol
+                else no)
+                no-error.
+              if not available temp-autotank then 
+              do:
+                create temp-autotank.
+                assign
+                  temp-autotank.curr-code = buf_inkas-pay-desk.curr-code
+                  temp-autotank.vat-pc    = v-vat-pc
+                  temp-autotank.slt-pc    = v-slt-pc
+                  temp-autotank.pay-desk  = (if p-by-cash-desk
+                                        then buf_inkas-pay-desk.pay-desk
+                                        else 0)
+                  temp-autotank.is-petrol = (if p-by-petrol-goods
+                                        then buf_temp-fin-sumAvans.is-petrol
+                                        else no)
+                  .
+              end.
+
+              assign
+                temp-autotank.sum-return = temp-autotank.sum-return - decimal(buf_chk-pay-attr.attr-value)
+                .
+            END.
+              
+            end.
+            else 
+            do:
+              FOR EACH buf_chk-doc NO-LOCK where buf_chk-doc.out-code = buf_inkas-pay-desk.inkas-code
+                AND buf_chk-doc.pay-desk = buf_inkas-pay-desk.pay-desk
+                AND buf_chk-doc.cashier  = buf_inkas-pay-desk.cashier,
+                EACH buf_chk-pay NO-LOCK
+                where buf_chk-pay.doc-code = buf_chk-doc.doc-code
+                AND  buf_chk-pay.pay-code = buf_inkas-pay-desk.pay-code
+                AND  buf_chk-pay.curr-code = buf_inkas-pay-desk.curr-code,
+                FIRST buf_chk-pay-attr NO-LOCK
+                WHERE buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code
+                AND buf_chk-pay-attr.line-num = buf_chk-pay.line-num
+                AND buf_chk-pay-attr.attr-code = "autotank-sum-return":
+                assign
+                  buf_temp-fin-sum.tot-sum  = buf_temp-fin-sum.tot-sum  - decimal(buf_chk-pay-attr.attr-value)
+                  buf_temp-fin-sum.tot-rubl = buf_temp-fin-sum.tot-rubl - decimal(buf_chk-pay-attr.attr-value)
+                  buf_temp-fin-sum.tot-base = buf_temp-fin-sum.tot-base - decimal(buf_chk-pay-attr.attr-value)
+                  .      /* автотанк только на рублевых объектах  */
+                find first buf_chk-gds no-lock
+                  where buf_chk-gds.doc-code = buf_chk-doc.doc-code
+                  no-error.
+                if available buf_chk-gds then 
+                do:
+                  find first buf_bar-code no-lock where
+                    buf_bar-code.b-code = buf_chk-gds.b-code no-error.
+                  if available buf_bar-code then 
+                  do:
+                    find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
+                    if available buf_goods then 
+                    do:
+                    { gbl/pftxvalg.i buf_goods.gds-code {&vat-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-vat-pc no-error }
+                    { gbl/pftxvalg.i buf_goods.gds-code {&slt-tax-code} ? v-host-code buf_inkas.obj-type buf_inkas.obj-code v-slt-pc no-error }
+                    end.
+                  end.
+                end.
+
+                find first temp-autotank where temp-autotank.curr-code =  buf_inkas-pay-desk.curr-code
+                  and temp-autotank.vat-pc    =  v-vat-pc
+                  and temp-autotank.slt-pc    =  v-slt-pc
+                  and temp-autotank.pay-desk = (if p-by-cash-desk
+                  then buf_inkas-pay-desk.pay-desk
+                  else 0)
+                  and temp-autotank.is-petrol = (if p-by-petrol-goods
+                  then buf_temp-fin-sum.is-petrol
+                  else no)
+                  no-error.
+                if not available temp-autotank then 
+                do:
+                  create temp-autotank.
+                  assign
+                    temp-autotank.curr-code = buf_inkas-pay-desk.curr-code
+                    temp-autotank.vat-pc    = v-vat-pc
+                    temp-autotank.slt-pc    = v-slt-pc
+                    temp-autotank.pay-desk  = (if p-by-cash-desk
+                                        then buf_inkas-pay-desk.pay-desk
+                                        else 0)
+                    temp-autotank.is-petrol = (if p-by-petrol-goods
+                                        then buf_temp-fin-sum.is-petrol
+                                        else no)
+                    .
+                end.
+
+                assign
+                  temp-autotank.sum-return = temp-autotank.sum-return - decimal(buf_chk-pay-attr.attr-value)
+                  .
+              END.
+            end.
+          end.
           _chk-gds-pay:
           for each buf_chk-gds-pay no-lock
             where buf_chk-gds-pay.out-code = buf_inkas.inkas-code
@@ -996,7 +1241,13 @@ procedure proc-main :
               ,input {&attr-item-matter-mark}
               ,output mValueVne
               ,output mTypeVne) no-error.       
-                  
+
+            run gds-attr-value in this-procedure (
+              input buf_chk-gds-pay.gds-code
+              ,input {&attr-type-method-calc}
+              ,output mValueAvans
+              ,output mTypeAvans) no-error.     
+                                
             find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
             if not available ub.CashBook 
               then 
@@ -1013,7 +1264,10 @@ procedure proc-main :
             /*p-by-osnovanie = ub.CashBook.RuleOsn .
             p-by-pril = ub.CashBook.RulePril .*/
             end.
-
+            find first tt-cashbookAttr where tt-cashbookAttr.cashbookid = ub.CashBook.id no-error .
+            if not (tt-cashbookAttr.vneCli <> "" and tt-cashbookAttr.vneCorr <> "") then mValueVne = "" .
+            if not (tt-cashbookAttr.avansCli <> "" and tt-cashbookAttr.avansCorr <> "") then mValueAvans = "" .
+            
             if p-by-petrol-goods then 
             do: /*проверяем товар на топливность*/
               run check-petrol in this-procedure (
@@ -1026,220 +1280,335 @@ procedure proc-main :
               and ub.chk-gds-attr.attr-code = "cstype"
               no-lock no-error.
             mTypePay          = if available chk-gds-attr and integer (chk-gds-attr.attr-value) eq 37 then 'Cash' else "".
-            if mValueVne <> "15" then do:
-            find first buf_temp-gds no-lock where
-              buf_temp-gds.b-code = buf_chk-gds-pay.b-code
-              and buf_temp-gds.doc-kind = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
-              then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
-              else '')
-              and buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
-              and (p-by-cash-desk = no or buf_temp-gds.cash-desk = buf_inkas-pay-desk.pay-desk)
-              and (p-by-petrol-goods = no or buf_temp-gds.is-petrol = is-petrolium)
-              and buf_temp-gds.pay-type = mTypePay 
-              no-error.
-            if not available buf_temp-gds then 
+            if mValueVne = "15" then 
             do:
-              find first buf_bar-code no-lock where
-                buf_bar-code.b-code = buf_chk-gds-pay.b-code no-error.
-              if available buf_bar-code then 
-              do:
-                find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
-                if available buf_goods then 
-                do:
-                  if p-by-petrol-goods then 
-                  do: /*проверяем товар на топливность*/
-                    run check-petrol in this-procedure (
-                      input buf_chk-gds-pay.b-code ,
-                      output is-petrolium
-                      ).
-                  end.
-                  create buf_temp-gds.
-                  assign
-                    buf_temp-gds.b-code    = buf_chk-gds-pay.b-code
-                    buf_temp-gds.gds-code  = buf_bar-code.gds-code
-                    buf_temp-gds.artic     = buf_goods.artic
-                    buf_temp-gds.prod-type = buf_goods.prod-type
-                    buf_temp-gds.prod-code = buf_goods.prod-code
-                    buf_temp-gds.doc-kind  = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
-                                          then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
-                                          else '')
-                    buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
-                    buf_temp-gds.cash-desk = (if p-by-cash-desk
-                                                      then buf_inkas-pay-desk.pay-desk
-                                                      else 0)
-                    buf_temp-gds.pay-type  = mTypePay 
-                    buf_temp-gds.node-code = buf_bar-code.node-code
-                    buf_temp-gds.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
-                    .
-                  find first chk-gds where chk-gds.doc-code eq buf_chk-gds-pay.doc-code
-                    and chk-gds.line-num eq buf_chk-gds-pay.line-num
-                    no-lock no-error.
-                  buf_temp-gds.with-vat = available chk-gds and chk-gds.VAT-pc >= 0.                    
-                end.
-              end.
-            end. /*if not available buf_temp-gds then do:*/
-            if available buf_temp-gds then 
-            do:
-              assign
-                buf_temp-gds.tot-r-b      = buf_temp-gds.tot-r-b + buf_chk-gds-pay.tot-r-b
-                buf_temp-gds.eff-doc-qnty = buf_temp-gds.eff-doc-qnty + buf_chk-gds-pay.eff-doc-qnty
-                buf_temp-gds.tot-rubl     = buf_temp-gds.tot-rubl +   (if v-curr-r-b = {&r-b-rubl}
-                                                              then buf_chk-gds-pay.tot-r-b
-                                                              else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
-                                                              )
-                buf_temp-gds.tot-base     = buf_temp-gds.tot-base +   (if v-curr-r-b = {&r-b-base}
-                                                              then buf_chk-gds-pay.tot-r-b
-                                                              else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
-                                                              )
-                .
-              case buf_chk-gds-pay.curr-code:
-                when 0 then 
-                  do:
-                    assign
-                      buf_temp-gds.tot-doc = buf_temp-gds.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
-                                                                then buf_chk-gds-pay.tot-r-b
-                                                                else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
-                                                                )
-                      .
-                  end.
-                when v-base-code then 
-                  do:
-                    assign
-                      buf_temp-gds.tot-doc = buf_temp-gds.tot-doc +   (if v-curr-r-b = {&r-b-base}
-                                                                then buf_chk-gds-pay.tot-r-b
-                                                                else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
-                                                                )
-                      .
-                  end.
-                otherwise 
-                do:
-                  find first buf_chk-pay no-lock where
-                    buf_chk-pay.doc-code = buf_chk-gds-pay.doc-code
-                    and buf_chk-pay.line-num = buf_chk-gds-pay.cpline-num no-error.
-                  if available buf_chk-pay then 
-                  do:
-                    assign
-                      buf_temp-gds.tot-doc = buf_temp-gds.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
-                                                                  then buf_chk-gds-pay.tot-r-b
-                                                                  else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate) / buf_chk-pay.calc-rate
-                                                                  )
-                      .
-                  end.
-                  else 
-                  do:
-                  /**/
-                  end.
-                end. /*otherwise do:*/
-              end case.
-            end. /*if available buf_temp-gds then do:*/
-end .
-            else do:
               find first buf_temp-gdsVne no-lock where
-              buf_temp-gdsVne.b-code = buf_chk-gds-pay.b-code
-              and buf_temp-gdsVne.doc-kind = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
-              then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
-              else '')
-              and buf_temp-gdsVne.curr-code = buf_inkas-pay-desk.curr-code
-              and (p-by-cash-desk = no or buf_temp-gdsVne.cash-desk = buf_inkas-pay-desk.pay-desk)
-              and (p-by-petrol-goods = no or buf_temp-gdsVne.is-petrol = is-petrolium)
-              and buf_temp-gdsVne.pay-type = mTypePay 
-              no-error.
-            if not available buf_temp-gdsVne then 
-            do:
-              find first buf_bar-code no-lock where
-                buf_bar-code.b-code = buf_chk-gds-pay.b-code no-error.
-              if available buf_bar-code then 
+                buf_temp-gdsVne.b-code = buf_chk-gds-pay.b-code
+                and buf_temp-gdsVne.doc-kind = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
+                then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
+                else '')
+                and buf_temp-gdsVne.curr-code = buf_inkas-pay-desk.curr-code
+                and (p-by-cash-desk = no or buf_temp-gdsVne.cash-desk = buf_inkas-pay-desk.pay-desk)
+                and (p-by-petrol-goods = no or buf_temp-gdsVne.is-petrol = is-petrolium)
+                and buf_temp-gdsVne.pay-type = mTypePay 
+                no-error.
+              if not available buf_temp-gdsVne then 
               do:
-                find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
-                if available buf_goods then 
+                find first buf_bar-code no-lock where
+                  buf_bar-code.b-code = buf_chk-gds-pay.b-code no-error.
+                if available buf_bar-code then 
                 do:
-                  if p-by-petrol-goods then 
-                  do: /*проверяем товар на топливность*/
-                    run check-petrol in this-procedure (
-                      input buf_chk-gds-pay.b-code ,
-                      output is-petrolium
-                      ).
-                  end.
-                  create buf_temp-gdsVne.
-                  assign
-                    buf_temp-gdsVne.b-code    = buf_chk-gds-pay.b-code
-                    buf_temp-gdsVne.gds-code  = buf_bar-code.gds-code
-                    buf_temp-gdsVne.artic     = buf_goods.artic
-                    buf_temp-gdsVne.prod-type = buf_goods.prod-type
-                    buf_temp-gdsVne.prod-code = buf_goods.prod-code
-                    buf_temp-gdsVne.doc-kind  = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
+                  find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
+                  if available buf_goods then 
+                  do:
+                    if p-by-petrol-goods then 
+                    do: /*проверяем товар на топливность*/
+                      run check-petrol in this-procedure (
+                        input buf_chk-gds-pay.b-code ,
+                        output is-petrolium
+                        ).
+                    end.
+                    create buf_temp-gdsVne.
+                    assign
+                      buf_temp-gdsVne.b-code    = buf_chk-gds-pay.b-code
+                      buf_temp-gdsVne.gds-code  = buf_bar-code.gds-code
+                      buf_temp-gdsVne.artic     = buf_goods.artic
+                      buf_temp-gdsVne.prod-type = buf_goods.prod-type
+                      buf_temp-gdsVne.prod-code = buf_goods.prod-code
+                      buf_temp-gdsVne.doc-kind  = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
                                           then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
                                           else '')
-                    buf_temp-gdsVne.curr-code = buf_inkas-pay-desk.curr-code
-                    buf_temp-gdsVne.cash-desk = (if p-by-cash-desk
+                      buf_temp-gdsVne.curr-code = buf_inkas-pay-desk.curr-code
+                      buf_temp-gdsVne.cash-desk = (if p-by-cash-desk
                                                       then buf_inkas-pay-desk.pay-desk
                                                       else 0)
-                    buf_temp-gdsVne.pay-type  = mTypePay 
-                    buf_temp-gdsVne.node-code = buf_bar-code.node-code
-                    buf_temp-gdsVne.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
-                    .
-                  find first chk-gds where chk-gds.doc-code eq buf_chk-gds-pay.doc-code
-                    and chk-gds.line-num eq buf_chk-gds-pay.line-num
-                    no-lock no-error.
-                  buf_temp-gdsVne.with-vat = available chk-gds and chk-gds.VAT-pc >= 0.                    
+                      buf_temp-gdsVne.pay-type  = mTypePay 
+                      buf_temp-gdsVne.node-code = buf_bar-code.node-code
+                      buf_temp-gdsVne.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
+                      .
+                    find first chk-gds where chk-gds.doc-code eq buf_chk-gds-pay.doc-code
+                      and chk-gds.line-num eq buf_chk-gds-pay.line-num
+                      no-lock no-error.
+                    buf_temp-gdsVne.with-vat = available chk-gds and chk-gds.VAT-pc >= 0.                    
+                  end.
                 end.
-              end.
-            end. /*if not available buf_temp-gds then do:*/
-            if available buf_temp-gdsVne then 
-            do:
-              assign
-                buf_temp-gdsVne.tot-r-b      = buf_temp-gdsVne.tot-r-b + buf_chk-gds-pay.tot-r-b
-                buf_temp-gdsVne.eff-doc-qnty = buf_temp-gdsVne.eff-doc-qnty + buf_chk-gds-pay.eff-doc-qnty
-                buf_temp-gdsVne.tot-rubl     = buf_temp-gdsVne.tot-rubl +   (if v-curr-r-b = {&r-b-rubl}
+              end. /*if not available buf_temp-gds then do:*/
+              if available buf_temp-gdsVne then 
+              do:
+                assign
+                  buf_temp-gdsVne.tot-r-b      = buf_temp-gdsVne.tot-r-b + buf_chk-gds-pay.tot-r-b
+                  buf_temp-gdsVne.eff-doc-qnty = buf_temp-gdsVne.eff-doc-qnty + buf_chk-gds-pay.eff-doc-qnty
+                  buf_temp-gdsVne.tot-rubl     = buf_temp-gdsVne.tot-rubl +   (if v-curr-r-b = {&r-b-rubl}
                                                               then buf_chk-gds-pay.tot-r-b
                                                               else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
                                                               )
-                buf_temp-gdsVne.tot-base     = buf_temp-gdsVne.tot-base +   (if v-curr-r-b = {&r-b-base}
+                  buf_temp-gdsVne.tot-base     = buf_temp-gdsVne.tot-base +   (if v-curr-r-b = {&r-b-base}
                                                               then buf_chk-gds-pay.tot-r-b
                                                               else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
                                                               )
-                .
-              case buf_chk-gds-pay.curr-code:
-                when 0 then 
-                  do:
-                    assign
-                      buf_temp-gdsVne.tot-doc = buf_temp-gdsVne.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
+                  .
+                case buf_chk-gds-pay.curr-code:
+                  when 0 then 
+                    do:
+                      assign
+                        buf_temp-gdsVne.tot-doc = buf_temp-gdsVne.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
                                                                 then buf_chk-gds-pay.tot-r-b
                                                                 else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
                                                                 )
-                      .
-                  end.
-                when v-base-code then 
-                  do:
-                    assign
-                      buf_temp-gdsVne.tot-doc = buf_temp-gdsVne.tot-doc +   (if v-curr-r-b = {&r-b-base}
+                        .
+                    end.
+                  when v-base-code then 
+                    do:
+                      assign
+                        buf_temp-gdsVne.tot-doc = buf_temp-gdsVne.tot-doc +   (if v-curr-r-b = {&r-b-base}
                                                                 then buf_chk-gds-pay.tot-r-b
                                                                 else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
                                                                 )
-                      .
-                  end.
-                otherwise 
-                do:
-                  find first buf_chk-pay no-lock where
-                    buf_chk-pay.doc-code = buf_chk-gds-pay.doc-code
-                    and buf_chk-pay.line-num = buf_chk-gds-pay.cpline-num no-error.
-                  if available buf_chk-pay then 
+                        .
+                    end.
+                  otherwise 
                   do:
-                    assign
-                      buf_temp-gdsVne.tot-doc = buf_temp-gdsVne.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
+                    find first buf_chk-pay no-lock where
+                      buf_chk-pay.doc-code = buf_chk-gds-pay.doc-code
+                      and buf_chk-pay.line-num = buf_chk-gds-pay.cpline-num no-error.
+                    if available buf_chk-pay then 
+                    do:
+                      assign
+                        buf_temp-gdsVne.tot-doc = buf_temp-gdsVne.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
                                                                   then buf_chk-gds-pay.tot-r-b
                                                                   else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate) / buf_chk-pay.calc-rate
                                                                   )
-                      .
-                  end.
-                  else 
+                        .
+                    end.
+                    else 
+                    do:
+                    /**/
+                    end.
+                  end. /*otherwise do:*/
+                end case.
+              end. /*if available buf_temp-gds then do:*/              
+
+            end .
+            else 
+            do:
+              if mValueAvans > "" then 
+              do:
+                              find first buf_temp-gdsAvans no-lock where
+                buf_temp-gdsAvans.b-code = buf_chk-gds-pay.b-code
+                and buf_temp-gdsAvans.doc-kind = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
+                then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
+                else '')
+                and buf_temp-gdsAvans.curr-code = buf_inkas-pay-desk.curr-code
+                and (p-by-cash-desk = no or buf_temp-gdsAvans.cash-desk = buf_inkas-pay-desk.pay-desk)
+                and (p-by-petrol-goods = no or buf_temp-gdsAvans.is-petrol = is-petrolium)
+                and buf_temp-gdsAvans.pay-type = mTypePay 
+                no-error.
+              if not available buf_temp-gdsAvans then 
+              do:
+                find first buf_bar-code no-lock where
+                  buf_bar-code.b-code = buf_chk-gds-pay.b-code no-error.
+                if available buf_bar-code then 
+                do:
+                  find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
+                  if available buf_goods then 
                   do:
-                  /**/
+                    if p-by-petrol-goods then 
+                    do: /*проверяем товар на топливность*/
+                      run check-petrol in this-procedure (
+                        input buf_chk-gds-pay.b-code ,
+                        output is-petrolium
+                        ).
+                    end.
+                    create buf_temp-gdsAvans.
+                    assign
+                      buf_temp-gdsAvans.b-code    = buf_chk-gds-pay.b-code
+                      buf_temp-gdsAvans.gds-code  = buf_bar-code.gds-code
+                      buf_temp-gdsAvans.artic     = buf_goods.artic
+                      buf_temp-gdsAvans.prod-type = buf_goods.prod-type
+                      buf_temp-gdsAvans.prod-code = buf_goods.prod-code
+                      buf_temp-gdsAvans.doc-kind  = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
+                                          then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
+                                          else '')
+                      buf_temp-gdsAvans.curr-code = buf_inkas-pay-desk.curr-code
+                      buf_temp-gdsAvans.cash-desk = (if p-by-cash-desk
+                                                      then buf_inkas-pay-desk.pay-desk
+                                                      else 0)
+                      buf_temp-gdsAvans.pay-type  = mTypePay 
+                      buf_temp-gdsAvans.node-code = buf_bar-code.node-code
+                      buf_temp-gdsAvans.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
+                      .
+                    find first chk-gds where chk-gds.doc-code eq buf_chk-gds-pay.doc-code
+                      and chk-gds.line-num eq buf_chk-gds-pay.line-num
+                      no-lock no-error.
+                    buf_temp-gdsAvans.with-vat = available chk-gds and chk-gds.VAT-pc >= 0.                    
                   end.
-                end. /*otherwise do:*/
-              end case.
-            end. /*if available buf_temp-gds then do:*/
-          end.
+                end.
+              end. /*if not available buf_temp-gds then do:*/
+              if available buf_temp-gdsAvans then 
+              do:
+                assign
+                  buf_temp-gdsAvans.tot-r-b      = buf_temp-gdsAvans.tot-r-b + buf_chk-gds-pay.tot-r-b
+                  buf_temp-gdsAvans.eff-doc-qnty = buf_temp-gdsAvans.eff-doc-qnty + buf_chk-gds-pay.eff-doc-qnty
+                  buf_temp-gdsAvans.tot-rubl     = buf_temp-gdsAvans.tot-rubl +   (if v-curr-r-b = {&r-b-rubl}
+                                                              then buf_chk-gds-pay.tot-r-b
+                                                              else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
+                                                              )
+                  buf_temp-gdsAvans.tot-base     = buf_temp-gdsAvans.tot-base +   (if v-curr-r-b = {&r-b-base}
+                                                              then buf_chk-gds-pay.tot-r-b
+                                                              else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                                              )
+                  .
+                case buf_chk-gds-pay.curr-code:
+                  when 0 then 
+                    do:
+                      assign
+                        buf_temp-gdsAvans.tot-doc = buf_temp-gdsAvans.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
+                                                                then buf_chk-gds-pay.tot-r-b
+                                                                else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
+                                                                )
+                        .
+                    end.
+                  when v-base-code then 
+                    do:
+                      assign
+                        buf_temp-gdsAvans.tot-doc = buf_temp-gdsAvans.tot-doc +   (if v-curr-r-b = {&r-b-base}
+                                                                then buf_chk-gds-pay.tot-r-b
+                                                                else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                                                )
+                        .
+                    end.
+                  otherwise 
+                  do:
+                    find first buf_chk-pay no-lock where
+                      buf_chk-pay.doc-code = buf_chk-gds-pay.doc-code
+                      and buf_chk-pay.line-num = buf_chk-gds-pay.cpline-num no-error.
+                    if available buf_chk-pay then 
+                    do:
+                      assign
+                        buf_temp-gdsAvans.tot-doc = buf_temp-gdsAvans.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
+                                                                  then buf_chk-gds-pay.tot-r-b
+                                                                  else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate) / buf_chk-pay.calc-rate
+                                                                  )
+                        .
+                    end.
+                    else 
+                    do:
+                    /**/
+                    end.
+                  end. /*otherwise do:*/
+                end case.
+              end. /*if available buf_temp-gds then do:*/              
+                
+              end.
+              else 
+              do:
+                find first buf_temp-gds no-lock where
+                  buf_temp-gds.b-code = buf_chk-gds-pay.b-code
+                  and buf_temp-gds.doc-kind = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
+                  then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
+                  else '')
+                  and buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
+                  and (p-by-cash-desk = no or buf_temp-gds.cash-desk = buf_inkas-pay-desk.pay-desk)
+                  and (p-by-petrol-goods = no or buf_temp-gds.is-petrol = is-petrolium)
+                  and buf_temp-gds.pay-type = mTypePay 
+                  no-error.
+                if not available buf_temp-gds then 
+                do:
+                  find first buf_bar-code no-lock where
+                    buf_bar-code.b-code = buf_chk-gds-pay.b-code no-error.
+                  if available buf_bar-code then 
+                  do:
+                    find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error.
+                    if available buf_goods then 
+                    do:
+                      if p-by-petrol-goods then 
+                      do: /*проверяем товар на топливность*/
+                        run check-petrol in this-procedure (
+                          input buf_chk-gds-pay.b-code ,
+                          output is-petrolium
+                          ).
+                      end.
+                      create buf_temp-gds.
+                      assign
+                        buf_temp-gds.b-code    = buf_chk-gds-pay.b-code
+                        buf_temp-gds.gds-code  = buf_bar-code.gds-code
+                        buf_temp-gds.artic     = buf_goods.artic
+                        buf_temp-gds.prod-type = buf_goods.prod-type
+                        buf_temp-gds.prod-code = buf_goods.prod-code
+                        buf_temp-gds.doc-kind  = (if num-entries(buf_chk-gds-pay.line-type, {&delim-par}) > 1
+                                          then entry(2, buf_chk-gds-pay.line-type, {&delim-par})
+                                          else '')
+                        buf_temp-gds.curr-code = buf_inkas-pay-desk.curr-code
+                        buf_temp-gds.cash-desk = (if p-by-cash-desk
+                                                      then buf_inkas-pay-desk.pay-desk
+                                                      else 0)
+                        buf_temp-gds.pay-type  = mTypePay 
+                        buf_temp-gds.node-code = buf_bar-code.node-code
+                        buf_temp-gds.is-petrol = (if p-by-petrol-goods then is-petrolium else no) 
+                        .
+                      find first chk-gds where chk-gds.doc-code eq buf_chk-gds-pay.doc-code
+                        and chk-gds.line-num eq buf_chk-gds-pay.line-num
+                        no-lock no-error.
+                      buf_temp-gds.with-vat = available chk-gds and chk-gds.VAT-pc >= 0.                    
+                    end.
+                  end.
+                end. /*if not available buf_temp-gds then do:*/
+                if available buf_temp-gds then 
+                do:
+                  assign
+                    buf_temp-gds.tot-r-b      = buf_temp-gds.tot-r-b + buf_chk-gds-pay.tot-r-b
+                    buf_temp-gds.eff-doc-qnty = buf_temp-gds.eff-doc-qnty + buf_chk-gds-pay.eff-doc-qnty
+                    buf_temp-gds.tot-rubl     = buf_temp-gds.tot-rubl +   (if v-curr-r-b = {&r-b-rubl}
+                                                              then buf_chk-gds-pay.tot-r-b
+                                                              else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
+                                                              )
+                    buf_temp-gds.tot-base     = buf_temp-gds.tot-base +   (if v-curr-r-b = {&r-b-base}
+                                                              then buf_chk-gds-pay.tot-r-b
+                                                              else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                                              )
+                    .
+                  case buf_chk-gds-pay.curr-code:
+                    when 0 then 
+                      do:
+                        assign
+                          buf_temp-gds.tot-doc = buf_temp-gds.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
+                                                                then buf_chk-gds-pay.tot-r-b
+                                                                else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate)
+                                                                )
+                          .
+                      end.
+                    when v-base-code then 
+                      do:
+                        assign
+                          buf_temp-gds.tot-doc = buf_temp-gds.tot-doc +   (if v-curr-r-b = {&r-b-base}
+                                                                then buf_chk-gds-pay.tot-r-b
+                                                                else (buf_chk-gds-pay.tot-r-b / buf_chk-gds-pay.eff-base-rate)
+                                                                )
+                          .
+                      end.
+                    otherwise 
+                    do:
+                      find first buf_chk-pay no-lock where
+                        buf_chk-pay.doc-code = buf_chk-gds-pay.doc-code
+                        and buf_chk-pay.line-num = buf_chk-gds-pay.cpline-num no-error.
+                      if available buf_chk-pay then 
+                      do:
+                        assign
+                          buf_temp-gds.tot-doc = buf_temp-gds.tot-doc +   (if v-curr-r-b = {&r-b-rubl}
+                                                                  then buf_chk-gds-pay.tot-r-b
+                                                                  else (buf_chk-gds-pay.tot-r-b * buf_chk-gds-pay.eff-base-rate) / buf_chk-pay.calc-rate
+                                                                  )
+                          .
+                      end.
+                      else 
+                      do:
+                      /**/
+                      end.
+                    end. /*otherwise do:*/
+                  end case.
+                end. /*if available buf_temp-gds then do:*/
+              end.
+            end.
           end. /*for each buf_chk-gds-pay no-lock where*/
         end. /*if last-of (buf_inkas-pay-desk.curr-code:*/
       end. /*  for each buf_inkas-pay-desk no-lock where*/
@@ -1272,11 +1641,18 @@ end .
             ,output mType) no-error.
             
           run gds-attr-value in this-procedure (
-            input buf_chk-gds-pay.gds-code
+            input buf_temp-gds.gds-code
             ,input {&attr-item-matter-mark}
             ,output mValueVne
             ,output mTypeVne) no-error.    
-              
+
+          run gds-attr-value in this-procedure (
+            input buf_temp-gds.gds-code
+            ,input {&attr-type-method-calc}
+            ,output mValueAvans
+            ,output mTypeAvans) no-error.  
+            
+                          
           find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
           if not available ub.CashBook 
             then 
@@ -1293,6 +1669,10 @@ end .
           /*  p-by-osnovanie = ub.CashBook.RuleOsn .
             p-by-pril = ub.CashBook.RulePril .*/
           end.
+          find first tt-cashbookAttr where tt-cashbookAttr.cashbookid = ub.CashBook.id no-error .
+          if not (tt-cashbookAttr.vneCli <> "" and tt-cashbookAttr.vneCorr <> "") then mValueVne = "" .
+          if not (tt-cashbookAttr.avansCli <> "" and tt-cashbookAttr.avansCorr <> "") then mValueAvans = "" .
+          
           find first buf_temp-tax where
             buf_temp-tax.curr-code = buf_temp-gds.curr-code
             and buf_temp-tax.vat-pc = buf_doc-line.vat-pc
@@ -1352,73 +1732,73 @@ assign
 release buf_temp-tax.
 end. /*      for each buf_temp-gds no-lock where*/
 
-        for each buf_temp-gdsVne no-lock
-          where buf_temp-gdsVne.doc-kind = buf_sale-doc.ext-doc-type ,
-          first buf_doc-line no-lock
-          where buf_doc-line.doc-code = buf_sale-doc.doc-code
-          and  buf_doc-line.artic = buf_temp-gdsVne.artic
-          and  buf_doc-line.prod-type = buf_temp-gdsVne.prod-type
-          and  buf_doc-line.prod-code = buf_temp-gdsVne.prod-code,
-          first buf_gds-dtl no-lock where
-          buf_gds-dtl.doc-code = buf_sale-doc.doc-code
-          and  buf_gds-dtl.artic = buf_temp-gdsVne.artic
-          and  buf_gds-dtl.prod-type = buf_temp-gdsVne.prod-type
-          and  buf_gds-dtl.prod-code = buf_temp-gdsVne.prod-code
-          and  buf_gds-dtl.prt-code = buf_temp-gdsVne.node-code
-          :
-          run gds-attr-value in this-procedure (
-            input buf_temp-gdsVne.gds-code
-            ,input "cash-book-id"
-            ,output mValue
-            ,output mType) no-error.
+for each buf_temp-gdsVne no-lock
+  where buf_temp-gdsVne.doc-kind = buf_sale-doc.ext-doc-type ,
+  first buf_doc-line no-lock
+  where buf_doc-line.doc-code = buf_sale-doc.doc-code
+  and  buf_doc-line.artic = buf_temp-gdsVne.artic
+  and  buf_doc-line.prod-type = buf_temp-gdsVne.prod-type
+  and  buf_doc-line.prod-code = buf_temp-gdsVne.prod-code,
+  first buf_gds-dtl no-lock where
+  buf_gds-dtl.doc-code = buf_sale-doc.doc-code
+  and  buf_gds-dtl.artic = buf_temp-gdsVne.artic
+  and  buf_gds-dtl.prod-type = buf_temp-gdsVne.prod-type
+  and  buf_gds-dtl.prod-code = buf_temp-gdsVne.prod-code
+  and  buf_gds-dtl.prt-code = buf_temp-gdsVne.node-code
+  :
+  run gds-attr-value in this-procedure (
+    input buf_temp-gdsVne.gds-code
+    ,input "cash-book-id"
+    ,output mValue
+    ,output mType) no-error.
             
-          find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
-          if not available ub.CashBook 
-            then 
-          do :
-            find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
-          end.
-          if available ub.CashBook
-            then 
-          do :
-            assign
-              p-by-cash-desk    = ub.CashBook.FlagSepCash 
-              p-by-petrol-goods = ub.CashBook.FlagSepFull 
-              .
-          /*  p-by-osnovanie = ub.CashBook.RuleOsn .
-            p-by-pril = ub.CashBook.RulePril .*/
-          end.
-          find first buf_temp-taxVne where
-            buf_temp-taxVne.curr-code = buf_temp-gdsVne.curr-code
-            and buf_temp-taxVne.vat-pc = buf_doc-line.vat-pc
-            and buf_temp-taxVne.slt-pc = buf_doc-line.slt-pc
-            and buf_temp-taxVne.cash-desk = buf_temp-gdsVne.cash-desk
-            and buf_temp-taxVne.is-petrol = buf_temp-gdsVne.is-petrol
-            and buf_temp-taxVne.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
-            and buf_temp-taxVne.is-expense_cash = (buf_temp-gdsVne.tot-doc < 0 and buf_temp-gdsVne.pay-type eq "cash")
-            and buf_temp-taxVne.pay-type = buf_temp-gdsVne.pay-type
-            and buf_temp-taxVne.num-expense_cash = 0
-            no-error.
-          if not available buf_temp-taxVne then 
-          do:
-            create buf_temp-taxVne.
-            assign
-              buf_temp-taxVne.curr-code        = buf_temp-gdsVne.curr-code
-              buf_temp-taxVne.vat-pc           = buf_doc-line.vat-pc
-              buf_temp-taxVne.slt-pc           = buf_doc-line.slt-pc
-              buf_temp-taxVne.cash-desk        = (if p-by-cash-desk
+  find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
+  if not available ub.CashBook 
+    then 
+  do :
+    find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+  end.
+  if available ub.CashBook
+    then 
+  do :
+    assign
+      p-by-cash-desk    = ub.CashBook.FlagSepCash 
+      p-by-petrol-goods = ub.CashBook.FlagSepFull 
+      .
+  /*  p-by-osnovanie = ub.CashBook.RuleOsn .
+    p-by-pril = ub.CashBook.RulePril .*/
+  end.
+  find first buf_temp-taxVne where
+    buf_temp-taxVne.curr-code = buf_temp-gdsVne.curr-code
+    and buf_temp-taxVne.vat-pc = buf_doc-line.vat-pc
+    and buf_temp-taxVne.slt-pc = buf_doc-line.slt-pc
+    and buf_temp-taxVne.cash-desk = buf_temp-gdsVne.cash-desk
+    and buf_temp-taxVne.is-petrol = buf_temp-gdsVne.is-petrol
+    and buf_temp-taxVne.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
+    and buf_temp-taxVne.is-expense_cash = (buf_temp-gdsVne.tot-doc < 0 and buf_temp-gdsVne.pay-type eq "cash")
+    and buf_temp-taxVne.pay-type = buf_temp-gdsVne.pay-type
+    and buf_temp-taxVne.num-expense_cash = 0
+    no-error.
+  if not available buf_temp-taxVne then 
+  do:
+    create buf_temp-taxVne.
+    assign
+      buf_temp-taxVne.curr-code        = buf_temp-gdsVne.curr-code
+      buf_temp-taxVne.vat-pc           = buf_doc-line.vat-pc
+      buf_temp-taxVne.slt-pc           = buf_doc-line.slt-pc
+      buf_temp-taxVne.cash-desk        = (if p-by-cash-desk
                                     then buf_temp-gdsVne.cash-desk
                                     else 0)
-              buf_temp-taxVne.is-petrol        = (if p-by-petrol-goods
+      buf_temp-taxVne.is-petrol        = (if p-by-petrol-goods
                                     then buf_temp-gdsVne.is-petrol
                                     else no)
-              buf_temp-taxVne.cashbookId       = (if available ub.CashBook then ub.CashBook.id else 0)
-              buf_temp-taxVne.is-expense_cash  = (buf_temp-gdsVne.tot-doc < 0 and buf_temp-gdsVne.pay-type eq "cash")
-              buf_temp-taxVne.num-expense_cash = 0
-              buf_temp-taxVne.pay-type         = buf_temp-gdsVne.pay-type
-              buf_temp-taxVne.with-vat         = buf_temp-gdsVne.with-vat
-              .
-          end. /*if not available buf_temp-tax then do:*/
+      buf_temp-taxVne.cashbookId       = (if available ub.CashBook then ub.CashBook.id else 0)
+      buf_temp-taxVne.is-expense_cash  = (buf_temp-gdsVne.tot-doc < 0 and buf_temp-gdsVne.pay-type eq "cash")
+      buf_temp-taxVne.num-expense_cash = 0
+      buf_temp-taxVne.pay-type         = buf_temp-gdsVne.pay-type
+      buf_temp-taxVne.with-vat         = buf_temp-gdsVne.with-vat
+      .
+  end. /*if not available buf_temp-tax then do:*/
          /*получаем НДС*/
           { str/out-vatp.i calc-gds-dtl buf_doc-line. buf_trn-doc. buf_gds-dtl.  }
 
@@ -1444,6 +1824,98 @@ assign
 release buf_temp-taxVne.
 end. /*      for each buf_temp-gdsVne no-lock where*/
 
+for each buf_temp-gdsAvans no-lock
+  where buf_temp-gdsAvans.doc-kind = buf_sale-doc.ext-doc-type ,
+  first buf_doc-line no-lock
+  where buf_doc-line.doc-code = buf_sale-doc.doc-code
+  and  buf_doc-line.artic = buf_temp-gdsAvans.artic
+  and  buf_doc-line.prod-type = buf_temp-gdsAvans.prod-type
+  and  buf_doc-line.prod-code = buf_temp-gdsAvans.prod-code,
+  first buf_gds-dtl no-lock where
+  buf_gds-dtl.doc-code = buf_sale-doc.doc-code
+  and  buf_gds-dtl.artic = buf_temp-gdsAvans.artic
+  and  buf_gds-dtl.prod-type = buf_temp-gdsAvans.prod-type
+  and  buf_gds-dtl.prod-code = buf_temp-gdsAvans.prod-code
+  and  buf_gds-dtl.prt-code = buf_temp-gdsAvans.node-code
+  :
+  run gds-attr-value in this-procedure (
+    input buf_temp-gdsAvans.gds-code
+    ,input "cash-book-id"
+    ,output mValue
+    ,output mType) no-error.
+            
+  find first ub.CashBook no-lock where ub.CashBook.id = int64(mValue) no-error .
+  if not available ub.CashBook 
+    then 
+  do :
+    find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+  end.
+  if available ub.CashBook
+    then 
+  do :
+    assign
+      p-by-cash-desk    = ub.CashBook.FlagSepCash 
+      p-by-petrol-goods = ub.CashBook.FlagSepFull 
+      .
+  /*  p-by-osnovanie = ub.CashBook.RuleOsn .
+    p-by-pril = ub.CashBook.RulePril .*/
+  end.
+  find first buf_temp-taxAvans where
+    buf_temp-taxAvans.curr-code = buf_temp-gdsAvans.curr-code
+    and buf_temp-taxAvans.vat-pc = buf_doc-line.vat-pc
+    and buf_temp-taxAvans.slt-pc = buf_doc-line.slt-pc
+    and buf_temp-taxAvans.cash-desk = buf_temp-gdsAvans.cash-desk
+    and buf_temp-taxAvans.is-petrol = buf_temp-gdsAvans.is-petrol
+    and buf_temp-taxAvans.cashbookId = (if available ub.CashBook then ub.CashBook.id else 0)
+    and buf_temp-taxAvans.is-expense_cash = (buf_temp-gdsAvans.tot-doc < 0 and buf_temp-gdsAvans.pay-type eq "cash")
+    and buf_temp-taxAvans.pay-type = buf_temp-gdsAvans.pay-type
+    and buf_temp-taxAvans.num-expense_cash = 0
+    no-error.
+  if not available buf_temp-taxAvans then 
+  do:
+    create buf_temp-taxAvans.
+    assign
+      buf_temp-taxAvans.curr-code        = buf_temp-gdsAvans.curr-code
+      buf_temp-taxAvans.vat-pc           = buf_doc-line.vat-pc
+      buf_temp-taxAvans.slt-pc           = buf_doc-line.slt-pc
+      buf_temp-taxAvans.cash-desk        = (if p-by-cash-desk
+                                    then buf_temp-gdsAvans.cash-desk
+                                    else 0)
+      buf_temp-taxAvans.is-petrol        = (if p-by-petrol-goods
+                                    then buf_temp-gdsAvans.is-petrol
+                                    else no)
+      buf_temp-taxAvans.cashbookId       = (if available ub.CashBook then ub.CashBook.id else 0)
+      buf_temp-taxAvans.is-expense_cash  = (buf_temp-gdsAvans.tot-doc < 0 and buf_temp-gdsAvans.pay-type eq "cash")
+      buf_temp-taxAvans.num-expense_cash = 0
+      buf_temp-taxAvans.pay-type         = buf_temp-gdsAvans.pay-type
+      buf_temp-taxAvans.with-vat         = buf_temp-gdsAvans.with-vat
+      .
+  end. /*if not available buf_temp-tax then do:*/
+         /*получаем НДС*/
+          { str/out-vatp.i calc-gds-dtl buf_doc-line. buf_trn-doc. buf_gds-dtl.  }
+
+assign
+  buf_temp-gdsAvans.vat-rubl = buf_temp-gdsAvans.eff-doc-qnty * vat-rubl-buyer
+  buf_temp-gdsAvans.vat-base = buf_temp-gdsAvans.eff-doc-qnty  * vat-base-buyer
+  buf_temp-gdsAvans.vat-doc  = (if buf_temp-gdsAvans.curr-code = 0
+                                 then buf_temp-gdsAvans.eff-doc-qnty * vat-rubl-buyer
+                                 else (if buf_temp-gdsAvans.curr-code = v-base-code
+                                       then buf_temp-gdsAvans.eff-doc-qnty * vat-base-buyer
+                                       else buf_temp-gdsAvans.eff-doc-qnty * vat-rubl-buyer * buf_temp-gdsAvans.tot-doc / buf_temp-gds.tot-rubl
+                                       )
+                                 )
+  buf_temp-taxAvans.sum-rubl = buf_temp-taxAvans.sum-rubl + buf_temp-gdsAvans.tot-rubl
+  buf_temp-taxAvans.sum-base = buf_temp-taxAvans.sum-base + buf_temp-gdsAvans.tot-base
+  buf_temp-taxAvans.sum-doc  = buf_temp-taxAvans.sum-doc  + buf_temp-gdsAvans.tot-doc
+  buf_temp-taxAvans.vat-rubl = buf_temp-taxAvans.vat-rubl + buf_temp-gdsAvans.vat-rubl
+  buf_temp-taxAvans.vat-base = buf_temp-taxAvans.vat-base + buf_temp-gdsAvans.vat-base
+  buf_temp-taxAvans.vat-doc  = buf_temp-taxAvans.vat-doc  + buf_temp-gdsAvans.vat-doc
+        
+  .
+
+release buf_temp-taxAvans.
+end. /*      for each buf_temp-gdsAvans no-lock where*/
+
 end. /*    for each buf_sale-doc no-lock where*/
 assign
   v-real-obj-type = buf_trn-doc.cli-type
@@ -1451,13 +1923,16 @@ assign
   . 
 empty temp-table temp-gds.
 empty temp-table temp-gdsVne.
+empty temp-table temp-gdsAvans.
 end. /*   for each buf_inkas no-lock where*/
 
 define variable Fact-order as decimal no-undo.
-define buffer tt-cashBookOst0      for tt-cashBookOst.
-define buffer buf_new_temp-fin-sum for temp-fin-sum.
-define buffer tt-cashBookOst0Vne   for tt-cashBookOstVne.
-define buffer buf_new_temp-fin-sumVne for temp-fin-sumVne.
+define buffer tt-cashBookOst0           for tt-cashBookOst.
+define buffer buf_new_temp-fin-sum      for temp-fin-sum.
+define buffer tt-cashBookOst0Vne        for tt-cashBookOstVne.
+define buffer buf_new_temp-fin-sumVne   for temp-fin-sumVne.
+define buffer tt-cashBookOst0Avans      for tt-cashBookOstAvans.
+define buffer buf_new_temp-fin-sumAvans for temp-fin-sumAvans.
 define variable mNumDoc as integer no-undo.
 
 /* Не внереализационный доход */
@@ -1630,23 +2105,27 @@ find first tt-cashBookOst0Vne where tt-cashBookOst0Vne.cashbookid eq 0
 if not available tt-cashBookOstVne
   then 
 do:
-  create tt-cashBookOst0Vne.
-  tt-cashBookOst0Vne.cashbookid =  0.
-  run fostatok in this-procedure (
-    input   v-host-code
-    ,input   buf_shift-obj.obj-code
-    ,input   buf_shift-obj.obj-type
-    ,input   yes
-    ,input   buf_shift-obj.close-date - 1
-    ,input   date('')
-    ,input   buf_shift-obj.shift-num
-    ,input   buf_shift-obj.shift-num
-    ,input   yes /*xTog-obj*/
-    ,input   0 /*p-curr-code*/
-    ,input   0 
-    ,output  tt-cashBookOst0Vne.ost
-    ,output  Fact-order)
-    no-error .
+  find first temp-fin-sumVne no-error .
+  if available (temp-fin-sumVne) then 
+  do:
+    create tt-cashBookOst0Vne.
+    tt-cashBookOst0Vne.cashbookid =  0.
+    run fostatok in this-procedure (
+      input   v-host-code
+      ,input   buf_shift-obj.obj-code
+      ,input   buf_shift-obj.obj-type
+      ,input   yes
+      ,input   buf_shift-obj.close-date - 1
+      ,input   date('')
+      ,input   buf_shift-obj.shift-num
+      ,input   buf_shift-obj.shift-num
+      ,input   yes /*xTog-obj*/
+      ,input   0 /*p-curr-code*/
+      ,input   0 
+      ,output  tt-cashBookOst0Vne.ost
+      ,output  Fact-order)
+      no-error .
+  end.
 end.
 find first buf_temp-fin-sumVne-Pko where buf_temp-fin-sumVne-Pko.num-expense_cash eq 0
   and buf_temp-fin-sumVne-Pko.is-expense_cash eq no
@@ -1786,6 +2265,174 @@ for each buf_temp-fin-sumVne where  buf_temp-fin-sumVne.num-expense_cash eq 0
     tt-cashBookOstVne.ost = msum. 
 end.
 
+/* Авансы */
+
+find first tt-cashBookOst0Avans where tt-cashBookOst0Avans.cashbookid eq 0
+  no-error.
+if not available tt-cashBookOstAvans
+  then 
+do:
+  find first temp-fin-sumAvans no-error .
+  if available (temp-fin-sumAvans) then 
+  do:
+    create tt-cashBookOst0Avans.
+    tt-cashBookOst0Avans.cashbookid =  0.
+    run fostatok in this-procedure (
+      input   v-host-code
+      ,input   buf_shift-obj.obj-code
+      ,input   buf_shift-obj.obj-type
+      ,input   yes
+      ,input   buf_shift-obj.close-date - 1
+      ,input   date('')
+      ,input   buf_shift-obj.shift-num
+      ,input   buf_shift-obj.shift-num
+      ,input   yes /*xTog-obj*/
+      ,input   0 /*p-curr-code*/
+      ,input   0 
+      ,output  tt-cashBookOst0Avans.ost
+      ,output  Fact-order)
+      no-error .
+  end.
+end.
+find first buf_temp-fin-sumAvans-Pko where buf_temp-fin-sumAvans-Pko.num-expense_cash eq 0
+  and buf_temp-fin-sumAvans-Pko.is-expense_cash eq no
+  and buf_temp-fin-sumAvans-Pko.cashbookid      eq 0
+  no-lock no-error.
+if available buf_temp-fin-sumAvans-Pko
+  then 
+  tt-cashBookOst0Avans.ost = tt-cashBookOst0Avans.ost + buf_temp-fin-sumAvans-Pko.tot-sum.
+for each buf_temp-fin-sumAvans where  buf_temp-fin-sumAvans.num-expense_cash eq 0
+  and  buf_temp-fin-sumAvans.is-expense_cash  eq yes
+  and  buf_temp-fin-sumAvans.cashbookid  ne 0
+  :
+          
+  find first tt-cashBookOstAvans where tt-cashBookOstAvans.cashbookid eq buf_temp-fin-sumAvans.cashbookid
+    no-error.
+  if not available tt-cashBookOstAvans
+    then 
+  do:
+    create tt-cashBookOstAvans.
+    tt-cashBookOstAvans.cashbookid =  buf_temp-fin-sumAvans.cashbookid.
+    run fostatok in this-procedure (
+      input   v-host-code
+      ,input   buf_shift-obj.obj-code
+      ,input   buf_shift-obj.obj-type
+      ,input   yes
+      ,input   buf_shift-obj.close-date - 1
+      ,input   date('')
+      ,input   buf_shift-obj.shift-num
+      ,input   buf_shift-obj.shift-num
+      ,input   yes /*xTog-obj*/
+      ,input   0 /*p-curr-code*/
+      ,input   buf_temp-fin-sumAvans.cashbookid 
+      ,output  tt-cashBookOstAvans.ost
+      ,output  Fact-order)
+      no-error .
+    find first buf_temp-fin-sumAvans-Pko where buf_temp-fin-sumAvans-Pko.num-expense_cash eq 0
+      and buf_temp-fin-sumAvans-Pko.is-expense_cash eq (not buf_temp-fin-sumAvans.is-expense_cash)
+      and buf_temp-fin-sumAvans-Pko.cash-desk       eq buf_temp-fin-sumAvans.cash-desk
+      and buf_temp-fin-sumAvans-Pko.curr-code       eq buf_temp-fin-sumAvans.curr-code
+      and buf_temp-fin-sumAvans-Pko.cashbookid      eq buf_temp-fin-sumAvans.cashbookid
+      no-lock no-error.
+    if available buf_temp-fin-sumAvans-Pko
+      then 
+      tt-cashBookOstAvans.ost = tt-cashBookOstAvans.ost + buf_temp-fin-sumAvans-Pko.tot-sum.
+                                              
+  end.
+  msum = tt-cashBookOstAvans.ost + buf_temp-fin-sumAvans.tot-sum. //остаток положительный а  buf_temp-fin-sum.tot-sum отрицательный 
+  if msum < 0
+    then 
+  do:
+    tt-cashBookOstAvans.ost = 0.
+             
+             
+    if tt-cashBookOst0Avans.ost + msum > 0
+      then 
+    do:
+      create buf_new_temp-fin-sumAvans.
+      buffer-copy buf_temp-fin-sumAvans except cashbookid to  buf_new_temp-fin-sumAvans
+        assign
+        mNumDoc = mNumDoc + 1
+        buf_new_temp-fin-sumAvans.cashbookid       = 0
+        buf_new_temp-fin-sumAvans.contr-kb         = buf_temp-fin-sumAvans.cashbookid
+        buf_new_temp-fin-sumAvans.num-expense_cash = mNumDoc
+        buf_new_temp-fin-sumAvans.tot-sum          = msum
+        buf_new_temp-fin-sumAvans.tot-base         = msum
+        buf_new_temp-fin-sumAvans.tot-rubl         = msum
+        buf_new_temp-fin-sumAvans.pay-type         = "trans"
+                   
+        tt-cashBookOst0Avans.ost                   = tt-cashBookOst0Avans.ost + msum.
+      .
+                
+      create buf_temp-taxAvans.
+      assign
+        buf_temp-taxAvans.curr-code        = buf_new_temp-fin-sumAvans.curr-code
+        buf_temp-taxAvans.cash-desk        = buf_new_temp-fin-sumAvans.cash-desk
+        buf_temp-taxAvans.is-petrol        = buf_new_temp-fin-sumAvans.is-petrol
+        buf_temp-taxAvans.cashbookId       = buf_new_temp-fin-sumAvans.cashbookid
+        buf_temp-taxAvans.is-expense_cash  = buf_new_temp-fin-sumAvans.is-expense_cash
+        buf_temp-taxAvans.num-expense_cash = buf_new_temp-fin-sumAvans.num-expense_cash
+        buf_temp-taxAvans.pay-type         = buf_new_temp-fin-sumAvans.pay-type
+        buf_temp-taxAvans.sum-rubl         = msum
+        buf_temp-taxAvans.sum-base         = msum
+        buf_temp-taxAvans.sum-doc          = msum
+                
+        .
+                
+      create buf_new_temp-fin-sumAvans.
+      buffer-copy buf_temp-fin-sumAvans to  buf_new_temp-fin-sumAvans
+        assign
+        mNumDoc = mNumDoc + 1
+        msum                                  = -1 * msum
+        buf_new_temp-fin-sumAvans.tot-sum          = msum
+        buf_new_temp-fin-sumAvans.num-expense_cash = mNumDoc
+        buf_new_temp-fin-sumAvans.tot-base         = msum
+        buf_new_temp-fin-sumAvans.tot-rubl         = msum
+        buf_new_temp-fin-sumAvans.is-expense_cash  = no
+        buf_new_temp-fin-sumAvans.contr-kb         = 0
+        buf_new_temp-fin-sumAvans.pay-type         = "trans"
+                   
+        .
+      create buf_temp-taxAvans.
+      assign
+        buf_temp-taxAvans.curr-code        = buf_new_temp-fin-sumAvans.curr-code
+        buf_temp-taxAvans.cash-desk        = buf_new_temp-fin-sumAvans.cash-desk
+        buf_temp-taxAvans.is-petrol        = buf_new_temp-fin-sumAvans.is-petrol
+        buf_temp-taxAvans.cashbookId       = buf_new_temp-fin-sumAvans.cashbookid
+        buf_temp-taxAvans.is-expense_cash  = buf_new_temp-fin-sumAvans.is-expense_cash
+        buf_temp-taxAvans.num-expense_cash = buf_new_temp-fin-sumAvans.num-expense_cash
+        buf_temp-taxAvans.pay-type         = buf_new_temp-fin-sumAvans.pay-type
+        buf_temp-taxAvans.sum-rubl         = msum
+        buf_temp-taxAvans.sum-base         = msum
+        buf_temp-taxAvans.sum-doc          = msum
+        .
+                
+    end.
+    else 
+    do:
+             &scop fin-doc-type-code (if buf_temp-fin-sumAvans.tot-sum > 0 then ~{&FDEDT_Income_Cash~} else ~{&FDEDT_expense_Cash~})
+                 &scop my-message substitute("Не возможно создать &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8 на кассой книге № 0 не достаточно средств." ~
+                                  , ~{&fin-doc-type-name~}  ~
+                                  , buf_shift-obj.shift-name ~
+                                  , buf_shift-obj.shift-date ~
+                                  , buf_shift-obj.shift-nuM    ~
+                                  , buf_shift-obj.obj-type ~
+                                  , buf_shift-obj.obj-code ~
+                                  , buf_temp-fin-sumAvans.cashbookid ~
+                                  , abs(buf_temp-fin-sumAvans.tot-sum) ~
+                                  , ~{&new-line~} ~
+                                  )
+      {&DISPLAY-MESSAGE}.
+             delete  buf_temp-fin-sumAvans.
+                
+                
+    end.
+  end.
+  else
+    tt-cashBookOstAvans.ost = msum. 
+end.
+
+
 
 for each temp-z-number
   break
@@ -1822,6 +2469,7 @@ define variable mosnacct             as character no-undo.
 define variable mdopacct             as character no-undo.
 define variable mpayer-name          as character no-undo.
 define variable mreceiver-name       as character no-undo.
+
 /*теперь создадим fin-doc*/
 _temp-fin-sum:
 for each buf_temp-fin-sum no-lock
@@ -2066,7 +2714,7 @@ for each buf_temp-fin-sum no-lock
 
     release tt0-fin-doc-tax.
   end.
-      
+  taxVne = no .    
   run StrTax in this-procedure ( input-output tt-fin-doc.including) .
   /* округляем  */
   run RoundTax in this-procedure .
@@ -2352,401 +3000,401 @@ for each buf_temp-fin-sum no-lock
 
    end. /*for each buf_temp-fin-sum no-lock*/
 
-/* Внереализационный доход */
-_temp-fin-sumVne:
-for each buf_temp-fin-sumVne no-lock
-  by buf_temp-fin-sumVne.tot-sum descending  /* EXPSD-7148 добавлена обратная сортировка по сумме, чтобы сначала создавались док-ты по приходу */
-  on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
-  on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
-  on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
-  :
+  /* Внереализационный доход */
+  _temp-fin-sumVne:
+  for each buf_temp-fin-sumVne no-lock
+    by buf_temp-fin-sumVne.tot-sum descending  /* EXPSD-7148 добавлена обратная сортировка по сумме, чтобы сначала создавались док-ты по приходу */
+    on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
+    on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
+    :
 
-  empty temp-table tt0-fin-doc-tax.
-  empty temp-table tt0-fin-doc-attr.
-  empty temp-table tt-fin-doc.
-  if buf_temp-fin-sumVne.tot-sum = 0  then 
-  do:
-    next _temp-fin-sumVne.
-  end.
-  v-naznach-plat = v-naznach-plat2 .
-  find first ub.CashBook no-lock where ub.CashBook.id = buf_temp-fin-sumVne.cashbookid no-error .
-  if not available ub.CashBook 
-    then 
-  do :
-    find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
-  end.
+    empty temp-table tt0-fin-doc-tax.
+    empty temp-table tt0-fin-doc-attr.
+    empty temp-table tt-fin-doc.
+    if buf_temp-fin-sumVne.tot-sum = 0  then 
+    do:
+      next _temp-fin-sumVne.
+    end.
+    v-naznach-plat = v-naznach-plat2 .
+    find first ub.CashBook no-lock where ub.CashBook.id = buf_temp-fin-sumVne.cashbookid no-error .
+    if not available ub.CashBook 
+      then 
+    do :
+      find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+    end.
 
-  assign
-    mreceiver-name = ""
-    mpayer-name    = ""
-    .
-if buf_temp-fin-sumVne.tot-sum > 0
+    assign
+      mreceiver-name = ""
+      mpayer-name    = ""
+      .
+    if buf_temp-fin-sumVne.tot-sum > 0
+      then
+    do:
+      assign
+        p-by-osnovanie       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "RuleOsnPkoVne"  )
+        v-real-obj-type-save = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-type"  )
+        v-real-obj-code-save = int( mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-code"  ))
+        mosnacct             = ub.CashBook.OsnAcct
+        mdopacct             = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "corrPkoVne"  )
+        mreceiver-name       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "takenfromVne"  )
+        .
+      if mpayer-name eq "" or mpayer-name eq ?
         then
       do:
-        assign
-          p-by-osnovanie       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "RuleOsnPkoVne"  )
-          v-real-obj-type-save = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-type"  )
-          v-real-obj-code-save = int( mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-code"  ))
-          mosnacct             = ub.CashBook.OsnAcct
-          mdopacct             = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "corrPkoVne"  )
-          mreceiver-name       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "takenfromVne"  )
-          .
-        if mpayer-name eq "" or mpayer-name eq ?
+        find first ub.clients no-lock where ub.clients.obj-type = v-real-obj-type-save
+          and ub.clients.obj-code = v-real-obj-code-save
+          no-error .
+        if available ub.clients
           then
-        do:
-          find first ub.clients no-lock where ub.clients.obj-type = v-real-obj-type-save
-            and ub.clients.obj-code = v-real-obj-code-save
-            no-error .
-          if available ub.clients
-            then
-            mpayer-name = ub.clients.obj-name .
-        end.
+          mpayer-name = ub.clients.obj-name .
       end.
-      else
-        assign
-          p-by-osnovanie       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "RuleOsnPkoVne"  )
-          v-real-obj-type-save = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-type"  )
-          v-real-obj-code-save = int( mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-code"  ))
-          mosnacct             = ub.CashBook.OsnAcct
-          mdopacct             = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "corrPkoVne"  )
-          mreceiver-name       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "takenfromVne"  )
-          .
-  if buf_temp-fin-sumVne.tot-sum > 0  then 
-  do:
-    run ref/finfnoco.p (
-      INPUT parParentProc
-      ,INPUT ? /*не надо нам*/
-      ,input v-host-code
-      ,input ({&add-def} + {&delim-par} + {&auto})
-      ,input v-host-code
-      ,input v-doc-rec
-      ,input 0 /*p-fin-doc-code*/
-      ,input {&income-cash} /*p-fin-doc-type*/
-      ,input {&FDEDT_income_cash} /*p-fin-ext-doc-type*/
-      ,input buf_shift-obj.obj-type
-      ,input buf_shift-obj.obj-code
-      ,input 0 /*p-contract-code*/
-      ,input '' /*p-ob-doc-code*/
-      ,input  v-real-obj-type-save  /*p-receiver-type*/ 
-      ,input  v-real-obj-code-save /*p-receiever-code*/
-      ,input 0 /*p-payer-code-schet*/
-      ,input {&cmp} /*p-receiver-type*/
-      ,input v-host-code /*p-receiver-code*/
-      ,input 0 /*p-receiver-code-schet*/
-      ,input buf_temp-fin-sumVne.curr-code
-      ,input 0 /*p-cor-acc*/
-      ,input 0 /*p-cor-acc1*/
-      ,input 0 /*p-an-uchet-code*/
-      ,input 0 /*p-cel-nazn-code*/
-      ,input buf_temp-fin-sumVne.cashbookid
-      ,input ""
-      ,INPUT-OUTPUT table tt-fin-doc
-      ,INPUT-OUTPUT table ttc-fin-doc
-      ,output table tt0-fin-doc-attr
-      ,output v-limit-access ) no-error .
-  end.
-  else 
-  do:
+    end.
+    else
+      assign
+        p-by-osnovanie       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "RuleOsnPkoVne"  )
+        v-real-obj-type-save = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-type"  )
+        v-real-obj-code-save = int( mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "Vnecli-code"  ))
+        mosnacct             = ub.CashBook.OsnAcct
+        mdopacct             = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "corrPkoVne"  )
+        mreceiver-name       = mCashBook:getSinglRule(buf_temp-fin-sumVne.cashbookid, {&by_all}, 0,  "takenfromVne"  )
+        .
+    if buf_temp-fin-sumVne.tot-sum > 0  then 
+    do:
+      run ref/finfnoco.p (
+        INPUT parParentProc
+        ,INPUT ? /*не надо нам*/
+        ,input v-host-code
+        ,input ({&add-def} + {&delim-par} + {&auto})
+        ,input v-host-code
+        ,input v-doc-rec
+        ,input 0 /*p-fin-doc-code*/
+        ,input {&income-cash} /*p-fin-doc-type*/
+        ,input {&FDEDT_income_cash} /*p-fin-ext-doc-type*/
+        ,input buf_shift-obj.obj-type
+        ,input buf_shift-obj.obj-code
+        ,input 0 /*p-contract-code*/
+        ,input '' /*p-ob-doc-code*/
+        ,input  v-real-obj-type-save  /*p-receiver-type*/ 
+        ,input  v-real-obj-code-save /*p-receiever-code*/
+        ,input 0 /*p-payer-code-schet*/
+        ,input {&cmp} /*p-receiver-type*/
+        ,input v-host-code /*p-receiver-code*/
+        ,input 0 /*p-receiver-code-schet*/
+        ,input buf_temp-fin-sumVne.curr-code
+        ,input 0 /*p-cor-acc*/
+        ,input 0 /*p-cor-acc1*/
+        ,input 0 /*p-an-uchet-code*/
+        ,input 0 /*p-cel-nazn-code*/
+        ,input buf_temp-fin-sumVne.cashbookid
+        ,input ""
+        ,INPUT-OUTPUT table tt-fin-doc
+        ,INPUT-OUTPUT table ttc-fin-doc
+        ,output table tt0-fin-doc-attr
+        ,output v-limit-access ) no-error .
+    end.
+    else 
+    do:
            
-    run ref/finfnoco.p (
-      INPUT parParentProc
-      ,INPUT ? /*не надо нам*/
-      ,input v-host-code
-      ,input ({&add-def} + {&delim-par} + {&auto})
-      ,input v-host-code
-      ,input v-doc-rec
-      ,input 0 /*p-fin-doc-code*/
-      ,input {&expense-cash} /*p-fin-doc-type*/
-      ,input {&FDEDT_expense_cash} /*p-fin-ext-doc-type*/
-      ,input buf_shift-obj.obj-type
-      ,input buf_shift-obj.obj-code
-      ,input 0 /*p-contract-code*/
-      ,input '' /*p-ob-doc-code*/
-      ,input {&cmp} /*p-payer-type*/
-      ,input v-host-code /*p-payer-code*/
-      ,input 0 /*p-payer-code-schet*/
-      ,input v-real-obj-type-save  /*p-receiver-type*/
-      ,input v-real-obj-code-save /*p-receiever-code*/
-      ,input 0 /*p-receiver-code-schet*/
-      ,input buf_temp-fin-sumVne.curr-code
-      ,input 0 /*p-cor-acc*/
-      ,input 0 /*p-cor-acc1*/
-      ,input 0 /*p-an-uchet-code*/
-      ,input 0 /*p-cel-nazn-code*/
-      ,input buf_temp-fin-sumVne.cashbookid
-      ,input ""
-      ,INPUT-OUTPUT table tt-fin-doc
-      ,INPUT-OUTPUT table ttc-fin-doc
-      ,output table tt0-fin-doc-attr
-      ,output v-limit-access ) no-error .
-  end.
-  if error-status:error then 
-  do:
+      run ref/finfnoco.p (
+        INPUT parParentProc
+        ,INPUT ? /*не надо нам*/
+        ,input v-host-code
+        ,input ({&add-def} + {&delim-par} + {&auto})
+        ,input v-host-code
+        ,input v-doc-rec
+        ,input 0 /*p-fin-doc-code*/
+        ,input {&expense-cash} /*p-fin-doc-type*/
+        ,input {&FDEDT_expense_cash} /*p-fin-ext-doc-type*/
+        ,input buf_shift-obj.obj-type
+        ,input buf_shift-obj.obj-code
+        ,input 0 /*p-contract-code*/
+        ,input '' /*p-ob-doc-code*/
+        ,input {&cmp} /*p-payer-type*/
+        ,input v-host-code /*p-payer-code*/
+        ,input 0 /*p-payer-code-schet*/
+        ,input v-real-obj-type-save  /*p-receiver-type*/
+        ,input v-real-obj-code-save /*p-receiever-code*/
+        ,input 0 /*p-receiver-code-schet*/
+        ,input buf_temp-fin-sumVne.curr-code
+        ,input 0 /*p-cor-acc*/
+        ,input 0 /*p-cor-acc1*/
+        ,input 0 /*p-an-uchet-code*/
+        ,input 0 /*p-cel-nazn-code*/
+        ,input buf_temp-fin-sumVne.cashbookid
+        ,input ""
+        ,INPUT-OUTPUT table tt-fin-doc
+        ,INPUT-OUTPUT table ttc-fin-doc
+        ,output table tt0-fin-doc-attr
+        ,output v-limit-access ) no-error .
+    end.
+    if error-status:error then 
+    do:
         &scop my-message substitute("Ошибки при заполнении фин.док-та значениями по умолчанию:&1&2&1&3"  ~
                                   , ~{&new-line~}  ~
                                   , error-status:get-message(1)    ~
                                   , return-value )
-    {&display-message}.
-    undo _main, return error.
+      {&display-message}.
+      undo _main, return error.
 
-  end.
-  find first tt-fin-doc.
-  /*заполнение налогов*/
+    end.
+    find first tt-fin-doc.
+    /*заполнение налогов*/
 
-  for each buf_temp-taxVne no-lock
-    where buf_temp-taxVne.curr-code        = buf_temp-fin-sumVne.curr-code
-    and buf_temp-taxVne.cash-desk         = buf_temp-fin-sumVne.cash-desk
-    and buf_temp-taxVne.is-petrol        = buf_temp-fin-sumVne.is-petrol
-    and buf_temp-taxVne.cashbookId       = buf_temp-fin-sumVne.cashbookId
-    and buf_temp-taxVne.is-expense_cash  = buf_temp-fin-sumVne.is-expense_cash
-    and buf_temp-taxVne.num-expense_cash = buf_temp-fin-sumVne.num-expense_cash
-    and buf_temp-taxVne.pay-type = buf_temp-fin-sumVne.pay-type
-    :
-    v-line-num = v-line-num + 1.
-    create tt0-fin-doc-tax .
-    assign
-      tt0-fin-doc-tax.fin-doc-code       = tt-fin-doc.fin-doc-code
-      tt0-fin-doc-tax.host-code          = tt-fin-doc.host-code
-      tt0-fin-doc-tax.line-num           = v-line-num
-      tt0-fin-doc-tax.VAT-pc             = buf_temp-taxVne.vat-pc
-      tt0-fin-doc-tax.slt-pc             = buf_temp-taxVne.slt-pc
-      tt0-fin-doc-tax.sum-line-contr     = 0
-      tt0-fin-doc-tax.sum-vat-line-contr = 0
-      tt0-fin-doc-tax.with-vat           = buf_temp-taxVne.with-vat
-      .
-    if buf_temp-fin-sumVne.tot-sum > 0  then 
+    for each buf_temp-taxVne no-lock
+      where buf_temp-taxVne.curr-code        = buf_temp-fin-sumVne.curr-code
+      and buf_temp-taxVne.cash-desk         = buf_temp-fin-sumVne.cash-desk
+      and buf_temp-taxVne.is-petrol        = buf_temp-fin-sumVne.is-petrol
+      and buf_temp-taxVne.cashbookId       = buf_temp-fin-sumVne.cashbookId
+      and buf_temp-taxVne.is-expense_cash  = buf_temp-fin-sumVne.is-expense_cash
+      and buf_temp-taxVne.num-expense_cash = buf_temp-fin-sumVne.num-expense_cash
+      and buf_temp-taxVne.pay-type = buf_temp-fin-sumVne.pay-type
+      :
+      v-line-num = v-line-num + 1.
+      create tt0-fin-doc-tax .
+      assign
+        tt0-fin-doc-tax.fin-doc-code       = tt-fin-doc.fin-doc-code
+        tt0-fin-doc-tax.host-code          = tt-fin-doc.host-code
+        tt0-fin-doc-tax.line-num           = v-line-num
+        tt0-fin-doc-tax.VAT-pc             = buf_temp-taxVne.vat-pc
+        tt0-fin-doc-tax.slt-pc             = buf_temp-taxVne.slt-pc
+        tt0-fin-doc-tax.sum-line-contr     = 0
+        tt0-fin-doc-tax.sum-vat-line-contr = 0
+        tt0-fin-doc-tax.with-vat           = buf_temp-taxVne.with-vat
+        .
+      if buf_temp-fin-sumVne.tot-sum > 0  then 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = buf_temp-taxVne.sum-doc
+          tt0-fin-doc-tax.sum-vat-line-doc  = buf_temp-taxVne.vat-doc
+          tt0-fin-doc-tax.sum-line-rubl     = buf_temp-taxVne.sum-rubl
+          tt0-fin-doc-tax.sum-vat-line-rubl = buf_temp-taxVne.vat-rubl
+          tt0-fin-doc-tax.sum-line-base     = buf_temp-taxVne.sum-base
+          tt0-fin-doc-tax.sum-vat-line-base = buf_temp-taxVne.vat-base
+          .
+      end.
+      else 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = abs(buf_temp-taxVne.sum-doc)
+          tt0-fin-doc-tax.sum-vat-line-doc  = abs(buf_temp-taxVne.vat-doc)
+          tt0-fin-doc-tax.sum-line-rubl     = abs(buf_temp-taxVne.sum-rubl)
+          tt0-fin-doc-tax.sum-vat-line-rubl = abs(buf_temp-taxVne.vat-rubl)
+          tt0-fin-doc-tax.sum-line-base     = abs(buf_temp-taxVne.sum-base)
+          tt0-fin-doc-tax.sum-vat-line-base = abs(buf_temp-taxVne.vat-base)
+          .
+      end.
+      find first temp-autotank no-lock
+        where temp-autotank.curr-code = buf_temp-taxVne.curr-code
+        and temp-autotank.pay-desk = buf_temp-taxVne.cash-desk
+        and temp-autotank.is-petrol = buf_temp-taxVne.is-petrol
+        and temp-autotank.vat-pc    = buf_temp-taxVne.vat-pc
+        and temp-autotank.slt-pc    = buf_temp-taxVne.slt-pc
+        no-error.
+      if available temp-autotank then 
+      do:
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = tt0-fin-doc-tax.sum-line-doc + temp-autotank.sum-return
+          tt0-fin-doc-tax.sum-vat-line-doc  = tt0-fin-doc-tax.sum-vat-line-doc +
+                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
+          tt0-fin-doc-tax.sum-line-rubl     = tt0-fin-doc-tax.sum-line-rubl + temp-autotank.sum-return
+          tt0-fin-doc-tax.sum-vat-line-rubl = tt0-fin-doc-tax.sum-vat-line-rubl +
+                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
+          tt0-fin-doc-tax.sum-line-base     = tt0-fin-doc-tax.sum-line-base  + temp-autotank.sum-return
+          tt0-fin-doc-tax.sum-vat-line-base = tt0-fin-doc-tax.sum-vat-line-base  +
+                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
+          .
+      end.
+
+      release tt0-fin-doc-tax.
+    end.
+    taxVne = yes .  
+    run StrTax in this-procedure ( input-output tt-fin-doc.including) .
+    /* округляем  */
+    run RoundTax in this-procedure .
+
+      
+    if available ub.CashBook
+      
+      then 
     do :
-      assign
-        tt0-fin-doc-tax.sum-line-doc      = buf_temp-taxVne.sum-doc
-        tt0-fin-doc-tax.sum-vat-line-doc  = buf_temp-taxVne.vat-doc
-        tt0-fin-doc-tax.sum-line-rubl     = buf_temp-taxVne.sum-rubl
-        tt0-fin-doc-tax.sum-vat-line-rubl = buf_temp-taxVne.vat-rubl
-        tt0-fin-doc-tax.sum-line-base     = buf_temp-taxVne.sum-base
-        tt0-fin-doc-tax.sum-vat-line-base = buf_temp-taxVne.vat-base
-        .
-    end.
-    else 
-    do :
-      assign
-        tt0-fin-doc-tax.sum-line-doc      = abs(buf_temp-taxVne.sum-doc)
-        tt0-fin-doc-tax.sum-vat-line-doc  = abs(buf_temp-taxVne.vat-doc)
-        tt0-fin-doc-tax.sum-line-rubl     = abs(buf_temp-taxVne.sum-rubl)
-        tt0-fin-doc-tax.sum-vat-line-rubl = abs(buf_temp-taxVne.vat-rubl)
-        tt0-fin-doc-tax.sum-line-base     = abs(buf_temp-taxVne.sum-base)
-        tt0-fin-doc-tax.sum-vat-line-base = abs(buf_temp-taxVne.vat-base)
-        .
-    end.
-    find first temp-autotank no-lock
-      where temp-autotank.curr-code = buf_temp-taxVne.curr-code
-      and temp-autotank.pay-desk = buf_temp-taxVne.cash-desk
-      and temp-autotank.is-petrol = buf_temp-taxVne.is-petrol
-      and temp-autotank.vat-pc    = buf_temp-taxVne.vat-pc
-      and temp-autotank.slt-pc    = buf_temp-taxVne.slt-pc
-      no-error.
-    if available temp-autotank then 
-    do:
-      assign
-        tt0-fin-doc-tax.sum-line-doc      = tt0-fin-doc-tax.sum-line-doc + temp-autotank.sum-return
-        tt0-fin-doc-tax.sum-vat-line-doc  = tt0-fin-doc-tax.sum-vat-line-doc +
-                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
-        tt0-fin-doc-tax.sum-line-rubl     = tt0-fin-doc-tax.sum-line-rubl + temp-autotank.sum-return
-        tt0-fin-doc-tax.sum-vat-line-rubl = tt0-fin-doc-tax.sum-vat-line-rubl +
-                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
-        tt0-fin-doc-tax.sum-line-base     = tt0-fin-doc-tax.sum-line-base  + temp-autotank.sum-return
-        tt0-fin-doc-tax.sum-vat-line-base = tt0-fin-doc-tax.sum-vat-line-base  +
-                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
-        .
-    end.
-
-    release tt0-fin-doc-tax.
-  end.
-      
-  run StrTax in this-procedure ( input-output tt-fin-doc.including) .
-  /* округляем  */
-  run RoundTax in this-procedure .
-
-      
-  if available ub.CashBook
-      
-    then 
-  do :
-    p-by-cash-desk = ub.CashBook.FlagSepCash .
-    p-by-petrol-goods = ub.CashBook.FlagSepFull .
+      p-by-cash-desk = ub.CashBook.FlagSepCash .
+      p-by-petrol-goods = ub.CashBook.FlagSepFull .
        
-    p-by-pril = ub.CashBook.RulePril .
-  end.
+      p-by-pril = ub.CashBook.RulePril .
+    end.
 
-  if p-by-cash-desk then 
-  do:
-    find first temp-z-number-list no-lock
-      where temp-z-number-list.cash-desk = buf_temp-fin-sumVne.cash-desk
-      no-error.
-  end.        
+    if p-by-cash-desk then 
+    do:
+      find first temp-z-number-list no-lock
+        where temp-z-number-list.cash-desk = buf_temp-fin-sumVne.cash-desk
+        no-error.
+    end.        
       
 
-  if     trim(p-by-pril) = '0' 
-    and buf_temp-fin-sumVne.pay-type ne "trans" 
-    then 
-    tt-fin-doc.enclosure = v-naznach-plat.
-  case p-by-osnovanie:
-    when '0' then 
-      do :
-        v-naznach-plat = 'Выручка от реализации'.
-        if available temp-z-number-list then temp-z-number-list.naznach-plat = 'Выручка от реализации'.
-      end.
-    when '2'          then 
-      do :
-        v-naznach-plat = ''.
-        if available temp-z-number-list then temp-z-number-list.naznach-plat = ''.
-      end.
-    when '1'          then 
-      do :
-        if available temp-z-number-list then temp-z-number-list.naznach-plat = v-naznach-plat.
-      end.
-    otherwise 
-    do:
-      v-naznach-plat = p-by-osnovanie.
-      if available temp-z-number-list then temp-z-number-list.naznach-plat = p-by-osnovanie.
-    end.        
-  end case .  
+    if     trim(p-by-pril) = '0' 
+      and buf_temp-fin-sumVne.pay-type ne "trans" 
+      then 
+      tt-fin-doc.enclosure = v-naznach-plat.
+    case p-by-osnovanie:
+      when '0' then 
+        do :
+          v-naznach-plat = 'Выручка от реализации'.
+          if available temp-z-number-list then temp-z-number-list.naznach-plat = 'Выручка от реализации'.
+        end.
+      when '2'          then 
+        do :
+          v-naznach-plat = ''.
+          if available temp-z-number-list then temp-z-number-list.naznach-plat = ''.
+        end.
+      when '1'          then 
+        do :
+          if available temp-z-number-list then temp-z-number-list.naznach-plat = v-naznach-plat.
+        end.
+      otherwise 
+      do:
+        v-naznach-plat = p-by-osnovanie.
+        if available temp-z-number-list then temp-z-number-list.naznach-plat = p-by-osnovanie.
+      end.        
+    end case .  
 
-  assign
-    tt-fin-doc.naznach-plat = (if p-by-cash-desk
+    assign
+      tt-fin-doc.naznach-plat = (if p-by-cash-desk
                                         then (if available temp-z-number-list
                                               then temp-z-number-list.naznach-plat
                                               else '')
                                         else  v-naznach-plat)
-    .
-  assign
-    tt-fin-doc.CashBookId = buf_temp-fin-sumVne.cashbookid
-    tt-fin-doc.sum-doc    = abs(buf_temp-fin-sumVne.tot-sum)
-    tt-fin-doc.sum-base   = abs(buf_temp-fin-sumVne.tot-base)
-    tt-fin-doc.sum-rubl   = abs(buf_temp-fin-sumVne.tot-rubl)
-    tt-fin-doc.exch-rate  = abs(if buf_temp-fin-sumVne.curr-code = 0 then 1 else buf_temp-fin-sumVne.tot-rubl / buf_temp-fin-sumVne.tot-sum )
-    tt-fin-doc.exch-scale = 1
-    tt-fin-doc.base-rate  = abs(if buf_temp-fin-sumVne.curr-code = v-base-code then 1 else buf_temp-fin-sumVne.tot-rubl / buf_temp-fin-sumVne.tot-base )
-    tt-fin-doc.base-scale = 1
-    .
-  if buf_temp-fin-sumVne.tot-sum > 0  then 
-  do:
-    if p-by-petrol-goods then 
-    do:
-      assign
-        tt-fin-doc.payer-name     = "Выручка от реализации " + (if buf_temp-fin-sumVne.is-petrol then "нефтепродуктов" else "ТНП")
-        tt-fin-doc.receiver-sign3 = v-cashier
-        .
-    end.
-    else 
-    do:
-      assign
-        tt-fin-doc.payer-name     = "Выручка от реализации нефтепродуктов, ТНП"
-        tt-fin-doc.receiver-sign3 = v-cashier
-        .
-    end.
+      .
     assign
-      tt-fin-doc.payer-name = mpayer-name 
-      when mpayer-name ne "". 
-  end.
-  else 
-  do:
-    if p-by-petrol-goods then 
+      tt-fin-doc.CashBookId = buf_temp-fin-sumVne.cashbookid
+      tt-fin-doc.sum-doc    = abs(buf_temp-fin-sumVne.tot-sum)
+      tt-fin-doc.sum-base   = abs(buf_temp-fin-sumVne.tot-base)
+      tt-fin-doc.sum-rubl   = abs(buf_temp-fin-sumVne.tot-rubl)
+      tt-fin-doc.exch-rate  = abs(if buf_temp-fin-sumVne.curr-code = 0 then 1 else buf_temp-fin-sumVne.tot-rubl / buf_temp-fin-sumVne.tot-sum )
+      tt-fin-doc.exch-scale = 1
+      tt-fin-doc.base-rate  = abs(if buf_temp-fin-sumVne.curr-code = v-base-code then 1 else buf_temp-fin-sumVne.tot-rubl / buf_temp-fin-sumVne.tot-base )
+      tt-fin-doc.base-scale = 1
+      .
+    if buf_temp-fin-sumVne.tot-sum > 0  then 
     do:
+      if p-by-petrol-goods then 
+      do:
+        assign
+          tt-fin-doc.payer-name     = "Выручка от реализации " + (if buf_temp-fin-sumVne.is-petrol then "нефтепродуктов" else "ТНП")
+          tt-fin-doc.receiver-sign3 = v-cashier
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.payer-name     = "Выручка от реализации нефтепродуктов, ТНП"
+          tt-fin-doc.receiver-sign3 = v-cashier
+          .
+      end.
       assign
-        /* tt-fin-doc.receiver-name   = "Выручка от реализации " + (if buf_temp-fin-sum.is-petrol then "нефтепродуктов" else "ТНП")*/ 
-        tt-fin-doc.payer-sign3 = v-cashier
-        .
+        tt-fin-doc.payer-name = mpayer-name 
+        when mpayer-name ne "". 
     end.
     else 
     do:
-      assign
-        /*   tt-fin-doc.receiver-name   = "Выручка от реализации нефтепродуктов, ТНП"*/ 
+      if p-by-petrol-goods then 
+      do:
+        assign
+          /* tt-fin-doc.receiver-name   = "Выручка от реализации " + (if buf_temp-fin-sum.is-petrol then "нефтепродуктов" else "ТНП")*/ 
+          tt-fin-doc.payer-sign3 = v-cashier
+          .
+      end.
+      else 
+      do:
+        assign
+          /*   tt-fin-doc.receiver-name   = "Выручка от реализации нефтепродуктов, ТНП"*/ 
           
             
-        tt-fin-doc.payer-sign3 = v-cashier
-        .
+          tt-fin-doc.payer-sign3 = v-cashier
+          .
+      end.
+      assign
+        tt-fin-doc.receiver-name = mreceiver-name 
+        when mreceiver-name ne "".
     end.
-    assign
-      tt-fin-doc.receiver-name = mreceiver-name 
-      when mreceiver-name ne "".
-  end.
       
       
-  o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
+    o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
       
       
       
-  if available ub.CashBook
-    then 
-  do :
-    tt-fin-doc.cor-acc-value  = mdopacct .
-    tt-fin-doc.cor-acc1-value = mosnacct.
-        
-    if buf_temp-fin-sumVne.tot-sum > 0
+    if available ub.CashBook
       then 
-    do: 
-      /*tt-fin-doc.payer-type = ub.CashBook.cli-type .
-      tt-fin-doc.payer-code = ub.CashBook.cli-code .*/
-      tt-fin-doc.payer-name = mpayer-name .
-    end.
+    do :
+      tt-fin-doc.cor-acc-value  = mdopacct .
+      tt-fin-doc.cor-acc1-value = mosnacct.
         
-    FIND ub.fin-code-cor-acc WHERE
-      ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc-value
-      AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
-      AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
-      NO-LOCK NO-error.
+      if buf_temp-fin-sumVne.tot-sum > 0
+        then 
+      do: 
+        /*tt-fin-doc.payer-type = ub.CashBook.cli-type .
+        tt-fin-doc.payer-code = ub.CashBook.cli-code .*/
+        tt-fin-doc.payer-name = mpayer-name .
+      end.
         
-    if not available ub.fin-code-cor-acc
-      then 
-    do:
-      assign
-        tt-fin-doc.cor-acc-value = {&question-mark}
-        .
-    end.
-    else 
-    do:
-      assign
-        tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code
-        .
-    end.
-    FIND ub.fin-code-cor-acc WHERE
-      ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc1-value
-      AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
-      AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
-      NO-LOCK NO-error.
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
         
-    if not available ub.fin-code-cor-acc
-      then 
-    do:
-      assign
-        tt-fin-doc.cor-acc1-value = {&question-mark}
-        .
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code
+          .
+      end.
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc1-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
+        
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc1-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code
+          .
+      end.
     end.
-    else 
-    do:
-      assign
-        tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code
-        .
-    end.
-  end.
       
-  if o-uchet = "0"
-    then v-uchet = "cal" .
-  else v-uchet = "smen" . 
+    if o-uchet = "0"
+      then v-uchet = "cal" .
+    else v-uchet = "smen" . 
       
 
-  /*подкручиваем для утилиты */
-  if buf_shift-obj.status_ = {&sht-closed} and v-uchet = "smen" then 
-  do:
+    /*подкручиваем для утилиты */
+    if buf_shift-obj.status_ = {&sht-closed} and v-uchet = "smen" then 
+    do:
+      assign
+        tt-fin-doc.doc-date   = buf_shift-obj.close-date
+        tt-fin-doc.shift-date = buf_shift-obj.shift-date
+        tt-fin-doc.shift-num  = buf_shift-obj.shift-num
+        tt-fin-doc.shift-name = buf_shift-obj.shift-name
+        .
+    end.
+    if v-uchet = "smen" then tt-fin-doc.doc-date = buf_shift-obj.shift-date .
     assign
-      tt-fin-doc.doc-date   = buf_shift-obj.close-date
-      tt-fin-doc.shift-date = buf_shift-obj.shift-date
-      tt-fin-doc.shift-num  = buf_shift-obj.shift-num
-      tt-fin-doc.shift-name = buf_shift-obj.shift-name
-      .
-  end.
-  if v-uchet = "smen" then tt-fin-doc.doc-date = buf_shift-obj.shift-date .
-  assign
-    tt-fin-doc.doc-author = {&auto}.
+      tt-fin-doc.doc-author = {&auto}.
     &scop prfx tt-fin-doc.
       run ref/findoc0.p (
       input-output v-doc-rec
@@ -2759,77 +3407,77 @@ if buf_temp-fin-sumVne.tot-sum > 0
             ,input no /*p-save-payment*/
             ,input table tt0-payment
       ) no-error.
-  if error-status:error then 
-  do:
+    if error-status:error then 
+    do:
         &scop my-message substitute("Ошибки при сохранении фин.док-та:&1&2&1&3"  ~
                                   , ~{&new-line~}  ~
                                   , error-status:get-message(1)    ~
                                   , return-value )
-    {&display-message}.
-    undo _main, return error.
-  end.
-  /*закрываем до факта*/
-  find first buf_fin-doc share-lock where
-    recid(buf_fin-doc) = v-doc-rec.
-  assign
-    buf_fin-doc.shift-flag = integer({&fin-flag-shift})
-    .
-  if buf_temp-fin-sumVne.contr-kb ne ?
-    then 
-  do:
-    find first fin-doc-attr where fin-doc-attr.host-code eq buf_fin-doc.host-code
-      and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
-      and fin-doc-attr.attr-code eq "contr-kb"
-      exclusive-lock no-error.
-    if not available fin-doc-attr
+      {&display-message}.
+      undo _main, return error.
+    end.
+    /*закрываем до факта*/
+    find first buf_fin-doc share-lock where
+      recid(buf_fin-doc) = v-doc-rec.
+    assign
+      buf_fin-doc.shift-flag = integer({&fin-flag-shift})
+      .
+    if buf_temp-fin-sumVne.contr-kb ne ?
       then 
     do:
-      create fin-doc-attr.
-      assign
-        fin-doc-attr.host-code    = buf_fin-doc.host-code
-        fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
-        fin-doc-attr.attr-code    = "contr-kb"
-        .
+      find first fin-doc-attr where fin-doc-attr.host-code eq buf_fin-doc.host-code
+        and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+        and fin-doc-attr.attr-code eq "contr-kb"
+        exclusive-lock no-error.
+      if not available fin-doc-attr
+        then 
+      do:
+        create fin-doc-attr.
+        assign
+          fin-doc-attr.host-code    = buf_fin-doc.host-code
+          fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+          fin-doc-attr.attr-code    = "contr-kb"
+          .
+      end.
+      fin-doc-attr.attr-value = String(buf_temp-fin-sumVne.contr-kb).
     end.
-    fin-doc-attr.attr-value = String(buf_temp-fin-sumVne.contr-kb).
-  end.
       
-  run proc-close in this-procedure ( buffer buf_fin-doc) no-error.
-  if error-status :error then 
-  do:
+    run proc-close in this-procedure ( buffer buf_fin-doc) no-error.
+    if error-status :error then 
+    do:
         &scop my-message substitute("Ошибки при сохранении фин.док-та:&1&2&1&3"  ~
                                   , ~{&new-line~}  ~
                                   , error-status:get-message(1)    ~
                                   , return-value )
-    {&display-message}.
-    undo _main, return error.
-  END.
-  if buf_fin-doc.status_ <> {&fin-fact} then 
-  do:
-    run proc-close in this-procedure ( buffer buf_fin-doc) NO-ERROR.
-    if error-status :error then 
+      {&display-message}.
+      undo _main, return error.
+    END.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
     do:
+      run proc-close in this-procedure ( buffer buf_fin-doc) NO-ERROR.
+      if error-status :error then 
+      do:
           &scop my-message substitute("Не удалось сменить статус фин.док-та:&1&2&1&3"  ~
                                     , ~{&new-line~}  ~
                                     , error-status:get-message(1)    ~
                                     , return-value )
-      {&display-message}.
-      undo _main, return error.
-    END.
-  end.
-  if buf_fin-doc.status_ <> {&fin-fact} then 
-  do:
-    run proc-close in this-procedure ( buffer buf_fin-doc) no-error .
-    if error-status :error then 
+        {&display-message}.
+        undo _main, return error.
+      END.
+    end.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
     do:
+      run proc-close in this-procedure ( buffer buf_fin-doc) no-error .
+      if error-status :error then 
+      do:
           &scop my-message substitute("Не удалось сменить статус фин.док-та:&1&2&1&3"  ~
                                     , ~{&new-line~}  ~
                                     , error-status:get-message(1)    ~
                                     , return-value )
-      {&display-message}.
-      undo _main, return error.
-    END.
-  end.
+        {&display-message}.
+        undo _main, return error.
+      END.
+    end.
      &scop fin-doc-type-code (if buf_temp-fin-sumVne.tot-sum > 0 then ~{&FDEDT_Income_Cash~} else ~{&FDEDT_expense_Cash~})
      &scop my-message substitute("Создаю &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8" ~
                                   , ~{&fin-doc-type-name~}  ~
@@ -2842,22 +3490,514 @@ if buf_temp-fin-sumVne.tot-sum > 0
                                   , abs(buf_temp-fin-sumVne.tot-sum) ~
                                   , ~{&new-line~} ~
                                   )
-  {&DISPLAY-MESSAGE}.
+    {&DISPLAY-MESSAGE}.
 
    end. /*for each buf_temp-fin-sumVne no-lock*/
 
+  /* Аванс */
+  _temp-fin-sumAvans:
+  for each buf_temp-fin-sumAvans no-lock
+    by buf_temp-fin-sumAvans.tot-sum descending  /* EXPSD-7148 добавлена обратная сортировка по сумме, чтобы сначала создавались док-ты по приходу */
+    on error  undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+    on stop   undo _main, return error substitute( "&1. stop", vss-workfile )
+    on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
+    :
 
-/* ------------------------- &end-rule& -------------------------------------*/
+    empty temp-table tt0-fin-doc-tax.
+    empty temp-table tt0-fin-doc-attr.
+    empty temp-table tt-fin-doc.
+    if buf_temp-fin-sumAvans.tot-sum = 0  then 
+    do:
+      next _temp-fin-sumAvans.
+    end.
+    v-naznach-plat = v-naznach-plat2 .
+    find first ub.CashBook no-lock where ub.CashBook.id = buf_temp-fin-sumAvans.cashbookid no-error .
+    if not available ub.CashBook 
+      then 
+    do :
+      find first ub.CashBook no-lock where ub.CashBook.id = 0 no-error .
+    end.
 
-/* ------------------------- &start-release-obj& -----------------------------------*/
+    assign
+      mreceiver-name = ""
+      mpayer-name    = ""
+      .
+    if buf_temp-fin-sumAvans.tot-sum > 0
+      then
+    do:
+      assign
+        p-by-osnovanie       = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "RuleOsnPkoAvans"  )
+        v-real-obj-type-save = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "Avanscli-type"  )
+        v-real-obj-code-save = int( mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "Avanscli-code"  ))
+        mosnacct             = ub.CashBook.OsnAcct
+        mdopacct             = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "corrPkoAvans"  )
+        mreceiver-name       = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "takenfromAvans"  )
+        .
+      if mpayer-name eq "" or mpayer-name eq ?
+        then
+      do:
+        find first ub.clients no-lock where ub.clients.obj-type = v-real-obj-type-save
+          and ub.clients.obj-code = v-real-obj-code-save
+          no-error .
+        if available ub.clients
+          then
+          mpayer-name = ub.clients.obj-name .
+      end.
+    end.
+    else
+      assign
+        p-by-osnovanie       = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "RuleOsnPkoAvans"  )
+        v-real-obj-type-save = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "Avanscli-type"  )
+        v-real-obj-code-save = int( mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "Avanscli-code"  ))
+        mosnacct             = ub.CashBook.OsnAcct
+        mdopacct             = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "corrPkoAvans"  )
+        mreceiver-name       = mCashBook:getSinglRule(buf_temp-fin-sumAvans.cashbookid, {&by_all}, 0,  "takenfromAvans"  )
+        .
+    if buf_temp-fin-sumAvans.tot-sum > 0  then 
+    do:
+      run ref/finfnoco.p (
+        INPUT parParentProc
+        ,INPUT ? /*не надо нам*/
+        ,input v-host-code
+        ,input ({&add-def} + {&delim-par} + {&auto})
+        ,input v-host-code
+        ,input v-doc-rec
+        ,input 0 /*p-fin-doc-code*/
+        ,input {&income-cash} /*p-fin-doc-type*/
+        ,input {&FDEDT_income_cash} /*p-fin-ext-doc-type*/
+        ,input buf_shift-obj.obj-type
+        ,input buf_shift-obj.obj-code
+        ,input 0 /*p-contract-code*/
+        ,input '' /*p-ob-doc-code*/
+        ,input  v-real-obj-type-save  /*p-receiver-type*/ 
+        ,input  v-real-obj-code-save /*p-receiever-code*/
+        ,input 0 /*p-payer-code-schet*/
+        ,input {&cmp} /*p-receiver-type*/
+        ,input v-host-code /*p-receiver-code*/
+        ,input 0 /*p-receiver-code-schet*/
+        ,input buf_temp-fin-sumAvans.curr-code
+        ,input 0 /*p-cor-acc*/
+        ,input 0 /*p-cor-acc1*/
+        ,input 0 /*p-an-uchet-code*/
+        ,input 0 /*p-cel-nazn-code*/
+        ,input buf_temp-fin-sumAvans.cashbookid
+        ,input ""
+        ,INPUT-OUTPUT table tt-fin-doc
+        ,INPUT-OUTPUT table ttc-fin-doc
+        ,output table tt0-fin-doc-attr
+        ,output v-limit-access ) no-error .
+    end.
+    else 
+    do:
+           
+      run ref/finfnoco.p (
+        INPUT parParentProc
+        ,INPUT ? /*не надо нам*/
+        ,input v-host-code
+        ,input ({&add-def} + {&delim-par} + {&auto})
+        ,input v-host-code
+        ,input v-doc-rec
+        ,input 0 /*p-fin-doc-code*/
+        ,input {&expense-cash} /*p-fin-doc-type*/
+        ,input {&FDEDT_expense_cash} /*p-fin-ext-doc-type*/
+        ,input buf_shift-obj.obj-type
+        ,input buf_shift-obj.obj-code
+        ,input 0 /*p-contract-code*/
+        ,input '' /*p-ob-doc-code*/
+        ,input {&cmp} /*p-payer-type*/
+        ,input v-host-code /*p-payer-code*/
+        ,input 0 /*p-payer-code-schet*/
+        ,input v-real-obj-type-save  /*p-receiver-type*/
+        ,input v-real-obj-code-save /*p-receiever-code*/
+        ,input 0 /*p-receiver-code-schet*/
+        ,input buf_temp-fin-sumAvans.curr-code
+        ,input 0 /*p-cor-acc*/
+        ,input 0 /*p-cor-acc1*/
+        ,input 0 /*p-an-uchet-code*/
+        ,input 0 /*p-cel-nazn-code*/
+        ,input buf_temp-fin-sumAvans.cashbookid
+        ,input ""
+        ,INPUT-OUTPUT table tt-fin-doc
+        ,INPUT-OUTPUT table ttc-fin-doc
+        ,output table tt0-fin-doc-attr
+        ,output v-limit-access ) no-error .
+    end.
+    if error-status:error then 
+    do:
+        &scop my-message substitute("Ошибки при заполнении фин.док-та значениями по умолчанию:&1&2&1&3"  ~
+                                  , ~{&new-line~}  ~
+                                  , error-status:get-message(1)    ~
+                                  , return-value )
+      {&display-message}.
+      undo _main, return error.
+
+    end.
+    find first tt-fin-doc.
+    /*заполнение налогов*/
+
+    for each buf_temp-taxAvans no-lock
+      where buf_temp-taxAvans.curr-code        = buf_temp-fin-sumAvans.curr-code
+      and buf_temp-taxAvans.cash-desk         = buf_temp-fin-sumAvans.cash-desk
+      and buf_temp-taxAvans.is-petrol        = buf_temp-fin-sumAvans.is-petrol
+      and buf_temp-taxAvans.cashbookId       = buf_temp-fin-sumAvans.cashbookId
+      and buf_temp-taxAvans.is-expense_cash  = buf_temp-fin-sumAvans.is-expense_cash
+      and buf_temp-taxAvans.num-expense_cash = buf_temp-fin-sumAvans.num-expense_cash
+      and buf_temp-taxAvans.pay-type = buf_temp-fin-sumAvans.pay-type
+      :
+      v-line-num = v-line-num + 1.
+      create tt0-fin-doc-tax .
+      assign
+        tt0-fin-doc-tax.fin-doc-code       = tt-fin-doc.fin-doc-code
+        tt0-fin-doc-tax.host-code          = tt-fin-doc.host-code
+        tt0-fin-doc-tax.line-num           = v-line-num
+        tt0-fin-doc-tax.VAT-pc             = buf_temp-taxAvans.vat-pc
+        tt0-fin-doc-tax.slt-pc             = buf_temp-taxAvans.slt-pc
+        tt0-fin-doc-tax.sum-line-contr     = 0
+        tt0-fin-doc-tax.sum-vat-line-contr = 0
+        tt0-fin-doc-tax.with-vat           = buf_temp-taxAvans.with-vat
+        .
+      if buf_temp-fin-sumAvans.tot-sum > 0  then 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = buf_temp-taxAvans.sum-doc
+          tt0-fin-doc-tax.sum-vat-line-doc  = buf_temp-taxAvans.vat-doc
+          tt0-fin-doc-tax.sum-line-rubl     = buf_temp-taxAvans.sum-rubl
+          tt0-fin-doc-tax.sum-vat-line-rubl = buf_temp-taxAvans.vat-rubl
+          tt0-fin-doc-tax.sum-line-base     = buf_temp-taxAvans.sum-base
+          tt0-fin-doc-tax.sum-vat-line-base = buf_temp-taxAvans.vat-base
+          .
+      end.
+      else 
+      do :
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = abs(buf_temp-taxAvans.sum-doc)
+          tt0-fin-doc-tax.sum-vat-line-doc  = abs(buf_temp-taxAvans.vat-doc)
+          tt0-fin-doc-tax.sum-line-rubl     = abs(buf_temp-taxAvans.sum-rubl)
+          tt0-fin-doc-tax.sum-vat-line-rubl = abs(buf_temp-taxAvans.vat-rubl)
+          tt0-fin-doc-tax.sum-line-base     = abs(buf_temp-taxAvans.sum-base)
+          tt0-fin-doc-tax.sum-vat-line-base = abs(buf_temp-taxAvans.vat-base)
+          .
+      end.
+      find first temp-autotank no-lock
+        where temp-autotank.curr-code = buf_temp-taxAvans.curr-code
+        and temp-autotank.pay-desk = buf_temp-taxAvans.cash-desk
+        and temp-autotank.is-petrol = buf_temp-taxAvans.is-petrol
+        and temp-autotank.vat-pc    = buf_temp-taxAvans.vat-pc
+        and temp-autotank.slt-pc    = buf_temp-taxAvans.slt-pc
+        no-error.
+      if available temp-autotank then 
+      do:
+        assign
+          tt0-fin-doc-tax.sum-line-doc      = tt0-fin-doc-tax.sum-line-doc + temp-autotank.sum-return
+          tt0-fin-doc-tax.sum-vat-line-doc  = tt0-fin-doc-tax.sum-vat-line-doc +
+                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
+          tt0-fin-doc-tax.sum-line-rubl     = tt0-fin-doc-tax.sum-line-rubl + temp-autotank.sum-return
+          tt0-fin-doc-tax.sum-vat-line-rubl = tt0-fin-doc-tax.sum-vat-line-rubl +
+                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
+          tt0-fin-doc-tax.sum-line-base     = tt0-fin-doc-tax.sum-line-base  + temp-autotank.sum-return
+          tt0-fin-doc-tax.sum-vat-line-base = tt0-fin-doc-tax.sum-vat-line-base  +
+                                     round(temp-autotank.sum-return * tt0-fin-doc-tax.VAT-pc / (100 + tt0-fin-doc-tax.VAT-pc),2)
+          .
+      end.
+
+      release tt0-fin-doc-tax.
+    end.
+    taxVne = no .  
+    run StrTax in this-procedure ( input-output tt-fin-doc.including) .
+    /* округляем  */
+    run RoundTax in this-procedure .
+
+      
+    if available ub.CashBook
+      
+      then 
+    do :
+      p-by-cash-desk = ub.CashBook.FlagSepCash .
+      p-by-petrol-goods = ub.CashBook.FlagSepFull .
+       
+      p-by-pril = ub.CashBook.RulePril .
+    end.
+
+    if p-by-cash-desk then 
+    do:
+      find first temp-z-number-list no-lock
+        where temp-z-number-list.cash-desk = buf_temp-fin-sumAvans.cash-desk
+        no-error.
+    end.        
+      
+
+    if     trim(p-by-pril) = '0' 
+      and buf_temp-fin-sumAvans.pay-type ne "trans" 
+      then 
+      tt-fin-doc.enclosure = v-naznach-plat.
+    case p-by-osnovanie:
+      when '0' then 
+        do :
+          v-naznach-plat = 'Выручка от реализации'.
+          if available temp-z-number-list then temp-z-number-list.naznach-plat = 'Выручка от реализации'.
+        end.
+      when '2'          then 
+        do :
+          v-naznach-plat = ''.
+          if available temp-z-number-list then temp-z-number-list.naznach-plat = ''.
+        end.
+      when '1'          then 
+        do :
+          if available temp-z-number-list then temp-z-number-list.naznach-plat = v-naznach-plat.
+        end.
+      otherwise 
+      do:
+        v-naznach-plat = p-by-osnovanie.
+        if available temp-z-number-list then temp-z-number-list.naznach-plat = p-by-osnovanie.
+      end.        
+    end case .  
+
+    assign
+      tt-fin-doc.naznach-plat = (if p-by-cash-desk
+                                        then (if available temp-z-number-list
+                                              then temp-z-number-list.naznach-plat
+                                              else '')
+                                        else  v-naznach-plat)
+      .
+    assign
+      tt-fin-doc.CashBookId = buf_temp-fin-sumAvans.cashbookid
+      tt-fin-doc.sum-doc    = abs(buf_temp-fin-sumAvans.tot-sum)
+      tt-fin-doc.sum-base   = abs(buf_temp-fin-sumAvans.tot-base)
+      tt-fin-doc.sum-rubl   = abs(buf_temp-fin-sumAvans.tot-rubl)
+      tt-fin-doc.exch-rate  = abs(if buf_temp-fin-sumAvans.curr-code = 0 then 1 else buf_temp-fin-sumAvans.tot-rubl / buf_temp-fin-sumAvans.tot-sum )
+      tt-fin-doc.exch-scale = 1
+      tt-fin-doc.base-rate  = abs(if buf_temp-fin-sumAvans.curr-code = v-base-code then 1 else buf_temp-fin-sumAvans.tot-rubl / buf_temp-fin-sumAvans.tot-base )
+      tt-fin-doc.base-scale = 1
+      .
+    if buf_temp-fin-sumAvans.tot-sum > 0  then 
+    do:
+      if p-by-petrol-goods then 
+      do:
+        assign
+          tt-fin-doc.payer-name     = "Выручка от реализации " + (if buf_temp-fin-sumAvans.is-petrol then "нефтепродуктов" else "ТНП")
+          tt-fin-doc.receiver-sign3 = v-cashier
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.payer-name     = "Выручка от реализации нефтепродуктов, ТНП"
+          tt-fin-doc.receiver-sign3 = v-cashier
+          .
+      end.
+      assign
+        tt-fin-doc.payer-name = mpayer-name 
+        when mpayer-name ne "". 
+    end.
+    else 
+    do:
+      if p-by-petrol-goods then 
+      do:
+        assign
+          /* tt-fin-doc.receiver-name   = "Выручка от реализации " + (if buf_temp-fin-sum.is-petrol then "нефтепродуктов" else "ТНП")*/ 
+          tt-fin-doc.payer-sign3 = v-cashier
+          .
+      end.
+      else 
+      do:
+        assign
+          /*   tt-fin-doc.receiver-name   = "Выручка от реализации нефтепродуктов, ТНП"*/ 
+          
+            
+          tt-fin-doc.payer-sign3 = v-cashier
+          .
+      end.
+      assign
+        tt-fin-doc.receiver-name = mreceiver-name 
+        when mreceiver-name ne "".
+    end.
+      
+      
+    o-uchet   = mCashBook:getSinglRule(tt-fin-doc.CashBookId, tt-fin-doc.obj-type, tt-fin-doc.obj-code, "uchet") .
+      
+      
+      
+    if available ub.CashBook
+      then 
+    do :
+      tt-fin-doc.cor-acc-value  = mdopacct .
+      tt-fin-doc.cor-acc1-value = mosnacct.
+        
+      if buf_temp-fin-sumAvans.tot-sum > 0
+        then 
+      do: 
+        /*tt-fin-doc.payer-type = ub.CashBook.cli-type .
+        tt-fin-doc.payer-code = ub.CashBook.cli-code .*/
+        tt-fin-doc.payer-name = mpayer-name .
+      end.
+        
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
+        
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc = ub.fin-code-cor-acc.fin-code
+          .
+      end.
+      FIND ub.fin-code-cor-acc WHERE
+        ub.fin-code-cor-acc.code-value  = tt-fin-doc.cor-acc1-value
+        AND ub.fin-code-cor-acc.host-code  = tt-fin-doc.host-code
+        AND  ub.fin-code-cor-acc.status_ = integer({&current-status-int})
+        NO-LOCK NO-error.
+        
+      if not available ub.fin-code-cor-acc
+        then 
+      do:
+        assign
+          tt-fin-doc.cor-acc1-value = {&question-mark}
+          .
+      end.
+      else 
+      do:
+        assign
+          tt-fin-doc.cor-acc1 = ub.fin-code-cor-acc.fin-code
+          .
+      end.
+    end.
+      
+    if o-uchet = "0"
+      then v-uchet = "cal" .
+    else v-uchet = "smen" . 
+      
+
+    /*подкручиваем для утилиты */
+    if buf_shift-obj.status_ = {&sht-closed} and v-uchet = "smen" then 
+    do:
+      assign
+        tt-fin-doc.doc-date   = buf_shift-obj.close-date
+        tt-fin-doc.shift-date = buf_shift-obj.shift-date
+        tt-fin-doc.shift-num  = buf_shift-obj.shift-num
+        tt-fin-doc.shift-name = buf_shift-obj.shift-name
+        .
+    end.
+    if v-uchet = "smen" then tt-fin-doc.doc-date = buf_shift-obj.shift-date .
+    assign
+      tt-fin-doc.doc-author = {&auto}.
+    &scop prfx tt-fin-doc.
+      run ref/findoc0.p (
+      input-output v-doc-rec
+            ,input {&add-def} + {&delim-par} + {&auto}
+            ,input yes
+            {&all-fin-doc-params-doc-status-transfer}
+            {&all-fin-doc-params-doc-status-transfer-2}
+            ,input table tt0-fin-doc-tax
+            ,input table tt0-fin-doc-attr
+            ,input no /*p-save-payment*/
+            ,input table tt0-payment
+      ) no-error.
+    if error-status:error then 
+    do:
+        &scop my-message substitute("Ошибки при сохранении фин.док-та:&1&2&1&3"  ~
+                                  , ~{&new-line~}  ~
+                                  , error-status:get-message(1)    ~
+                                  , return-value )
+      {&display-message}.
+      undo _main, return error.
+    end.
+    /*закрываем до факта*/
+    find first buf_fin-doc share-lock where
+      recid(buf_fin-doc) = v-doc-rec.
+    assign
+      buf_fin-doc.shift-flag = integer({&fin-flag-shift})
+      .
+    if buf_temp-fin-sumAvans.contr-kb ne ?
+      then 
+    do:
+      find first fin-doc-attr where fin-doc-attr.host-code eq buf_fin-doc.host-code
+        and fin-doc-attr.fin-doc-code eq buf_fin-doc.fin-doc-code
+        and fin-doc-attr.attr-code eq "contr-kb"
+        exclusive-lock no-error.
+      if not available fin-doc-attr
+        then 
+      do:
+        create fin-doc-attr.
+        assign
+          fin-doc-attr.host-code    = buf_fin-doc.host-code
+          fin-doc-attr.fin-doc-code = buf_fin-doc.fin-doc-code
+          fin-doc-attr.attr-code    = "contr-kb"
+          .
+      end.
+      fin-doc-attr.attr-value = String(buf_temp-fin-sumAvans.contr-kb).
+    end.
+      
+    run proc-close in this-procedure ( buffer buf_fin-doc) no-error.
+    if error-status :error then 
+    do:
+        &scop my-message substitute("Ошибки при сохранении фин.док-та:&1&2&1&3"  ~
+                                  , ~{&new-line~}  ~
+                                  , error-status:get-message(1)    ~
+                                  , return-value )
+      {&display-message}.
+      undo _main, return error.
+    END.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
+    do:
+      run proc-close in this-procedure ( buffer buf_fin-doc) NO-ERROR.
+      if error-status :error then 
+      do:
+          &scop my-message substitute("Не удалось сменить статус фин.док-та:&1&2&1&3"  ~
+                                    , ~{&new-line~}  ~
+                                    , error-status:get-message(1)    ~
+                                    , return-value )
+        {&display-message}.
+        undo _main, return error.
+      END.
+    end.
+    if buf_fin-doc.status_ <> {&fin-fact} then 
+    do:
+      run proc-close in this-procedure ( buffer buf_fin-doc) no-error .
+      if error-status :error then 
+      do:
+          &scop my-message substitute("Не удалось сменить статус фин.док-та:&1&2&1&3"  ~
+                                    , ~{&new-line~}  ~
+                                    , error-status:get-message(1)    ~
+                                    , return-value )
+        {&display-message}.
+        undo _main, return error.
+      END.
+    end.
+     &scop fin-doc-type-code (if buf_temp-fin-sumAvans.tot-sum > 0 then ~{&FDEDT_Income_Cash~} else ~{&FDEDT_expense_Cash~})
+     &scop my-message substitute("Создаю &1 для выручки по смене № &2 от &3 (П. &4)&8 для &5&6  по кассовой книге № &7 на сумму &8" ~
+                                  , ~{&fin-doc-type-name~}  ~
+                                  , buf_shift-obj.shift-name ~
+                                  , buf_shift-obj.shift-date ~
+                                  , buf_shift-obj.shift-nuM    ~
+                                  , buf_shift-obj.obj-type ~
+                                  , buf_shift-obj.obj-code ~
+                                  , buf_temp-fin-sumAvans.cashbookid ~
+                                  , abs(buf_temp-fin-sumAvans.tot-sum) ~
+                                  , ~{&new-line~} ~
+                                  )
+    {&DISPLAY-MESSAGE}.
+
+   end. /*for each buf_temp-fin-sumAvans no-lock*/
+  /* ------------------------- &end-rule& -------------------------------------*/
+
+  /* ------------------------- &start-release-obj& -----------------------------------*/
 
 
-/* ------------------------- &end-release-obj& -------------------------------------*/
+  /* ------------------------- &end-release-obj& -------------------------------------*/
 
-end. /*doe _main*/
-finally:
-  delete object mCashBook no-error .
-end finally.
+  end. /*doe _main*/
+  finally:
+    delete object mCashBook no-error .
+  end finally.
 end procedure. /* proc-main */
 
 procedure load-ruleset-context :
@@ -2935,11 +4075,20 @@ PROCEDURE StrTax :
       do:
         if tt-fin-doc.curr-code = 0 then 
         do:
+          if tt0-fin-doc-tax.vat-pc = 0 and taxVne then 
+          assign 
+            str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+            else
           assign 
             str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+
         end.
         else 
         do:
+          if tt0-fin-doc-tax.vat-pc = 0 and taxVne then 
+          assign 
+            str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+            else          
           assign 
             str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
         end.  

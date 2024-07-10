@@ -288,6 +288,7 @@ class ibs.th.file.asyncproc:
    method public char Writefile (ifile as character ,itext as character):
       if itext eq ""
       then do:
+        if ifile <> ? then 
          output stream sWriteFile to value(ifile).
          output stream sWriteFile close.
       end.

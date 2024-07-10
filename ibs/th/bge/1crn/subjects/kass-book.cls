@@ -39,15 +39,21 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
     private set.
   define property rule-reason-nonop-inc   as character    no-undo get. 
     private set.
+  define property rule-reason-prepayment   as character    no-undo get. 
+    private set.
   define property Rule-Osn-Rko    as character    no-undo get. 
     private set.
   define property code-payer    as integer      no-undo get. 
     private set.
   define property code-payer-nonop-inc    as integer      no-undo get. 
     private set.
+  define property code-payer-prepayment    as integer      no-undo get. 
+    private set.
   define property rule-payer    as character    no-undo get. 
     private set.
   define property rule-payer-nonop-inc    as character    no-undo get. 
+    private set.
+  define property rule-payer-prepayment    as character    no-undo get. 
     private set.
   define property rule-att      as integer      no-undo get. 
     private set.
@@ -58,6 +64,8 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
   define property kredit        as character    no-undo get. 
     private set.
   define property kredit-nonop-inc        as character    no-undo get. 
+    private set.
+  define property credit-prepayment        as character    no-undo get. 
     private set.
   define property debit         as character    no-undo get. 
     private set.
@@ -151,16 +159,22 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
         rule-reason      = {&attr-str} .
       when "rule-reason-nonop-inc"      then 
         rule-reason-nonop-inc      = {&attr-str} .
+      when "rule-reason-prepayment"      then 
+        rule-reason-prepayment      = {&attr-str} .
       when "Rule-Osn-Rko"       then 
         Rule-Osn-Rko       = {&attr-str} .
       when "code-payer"       then 
         code-payer       = {&attr-integer} .
       when "code-payer-nonop-inc"       then 
         code-payer-nonop-inc       = {&attr-integer} .
+      when "code-payer-prepayment"       then 
+        code-payer-prepayment       = {&attr-integer} .
       when "rule-payer"       then 
         rule-payer       = {&attr-str} .
       when "rule-payer-nonop-inc"       then 
         rule-payer-nonop-inc       = {&attr-str} .
+      when "rule-payer-prepayment"       then 
+        rule-payer-prepayment       = {&attr-str} .
       when "rule-att"         then 
         rule-att         = {&attr-integer} .
       when "ind-kass-pko"     then 
@@ -171,6 +185,8 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
         kredit           = {&attr-str} .
       when "kredit-nonop-inc"           then 
         kredit-nonop-inc           = {&attr-str} .
+      when "credit-prepayment"           then 
+        credit-prepayment           = {&attr-str} .
       when "debit"            then 
         debit            = {&attr-str} .
       when "Corr-Rko"          then 
@@ -283,15 +299,19 @@ class ibs.th.bge.1crn.subjects.kass-book inherits ibs.th.bge.1crn.subjects.asubj
       basic-kb              = ?
       rule-reason           = "Не заполнять"
       rule-reason-nonop-inc = "Не заполнять"
+      rule-reason-prepayment = "Не заполнять"
       code-payer            = ?
       code-payer-nonop-inc  = ?
+      code-payer-prepayment = ?
       rule-payer            = ?
       rule-payer-nonop-inc  = ?
+      rule-payer-prepayment = ?
       rule-att              = ?
       ind-kass-pko          = ?
       apart-np-tnp          = ?
       kredit                = ?
       kredit-nonop-inc      = ?
+      credit-prepayment     = ?
       debit                 = ?
       post-chief            = ?
       fio-chief             = ?

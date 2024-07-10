@@ -22,11 +22,11 @@ define buffer buf_clients-attr for ub.clients-attr .
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d3f9048d4e8e, 3106, rls $
+$Author: Ostroukhov $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: findoci2.w $
+$Archive: ref/findoci2.w $
 
 Карточка редактирования расходного ордера
 
@@ -70,11 +70,11 @@ define input parameter p-other as character no-undo .
 define input-output parameter p-doc-rec as recid no-undo.
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d3f9048d4e8e, 3106, rls $":U .
+define variable vss-author      as character no-undo init "$Author: Ostroukhov $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 09 09:15:01 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: findoci2.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/findoci2.w $":U .
 define variable vss-description as character no-undo init "Карточка редактирования расходного ордера".
 { cmp/vssrevis.i }
 /*{ cmp/library.i }*/
@@ -96,6 +96,9 @@ define variable mprn-doc-code-old as character no-undo.
 define variable current-pko-rko as character no-undo.
 define variable current-ruleID  as character no-undo. 
 define variable MParam as character no-undo.
+define variable paramVne as logical no-undo .
+define variable Vnecli-type   as character no-undo .
+define variable Vnecli-code   as integer   no-undo .
 
 define buffer X_fin-code-cor-acc for ub.fin-code-cor-acc.
 define buffer X_fin-code-an-uchet for ub.fin-code-an-uchet.

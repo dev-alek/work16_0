@@ -22,11 +22,11 @@ DEFINE BUFFER X_sysconf FOR ub.sysconf.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 12c0f79a3864, 3013, rls $
+$Author: EShklyar $
+$Date: Ср апр 06 16:23:44 2022 +0300 $
+$Workfile: findoci6.w $
+$Archive: ref/findoci6.w $
 
 Карточка редактирования расходного АПЗ
 
@@ -67,11 +67,11 @@ define input parameter p-other as character no-undo .
 define input-output parameter p-doc-rec as recid no-undo.
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 12c0f79a3864, 3013, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:44 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: findoci6.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/findoci6.w $":U .
 define variable vss-description as character no-undo init "Карточка редактирования расходного АПЗ".
 { cmp/vssrevis.i }
 
@@ -88,7 +88,9 @@ define variable v-baseratef     as logical no-undo .
 define variable v-contractf     as logical no-undo .
 define variable v-contractratef as logical no-undo .
 define variable v-limit-access  as integer no-undo .
-
+define variable paramVne as logical no-undo .
+define variable Vnecli-type   as character no-undo .
+define variable Vnecli-code   as integer   no-undo .
 
 
 

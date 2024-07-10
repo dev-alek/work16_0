@@ -245,6 +245,30 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           , objImp:kredit-nonop-inc, v-code, objImp:name_
           ) ) .
     end .
+    if objImp:credit-prepayment <> ? then 
+    do :
+      v-int-schet = integer (objImp:credit-prepayment) no-error .
+      v-code-value = objImp:credit-prepayment .
+      v-schet-found = false .
+      for each buf_clients no-lock
+        where buf_clients.db-num   = ibs.th.gbl.gbl-var:g#db-num
+        and buf_clients.obj-type = {&shop}
+        and buf_clients.stts     = {&bef-current-status-int} :
+        if can-find (first buf_fin-code-cor-acc
+          where buf_fin-code-cor-acc.host-code  = buf_clients.host-code
+          AND buf_fin-code-cor-acc.code-value = v-code-value) then 
+        do :
+          v-host-code   = buf_clients.host-code .
+          v-schet-found = true .
+          leave.
+        end .
+      end .
+      if not v-schet-found then
+        undo, throw new Progress.Lang.AppError( substitute(
+          "Счёт кредита для формирования ПКО «Аванс» [&1] из кассовой книги [&2 &3] отсутствует в справочнике счетов."
+          , objImp:credit-prepayment, v-code, objImp:name_
+          ) ) .
+    end .
     if objImp:debit <> ? then 
     do :
       v-int-schet = integer (objImp:debit) no-error .
@@ -292,6 +316,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
           , {&cmp}, objImp:code-payer-nonop-inc, v-code, objImp:name_
           ) ) .
     end .
+    if objImp:code-payer-prepayment <> ? then 
+    do :
+      if not can-find (first buf_clients
+        where buf_clients.obj-type = {&cmp}
+        and buf_clients.obj-code = objImp:code-payer-prepayment) then
+        undo, throw new Progress.Lang.AppError( substitute(
+          "Контрагент для аванса ПКО [&1 &2] из кассовой книги [&3 &4] отсутствует в справочнике клиентов."
+          , {&cmp}, objImp:code-payer-prepayment, v-code, objImp:name_
+          ) ) .
+    end .
     define variable vbank-resive      as integer no-undo.
     define variable vbank-resive-host as integer no-undo.
     find first fin-bank where fin-bank.bik eq objImp:bank-resive
@@ -327,12 +361,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       when objImp:kredit <> ? 
       tt-cashbook.corrPkoVne        = objImp:kredit-nonop-inc              
       when objImp:kredit-nonop-inc <> ? 
+      tt-cashbook.corrPkoAvans        = objImp:credit-prepayment       
+      when objImp:credit-prepayment <> ? 
       tt-cashbook.CorrRko           = objImp:Corr-Rko            
       when objImp:Corr-Rko <> ?
       tt-cashbook.RuleOsnPko        = objImp:rule-reason         
       when objImp:rule-reason <> ?
       tt-cashbook.RuleOsnPkoVne     = objImp:rule-reason-nonop-inc 
       when objImp:rule-reason-nonop-inc <> ?
+      tt-cashbook.RuleOsnPkoAvans     = objImp:rule-reason-prepayment 
+      when objImp:rule-reason-prepayment <> ?
       tt-cashbook.OsnAcct           = objImp:debit               
       when objImp:debit <> ? 
       tt-cashbook.RuleOsnRko        = objImp:Rule-Osn-Rko        
@@ -344,7 +382,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.Vnecli-type       = {&cmp}                     
       when objImp:code-payer-nonop-inc <> ?
       tt-cashbook.Vnecli-code       = objImp:code-payer-nonop-inc          
-      when objImp:code-payer-nonop-inc <> ?
+      when objImp:code-payer-prepayment <> ?
+      tt-cashbook.Avanscli-type       = {&cmp}                     
+      when objImp:code-payer-prepayment <> ?
+      tt-cashbook.Avanscli-code       = objImp:code-payer-prepayment  
+      when objImp:code-payer-prepayment <> ?
       tt-cashbook.RulePril          = string(objImp:rule-att)    
       when objImp:rule-att <> ?
       tt-cashbook.FlagSepCash       = (objImp:ind-kass-pko = 1)  
@@ -401,11 +443,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
        Если не указано, то в ПКО проставляется наименование контрагента (см. п. 4.3.4.3) */
     tt-cashbook.takenfrom    = objImp:rule-payer .
     tt-cashbook.takenfromVne = objImp:rule-payer-nonop-inc .
+    tt-cashbook.takenfromAvans = objImp:rule-payer-prepayment .
     /*
     if objImp:rule-payer <> ? then do : 
       tt-cashbook.takenfrom    = objImp:rule-payer .
     end .
-    else do :
+    else 
+    do :
       /* п.4.3.4.3
          Поле «Получено от» - представляет собой контрагента, от которого поступили ДС.
          Если не заполнено, то подставляется контрагент, указанный в настройке фирмы «Тип и код реализации».

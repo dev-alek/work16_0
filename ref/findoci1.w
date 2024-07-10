@@ -93,7 +93,10 @@ define variable v-limit-access  as integer no-undo .
 define variable mprn-doc-code-old as character no-undo. 
 define variable current-pko-rko as character no-undo.
 define variable current-ruleID  as character no-undo. 
-
+define variable paramVne as logical no-undo .
+define variable Vnecli-type   as character no-undo .
+define variable Vnecli-code   as integer   no-undo .
+  
 define buffer X_fin-code-cor-acc for ub.fin-code-cor-acc.
 define buffer X_fin-code-an-uchet for ub.fin-code-an-uchet.
 define buffer X_fin-code-cel-nazn for ub.fin-code-cel-nazn.
@@ -1002,7 +1005,7 @@ tt-fin-doc.sum-doc
 tt-fin-doc.prn-doc-code
 tt-fin-doc.payer-name
 /*tt-fin-doc.naznach-plat*/
-tt-fin-doc.including
+/*tt-fin-doc.including*/
 tt-fin-doc.enclosure
 tt-fin-doc.receiver-sign2
 tt-fin-doc.receiver-sign3

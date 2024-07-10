@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 84c6c67137c5, 2693, rls $
+$Author: EShklyar $
+$Date: ѕт дек 18 18:16:05 2020 +0300 $
+$Workfile: r-ddinam.p $
+$Archive: rep/r-ddinam.p $
 
 ƒвижение денежных средств
 
@@ -37,11 +37,11 @@ define input parameter p-plain-txt              as   logical               no-un
 define input parameter p-xls                    as   logical               no-undo .
 define input parameter p-dir-name               as   character             no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 84c6c67137c5, 2693, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: ѕт дек 18 18:16:05 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-ddinam.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-ddinam.p $":U .
 define variable vss-description as character no-undo init "ƒвижение денежных средств".
 { cmp/vssrevis.i }
 {cmp\r-sheetf.i }
@@ -1132,25 +1132,29 @@ procedure report-exec :
                            v-income-ras    = v-income-ras + buf_fin-doc.sum-doc
                            .
                      end.
-                     else
-                     do:
+                      else do:
                         find first ub.CashBook no-lock where ub.CashBook.cli-code = buf_fin-doc.payer-code
-                           and ub.CashBook.cli-type = buf_fin-doc.payer-type no-error .
-                        if available (ub.CashBook) then
-                        do:
-                           assign
-                              v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
-                              v-income-ras    = v-income-ras + buf_fin-doc.sum-doc
-                              .
+                        and ub.CashBook.cli-type = buf_fin-doc.payer-type no-error .
+                        if available (ub.CashBook) then do:
+                        assign
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
+                        .
                         end.
-                        else
-                        do:
-                           assign
-                              v-income-other = v-income-other + buf_fin-doc.sum-doc
-                              v-income-ras   = v-income-ras + buf_fin-doc.sum-doc
-                              .
+                        else do:  
+                        find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId and
+                        ub.CashBookRule.Code = "Avanscli-code" and ub.CashBookRule.RuleValue = string(buf_fin-doc.payer-code) no-error .
+                        if available (ub.CashBookRule) and buf_fin-doc.payer-type = {&cmp} then do:
+                        assign
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
+                        .
                         end.
-                     end.
+                        else do:                         
+                        assign
+                          v-income-other = v-income-other + buf_fin-doc.sum-doc
+                        .
+                        end.
+                        end.
+                      end.
                   end.
                   else
                   do :
@@ -1316,25 +1320,29 @@ else temp-fin-doc.ost-end       = temp-fin-doc.ost-end + (temp-fin-doc.ost-begin
                               v-income-ras    = v-income-ras + buf_fin-doc.sum-doc
                               .
                         end.
-                        else 
-                        do:
-                           find first ub.CashBook no-lock where ub.CashBook.cli-code = buf_fin-doc.payer-code
-                              and ub.CashBook.cli-type = buf_fin-doc.payer-type no-error .
-                           if available (ub.CashBook) then 
-                           do:
-                              assign
-                                 v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
-                                 v-income-ras    = v-income-ras + buf_fin-doc.sum-doc
-                                 .
-                           end.
-                           else 
-                           do:  
-                              assign
-                                 v-income-other = v-income-other + buf_fin-doc.sum-doc
-                                 v-income-ras   = v-income-ras + buf_fin-doc.sum-doc
-                                 .
-                           end.
+                      else do:
+                        find first ub.CashBook no-lock where ub.CashBook.cli-code = buf_fin-doc.payer-code
+                        and ub.CashBook.cli-type = buf_fin-doc.payer-type no-error .
+                        if available (ub.CashBook) then do:
+                        assign
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
+                        .
                         end.
+                        else do:  
+                        find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId and
+                        ub.CashBookRule.Code = "Avanscli-code" and ub.CashBookRule.RuleValue = string(buf_fin-doc.payer-code) no-error .
+                        if available (ub.CashBookRule) and buf_fin-doc.payer-type = {&cmp} then do:
+                        assign
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
+                        .
+                        end.
+                        else do:                         
+                        assign
+                          v-income-other = v-income-other + buf_fin-doc.sum-doc
+                        .
+                        end.
+                        end.
+                      end.
 
                      end.              
                      else 

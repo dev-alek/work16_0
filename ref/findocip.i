@@ -1079,7 +1079,12 @@ ON CHOOSE OF B-{&cli-side} IN FRAME Dialog-Frame
     define variable ref-rec  as recid     no-undo.
     define variable Vnecli-type as character no-undo .
     define variable Vnecli-code as integer no-undo .
-    
+    define variable Avanscli-type as character no-undo .
+    define variable Avanscli-code as integer no-undo .
+    define variable v-sum-vat-chr  as character no-undo .
+    define variable v-each-vat-chr as character no-undo.
+    define variable v-sum-vat      like ub.fin-doc-tax.sum-vat-line-doc no-undo .
+        
     define buffer buf_clients for ub.clients.
 { gbl/stdbtn.i }
 run ref/cli-all.w ( parParentProc
@@ -1153,19 +1158,21 @@ do :
     .
 end.
 
-find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = tt-fin-doc.cor-acc1-value
-  and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
-  and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+find first X_fin-code-cor-acc1 no-lock where X_fin-code-cor-acc1.code-value = tt-fin-doc.cor-acc1-value
+  and X_fin-code-cor-acc1.host-code = tt-fin-doc.host-code
+  and X_fin-code-cor-acc1.status_ = integer({&current-status-int})  
   no-error .
-if available X_fin-code-cor-acc
+if available X_fin-code-cor-acc1
   then 
 do :
   assign
-    f-cor-acc1-descr   = X_fin-code-cor-acc.descr
-    tt-fin-doc.cor-acc = X_fin-code-cor-acc.fin-code
+    f-cor-acc1-descr   = X_fin-code-cor-acc1.descr
+    tt-fin-doc.cor-acc = X_fin-code-cor-acc1.fin-code
     .
 end.
-
+assign
+  tt-fin-doc.including = "@, в том числе НДС" .
+  paramVne = false .
 end.
 else 
 do:
@@ -1213,7 +1220,55 @@ do :
     .
 end.
 
-find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = tt-fin-doc.cor-acc1-value
+find first X_fin-code-cor-acc1 no-lock where X_fin-code-cor-acc1.code-value = tt-fin-doc.cor-acc1-value
+  and X_fin-code-cor-acc1.host-code = tt-fin-doc.host-code
+  and X_fin-code-cor-acc1.status_ = integer({&current-status-int})  
+  no-error .
+if available X_fin-code-cor-acc1
+  then 
+do :
+  assign
+    f-cor-acc1-descr   = X_fin-code-cor-acc1.descr
+    tt-fin-doc.cor-acc = X_fin-code-cor-acc1.fin-code
+    .
+end.
+assign
+  tt-fin-doc.including = "@, в т.ч.: без налога (НДС)" .
+  paramVne = true .
+end.
+else do:
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "Avanscli-type"
+  no-error.
+Avanscli-type = ub.CashBookRule.RuleValue .                                     
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "Avanscli-code"
+  no-error.
+Avanscli-code = integer(ub.CashBookRule.RuleValue) .                                       
+                                         
+if tt-fin-doc.{&cli-side}-type = Avanscli-type and
+tt-fin-doc.{&cli-side}-code = Avanscli-code then do:
+assign
+  tt-fin-doc.cor-acc1-value = ub.CashBook.OsnAcct
+  .
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "corrPkoAvans"
+  no-error.
+if available (ub.CashBookRule) then tt-fin-doc.cor-acc-value = ub.CashBookRule.RuleValue .  
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "RuleOsnPkoAvans"
+  no-error.
+if available (ub.CashBookRule) then tt-fin-doc.naznach-plat = ub.CashBookRule.RuleValue .  
+
+find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = tt-fin-doc.cor-acc-value
   and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
   and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
   no-error .
@@ -1221,14 +1276,33 @@ if available X_fin-code-cor-acc
   then 
 do :
   assign
-    f-cor-acc1-descr   = X_fin-code-cor-acc.descr
+    f-cor-acc-descr    = X_fin-code-cor-acc.descr
     tt-fin-doc.cor-acc = X_fin-code-cor-acc.fin-code
     .
 end.
-  
+
+find first X_fin-code-cor-acc1 no-lock where X_fin-code-cor-acc1.code-value = tt-fin-doc.cor-acc1-value
+  and X_fin-code-cor-acc1.host-code = tt-fin-doc.host-code
+  and X_fin-code-cor-acc1.status_ = integer({&current-status-int})  
+  no-error .
+if available X_fin-code-cor-acc1
+  then 
+do :
+  assign
+    f-cor-acc1-descr   = X_fin-code-cor-acc1.descr
+    tt-fin-doc.cor-acc = X_fin-code-cor-acc1.fin-code
+    .
+end.
+assign
+  tt-fin-doc.including = "@, в том числе НДС" .
+  paramVne = false .
 end.
 else do:
 tt-fin-doc.naznach-plat = "".
+
+tt-fin-doc.including = "@, в том числе НДС" .
+paramVne = false .
+end.
 end.
 end.
 
@@ -1369,8 +1443,10 @@ ON VALUE-CHANGED OF tt-fin-doc.{&cli-side}-type IN FRAME Dialog-Frame
 
 PROCEDURE check-{&cli-side} :
   define buffer buf_clients for ub.clients.
-  define variable Vnecli-type as character no-undo .
-  define variable Vnecli-code as integer   no-undo .
+  define variable Vnecli-type   as character no-undo .
+  define variable Vnecli-code   as integer   no-undo .
+  define variable Avanscli-type as character no-undo .
+  define variable Avanscli-code as integer   no-undo .
   find first buf_clients no-lock where
     buf_clients.obj-code = input frame {&frame-name} tt-fin-doc.{&cli-side}-code
     and buf_clients.obj-type = input frame {&frame-name} tt-fin-doc.{&cli-side}-type no-error.
@@ -1410,16 +1486,16 @@ do :
     .
 end.
 
-find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = tt-fin-doc.cor-acc1-value
-  and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
-  and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
+find first X_fin-code-cor-acc1 no-lock where X_fin-code-cor-acc1.code-value = tt-fin-doc.cor-acc1-value
+  and X_fin-code-cor-acc1.host-code = tt-fin-doc.host-code
+  and X_fin-code-cor-acc1.status_ = integer({&current-status-int})  
   no-error .
-if available X_fin-code-cor-acc
+if available X_fin-code-cor-acc1
   then 
 do :
   assign
-    f-cor-acc1-descr   = X_fin-code-cor-acc.descr
-    tt-fin-doc.cor-acc = X_fin-code-cor-acc.fin-code
+    f-cor-acc1-descr   = X_fin-code-cor-acc1.descr
+    tt-fin-doc.cor-acc = X_fin-code-cor-acc1.fin-code
     .
 end.
 
@@ -1470,7 +1546,53 @@ do :
     .
 end.
 
-find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = tt-fin-doc.cor-acc1-value
+find first X_fin-code-cor-acc1 no-lock where X_fin-code-cor-acc1.code-value = tt-fin-doc.cor-acc1-value
+  and X_fin-code-cor-acc1.host-code = tt-fin-doc.host-code
+  and X_fin-code-cor-acc1.status_ = integer({&current-status-int})  
+  no-error .
+if available X_fin-code-cor-acc1
+  then 
+do :
+  assign
+    f-cor-acc1-descr   = X_fin-code-cor-acc1.descr
+    tt-fin-doc.cor-acc = X_fin-code-cor-acc1.fin-code
+    .
+end.
+  
+end.
+else do:
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "Avanscli-type"
+  no-error.
+Avanscli-type = ub.CashBookRule.RuleValue .                                     
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "Avanscli-code"
+  no-error.
+Avanscli-code = integer(ub.CashBookRule.RuleValue) .                                       
+                                         
+if tt-fin-doc.{&cli-side}-type = Avanscli-type and
+tt-fin-doc.{&cli-side}-code = Avanscli-code then do:
+assign
+  tt-fin-doc.cor-acc1-value = ub.CashBook.OsnAcct
+  .
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "corrPkoAvans"
+  no-error.
+if available (ub.CashBookRule) then tt-fin-doc.cor-acc-value = ub.CashBookRule.RuleValue .  
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "RuleOsnPkoAvans"
+  no-error.
+if available (ub.CashBookRule) then tt-fin-doc.naznach-plat = ub.CashBookRule.RuleValue .  
+
+find first X_fin-code-cor-acc no-lock where X_fin-code-cor-acc.code-value = tt-fin-doc.cor-acc-value
   and X_fin-code-cor-acc.host-code = tt-fin-doc.host-code
   and X_fin-code-cor-acc.status_ = integer({&current-status-int})  
   no-error .
@@ -1478,14 +1600,28 @@ if available X_fin-code-cor-acc
   then 
 do :
   assign
-    f-cor-acc1-descr   = X_fin-code-cor-acc.descr
+    f-cor-acc-descr    = X_fin-code-cor-acc.descr
     tt-fin-doc.cor-acc = X_fin-code-cor-acc.fin-code
+    .
+end.
+
+find first X_fin-code-cor-acc1 no-lock where X_fin-code-cor-acc1.code-value = tt-fin-doc.cor-acc1-value
+  and X_fin-code-cor-acc1.host-code = tt-fin-doc.host-code
+  and X_fin-code-cor-acc1.status_ = integer({&current-status-int})  
+  no-error .
+if available X_fin-code-cor-acc1
+  then 
+do :
+  assign
+    f-cor-acc1-descr   = X_fin-code-cor-acc1.descr
+    tt-fin-doc.cor-acc = X_fin-code-cor-acc1.fin-code
     .
 end.
   
 end.
 else do:
 tt-fin-doc.naznach-plat = "".
+end.
 end.
 end.
 
@@ -2566,7 +2702,24 @@ PROCEDURE fill-tables :
 
   end.
   { gbl/fautoobj.i tt-fin-doc.host-code tt-fin-doc.fin-doc-code v-is-auto-obj }
+
+  find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "Vnecli-type"
+  no-error.
+Vnecli-type = ub.CashBookRule.RuleValue .                                     
+find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = tt-fin-doc.cashbookId
+  and ub.CashBookRule.Obj-type   = {&by_all}
+  and ub.CashBookRule.Obj-code   = 0
+  and ub.CashBookRule.Code       = "Vnecli-code"
+  no-error.
+Vnecli-code = integer(ub.CashBookRule.RuleValue) .          
+if tt-fin-doc.{&cli-side}-type = Vnecli-type and
+tt-fin-doc.{&cli-side}-code = Vnecli-code then paramVne = true .
+else paramVne = false .
   run proc-update-sum-vat-chr in this-procedure (input-output v-start).
+
 END PROCEDURE.
 
 
@@ -2873,10 +3026,15 @@ procedure proc-update-sum-vat-chr :
       /*      .*/
       end.
     end. /* for each tt0-fin-doc-tax no-lock where */
+
     if tt-fin-doc.curr-code = 0 then 
     do:
-      /*      assign*/
-      do:
+      if paramVne then do:
+      assign
+        v-sum-vat-chr = "в т.ч. без налога (НДС)" 
+        .        
+      end.
+      else do:  
         v-sum-vat-chr = "в том числе НДС" + right-trim (v-each-vat-chr , ";").
       /*      v-sum-vat-chr = "в том числе НДС" + {&space-char} +                                                              */
       /*                    string(truncate(v-sum-vat, 0)) + {&space-char} +  "{&abbr_rub}." + {&space-char} +                 */
@@ -2884,7 +3042,7 @@ procedure proc-update-sum-vat-chr :
       /*                    then (string(100 * round(v-sum-vat - truncate(v-sum-vat, 0), 2))  + {&space-char} + "{&abbr_kop}.")*/
       /*                    else "":U)                                                                                         */
       end.
-    /*      .*/
+          
     end. /* if tt-fin-doc.curr-code = 0 then do: */
     else 
     do:
