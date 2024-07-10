@@ -89,6 +89,8 @@ define buffer buf-spi_trn-doc for ub.trn-doc .
       rvs-rec = recid (r-doc) ~
     . ~
   end.
+&scop ERR_POKMI "Работа с документом проверки корректности работы АСИ в резервуаре ~
+невозможна при выключенной интеграции с библиотекой ПОкМИ." 
 
 {str/autorvs.i}
 
@@ -130,6 +132,8 @@ define variable rvs-rec          as recid     no-undo.
 define variable varlog           as logical   no-undo.
 define variable p-auto           as char      no-undo.
 define variable rvsinvstrObj     as class rvsinvstr no-undo.
+define variable rdc-value        as character no-undo .
+define variable rdc-type         as character no-undo.
 /*define variable p-autorvs as logical no-undo.*/
 
 
@@ -445,7 +449,12 @@ DO:
 /*                view-as alert-box error.                                                                              */
 /*            return no-apply.                                                                                          */
 /*        end.                                                                                                          */
-
+        if rdc-value <>  "pomi-rn" then
+        do:
+          message {&ERR_POKMI} view-as alert-box.
+          return no-apply.  
+        end.
+        
         assign
             rvs-rec = ?
             .
@@ -490,6 +499,11 @@ DO:
             view-as alert-box.
         return no-apply.
   end.
+  if rdc-value <>  "pomi-rn" then
+  do:
+    message {&ERR_POKMI} view-as alert-box.
+    return no-apply.  
+  end.
 
   assign
       rvs-rec = recid( r-doc )
@@ -533,6 +547,11 @@ DO:
   end.
   if r-doc.status_ = {&g___new} then 
   do:
+    if rdc-value <>  "pomi-rn" then
+    do:
+      message {&ERR_POKMI} view-as alert-box.
+      return no-apply.  
+    end.
     assign
         varlog = no
         .
@@ -593,6 +612,11 @@ DO:
     do:
         message "Не выбрана сверка, которую нужно удалить." view-as alert-box.
         return no-apply.
+    end.
+    if rdc-value <>  "pomi-rn" then
+    do:
+      message {&ERR_POKMI} view-as alert-box.
+      return no-apply.  
     end.
     
     p-rvs-doc = r-doc.rvs-code.
@@ -939,7 +963,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     assign
         filter-point = "all-test-asi":U
         . 
-        
+    
+    RUN gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", NO, OUTPUT rdc-value, OUTPUT rdc-type) NO-ERROR.
     run UI-on in this-procedure .
     WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
     

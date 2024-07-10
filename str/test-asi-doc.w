@@ -63,6 +63,7 @@ define buffer buf_doc-attr      for ub.doc-attr.
 define variable v-ref-rec         as recid     no-undo .
 define variable ii                as integer   no-undo.
 define variable bcol              as handle    extent 37 no-undo.
+define variable isMeasurement     as logical   no-undo init no.
 
 /* ********************  preprocessor definitions  ******************** */
 &scop open-query-{&browse-name} open query {&browse-name} ~
@@ -205,8 +206,8 @@ define button b-meas
   size 10 by 1.
 
 define menu m-meas
-  menu-item m-meas-1 label "Всех резервуаров"        accelerator "alt-1"
-  menu-item m-meas-3 label "Текущего резервуара"     accelerator "alt-3".
+  menu-item m-meas-1 label "Всех резервуаров в документе" accelerator "alt-1"
+  menu-item m-meas-3 label "Текущего резервуара"          accelerator "alt-3".
 
 
 define button r-acc
@@ -748,9 +749,12 @@ procedure ui-on :
       r-doc.agnt
       r-doc.boss
       r-wrkr r-agnt r-boss
-      b-add b-del b-mark
-      b-meas b-chg
+      b-mark
     with frame {&frame-name}.
+    if not isMeasurement then
+        enable
+          b-add b-del b-chg  b-meas
+        with frame {&frame-name}.
   end.
   
 
@@ -1288,8 +1292,12 @@ procedure proc_m-meas-3 :
     assign 
       tt-meas.obj-type = ub.rvs-line.obj-type
       tt-meas.obj-code = ub.rvs-line.obj-code
-      tt-meas.pl-code  = ub.rvs-line.pl-code.
+      tt-meas.pl-code  = ub.rvs-line.pl-code
+      tt-meas.loc1     = meas-place.loc1
+    .
     run waitfram-show in this-procedure ( input ("Делаем сверку по резервуару " + meas-place.loc1) ).
+    disable b-add b-chg b-del b-meas with frame {&frame-name}.
+    isMeasurement = yes.
     tr:
     do transaction on error undo tr, retry tr :
       if retry then 
@@ -1410,6 +1418,7 @@ procedure proc_m-meas-3 :
 /*      end.                                                               */
     end. /* transaction */
     run waitfram-hide in this-procedure.
+    isMeasurement = no.
     run ui-on in this-procedure.
     if VErrorFlag 
       then 
@@ -1455,31 +1464,21 @@ procedure proc-lkp:
 end procedure.
 
 procedure proc_m-meas-1:
-  define buffer bf_place  for ub.place.
-  define buffer bf_r-line for ub.rvs-line.
+  define buffer meas-place for ub.place.
+  define buffer bf_r-line  for ub.rvs-line.
   
   define variable VErrorFlag as logical no-undo.
   
   assign 
     rvs-line-rec      = (if available ub.rvs-line      then recid(ub.rvs-line)      else ?)
   .
-  run waitfram-show in this-procedure ( input "Просматриваем измеряемые резервуары" ).
-  { str/meas-plc.i
-      r-doc.obj-type
-      r-doc.obj-code
-      tt-meas
-      no-error
-  }
-  if error-status :error then 
-  do:
-    message "Ошибка при определении резервуаров для измерения."
-      return-value
-      view-as alert-box error.
-    run waitfram-hide in this-procedure.
-    return error.
+  for each tt-meas:
+    delete tt-meas.
   end.
-  if can-find( first tt-meas ) then 
+  if can-find( first bf_r-line where bf_r-line.rvs-code = r-doc.rvs-code ) then 
   do:
+    isMeasurement = yes.
+    disable b-add b-chg b-del b-meas with frame {&frame-name}.
     run waitfram-show in this-procedure ( input "Делаем сверку по всем резервуарам" ).
     tr:
     do transaction on error undo tr, retry tr :
@@ -1546,37 +1545,60 @@ procedure proc_m-meas-1:
             varcur-rvs = 1.
         end.
       end.
-      { str/rvsplace.i
-          r-doc.obj-type
-          r-doc.obj-code
-          no
-          varcur-rvs
-          yes
-          tt-meas-file
-          tt-meas
-          no-error
-      }
-      if error-status :error then 
-      do:
-        message "Ошибка при получении данных с приборов на резервуарах." skip
-          return-value
-          view-as alert-box error.
-        undo tr, retry tr.
+      
+      for each bf_r-line no-lock where
+               bf_r-line.rvs-code = r-doc.rvs-code,
+         first meas-place no-lock where 
+               meas-place.obj-type = bf_r-line.obj-type and
+               meas-place.obj-code = bf_r-line.obj-code and
+               meas-place.pl-code  = bf_r-line.pl-code
+        :    
+        create tt-meas.
+        assign 
+          tt-meas.obj-type = bf_r-line.obj-type
+          tt-meas.obj-code = bf_r-line.obj-code
+          tt-meas.pl-code  = bf_r-line.pl-code
+          tt-meas.loc1     = meas-place.loc1    
+        .
+        { str/rvsplace.i
+           r-doc.obj-type
+           r-doc.obj-code
+           yes
+           varcur-rvs
+           yes
+           tt-meas-file
+           tt-meas
+           no-error
+        }
+        if error-status :error then 
+        do:
+          message "Ошибка при получении данных с приборов на резервуарах." skip
+            return-value
+            view-as alert-box error.
+          undo tr, retry tr.
+        end.
+        find first ub.rvs-line where recid(ub.rvs-line) = recid(bf_r-line) exclusive-lock.
+        { str/fill1plc.i
+            ub.rvs-line.obj-type
+            ub.rvs-line.obj-code
+            ub.rvs-line.pl-code
+            "recid( ub.rvs-line )"
+            ub.rvs-line.rvs-prev-code
+            tt-meas
+            no-error
+        }
+        if error-status :error then 
+        do:
+          message "Ошибка при заполнении данных с приборов на резервуарах." skip
+            return-value
+            view-as alert-box error.
+          undo tr, retry tr.
+        end.
+        
+        find first tt-meas exclusive-lock no-error.
+        delete tt-meas.
       end.
-      { str/fall-plc.i
-          r-doc.obj-type
-          r-doc.obj-code
-          r-doc.rvs-code
-          yes
-          no-error
-      }
-      if error-status :error then 
-      do:
-        message "Ошибка при заполнении данных с приборов на резервуарах." skip
-          return-value
-          view-as alert-box error.
-        undo tr, retry tr.
-      end.
+
 /*      run waitfram-show in this-procedure ( input "Пересчитывем шапку" ).*/
 /*      { str/rvsclchd.i "recid( r-doc )"                                  */
 /*                   no                       no-error }                   */
@@ -1588,6 +1610,7 @@ procedure proc_m-meas-1:
 /*        undo tr, retry tr.                                               */
 /*      end.                                                               */
     end. /* transaction */
+    isMeasurement = no.
   end.
   else 
   do: 
