@@ -1054,8 +1054,8 @@ procedure proc-00 :
                 /*установить смены на кассе*/
                 
                 assign
-                    mc-exist = no
-                    lll = lll + 1 .
+                    mc-exist = NO .
+                    /* lll = lll + 1 . */
                 
                 CREATE buf_chk-doc.
                
@@ -1303,8 +1303,8 @@ procedure proc-00 :
                     delete temp-ivs-ibs-line.
                 end.
                 assign
-                    exist = no
-                    lll = lll + 1 .
+                    exist = NO.
+                    /* lll = lll + 1 . */
                 
                  
                 create buf_chk-doc.
@@ -2745,6 +2745,7 @@ procedure proc-end-chk :
           NO-ERROR. 
        
           IF NOT AVAILABLE ub.chk-doc THEN DO:
+          lll = lll + 1 .
           CREATE ub.chk-doc.   
           ASSIGN 
           ub.chk-doc.doc-code  = tt-chk-doc.doc-code
