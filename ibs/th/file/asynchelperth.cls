@@ -63,7 +63,7 @@ end.
     set (arg as char):
       if arg eq ""
       then
-         MyParamStart = " -ininame "  + GetStartupParam("-ininame").
+         MyParamStart = " -ininame "  + GetStartupParam("-ininame") +  GetStartupParamAndCode("-pf").
       
       else if arg ne ?
       then
@@ -307,7 +307,7 @@ end.*/
             publish "PutFileLogAsunc" from mProcPublish ("Не удалось создать рабочий каталог, задание прервано." ).
             return no.
          end.
-         mIniFile = " -ininame "  + GetStartupParam("-ininame")  .
+         mIniFile = " -ininame "  + GetStartupParam("-ininame") +  GetStartupParamAndCode("-pf")  .
          ConPar = substitute(ConPar, substitute ("-U &1 -P &2 ",myUser,myPass)).
          Writefile(MyWorkDir + "prof.pf", substitute('-DESCRIPTION "&2"&1 -LISTINGS .&1 -FILENAME prof.out&1 ',{&new-line},TaskName)).
          
@@ -1103,6 +1103,16 @@ end.
       os-delete   value(trim(MyWorkDir,v-path-tls-dir-delim )) RECURSIVE.
      
    end method.    
+   
+   method public character GetStartupParamAndCode (input iParam as character  ):
+      def var vText as char no-undo.
+      vText = GetStartupParam ( iParam).
+      if vText eq ?
+      then
+         return "".
+      else
+         return " " + iParam + " " + vText.
+   end.
    
    method public character GetStartupParamEx (input iParam as character  ):
       define variable vText as character no-undo.
