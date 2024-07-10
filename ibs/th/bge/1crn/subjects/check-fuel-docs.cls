@@ -267,15 +267,25 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   method private void expCheckCorrectDoc() :
     
     InitSecTag = "check-correct-docs" .
+    define variable v-asi-type as character no-undo .
     
-    find first buf_doc-attr no-lock where tt-rvs-doc.rvs-code = buf_doc-attr.doc-code
+    find first buf_doc-attr no-lock where buf_doc-attr.doc-code = tt-rvs-doc.rvs-code 
                                       and buf_doc-attr.attr-code = "test-asi-type"
                                       no-error .
     if not available buf_doc-attr
     then do :
-      v-type = "0" .
+      find last buf_c-doc-attr no-lock where buf_c-doc-attr.doc-code = tt-rvs-doc.rvs-code
+                                         and buf_c-doc-attr.attr-code = "test-asi-type"
+                                         no-error .
+      if available buf_c-doc-attr
+      then do :
+        assign v-asi-type = buf_c-doc-attr.attr-value .
+      end .
     end .
-    case buf_doc-attr.attr-value :
+    else do :
+      assign v-asi-type = buf_doc-attr.attr-value .
+    end .
+    case v-asi-type :
       when "test-asi_dens-place" then v-type = "1" .
       when "test-asi_dens-pump" then v-type = "2" .
       when "test-asi_mass" then v-type = "3" .
