@@ -538,9 +538,9 @@ do:
   if sr-izmerenia.sr-level then
   do:
       case sr-izmerenia.sr-type-izm:
-         when 1 then assign v-delta-min = 0 v-delta = 3.
          when 2 then assign v-delta-min = 0 v-delta = 3.
-         when 3 then assign v-delta-min = 0 v-delta = ?.
+         when 0 then assign v-delta-min = 0 v-delta = 3.
+         when 1 then assign v-delta-min = 0 v-delta = ?.
       end case.
       if abs(sr-izmerenia.sr-abs-err-neft-water) < v-delta-min or
          sr-izmerenia.sr-abs-err-neft-water > v-delta or sr-izmerenia.sr-abs-err-neft-water < (-1) * v-delta then do :
@@ -565,9 +565,9 @@ do:
   if sr-izmerenia.sr-temperature then
   do:
       case sr-izmerenia.sr-type-izm:
-         when 1 then v-delta = 0.5.
          when 2 then v-delta = 0.5.
-         when 3 then v-delta = 0.2.
+         when 0 then v-delta = 0.5.
+         when 1 then v-delta = 0.2.
       end case.
       if sr-izmerenia.sr-abs-err-temp-vol > v-delta or sr-izmerenia.sr-abs-err-temp-vol < (-1) * v-delta then do :
         message substitute("&1 &2&3(+/-)&4 °Ñ",
@@ -588,9 +588,9 @@ do:
   if sr-izmerenia.sr-density then
   do:
       case sr-izmerenia.sr-type-izm:
-         when 1 then v-delta = 1.
-         when 2 then v-delta = 0.5.
-         when 3 then v-delta = 0.5.
+         when 2 then v-delta = 1.
+         when 0 then v-delta = 0.5.
+         when 1 then v-delta = 0.5.
       end case.
       if sr-izmerenia.sr-abs-err-dens > v-delta or sr-izmerenia.sr-abs-err-dens < (-1) * v-delta then do :
         message substitute("&1 &2&3(+/-)&4 êã/ì3",
@@ -626,9 +626,9 @@ do:
       end.
       
       case sr-izmerenia.sr-type-izm:
-         when 1 then v-delta = 1.
-         when 2 then v-delta = 0.5.
-         when 3 then v-delta = 0.5.
+         when 2 then v-delta = 1.
+         when 0 then v-delta = 0.5.
+         when 1 then v-delta = 0.5.
       end case.
       if sr-izmerenia.sr-abs-err-dens > v-delta or sr-izmerenia.sr-abs-err-dens < (-1) * v-delta then do :
         message substitute("&1 &2&3(+/-)&4 êã/ì3",
