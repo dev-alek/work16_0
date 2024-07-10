@@ -4281,8 +4281,8 @@ THEN DO:
             v-mm:H                      = bf_rvs-line.level-total * 10
             v-mm:CalibrationTable       = CalibTable
             v-mm:T                      = bf_rvs-line.state-temperature
-            v-mm:R_liquid               = bf_rvs-line.state-density * 1000
-            v-mm:R_gas                  = if state-vapor-density <> ? then (state-vapor-density * 1000) else (vapor-density * 1000)
+            v-mm:R_liquid               = round(bf_rvs-line.state-density * 1000,1)
+            v-mm:R_gas                  = round(if state-vapor-density <> ? then (state-vapor-density * 1000) else (vapor-density * 1000),1)
             v-mm:DeltaOtn_K             = DeltaOtn_K
             v-mm:DeltaOtn_K_Full        = DeltaOtn_K
             v-mm:DeltaAbs_H             = DeltaAbs_H
