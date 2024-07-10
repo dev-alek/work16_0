@@ -18,11 +18,11 @@ DEFINE BUFFER X_sysconf FOR ub.sysconf.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 520233f89800, 2104, rls $
+$Author: SSlivenko $
+$Date: Wed Dec 25 15:23:52 2019 +0300 $
+$Workfile: fndocti.w $
+$Archive: ref/fndocti.w $
 
 Налоги для финансового документа также и для записи истории по фин доку
 
@@ -65,11 +65,11 @@ define INPUT-OUTPUT parameter table for tt0-fin-doc-tax.
 define input parameter p-chip-num like ub.c-fin-doc.chip-num no-undo .
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 520233f89800, 2104, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Dec 25 15:23:52 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fndocti.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/fndocti.w $":U .
 define variable vss-description as character no-undo init "Налоги для финансового документа".
 { cmp/vssrevis.i }
 
@@ -238,7 +238,7 @@ DEFINE VARIABLE f-sum-vat AS DECIMAL FORMAT ">,>>>,>>>,>>>,>>9.99":U INITIAL 0
      SIZE 22.88 BY 1.04
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE f-vat-pc AS DECIMAL FORMAT ">9.99":U INITIAL 0
+DEFINE VARIABLE f-vat-pc AS DECIMAL FORMAT "->9.99":U INITIAL 0
      LABEL "%НДС"
      VIEW-AS FILL-IN
      SIZE 6.63 BY 1 NO-UNDO.
@@ -289,7 +289,7 @@ DEFINE BROWSE BR-fin-doc-tax
       tt-fin-doc-tax.line-num COLUMN-LABEL "N строки!по налогу" FORMAT "99999":U
       tt-fin-doc-tax.sum-line-doc COLUMN-LABEL "Сумма (в т.ч. налоги)" FORMAT ">,>>>,>>>,>>>,>>9.99":U
       tt-fin-doc-tax.with-vat COLUMN-LABEL "С!НДС" FORMAT "да/нет":U
-      tt-fin-doc-tax.vat-pc COLUMN-LABEL "%!НДС" FORMAT ">9.99":U
+      tt-fin-doc-tax.vat-pc COLUMN-LABEL "%!НДС" FORMAT "->9.99":U
             WIDTH 7
       tt-fin-doc-tax.sum-vat-line-doc COLUMN-LABEL "Сумма НДС" FORMAT ">,>>>,>>>,>>>,>>9.99":U
       tt-fin-doc-tax.with-slt COLUMN-LABEL "С!НП" FORMAT "да/нет":U
@@ -1518,6 +1518,7 @@ case v-add-chg:
     .
   end.
  END CASE.
+ if f-vat-pc <> -1 then do:
 CASE p-main-widget :
     when "sum-doc":U then do:
       assign
@@ -1548,6 +1549,7 @@ CASE p-main-widget :
       .
     end.
 END CASE.
+end.
 if
 not (f-sum-vat = 0
 and f-sum-slt = 0
@@ -1625,14 +1627,18 @@ CASE p-widget:
   when "vat":U then do:
     CASE p-on:
       when yes then do:
-        if p-rewrite-tax then
+        if p-rewrite-tax then do:
+          if f-vat-pc <> -1 then
         assign
         f-vat-pc     = v-fin-vat-pc
         .
+        end.
+        if f-vat-pc <> -1 then do:
         assign
         T-with-vat   = yes
         f-sum-vat    = (f-sum-doc - f-sum-slt ) * f-vat-pc / (100 + f-vat-pc )
         .
+        end.
         display
         f-vat-pc
         f-sum-vat

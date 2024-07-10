@@ -88,9 +88,7 @@ define variable v-baseratef     as logical no-undo .
 define variable v-contractf     as logical no-undo .
 define variable v-contractratef as logical no-undo .
 define variable v-limit-access  as integer no-undo .
-define variable paramVne as logical no-undo .
-define variable Vnecli-type   as character no-undo .
-define variable Vnecli-code   as integer   no-undo .
+define variable paramVne as character no-undo .
 
 define buffer X_fin-code-cor-acc for ub.fin-code-cor-acc.
 define buffer X_fin-code-an-uchet for ub.fin-code-an-uchet.
@@ -135,6 +133,7 @@ define variable v-sum-doc-tab-order  as character no-undo init "sum-doc,curr-cod
 { gbl/color.i    }
 { gbl/getcntxt.i def }
 { gbl/usrfulnf.i }
+{ ref/getCliKassa.i }
 { ref/findocip.i &action="define" }
 
 &scop buttons-tab-order    "b-exit,b-quit,b-tax,b-cards,b-print,b-hist,b-help,"

@@ -96,9 +96,7 @@ define variable mprn-doc-code-old as character no-undo.
 define variable current-pko-rko as character no-undo.
 define variable current-ruleID  as character no-undo. 
 define variable MParam as character no-undo.
-define variable paramVne as logical no-undo .
-define variable Vnecli-type   as character no-undo .
-define variable Vnecli-code   as integer   no-undo .
+define variable paramVne as character no-undo .
 
 define buffer X_fin-code-cor-acc for ub.fin-code-cor-acc.
 define buffer X_fin-code-an-uchet for ub.fin-code-an-uchet.
@@ -145,6 +143,7 @@ define variable v-sum-doc-tab-order  as character no-undo init "sum-doc,curr-cod
 { gbl/getcntxt.i def }
 { gbl/usrfulnf.i }
 { gbl/key-rec.i }
+{ ref/getCliKassa.i }
 { ref/findocip.i &action="define" &doc-type="expense-cash" }
 { ref/fd-attr.i " " tt0-fin-doc-attr }
 

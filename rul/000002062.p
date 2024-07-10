@@ -109,7 +109,7 @@ define variable vss-description as character no-undo init "Библиотека процедур д
   define variable mValueAvans          as character no-undo.
   define variable mTypeAvans           as character no-undo.
   define variable mTypePay             as character no-undo.
-  define variable taxVne               as logical   no-undo .
+  define variable taxVne               as character no-undo .
   define buffer buf_shift-obj for ub.shift-obj.
   { str/dia2auto.i }
   { rul/seterror.i }
@@ -2097,9 +2097,7 @@ for each buf_temp-fin-sum where  buf_temp-fin-sum.num-expense_cash eq 0
     tt-cashBookOst.ost = msum. 
 end.
 
-
 /* Внереализационный доход */
-
 find first tt-cashBookOst0Vne where tt-cashBookOst0Vne.cashbookid eq 0
   no-error.
 if not available tt-cashBookOstVne
@@ -2127,6 +2125,7 @@ do:
       no-error .
   end.
 end.
+
 find first buf_temp-fin-sumVne-Pko where buf_temp-fin-sumVne-Pko.num-expense_cash eq 0
   and buf_temp-fin-sumVne-Pko.is-expense_cash eq no
   and buf_temp-fin-sumVne-Pko.cashbookid      eq 0
@@ -2160,7 +2159,7 @@ for each buf_temp-fin-sumVne where  buf_temp-fin-sumVne.num-expense_cash eq 0
       ,input   buf_temp-fin-sumVne.cashbookid 
       ,output  tt-cashBookOstVne.ost
       ,output  Fact-order)
-      no-error .
+      no-error .    
     find first buf_temp-fin-sumVne-Pko where buf_temp-fin-sumVne-Pko.num-expense_cash eq 0
       and buf_temp-fin-sumVne-Pko.is-expense_cash eq (not buf_temp-fin-sumVne.is-expense_cash)
       and buf_temp-fin-sumVne-Pko.cash-desk       eq buf_temp-fin-sumVne.cash-desk
@@ -2172,6 +2171,7 @@ for each buf_temp-fin-sumVne where  buf_temp-fin-sumVne.num-expense_cash eq 0
       tt-cashBookOstVne.ost = tt-cashBookOstVne.ost + buf_temp-fin-sumVne-Pko.tot-sum.
                                               
   end.
+
   msum = tt-cashBookOstVne.ost + buf_temp-fin-sumVne.tot-sum. //остаток положительный а  buf_temp-fin-sum.tot-sum отрицательный 
   if msum < 0
     then 
@@ -2211,7 +2211,7 @@ for each buf_temp-fin-sumVne where  buf_temp-fin-sumVne.num-expense_cash eq 0
         buf_temp-taxVne.sum-doc          = msum
                 
         .
-                
+        
       create buf_new_temp-fin-sumVne.
       buffer-copy buf_temp-fin-sumVne to  buf_new_temp-fin-sumVne
         assign
@@ -2238,8 +2238,8 @@ for each buf_temp-fin-sumVne where  buf_temp-fin-sumVne.num-expense_cash eq 0
         buf_temp-taxVne.sum-rubl         = msum
         buf_temp-taxVne.sum-base         = msum
         buf_temp-taxVne.sum-doc          = msum
-        .
-                
+        buf_temp-taxVne.vat-pc           = -1
+        .   
     end.
     else 
     do:
@@ -2266,7 +2266,6 @@ for each buf_temp-fin-sumVne where  buf_temp-fin-sumVne.num-expense_cash eq 0
 end.
 
 /* Авансы */
-
 find first tt-cashBookOst0Avans where tt-cashBookOst0Avans.cashbookid eq 0
   no-error.
 if not available tt-cashBookOstAvans
@@ -2328,6 +2327,7 @@ for each buf_temp-fin-sumAvans where  buf_temp-fin-sumAvans.num-expense_cash eq 
       ,output  tt-cashBookOstAvans.ost
       ,output  Fact-order)
       no-error .
+                      
     find first buf_temp-fin-sumAvans-Pko where buf_temp-fin-sumAvans-Pko.num-expense_cash eq 0
       and buf_temp-fin-sumAvans-Pko.is-expense_cash eq (not buf_temp-fin-sumAvans.is-expense_cash)
       and buf_temp-fin-sumAvans-Pko.cash-desk       eq buf_temp-fin-sumAvans.cash-desk
@@ -2339,6 +2339,7 @@ for each buf_temp-fin-sumAvans where  buf_temp-fin-sumAvans.num-expense_cash eq 
       tt-cashBookOstAvans.ost = tt-cashBookOstAvans.ost + buf_temp-fin-sumAvans-Pko.tot-sum.
                                               
   end.
+
   msum = tt-cashBookOstAvans.ost + buf_temp-fin-sumAvans.tot-sum. //остаток положительный а  buf_temp-fin-sum.tot-sum отрицательный 
   if msum < 0
     then 
@@ -2363,7 +2364,7 @@ for each buf_temp-fin-sumAvans where  buf_temp-fin-sumAvans.num-expense_cash eq 
                    
         tt-cashBookOst0Avans.ost                   = tt-cashBookOst0Avans.ost + msum.
       .
-                
+
       create buf_temp-taxAvans.
       assign
         buf_temp-taxAvans.curr-code        = buf_new_temp-fin-sumAvans.curr-code
@@ -2376,6 +2377,7 @@ for each buf_temp-fin-sumAvans where  buf_temp-fin-sumAvans.num-expense_cash eq 
         buf_temp-taxAvans.sum-rubl         = msum
         buf_temp-taxAvans.sum-base         = msum
         buf_temp-taxAvans.sum-doc          = msum
+        
                 
         .
                 
@@ -2643,6 +2645,21 @@ for each buf_temp-fin-sum no-lock
     undo _main, return error.
 
   end.
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   find first tt-fin-doc.
   /*заполнение налогов*/
   define variable v-line-num as integer no-undo .
@@ -2714,7 +2731,7 @@ for each buf_temp-fin-sum no-lock
 
     release tt0-fin-doc-tax.
   end.
-  taxVne = no .    
+  taxVne = "" .    
   run StrTax in this-procedure ( input-output tt-fin-doc.including) .
   /* округляем  */
   run RoundTax in this-procedure .
@@ -3140,7 +3157,6 @@ for each buf_temp-fin-sum no-lock
     end.
     find first tt-fin-doc.
     /*заполнение налогов*/
-
     for each buf_temp-taxVne no-lock
       where buf_temp-taxVne.curr-code        = buf_temp-fin-sumVne.curr-code
       and buf_temp-taxVne.cash-desk         = buf_temp-fin-sumVne.cash-desk
@@ -3156,11 +3172,11 @@ for each buf_temp-fin-sum no-lock
         tt0-fin-doc-tax.fin-doc-code       = tt-fin-doc.fin-doc-code
         tt0-fin-doc-tax.host-code          = tt-fin-doc.host-code
         tt0-fin-doc-tax.line-num           = v-line-num
-        tt0-fin-doc-tax.VAT-pc             = buf_temp-taxVne.vat-pc
+        tt0-fin-doc-tax.VAT-pc             = -1
         tt0-fin-doc-tax.slt-pc             = buf_temp-taxVne.slt-pc
         tt0-fin-doc-tax.sum-line-contr     = 0
         tt0-fin-doc-tax.sum-vat-line-contr = 0
-        tt0-fin-doc-tax.with-vat           = buf_temp-taxVne.with-vat
+        tt0-fin-doc-tax.with-vat           = no
         .
       if buf_temp-fin-sumVne.tot-sum > 0  then 
       do :
@@ -3208,7 +3224,7 @@ for each buf_temp-fin-sum no-lock
 
       release tt0-fin-doc-tax.
     end.
-    taxVne = yes .  
+    taxVne = "Vne" .  
     run StrTax in this-procedure ( input-output tt-fin-doc.including) .
     /* округляем  */
     run RoundTax in this-procedure .
@@ -3634,7 +3650,6 @@ for each buf_temp-fin-sum no-lock
     end.
     find first tt-fin-doc.
     /*заполнение налогов*/
-
     for each buf_temp-taxAvans no-lock
       where buf_temp-taxAvans.curr-code        = buf_temp-fin-sumAvans.curr-code
       and buf_temp-taxAvans.cash-desk         = buf_temp-fin-sumAvans.cash-desk
@@ -3702,7 +3717,7 @@ for each buf_temp-fin-sum no-lock
 
       release tt0-fin-doc-tax.
     end.
-    taxVne = no .  
+    taxVne = "avans" .  
     run StrTax in this-procedure ( input-output tt-fin-doc.including) .
     /* округляем  */
     run RoundTax in this-procedure .
@@ -4068,30 +4083,46 @@ PROCEDURE StrTax :
       str = " В т.ч.: "  .
 
     for each tt0-fin-doc-tax :
-      
       if str <> " В т.ч.: " then str = str + "," .
-      if not tt0-fin-doc-tax.with-vat then assign str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+      if not tt0-fin-doc-tax.with-vat then assign str = str + "без налога (НДС) - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
       else 
       do:
         if tt-fin-doc.curr-code = 0 then 
         do:
-          if tt0-fin-doc-tax.vat-pc = 0 and taxVne then 
-          assign 
-            str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
-            else
-          assign 
-            str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
-
+          if tt0-fin-doc-tax.vat-pc = 0 then do:
+            case taxVne:
+              when "vne" then 
+                do:
+                  str = str + "без налога (НДС) - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+                end.
+              when "avans" then 
+                do:
+                  str = str + string(tt0-fin-doc-tax.vat-pc,">>9") + "/" + string(tt0-fin-doc-tax.vat-pc + 100,">>9") + " НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+                end.
+              otherwise 
+              do:
+                str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " {&abbr_rub}. (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+              end.  
+            end case .
         end.
         else 
         do:
-          if tt0-fin-doc-tax.vat-pc = 0 and taxVne then 
-          assign 
-            str = str + "без НДС - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
-            else          
-          assign 
-            str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + " (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+            case taxVne:
+              when "vne" then 
+                do:
+                  str = str + "без налога (НДС) - (от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+                end.
+              when "avans" then 
+                do:
+                  str = str + string(tt0-fin-doc-tax.vat-pc,">>9") + "/" + string(tt0-fin-doc-tax.vat-pc + 100,">>9") + " НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + "(от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+                end.
+              otherwise 
+              do:
+                str = str + string(tt0-fin-doc-tax.vat-pc,">>9.9") + "% НДС - " + string(tt0-fin-doc-tax.sum-vat-line-doc) + "(от суммы " + string(tt0-fin-doc-tax.sum-line-doc) + ") " .
+              end.  
+            end case .
         end.  
+      end.
       end.
       if str = " В т.ч.: " then assign str = "" .
     end.

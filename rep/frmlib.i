@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: frmlib.i $
+$Archive: rep/frmlib.i $
 
 Функция разбивает строку по пробелам на num-line НЕРАВНЫХ частей, которые задаются списком чисел с разделителем {&comma-char}
 
@@ -18,7 +18,7 @@ Creation date: 11/20/03
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: frmlib.i $ $Revision: aea5316774be, 0, rls $".
 
 FUNCTION Break-n-line RETURNS CHARACTER
   ( INPUT p-ost as char,
@@ -77,6 +77,7 @@ do jj = 1 to num-line:
 end.
 assign
 output-num-lines = jj.
+
 RETURN v-line.   /* Function return value. */
 
 END FUNCTION.
@@ -370,4 +371,4 @@ END PROCEDURE. /* get-month-name-gen */
 
 
 
-/* $Workfile$ e n d */
+/* $Workfile: frmlib.i $ e n d */
