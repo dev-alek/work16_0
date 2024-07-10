@@ -1402,6 +1402,7 @@ define input  parameter p-msg as character no-undo .
     f-msg = p-msg
   .
   enable f-msg with frame {&frame-name}.
+  if mHiddenMode = false then
   display
     f-msg
     with frame {&frame-name}

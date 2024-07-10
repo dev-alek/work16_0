@@ -225,7 +225,7 @@ on error undo main-block, return error
     .
   end.
 
-  def frame a
+  def frame infa
     ub.trn-doc.doc-code                      label "Документ" skip
     ub.trn-doc.obj-type                      label "Объект"
     ub.trn-doc.obj-code                      no-label skip
@@ -237,17 +237,31 @@ on error undo main-block, return error
     with view-as dialog-box side-labels three-d
     title "Расчет складского архива по поставщикам"
     .
+  define variable mFrameView      as logical   no-undo init yes.
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame infa:handle.
+
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Logname=" + log-manager:logfile-name , "frameoxmError").
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameoxmError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameoxmError"). 
+  end.
+  mFrameView = not session:batch-mode and mFramHandle:visible.
   run cur-time in this-procedure ( output v-today
                                  , output start-time
                                  ).
 
-  view frame a .
+  if mFrameView
+  then do:
+     view frame infa .
   display
     buf_trn-doc.doc-code @ ub.trn-doc.doc-code
     buf_trn-doc.obj-type @ ub.trn-doc.obj-type
     buf_trn-doc.obj-code @ ub.trn-doc.obj-code
     buf_trn-doc.fact-date @ ub.trn-doc.fact-date
-    with frame a .
+    with frame infa .
+  end.
   run show-action in this-procedure
     (input "Обработка строк документа"
     ).
@@ -310,11 +324,15 @@ on error undo main-block, return error
       assign
         current-time = string(v-time - start-time, "HH:MM:SS")
       .
+      if mFrameView
+      then do:
+     
       display
         v-ind
         buf_doc-line.artic
         current-time
-        with frame a .
+        with frame infa .
+      end.
     end.
   end.
 
@@ -2840,9 +2858,13 @@ procedure show-action :
       current-time = string(v-time - start-time, "HH:MM:SS")
       current-action = p-action
     .
+    if mFrameView
+    then do:
+     
     display
       current-time
       current-action
-      with frame a.
+      with frame infa.
+     end.
   end.
 end procedure. /* show-action */

@@ -75,12 +75,23 @@ DEFINE FRAME InfoFrame
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
          TITLE "Процесс"
          DEFAULT-BUTTON StopBtn CANCEL-BUTTON StopBtn.
+define variable mFrameView      as logical   no-undo init yes.
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame InfoFrame:handle.
 
-
-ASSIGN
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Logname=" + log-manager:logfile-name , "frameRepError").
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameRepError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameRepError"). 
+  end.
+  mFrameView = not session:batch-mode and mFramHandle:visible.
+  if mFrameView
+  then do:
+    ASSIGN
        FRAME InfoFrame:HIDDEN                           = TRUE
        StopBtn:sensitive IN FRAME InfoFrame             = TRUE.
-
+  end.
 /* ***************  Runtime Attributes and UIB Settings  ************** */
 ON CHOOSE OF StopBtn IN FRAME InfoFrame
 DO:
@@ -89,7 +100,10 @@ DO:
             "процесс проверки?" view-as alert-box QUESTION BUTTONS yes-no
               UPDATE StopProcessing.
   IF StopProcessing THEN do:
-    HIDE FRAME InfoFrame.
+     if mFrameView
+     then do:
+        HIDE FRAME InfoFrame.
+     end.
   End.
 
 END.
@@ -108,8 +122,10 @@ assign v-account = ( if integer( {2} ) = 0 then 100 else integer( {2} ) ).
   &else
 assign v-account = 100.
   &endif
-
-  VIEW FRAME InfoFrame.
+  if mFrameView
+  then do:
+     VIEW FRAME InfoFrame.
+  end.
 &IF "{3}" <> ""  &then
         Assign  RecordsDone: label = {3} .
 &endif
@@ -119,9 +135,11 @@ assign v-account = 100.
 &else
    v-button-stop = false .
 &endif
-
+      if mFrameView
+      then do:
       if v-button-stop then view STOPBTN in frame InfoFrame.
                        else Hide STOPBTN in frame InfoFrame.
+      end.
 
 &endif
 
@@ -156,16 +174,21 @@ IF ( {2} modulo v-account = 0 )  then DO: &endif
     RecordsString3 = fill(' ',v-kol-spice) + string({5})
     .
 &endif
+           if mFrameView
+           then do:
             DISPLAY
               &if "{2}" <> "" &then  {2} @ RecordsDone  &endif
               &if "{3}" <> "" &then  RecordsString   @ RecordsString   &endif
               &if "{4}" <> "" &then  RecordsString2  @ RecordsString2  &endif
               &if "{5}" <> "" &then  RecordsString3  @ RecordsString3  &endif
               WITH FRAME InfoFrame.
+           end.
 &if "{2}" <> "" &then
 End. &endif
    if v-button-stop then  DO:
-         PROCESS EVENTS.
+         if mFrameView
+         then
+            PROCESS EVENTS.
          IF StopProcessing THEN DO:
            &if "{&user-stream-name}" <> "" &then
            PUT STREAM {&user-stream-name} UNFORMATTED "Процесс формирования отчета прерван пользователем!" SKIP(1).
@@ -176,6 +199,9 @@ End. &endif
 &endif
 
 &If "{1}" = "off" &then
-HIDE FRAME InfoFrame.
+if mFrameView
+then do:
+   HIDE FRAME InfoFrame.
+end.
 &endif
 /* $Workfile$ e n d */

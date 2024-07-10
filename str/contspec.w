@@ -3449,7 +3449,6 @@ define variable b-ext as character no-undo .
   HIDE stream PrnLibStream FRAME BottomFrame .
   OUTPUT stream PrnLibStream CLOSE.
 
-  { rep/repfrm.i off } /* Показать окно информации о текущем процессе */
   { gbl/stopwork.i }
 
   run prn-lib-prn-file in this-procedure (input parParentProc,input 0).

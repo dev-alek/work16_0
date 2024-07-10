@@ -330,7 +330,19 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
    define variable mSilent as logical no-undo.
+   
+  define variable mFrameView      as logical   no-undo init yes.
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame {&frame-name}:handle.
+
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameoxmError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameoxmError"). 
+  end.
+  mFrameView = not session:batch-mode and mFramHandle:visible.
    publish "IsAsyncProc" (output mSilent).
+   mSilent = mSilent or mFrameView.
    if mSilent ne true
    then do:
      IF create-window-option = 1 THEN DO:
