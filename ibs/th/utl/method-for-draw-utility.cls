@@ -2312,8 +2312,9 @@ class ibs.th.utl.method-for-draw-utility final:
   
 
                   put-log ( string(now) +  "   Ќачинаем загрузку остатков по топливу...") .
-  
+                     MESSAGE   " Ќачинаем загрузку остатков по топливу...@" VIEW-AS ALERT-BOX .
                   define variable v-count-err as integer no-undo .
+                  
                   run utl/imp-doc4cr-draw-ptrl.p ( this-object
                     , iosn-fname // список соответстви€ поставщиков
                     , iart-fname // список соответстви€ товаров
@@ -2899,7 +2900,7 @@ class ibs.th.utl.method-for-draw-utility final:
                     if error-status:error then 
                     do:
                       /* put-log("ќшибки при заполнении фин.док-та значени€ми по умолчанию"). */
-                      put-log(substitute("ќшибки при заполнении фин.док-та значени€ми по умолчанию &1 &2 ",{&new-line},ENTRY(3,return-value)) ).
+                      put-log(substitute("ќшибки при заполнении фин.док-та значени€ми по умолчанию &1 &2 ",{&new-line},RETURN-VALUE)).
                     end.
                     find first tt-fin-doc.
                     /*заполнение налогов*/

@@ -649,7 +649,7 @@ do:
     else tt-fin-doc.receiver-code)
     NO-LOCK  no-error.
   if not avail buf_receiver then 
-  do:
+/*   do:
      
 
     undo, return error substitute("&1 &2 &3&4 Неверные параметры p-receiver-type или значение поля receiver-type &5&4И/ИЛИ p-receiver-code или значение поля receiver-code &6"
@@ -659,7 +659,15 @@ do:
       ,{&new-line}
       ,(if p-mode = {&add-def} then p-receiver-type else tt-fin-doc.receiver-type)
       ,(if p-mode = {&add-def} then p-receiver-code else tt-fin-doc.receiver-code)).
+  end. */
+  
+  do:
+    undo, return error substitute("Неверные параметры p-receiver-type или значение поля receiver-type &1 &2 И/ИЛИ p-receiver-code или значение поля receiver-code &3",
+      (if p-mode = {&add-def} then p-receiver-type else tt-fin-doc.receiver-type)
+      ,{&new-line}
+      ,(if p-mode = {&add-def} then p-receiver-code else tt-fin-doc.receiver-code)).
   end.
+  
   if buf_receiver.obj-type = {&cmp} then 
   do:
     find first buf_receiver-firm no-lock where
