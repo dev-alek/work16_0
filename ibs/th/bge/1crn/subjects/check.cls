@@ -617,7 +617,7 @@ define private temp-table tt-recid-TranFuel no-undo
     /* 19/II-2019  Если в чеке есть платеж, с is-nds = 1, то в товарных строках НДС выгружать,
                    если нет, то НДС не выгружать совсем. */
     /* сопоставление по кодам перечня типов, согласно COMBO-BOX cb-prop из ref/cashpayi.w */
-    &scoped-define is-nds-eq-1 can-do ("1,2,3,6", buf_cash-pay-attr.attr-value)
+    &scoped-define is-nds-eq-1 can-do ("1,2,3,6,7", buf_cash-pay-attr.attr-value)
     v-chk-pay-is-nds = false .
     for each buf_cash-pay-attr no-lock
        where buf_cash-pay-attr.attr-code  = "cash-prop"
@@ -970,7 +970,7 @@ define private temp-table tt-recid-TranFuel no-undo
                     нам необходимо в 1С посылать информацию о том,
                     брать НДС из чека для этого платежа или нет.
          Определять это будем по настройкам типов платежей.
-         Если в типе платежа стоит, что нал, банковская карты или банковская карта оф-лайн,
+         Если в типе платежа стоит, что нал, банковская карты, банковская карта оф-лайн, QR-код или авансовый платеж,
          то в тэг is-nds секции платежей ставить 1. Во всех остальных случаях - 0.
          is-nds Число(0/1) 1-1 Признак распределения НДС по платежу
       */
