@@ -149,7 +149,7 @@ end.*/
          end.
          else
             MyWorkDir = objExists( arg,"D").
-         if MyWorkDir ne ?
+         if MyWorkDir ne ? 
          then
             Writefile(MyWorkDir + "parentPid.txt", string(mypid) + {&new-line}).
        end.
@@ -491,7 +491,9 @@ end.*/
         else if    vtime > 120
         then do:
            vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/endproc.txt".
-           Writefile(vFile, "").
+           if FolderExists (MyWorkDir + ttrun.task + string(ttrun.num))
+           then 
+              Writefile(vFile, "").
         end.
         
         PubFileLog (ttrun.task, ttrun.num, no).
@@ -795,7 +797,10 @@ Phase 1 of Load completed.  Working.  Please wait ...~
        vCountend = 0. 
        WAIT-FOR-COMPLETE = false.      /* на всякий случай */
        mstop = no.
-       Writefile(MyWorkDir + "Stop.txt", "").
+       
+       if FolderExists(MyWorkDir) then       
+          Writefile(MyWorkDir + "Stop.txt", "").
+       
        do while not WAIT-FOR-COMPLETE:
           
           WAIT-FOR-COMPLETE = true.
@@ -1077,7 +1082,9 @@ end.
             Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "propath.txt", propath).
             os-delete value(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log").
             Writefile(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log", "error Ошибка запуска сессии.").
-            Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt","").       
+            if FolderExists(MyWorkDir + vTask) then            
+               Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt","").       
+            else return.
                
          define variable vruncomand as character no-undo.
          vruncomand =  vtask + " & " + ttrun.cmd + " & copy /y param.txt endproc.txt & del /F stop.txt & exit".
