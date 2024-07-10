@@ -761,10 +761,10 @@ do
             tt-petrol.urov-AC = "".
             tt-petrol.density-AC = ? .
             tt-petrol.temp-AC    = ? .
-            tt-petrol.limit      = ? .
-            tt-petrol.vol-AC     = 0 .
-            tt-petrol.weight-AC  = 0 .
+            tt-petrol.vol-AC     = decimal(v-InfoSection:TankVolPomiRvs) / 1000 .
+            tt-petrol.weight-AC  = v-InfoSection:TankWeightRvs .
             
+            /*
             v-sec-name = v-InfoSection:SectionName .
             find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
                                                 and buf_rvs-doc.out-code = v-doc-code
@@ -816,7 +816,9 @@ do
               end .
             end .
             tt-petrol.vol-AC = tt-petrol.vol-AC / 1000 .
+            */
           end .
+          
 
         /*                    for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type     */
         /*                        and buf_doc-pl.obj-code = buf_doc-line.obj-code                               */

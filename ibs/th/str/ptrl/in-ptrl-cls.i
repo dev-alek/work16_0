@@ -503,20 +503,8 @@
                                                       and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
           :
             assign
-              buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
               buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-              buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
               buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-              buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-              buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-              buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-              buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-              buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-              buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-              buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-              buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-              buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-              buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
             .
           end .      
         end.
@@ -700,30 +688,17 @@
                   tt-pump-nozzle
                 }
               end .
-              
-              for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                          and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                          and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                          and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                          and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-              :
-                assign
-                  buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
-                  buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-                  buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
-                  buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-                  buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-                  buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-                  buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-                  buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-                  buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-                  buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-                  buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-                  buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-                  buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-                  buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
-                .
-              end .
+            end .
+            for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                        and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                        and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                        and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                        and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+            :
+              assign
+                buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+              .
             end .
           end .
           
@@ -743,6 +718,9 @@
           infoSecsObj:InfoSectionCurr:DateEnd   = v-prt-end-real-date . 
           infoSecsObj:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
         end .
+        infoSecsObj:InfoSectionCurr:TankWeightRvs = ? .
+        infoSecsObj:InfoSectionCurr:TankVolPomiRvs = ? .
+        infoSecsObj:InfoSectionCurr:AvgTempRvs = ? .
       end.
       infoSecsObj:SaveDB().
       

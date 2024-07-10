@@ -1076,6 +1076,13 @@ DO:
                     input-output v-node-code,
                     output v-sr-type-id) no-error.
   if v-node-code <> 0 and v-node-code <> ? then do :
+    if v-mi-dnst:screen-value <> "?"
+    then do :
+      if integer(v-mi-dnst:screen-value) <> v-node-code
+      then do :
+        v-mi-tmp-dnst = 0 .
+      end .
+    end .
     v-mi-dnst = v-node-code.
     v-mi-dnst:screen-value = string(v-node-code).
     find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = v-mi-dnst .
@@ -1149,6 +1156,7 @@ do:
   then do :
     if string(v-mi-dnst) <> v-old-val
     then do :
+      v-mi-tmp-dnst = 0 .
       tt-rvs-line.izmer-density = 0 .
       tt-rvs-line.state-temperature = ? .
     end .
@@ -1460,7 +1468,7 @@ define variable DeltaAbs_H_Water        as decimal no-undo.
 define variable DeltaAbs_R              as decimal no-undo.
 define variable DeltaAbs_Tv             as decimal no-undo.
 define variable DeltaAbs_Tr             as decimal no-undo.
-define variable DeltaOtn_N              as decimal no-undo.
+define variable DeltaOtn_N              as decimal no-undo init 0.05 .
 define variable DeltaOtn_K              as decimal no-undo.
 define variable A_Reservoir             as decimal no-undo init 0.0000125 .
 define variable DeadZone_Reservoir      as decimal no-undo.

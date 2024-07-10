@@ -120,6 +120,8 @@ then do:
   parline-mode = replace (parline-mode, ",autotrnqr2d", "").
 end.
 
+define stream outstream.
+
 { cmp/vssrevis.i               }
 { cmp/str-glbl.i               }
 { cmp/showinf.i                }
@@ -155,6 +157,8 @@ end.
 { gbl/key-rec.i                }
 { cmp/ini-lib.i                }
 { str/trdcalib.i               }
+{ str/get-pokmi-dll-version.i  }
+{ str/proc-pomi-rvs.i          }
 
 define buffer type-inp-vat-attr for ub.doc-line-attr.
 define buffer bf_sysconf        for ub.sysconf.
@@ -311,7 +315,7 @@ define variable v-lgas-gds                  as logical                       no-
 define variable v-tth             as handle    no-undo.
 define variable v-Param-Type      as character no-undo.
 define variable list-pl           as character no-undo.
-define variable isKPrvsSet        as logical   no-undo init no .
+/*define variable isKPrvsSet        as logical   no-undo init no .*/
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -1532,7 +1536,7 @@ do:
   infoSectionsTotal:DocDensLine = tt-fr-doc-line.doc-density.
   infoSectionsTotal:DocCliLine = tt-fr-doc-line.cli-qnty.
   infoSectionsTotal:FlagTrn = t-doc.flag_.
-  
+  /*
   if infoSectionsTotal:IsKPrvs
   and b-rvs-af:sensitive
   and b-rvs-bf:sensitive
@@ -1611,7 +1615,7 @@ do:
       end .
     end .
   end .
-  
+  */
   run proc-b-addinfo in this-procedure
     ( input        parparentproc
      ,input        ( if parline-mode <> {&lookup} then {&update} else {&lookup} )
@@ -1644,11 +1648,11 @@ do:
   if tt-fr-doc-line.fact-qnty <> v-new-fact-qnty
     or tt-fr-doc-line.fact-qnty-kg <> v-new-cli-fact-qnty
   then do:
-    isKPrvsSet = yes .
     run correct-fact-qnty in this-procedure
       ( input v-new-fact-qnty
        ,input v-new-density
       ) no-error .
+/*    if infoSectionsTotal:IsKPrvs then isKPrvsSet = yes .*/
   end.
   
   run display-measure in this-procedure
@@ -3124,131 +3128,105 @@ do:
   if valid-object (infoSectionsTotal) 
   then do:
     define variable ii as integer no-undo .
-    define variable v-new-fact-qnty     like ub.doc-line.fact-qnty    no-undo .
-    define variable v-new-density       like ub.doc-line.fact-density no-undo .
+    define variable v-pokmi-dll-version as character no-undo .
+    define variable rdc-dnstvalue as character no-undo.
+    define variable rdc-dnsttype  as character no-undo.
+    define variable v-tank-weight-rvs     like ub.doc-line.fact-qnty    no-undo .
+    define variable v-tank-vol-pomi-rvs   like ub.doc-line.fact-density no-undo .
+    define variable v-new-fact-qnty       like ub.doc-line.fact-qnty    no-undo .
+    define variable v-new-density         like ub.doc-line.fact-density no-undo .
+    define variable v-new-cli-fact-qnty   like ub.doc-line.fact-qnty    no-undo .
+    define variable v-new-sec-fact-qnty-kg as decimal no-undo .
+    define variable v-calc-density as decimal no-undo .
     define variable v-log as logical no-undo .
+    define variable v-need-save as logical no-undo .
     
     define variable infoSectionObj as class InfoSection no-undo.
     
-    find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = t-doc.doc-code
-                                     and num-entries(buf_rvs-doc.rvs-code, "-") = 3
-                                     no-error .
+    run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
+    v-pokmi-dll-version = get-pokmi-dll-version() .
+    
     if infoSectionsTotal:FlagTrn
-    and infoSectionsTotal:IsKPrvs
-    and not available buf_rvs-doc
+    and rdc-dnstvalue = "pomi-rn"
+    and v-pokmi-dll-version <> "1.0.2.7"
+    and not v-lgas-gds
     then do :
+      v-need-save = no . 
       do ii = 1 to infoSectionsTotal:SectionNum :
-        
-        define variable v-calc-density like ub.rvs-line.state-density no-undo .
-        define variable v-new-sec-fact-qnty         as decimal no-undo.
-        define variable v-rvs-sec-qnty-before       as decimal no-undo.
-        define variable v-rvs-sec-qnty-after        as decimal no-undo.
-        define variable v-rvs-sec-cli-qnty-before   as decimal no-undo.
-        define variable v-rvs-sec-cli-qnty-after    as decimal no-undo.
-              
         infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii) .
         
-        v-new-sec-fact-qnty = if infoSectionObj:FactQnty = 0 or infoSectionObj:FactQnty = ? then infoSectionObj:DocQnty else infoSectionObj:FactQnty.
-        if infoSectionObj:TankWeight > 0 and infoSectionObj:TankVol > 0 
-          then v-calc-density = infoSectionObj:TankWeight / infoSectionObj:TankVol.
-          else v-calc-density = ?.
-        
-        if not infoSectionsTotal:IsActnComm
-        then do:
-          message substitute ( "По секции &1 включен комиссионный прием нефтепродукта. У пользователя отсутвует право <<Комиссионный прием нефтепродукта>>. Продолжение невозможно.", infoSectionObj:SectionName )
-          view-as alert-box error .
-          return  no-apply .
-        end .
-        run return-rvs-sec-qnty in this-procedure
-          (  input t-doc.doc-code
-            ,input buf_goods.gds-code
-            ,input infoSectionObj:SectionName
-            ,input infoSectionObj:ListTank
-            ,output v-rvs-sec-qnty-before
-            ,output v-rvs-sec-qnty-after
-            ,output v-rvs-sec-cli-qnty-before
-            ,output v-rvs-sec-cli-qnty-after
-          ) no-error .
-        if error-status :error then do:
-          undo, return  no-apply .
-        end.
-        assign
-          v-new-sec-fact-qnty = v-rvs-sec-qnty-after - v-rvs-sec-qnty-before
-          v-calc-density = ( v-rvs-sec-cli-qnty-after - v-rvs-sec-cli-qnty-before ) / ( v-rvs-sec-qnty-after - v-rvs-sec-qnty-before )
-        .
-        if v-new-sec-fact-qnty = ?
-        or v-new-sec-fact-qnty < 0
+        if infoSectionObj:TankWeightRvs = ?
+        or infoSectionObj:TankWeightRvs <= 0
         then do :
-          message substitute ( "По секции &1 включен комиссионный прием нефтепродукта 'По сверкам'. Проверьте, что данные в сверках ДО и ПОСЛЕ корректны и повторите.", infoSectionObj:SectionName )
-          view-as alert-box error .
-          return  no-apply .
+          run calc-pomi-rvs (input ii,
+                             input t-doc.doc-code,
+                             input buf_goods.gds-code,
+                             input-output infoSectionsTotal,
+                             output v-tank-weight-rvs,
+                             output v-tank-vol-pomi-rvs)
+                             no-error .
+          if infoSectionObj:AccMeth = 1
+          then do :
+            v-need-save = yes .
+            v-calc-density = v-tank-weight-rvs / v-tank-vol-pomi-rvs .
+            if v-calc-density = ?
+            or v-calc-density <= 0
+            or v-calc-density >= 1
+            then do :
+              message substitute("По результатам рассчёта модуля ПОкМИ плотность выходит за допустимые значения!&1Масса, кг: &2&1Объём, л: &3", {&new-line}, v-tank-weight-rvs, v-tank-vol-pomi-rvs)
+              view-as alert-box error .
+              return no-apply .
+            end .
+            infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).     
+            infoSectionObj:FactQnty = v-new-sec-fact-qnty-kg / v-calc-density .
+            infoSectionObj:FactDensity = v-calc-density .
+          end .
         end .
-        
-        infoSectionObj:FactQnty = v-new-sec-fact-qnty.
-        infoSectionObj:FactDensity = v-calc-density.
-                      
       end .
-      if parline-mode ne {&lookup}
-      then
-         infoSectionsTotal:SaveDb().
-      infoSectionsTotal:GetDBAllAttr().
-      infoSectionsTotal:CalculateTotal().
-      
-      v-new-density = infoSectionsTotal:FactKgQntyTotal / infoSectionsTotal:FactQntyTotal.
-      v-new-fact-qnty = infoSectionsTotal:FactQntyTotal.
-      
-      v-log = yes .
-      if v-new-fact-qnty <> tt-fr-doc-line.fact-qnty
-      or v-new-density <> tt-fr-doc-line.fact-density
+      if v-need-save
       then do :
-        if varupd-fact-qnty
+        infoSectionsTotal:SaveDB() .
+        infoSectionsTotal:GetDBAllAttr().
+        infoSectionsTotal:CalculateTotal().
+        
+        v-new-density = infoSectionsTotal:FactKgQntyTotal / infoSectionsTotal:FactQntyTotal.
+        v-new-fact-qnty = infoSectionsTotal:FactQntyTotal.
+        
+        v-log = yes .
+        if v-new-fact-qnty <> tt-fr-doc-line.fact-qnty
+        or v-new-density <> tt-fr-doc-line.fact-density
         then do :
-          message
-            substitute( "По результатам измерения в резервуаре фактическое кол-во необходимо изменить." ) skip
-            substitute( "Будем менять фактические" ) skip
-            substitute( "количество на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
-            substitute( "плотность на &1 ?", v-new-density ) skip
-          view-as alert-box question buttons yes-no update v-log .
+          if varupd-fact-qnty
+          then do :
+            message
+              substitute( "По результатам измерения в резервуаре фактическое кол-во необходимо изменить." ) skip
+              substitute( "Будем менять фактические" ) skip
+              substitute( "количество на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
+              substitute( "плотность на &1 ?", v-new-density ) skip
+            view-as alert-box question buttons yes-no update v-log .
+          end .
+          else do :
+            message
+              substitute( "По результатам измерения в резервуаре фактическое кол-во товара изменяется на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
+              substitute( "фактическая плотность на &1.", v-new-density ) skip
+            view-as alert-box information .
+          end .
+        end .
+        
+        if v-log
+        then do :
+/*          isKPrvsSet = yes .*/
+          run correct-fact-qnty in this-procedure
+            ( input v-new-fact-qnty
+             ,input v-new-density
+            ) no-error .
         end .
         else do :
-          message
-            substitute( "По результатам измерения в резервуаре фактическое кол-во товара изменяется на &1 (&2),", (v-new-fact-qnty * v-new-density), "кг" ) skip
-            substitute( "фактическая плотность на &1.", v-new-density ) skip
-          view-as alert-box information .
+          return no-apply .
         end .
-      end .
-      
-      if v-log
-      then do :
-        isKPrvsSet = yes .
-        run correct-fact-qnty in this-procedure
-          ( input v-new-fact-qnty
-           ,input v-new-density
-          ) no-error .
-      end .
-      else do :
-        return no-apply .
-      end .
-      
-      run display-measure in this-procedure
-        no-error .
-    
-      display
-        tt-fr-doc-line.fact-qnty
-        tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true
-        tt-fr-doc-line.fact-density when tt-fr-doc-line.fact-density :visible = true
-      with frame {&frame-name} .
-      
+      end. /* if v-need-save */
     end .
-    
-    if infoSectionsTotal:IsKPrvs
-    and not isKPrvsSet
-    then do :
-      message "Включен комиссионный приём 'По сверкам'. Сначала сохраните данные по секциям в доп. инфо."
-      view-as alert-box .
-      return no-apply .
-    end .
-    
+        
     if infoSectionsTotal:FlagTrn
     and infoSectionsTotal:IsSGDKK
     then do :
@@ -4418,11 +4396,11 @@ if varrvs-place = yes then do:
     run display-measure in this-procedure
     no-error .
     
-    if infoSectionsTotal:IsKPrvs
-    and tt-fr-doc-line.fact-qnty <> tt-fr-doc-line.doc-qnty
-    then do :
-      isKPrvsSet = yes .
-    end .
+/*    if infoSectionsTotal:IsKPrvs                           */
+/*    and tt-fr-doc-line.fact-qnty <> tt-fr-doc-line.doc-qnty*/
+/*    then do :                                              */
+/*      isKPrvsSet = yes .                                   */
+/*    end .                                                  */
 
     if t-doc.flag_ = true
       or t-doc.status_ = {&fact}
@@ -7425,12 +7403,12 @@ procedure display-measure :
       tt-fr-doc-line.trk-cli-qnty
     with frame {&frame-name} .
     
-    if (v-old-qnty <> tt-fr-doc-line.state-measure-qnty
-    or v-old-cli-qnty <> tt-fr-doc-line.state-measure-cli-qnty)
-    and tt-fr-doc-line.fact-qnty = tt-fr-doc-line.doc-qnty
-    then do :
-      if infoSectionsTotal:IsKPrvs then isKPrvsSet = no .
-    end .
+/*    if (v-old-qnty <> tt-fr-doc-line.state-measure-qnty        */
+/*    or v-old-cli-qnty <> tt-fr-doc-line.state-measure-cli-qnty)*/
+/*    and tt-fr-doc-line.fact-qnty = tt-fr-doc-line.doc-qnty     */
+/*    then do :                                                  */
+/*      if infoSectionsTotal:IsKPrvs then isKPrvsSet = no .      */
+/*    end .                                                      */
     
   end. /* on error */
 end procedure. /* display-measure */

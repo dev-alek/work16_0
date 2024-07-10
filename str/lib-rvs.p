@@ -2002,7 +2002,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable DeltaAbs_R_Sug-vapor    as decimal no-undo.
   define variable DeltaAbs_Tv             as decimal no-undo.
   define variable DeltaAbs_Tr             as decimal no-undo.
-  define variable DeltaOtn_N              as decimal no-undo.
+  define variable DeltaOtn_N              as decimal no-undo init 0.05 .
   define variable DeltaOtn_K              as decimal no-undo.
   define variable DeltaOtn_K_Full         as decimal no-undo.
   define variable A_Reservoir             as decimal no-undo init 0.0000125 .

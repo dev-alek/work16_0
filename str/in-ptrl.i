@@ -1334,20 +1334,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                                             and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
                 :
                   assign
-                    buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
                     buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-                    buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
                     buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-                    buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-                    buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-                    buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-                    buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-                    buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-                    buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-                    buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-                    buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-                    buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-                    buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
                   .
                 end .
               end .
@@ -1770,30 +1758,18 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       tt-pump-nozzle
                     }
                   end .
-                  
-                  for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                              and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                              and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                              and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                              and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-                  :
-                    assign
-                      buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
-                      buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-                      buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
-                      buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-                      buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-                      buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-                      buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-                      buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-                      buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-                      buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-                      buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-                      buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-                      buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-                      buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
-                    .
-                  end .
+                end .
+                
+                for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                            and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                            and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                            and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                            and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+                :
+                  assign
+                    buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                    buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                  .
                 end .
               end .
             end.
@@ -1835,10 +1811,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionsTotal:InfoSectionCurr:DateEnd   = v-prt-end-real-date .
               infoSectionsTotal:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
             end .
+            infoSectionsTotal:InfoSectionCurr:TankWeightRvs = ? .
+            infoSectionsTotal:InfoSectionCurr:TankVolPomiRvs = ? .
+            infoSectionsTotal:InfoSectionCurr:AvgTempRvs = ? .
           end.
-          infoSectionsTotal:SaveDB().
         end .
-        
+        infoSectionsTotal:SaveDB().
         
         run placelib_get-attr(input {&place-virtual}
                              ,input t-doc.obj-code
@@ -2257,6 +2235,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               assign
                 v-new-fact-qnty = p-new-fact-qnty
                 .
+
             do ii = 1 to p-infoSectionsTotal:SectionNum : 
 
               define variable v-calc-density like ub.rvs-line.state-density no-undo .
@@ -2272,55 +2251,77 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionObj = p-infoSectionsTotal:GetInfoSectionProp(ii).
                             
               v-new-sec-fact-qnty = if infoSectionObj:FactQnty = 0 or infoSectionObj:FactQnty = ? then infoSectionObj:DocQnty else infoSectionObj:FactQnty.
-              if infoSectionObj:TankWeight > 0 and infoSectionObj:TankVol > 0 
-                then v-calc-density = infoSectionObj:TankWeight / infoSectionObj:TankVol.
-                else v-calc-density = ?.
+              v-calc-density = ? .
+              if infoSectionObj:TankWeight > 0
+              and infoSectionObj:TankVol > 0 
+              then
+                v-calc-density = infoSectionObj:TankWeight / infoSectionObj:TankVol
+              .
+              if infoSectionObj:AccMeth = 1
+              and infoSectionObj:TankWeightRvs > 0 
+              and infoSectionObj:TankVolPomiRvs > 0 
+              then
+                v-calc-density = infoSectionObj:TankWeightRvs / infoSectionObj:TankVolPomiRvs
+              .
+              
               
               if not p-infoSectionsTotal:IsSGDKK
               then do :
-                if infoSectionObj:IsKP
-                and infoSectionObj:AccMeth = 1
-                then do :
-                  if not p-infoSectionsTotal:IsActnComm
-                  then do:
-                    message substitute ( "По секции &1 включен комиссионный прием нефтепродукта. У пользователя отсутвует право <<Комиссионный прием нефтепродукта>>. Продолжение невозможно.", infoSectionObj:SectionName )
-                    view-as alert-box error .
-                    undo block_tr, return error .
-                  end .
-                  run return-rvs-sec-qnty in this-procedure
-                    (  input p-doc-code
-                      ,input p-gds-code
-                      ,input infoSectionObj:SectionName
-                      ,input infoSectionObj:ListTank
-                      ,output v-rvs-sec-qnty-before
-                      ,output v-rvs-sec-qnty-after
-                      ,output v-rvs-sec-cli-qnty-before
-                      ,output v-rvs-sec-cli-qnty-after
-                    ) no-error .
-                  if error-status :error then do:
-                    undo block_tr, return error return-value .
-                  end.
+                if p-infoSectionsTotal:IsRNAlgo
+                then do:
                   assign
-                    v-new-sec-fact-qnty = v-rvs-sec-qnty-after - v-rvs-sec-qnty-before
-                    v-calc-density = ( v-rvs-sec-cli-qnty-after - v-rvs-sec-cli-qnty-before ) / ( v-rvs-sec-qnty-after - v-rvs-sec-qnty-before )
-                    v-chg-temp = true
-                    v-st-doc-temp = false
+                    v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
+                    v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'
                   .
-                  if v-new-sec-fact-qnty = ?
-                  or v-new-sec-fact-qnty < 0
+                  if infoSectionObj:AccMeth = 1
                   then do :
-                    message substitute ( "По секции &1 включен комиссионный прием нефтепродукта 'По сверкам'. Проверьте, что данные в сверках ДО и ПОСЛЕ корректны и повторите.", infoSectionObj:SectionName )
-                    view-as alert-box error .
-                    return .
+                    assign v-calc-density = infoSectionObj:TankWeightRvs / infoSectionObj:TankVolPomiRvs .
                   end .
-                end .
-                else do :
+                  p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
+                  if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
+                  then do:
+                    v-new-sec-fact-qnty = v-new-sec-fact-qnty-kg / v-calc-density.
+                    v-chg-temp = true.
+                    v-st-doc-temp = false.
+                  end.
+                  else do:
+                    v-st-doc-temp = true.
+                    v-chg-temp = false.
+                  end.
+                end.
+                else do:
+                  { str/stfactqt.i
+                    p-stfactplvalue
+                    infoSectionObj:DocQnty
+                    infoSectionObj:DocDensity
+                    0.00
+                    0.00
+                    infoSectionObj:TankVol
+                    v-calc-density            
+                    no
+                    v-new-sec-fact-qnty
+                    v-chg-temp
+                    v-st-doc-temp
+                    no-error
+                  }
+                  if error-status :error then do:
+                    undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
+                  end.
+                end.
+              end .
+              else do :  /* p-infoSectionsTotal:IsSGDKK */
+                if infoSectionObj:IsKP
+                then do :
                   if p-infoSectionsTotal:IsRNAlgo
                   then do:
                     assign
                       v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
                       v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'
                     .
+                    if infoSectionObj:AccMeth = 1
+                    then do :
+                      assign v-calc-density = infoSectionObj:TankWeightRvs / infoSectionObj:TankVolPomiRvs .
+                    end .
                     p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
                     if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
                     then do:
@@ -2352,79 +2353,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
                     end.
                   end.
-                end .
-              end .
-              else do :  /* p-infoSectionsTotal:IsSGDKK */
-                if infoSectionObj:IsKP
-                then do :
-                  if infoSectionObj:AccMeth = 1
-                  then do :
-                    run return-rvs-sec-qnty in this-procedure
-                      (  input p-doc-code
-                        ,input p-gds-code
-                        ,input infoSectionObj:SectionName
-                        ,input infoSectionObj:ListTank
-                        ,output v-rvs-sec-qnty-before
-                        ,output v-rvs-sec-qnty-after
-                        ,output v-rvs-sec-cli-qnty-before
-                        ,output v-rvs-sec-cli-qnty-after
-                      ) no-error .
-                    if error-status :error then do:
-                      undo block_tr, return error return-value .
-                    end.
-                    assign
-                      v-new-sec-fact-qnty = v-rvs-sec-qnty-after - v-rvs-sec-qnty-before
-                      v-calc-density = ( v-rvs-sec-cli-qnty-after - v-rvs-sec-cli-qnty-before ) / ( v-rvs-sec-qnty-after - v-rvs-sec-qnty-before )
-                      v-chg-temp = true
-                      v-st-doc-temp = false
-                    .
-                    if v-new-sec-fact-qnty = ?
-                    or v-new-sec-fact-qnty < 0
-                    then do :
-                      message substitute ( "По секции &1 включен комиссионный прием нефтепродукта 'По сверкам'. Проверьте, что данные в сверках ДО и ПОСЛЕ корректны и повторите.", infoSectionObj:SectionName )
-                      view-as alert-box error .
-                      return .
-                    end .
-                  end .
-                  else do :
-                    if p-infoSectionsTotal:IsRNAlgo
-                    then do:
-                      assign
-                        v-calc-density = infoSectionObj:TankDensityPomi when not p-infoSectionsTotal:RdcDnstvalue = 'not'
-                        v-calc-density = infoSectionObj:TankDensity when p-infoSectionsTotal:RdcDnstvalue = 'not'
-                      .
-                      p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
-                      if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
-                      then do:
-                        v-new-sec-fact-qnty = v-new-sec-fact-qnty-kg / v-calc-density.
-                        v-chg-temp = true.
-                        v-st-doc-temp = false.
-                      end.
-                      else do:
-                        v-st-doc-temp = true.
-                        v-chg-temp = false.
-                      end.
-                    end.
-                    else do:
-                      { str/stfactqt.i
-                        p-stfactplvalue
-                        infoSectionObj:DocQnty
-                        infoSectionObj:DocDensity
-                        0.00
-                        0.00
-                        infoSectionObj:TankVol
-                        v-calc-density            
-                        no
-                        v-new-sec-fact-qnty
-                        v-chg-temp
-                        v-st-doc-temp
-                        no-error
-                      }
-                      if error-status :error then do:
-                        undo block_tr, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) ) .
-                      end.
-                    end.
-                  end .
                 end .
                 else do :
                   v-st-doc-temp = true.

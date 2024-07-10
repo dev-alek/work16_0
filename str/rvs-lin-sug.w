@@ -1493,7 +1493,7 @@ define variable DeltaAbs_R_SUG          as decimal no-undo.
 define variable DeltaAbs_R_SUG-vapor    as decimal no-undo.
 define variable DeltaAbs_Tv             as decimal no-undo.
 define variable DeltaAbs_Tr             as decimal no-undo.
-define variable DeltaOtn_N              as decimal no-undo.
+define variable DeltaOtn_N              as decimal no-undo init 0.05 .
 define variable DeltaOtn_H              as decimal no-undo.
 define variable DeltaOtn_H_Water        as decimal no-undo.
 define variable DeltaOtn_R              as decimal no-undo.
