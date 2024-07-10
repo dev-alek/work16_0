@@ -28,6 +28,7 @@ define variable mObjType  as character no-undo.
 define variable mObjCode  as integer   no-undo.
 define variable mPostType as character no-undo.
 define variable mCashNum  as integer   no-undo.
+define stream finp.
 
 procedure putc :
   define input  parameter iSAXWriter as handle no-undo .
@@ -40,6 +41,8 @@ procedure putc :
   define VARIABLE name-cash1     as character no-undo.
   define VARIABLE name-cash2     as character no-undo.
   define variable enc-passwd     as character no-undo.
+  define variable ufo-passwd as character no-undo.
+  define variable ufo-enc20  as character format "x(20)" no-undo.
   define variable v-shadow-fname as character no-undo .
   define buffer buf_clients for ub.clients .
 
@@ -69,6 +72,20 @@ procedure putc :
         name-cash1 = if ub.person.name1 <> "" then (substring(ub.person.name1,1,1) + '.') else ''.
         name-cash2 = if ub.person.name2 <> "" then (substring(ub.person.name2,1,1) + '.') else ''.
         name-cash = buf_clients.obj-name + ' ' + name-cash1 + ' ' + name-cash2 .
+      end.
+      
+      enc-passwd = "".
+      ufo-passwd = search('exe/ufo_passwd.exe':u).
+      if ufo-passwd > "" then 
+      do:
+        os-command silent value(ufo-passwd) value(ub.staff.password) > value(v-shadow-fname) .
+        input stream finp from value(v-shadow-fname) .
+        repeat:
+          import stream finp unformatted ufo-enc20 no-error.
+          enc-passwd = enc-passwd + ufo-enc20.
+        end.
+        input stream finp close.
+        os-delete value(v-shadow-fname).
       end.
 
       iSAXWriter:write-data-element ( "CashierName", name-cash ).
