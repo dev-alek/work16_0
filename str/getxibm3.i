@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: cd82ba7bd738, 2912, rls $
+$Author: DRuban $
+$Date: Пн ноя 22 19:49:14 2021 +0300 $
+$Workfile: getxibm3.i $
+$Archive: str/getxibm3.i $
 
 Процедура обработки строки 03 в спул IBM-XML
 
@@ -16,13 +16,17 @@ Creation date: 10/30/05
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: getxibm3.i $ $Revision: cd82ba7bd738, 2912, rls $".
 {utl\parsjson.i}
 procedure proc-03 :
 define input parameter par-mode as integer no-undo .
 define input parameter loc-exist as logical no-undo .
 define variable lnp-spl as integer no-undo .
 define buffer buf_temp-temp for temp-temp.
+define buffer buf_chk-doc for tt-chk-doc.
+define buffer buf_chk-doc-attr for tt-chk-doc-attr.
+define buffer buf_chk-pay for tt-chk-pay.
+define buffer buf_chk-pay-attr for tt-chk-pay-attr.
 define variable i-cpdoc      as int no-undo.
 
 /*0 - ub.chk-doc  ub.chk-pay
@@ -155,13 +159,14 @@ define variable vsbprrn as character no-undo.
         {&error-in-file-format}
       end.
 
-      find first ub.chk-pay-attr where 
-            ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
-        and ub.chk-pay-attr.line-num   = lnp-spl
-        and ub.chk-pay-attr.attr-code  = 'RTA_RefundExport' no-error.
-      if available ub.chk-pay-attr then do:
+      find first buf_chk-doc NO-ERROR.
+      find first buf_chk-pay-attr where 
+            buf_chk-pay-attr.doc-code   = buf_chk-doc.doc-code
+        and buf_chk-pay-attr.line-num   = lnp-spl
+        and buf_chk-pay-attr.attr-code  = 'RTA_RefundExport' no-error.
+      if available buf_chk-pay-attr then do:
         assign
-          ub.chk-pay-attr.attr-value = ub.chk-pay-attr.attr-value + c-attr-value
+          buf_chk-pay-attr.attr-value = buf_chk-pay-attr.attr-value + c-attr-value
           no-error.
         leave _proc-03.      
       end.
@@ -170,95 +175,97 @@ define variable vsbprrn as character no-undo.
         when 0
         or when 1
         then do:
-          FIND ub.chk-pay WHERE
-                ub.chk-pay.doc-code = ub.chk-doc.doc-code
-            AND ub.chk-pay.curr-code = curr_code
-            AND ub.chk-pay.pay-code = pay_code
-            and ub.chk-pay.line-num = lnp-spl
+          FIND buf_chk-pay WHERE
+                buf_chk-pay.doc-code = buf_chk-doc.doc-code
+            AND buf_chk-pay.curr-code = curr_code
+            AND buf_chk-pay.pay-code = pay_code
+            and buf_chk-pay.line-num = lnp-spl
             NO-ERROR.
-          if NOT available ub.chk-pay
+          if NOT available buf_chk-pay
           then  do:
-            CREATE ub.chk-pay .
+          
+            
+            CREATE buf_chk-pay .
             assign
-            ub.chk-pay.doc-code = ub.chk-doc.doc-code
-            ub.chk-pay.line-num = lnp-spl
-            ub.chk-pay.chk-date = ub.chk-doc.chk-date
-            ub.chk-pay.obj-code = shop-code
-            ub.chk-pay.obj-type = shop-type
-            ub.chk-pay.tot-rubl = 0
-            ub.chk-pay.tot-sum = 0
-            ub.chk-pay.tot-base = 0
-            ub.chk-pay.pay-code = pay_code
-            ub.chk-pay.curr-code = curr_code
-            ub.chk-pay.time-oper = time-oper_
+            buf_chk-pay.doc-code = buf_chk-doc.doc-code
+            buf_chk-pay.line-num = lnp-spl
+            buf_chk-pay.chk-date = buf_chk-doc.chk-date
+            buf_chk-pay.obj-code = shop-code
+            buf_chk-pay.obj-type = shop-type
+            buf_chk-pay.tot-rubl = 0
+            buf_chk-pay.tot-sum  = 0
+            buf_chk-pay.tot-base = 0
+            buf_chk-pay.pay-code = pay_code
+            buf_chk-pay.curr-code = curr_code
+            buf_chk-pay.time-oper = time-oper_
             cass-rate = cass-rate * exp( 10, int( rate-por ) )
-            ub.chk-pay.cash-rate = cass-rate
-            ub.chk-pay.bank-rate = bank-rate_
-            ub.chk-pay.bank-scale = bank-scale_
-            ub.chk-pay.pass-pay = pass-pay_
-            ub.chk-pay.pay-card = pay-card_
-            ub.chk-pay.line-type = "":U
-            ub.chk-pay.line-sign = (if ub.chk-doc.chk-type = integer({&rcpt-sale})
-                                then (chk-pay.tot-sum >= 0)
-                                else (chk-pay.tot-sum <= 0)
+            buf_chk-pay.cash-rate = cass-rate
+            buf_chk-pay.bank-rate = bank-rate_
+            buf_chk-pay.bank-scale = bank-scale_
+            buf_chk-pay.pass-pay  = pass-pay_
+            buf_chk-pay.pay-card  = pay-card_
+            buf_chk-pay.line-type = "":U
+            buf_chk-pay.line-sign = (if buf_chk-doc.chk-type = integer({&rcpt-sale})
+                                then (buf_chk-pay.tot-sum >= 0)
+                                else (buf_chk-pay.tot-sum <= 0)
                                 )
-            ub.chk-pay.is-error = no
+            buf_chk-pay.is-error = no
             .
             assign 
               pay-card_ = "".
             if not (c-attr-code = "" or c-attr-code = ?) then do:
-              create ub.chk-pay-attr.
+              create buf_chk-pay-attr.
               assign 
-              ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
-              ub.chk-pay-attr.line-num   = lnp-spl
-              ub.chk-pay-attr.attr-code  = c-attr-code
-              ub.chk-pay-attr.attr-value = c-attr-value
+              buf_chk-pay-attr.doc-code   = buf_chk-doc.doc-code
+              buf_chk-pay-attr.line-num   = lnp-spl
+              buf_chk-pay-attr.attr-code  = c-attr-code
+              buf_chk-pay-attr.attr-value = c-attr-value
               no-error.
             end.
             if vCPAgreement ne "" and vCPAgreement ne ? 
             then do:
-              create ub.chk-pay-attr.
+              create buf_chk-pay-attr.
               assign 
-              ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
-              ub.chk-pay-attr.line-num   = lnp-spl
-              ub.chk-pay-attr.attr-code  = "CPAgreement"
-              ub.chk-pay-attr.attr-value = vCPAgreement
+              buf_chk-pay-attr.doc-code   = buf_chk-doc.doc-code
+              buf_chk-pay-attr.line-num   = lnp-spl
+              buf_chk-pay-attr.attr-code  = "CPAgreement"
+              buf_chk-pay-attr.attr-value = vCPAgreement
               no-error.
             end.
             if vsbpstat ne "" and vsbpstat ne ? 
             then do:
-               create ub.chk-pay-attr.
+               create buf_chk-pay-attr.
                assign 
-               ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
-               ub.chk-pay-attr.line-num   = lnp-spl
-               ub.chk-pay-attr.attr-code  = "SBPStat"
-               ub.chk-pay-attr.attr-value = vsbpstat
+               buf_chk-pay-attr.doc-code   = buf_chk-doc.doc-code
+               buf_chk-pay-attr.line-num   = lnp-spl
+               buf_chk-pay-attr.attr-code  = "SBPStat"
+               buf_chk-pay-attr.attr-value = vsbpstat
                no-error.
             end.
             if vsbprrn ne "" and vsbprrn ne ? 
             then do:
-               create ub.chk-pay-attr.
+               create buf_chk-pay-attr.
                assign 
-               ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
-               ub.chk-pay-attr.line-num   = lnp-spl
-               ub.chk-pay-attr.attr-code  = "SBPRRN"
-               ub.chk-pay-attr.attr-value = vsbprrn
+               buf_chk-pay-attr.doc-code   = buf_chk-doc.doc-code
+               buf_chk-pay-attr.line-num   = lnp-spl
+               buf_chk-pay-attr.attr-code  = "SBPRRN"
+               buf_chk-pay-attr.attr-value = vsbprrn
                no-error.
             end.
             if vCPWithdrawal ne "" and vCPWithdrawal ne ? and dec(vCPWithdrawal) ne 0  
             then do:
-              create ub.chk-pay-attr.
+              create buf_chk-pay-attr.
               assign 
-              ub.chk-pay-attr.doc-code   = ub.chk-doc.doc-code
-              ub.chk-pay-attr.line-num   = lnp-spl
-              ub.chk-pay-attr.attr-code  = "CPWithdrawal"
-              ub.chk-pay-attr.attr-value = left-trim(string (dec(vCPWithdrawal),">>>>>>>>>>>9.99") ) 
+              buf_chk-pay-attr.doc-code   = buf_chk-doc.doc-code
+              buf_chk-pay-attr.line-num   = lnp-spl
+              buf_chk-pay-attr.attr-code  = "CPWithdrawal"
+              buf_chk-pay-attr.attr-value = left-trim(string (dec(vCPWithdrawal),">>>>>>>>>>>9.99") ) 
               no-error.
             end.
             
           end.
           assign
-          chk-pay.tot-sum = chk-pay.tot-sum + tot_sum
+          buf_chk-pay.tot-sum = buf_chk-pay.tot-sum + tot_sum
           .
         end.
         
@@ -430,4 +437,4 @@ define buffer buf_temp-temp for temp-temp.
 end procedure. /* proc-cash */
 
 
-/* $Workfile$ e n d */
+/* $Workfile: getxibm3.i $ e n d */
