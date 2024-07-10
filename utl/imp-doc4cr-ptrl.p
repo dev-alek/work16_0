@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 022d9db987b8, 3255, rls $
+$Author: EShklyar $
+$Date: 2023/01/27 13:45:26 $
+$Workfile: imp-doc4cr-ptrl.p $
+$Archive: utl/imp-doc4cr-ptrl.p $
 
 Импорт накладных. Создание документов.
 
@@ -74,11 +74,11 @@ define output parameter p-count-err1     as integer no-undo . /* - нет соответст
 define output parameter p-count-err2     as integer no-undo . /* - нет соответствий по поставщикам */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 022d9db987b8, 3255, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/01/27 13:45:26 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-doc4cr-ptrl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/imp-doc4cr-ptrl.p $":U .
 define variable vss-description as character no-undo init "Импорт накладных. Создание документов.".
 { cmp/vssrevis.i }
 
@@ -489,6 +489,9 @@ define buffer new_clients  for ub.clients .
         .
       end .
       
+      
+
+      
       if v-is-supp-err then do :
         /* Ошибку выводить в лог-файл, а строку ошибки выводить в отдельный файл, пригодный для повторного импорта, как есть.
            Работу по остальным строкам продолжать. */
@@ -596,6 +599,15 @@ define buffer new_clients  for ub.clients .
         v-my-message  = substitute ("Отсутствует код товара &1 из вер.15 в файле соответствия &2", buf_tt-parts.gds-code, p-art-fname )
         v-is-good-err = true
       .
+      
+      DEFINE VARIABLE pltn AS DECIMAL .
+      pltn = ROUND ((buf_tt-parts.cli-qnty / buf_tt-parts.fact-qnty), 4 ) .
+      IF (buf_tt-parts.cli-qnty / buf_tt-parts.fact-qnty  > 1 ) THEN DO:
+      MESSAGE 'плотность более 1, остатки с такой плотностью не переносятся.' pltn VIEW-AS ALERT-BOX.
+      v-is-good-err = TRUE.
+      v-my-message  = substitute ("Ошибка. Плотность &1, остатки с такой плотностью не переносятся, код товара &2", pltn, new_gds-code ).
+      END.
+      
       /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
       if v-is-good-err then do :
         {&display-message}.
