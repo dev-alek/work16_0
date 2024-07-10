@@ -2500,7 +2500,11 @@ DO:
                                  output vOk)
                                  .
   if vOk
-  then do :      
+  then do :   
+    if tt-rvs-line.temp-izm-vol <> v-out-temp
+    then do :
+      assign tt-rvs-line.test-asi-diff = ? .
+    end .   
     tt-rvs-line.temp-izm-vol = v-out-temp .                        
     display tt-rvs-line.temp-izm-vol with frame Dialog-Frame .
         
@@ -2673,6 +2677,10 @@ DO:
                                .
     if vOk
     then do :
+      if tt-rvs-line.izmer-density <> v-out-dens
+      then do :
+        assign tt-rvs-line.test-asi-diff = ? .
+      end .
       assign
         tt-rvs-line.izmer-density = v-out-dens                          
         tt-rvs-line.state-density = tt-rvs-line.izmer-density
@@ -2770,6 +2778,10 @@ DO:
                                  .
     if vOk
     then do : 
+      if tt-rvs-line.izmer-density <> v-out-dens
+      then do :
+        assign tt-rvs-line.test-asi-diff = ? .
+      end .
       assign      
         tt-rvs-line.izmer-density = v-out-dens                    
         tt-rvs-line.state-density = tt-rvs-line.izmer-density
@@ -3253,6 +3265,8 @@ DO:
 
     assign frame {&frame-name} tt-rvs-line.izmer-density.
     
+    assign tt-rvs-line.test-asi-diff = ? .
+    
     assign v-hand-input-dnst = true .
   end.
 
@@ -3293,6 +3307,8 @@ DO:
     then do :
       rvs-line-attr.attr-value = string(no) .
     end .
+    
+    assign tt-rvs-line.test-asi-diff = ? .
     
     run level-water in this-procedure ( input no ) /* no-error */ .
       
@@ -3396,6 +3412,8 @@ DO:
     then do :
       rvs-line-attr.attr-value = string(no) .
     end .
+    
+    assign tt-rvs-line.test-asi-diff = ? .
     
     run level-water in this-procedure ( input no ) /* no-error */ .
       
@@ -3587,8 +3605,12 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-rvs-line.state-temperature Dialog-Frame
 ON LEAVE OF tt-rvs-line.state-temperature IN FRAME Dialog-Frame /* Температура */
 DO:
-    assign frame {&frame-name} {&self-name}.
-
+  if input frame {&frame-name} {&self-name} <> {&self-name} then do:
+    assign tt-rvs-line.test-asi-diff = ? .
+  end .
+  
+  assign frame {&frame-name} {&self-name}.
+    
 END.
 
 /* _UIB-CODE-BLOCK-END */
