@@ -18,8 +18,10 @@ class ibs.th.ref.cashbookfrm inherits Form :
   
    define private variable BankRecipacct  as System.Windows.Forms.TextBox     no-undo.
    define private variable bChooseCli     as System.Windows.Forms.Button      no-undo.
+   define private variable bChooseCliVne  as System.Windows.Forms.Button      no-undo.
    define private variable bChooseCorRko  as System.Windows.Forms.Button      no-undo.
    define private variable bChooseCorPko  as System.Windows.Forms.Button      no-undo.
+   define private variable bChooseCorPkoVne  as System.Windows.Forms.Button      no-undo.
    define private variable bChooseOsnAcct as System.Windows.Forms.Button      no-undo.
    define private variable bindingSource1 as Progress.Data.BindingSource      no-undo.
    define private variable btbankrec      as System.Windows.Forms.Button      no-undo.
@@ -33,6 +35,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
    define private variable buttonOk       as System.Windows.Forms.Button      no-undo.
    define private variable buttonCancel   as System.Windows.Forms.Button      no-undo.
    define private variable fCorpko        as System.Windows.Forms.TextBox     no-undo.
+   define private variable fCorpkoVne     as System.Windows.Forms.TextBox     no-undo.
    define private variable FcorRko        as System.Windows.Forms.TextBox     no-undo.
    define private variable FcorrRKOincas  as System.Windows.Forms.TextBox     no-undo.
    define private variable fcorrtrans     as System.Windows.Forms.TextBox     no-undo.
@@ -43,15 +46,18 @@ class ibs.th.ref.cashbookfrm inherits Form :
    define private variable fosntrans      as System.Windows.Forms.ComboBox    no-undo.
    define private variable fRuleOsnRko    as System.Windows.Forms.ComboBox    no-undo.
    define private variable fRuleOsnPko    as System.Windows.Forms.ComboBox    no-undo.
+   define private variable fRuleOsnPkoVne as System.Windows.Forms.ComboBox    no-undo.
    define private variable fOsnacct       as System.Windows.Forms.TextBox     no-undo.
    define private variable fRulePril      as System.Windows.Forms.ComboBox    no-undo.
    define private variable fName          as System.Windows.Forms.TextBox     no-undo.
    define private variable fSourceCode    as System.Windows.Forms.ComboBox    no-undo.
    define private variable fTakenFrom     as System.Windows.Forms.TextBox     no-undo.
+   define private variable fTakenFromVne  as System.Windows.Forms.TextBox     no-undo.
    define private variable groupBox2      as System.Windows.Forms.GroupBox    no-undo.
    define private variable groupBox1      as System.Windows.Forms.GroupBox    no-undo.
    define private variable groupBox3      as System.Windows.Forms.GroupBox    no-undo.
    define private variable groupBox4      as System.Windows.Forms.GroupBox    no-undo.
+   define private variable groupBox5      as System.Windows.Forms.GroupBox    no-undo.
    define private variable label1         as System.Windows.Forms.Label       no-undo.
    define private variable label10        as System.Windows.Forms.Label       no-undo.
    define private variable label12        as System.Windows.Forms.Label       no-undo.
@@ -64,23 +70,28 @@ class ibs.th.ref.cashbookfrm inherits Form :
    define private variable label19        as System.Windows.Forms.Label       no-undo.
    define private variable label17        as System.Windows.Forms.Label       no-undo.
    define private variable label2         as System.Windows.Forms.Label       no-undo.
+   define private variable label25        as System.Windows.Forms.Label       no-undo.
    define private variable label20 as System.Windows.Forms.Label no-undo.
    define private variable label23        as System.Windows.Forms.Label       no-undo.
    define private variable label22        as System.Windows.Forms.Label       no-undo.
    define private variable label21        as System.Windows.Forms.Label       no-undo.
    define private variable label24 as System.Windows.Forms.Label no-undo.
    define private variable label4         as System.Windows.Forms.Label       no-undo.
+   define private variable label41        as System.Windows.Forms.Label       no-undo.
    define private variable label3         as System.Windows.Forms.Label       no-undo.
    define private variable label6         as System.Windows.Forms.Label       no-undo.
    define private variable label5         as System.Windows.Forms.Label       no-undo.
+   define private variable label51        as System.Windows.Forms.Label       no-undo.
    define private variable label7         as System.Windows.Forms.Label       no-undo.
   
    define private variable label8         as System.Windows.Forms.Label       no-undo.
+   define private variable label81        as System.Windows.Forms.Label       no-undo.
    define private variable label9         as System.Windows.Forms.Label       no-undo.
    define private variable lbankrec       as System.Windows.Forms.Label       no-undo.
    define private variable lbankdep       as System.Windows.Forms.Label       no-undo.
    define private variable lcashcli       as System.Windows.Forms.Label       no-undo.
    define private variable lCli           as System.Windows.Forms.Label       no-undo.
+   define private variable lCliVne        as System.Windows.Forms.Label       no-undo.
    define private variable lclitrans      as System.Windows.Forms.Label       no-undo.
    define private variable Lincasagent    as System.Windows.Forms.Label       no-undo.
    define         variable mCashBook      as class                            ibs.th.ref.cashbookstorage no-undo .
@@ -178,7 +189,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void bChooseCli_Click( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       define variable ref-rec  as recid     no-undo .
       define variable ref-list as character no-undo.
     
@@ -213,6 +224,41 @@ class ibs.th.ref.cashbookfrm inherits Form :
     Notes:
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
+   method private void bChooseCliVne_Click( input sender as System.Object, input e as System.EventArgs ):
+    
+      define variable ref-rec  as recid     no-undo .
+      define variable ref-list as character no-undo.
+    
+      run ref/cli-all.w ( input parParentProc
+         ,input "b-sel"
+         ,input {&all}
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,input ?
+         ,output ref-list) .
+      if ref-list = "" then 
+      do:
+         return .
+      end.
+      ref-rec = integer( ref-list ).
+      FIND ub.clients WHERE recid (ub.clients) = ref-rec NO-LOCK .
+      this-object:lCliVne:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      this-object:lCliVne:Focus().
+      assign
+         tt-CashBook.Vnecli-type = ub.clients.obj-type
+         tt-CashBook.Vnecli-code = ub.clients.obj-code
+         .  
+    
+      return.
+
+   end method.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
    method private void bChooseCredit_Click( input sender as System.Object, input e as System.EventArgs ):
       define variable rid-list as character no-undo.
       rid-list = "":U .
@@ -242,6 +288,40 @@ class ibs.th.ref.cashbookfrm inherits Form :
 
    end method.
 
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void bChooseCreditVne_Click( input sender as System.Object, input e as System.EventArgs ):
+      define variable rid-list as character no-undo.
+      rid-list = "":U .
+      run ref/fwcode-1.w (
+         parParentProc
+         ,"b-sel"
+         ,{&all}
+         ,input ?
+         ,input ?
+         ,output rid-list ).
+    
+      if rid-list <> "":U then 
+      do:
+         FIND FIRST fin-code-cor-acc WHERE
+            recid( fin-code-cor-acc ) = integer(entry(1, rid-list)) NO-LOCK .
+         if fin-code-cor-acc.status_ <> integer({&current-status-int}) then 
+         do:
+            message
+               "Нельзя выбрать удаленный корр счет"
+               view-as alert-box error .
+            return .
+         end.
+         this-object:fCorpkoVne:Text = fin-code-cor-acc.code-value .
+         this-object:fCorpkoVne:focus() .
+      end.
+      return.
+
+   end method.
+   
    /*------------------------------------------------------------------------------
     Purpose:
     Notes:
@@ -476,7 +556,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void cashbookfrm_Load( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       return.
 
    end method.
@@ -487,7 +567,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void fRuleOsnPko_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       return.
 
    end method.
@@ -497,8 +577,28 @@ class ibs.th.ref.cashbookfrm inherits Form :
     Notes:
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
+   method private void fRuleOsnPkoVne_SelectedIndexChanged( input sender as System.Object, input e as System.EventArgs ):
+    
+      return.
+
+   end method.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
    method private void fTakenFrom_TextChanged( input sender as System.Object, input e as System.EventArgs ):
-		
+    
+      return.
+
+   end method.
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void fTakenFromVne_TextChanged( input sender as System.Object, input e as System.EventArgs ):
+    
       return.
 
    end method.
@@ -544,7 +644,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void groupBox2_Enter( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       return.
 
    end method.
@@ -555,7 +655,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void groupBox3_Enter( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       return.
 
    end method.
@@ -566,7 +666,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void label13_Click( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       return.
 
    end method.
@@ -577,33 +677,44 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void label14_Click( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       return.
 
    end method.
 
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void label8_Click( input sender as System.Object, input e as System.EventArgs ):
-		
-		return.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void label8_Click( input sender as System.Object, input e as System.EventArgs ):
+    
+    return.
 
-	end method.
+  end method.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void lbankrec_Click( input sender as System.Object, input e as System.EventArgs ):
-		
-		return.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void label81_Click( input sender as System.Object, input e as System.EventArgs ):
+    
+    return.
 
-	end method.
+  end method.
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  @VisualDesigner.
+  method private void lbankrec_Click( input sender as System.Object, input e as System.EventArgs ):
+    
+    return.
+
+  end method.
 
    /*------------------------------------------------------------------------------
     Purpose:
@@ -611,11 +722,22 @@ class ibs.th.ref.cashbookfrm inherits Form :
    ------------------------------------------------------------------------------*/
    @VisualDesigner.
    method private void lCli_Click( input sender as System.Object, input e as System.EventArgs ):
-		
+    
       return.
 
    end method.
 
+   /*------------------------------------------------------------------------------
+    Purpose:
+    Notes:
+   ------------------------------------------------------------------------------*/
+   @VisualDesigner.
+   method private void lCliVne_Click( input sender as System.Object, input e as System.EventArgs ):
+    
+      return.
+
+   end method.
+   
    method private void okButton_Click (sender as System.Object, e as System.EventArgs):
       bindingSource1:Assign().
       if tt-cashbook.id = ?
@@ -661,29 +783,39 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fName = new System.Windows.Forms.TextBox().
       this-object:bindingSource1 = new Progress.Data.BindingSource(this-object:components).
       this-object:label5 = new System.Windows.Forms.Label().
+      this-object:label51 = new System.Windows.Forms.Label().
       this-object:label6 = new System.Windows.Forms.Label().
       this-object:FlagSepFuel = new System.Windows.Forms.CheckBox().
       this-object:FlagSepCash = new System.Windows.Forms.CheckBox().
       this-object:label3 = new System.Windows.Forms.Label().
       this-object:fExtCode = new System.Windows.Forms.TextBox().
       this-object:label4 = new System.Windows.Forms.Label().
+      this-object:label41 = new System.Windows.Forms.Label().
       this-object:label7 = new System.Windows.Forms.Label().
       this-object:fCorpko = new System.Windows.Forms.TextBox().
+      this-object:fCorpkoVne = new System.Windows.Forms.TextBox().
       this-object:fOsnacct = new System.Windows.Forms.TextBox().
       this-object:fRulePril = new System.Windows.Forms.ComboBox().
       this-object:bChooseCorPko = new System.Windows.Forms.Button().
+      this-object:bChooseCorPkoVne = new System.Windows.Forms.Button().
       this-object:bChooseOsnAcct = new System.Windows.Forms.Button().
       this-object:label2 = new System.Windows.Forms.Label().
+      this-object:label25 = new System.Windows.Forms.Label().
       this-object:label8 = new System.Windows.Forms.Label().
+      this-object:label81 = new System.Windows.Forms.Label().
       this-object:fTakenFrom = new System.Windows.Forms.TextBox().
+      this-object:fTakenFromVne = new System.Windows.Forms.TextBox().
       this-object:bChooseCli = new System.Windows.Forms.Button().
+      this-object:bChooseCliVne = new System.Windows.Forms.Button().
       this-object:lCli = new System.Windows.Forms.Label().
+      this-object:lCliVne = new System.Windows.Forms.Label().
       this-object:FcorRko = new System.Windows.Forms.TextBox().
       this-object:bChooseCorRko = new System.Windows.Forms.Button().
       this-object:label9 = new System.Windows.Forms.Label().
       this-object:fRuleOsnRko = new System.Windows.Forms.ComboBox().
       this-object:label10 = new System.Windows.Forms.Label().
       this-object:fRuleOsnPko = new System.Windows.Forms.ComboBox().
+      this-object:fRuleOsnPkoVne = new System.Windows.Forms.ComboBox().
       this-object:label11 = new System.Windows.Forms.Label().
       this-object:lcashcli = new System.Windows.Forms.Label().
       this-object:label13 = new System.Windows.Forms.Label().
@@ -713,6 +845,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label18 = new System.Windows.Forms.Label().
       this-object:groupBox4 = new System.Windows.Forms.GroupBox().
       this-object:textBox2 = new System.Windows.Forms.TextBox().
+      this-object:groupBox5 = new System.Windows.Forms.GroupBox().
+/*      this-object:textBox2 = new System.Windows.Forms.TextBox().*/
       this-object:label24 = new System.Windows.Forms.Label().
       this-object:fosntrans = new System.Windows.Forms.ComboBox().
       this-object:lclitrans = new System.Windows.Forms.Label().
@@ -727,6 +861,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox2:SuspendLayout().
       this-object:groupBox3:SuspendLayout().
       this-object:groupBox4:SuspendLayout().
+      this-object:groupBox5:SuspendLayout().
       this-object:SuspendLayout().
       /*  */
       /* buttonOk */
@@ -777,7 +912,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar0 = new "Progress.Data.TableDesc[]"(0).
       tableDesc1:ChildTables = arrayvar0.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 21 no-undo.
+      define variable arrayvar1 as Progress.Data.ColumnPropDesc extent 24 no-undo.
       arrayvar1[1] = new Progress.Data.ColumnPropDesc("CashBookName", "Наименование", Progress.Data.DataType:CHARACTER).
       arrayvar1[2] = new Progress.Data.ColumnPropDesc("corrPko", "Корсчет для ПКО", Progress.Data.DataType:CHARACTER).
       arrayvar1[3] = new Progress.Data.ColumnPropDesc("osnAcct", "дебит", Progress.Data.DataType:CHARACTER).
@@ -799,6 +934,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       arrayvar1[19] = new Progress.Data.ColumnPropDesc("rule-osn-transf", "правило", Progress.Data.DataType:CHARACTER).
       arrayvar1[20] = new Progress.Data.ColumnPropDesc("rule-payer-transf", "Выдать\Принять от", Progress.Data.DataType:CHARACTER).
       arrayvar1[21] = new Progress.Data.ColumnPropDesc("rule-payer-rko", "Выдать", Progress.Data.DataType:CHARACTER).
+      arrayvar1[22] = new Progress.Data.ColumnPropDesc("corrPkoVne", "Корсчет для внереализационного дохода", Progress.Data.DataType:CHARACTER).
+      arrayvar1[23] = new Progress.Data.ColumnPropDesc("takenfromVne", "Принято от", Progress.Data.DataType:CHARACTER).
+      arrayvar1[24] = new Progress.Data.ColumnPropDesc("RuleOsnPkoVne", "Прав. запол.ПКО", Progress.Data.DataType:CHARACTER).
       tableDesc1:Columns = arrayvar1.
       this-object:bindingSource1:TableSchema = tableDesc1.
       /*  */
@@ -810,6 +948,15 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label5:TabIndex = 10.
       this-object:label5:Text = "Правило заполнения графы ~"Основание~":".
       this-object:label5:UseCompatibleTextRendering = true.
+      /*  */
+      /* label51 */
+      /*  */
+      this-object:label51:Location = new System.Drawing.Point(4, 43).
+      this-object:label51:Name = "label51".
+      this-object:label51:Size = new System.Drawing.Size(237, 23).
+      this-object:label51:TabIndex = 10.
+      this-object:label51:Text = "Правило заполнения графы ~"Основание~":".
+      this-object:label51:UseCompatibleTextRendering = true.
       /*  */
       /* label6 */
       /*  */
@@ -869,6 +1016,15 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label4:Text = "Кор.счет:".
       this-object:label4:UseCompatibleTextRendering = true.
       /*  */
+      /* label41 */
+      /*  */
+      this-object:label41:Location = new System.Drawing.Point(4, 20).
+      this-object:label41:Name = "label41".
+      this-object:label41:Size = new System.Drawing.Size(57, 23).
+      this-object:label41:TabIndex = 21.
+      this-object:label41:Text = "Кор.счет:".
+      this-object:label41:UseCompatibleTextRendering = true.
+      /*  */
       /* label7 */
       /*  */
       this-object:label7:Location = new System.Drawing.Point(11, 84).
@@ -885,6 +1041,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fCorpko:Name = "fCorpko".
       this-object:fCorpko:Size = new System.Drawing.Size(36, 20).
       this-object:fCorpko:TabIndex = 5.
+      /*  */
+      /* fCorpkoVne */
+      /*  */
+      this-object:fCorpkoVne:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "corrPkoVne", true)).
+      this-object:fCorpkoVne:Location = new System.Drawing.Point(67, 20).
+      this-object:fCorpkoVne:Name = "fCorpkoVne".
+      this-object:fCorpkoVne:Size = new System.Drawing.Size(36, 20).
+      this-object:fCorpkoVne:TabIndex = 5.
       /*  */
       /* fOsnacct */
       /*  */
@@ -919,6 +1083,16 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:bChooseCorPko:UseVisualStyleBackColor = true.
       this-object:bChooseCorPko:Click:Subscribe(this-object:bChooseCredit_Click).
       /*  */
+      /* bChooseCorPkoVne */
+      /*  */
+      this-object:bChooseCorPkoVne:Location = new System.Drawing.Point(111, 17).
+      this-object:bChooseCorPkoVne:Name = "bChooseCorPkoVne".
+      this-object:bChooseCorPkoVne:Size = new System.Drawing.Size(23, 23).
+      this-object:bChooseCorPkoVne:TabIndex = 25.
+      this-object:bChooseCorPkoVne:UseCompatibleTextRendering = true.
+      this-object:bChooseCorPkoVne:UseVisualStyleBackColor = true.
+      this-object:bChooseCorPkoVne:Click:Subscribe(this-object:bChooseCreditVne_Click).
+      /*  */
       /* bChooseOsnAcct */
       /*  */
       this-object:bChooseOsnAcct:Location = new System.Drawing.Point(401, 81).
@@ -938,6 +1112,15 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label2:Text = "Контрагент:".
       this-object:label2:UseCompatibleTextRendering = true.
       /*  */
+      /* label25 */
+      /*  */
+      this-object:label25:Location = new System.Drawing.Point(140, 20).
+      this-object:label25:Name = "label25".
+      this-object:label25:Size = new System.Drawing.Size(70, 24).
+      this-object:label25:TabIndex = 27.
+      this-object:label25:Text = "Контрагент:".
+      this-object:label25:UseCompatibleTextRendering = true.
+      /*  */
       /* label8 */
       /*  */
       this-object:label8:Location = new System.Drawing.Point(6, 69).
@@ -948,6 +1131,16 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label8:UseCompatibleTextRendering = true.
       this-object:label8:Click:Subscribe(this-object:label8_Click).
       /*  */
+      /* label81 */
+      /*  */
+      this-object:label81:Location = new System.Drawing.Point(6, 69).
+      this-object:label81:Name = "label81".
+      this-object:label81:Size = new System.Drawing.Size(103, 15).
+      this-object:label81:TabIndex = 28.
+      this-object:label81:Text = "Принято от:".
+      this-object:label81:UseCompatibleTextRendering = true.
+      this-object:label81:Click:Subscribe(this-object:label81_Click).
+      /*  */
       /* fTakenFrom */
       /*  */
       this-object:fTakenFrom:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "takenfrom", true)).
@@ -955,6 +1148,14 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fTakenFrom:Name = "fTakenFrom".
       this-object:fTakenFrom:Size = new System.Drawing.Size(292, 20).
       this-object:fTakenFrom:TabIndex = 29.
+      /*  */
+      /* fTakenFromVne */
+      /*  */
+      this-object:fTakenFromVne:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "takenfromVne", true)).
+      this-object:fTakenFromVne:Location = new System.Drawing.Point(121, 66).
+      this-object:fTakenFromVne:Name = "fTakenFromVne".
+      this-object:fTakenFromVne:Size = new System.Drawing.Size(292, 20).
+      this-object:fTakenFromVne:TabIndex = 29.
       /*  */
       /* bChooseCli */
       /*  */
@@ -966,6 +1167,16 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:bChooseCli:UseVisualStyleBackColor = true.
       this-object:bChooseCli:Click:Subscribe(this-object:bChooseCli_Click).
       /*  */
+      /* bChooseCliVne */
+      /*  */
+      this-object:bChooseCliVne:Location = new System.Drawing.Point(390, 12).
+      this-object:bChooseCliVne:Name = "bChooseCliVne".
+      this-object:bChooseCliVne:Size = new System.Drawing.Size(23, 23).
+      this-object:bChooseCliVne:TabIndex = 30.
+      this-object:bChooseCliVne:UseCompatibleTextRendering = true.
+      this-object:bChooseCliVne:UseVisualStyleBackColor = true.
+      this-object:bChooseCliVne:Click:Subscribe(this-object:bChooseCliVne_Click).
+      /*  */
       /* lCli */
       /*  */
       this-object:lCli:Location = new System.Drawing.Point(206, 22).
@@ -974,6 +1185,15 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:lCli:TabIndex = 31.
       this-object:lCli:UseCompatibleTextRendering = true.
       this-object:lCli:Click:Subscribe(this-object:lCli_Click).
+      /*  */
+      /* lCliVne */
+      /*  */
+      this-object:lCliVne:Location = new System.Drawing.Point(206, 22).
+      this-object:lCliVne:Name = "lCliVne".
+      this-object:lCliVne:Size = new System.Drawing.Size(178, 15).
+      this-object:lCliVne:TabIndex = 63.
+      this-object:lCliVne:UseCompatibleTextRendering = true.
+      this-object:lCliVne:Click:Subscribe(this-object:lCliVne_Click).
       /*  */
       /* FcorRko */
       /*  */
@@ -1047,6 +1267,22 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:fRuleOsnPko:Size = new System.Drawing.Size(166, 21).
       this-object:fRuleOsnPko:TabIndex = 38.
       this-object:fRuleOsnPko:SelectedIndexChanged:Subscribe(this-object:fRuleOsnPko_SelectedIndexChanged).
+      /*  */
+      /* fRuleOsnPkoVne */
+      /*  */
+      this-object:fRuleOsnPkoVne:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "RuleOsnPkoVne", true)).
+      this-object:fRuleOsnPkoVne:FormattingEnabled = true.
+      @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+      define variable arrayvar10 as System.Object extent 3 no-undo.
+      arrayvar10[1] = "Поступление денежных средств в возмещение причиненных Обществу убытков".
+      arrayvar10[2] = "Номера Z-отчетов".
+      arrayvar10[3] = "Не заполнять".
+      this-object:fRuleOsnPkoVne:Items:AddRange(arrayvar10).
+      this-object:fRuleOsnPkoVne:Location = new System.Drawing.Point(247, 43).
+      this-object:fRuleOsnPkoVne:Name = "fRuleOsnPkoVne".
+      this-object:fRuleOsnPkoVne:Size = new System.Drawing.Size(166, 21).
+      this-object:fRuleOsnPkoVne:TabIndex = 62.
+      this-object:fRuleOsnPkoVne:SelectedIndexChanged:Subscribe(this-object:fRuleOsnPkoVne_SelectedIndexChanged).
       /*  */
       /* label11 */
       /*  */
@@ -1258,6 +1494,26 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:label19:Text = "Контрагент:".
       this-object:label19:UseCompatibleTextRendering = true.
       /*  */
+      /* groupBox5 */
+      /*  */
+      this-object:groupBox5:Controls:Add(this-object:fRuleOsnPkoVne).
+      this-object:groupBox5:Controls:Add(this-object:lCliVne).
+      this-object:groupBox5:Controls:Add(this-object:bChooseCliVne).
+      this-object:groupBox5:Controls:Add(this-object:label25).
+      this-object:groupBox5:Controls:Add(this-object:bChooseCorPkoVne).
+      this-object:groupBox5:Controls:Add(this-object:fTakenFromVne).
+      this-object:groupBox5:Controls:Add(this-object:fCorpkoVne).
+      this-object:groupBox5:Controls:Add(this-object:label81).
+      this-object:groupBox5:Controls:Add(this-object:label41).
+      this-object:groupBox5:Controls:Add(this-object:label51).
+      this-object:groupBox5:Location = new System.Drawing.Point(14, 293).
+      this-object:groupBox5:Name = "groupBox5".
+      this-object:groupBox5:Size = new System.Drawing.Size(428, 97).
+      this-object:groupBox5:TabIndex = 61.
+      this-object:groupBox5:TabStop = false.
+      this-object:groupBox5:Text = "ПКО (внереализационный доход)".
+      this-object:groupBox5:UseCompatibleTextRendering = true.
+      /*  */
       /* groupBox1 */
       /*  */
       this-object:groupBox1:Controls:Add(this-object:fRuleOsnPko).
@@ -1290,7 +1546,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox2:Controls:Add(this-object:label11).
       this-object:groupBox2:Controls:Add(this-object:lcashcli).
       this-object:groupBox2:Controls:Add(this-object:btcash).
-      this-object:groupBox2:Location = new System.Drawing.Point(14, 293).
+      this-object:groupBox2:Location = new System.Drawing.Point(14, 396).
       this-object:groupBox2:Name = "groupBox2".
       this-object:groupBox2:Size = new System.Drawing.Size(428, 94).
       this-object:groupBox2:TabIndex = 61.
@@ -1336,7 +1592,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox3:Controls:Add(this-object:label15).
       this-object:groupBox3:Controls:Add(this-object:label14).
       this-object:groupBox3:Controls:Add(this-object:label13).
-      this-object:groupBox3:Location = new System.Drawing.Point(14, 393).
+      this-object:groupBox3:Location = new System.Drawing.Point(14, 496).
       this-object:groupBox3:Name = "groupBox3".
       this-object:groupBox3:Size = new System.Drawing.Size(428, 198).
       this-object:groupBox3:TabIndex = 62.
@@ -1366,7 +1622,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox4:Controls:Add(this-object:fcorrtrans).
       this-object:groupBox4:Controls:Add(this-object:label22).
       this-object:groupBox4:Controls:Add(this-object:label23).
-      this-object:groupBox4:Location = new System.Drawing.Point(14, 597).
+      this-object:groupBox4:Location = new System.Drawing.Point(14, 700).
       this-object:groupBox4:Name = "groupBox4".
       this-object:groupBox4:Size = new System.Drawing.Size(428, 103).
       this-object:groupBox4:TabIndex = 61.
@@ -1472,7 +1728,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       this-object:AcceptButton = this-object:buttonOk.
       this-object:CancelButton = this-object:buttonCancel.
-      this-object:ClientSize = new System.Drawing.Size(458, 708).
+      this-object:ClientSize = new System.Drawing.Size(458, 812).
+      this-object:Controls:Add(this-object:groupBox5).
       this-object:Controls:Add(this-object:groupBox4).
       this-object:Controls:Add(this-object:groupBox3).
       this-object:Controls:Add(this-object:groupBox2).
@@ -1508,6 +1765,8 @@ class ibs.th.ref.cashbookfrm inherits Form :
       this-object:groupBox3:PerformLayout().
       this-object:groupBox4:ResumeLayout(false).
       this-object:groupBox4:PerformLayout().
+      this-object:groupBox5:ResumeLayout(false).
+      this-object:groupBox5:PerformLayout().      
       this-object:ResumeLayout(false).
       this-object:PerformLayout().
       catch e as Progress.Lang.Error:
@@ -1531,7 +1790,16 @@ class ibs.th.ref.cashbookfrm inherits Form :
       do :
          this-object:lCli:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
       end.
-    
+
+      find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.Vnecli-type
+         and ub.clients.obj-code = tt-cashbook.Vnecli-code
+         no-error .
+      if available ub.clients
+         then 
+      do :
+         this-object:lCliVne:Text = ub.clients.obj-type + string(ub.clients.obj-code) + "   " + ub.clients.obj-name .
+      end.
+          
       find first ub.clients no-lock where ub.clients.obj-type = tt-cashbook.CountCash-type
          and ub.clients.obj-code = tt-cashbook.CountCash-code
          no-error .
@@ -1575,10 +1843,13 @@ class ibs.th.ref.cashbookfrm inherits Form :
             this-object:fExtCode:ReadOnly      = true
             this-object:fName:ReadOnly         = true
             this-object:fCorpko:ReadOnly       = true
+            this-object:fCorpkoVne:ReadOnly    = true
             this-object:FcorRko:ReadOnly       = true
             this-object:fOsnacct:ReadOnly      = true
             this-object:fTakenFrom:ReadOnly    = true
+            this-object:fTakenFromVne:ReadOnly = true
             this-object:fRuleOsnPko:Enabled    = false
+            this-object:fRuleOsnPkoVne:Enabled = false
             this-object:fRuleOsnRko:Enabled    = false
             this-object:fRulePril:Enabled      = false
             this-object:FlagSepCash:Enabled    = false
@@ -1586,8 +1857,11 @@ class ibs.th.ref.cashbookfrm inherits Form :
             this-object:buttonOk:Enabled       = false
             this-object:bChooseOsnAcct:Enabled = false
             this-object:bChooseCorPko:Enabled  = false
+            this-object:bChooseCorPkoVne:Enabled  = false
             this-object:bChooseCorRko:Enabled  = false
             this-object:bChooseCli:Enabled     = false
+            this-object:bChooseCliVne:Enabled  = false
+            this-object:groupBox5:Enabled      = false
             this-object:groupBox4:Enabled      = false
             this-object:groupBox3:Enabled      = false
             this-object:groupBox2:Enabled      = false

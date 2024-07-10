@@ -22,13 +22,7 @@ class ibs.th.ref.cashbookstorage final:
   define property Msg as character
     get.
     private set.
-   /* 
-  {ibs/th/ref/type.i
-    &NameType = AttrCode
-    &ListType = "PkoMask,RkoMask,currPko,currRko,ManagerPosition,ManagerFIO,BuhFIO,Struct,uchet,DptName,DptType,DptCode,Pin,BankDepos-host,BankDepos-code,CountCollect-code,CountCollect-type,SourceCode,BankRecip-host,BankRecip-code"
-    &Shift    =  1
-} 
-  */
+
   define variable mQuery as handle no-undo.
   define variable mQueryRule as handle no-undo.
   define variable objKeyRec as ibs.th.gbl.keyrec no-undo.
@@ -57,11 +51,11 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Поле Кор. счет ПКО не может быть пустым!" .
       return .
     end.
-    /*if trim(tt-cashbook.CorrRko) = ""
-    then do :
-      Msg = "Поле Кор. счет РКО не может быть пустым!" .
-      return .
-    end.*/
+/*    if trim(tt-cashbook.CorrPkoVne) = ""                                        */
+/*    then do :                                                                   */
+/*      Msg = "Поле Кор. счет ПКО внереализационный доход не может быть пустым!" .*/
+/*      return .                                                                  */
+/*    end.                                                                        */
     if trim(tt-cashbook.OSnAcct) = ""
     then do :
       Msg = "Поле Основной счет не может быть пустым!" .
@@ -88,6 +82,12 @@ class ibs.th.ref.cashbookstorage final:
       Msg = "Выберите контрагента для автоматического формирования платежей. Поле Контрагент (авто)." .
       return .
     end.
+/*    if (trim(tt-cashbook.Vnecli-type) = ""                                                                                          */
+/*    or tt-cashbook.Vnecli-code = ? or tt-cashbook.Vnecli-code <= 0) and tt-cashbook.id eq 0                                         */
+/*    then do :                                                                                                                       */
+/*      Msg = "Выберите контрагента для формирования платежей внереализационного дохода. Поле Контрагент (внереализационный доход)." .*/
+/*      return .                                                                                                                      */
+/*    end.                                                                                                                            */
    /* if trim(tt-cashbook.takenfrom) = ""
     then do :
       Msg = "Поле Принято от (авто) не может быть пустым!" .

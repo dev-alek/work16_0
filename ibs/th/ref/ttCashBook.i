@@ -12,33 +12,44 @@
     Notes       :
   ----------------------------------------------------------------------*/
 &global-define cashbookSysField "stat,mark,basic-kb"
-define temp-table tt-cashbook like ub.cashbook
-  field stat               as character
-  field mark               as character
-  field basic-kb           as logical
+
+define temp-table tt-cashbook like ub.CashBook
+  field stat              as character
+  field mark              as character
+  field basic-kb          as logical
   
-  field SourceCode         as character
-  field BankRecip-host     as integer
-  field BankRecip-code     as integer
-  field BankRecip-acct     as character 
-  field BankDepos-host     as integer
-  field BankDepos-code     as integer
-  field CountCollect-type  as character
-  field CountCollect-code  as integer
-  field CountCash-type     as character
-  field CountCash-code     as integer
-  field BasisIncas         as character 
-  field CorrAcctIncas      as character
- /* field contr-type-rko     as character 
-  field contr-code-rko     as integer */ 
-  field Corr-transf        as character 
-  field rule-osn-transf    as character 
-  field contr-type-transf  as character 
-  field contr-code-transf  as integer 
-  field rule-payer-transf  as character
-  field rule-payer-rko     as character 
-  field rule-payer-inkass  as character  
-.
+  field SourceCode        as character
+  field BankRecip-host    as integer
+  field BankRecip-code    as integer
+  field BankRecip-acct    as character 
+  field BankDepos-host    as integer
+  field BankDepos-code    as integer
+  field CountCollect-type as character
+  field CountCollect-code as integer
+  field CountCash-type    as character
+  field CountCash-code    as integer
+  field BasisIncas        as character 
+  field CorrAcctIncas     as character
+  /* field contr-type-rko     as character 
+   field contr-code-rko     as integer */ 
+  field Corr-transf       as character 
+  field rule-osn-transf   as character 
+  field contr-type-transf as character 
+  field contr-code-transf as integer 
+  field Vnecli-type       as character
+  field Vnecli-code       as integer
+  field Avanscli-type     as character
+  field Avanscli-code     as integer
+  field rule-payer-transf as character
+  field rule-payer-rko    as character 
+  field rule-payer-inkass as character  
+  field corrPkoVne        as character
+  field takenfromVne      as character
+  field RuleOsnPkoVne     as character
+  field corrPkoAvans      as character
+  field takenfromAvans    as character
+  field RuleOsnPkoAvans   as character
+  .
 
 define dataset ds-cashbook for tt-cashbook .
 

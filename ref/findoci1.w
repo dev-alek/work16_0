@@ -22,11 +22,11 @@ DEFINE BUFFER X_sysconf FOR sysconf.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d3f9048d4e8e, 3106, rls $
+$Author: Ostroukhov $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: findoci1.w $
+$Archive: ref/findoci1.w $
 
 Карточка редактирования приходного ордера
 
@@ -69,11 +69,11 @@ define input parameter p-other as character no-undo .
 
 define input-output parameter p-doc-rec as recid no-undo.
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d3f9048d4e8e, 3106, rls $":U .
+define variable vss-author      as character no-undo init "$Author: Ostroukhov $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 09 09:15:01 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: findoci1.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/findoci1.w $":U .
 define variable vss-description as character no-undo init "Карточка редактирования приходного ордера".
 { cmp/vssrevis.i }
 
@@ -1001,7 +1001,7 @@ tt-fin-doc.obj-code
 tt-fin-doc.sum-doc
 tt-fin-doc.prn-doc-code
 tt-fin-doc.payer-name
-tt-fin-doc.naznach-plat
+/*tt-fin-doc.naznach-plat*/
 tt-fin-doc.including
 tt-fin-doc.enclosure
 tt-fin-doc.receiver-sign2
