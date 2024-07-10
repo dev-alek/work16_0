@@ -120,6 +120,8 @@ then do:
   parline-mode = replace (parline-mode, ",autotrnqr2d", "").
 end.
 
+define temp-table tt-old-list-tank no-undo like ub.doc-line-attr .
+
 define stream outstream.
 
 { cmp/vssrevis.i               }
@@ -1691,6 +1693,8 @@ do:
   define variable pl-setted        as logical no-undo init false .
   define variable ii               as integer no-undo .
   define variable pl               as integer no-undo .
+  
+  define buffer tmp_doc-line-attr for ub.doc-line-attr .
 
   assign
     v-new-fact-qnty     = tt-fr-doc-line.fact-qnty
@@ -1701,6 +1705,16 @@ do:
   or v-is-looksec
   then
     infoSectionsTotal:GetDBAllAttr().
+
+  empty temp-table tt-old-list-tank .
+  for each tmp_doc-line-attr no-lock where tmp_doc-line-attr.doc-code = t-doc.doc-code
+                                       and tmp_doc-line-attr.gds-code = buf_goods.gds-code
+                                       and tmp_doc-line-attr.attr-code begins "list-tank" :
+    create tt-old-list-tank .
+    buffer-copy tmp_doc-line-attr to tt-old-list-tank .
+  end .
+  infoSectionsTotal:PlChanged = no .
+  
   if not valid-object(tanksForm)
   then
     tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
@@ -6041,6 +6055,7 @@ end procedure.
 
 procedure proc-quit:
   define buffer bf_doc-pl for ub.doc-pl.
+  define buffer tmp_doc-line-attr for ub.doc-line-attr .
 
   do transaction
   on error undo, return error
@@ -6092,6 +6107,21 @@ procedure proc-quit:
         delete tt-doc-pl.
       end.
     end.
+    
+    if infoSectionsTotal:PlChanged
+    then do :
+      for each tmp_doc-line-attr exclusive-lock where tmp_doc-line-attr.doc-code = t-doc.doc-code
+                                                  and tmp_doc-line-attr.gds-code = buf_goods.gds-code
+                                                  and tmp_doc-line-attr.attr-code begins "list-tank" :
+        delete tmp_doc-line-attr .
+      end .
+      for each tt-old-list-tank :
+        create tmp_doc-line-attr .
+        buffer-copy tt-old-list-tank to tmp_doc-line-attr .
+      end .
+      empty temp-table tt-old-list-tank .
+    end .
+    
   end. /* transaction */
 
 end procedure. /* proc-quit */
