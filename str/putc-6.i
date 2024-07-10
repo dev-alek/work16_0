@@ -21,7 +21,6 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 define stream finp.
 PROCEDURE putc-6.
 def input param pos-type as char no-undo.
-define input parameter pos-graff as logical no-undo .
 def var ii  as  int     no-undo.
 &scop validate-cash-cash  if cash-cash.cash-code > ~{&max-cash-code~} then do:                      ~
     run write-log-and-file in p-log-handle (                                         ~
@@ -118,7 +117,6 @@ end.
       run bgelib-tag-put in this-procedure ( input 3, input "CashierINN"          , input if available person then string(person.inn) else "", input 1 ).
       run bgelib-tag-put in this-procedure ( input 3, input "CashierShadow"       , input enc-passwd, input 1 ).
 
-      if pos-graff then do:
           for first ub.staff no-lock where ub.staff.psn-code = ub.person.psn-code
           and ub.staff.role = {&role-cashier} 
           and (ub.staff.date-end > today or ub.staff.date-end = ?),
@@ -128,7 +126,7 @@ end.
           and ub.staff-attr.staff-code = ub.staff.staff-code:
              run bgelib-tag-put in this-procedure ( input 3, input "CashierQRCode"       , input ub.staff-attr.attr-value, input 1 ).
           end.
-      end.
+
       run bgelib-tag-close in this-procedure ( input 2, input "Cashier").
     END.
   end.

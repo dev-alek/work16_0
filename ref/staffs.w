@@ -451,20 +451,17 @@ DO:
           
    end.
   if can-find(first cash-cash) then do:
-  
+          
   /* Отсылка на кассу */
-  run str/diallog.w (
-    input this-procedure
-    , input this-procedure
-    , input "str/sendqr.p":U  + {&delim-par} +
-    "1":U  + {&delim-par} +  /*error-message-option*/
-    "1":U + {&delim-par} +  /*auto-go-option*/
-    "1":U                  /*return-value-option*/
-    , input ({&cd-type-IBm-XML} + {&delim-par} + v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + "U":U + {&delim-par} + string(v-cntxt-db-num) + {&delim-par} + string(recid_attr))
-    , input yes /*p-auto-go*/
-    , input "":U
-    , input substitute("Отсылка QR-code на кассы &1", {&cd-type-IBm-XML})
-    ) no-error.
+      run str/diallog.w (
+            input parparentproc
+          , input this-procedure
+          , input "str/send-all.p":U
+          , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'qrCode' + {&delim-par} + 'Отсылка QR-code на кассы':U + {&delim-par} + string(recid_attr))
+          , input ? /*p-auto-go*/
+          , input "":U
+          , input substitute("Отсылка QR-code на кассы &1", {&cd-type-IBm-XML})
+        ) no-error.
 
   end.
 END.
