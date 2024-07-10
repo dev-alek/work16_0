@@ -84,6 +84,7 @@ do
   define buffer bf-wst_doc-pl     for ub.doc-pl.
   define buffer buf_sale-doc      for ub.sale-doc .
   define buffer buf_place         for ub.place .
+  define buffer buf2_place        for ub.place .
 
   define temp-table tt-line-for-doc no-undo
     field gds-code      like ub.rvs-line.gds-code
@@ -528,6 +529,28 @@ do
       if  v-ok
       and v-value > ""
       then do :
+        do ii = 1 to num-entries(v-value) :
+          find first buf2_place no-lock where buf2_place.obj-type = buf_rvs-doc.obj-type
+                                          and buf2_place.obj-code = buf_rvs-doc.obj-code
+                                          and buf2_place.loc1     = entry(ii, v-value)
+                                          and buf2_place.status_  = ""
+                                          no-error .
+          if available buf2_place
+          then do :
+            find first com_rvs-line where com_rvs-line.gds-code = buf_goods.gds-code
+                                      and com_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                      and com_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                      and com_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                      and com_rvs-line.pl-code  = buf2_place.pl-code
+                                      no-error .
+            if not available com_rvs-line
+            then do :
+              message substitute ("Внимание! Не сделана сверка по резервуару №&1, включенному в связку сообщающихся резервуаров! Документ инвентаризации не создан!", buf2_place.loc1)
+                view-as alert-box error .
+              undo block_cre-inv, leave block_cre-inv .
+            end .
+          end .
+        end .
         run placelib_get-attr  ( input {&place-is-main}
           ,input buf_place.obj-code
           ,input buf_place.obj-type
@@ -1046,8 +1069,7 @@ do
                 and buf_place.status_  = ""
                 no-error .
               if available buf_place
-                then 
-              do :
+              then do :
                 find first com_rvs-line where com_rvs-line.gds-code = buf_doc-pl.gds-code
                   and com_rvs-line.rvs-code = buf_rvs-doc.rvs-code
                   and com_rvs-line.obj-type = buf_doc-pl.obj-type
@@ -1055,14 +1077,12 @@ do
                   and com_rvs-line.pl-code  = buf_place.pl-code
                   no-error .
                 if not available com_rvs-line
-                  then 
-                do :
+                then do :
                   message substitute ("Внимание! Не сделана сверка по резервуару №&1, включенному в связку сообщающихся резервуаров! Документ инвентаризации не создан!", buf_place.loc1)
                     view-as alert-box error .
                   undo block_cre-inv, leave block_cre-inv .
                 end .
-                else 
-                do :
+                else do :
                   assign
                     O_FACT-base = O_FACT-base + (com_rvs-line.state-measure-qnty + com_rvs-line.state-add-qnty)
                     O_FACT-cli  = O_FACT-cli + (com_rvs-line.state-measure-cli-qnty + com_rvs-line.state-add-qnty * com_rvs-line.state-density)
