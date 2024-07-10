@@ -644,7 +644,7 @@ procedure fill-tt :
       when "test-asi_mass"
       then do :
         assign
-          tt-result.state-level-total = buf_rvs-line.state-level-total
+          tt-result.state-level-total = if buf_rvs-line.state-level-total > 0 then buf_rvs-line.state-level-total else ?
           tt-result.izmer-density     = v-izmer-density
           tt-result.pomi-density      = v-pomi-density
           tt-result.state-temperature = v-temp-izm-vol
