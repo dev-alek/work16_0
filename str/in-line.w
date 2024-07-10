@@ -2551,6 +2551,10 @@ do:
 /*    tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true*/
 /*    with frame {&frame-name} .                                                  */
   tanksForm:dispose() .
+  if valid-object(tanksForm)
+  and tanksForm:isDisposed
+  then
+    delete object tanksForm .
 end.
 
 /* Атрибуты алкогольной продукции */
