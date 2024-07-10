@@ -2026,6 +2026,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-mm-density            as decimal no-undo.
   define variable v-POkMI-result          as character no-undo.
   define variable v-POkMI-result-attr     as character no-undo.
+  define variable v-POkMI-warnings        as character no-undo.
   define variable v-pokmi-dll-version     as character no-undo .
   define variable place-ponton            as logical no-undo .
   define variable place-ponton-mass       as decimal no-undo .
@@ -4320,8 +4321,19 @@ THEN DO:
           then do :
             assign
               v-mm:Use_DeltaOtn_R_liquid_IN = Use_DeltaOtn_R_liquid_IN
-              v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN
+/*              v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN*/
             .
+            if DeltaOtn_R_liquid_IN = 0.42
+            then do :
+              v-mm:Set_DeltaOtn_R_liquid_IN(replace(string(DeltaOtn_R_liquid_IN), ".", ",")) no-error .
+              if string(v-mm:DeltaOtn_R_liquid_IN) = ".0000000000"
+              then do :
+                v-mm:Set_DeltaOtn_R_liquid_IN(string(DeltaOtn_R_liquid_IN)) no-error .
+              end .
+            end .
+            else do :
+              v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN .
+            end .
             PUT STREAM outstream unformatted
               'Use_DeltaOtn_R_liquid_IN = ' v-mm:Use_DeltaOtn_R_liquid_IN SKIP
               'DeltaOtn_R_liquid_IN     = ' v-mm:DeltaOtn_R_liquid_IN     SKIP
@@ -4389,7 +4401,20 @@ THEN DO:
               v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
               v-mm:DeltaAbs_H_CalcType    = DeltaAbs_H_CalcType
               v-mm:DeltaAbs_H_Water_CalcType = DeltaAbs_H_Water_CalcType
+              
+              v-mm:A_LevelMeasurementTool = 0
             .
+            if A_LevelMeasurementTool = 0.0001
+            then do :
+              v-mm:Set_A_LevelMeasurementTool(replace(string(A_LevelMeasurementTool), ".", ",")) no-error .
+              if string(v-mm:A_LevelMeasurementTool) = ".0000000000"
+              then do :
+                v-mm:Set_A_LevelMeasurementTool(string(A_LevelMeasurementTool)) no-error .
+              end .
+            end .
+            else do :
+              v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool .
+            end .
             PUT STREAM outstream unformatted
               'CalibrationBelt       = ' v-mm:CalibrationBelt           SKIP
               'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP
@@ -4795,7 +4820,8 @@ THEN DO:
                 "MM:DeltaOtn_Vcy        = " + v-mm:DeltaOtn_Vcy  + {&new-line} +
                 "MM:DeltaOtn_Vm         = " + v-mm:DeltaOtn_Vm  + {&new-line} +
                 "MM:DeltaOtn_M          = " + v-mm:DeltaOtn_M  + {&new-line} +
-                "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion
+                "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion + {&new-line} + {&new-line} +
+                "MM:Warnings            = " + v-mm:Warnings
             .
             OUTPUT stream outstream to value ("pomi.log")  append.
             PUT STREAM outstream unformatted v-POkMI-result skip .
@@ -4809,6 +4835,8 @@ THEN DO:
                 "Объем, приведенный к стандартным условиям, л: " + string((v-mm:Vcy * 1000), "->>,>>>,>>9":U) + {&new-line} +
                 "Объем НП при температуре его измерения, л: " + string((v-mm:V * 1000), "->>,>>>,>>9":U) + {&new-line} +
                 "Объем воды, л: " + string((v-mm:V_water * 1000), "->>,>>>,>>9":U)
+                
+              v-POkMI-warnings = v-mm:Warnings
             .
             
             find first rvs-line-attr exclusive-lock
@@ -4831,6 +4859,28 @@ THEN DO:
                 rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
                 rvs-line-attr.attr-code = "POkMI-result"
                 rvs-line-attr.attr-value = v-POkMI-result-attr
+              .
+            end.
+            find first rvs-line-attr exclusive-lock
+                  where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                    and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                    and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                    and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                    and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                    and rvs-line-attr.attr-code = "POkMI-warnings" no-error.
+            if available rvs-line-attr then do :
+              rvs-line-attr.attr-value = v-POkMI-warnings .
+            end.
+            else do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "POkMI-warnings"
+                rvs-line-attr.attr-value = v-POkMI-warnings
               .
             end.
           end .

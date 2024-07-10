@@ -12,7 +12,7 @@ DEFINE TEMP-TABLE tt-rvs-line NO-UNDO LIKE rvs-line
 field meas-calc-qnty     AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
 field meas-calc-dens     AS DECIMAL FORMAT "9.9999":U INITIAL 0
 field meas-cli-calc-qnty AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
-field izmer-density      AS DECIMAL FORMAT "9.9999":U INITIAL 0
+field izmer-density      AS DECIMAL FORMAT "9.9999":U INITIAL 0 decimals 10
 field calc-add-mass      AS DECIMAL FORMAT "->>,>>>,>>9.9":U INITIAL 0
 field calc-vol           AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
 field sum-mass           AS DECIMAL FORMAT "->>,>>>,>>9.9":U INITIAL 0
@@ -21,7 +21,7 @@ field fact-calc-add-mass AS DECIMAL FORMAT "->>,>>>,>>9.9":U INITIAL 0
 field fact-calc-vol      AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
 field fact-sum-mass      AS DECIMAL FORMAT "->>,>>>,>>9.9":U INITIAL 0
 field fact-sum-vol       AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0 
-field temp-izm-vol       as decimal format "->>>9.9":U initial ?
+field temp-izm-vol       as decimal format "->>>9.9":U initial ? decimals 10
 .
 
 define new shared temp-table tt-temps no-undo
@@ -141,6 +141,7 @@ define variable v-revision-mode   as logical no-undo init no .
 define variable v-first-enter     as logical no-undo init yes .
 
 define variable v-POkMI-result-attr     as character no-undo.
+define variable v-POkMI-warnings        as character no-undo init "" .
 
 define variable v-value           as character no-undo.
 define variable v-ok              as logical   no-undo.
@@ -907,7 +908,13 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-POkMI-result Dialog-Frame
 ON CHOOSE OF b-POkMI-result IN FRAME Dialog-Frame /* Отмена */
 DO:
-  message v-POkMI-result-attr view-as alert-box information .
+  if trim(v-POkMI-warnings) > ""
+  then do :
+    message (v-POkMI-result-attr + {&new-line} + " " + {&new-line} + " " + {&new-line} + "Предупреждения:" + {&new-line} + v-POkMI-warnings) view-as alert-box information .
+  end .
+  else do :
+    message v-POkMI-result-attr view-as alert-box information .
+  end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1475,6 +1482,10 @@ define variable place-ponton            as logical no-undo .
 define variable place-ponton-mass       as decimal no-undo .
 define variable place-ponton-height     as decimal no-undo .
 
+define variable Tv                      as decimal no-undo .
+define variable Tr                      as decimal no-undo .
+define variable R                       as decimal no-undo .
+
 define variable v-POkMI-result          as character no-undo.
 
 define buffer buf_sr-izmerenia for sr-izmerenia .
@@ -2037,13 +2048,46 @@ define buffer bf_place for ub.place .
       undo _trpomi, return no-apply .
     END.
     ELSE DO :
+      assign
+        Tr = tt-rvs-line.state-temperature
+        Tv = if tt-rvs-line.temp-izm-vol <> ? then tt-rvs-line.temp-izm-vol else tt-rvs-line.state-temperature 
+        R = ( tt-rvs-line.izmer-density * 1000 )
+      .
+      for first rvs-line-attr no-lock where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                                        and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                                        and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                                        and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                                        and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                                        and rvs-line-attr.attr-code = "Tr"
+                                        :
+        assign Tr = decimal(rvs-line-attr.attr-value) .
+      end . 
+      for first rvs-line-attr no-lock where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                                        and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                                        and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                                        and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                                        and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                                        and rvs-line-attr.attr-code = "Tv"
+                                        :
+        assign Tv = decimal(rvs-line-attr.attr-value) .
+      end . 
+      for first rvs-line-attr no-lock where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                                        and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                                        and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                                        and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                                        and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                                        and rvs-line-attr.attr-code = "R"
+                                        :
+        assign R = decimal(rvs-line-attr.attr-value) * 1000 .
+      end . 
+      
       ASSIGN
         v-mm:H                      = tt-rvs-line.state-level-total * 10
         v-mm:H_water                = tt-rvs-line.state-level-water * 10 when tt-rvs-line.state-level-water <> ?
         v-mm:CalibrationTable       = CalibTable
-        v-mm:Tr                     = tt-rvs-line.state-temperature
-        v-mm:Tv                     = if tt-rvs-line.temp-izm-vol <> ? then tt-rvs-line.temp-izm-vol else tt-rvs-line.state-temperature 
-        v-mm:R                      = ( tt-rvs-line.izmer-density * 1000 )
+        v-mm:Tr                     = Tr
+        v-mm:Tv                     = Tv
+        v-mm:R                      = R
         v-mm:Tcy                    = temp-for-pomi
         v-mm:ToolType               = ToolType
         v-mm:DeltaOtn_K             = DeltaOtn_K
@@ -2067,64 +2111,77 @@ define buffer bf_place for ub.place .
               "    " SKIP
               cur-time-string()           FORMAT "x(16)"    SKIP
               'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
-              'Версия dll: '              v-pokmi-dll-version                              SKIP
-              'CODE_PL                = ' tt-rvs-line.pl-code                           SKIP
-              'H                      = ' v-mm:H                                             SKIP
-              'H_water                = ' v-mm:H_water                                       SKIP
-              'CalibrationTable       = ' v-mm:CalibrationTable                              SKIP
-              .
-              if v-pokmi-dll-version = "1.0.5.6"
-              then do :
-                CalibBelt = getCalibrationBelt(
-                    tt-rvs-line.obj-type, 
-                    tt-rvs-line.obj-code,
-                    tt-rvs-line.pl-code,
-                    tt-rvs-line.state-level-total,
-                    if tt-rvs-line.state-level-water <> ? then tt-rvs-line.state-level-water else 0
-                ).
-                assign
-                  v-mm:CalibrationBelt        = CalibBelt
-                  v-mm:ToolAutomationLevel_H  = ToolAutomationLevel_H
-                  v-mm:ToolAutomationLevel_H_Water = ToolAutomationLevel_H_Water
-                  v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
-                  v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
-                  v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
-                  v-mm:DeltaAbs_H_CalcType    = DeltaAbs_H_CalcType
-                  v-mm:DeltaAbs_H_Water_CalcType = DeltaAbs_H_Water_CalcType
-                .
-                PUT STREAM outstream unformatted
-                  'DeltaOtn_N            = ' v-mm:DeltaOtn_N                SKIP
-                  'CalibrationBelt             = ' v-mm:CalibrationBelt           SKIP
-                  'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP
-                  'ToolAutomationLevel_H_Water = ' ToolAutomationLevel_H_Water    SKIP
-                  'ToolAutomationLevel_R       = ' v-mm:ToolAutomationLevel_R     SKIP
-                  'ToolAutomationLevel_Tv      = ' v-mm:ToolAutomationLevel_Tv    SKIP
-                  'ToolAutomationLevel_Tr      = ' v-mm:ToolAutomationLevel_Tr    SKIP
-                  'DeltaAbs_H_CalcType         = ' v-mm:DeltaAbs_H_CalcType       SKIP
-                  'DeltaAbs_H_Water_CalcType   = ' v-mm:DeltaAbs_H_Water_CalcType SKIP
-                  
-                .
-              end .
-              
-              PUT STREAM outstream unformatted
-              'Tr                     = ' v-mm:Tr                                            SKIP
-              'Tv                     = ' v-mm:Tv                                            SKIP
-              'R                      = ' v-mm:R                                             SKIP
-              'Tcy                    = ' v-mm:Tcy                                           SKIP
-              'ToolType               = ' v-mm:ToolType                                      SKIP
-              'DeadZone_Reservoir     = ' v-mm:DeadZone_Reservoir                            SKIP
-              'DeltaOtn_K             = ' v-mm:DeltaOtn_K                                    SKIP
-              'A_Reservoir            = ' v-mm:A_Reservoir                                   SKIP
-              'A_LevelMeasurementTool = ' v-mm:A_LevelMeasurementTool                        skip
-              'DeltaAbs_H             = ' v-mm:DeltaAbs_H                                    SKIP
-              'DeltaAbs_H_Water       = ' v-mm:DeltaAbs_H_Water                              SKIP
-              'DeltaAbs_R             = ' v-mm:DeltaAbs_R                                    SKIP
-              'DeltaAbs_Tv            = ' v-mm:DeltaAbs_Tv                                   SKIP
-              'DeltaAbs_Tr            = ' v-mm:DeltaAbs_Tr                                   SKIP
-              'DeltaOtn_H             = ' v-mm:DeltaOtn_H                                    SKIP
-              'DeltaOtn_H_Water       = ' v-mm:DeltaOtn_H_Water                              SKIP
-              'DeltaOtn_R             = ' v-mm:DeltaOtn_R                                    SKIP
-              'DeltaOtn_N             = ' v-mm:DeltaOtn_N                                    SKIP
+              'Версия dll: '              v-pokmi-dll-version                           SKIP
+              'CODE_PL                     = ' tt-rvs-line.pl-code                      SKIP
+              'H                           = ' v-mm:H                                   SKIP
+              'H_water                     = ' v-mm:H_water                             SKIP
+              'CalibrationTable            = ' v-mm:CalibrationTable                    SKIP
+      .
+      if v-pokmi-dll-version = "1.0.5.6"
+      then do :
+        CalibBelt = getCalibrationBelt(
+            tt-rvs-line.obj-type, 
+            tt-rvs-line.obj-code,
+            tt-rvs-line.pl-code,
+            tt-rvs-line.state-level-total,
+            if tt-rvs-line.state-level-water <> ? then tt-rvs-line.state-level-water else 0
+        ).
+        assign
+          v-mm:CalibrationBelt        = CalibBelt
+          v-mm:ToolAutomationLevel_H  = ToolAutomationLevel_H
+          v-mm:ToolAutomationLevel_H_Water = ToolAutomationLevel_H_Water
+          v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
+          v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
+          v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
+          v-mm:DeltaAbs_H_CalcType    = DeltaAbs_H_CalcType
+          v-mm:DeltaAbs_H_Water_CalcType = DeltaAbs_H_Water_CalcType
+          
+          v-mm:A_LevelMeasurementTool = 0
+        .
+        if A_LevelMeasurementTool = 0.0001
+        then do :
+          v-mm:Set_A_LevelMeasurementTool(replace(string(A_LevelMeasurementTool), ".", ",")) no-error .
+          if string(v-mm:A_LevelMeasurementTool) = ".0000000000"
+          then do :
+            v-mm:Set_A_LevelMeasurementTool(string(A_LevelMeasurementTool)) no-error .
+          end .
+        end .
+        else do :
+          v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool .
+        end .
+        PUT STREAM outstream unformatted
+          'DeltaOtn_N            = ' v-mm:DeltaOtn_N                SKIP
+          'CalibrationBelt             = ' v-mm:CalibrationBelt           SKIP
+          'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP
+          'ToolAutomationLevel_H_Water = ' ToolAutomationLevel_H_Water    SKIP
+          'ToolAutomationLevel_R       = ' v-mm:ToolAutomationLevel_R     SKIP
+          'ToolAutomationLevel_Tv      = ' v-mm:ToolAutomationLevel_Tv    SKIP
+          'ToolAutomationLevel_Tr      = ' v-mm:ToolAutomationLevel_Tr    SKIP
+          'DeltaAbs_H_CalcType         = ' v-mm:DeltaAbs_H_CalcType       SKIP
+          'DeltaAbs_H_Water_CalcType   = ' v-mm:DeltaAbs_H_Water_CalcType SKIP
+          
+        .
+      end .
+      
+      PUT STREAM outstream unformatted
+              'Tr                          = ' v-mm:Tr                                  SKIP
+              'Tv                          = ' v-mm:Tv                                  SKIP
+              'R                           = ' v-mm:R                                   SKIP
+              'Tcy                         = ' v-mm:Tcy                                 SKIP
+              'ToolType                    = ' v-mm:ToolType                            SKIP
+              'DeadZone_Reservoir          = ' v-mm:DeadZone_Reservoir                  SKIP
+              'DeltaOtn_K                  = ' v-mm:DeltaOtn_K                          SKIP
+              'A_Reservoir                 = ' v-mm:A_Reservoir                         SKIP
+              'A_LevelMeasurementTool      = ' v-mm:A_LevelMeasurementTool              skip
+              'DeltaAbs_H                  = ' v-mm:DeltaAbs_H                          SKIP
+              'DeltaAbs_H_Water            = ' v-mm:DeltaAbs_H_Water                    SKIP
+              'DeltaAbs_R                  = ' v-mm:DeltaAbs_R                          SKIP
+              'DeltaAbs_Tv                 = ' v-mm:DeltaAbs_Tv                         SKIP
+              'DeltaAbs_Tr                 = ' v-mm:DeltaAbs_Tr                         SKIP
+              'DeltaOtn_H                  = ' v-mm:DeltaOtn_H                          SKIP
+              'DeltaOtn_H_Water            = ' v-mm:DeltaOtn_H_Water                    SKIP
+              'DeltaOtn_R                  = ' v-mm:DeltaOtn_R                          SKIP
+              'DeltaOtn_N                  = ' v-mm:DeltaOtn_N                          SKIP
       .
       
       if place-type = 1
@@ -2248,7 +2305,8 @@ define buffer bf_place for ub.place .
             "MM:DeltaOtn_Vcy        = " + v-mm:DeltaOtn_Vcy  + {&new-line} +
             "MM:DeltaOtn_Vm         = " + v-mm:DeltaOtn_Vm  + {&new-line} +
             "MM:DeltaOtn_M          = " + v-mm:DeltaOtn_M  + {&new-line} +
-            "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion
+            "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion + {&new-line} + {&new-line} +
+            "MM:Warnings            = " + v-mm:Warnings
         .
         OUTPUT stream outstream to value ("pomi.log")  append.
         PUT STREAM outstream unformatted v-POkMI-result skip .
@@ -2262,6 +2320,8 @@ define buffer bf_place for ub.place .
             "Объем, приведенный к стандартным условиям, л: " + string((v-mm:Vcy * 1000), "->>,>>>,>>9":U) + {&new-line} +
             "Объем НП при температуре его измерения, л: " + string((v-mm:V * 1000), "->>,>>>,>>9":U) + {&new-line} +
             "Объем воды, л: " + string((v-mm:V_water * 1000), "->>,>>>,>>9":U)
+        
+          v-POkMI-warnings = v-mm:Warnings
         .
         
         RELEASE OBJECT v-mm NO-ERROR.
@@ -2287,6 +2347,29 @@ define buffer bf_place for ub.place .
             rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
             rvs-line-attr.attr-code = "POkMI-result"
             rvs-line-attr.attr-value = v-POkMI-result-attr
+          .
+        end.
+        
+        find first rvs-line-attr exclusive-lock
+              where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                and rvs-line-attr.attr-code = "POkMI-warnings" no-error.
+        if available rvs-line-attr then do :
+          rvs-line-attr.attr-value = v-POkMI-warnings .
+        end.
+        else do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+            rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+            rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+            rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+            rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+            rvs-line-attr.attr-code = "POkMI-warnings"
+            rvs-line-attr.attr-value = v-POkMI-warnings
           .
         end.
         
@@ -2389,7 +2472,29 @@ DO:
                                  .
   if vOk
   then do :      
-    tt-rvs-line.temp-izm-vol = v-out-temp .                        
+    tt-rvs-line.temp-izm-vol = v-out-temp .    
+    find first rvs-line-attr exclusive-lock
+         where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+           and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+           and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+           and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+           and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+           and rvs-line-attr.attr-code = "Tv" no-error.
+    if not available rvs-line-attr then do :
+      create rvs-line-attr.
+      assign
+        rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+        rvs-line-attr.attr-code = "Tv"
+        rvs-line-attr.attr-value = string(v-out-temp)
+      .
+    end.
+    else do :
+      rvs-line-attr.attr-value = string(v-out-temp) .
+    end.                    
     display tt-rvs-line.temp-izm-vol with frame Dialog-Frame .
         
     assign v-hand-input-tmp = true .
@@ -2421,6 +2526,28 @@ DO:
     and not pl-rvd-dens
     then do :
       tt-rvs-line.state-temperature = v-out-temp .
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "Tr" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "Tr"
+          rvs-line-attr.attr-value = string(v-out-temp)
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = string(v-out-temp) .
+      end.
       display tt-rvs-line.state-temperature with frame Dialog-Frame .
     end . 
     
@@ -2440,6 +2567,28 @@ DO:
       then do : end .
       else do :
         tt-rvs-line.state-temperature = v-out-temp .
+        find first rvs-line-attr exclusive-lock
+             where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+               and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+               and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+               and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+               and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+               and rvs-line-attr.attr-code = "Tr" no-error.
+        if not available rvs-line-attr then do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+            rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+            rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+            rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+            rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+            rvs-line-attr.attr-code = "Tr"
+            rvs-line-attr.attr-value = string(v-out-temp)
+          .
+        end.
+        else do :
+          rvs-line-attr.attr-value = string(v-out-temp) .
+        end.
         display tt-rvs-line.state-temperature with frame Dialog-Frame .
       end .       
     end .
@@ -2564,7 +2713,30 @@ DO:
       assign
         tt-rvs-line.izmer-density = v-out-dens                          
         tt-rvs-line.state-density = tt-rvs-line.izmer-density
-      .                           
+      .
+      
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "R" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "R"
+          rvs-line-attr.attr-value = string(v-out-dens)
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = string(v-out-dens) .
+      end.
       display tt-rvs-line.izmer-density tt-rvs-line.state-density with frame Dialog-Frame . 
       
       assign v-hand-input-dnst = true .
@@ -2662,11 +2834,56 @@ DO:
         tt-rvs-line.izmer-density = v-out-dens                    
         tt-rvs-line.state-density = tt-rvs-line.izmer-density
       .                           
+      
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "R" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "R"
+          rvs-line-attr.attr-value = string(v-out-dens)
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = string(v-out-dens) .
+      end.
       display tt-rvs-line.izmer-density tt-rvs-line.state-density with frame Dialog-Frame . 
       
       assign v-hand-input-dnst = true .
       assign v-hand-input-tmp = true .
       tt-rvs-line.state-temperature = v-out-temp .
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "Tr" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "Tr"
+          rvs-line-attr.attr-value = string(v-out-temp)
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = string(v-out-temp) .
+      end.
       display tt-rvs-line.state-temperature with frame Dialog-Frame .
       
       find first rvs-line-attr exclusive-lock
@@ -5284,6 +5501,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-POkMI-result
     with frame Dialog-Frame.
   end.
+  
+  for first rvs-line-attr no-lock
+        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          and rvs-line-attr.attr-code = "POkMI-warnings"
+  :
+    v-POkMI-warnings = rvs-line-attr.attr-value .
+  end .
   
   if rdc-value <> 'pomi-rn'
   then do :

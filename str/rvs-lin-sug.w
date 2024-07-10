@@ -111,6 +111,7 @@ define variable v-hand-input-tmp as logical no-undo initial no .
 define variable v-hand-input-lvl as logical no-undo initial no .
 define variable v-sug-struct-val as character no-undo .
 define variable v-POkMI-result-attr     as character no-undo.
+define variable v-POkMI-warnings        as character no-undo init "" .
 
 define variable place-diameter    as decimal no-undo .
 define variable pl-dens-sr-izm    as integer no-undo .
@@ -948,7 +949,13 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-POkMI-result Dialog-Frame
 ON CHOOSE OF b-POkMI-result IN FRAME Dialog-Frame /* Отмена */
 DO:
-  message v-POkMI-result-attr view-as alert-box information .
+  if trim(v-POkMI-warnings) > ""
+  then do :
+    message (v-POkMI-result-attr + {&new-line} + " " + {&new-line} + " " + {&new-line} + "Предупреждения:" + {&new-line} + v-POkMI-warnings) view-as alert-box information .
+  end .
+  else do :
+    message v-POkMI-result-attr view-as alert-box information .
+  end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1963,8 +1970,19 @@ define buffer bf_place for ub.place .
       then do :
         assign
           v-mm:Use_DeltaOtn_R_liquid_IN = Use_DeltaOtn_R_liquid_IN
-          v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN
+/*          v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN*/
         .
+        if DeltaOtn_R_liquid_IN = 0.42
+        then do :
+          v-mm:Set_DeltaOtn_R_liquid_IN(replace(string(DeltaOtn_R_liquid_IN), ".", ",")) no-error .
+          if string(v-mm:DeltaOtn_R_liquid_IN) = ".0000000000"
+          then do :
+            v-mm:Set_DeltaOtn_R_liquid_IN(string(DeltaOtn_R_liquid_IN)) no-error .
+          end .
+        end .
+        else do :
+          v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN .
+        end .
         PUT STREAM outstream unformatted
           'Use_DeltaOtn_R_liquid_IN = ' v-mm:Use_DeltaOtn_R_liquid_IN SKIP
           'DeltaOtn_R_liquid_IN     = ' v-mm:DeltaOtn_R_liquid_IN     SKIP
@@ -2065,7 +2083,8 @@ define buffer bf_place for ub.place .
           "MM:H_min_liquid      = " v-mm:H_min_liquid  SKIP
           "MM:H_min             = " v-mm:H_min  SKIP
           "MM:A                 = " v-mm:A  SKIP
-          "MM:B                 = " v-mm:B  SKIP
+          "MM:B                 = " v-mm:B  SKIP SKIP
+          "MM:Warnings          = " v-mm:Warnings   SKIP
         .
         output stream outstream close.
         
@@ -2075,6 +2094,8 @@ define buffer bf_place for ub.place .
             "Относительная погрешность измерения массы СУГ, %: "  + string(v-mm:DeltaOtn_M, ">>>>>>>9.99") + {&new-line} +
             "Объем ЖФ СУГ, л: " + string((v-mm:V_liquid * 1000), "->>,>>>,>>9":U) + {&new-line} +
             "Объем ПФ СУГ, л: " + string((v-mm:V_gas * 1000), "->>,>>>,>>9":U) + {&new-line}
+            
+          v-POkMI-warnings = v-mm:Warnings
         .
         
         RELEASE OBJECT v-mm NO-ERROR.
@@ -2100,6 +2121,29 @@ define buffer bf_place for ub.place .
             rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
             rvs-line-attr.attr-code = "POkMI-result"
             rvs-line-attr.attr-value = v-POkMI-result-attr
+          .
+        end.
+        
+        find first rvs-line-attr exclusive-lock
+              where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                and rvs-line-attr.attr-code = "POkMI-warnings" no-error.
+        if available rvs-line-attr then do :
+          rvs-line-attr.attr-value = v-POkMI-warnings .
+        end.
+        else do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+            rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+            rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+            rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+            rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+            rvs-line-attr.attr-code = "POkMI-warnings"
+            rvs-line-attr.attr-value = v-POkMI-warnings
           .
         end.
         
@@ -5169,6 +5213,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-POkMI-result
     with frame Dialog-Frame.
   end.
+  
+  for first rvs-line-attr no-lock
+        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          and rvs-line-attr.attr-code = "POkMI-warnings"
+  :
+    v-POkMI-warnings = rvs-line-attr.attr-value .
+  end .
   
   assign frame {&frame-name} :title = frame {&frame-name} :title + " - " + parmode
                                     + " - " +  partitle.
