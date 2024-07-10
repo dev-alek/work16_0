@@ -1178,6 +1178,7 @@ class ibs.th.str.InfoSectionsTotal:
     then
     assign
       MF = InfoSectionCurr:TankWeightRvs
+      dMP = MF - MTTH
     .
     
     InfoSectionCurr:Deficit = 0 .
