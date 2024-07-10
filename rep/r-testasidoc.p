@@ -549,6 +549,12 @@ procedure fill-tt :
                               and buf_place.obj-code = buf_rvs-line.obj-code
                               and buf_place.pl-code  = buf_rvs-line.pl-code
   :
+    assign
+      v-izmer-density = ?
+      v-pomi-density  = ?
+      v-diff          = ?
+      v-temp-izm-vol  = ?
+    .
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
                                           and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
                                           and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
