@@ -534,6 +534,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
         end .
       end .
     end .
+    
 		return.
 
 	end method.
@@ -710,6 +711,9 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   end method.
   
   destructor public tanksections ( ):
+    
+    tankSectionSumControl:Dispose() .
+    delete object tankSectionSumControl no-error .
 
   end destructor.
 

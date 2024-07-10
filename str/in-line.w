@@ -1697,7 +1697,9 @@ do:
   or v-is-looksec
   then
     infoSectionsTotal:GetDBAllAttr().
-  tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
+  if not valid-object(tanksForm)
+  then
+    tanksForm = new ibs.th.str.ptrl.forms.tanksections(infoSectionsTotal).
   wait-for tanksForm:ShowDialog().
 
    
@@ -2530,7 +2532,7 @@ do:
 /*    tt-fr-doc-line.fact-qnty                                                    */
 /*    tt-fr-doc-line.fact-qnty-kg when tt-fr-doc-line.fact-qnty-kg :visible = true*/
 /*    with frame {&frame-name} .                                                  */
-
+  tanksForm:dispose() .
 end.
 
 /* Атрибуты алкогольной продукции */
@@ -3351,13 +3353,14 @@ do:
         
       end.
       
-      delete object infoSectionsTotal no-error.
-      delete object tanksForm no-error.
-      
     end.
-  
+    
   end.
   
+  delete object infoSectionsTotal no-error.
+  tanksForm:Dispose() .
+  delete object tanksForm no-error.
+
   if v-lgas-gds
   then do :
     define buffer buf_doc-line-attr for ub.doc-line-attr .

@@ -1020,6 +1020,8 @@ procedure save_update :
     end .
   end .
   
+  delete object infoSecsObj no-error .
+  
   apply "choose" to b-exit in frame {&frame-name}.
   
 
