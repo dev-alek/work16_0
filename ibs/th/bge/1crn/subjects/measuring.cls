@@ -185,7 +185,7 @@ class ibs.th.bge.1crn.subjects.measuring inherits ibs.th.bge.1crn.subjects.asubj
       v-str = v-str + ",dnst-abs-me-np"    when dnst-abs-me-np    = ? and dnst-rel-me-np    = ? and dimension-dnst  = 1
       v-str = v-str + ",dnst-rel-me-np"    when dnst-abs-me-np    = ? and dnst-rel-me-np    = ? and dimension-dnst  = 1
       v-str = v-str + ",dnst-abs-me-lpg-l" when dnst-abs-me-lpg-l = ? and dimension-dnst    = 1
-      v-str = v-str + ",dnst-rel-me-lpg-l" when dnst-rel-me-lpg-l = ? and dimension-dnst    = 1
+/*      v-str = v-str + ",dnst-rel-me-lpg-l" when dnst-rel-me-lpg-l = ? and dimension-dnst    = 1*/
       v-str = v-str + ",wght-rel-me"       when wght-rel-me       = ? and dimension-wght    = 1
       v-str = v-str + ",limit"             when limit             = ?
     .
