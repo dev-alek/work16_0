@@ -49,6 +49,8 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      PARENT-ID-RELATION FOR tthosts-body, tthosts PARENT-ID-FIELD reqid .
     
   define dataset gismt-host-adr SERIALIZE-HIDDEN  for tthosts-adr .
+
+  define stream out_data.
     
        /*------------------------------------------------------------------------------
         Purpose:
@@ -436,22 +438,24 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
         vFileName =  vWork + vFileName.
         
         if not iFlagOk then do:
-            vStrLong = string(now) + "~tНе удалось обновить CDN площадки. Текущие площадки:~n".
-            copy-lob from object vStrLong to file vFileName append no-error.
+            OUTPUT STREAM out_data TO value(vFileName) APPEND.
+            PUT STREAM out_data UNFORMATTED 
+              now chr(9) "Не удалось обновить CDN площадки. Текущие площадки:" skip.
+            OUTPUT STREAM out_data CLOSE.            
         end.    
         else do:
-            vStrLong = string(now) + "~tCDN площадки обновлены:~n".
-            copy-lob from object vStrLong to file vFileName append no-error.
+            OUTPUT STREAM out_data TO value(vFileName) APPEND.
+            PUT STREAM out_data UNFORMATTED 
+              now chr(9) "CDN площадки обновлены:" skip.
+            OUTPUT STREAM out_data CLOSE.             
         end.                
         for each buf_code no-lock where 
                  buf_code.parent = "CDN_GisMt":          
            vTimeUnBlock = if buf_code.misc2 = "" then "null" else buf_code.misc2.               
-           vStrLong = substitute("&1~t&2~t&3~t&4~n",
-                                 buf_code.misc1,
-                                 buf_code.code,
-                                 buf_code.codeval,
-                                 vTimeUnBlock).      
-           copy-lob from object vStrLong to file vFileName append no-error.
+           OUTPUT STREAM out_data TO value(vFileName) APPEND.
+           PUT STREAM out_data UNFORMATTED 
+             buf_code.misc1 chr(9) buf_code.code chr(9) buf_code.codeval chr(9) vTimeUnBlock chr(9) skip.
+           OUTPUT STREAM out_data CLOSE. 
         end.   
 
    end method.    
