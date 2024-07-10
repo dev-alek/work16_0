@@ -2020,6 +2020,13 @@ define buffer bf_place for ub.place .
     if DeltaAbs_H_CalcType         = ? then DeltaAbs_H_CalcType = 0.
     if DeltaAbs_H_Water_CalcType   = ? then DeltaAbs_H_Water_CalcType = 0.
     
+    if tt-rvs-line.state-level-water = 0
+    then do :
+      ToolAutomationLevel_H_Water = 0 .
+      DeltaAbs_H_Water_CalcType = 0 .
+      DeltaAbs_H_Water = 0 .
+    end .
+    
     /*..........................................*/
     
     v-pokmi-dll-version = get-pokmi-dll-version() .
