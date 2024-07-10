@@ -1832,8 +1832,10 @@ define buffer bf_place for ub.place .
 /*            DeltaOtn_R             = dens_sr-izmerenia.sr-relative-err-dens*/
 /*          .                                                                */
           assign
-            DeltaAbs_R_SUG         = dens_sr-izmerenia.sr-abs-err-dens-lgas-liquid
-            DeltaAbs_R_SUG-vapor   = dens_sr-izmerenia.sr-abs-err-dens-lgas-vapor
+            DeltaAbs_R_SUG            = dens_sr-izmerenia.sr-abs-err-dens-lgas-liquid
+            DeltaAbs_R_SUG-vapor      = dens_sr-izmerenia.sr-abs-err-dens-lgas-vapor
+            Use_DeltaOtn_R_liquid_IN  = dens_sr-izmerenia.sr-relative-err-dens-lgas-liquid <> ?
+            DeltaOtn_R_liquid_IN      = dens_sr-izmerenia.sr-relative-err-dens-lgas-liquid
           .
         end.
       end .

@@ -4121,11 +4121,11 @@ THEN DO:
           end.
         end .
         
-        if pl-rvd-dens
-        then do :
-          DeltaAbs_R_Sug         = 0 .
-          DeltaAbs_R_Sug-vapor   = 0 .
-        end .
+/*        if pl-rvd-dens                */
+/*        then do :                     */
+/*          DeltaAbs_R_Sug         = 0 .*/
+/*          DeltaAbs_R_Sug-vapor   = 0 .*/
+/*        end .                         */
         
         find first rvs-line-attr no-lock
           where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
