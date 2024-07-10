@@ -2,11 +2,11 @@
 &Scoped-define FRAME-NAME d-gds-form
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b39224d84de3, 3188, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:26 $
+$Workfile: gds-form.w $
+$Archive: ref/gds-form.w $
 
 Карточка товара
 
@@ -26,11 +26,11 @@ define input parameter p-call-prog as handle no-undo .
 define input-output parameter gds-rec as recid no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b39224d84de3, 3188, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:26 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gds-form.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/gds-form.w $":U .
 define variable vss-description as character no-undo init "Карточка товара".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }
@@ -58,6 +58,7 @@ define variable vss-description as character no-undo init "Карточка товара".
 { ref/imagelist.i }
 { gbl/ggoattr.i }
 { gbl/attr-lib.i }
+{ cmp/ini-lib.i }
 
 define temp-table temp-goods no-undo like ub.goods
 field alc-prod as logical

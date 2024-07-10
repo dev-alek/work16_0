@@ -54,6 +54,7 @@ define variable vss-description as character no-undo init "Загрузка товара из ER
 { ref/gds-attr.i}
 { ref/gdsoattr.i }
 { gbl/objsrv.i } 
+{ cmp/ini-lib.i }
 define input parameter p-GdsObj         as class goods .
 
   

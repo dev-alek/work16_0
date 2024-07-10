@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c05e0a69ef9d, 3077, rls $
+$Author: DRuban $
+$Date: Пт авг 05 19:16:16 2022 +0300 $
+$Workfile: 000002098.p $
+$Archive: rul/000002098.p $
 
 Вспомогательный файл для кодекса правил 20 набор правил 4
 
@@ -55,17 +55,18 @@ define input parameter v-curr-r-b   as character no-undo .
 define input parameter p-cmd-proc-handle as handle no-undo .
 define input parameter p-cmd-code  as integer no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c05e0a69ef9d, 3077, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:16 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: 000002098.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rul/000002098.p $":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с кодексом 20 набор правил 4".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { rul/garbcoll.i }
 { gbl/cur-time.i }
 { nws/lib-nws.i }
+{ cmp/ini-lib.i  }
 &glob cmd-proc-handle p-cmd-proc-handle
 &glob cmd-code p-cmd-code
 
