@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b1f216c91d59, 3334, rls $
+$Author: SSlivenko $
+$Date: 2023/05/19 13:37:09 $
+$Workfile: gds-ref.i $
+$Archive: ref/gds-ref.i $
 
 Справочник товаров
 
@@ -511,7 +511,7 @@ DEFINE BROWSE {&BROWSE-NAME} QUERY {&BROWSE-NAME} NO-LOCK DISPLAY
    ( if {1}.gds-type = {&gds-goods} then "-" else "+" ) format "x(1)":U column-label "У"
    mark-recipe format "x(1)":U column-label "Р"
   {1}.artic
-  gds-n  format "x(48)":U column-label "Название"
+  gds-n  format "x(112)":U column-label "Название"
   free-q  COLUMN-LABEL "Своб-но" format  "->>,>>>,>>>.<<<":U
   fact-q  COLUMN-LABEL "Факт" format  "->>,>>>,>>>.<<<":U
   price
@@ -4476,4 +4476,4 @@ define buffer buf_assortment-matrix-goods for ub.assortment-matrix-goods  .
   end.
 end procedure. /* recalc-assgds */
 
-/* $Workfile$   E n d */
+/* $Workfile: gds-ref.i $   E n d */
