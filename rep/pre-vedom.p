@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 074931e2893a, 3249, rls $
+$Author: EShklyar $
+$Date: 2023/01/27 13:45:25 $
+$Workfile: pre-vedom.p $
+$Archive: rep/pre-vedom.p $
 
 Печать платежа  типа расход наличные
 
@@ -22,11 +22,11 @@ define input parameter p-fin-doc-code as integer no-undo .
 
 &SCOP f-l MonthNameRusGen
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 074931e2893a, 3249, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/01/27 13:45:25 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pre-vedom.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/pre-vedom.p $":U .
 define variable vss-description as character no-undo init "Печать платежа  типа расход наличные".
 
 { cmp/vssrevis.i }
@@ -957,7 +957,7 @@ do
         '<td></td>' skip
         '<td colspan="23" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
         '<td></td>' skip
-        '<td colspan="30" rowspan="2" style="text-align: center;">место печати (штампа)</td>' skip
+        '<td colspan="15" rowspan="2" style="text-align: center;">место печати (штампа)</td>' skip
         '</tr>' skip
         .   
       
@@ -995,7 +995,7 @@ do
         '<td></td>' skip
         '<td colspan="18" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
+        '<td colspan="21" style="text-align: center; border-bottom: 1px solid black;"></td>' skip
         '</tr>' skip.   
       
       put stream OutStr-html unformatted
@@ -1011,7 +1011,7 @@ do
         '<td></td>' skip
         '<td colspan="18" style="text-align: center; font-size: 8px;">(личная подпись)</td>' skip
         '<td></td>' skip
-        '<td colspan="23" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
+        '<td colspan="21" style="text-align: center; font-size: 8px;">(фамилия, инициалы)</td>' skip
         '</tr>' skip.                
     end.  
     if jj = 2 then 
@@ -1298,12 +1298,12 @@ do
 
     put stream OutStr-html unformatted
       '<tr style="height: 80px;">' skip
-      '<td colspan="21" style="text-align: center; font-weight: bold;  border: 1px solid black;">Фактическая сумма цифрами</td>' skip
-      '<td colspan="17" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сумма недостачи цифрами</td>' skip
-      '<td colspan="21" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сумма излишка цифрами</td>' skip
-      '<td colspan="33" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сомнительные денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
-      '<td colspan="33" style="text-align: center; font-weight: bold; border: 1px solid black;">Неплатежеспособные не имеющие признаков подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
-      '<td colspan="33" style="text-align: center; font-weight: bold; border: 1px solid black;">Имеющие признаки подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
+      '<td colspan="21" text_wrap="true" style="text-align: center; font-weight: bold;  border: 1px solid black;">Фактическая сумма цифрами</td>' skip
+      '<td colspan="17" text_wrap="true" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сумма недостачи цифрами</td>' skip
+      '<td colspan="21" text_wrap="true" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сумма излишка цифрами</td>' skip
+      '<td colspan="33" text_wrap="true" style="text-align: center; font-weight: bold;  border: 1px solid black;">Сомнительные денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
+      '<td colspan="33" text_wrap="true" style="text-align: center; font-weight: bold; border: 1px solid black;">Неплатежеспособные не имеющие признаков подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
+      '<td colspan="33" text_wrap="true" style="text-align: center; font-weight: bold; border: 1px solid black;">Имеющие признаки подделки денежные знаки (для банкнот Банка России - номинал, год образца, серия и номер; для монеты Банка России - номинал, год, чеканка, наименование монетного двора)</td>' skip
       '</tr>' skip
       . 
     
