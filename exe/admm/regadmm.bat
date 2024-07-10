@@ -1,3 +1,3 @@
-RegAsm.exe admm.dll /codebase
+RegAsm.exe adMMlib.dll /codebase
 pause
 exit

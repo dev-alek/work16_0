@@ -69,10 +69,11 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { gbl/getsect.i def }
 { str/is-sug.i }
 { gbl/db-attr.i }
-{utl\search.i}
-{bge/place-def.i}
-{str/revis.i }
-{gbl/objsrv.i}
+{ utl\search.i }
+{ bge/place-def.i }
+{ str/revis.i }
+{ gbl/objsrv.i }
+{ str/get-pokmi-dll-version.i }
 
 define stream str-err.
 define stream str-log.
@@ -2014,6 +2015,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-mm-density            as decimal no-undo.
   define variable v-POkMI-result          as character no-undo.
   define variable v-POkMI-result-attr     as character no-undo.
+  define variable v-pokmi-dll-version     as character no-undo .
   define variable place-ponton            as logical no-undo .
   define variable place-ponton-mass       as decimal no-undo .
   define variable place-ponton-height     as decimal no-undo .
@@ -4090,6 +4092,14 @@ THEN DO:
       
       /*..........................................*/
       
+      v-pokmi-dll-version = get-pokmi-dll-version() .
+      if v-pokmi-dll-version = "error"
+      then do :
+        release object v-mm no-error.
+        v-mm = ?.
+        undo _trpomi, return error substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) .
+      end .
+      
       if LevelToolType > 0
       and not is-sug(bf_rvs-line.gds-code)
       then do :
@@ -4115,6 +4125,7 @@ THEN DO:
                       "    " SKIP
                       cur-time-string()           FORMAT "x(16)"    SKIP
                       'Процедура             "ADMM.CMethodOfMetering57"'       SKIP
+                      'Версия dll: '              v-pokmi-dll-version                               SKIP
                       'CODE_PL                = ' bf_rvs-line.pl-code                           SKIP
                       'H                      = ' v-mm57:H                  SKIP
                       'ToolType               = ' v-mm57:ToolType                                      SKIP
@@ -4249,16 +4260,22 @@ THEN DO:
           then do :
             v-mm:Set_A_Reservoir(replace(string(A_Reservoir), ".", ",")) no-error .
           end .
+          
+          if v-pokmi-dll-version = "1.0.5.6"
+          then do :
+            
+          end .
     
           OUTPUT stream outstream to value ("pomi.log") append.
                   PUT STREAM outstream  unformatted
                   "    " SKIP
                   "    " SKIP
                   cur-time-string()           FORMAT "x(16)"    SKIP
-                  'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
-                  'CODE_PL                = ' bf_rvs-line.pl-code                           SKIP
+                  'Процедура'                 v-proc                      FORMAT "x(128)"        SKIP
+                  'Версия dll: '              v-pokmi-dll-version                                SKIP
+                  'CODE_PL                = ' bf_rvs-line.pl-code                                SKIP
                   'H                      = ' v-mm:H                                             SKIP
-                  'CalibrationTable       = ' v-mm:CalibrationTable                    SKIP
+                  'CalibrationTable       = ' v-mm:CalibrationTable                              SKIP
                   'T                      = ' v-mm:T                                             SKIP
                   'R_liquid               = ' v-mm:R_liquid                                      SKIP
                   'R_gas                  = ' v-mm:R_gas                                         SKIP
@@ -4306,6 +4323,7 @@ THEN DO:
               "    " SKIP
               cur-time-string()           FORMAT "x(16)"    SKIP
               'Процедура '                v-proc                          FORMAT "x(128)"    SKIP
+              'Версия dll: '              v-pokmi-dll-version                                SKIP
               'CODE_PL                = ' bf_rvs-line.pl-code                                SKIP
               'H                      = ' v-mm:H                                             SKIP
               'H_water                = ' v-mm:H_water                                       SKIP
@@ -4342,6 +4360,11 @@ THEN DO:
               "CoverFloatingHeight    = " v-mm:CoverFloatingHeight      skip
             .
           end.
+          
+          if v-pokmi-dll-version = "1.0.5.6"
+          then do :
+            
+          end .
           
           put stream outstream unformatted SKIP SKIP .
           

@@ -1459,7 +1459,7 @@ class ibs.th.str.InfoSectionsTotal:
   end method.
   
   method public void CalcWeight ():  
-      define variable ToolType                as integer no-undo.
+    define variable ToolType                as integer no-undo.
     define variable DeltaAbs_R              as decimal no-undo.
     define variable DeltaAbs_Tv             as decimal no-undo.
     define variable DeltaAbs_Tr             as decimal no-undo.
@@ -1471,6 +1471,7 @@ class ibs.th.str.InfoSectionsTotal:
     define variable v-mm as com-handle.
     define variable v-proc as character no-undo.
     define variable v-TankVol-m3            as decimal decimals 10 no-undo .
+    define variable v-pokmi-dll-version as character no-undo .
   /*  define buffer buf_clob-bind    for ub.clob-bind.*/
     define buffer buf_sr-izmerenia    for ub.sr-izmerenia .
 /*    run save-page.*/
@@ -1521,6 +1522,17 @@ class ibs.th.str.InfoSectionsTotal:
           end.
           
           /*..........................................*/
+          v-pokmi-dll-version = get-pokmi-dll-version() .
+          if v-pokmi-dll-version = "error"
+          then do :
+            release object v-mm no-error.
+            v-mm = ?.
+            message
+              substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply .
+          end .
+          
           v-proc = "ADMM.CMethodOfMetering31N" .
     
           release object v-mm no-error.
@@ -1663,6 +1675,11 @@ class ibs.th.str.InfoSectionsTotal:
               v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
               v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
             .
+            if v-pokmi-dll-version = "1.0.5.6"
+            then do :
+              
+            end .
+            
             v-mm:Exec() .
 
 /*            assign                                                                */
@@ -1689,6 +1706,7 @@ class ibs.th.str.InfoSectionsTotal:
               {&new-line}
                                          now                     skip
               'Процедура: '              v-proc                  skip
+              'Версия dll: '             v-pokmi-dll-version     skip
               'V_real                 = ' v-mm:V_real            skip
               'DeltaH                 = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:ABTarir) skip
               'NeckArea               = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea) skip
@@ -2049,6 +2067,8 @@ class ibs.th.str.InfoSectionsTotal:
     clearObj().
 
   end destructor.
+  
+  { str/get-pokmi-dll-version.i class }
 
 
 end class.

@@ -101,7 +101,7 @@ define variable vss-description as character no-undo initial "Экран работы со ст
 { gbl/getsect.i def }
 { str/initiator.i }
 { gbl/color.i }
-
+{ str/get-pokmi-dll-version.i }
 
 define variable g-log        as logical   no-undo.
 define variable g-log2       as logical   no-undo.
@@ -1432,7 +1432,8 @@ DO:
 
 define variable v-mm as com-handle.
 define variable v-proc as character no-undo.
-define variable v-mm57       as com-handle.
+define variable v-mm57 as com-handle.
+define variable v-pokmi-dll-version as character no-undo .
 
 define variable v-code            as character no-undo.
 define variable ii                as integer   no-undo.
@@ -1862,6 +1863,17 @@ define buffer bf_place for ub.place .
     
     /*..........................................*/
     
+    v-pokmi-dll-version = get-pokmi-dll-version() .
+    if v-pokmi-dll-version = "error"
+    then do :
+      release object v-mm no-error.
+      v-mm = ?.
+      message
+        substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) skip
+      view-as alert-box error.
+      undo _trpomi, return no-apply .
+    end .
+    
     if LevelToolType > 0
     then do :
       RELEASE OBJECT v-mm57 NO-ERROR.
@@ -1887,6 +1899,7 @@ define buffer bf_place for ub.place .
                     "    " SKIP
                     cur-time-string()           FORMAT "x(16)"    SKIP
                     'Процедура             "Rosneft.MethodOfMetering57"'       SKIP
+                    'Версия dll: '            v-pokmi-dll-version   skip
                     'CODE_PL                = ' tt-rvs-line.pl-code                           SKIP
                     'H                      = ' v-mm57:H                  SKIP
                     'ToolType               = ' v-mm57:ToolType                                      SKIP
@@ -2005,6 +2018,7 @@ define buffer bf_place for ub.place .
               "    " SKIP
               cur-time-string()           FORMAT "x(16)"    SKIP
               'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
+              'Версия dll: '              v-pokmi-dll-version                              SKIP
               'CODE_PL                = ' tt-rvs-line.pl-code                           SKIP
               'H                      = ' v-mm:H                                             SKIP
               'H_water                = ' v-mm:H_water                                       SKIP
@@ -2041,6 +2055,11 @@ define buffer bf_place for ub.place .
           "CoverFloatingHeight    = " v-mm:CoverFloatingHeight      skip
         .
       end.
+      
+      if v-pokmi-dll-version = "1.0.5.6"
+      then do :
+        
+      end .
       
       output stream outstream close.
       v-mm:Exec() .

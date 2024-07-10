@@ -50,6 +50,9 @@ define stream outstream.
 define variable error-string as character no-undo .
 define variable enter-error as logical no-undo .
 
+define buffer buf_place for ub.place .
+define buffer buf_goods for ub.goods .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -213,10 +216,16 @@ do :
   .
   
   if f-dens15 = ?
-  or f-dens15 <= 0
-  or f-dens15 >= 1
+  or f-dens15 = 0
   then do :
     message "Не указано значение для плотности ЖФ при 15°С. Сохранение невозможно." view-as alert-box .
+    return no-apply .
+  end .
+  
+  if f-dens15 < 0.5
+  or f-dens15 > 0.8
+  then do :
+    message "Внесённое значение плотности ЖФ при 15°С выходит за рамки допустимого диапазона (0,500 - 0,800). Сохранение невозможно. Проверьте внесённое значение плотности ЖФ при 15°С." view-as alert-box .
     return no-apply .
   end .
   
@@ -452,11 +461,19 @@ do :
       PUT STREAM outstream unformatted
           "MM:R   = " v-mm55:R  SKIP
           "MM:CTL = " v-mm55:CTL  SKIP
+          'Версия dll: '              v-mm55:DllVersion  SKIP
       .
       OUTPUT stream outstream close.
       RELEASE OBJECT v-mm55 NO-ERROR.
       v-mm55 = ?.
     end .
+  end .
+  
+  if p-dens = ?
+  or p-dens <= 0
+  then do :
+    message substitute( "Ошибка расчета. Метод 55 ПОкМИ вернул отрицательное значение (&1) плотности ЖФ при рабочих условиях!", trim(string(p-dens, "->>>>>>9.99<<<<<"))) view-as alert-box .
+    return .
   end .
   
   RELEASE OBJECT v-mm56 NO-ERROR.
@@ -522,10 +539,33 @@ do :
       PUT STREAM outstream unformatted
           "MM:R   = " v-mm56:R  SKIP
           "MM:P_Vapor = " v-mm56:P_Vapor  SKIP
+          'Версия dll: '              v-mm56:DllVersion  SKIP
       .
       OUTPUT stream outstream close.
       RELEASE OBJECT v-mm56 NO-ERROR.
       v-mm56 = ?.
+      if p-dens-pf < 0
+      then do :
+        find first buf_place no-lock where buf_place.obj-type = p-obj-type
+                                       and buf_place.obj-code = p-obj-code
+                                       and buf_place.pl-code = p-pl-code
+                                       no-error .
+        find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+        if available buf_place
+        and available buf_goods
+        then do :
+          message
+            "Ошибка при заполнении данных!" skip
+            "Для резервуара " string(buf_place.pl-code) " (" buf_place.loc1 "  " buf_goods.gds-name ") не определено значение плотности ПГФ. Сохранение результатов расчёта невозможно." skip
+            "Проверьте внесённый компонентный состав СУГ."
+          view-as alert-box .
+          return .
+        end .
+        else do :
+          message "Ошибка при заполнении данных! Проверьте внесённый компонентный состав СУГ." view-as alert-box .
+          return .
+        end .                               
+      end .
     end .
   end .
   
