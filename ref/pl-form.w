@@ -83,6 +83,9 @@ define variable v-lvl-mi-old      as integer   no-undo .
 define variable is-main           as logical   no-undo .
 define variable v-com-vessel-changed as logical no-undo init no .
 define variable v-gate-valve-tanks-changed as logical no-undo init no .
+define variable v-old-auto-gate-valve as logical no-undo .
+define variable v-not-gas-place   as logical no-undo . /* на месте хранения есть товар и это не СУГ, не Метан и не Пропан. Только бензин и дизель */
+define variable v-sug-place       as logical no-undo . /* на месте хранения есть товар и это СУГ */
 
 define buffer com_place for ub.place .
 define buffer com_place-attr for ub.place-attr .
@@ -375,6 +378,10 @@ DEFINE VARIABLE v-is-main AS character FORMAT "x(11)"
      VIEW-AS fill-in
      SIZE 11 BY 1 NO-UNDO.      
 
+DEFINE VARIABLE t-auto-gate-valve AS LOGICAL INITIAL no 
+     LABEL "Автоматическая задвижка" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 25 BY 1 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -459,6 +466,7 @@ DEFINE FRAME d-pl-form
      place-temp-coef at row 16.25 COL 88 RIGHT-ALIGNED
 /*     place-ratio-error AT ROW 17.25 COL 88 RIGHT-ALIGNED WIDGET-ID 20*/
      dens-prov AT ROW 17.25 COL 88 RIGHT-ALIGNED
+     t-auto-gate-valve at row 18.25 col 3
      place-twice-code AT ROW 18.25 COL 88 RIGHT-ALIGNED WIDGET-ID 24
      t-com-vessel at row 19.25 col 20
      com-tanks at row 19.25 col 65 no-label
@@ -574,37 +582,39 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-pl-form
 ON CHOOSE OF b-exit IN FRAME d-pl-form /* Ввод */
 DO:
-  define variable vOk as logical no-undo .
-  
-  { gbl/stdbtn.i }
-  assign
-    tt-place.pl-name
-    tt-place.loc1
-    tt-place.loc2
-    tt-place.loc3
-    tt-place.loc4
-    tt-place.ps
-    tt-place.add-qnty
-    tt-place.is-meas
-    tt-place.max-qnty
-    tt-place.start-date
-    tt-place.issue-year
-    tt-place.chk-max-qnty
-    t-place-virtual
-    t-asi-srtif
-    place-locat
-    error-mass
-    rvd-dnstv
-    rvd-lvl
-    rvd-tmp
-    place-si
-    v-mi-dnst
-    v-mi-lvl
-    v-mi-tmp
-    ponton-mass
-    ponton-height
-    t-com-vessel
-  .
+define variable vOk as logical no-undo .
+
+{ gbl/stdbtn.i }
+assign
+  tt-place.pl-name
+  tt-place.loc1
+  tt-place.loc2
+  tt-place.loc3
+  tt-place.loc4
+  tt-place.ps
+  tt-place.add-qnty
+  tt-place.is-meas
+  tt-place.max-qnty
+  tt-place.start-date
+  tt-place.issue-year
+  tt-place.chk-max-qnty
+  t-place-virtual
+  t-asi-srtif
+  place-locat
+  error-mass
+  rvd-dnstv
+  rvd-lvl
+  rvd-tmp
+  place-si
+  v-mi-dnst
+  v-mi-lvl
+  v-mi-tmp
+  ponton-mass
+  ponton-height
+  t-com-vessel
+  t-auto-gate-valve
+.
+
 if v-mi-dnst = ? then v-mi-dnst = 0 . 
 if v-mi-lvl = ? then v-mi-lvl = 0 . 
 if v-mi-tmp = ? then v-mi-tmp = 0 . 
@@ -931,7 +941,11 @@ do :
         when {&place-is-main} then 
             do: 
                 v-value = if is-main then "yes" else "no" .
-            end.                                             
+            end. 
+        when {&place-auto-gate-valve} then 
+            do: 
+                v-value = t-auto-gate-valve:screen-value .
+            end.                                            
     end case.
     run placelib_write-attr  (input v-code
       ,input p-obj-code
@@ -942,35 +956,75 @@ do :
 
   end.
   
-  define variable v-cv-place as character no-undo .
-  if v-com-vessel-changed
-  then do :
-    for each com_place-attr exclusive-lock where com_place-attr.obj-type = p-obj-type
-                                             and com_place-attr.obj-code = p-obj-code
-                                             and com_place-attr.attr-code = {&place-com-tanks}
-                                             and com_place-attr.attr-value > ""
-    :
-      ii_ :
-      do ii = 1 to num-entries(com_place-attr.attr-value) :
-        if entry(ii, com_place-attr.attr-value) = tt-place.loc1
-        then do :
-          com_place-attr.attr-value = trim(replace((com_place-attr.attr-value + ","), (tt-place.loc1 + ","), ""), ",") .
-          leave ii_ .
+  if not v-old-auto-gate-valve /* Включаем */
+  and t-auto-gate-valve        /* автозадвижку */
+  and is-main                  /* на главном резервуаре */
+  then do :                    /* ставим на резервуар признак ТЕКУЩИЙ и включаем автозадвижку на всех СР */
+    run placelib_write-attr  (input {&place-current}
+      ,input p-obj-code
+      ,input p-obj-type
+      ,input com_place.pl-code
+      ,input "yes"
+      ,output v-ok      ) no-error.
+    if not v-com-vessel-changed /* если связки СР менялись, то автозадвижка проставится ниже */
+    then do :
+      do ii = 1 to num-entries(com-tanks) :
+        for first com_place no-lock where com_place.obj-type = p-obj-type
+                                      and com_place.obj-code = p-obj-code
+                                      and com_place.loc1 = entry(ii, com-tanks)
+                                      and com_place.status_ = ""
+        :
+          run placelib_write-attr  (input {&place-auto-gate-valve}
+            ,input p-obj-code
+            ,input p-obj-type
+            ,input com_place.pl-code
+            ,input "yes"
+            ,output v-ok      ) no-error.
+          run placelib_write-attr  (input {&place-current}
+            ,input p-obj-code
+            ,input p-obj-type
+            ,input com_place.pl-code
+            ,input "no"
+            ,output v-ok      ) no-error.
+          { gbl/rum-runa.i
+            ?
+            this-procedure:handle
+            ?
+            {&thref-proc_ref-event}
+            " buffer com_place:handle "
+            " buffer com_place:handle "
+            ''
+            ''
+            no-error
+          }
         end .
       end .
-      if com_place-attr.attr-value = ""
-      then do :
-        run placelib_write-attr  (input {&place-com-vessel}
-          ,input p-obj-code
-          ,input p-obj-type
-          ,input com_place-attr.pl-code
-          ,input "no"
-          ,output v-ok      ) no-error.
-      end .
+    end .
+  end .
+  
+  if v-old-auto-gate-valve     /* Выключаем */
+  and not t-auto-gate-valve    /* автозадвижку */
+  and is-main                  /* на главном резервуаре */
+  and not v-com-vessel-changed /* если связки СР менялись, то автозадвижка проставится ниже */
+  then do :                    /* снимаем автозадвижку со всех СР */
+    run placelib_write-attr  (input {&place-current}
+      ,input p-obj-code
+      ,input p-obj-type
+      ,input com_place.pl-code
+      ,input "no"
+      ,output v-ok      ) no-error.
+    do ii = 1 to num-entries(com-tanks) :
       for first com_place no-lock where com_place.obj-type = p-obj-type
                                     and com_place.obj-code = p-obj-code
-                                    and com_place.pl-code  = com_place-attr.pl-code
+                                    and com_place.loc1 = entry(ii, com-tanks)
+                                    and com_place.status_ = ""
       :
+        run placelib_write-attr  (input {&place-auto-gate-valve}
+          ,input p-obj-code
+          ,input p-obj-type
+          ,input com_place.pl-code
+          ,input "no"
+          ,output v-ok      ) no-error.
         { gbl/rum-runa.i
           ?
           this-procedure:handle
@@ -982,6 +1036,75 @@ do :
           ''
           no-error
         }
+      end .
+    end .
+  end .
+  
+  define variable v-cv-place as character no-undo .
+  define variable v-com-place-attr-changed as logical no-undo .
+  if v-com-vessel-changed
+  then do :
+    for each com_place-attr exclusive-lock where com_place-attr.obj-type = p-obj-type
+                                             and com_place-attr.obj-code = p-obj-code
+                                             and com_place-attr.attr-code = {&place-com-tanks}
+                                             and com_place-attr.attr-value > ""
+    :
+      v-com-place-attr-changed = no .
+      ii_ :
+      do ii = 1 to num-entries(com_place-attr.attr-value) :
+        if entry(ii, com_place-attr.attr-value) = tt-place.loc1
+        then do :
+          com_place-attr.attr-value = trim(replace((com_place-attr.attr-value + ","), (tt-place.loc1 + ","), ""), ",") .
+          v-com-place-attr-changed = yes .
+          leave ii_ .
+        end .
+      end .
+      if com_place-attr.attr-value = "" /* Связка СР полностью разъединена - снимаем все связанные с СР признаки */
+      then do :
+        run placelib_write-attr  (input {&place-com-vessel}
+          ,input p-obj-code
+          ,input p-obj-type
+          ,input com_place-attr.pl-code
+          ,input "no"
+          ,output v-ok      ) no-error.
+        run placelib_write-attr  (input {&place-is-main}
+          ,input p-obj-code
+          ,input p-obj-type
+          ,input com_place-attr.pl-code
+          ,input "no"
+          ,output v-ok      ) no-error.
+        run placelib_write-attr  (input {&place-auto-gate-valve}
+          ,input p-obj-code
+          ,input p-obj-type
+          ,input com_place-attr.pl-code
+          ,input "no"
+          ,output v-ok      ) no-error.
+        run placelib_write-attr  (input {&place-current}
+          ,input p-obj-code
+          ,input p-obj-type
+          ,input com_place-attr.pl-code
+          ,input "no"
+          ,output v-ok      ) no-error.
+        v-com-place-attr-changed = yes .
+      end .
+      if v-com-place-attr-changed
+      then do :
+        for first com_place no-lock where com_place.obj-type = p-obj-type
+                                      and com_place.obj-code = p-obj-code
+                                      and com_place.pl-code  = com_place-attr.pl-code
+        :
+          { gbl/rum-runa.i
+            ?
+            this-procedure:handle
+            ?
+            {&thref-proc_ref-event}
+            " buffer com_place:handle "
+            " buffer com_place:handle "
+            ''
+            ''
+            no-error
+          }
+        end .
       end .
     end .
     if com-tanks > ""
@@ -1011,7 +1134,33 @@ do :
             ,input com_place.pl-code
             ,input "no"
             ,output v-ok      ) no-error.
-            
+          if is-main
+          then do :
+            if t-auto-gate-valve
+            then do :
+              run placelib_write-attr  (input {&place-auto-gate-valve}
+                ,input p-obj-code
+                ,input p-obj-type
+                ,input com_place.pl-code
+                ,input "yes"
+                ,output v-ok      ) no-error.  
+              run placelib_write-attr  (input {&place-current}
+                ,input p-obj-code
+                ,input p-obj-type
+                ,input com_place.pl-code
+                ,input "no"
+                ,output v-ok      ) no-error. 
+            end .
+            else do :
+              run placelib_write-attr  (input {&place-auto-gate-valve}
+                ,input p-obj-code
+                ,input p-obj-type
+                ,input com_place.pl-code
+                ,input "no"
+                ,output v-ok      ) no-error.
+            end .
+          end .
+          
           { gbl/rum-runa.i
             ?
             this-procedure:handle
@@ -1626,7 +1775,7 @@ DO:
 ON CHOOSE OF b-quit IN FRAME d-pl-form /* Отмена */
 DO:
   define variable vlog as logical no-undo .
-  message "Все введенные данные будут утеряны. Вы уверены, что хо-тите отказаться от внесенных изменений?"
+  message "Все введенные данные будут утеряны. Вы уверены, что хотите отказаться от внесенных изменений?"
   view-as alert-box question buttons yes-no update vlog .
   if not vlog then return no-apply .
   p-rep-rec = ?.
@@ -2046,6 +2195,14 @@ DO:
   then do :
     enable b-com-tanks with frame {&frame-name} .
     disable t-gate-valve b-gate-valve-tanks with frame {&frame-name} .
+    if v-not-gas-place
+    then do :
+      display t-auto-gate-valve with frame {&frame-name}.
+      if is-main
+      then do :
+        enable t-auto-gate-valve with frame {&frame-name}.
+      end .
+    end .
   end .
   else do :
     if is-main
@@ -2071,7 +2228,11 @@ DO:
         return no-apply .
       end .
     end .
-    enable t-gate-valve b-gate-valve-tanks with frame {&frame-name} .
+    if v-sug-place
+    then do :
+      enable t-gate-valve b-gate-valve-tanks with frame {&frame-name} .
+    end .
+    hide t-auto-gate-valve in frame {&frame-name}.
   end .
   v-com-vessel-changed = yes .
 END.
@@ -2079,6 +2240,23 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME t-auto-gate-valve
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-auto-gate-valve d-pl-form
+ON value-changed OF t-auto-gate-valve IN FRAME d-pl-form
+DO:
+  if t-auto-gate-valve:screen-value = "no"
+  then do :
+    message "Чек-бокс «Автоматическая задвижка» будет выключен. Расчет плотности не будет рассчитываться на основании анализа убыли объема в резервуаре! Вы уверены?" view-as alert-box question buttons yes-no update v-ok .
+    if not v-ok
+    then do :
+      t-auto-gate-valve:screen-value = "yes" .
+      return no-apply .
+    end .
+  end .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME t-gate-valve
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-gate-valve d-pl-form
@@ -2610,6 +2788,10 @@ DO:
       is-main = yes .
       v-is-main = "Главный" .
       display v-is-main with frame {&frame-name} .
+      if v-not-gas-place
+      then do :
+        enable t-auto-gate-valve with frame {&frame-name} .
+      end .
     end .
   end.
   v-com-vessel-changed = yes .
@@ -2953,6 +3135,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       when {&place-gate-valve-tanks} then do: 
         if v-ok then gate-valve-tanks = v-value no-error .
       end. 
+      when {&place-auto-gate-valve} then do :
+        if v-ok
+        then do :
+          t-auto-gate-valve = logical(v-value) .
+          v-old-auto-gate-valve = t-auto-gate-valve .
+        end .
+      end.
     end case.
   end.
   run Myenable in this-procedure .
@@ -3088,9 +3277,9 @@ PROCEDURE Myenable :
   
   apply "value-changed" to place-type .
   
-  hide t-com-vessel com-tanks b-com-tanks v-is-main gate-valve-tanks t-gate-valve b-gate-valve-tanks in frame {&frame-name} .
+  hide t-com-vessel com-tanks b-com-tanks v-is-main gate-valve-tanks t-gate-valve b-gate-valve-tanks t-auto-gate-valve in frame {&frame-name} .
   
-  run check-sug-par .
+  run check-sug-NP-par .
   
 END PROCEDURE.
 
@@ -3098,8 +3287,13 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Myenable d-pl-form 
-PROCEDURE check-sug-par :
+PROCEDURE check-sug-NP-par :
   define buffer buf_pl-gds for ub.pl-gds .
+  define variable c-value as character no-undo .
+  define variable c-type  as character no-undo .
+  
+  v-not-gas-place = no .
+  v-sug-place = no .
   
   find first buf_pl-gds no-lock where buf_pl-gds.obj-type = tt-place.obj-type
                                   and buf_pl-gds.obj-code = tt-place.obj-code
@@ -3109,8 +3303,17 @@ PROCEDURE check-sug-par :
   then do :
     return .
   end . 
-  if is-sug(buf_pl-gds.gds-code)
+  &scop proc-name gds-attr-value
+  {&run_proc_attr-lib}
+    (input  buf_pl-gds.gds-code
+    ,input  {&attr-fuel-type}
+    ,output c-value
+    ,output c-type)
+  no-error.
+  if c-value = 'lgas':U /* СУГ */
   then do :
+    v-sug-place = yes .
+    
     display t-com-vessel com-tanks b-com-tanks v-is-main gate-valve-tanks t-gate-valve b-gate-valve-tanks with frame {&frame-name}.
     enable t-com-vessel t-gate-valve with frame {&frame-name}.
     if t-com-vessel
@@ -3126,6 +3329,34 @@ PROCEDURE check-sug-par :
     then do :
       enable b-gate-valve-tanks with frame {&frame-name}.
       disable t-com-vessel b-com-tanks with frame {&frame-name}.
+    end .
+  end .
+  else
+  if c-value = 'metan':U
+  or c-value = 'propan':U
+  then do :
+  end .
+  else do : /* Бензин и дизель */
+    v-not-gas-place = yes .
+  
+    display t-com-vessel com-tanks b-com-tanks v-is-main with frame {&frame-name}.
+    enable t-com-vessel with frame {&frame-name}.
+    if t-com-vessel
+    then do :
+      if is-main then v-is-main = "Главный" . else v-is-main = "Не главный" .
+      display v-is-main with frame {&frame-name}.
+      enable com-tanks b-com-tanks with frame {&frame-name}.
+      com-tanks:read-only in frame {&frame-name} = yes.
+      if com-tanks > "" then disable b-com-tanks with frame {&frame-name}.
+      
+      display t-auto-gate-valve with frame {&frame-name}.
+      if is-main
+      then do :
+        enable t-auto-gate-valve with frame {&frame-name}.
+      end .
+      else do :
+        disable t-auto-gate-valve with frame {&frame-name}.
+      end .
     end .
   end .
                      

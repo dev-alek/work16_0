@@ -992,7 +992,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   @VisualDesigner.
   method private void buttonPl_Click( input sender as System.Object, input e as System.EventArgs ):
     
-    def var v-str as char no-undo.
+    define buffer buf_place for ub.place .
+    define buffer buf2_place for ub.place .
+    define buffer buf_place-attr for ub.place-attr .
+    define buffer buf2_place-attr for ub.place-attr .
+    
+    define variable ii as integer no-undo .
+    define variable v-str as character no-undo .
+    define variable v-is-main as logical no-undo .
+    define variable v-com-tanks as character no-undo .
     
     run str/place-list.w 
     ( input infoSecsObj:ObjType,
@@ -1001,11 +1009,67 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       input-output v-str
     ).
     
-    if maskedTextBoxListTank:text <> v-str
+    if maskedTextBoxListTank:text = v-str
     then do :
-      infoSecsObj:PlChanged = yes .
-      maskedTextBoxListTank:text = v-str.
+      return .
     end .
+    
+    find first buf_place no-lock where buf_place.obj-type = infoSecsObj:ObjType
+                                   and buf_place.obj-code = infoSecsObj:ObjCode
+                                   and buf_place.loc1     = v-str
+                                   and buf_place.status_  = ""
+                                   no-error .
+    if not available buf_place
+    then do :
+      return error .
+    end .
+    
+    for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-is-main"
+                                        and buf_place-attr.obj-code = buf_place.obj-code
+                                        and buf_place-attr.obj-type = buf_place.obj-type
+                                        and buf_place-attr.pl-code  = buf_place.pl-code
+    :
+      v-is-main = logical(buf_place-attr.attr-value) .
+    end .
+    if not v-is-main
+    then do :
+      for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-com-tanks"
+                                          and buf_place-attr.obj-code = buf_place.obj-code
+                                          and buf_place-attr.obj-type = buf_place.obj-type
+                                          and buf_place-attr.pl-code  = buf_place.pl-code
+      :
+        assign v-com-tanks = buf_place-attr.attr-value .
+      end .
+      do ii = 1 to num-entries(v-com-tanks) :
+        find first buf2_place no-lock where buf2_place.obj-type = buf_place.obj-type
+                                        and buf2_place.obj-code = buf_place.obj-code
+                                        and buf2_place.loc1     = entry(ii, v-com-tanks)
+                                        and buf2_place.status_  = ""
+                                        no-error .
+        if available buf2_place
+        then do :
+          for first buf2_place-attr no-lock where buf2_place-attr.attr-code = "place-is-main"
+                                              and buf2_place-attr.obj-code  = buf2_place.obj-code
+                                              and buf2_place-attr.obj-type  = buf2_place.obj-type
+                                              and buf2_place-attr.pl-code   = buf2_place.pl-code
+          :
+            if logical(buf2_place-attr.attr-value) /* Главный СР */
+            then do :
+              v-str = buf2_place.loc1 .
+              leave .
+            end .
+          end .
+        end .
+      end .
+    end .
+    
+    if maskedTextBoxListTank:text = v-str
+    then do :
+      return .
+    end .
+    
+    infoSecsObj:PlChanged = yes .
+    maskedTextBoxListTank:text = v-str.
     
     infoSecsObj:GetInfoSectionProp(idSecTabPage).
     infoSecsObj:InfoSectionCurr:ListTank = maskedTextBoxListTank:text .

@@ -105,6 +105,13 @@ define variable mark-ii     as integer no-undo .
 
 define variable v-doc-code_fbr as character no-undo .
 
+define variable v-pl-code   like ub.place.pl-code no-undo .
+define variable v-pl-list   as character no-undo .
+define variable v-pl-ii     as integer   no-undo .
+define variable v-value     as character no-undo .
+define variable v-ok        as logical   no-undo .
+define variable v-Reconc-tank-attr as character no-undo .
+
 define buffer buf_trn-doc for ub.trn-doc.
 define buffer buf_fbr-gds-obj for ub.fbr-gds-obj.
 define buffer buf_c-chk-doc for ub.c-chk-doc.
@@ -121,6 +128,7 @@ define buffer buf_inkas-pay for ub.inkas-pay.
 define buffer buf_inkas-pay-desk for ub.inkas-pay-desk.
 define buffer buf_inkas-pay-wth for ub.inkas-pay-wth.
 define buffer buf_place       for ub.place.
+define buffer com_place       for ub.place.
 
 define buffer dop_trn-doc for ub.trn-doc.
 define buffer buf_doc-line for ub.doc-line.
@@ -578,21 +586,89 @@ on error undo, return error return-value
             UNDO _one-check, leave _one-check.
           end.
           assign
+            v-pl-code           = plcode
             buf_chk-gds.pl-code = plcode
             buf_chk-gds.loc1    = buf_place.loc1
           .
+          /* Если на резервуаре включен признак Автозадвижка, мы должны проводить анализ убыли для всех Сообщающихся Резервуаров, */
+          /* чтобы определить по какому из них вычислять среднюю плотность (ЗИ 7700198420 РАЗДЕЛЕНИЕ УЧЕТА ПО СДВОЕННЫМ РЕЗЕРВУАРАМ) */
+          run placelib_get-attr (
+            input {&place-auto-gate-valve}
+            ,input buf_place.obj-code
+            ,input buf_place.obj-type
+            ,input buf_place.pl-code
+            ,output v-value
+            ,output v-ok     )
+          no-error.
+          if v-ok
+          and logical(v-value)
+          then do :
+            v-pl-list = "" .
+            run placelib_get-attr (
+              input {&place-com-tanks}
+              ,input buf_place.obj-code
+              ,input buf_place.obj-type
+              ,input buf_place.pl-code
+              ,output v-value
+              ,output v-ok     )
+            no-error.
+            if v-ok
+            and v-value > ""
+            then do :
+              v-pl-list = string(buf_place.pl-code) .
+              do v-pl-ii = 1 to num-entries(v-value) :
+                for first com_place no-lock where com_place.obj-type = p-obj-type
+                                              and com_place.obj-code = p-obj-code
+                                              and com_place.loc1 = entry(v-pl-ii, v-value)
+                                              and com_place.status_ = ""
+                :
+                  v-pl-list = v-pl-list + "," + string(com_place.pl-code) .
+                end .
+              end .
+            end .
+            if num-entries(v-pl-list) > 1
+            then do :
+              { str/vollosan.i
+                goods.gds-code
+                X_chk-doc.obj-type
+                X_chk-doc.obj-code
+                v-pl-list
+                X_chk-doc.shift-date
+                X_chk-doc.shift-num
+                X_chk-doc.chk-date
+                X_chk-doc.chk-time
+                v-pl-code
+                no-error
+              }
+              if error-status:error then do:
+                &scop my-message substitute("Чек &1 Бар-код &2 ТРК &3&4Не удается определить резервуар среди сообщающихся &4&5&4Чек не будет закачан в продажу"  ~
+                                  , X_chk-doc.doc-code             ~
+                                  , t-gds.b-code                   ~
+                                  , t-gds.pump                     ~
+                                  , ~{&new-line~}                  ~
+                                  , v-pl-list                   ~
+                                  )
+      
+                {&display-message-laud} .
+                UNDO _one-check, leave _one-check.
+              end.
+            end .
+          end .
+          
           /* расчет плотности топлива */
           if valid-density( buf_chk-gds.density, (goods.unit-base = goods.unit-cli)  ) <> true then do:
+            v-Reconc-tank-attr = "" .
             { str/avrgdens.i
               goods.gds-code
               X_chk-doc.obj-type
               X_chk-doc.obj-code
-              buf_chk-gds.pl-code
+              v-pl-code
               X_chk-doc.shift-date
               X_chk-doc.shift-num
               X_chk-doc.chk-date
               X_chk-doc.chk-time
               buf_chk-gds.density
+              v-Reconc-tank-attr
               no-error
             }
             if error-status:error then do:
@@ -607,6 +683,25 @@ on error undo, return error return-value
               {&display-message-laud} .
               UNDO _one-check, leave _one-check.
             end.
+            if v-Reconc-tank-attr > ""
+            then do :
+              find first chk-gds-attr exclusive-lock where chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                                       and chk-gds-attr.line-num = buf_chk-gds.line-num
+                                                       and chk-gds-attr.attr-code = "Reconc-tank"
+                                                       no-error .
+              if not available chk-gds-attr
+              then do :
+                create chk-gds-attr .
+                assign
+                  chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                  chk-gds-attr.line-num = buf_chk-gds.line-num
+                  chk-gds-attr.attr-code = "Reconc-tank"
+                .
+              end .
+              assign
+                chk-gds-attr.attr-value = v-Reconc-tank-attr
+              .
+            end .
           end.
           
         end . /* end_of pump > 0 */

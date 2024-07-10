@@ -105,18 +105,26 @@ define temp-table tt-rep no-undo
   field col28str as character
   /* Параметры топлива по измерениям в резервуаре до слива */
   field col29 as decimal    /* Объем, л */
+  field col29str as character
   field col30 as decimal    /* Масса, кг */
+  field col30str as character
   field col31 as decimal    /* Плотн., г/см3 */
+  field col31str as character
   field col32 as decimal    /* Темп., °С */
+  field col32str as character
   /* Реализация при сливе НП */
   field col33 as decimal    /* Объем, л */
   field col34 as decimal    /* Масса, кг */
   field col35 as character  /* Ошибка данных с ТРК */
   /* Параметры топлива по измерениям в резервуаре после слива */
   field col36 as decimal    /* Объем, л */
+  field col36str as character
   field col37 as decimal    /* Масса, кг */
+  field col37str as character
   field col38 as decimal    /* Плотн., г/см3 */
+  field col38str as character
   field col39 as decimal    /* Темп., °С */
+  field col39str as character
   /* Принято к учету */
   field col40 as decimal    /* Объем, л */
   field col41 as decimal    /* Масса, кг */
@@ -836,6 +844,36 @@ procedure processTrn :
       else do :
         v-place-num = v-InfoSection:ListTank .
         
+        pl_ :
+        for each buf_place no-lock where buf_place.obj-type = buf_doc-line.obj-type
+                                     and buf_place.obj-code = buf_doc-line.obj-code
+                                     and buf_place.loc1     = v-place-num :
+          find first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                                          and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                                          and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                          and buf_doc-pl.gds-code = buf_goods.gds-code
+                                          and buf_doc-pl.pl-code  = buf_place.pl-code
+                                          no-error .
+          if available buf_doc-pl
+          then do :
+            leave pl_ .
+          end .
+        end .
+        
+        run placelib_get-attr  ( input {&place-com-tanks}
+          ,input buf_place.obj-code
+          ,input buf_place.obj-type
+          ,input buf_place.pl-code
+          ,output varvalue
+          ,output v-ok      ) no-error.
+        if v-ok
+        and varvalue > ""
+        then do :
+          is-com-tanks = yes .
+          v-num-com-tanks = 1 + num-entries(varvalue) .
+          v-place-num = v-place-num + "," + varvalue .
+        end .
+        
         v-date-start  = v-InfoSection:DateStart .
         v-date-end    = v-InfoSection:DateEnd .
         
@@ -893,7 +931,7 @@ procedure processTrn :
           tt-rep.col7       = string(v-hour-pour) + ":" + string(v-min-pour, "99") + ":00"
           tt-rep.col8       = v-cli-name
           tt-rep.col9       = v-auto-cli-name
-          tt-rep.col10       = v-nb-cli-name
+          tt-rep.col10      = v-nb-cli-name
           tt-rep.col11      = v-car-num
           tt-rep.col12      = v-sep
           tt-rep.col13      = v-driver-name
@@ -1025,6 +1063,12 @@ procedure processTrn :
                 tt-rep.col31  = buf_rvs-line.state-density
                 tt-rep.col32  = buf_rvs-line.state-temperature
               .
+              assign
+                tt-rep.col29str = fDec2Str(buf_rvs-line.state-measure-qnty, "->>>>>>>>>>>9")
+                tt-rep.col30str = fDec2Str(buf_rvs-line.state-measure-cli-qnty, "->>>>>>>>>>>9.9")
+                tt-rep.col31str = fDec2Str(buf_rvs-line.state-density, "->>>>>>>>9.9999")
+                tt-rep.col32str = fDec2Str(buf_rvs-line.state-temperature, "->>>>>>>>>>>9.9")
+              .
               for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                                     and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                                     and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
@@ -1032,7 +1076,10 @@ procedure processTrn :
                                                     and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                                     and buf_rvs-line-attr.attr-code = "temp-izm-vol"
               :
-                tt-rep.col32 = decimal(buf_rvs-line-attr.attr-value) .
+                assign
+                  tt-rep.col32 = decimal(buf_rvs-line-attr.attr-value)
+                  tt-rep.col32str = fDec2Str(decimal(buf_rvs-line-attr.attr-value), "->>>>>>>>>>>9.9")
+                .
               end .
               for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                                     and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
@@ -1096,6 +1143,12 @@ procedure processTrn :
                 tt-rep.col38  = buf_rvs-line.state-density
                 tt-rep.col39  = buf_rvs-line.state-temperature
               .
+              assign
+                tt-rep.col36str = fDec2Str(buf_rvs-line.state-measure-qnty, "->>>>>>>>>>>9")
+                tt-rep.col37str = fDec2Str(buf_rvs-line.state-measure-cli-qnty, "->>>>>>>>>>>9.9")
+                tt-rep.col38str = fDec2Str(buf_rvs-line.state-density, "->>>>>>>>9.9999")
+                tt-rep.col39str = fDec2Str(buf_rvs-line.state-temperature, "->>>>>>>>>>>9.9")
+              .
               for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                                     and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                                     and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
@@ -1103,7 +1156,10 @@ procedure processTrn :
                                                     and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
                                                     and buf_rvs-line-attr.attr-code = "temp-izm-vol"
               :
-                tt-rep.col39 = decimal(buf_rvs-line-attr.attr-value) .
+                assign
+                  tt-rep.col39 = decimal(buf_rvs-line-attr.attr-value)
+                  tt-rep.col39str = fDec2Str(decimal(buf_rvs-line-attr.attr-value), "->>>>>>>>>>>9.9")
+                .
               end .
               for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                                     and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
@@ -1158,7 +1214,7 @@ procedure processTrn :
                     tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
                   end .
                 end .
-              end .
+              end . /* for each buf_rvs-line-pump */
             end .
           end .
           
@@ -1183,57 +1239,229 @@ procedure processTrn :
         if is-com-tanks
         and not available buf_place
         then do :
-          for first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
-                                          and buf_rvs-doc.out-code = buf_doc-line.doc-code,
-               each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                                           and buf_rvs-line.gds-code = buf_goods.gds-code
-          :
-            assign
-              tt-rep.col29  = tt-rep.col29 + buf_rvs-line.state-measure-qnty
-              tt-rep.col30  = tt-rep.col30 + buf_rvs-line.state-measure-cli-qnty
-              tt-rep.col32  = tt-rep.col32 + buf_rvs-line.state-temperature
-            .
-            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
-                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
-                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
-                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
-                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
-                                                  and buf_rvs-line-attr.attr-code begins "input-type"
-                                                  and buf_rvs-line-attr.attr-value <> 'а'
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                           and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                           and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                           and entry(2, buf_rvs-doc.rvs-code, "-") = tt-rep.col15
+                                           no-error .
+          if not available buf_rvs-doc
+          then do :
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                             and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                             no-error .
+          end .
+          if available buf_rvs-doc
+          then do :
+            for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                            and buf_rvs-line.gds-code = buf_goods.gds-code
             :
-              tt-rep.col51 = "РВД" .
+              assign
+                tt-rep.col29  = tt-rep.col29 + buf_rvs-line.state-measure-qnty
+                tt-rep.col30  = tt-rep.col30 + buf_rvs-line.state-measure-cli-qnty
+              .
+              assign
+                tt-rep.col29str = tt-rep.col29str + fDec2Str(buf_rvs-line.state-measure-qnty, "->>>>>>>>>>>9") + "<br>" + {&new-line}
+                tt-rep.col30str = tt-rep.col30str + fDec2Str(buf_rvs-line.state-measure-cli-qnty, "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
+                tt-rep.col31str = tt-rep.col31str + fDec2Str(buf_rvs-line.state-density, "->>>>>>>>9.9999") + "<br>" + {&new-line}
+              .
+              find first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                     and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                     and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                     and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                     and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                     and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+                                                     no-error .
+              if available buf_rvs-line-attr
+              and buf_rvs-line-attr.attr-value > ""
+              then do :
+                assign
+                  tt-rep.col32 = tt-rep.col32 + decimal(buf_rvs-line-attr.attr-value)
+                  
+                  tt-rep.col32str = tt-rep.col32str + fDec2Str(decimal(buf_rvs-line-attr.attr-value), "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
+                .
+              end .
+              else do :
+                assign
+                  tt-rep.col32  = tt-rep.col32 + buf_rvs-line.state-temperature
+                  
+                  tt-rep.col32str = tt-rep.col32str + fDec2Str(buf_rvs-line.state-temperature, "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
+                .
+              end .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code = "delta-mass-qnty"
+              :
+                tt-rep.delta-mass-qnty-before = decimal(buf_rvs-line-attr.attr-value) .
+              end .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code begins "input-type"
+                                                    and buf_rvs-line-attr.attr-value <> 'а'
+              :
+                tt-rep.col51 = "РВД" .
+              end .
+              
+              for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                   and buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                   and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                   and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                   and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                create tt-rvs-line-pump-delta .
+                buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                assign
+                  tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                .
+                if tt-rvs-line-pump-delta.state-el-cnt = ?
+                or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                then do :
+                  tt-rvs-line-pump-delta.is-err = yes .
+                end .
+              end. /* for each bf_rvs-line-pump */
             end .
+            assign
+              tt-rep.col31 = tt-rep.col30 / tt-rep.col29
+              tt-rep.col32 = tt-rep.col32 / v-num-com-tanks
+            .
+          end .
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                           and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                           and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                           and entry(2, buf_rvs-doc.rvs-code, "-") = tt-rep.col15
+                                           no-error .
+          if not available buf_rvs-doc
+          then do :
+            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
+                                             and buf_rvs-doc.out-code = buf_doc-line.doc-code
+                                             no-error .
+          end .
+          if available buf_rvs-doc
+          then do :
+            for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                            and buf_rvs-line.gds-code = buf_goods.gds-code
+            :
+              assign
+                tt-rep.col36  = tt-rep.col36 + buf_rvs-line.state-measure-qnty
+                tt-rep.col37  = tt-rep.col37 + buf_rvs-line.state-measure-cli-qnty
+              .
+              assign
+                tt-rep.col36str = tt-rep.col36str + fDec2Str(buf_rvs-line.state-measure-qnty, "->>>>>>>>>>>9") + "<br>" + {&new-line}
+                tt-rep.col37str = tt-rep.col37str + fDec2Str(buf_rvs-line.state-measure-cli-qnty, "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
+                tt-rep.col38str = tt-rep.col38str + fDec2Str(buf_rvs-line.state-density, "->>>>>>>>9.9999") + "<br>" + {&new-line}
+              .
+              find first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                     and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                     and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                     and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                     and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                     and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+                                                     no-error .
+              if available buf_rvs-line-attr
+              and buf_rvs-line-attr.attr-value > ""
+              then do :
+                assign
+                  tt-rep.col39 = tt-rep.col39 + decimal(buf_rvs-line-attr.attr-value)
+                  
+                  tt-rep.col39str = tt-rep.col39str + fDec2Str(decimal(buf_rvs-line-attr.attr-value), "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
+                .
+              end .
+              else do :
+                assign
+                  tt-rep.col39  = tt-rep.col39 + buf_rvs-line.state-temperature
+                  
+                  tt-rep.col39str = tt-rep.col39str + fDec2Str(buf_rvs-line.state-temperature, "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
+                .
+              end .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code = "delta-mass-qnty"
+              :
+                tt-rep.delta-mass-qnty-after = decimal(buf_rvs-line-attr.attr-value) .
+              end .
+              for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
+                                                    and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
+                                                    and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
+                                                    and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
+                                                    and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
+                                                    and buf_rvs-line-attr.attr-code begins "input-type"
+                                                    and buf_rvs-line-attr.attr-value <> 'а'
+              :
+                tt-rep.col51 = "РВД" .
+              end .
+              
+              for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                   and buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                   and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                   and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                   and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                                                    and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                    and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                    and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                    and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                    and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                    and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                    no-error .
+                if not available tt-rvs-line-pump-delta
+                then do :
+                  create tt-rvs-line-pump-delta .
+                  buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                  assign
+                    tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                    tt-rvs-line-pump-delta.is-err = yes
+                  .
+                end .
+                else do :
+                  tt-rvs-line-pump-delta.find-pair = yes .
+                  if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                  then do :
+                    tt-rvs-line-pump-delta.is-err = yes .
+                  end .
+                  else do :
+                    tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                  end .
+                end .
+              end . /* for each buf_rvs-line-pump */
+            end .
+            assign
+              tt-rep.col38 = tt-rep.col37 / tt-rep.col36
+              tt-rep.col39 = tt-rep.col39 / v-num-com-tanks
+              v-avrg-dens = (tt-rep.col31 + tt-rep.col38) / 2 
+              tt-rep.col34 = tt-rep.col33 * v-avrg-dens 
+            .
+          end .
+          for each tt-rvs-line-pump-delta :
+            if not tt-rvs-line-pump-delta.find-pair
+            then do :
+              tt-rvs-line-pump-delta.is-err = yes .
+            end .
+            if tt-rvs-line-pump-delta.is-err = yes
+            then do :
+              tt-rvs-line-pump-delta.deltaVol = 0 .
+              tt-rep.col35 = "Есть" .
+            end .
+            tt-rep.col33 = tt-rep.col33 + tt-rvs-line-pump-delta.deltaVol .
           end .
           assign
-            tt-rep.col31 = tt-rep.col30 / tt-rep.col29
-            tt-rep.col32 = tt-rep.col32 / v-num-com-tanks
-          .
-          for first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
-                                          and buf_rvs-doc.out-code = buf_doc-line.doc-code,
-               each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                                           and buf_rvs-line.gds-code = buf_goods.gds-code
-          :
-            assign
-              tt-rep.col36  = tt-rep.col36 + buf_rvs-line.state-measure-qnty
-              tt-rep.col37  = tt-rep.col37 + buf_rvs-line.state-measure-cli-qnty
-              tt-rep.col39  = tt-rep.col39 + buf_rvs-line.state-temperature
-            .
-            for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
-                                                  and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
-                                                  and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
-                                                  and buf_rvs-line-attr.pl-code  = buf_rvs-line.pl-code
-                                                  and buf_rvs-line-attr.gds-code = buf_rvs-line.gds-code
-                                                  and buf_rvs-line-attr.attr-code begins "input-type"
-                                                  and buf_rvs-line-attr.attr-value <> 'а'
-            :
-              tt-rep.col51 = "РВД" .
-            end .
-          end .
-          assign
-            tt-rep.col38 = tt-rep.col37 / tt-rep.col36
-            tt-rep.col39 = tt-rep.col39 / v-num-com-tanks
-            v-avrg-dens = (tt-rep.col31 + tt-rep.col38) / 2 
-            tt-rep.col34 = tt-rep.col33 * v-avrg-dens 
+            tt-rep.col29str = trim(tt-rep.col29str, "<br>" + {&new-line})
+            tt-rep.col30str = trim(tt-rep.col30str, "<br>" + {&new-line})
+            tt-rep.col31str = trim(tt-rep.col31str, "<br>" + {&new-line})
+            tt-rep.col32str = trim(tt-rep.col32str, "<br>" + {&new-line})
+            
+            tt-rep.col36str = trim(tt-rep.col36str, "<br>" + {&new-line})
+            tt-rep.col37str = trim(tt-rep.col37str, "<br>" + {&new-line})
+            tt-rep.col38str = trim(tt-rep.col38str, "<br>" + {&new-line})
+            tt-rep.col39str = trim(tt-rep.col39str, "<br>" + {&new-line})
           .
         end .
         
@@ -1897,17 +2125,17 @@ procedure PrintTT:
             '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col26str + '</TH>'  skip
             '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col27str + '</TH>'  skip
             '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col28str + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col29, "->>>>>>>>>>>9"  ) + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col29, "->>>>>>>>>>>9"  ) + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col30, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col30, "->>>>>>>>>>>9.9") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col31, "->>>>>>>>9.9999") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col31, "->>>>>>>>9.9999") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col32, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col32, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col29str + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col30str + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col31str + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col32str + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col33, "->>>>>>>>>>>9"  ) + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col33, "->>>>>>>>>>>9"  ) + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col34, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col34, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH style="text-align: center; font-weight:normal; color: ' + (if tt-rep.col35 = "Есть" then "red" else "black") + '; ">' fStrNvl(tt-rep.col35, "") '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col36, "->>>>>>>>>>>9"  ) + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col36, "->>>>>>>>>>>9"  ) + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col37, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col37, "->>>>>>>>>>>9.9") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col38, "->>>>>>>>9.9999") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col38, "->>>>>>>>9.9999") + '</TH>'  skip
-            '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col39, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col39, "->>>>>>>>>>>9.9") + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col36str + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col37str + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col38str + '</TH>'  skip
+            '<TH num="#,##0.00" style="text-align: center; font-weight:normal; ">' + tt-rep.col39str + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col40, "->>>>>>>>>>>9"  ) + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col40, "->>>>>>>>>>>9"  ) + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col41, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; ">' + fDec2Str(tt-rep.col41, "->>>>>>>>>>>9.9") + '</TH>'  skip
             '<TH num="#,##0.00" val="' + fDec2Str(tt-rep.col42, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight:normal; color: ' + (if (abs(tt-rep.col43) > tt-rep.delta-mass-qnty-ac or not tt-rep.ac-measured) then "red" else "black") + '; ">' + fDec2Str(tt-rep.col42, "->>>>>>>>>>>9.9") + '</TH>'  skip

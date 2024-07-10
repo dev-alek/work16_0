@@ -1194,10 +1194,19 @@ DO:
       return no-apply .
     end.
     
-    if is-sug(buf_pl-gds.gds-code)
+    run placelib_get-attr  (
+       input {&place-is-main}
+      ,input buf_pl-gds.obj-code
+      ,input buf_pl-gds.obj-type
+      ,input buf_pl-gds.pl-code
+      ,output v-value
+      ,output v-ok      )
+    no-error.
+    if v-ok
+    and not logical(v-value) /* Не главный сообщающийся резервуар */
     then do :
       run placelib_get-attr  (
-         input {&place-is-main}
+         input {&place-com-tanks}
         ,input buf_pl-gds.obj-code
         ,input buf_pl-gds.obj-type
         ,input buf_pl-gds.pl-code
@@ -1205,44 +1214,36 @@ DO:
         ,output v-ok      )
       no-error.
       if v-ok
-      and not logical(v-value) /* Не главный сообщающийся резервуар (СУГ) */
-      then do :
-        run placelib_get-attr  (
-           input {&place-com-tanks}
-          ,input buf_pl-gds.obj-code
-          ,input buf_pl-gds.obj-type
-          ,input buf_pl-gds.pl-code
-          ,output v-value
-          ,output v-ok      )
-        no-error.
-        if v-ok
-        and v-value > ""
-        then do ii = 1 to num-entries(v-value) :
-          find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
-                                         and buf_place.obj-code = buf_pl-gds.obj-code
-                                         and buf_place.loc1     = entry(ii, v-value)
-                                         and buf_place.status_  = ""
-                                         no-error .
-          if available buf_place
+      and v-value > ""
+      then do ii = 1 to num-entries(v-value) :
+        find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
+                                       and buf_place.obj-code = buf_pl-gds.obj-code
+                                       and buf_place.loc1     = entry(ii, v-value)
+                                       and buf_place.status_  = ""
+                                       no-error .
+        if available buf_place
+        then do :
+          run placelib_get-attr  (
+             input {&place-is-main}
+            ,input buf_place.obj-code
+            ,input buf_place.obj-type
+            ,input buf_place.pl-code
+            ,output v-value2
+            ,output v-ok      )
+          no-error.
+          if v-ok
+          and logical(v-value2)
           then do :
-            run placelib_get-attr  (
-               input {&place-is-main}
-              ,input buf_place.obj-code
-              ,input buf_place.obj-type
-              ,input buf_place.pl-code
-              ,output v-value2
-              ,output v-ok      )
-            no-error.
-            if v-ok
-            and logical(v-value2)
-            then do :
-              v-pl-code = buf_place.pl-code .
-              leave .
-            end .
+            v-pl-code = buf_place.pl-code .
+            leave .
           end .
         end .
       end .
     end .
+    
+    if loc-t-doc-pl.pl-code = v-pl-code then do:
+      return no-apply .
+    end.
 
     assign
       loc-t-doc-pl.pl-code :screen-value = string( v-pl-code, loc-t-doc-pl.pl-code :format )

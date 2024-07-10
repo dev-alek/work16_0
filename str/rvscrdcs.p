@@ -174,6 +174,12 @@ do
   define variable varfact-order-prev-inv        like ub.trn-doc.fact-order no-undo.
   define variable InfoSecsObj                   as class     InfoSectionsTotal      no-undo.
   
+  define variable v-all-state-measure-qnty as decimal no-undo .
+  define variable v-all-state-measure-cli-qnty as decimal no-undo .
+  define variable v-avg-state-density as decimal no-undo .
+  define variable v-num-tanks as integer no-undo .
+  define variable v-all-state-add-cli-qnty as decimal no-undo .
+  
   define variable dM                            as decimal   no-undo.
   define variable dMMBd                         as decimal   no-undo.
   define variable MKN                           as decimal   no-undo.
@@ -519,11 +525,9 @@ do
         ,output v-value
         ,output v-ok      ) no-error.
 
-      if is-sug(buf_goods.gds-code)
-        and v-ok
-        and v-value > ""
-        then 
-      do :
+      if  v-ok
+      and v-value > ""
+      then do :
         run placelib_get-attr  ( input {&place-is-main}
           ,input buf_place.obj-code
           ,input buf_place.obj-type
@@ -978,6 +982,15 @@ do
               v-fact-cli-qnty = 0.0
               .
           end.
+          
+          assign
+            v-all-state-measure-qnty = 0.0
+            v-all-state-measure-cli-qnty = 0.0
+            v-avg-state-density = 0.0
+            v-all-state-add-cli-qnty = 0.0
+            v-num-tanks = 1 
+          .
+          
           assign
             O_PKH-base            = v-fact-qnty
             O_FACT-base           = buf_rvs-line.state-measure-qnty + buf_rvs-line.state-add-qnty
@@ -991,6 +1004,10 @@ do
             /*            v-metering-error-dens = buf_rvs-line.state-density                    */
             /*            v-metering-error-base = K1 / 100 * O_FACT-base*/
             /*            v-metering-error-cli  = K1 / 100 * O_FACT-cli*/
+            v-all-state-measure-qnty = buf_rvs-line.state-measure-qnty
+            v-all-state-measure-cli-qnty = buf_rvs-line.state-measure-cli-qnty
+            v-all-state-add-cli-qnty = buf_rvs-line.state-add-qnty * buf_rvs-line.state-density
+            v-avg-state-density   = buf_rvs-line.state-density
             v-metering-qnty-base  = 0.0
             v-metering-qnty-cli   = 0.0
             v-normal-wastage-base = 0.0
@@ -1011,16 +1028,65 @@ do
             "  - Масса расчетно-книжная (кг) = " + string(if O_PKH-cli <> ? then O_PKH-cli else 0) + {&new-line} +
             "  - Масса НП, включая трубопровод (кг) = " + string(if O_FACT-cli <> ? then O_FACT-cli else 0) + {&new-line} 
             /*      "  - v-normal-wastage-dens = " + string(v-normal-wastage-dens) + {&new-line}*/
-            .  
+            .
+            
+          run placelib_get-attr  ( input {&place-com-tanks}
+            ,input buf_doc-pl.obj-code
+            ,input buf_doc-pl.obj-type
+            ,input buf_doc-pl.pl-code
+            ,output v-value
+            ,output v-ok      ) no-error.
+          if v-ok
+          and v-value > ""
+          then do :
+            do ii = 1 to num-entries(v-value) :
+              find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
+                and buf_place.obj-code = buf_pl-gds.obj-code
+                and buf_place.loc1     = entry(ii, v-value)
+                and buf_place.status_  = ""
+                no-error .
+              if available buf_place
+                then 
+              do :
+                find first com_rvs-line where com_rvs-line.gds-code = buf_doc-pl.gds-code
+                  and com_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                  and com_rvs-line.obj-type = buf_doc-pl.obj-type
+                  and com_rvs-line.obj-code = buf_doc-pl.obj-code
+                  and com_rvs-line.pl-code  = buf_place.pl-code
+                  no-error .
+                if not available com_rvs-line
+                  then 
+                do :
+                  message substitute ("Внимание! Не сделана сверка по резервуару №&1, включенному в связку сообщающихся резервуаров! Документ инвентаризации не создан!", buf_place.loc1)
+                    view-as alert-box error .
+                  undo block_cre-inv, leave block_cre-inv .
+                end .
+                else 
+                do :
+                  assign
+                    O_FACT-base = O_FACT-base + (com_rvs-line.state-measure-qnty + com_rvs-line.state-add-qnty)
+                    O_FACT-cli  = O_FACT-cli + (com_rvs-line.state-measure-cli-qnty + com_rvs-line.state-add-qnty * com_rvs-line.state-density)
+                    
+                    v-all-state-measure-qnty      = v-all-state-measure-qnty + com_rvs-line.state-measure-qnty
+                    v-all-state-measure-cli-qnty  = v-all-state-measure-cli-qnty + com_rvs-line.state-measure-cli-qnty
+                    v-avg-state-density           = v-avg-state-density + com_rvs-line.state-density
+                    v-all-state-add-cli-qnty      = v-all-state-add-cli-qnty + (buf_rvs-line.state-add-qnty * buf_rvs-line.state-density)
+                    v-num-tanks = v-num-tanks + 1
+                  .
+                end .
+              end .
+            end .
+            assign v-avg-state-density = v-avg-state-density / v-num-tanks .
+          end .  
                  
           if not v-lgas-gds
             and not is-gas(buf_goods.gds-code)
             then 
           do:
             assign
-              v-metering-error-base = K1 / 100 * buf_rvs-line.state-measure-qnty
-              v-metering-error-cli  = K1 / 100 * buf_rvs-line.state-measure-cli-qnty
-              v-metering-error-dens = buf_rvs-line.state-density
+              v-metering-error-base = K1 / 100 * v-all-state-measure-qnty
+              v-metering-error-cli  = K1 / 100 * v-all-state-measure-cli-qnty
+              v-metering-error-dens = v-avg-state-density
               .
           end.
           else 
@@ -1624,8 +1690,8 @@ do
               rvsinvsubObj:GdsCode  = buf_rvs-line.gds-code.
               MKN = O_PKH-cli.
               MFO = O_FACT-cli.
-              MFOR = buf_rvs-line.state-measure-cli-qnty.
-              MFOT = buf_rvs-line.state-add-qnty * buf_rvs-line.state-density.
+              MFOR = v-all-state-measure-cli-qnty.
+              MFOT = v-all-state-add-cli-qnty.
               beta1 = K1.
               beta2 = K3.
               dMMBd = (beta1 * MFOR + beta2 * MFOT) / 100.
@@ -1661,7 +1727,7 @@ do
                   dM = MFO - MKN.
                   MI = dM - dMMBd. 
                   MKKN = MKN + MI.
-                  v-rsrv-qnty = (MI) / buf_rvs-line.state-density.
+                  v-rsrv-qnty = (MI) / v-avg-state-density.
                   logger:StrLogPut =
                     "Излишки: " + {&new-line} +
                     "MI: " + string(MI) + {&new-line} +
@@ -1684,7 +1750,7 @@ do
                     MKKN = MFO + dMMBd.
                   /*                  MNED = MKN - MFO - dMMBd - dMPOT.*/
                   end.
-                  v-rsrv-qnty = (MKKN - MKN) / buf_rvs-line.state-density.
+                  v-rsrv-qnty = (MKKN - MKN) / v-avg-state-density.
                  
                   logger:StrLogPut =
                     "Недостача: " + {&new-line} +
@@ -1791,7 +1857,7 @@ do
                 else 
                 do:
                   assign
-                    v-reserv-qnty-base = v-reserv-qnty-cli / buf_rvs-line.state-density
+                    v-reserv-qnty-base = v-reserv-qnty-cli / v-avg-state-density
                     .
                   logger:StrLogPut =
                         
@@ -1818,7 +1884,7 @@ do
                 else 
                 do:
                   assign
-                    v-reserv-qnty-cli = v-reserv-qnty-base * buf_rvs-line.state-density
+                    v-reserv-qnty-cli = v-reserv-qnty-base * v-avg-state-density
                     .
 
                   logger:StrLogPut =
@@ -1831,7 +1897,7 @@ do
             do:
               v-reserv-qnty-base = v-rsrv-qnty.
               assign
-                v-reserv-qnty-cli = v-reserv-qnty-base * buf_rvs-line.state-density
+                v-reserv-qnty-cli = v-reserv-qnty-base * v-avg-state-density
                 .
 
               logger:StrLogPut =
@@ -1840,54 +1906,7 @@ do
                 .
             end.
           end.
-          else 
-          do:
-            if v-lgas-gds
-              then 
-            do :
-              run placelib_get-attr  ( input {&place-com-tanks}
-                ,input buf_doc-pl.obj-code
-                ,input buf_doc-pl.obj-type
-                ,input buf_doc-pl.pl-code
-                ,output v-value
-                ,output v-ok      ) no-error.
-              if v-ok
-                and v-value > ""
-                then 
-              do :
-                do ii = 1 to num-entries(v-value) :
-                  find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
-                    and buf_place.obj-code = buf_pl-gds.obj-code
-                    and buf_place.loc1     = entry(ii, v-value)
-                    and buf_place.status_  = ""
-                    no-error .
-                  if available buf_place
-                    then 
-                  do :
-                    find first com_rvs-line where com_rvs-line.gds-code = buf_doc-pl.gds-code
-                      and com_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                      and com_rvs-line.obj-type = buf_doc-pl.obj-type
-                      and com_rvs-line.obj-code = buf_doc-pl.obj-code
-                      and com_rvs-line.pl-code  = buf_place.pl-code
-                      no-error .
-                    if not available com_rvs-line
-                      then 
-                    do :
-                      message substitute ("Внимание! Не сделана сверка по резервуару №&1, включенному в связку сообщающихся резервуаров! Документ инвентаризации не создан!", buf_place.loc1)
-                        view-as alert-box error .
-                      undo block_cre-inv, leave block_cre-inv .
-                    end .
-                    else 
-                    do :
-                      assign
-                        O_FACT-base = O_FACT-base + (com_rvs-line.state-measure-qnty + com_rvs-line.state-add-qnty)
-                        O_FACT-cli  = O_FACT-cli + (com_rvs-line.state-measure-cli-qnty + com_rvs-line.state-add-qnty * com_rvs-line.state-density)
-                        .
-                    end .
-                  end .
-                end .
-              end .
-            end .
+          else do:
             assign
               v-reserv-qnty-cli  = O_FACT-cli - O_PKH-cli
               v-reserv-qnty-base = O_FACT-base - O_PKH-base 

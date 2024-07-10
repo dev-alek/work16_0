@@ -67,6 +67,7 @@ define variable vss-description as character no-undo init "Закачка чеков в прода
 { gbl/clntattr.i }
 { rep/real3tm.i }
 { ref/gds-attr.i }
+{ str/placelib.i }
 
 define variable p-ii as integer no-undo .
 define variable p-ii-ok as integer no-undo .

@@ -85,6 +85,7 @@ define variable vss-description as character no-undo init "Закачка чеков в прода
 { gbl/clntattr.i }
 { rep/real3tm.i }
 { ref/gds-attr.i }
+{ str/placelib.i }
 
 
 define shared buffer X_chk-doc for ub.chk-doc.

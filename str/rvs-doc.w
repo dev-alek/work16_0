@@ -1186,12 +1186,10 @@ procedure cycle-add :
       ,output v-value
       ,output v-ok      ) no-error.
 
-    if is-sug(buf_goods.gds-code)
-      and v-ok
-      and v-value > ""
-      then 
-    do :
-      /*    Сообщающиеся резервуары СУГ   */
+    if  v-ok
+    and v-value > ""
+    then do :
+      /*    Сообщающиеся резервуары  */
       find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
         and buf_place.obj-code = buf_pl-gds.obj-code
         and buf_place.pl-code = buf_pl-gds.pl-code
