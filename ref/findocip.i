@@ -3184,7 +3184,7 @@ procedure proc-update-sum-vat-chr :
     do:
       case paramVne :
       when "vne" then do:
-      if v-vat-pc <> -1 then do:
+      if v-vat-pc > 0 then do:
         v-sum-vat-chr = "в том числе НДС" + right-trim (v-each-vat-chr , ";").
       end .  
       else     
