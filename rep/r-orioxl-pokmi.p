@@ -39,6 +39,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { rep/html-conv.i }
 { str/is-sug.i }
 { str/placelib.i }
+{ rep/c-temp-place.i }
 { rep/c-place-attr.i }
 
 define variable g#report-num  as integer no-undo .
