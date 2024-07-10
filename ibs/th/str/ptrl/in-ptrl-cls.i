@@ -99,44 +99,75 @@
         undo block_tr, return error .
       end.
       
+      find first buf_goods no-lock where buf_goods.gds-code = infoSecsObj:GdsCode .
+      
       { gbl/conf-rd.i "'ptoldfil'" buf_rvs-doc.host-code buf_rvs-doc.obj-type buf_rvs-doc.obj-code "''" "''" "''" no ptoldfilvalue ptoldfiltype no-error }
 
-      for first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
-                                    and buf_place.obj-code = buf_rvs-doc.obj-code
-                                    and buf_place.loc1 = infoSecObj:ListTank
-                                    and buf_place.status_ = ""
-      :
-        assign
-          v-pl-code = buf_place.pl-code
-          v-pl-list = v-pl-list + string(buf_place.pl-code) + ","
-          v-com-tanks = ""
-        .
-        for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-com-tanks"
-                                            and buf_place-attr.obj-code = buf_place.obj-code
-                                            and buf_place-attr.obj-type = buf_place.obj-type
-                                            and buf_place-attr.pl-code  = buf_place.pl-code
+      assign v-pl-code = ? .
+      
+      if pAction = {&lookup}
+      then do :
+        for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                        and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                        and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                        and buf_rvs-line.gds-code = buf_goods.gds-code
         :
-          assign v-com-tanks = buf_place-attr.attr-value .
+          assign
+            v-pl-code      = buf_rvs-line.pl-code
+            v-pl-list      = v-pl-list + string(buf_rvs-line.pl-code) + "," 
+          .
         end .
-        if (pAction = {&lookup}
-        or pActionType = "edit")
-        then
-        do ii = 1 to num-entries(v-com-tanks) :
-          find first buf2_place no-lock where buf2_place.obj-type = buf_place.obj-type
+        if v-pl-code = ?
+        then do :
+          message
+            "Ќе найдена строка сверки:" skip
+            substitute( "товар &1", buf_goods.gds-code ) skip
+            substitute( "место хранени€ &1", infoSecObj:ListTank ) skip
+            view-as alert-box error .
+          undo block_tr, return error .
+        end .
+      end .
+      else do :
+        for first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                                      and buf_place.obj-code = buf_rvs-doc.obj-code
+                                      and buf_place.loc1 = infoSecObj:ListTank
+                                      and buf_place.status_ = ""
+        :
+          assign
+            v-pl-code = buf_place.pl-code
+            v-pl-list = v-pl-list + string(buf_place.pl-code) + ","
+            v-com-tanks = ""
+          .
+          for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-com-tanks"
+                                              and buf_place-attr.obj-code = buf_place.obj-code
+                                              and buf_place-attr.obj-type = buf_place.obj-type
+                                              and buf_place-attr.pl-code  = buf_place.pl-code
+          :
+            assign v-com-tanks = buf_place-attr.attr-value .
+          end .
+          if pActionType = "edit"
+          then
+          do ii = 1 to num-entries(v-com-tanks) :
+            for each buf2_place no-lock where buf2_place.obj-type = buf_place.obj-type
                                           and buf2_place.obj-code = buf_place.obj-code
                                           and buf2_place.loc1     = entry(ii, v-com-tanks)
-                                          and buf2_place.status_  = ""
-                                          no-error .
-          if available buf2_place
-          then do :
-            assign v-pl-list = v-pl-list + string(buf2_place.pl-code) + "," .
+  /*                                          and buf2_place.status_  = ""*/
+            :
+              for first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                               and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                               and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                               and buf_rvs-line.pl-code  = buf2_place.pl-code
+                                               and buf_rvs-line.gds-code = buf_goods.gds-code
+              :
+                assign v-pl-list = v-pl-list + string(buf2_place.pl-code) + "," .
+              end .
+              release buf_rvs-line no-error .
+            end .
           end .
         end .
       end .
       
       assign v-pl-list = trim(v-pl-list, ",") .
-      
-      find first buf_goods no-lock where buf_goods.gds-code = infoSecsObj:GdsCode .
       
       if num-entries(v-pl-list) > 1
       or v-pl-code = ?

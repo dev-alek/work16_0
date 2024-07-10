@@ -637,113 +637,143 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           p-pl-code      = ?
         .
         
-        tt-doc-pl_ :
-        for each tt-doc-pl no-lock
-        on error undo block_tr, return error return-value
-        :
-          if not is-sug(tt-doc-pl.gds-code)
-          then do :
-            v-KPrvs-secs = "" .
-            v-KPrvs-doc-pl = no .
-            find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
-                                           and buf_place.obj-code = t-doc.obj-code
-                                           and buf_place.pl-code  = tt-doc-pl.pl-code
-                                           .
-            do ii = 1 to infoSectionsTotal:SectionNum : 
-              infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-              if infoSecObj:ListTank = buf_place.loc1
-              then do :
-                if infoSecObj:AccMeth = 1
-                then do :
-                  v-KPrvs-doc-pl = yes .
-                end .
-                v-KPrvs-secs = v-KPrvs-secs + "," + infoSecObj:SectionName .
-              end .
-            end .
-            v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
-            
-            if v-KPrvs-doc-pl
-            and num-entries(v-KPrvs-secs) > 1
-            then do :
-              next tt-doc-pl_ .
-            end .
+        if p-action = {&lookup}
+        then do :
+          for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                          and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                          and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                          and buf_rvs-line.gds-code = tt-doc-pl.gds-code
+          :
+            assign
+              p-pl-code      = buf_rvs-line.pl-code
+              v-pl-list      = v-pl-list + string(buf_rvs-line.pl-code) + "," 
+            .
           end .
-          
-          find first buf_rvs-line no-lock
-            where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-              and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
-              and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
-              and buf_rvs-line.pl-code  = tt-doc-pl.pl-code
-              and buf_rvs-line.gds-code = tt-doc-pl.gds-code
-            no-error .
-          if not available buf_rvs-line then do:
+          if p-pl-code = ?
+          then do :
             message
               "Ќе найдена строка сверки:" skip
               substitute( "товар &1", tt-doc-pl.gds-code ) skip
               substitute( "место хранени€ &1", tt-doc-pl.pl-code ) skip
               view-as alert-box error .
             undo block_tr, return error .
-          end.
-          assign
-            p-pl-code      = buf_rvs-line.pl-code
-            v-pl-list      = v-pl-list + string(buf_rvs-line.pl-code) + "," .
-          .
-          
-          run placelib_get-attr  (
-             input {&place-com-tanks}
-            ,input t-doc.obj-code
-            ,input t-doc.obj-type
-            ,input tt-doc-pl.pl-code
-            ,output v-value
-            ,output v-ok      )
-          no-error.
-          
-          if  v-ok
-          and v-value > ""
-          and (p-action = {&lookup}
-            or p-action-type = "edit")
-          then do :
-            is-com-tanks = yes .
-            
-            find first buf_place no-lock
-              where buf_place.obj-type = t-doc.obj-type
-                and buf_place.obj-code = t-doc.obj-code
-                and buf_place.pl-code  = tt-doc-pl.pl-code
-            .
-            
-/*            v-value = buf_place.loc1 + "," + v-value  .*/
-            do ii = 1 to num-entries(v-value) :
-              find first buf_place no-lock where buf_place.obj-type = tt-doc-pl.obj-type
-                                             and buf_place.obj-code = tt-doc-pl.obj-code
-                                             and buf_place.loc1     = entry(ii, v-value)
-                                             and buf_place.status_  = ""
-                                             no-error .
-              if available buf_place
+          end .
+        end .
+        else do :
+          tt-doc-pl_ :
+          for each tt-doc-pl no-lock
+          on error undo block_tr, return error return-value
+          :
+            if not is-sug(tt-doc-pl.gds-code)
+            then do :
+              v-KPrvs-secs = "" .
+              v-KPrvs-doc-pl = no .
+              find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
+                                             and buf_place.obj-code = t-doc.obj-code
+                                             and buf_place.pl-code  = tt-doc-pl.pl-code
+                                             .
+              do ii = 1 to infoSectionsTotal:SectionNum : 
+                infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+                if infoSecObj:ListTank = buf_place.loc1
+                then do :
+                  if infoSecObj:AccMeth = 1
+                  then do :
+                    v-KPrvs-doc-pl = yes .
+                  end .
+                  v-KPrvs-secs = v-KPrvs-secs + "," + infoSecObj:SectionName .
+                end .
+              end .
+              v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
+              
+              if v-KPrvs-doc-pl
+              and num-entries(v-KPrvs-secs) > 1
               then do :
-                find first buf_rvs-line no-lock
-                  where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                    and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
-                    and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
-                    and buf_rvs-line.pl-code  = buf_place.pl-code
-                    and buf_rvs-line.gds-code = tt-doc-pl.gds-code
-                  no-error .
-                if not available buf_rvs-line then do:
-                  message
-                    "Ќе найдена строка сверки:" skip
-                    substitute( "товар &1", tt-doc-pl.gds-code ) skip
-                    substitute( "место хранени€ &1", buf_place.pl-code ) skip
-                    view-as alert-box error .
-                  undo block_tr, return error .
-                end.
-                assign
-                  p-pl-code      = buf_rvs-line.pl-code
-                  v-pl-list      = v-pl-list + string(buf_rvs-line.pl-code) + "," .
-                .
+                next tt-doc-pl_ .
               end .
             end .
-          end .
             
-        end. /* for each tt-doc-pl */
+            find first buf_rvs-line no-lock
+              where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                and buf_rvs-line.pl-code  = tt-doc-pl.pl-code
+                and buf_rvs-line.gds-code = tt-doc-pl.gds-code
+              no-error .
+            if not available buf_rvs-line then do:
+              message
+                "Ќе найдена строка сверки:" skip
+                substitute( "товар &1", tt-doc-pl.gds-code ) skip
+                substitute( "место хранени€ &1", tt-doc-pl.pl-code ) skip
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+            assign
+              p-pl-code      = buf_rvs-line.pl-code
+              v-pl-list      = v-pl-list + string(buf_rvs-line.pl-code) + "," .
+            .
+            
+            run placelib_get-attr  (
+               input {&place-com-tanks}
+              ,input t-doc.obj-code
+              ,input t-doc.obj-type
+              ,input tt-doc-pl.pl-code
+              ,output v-value
+              ,output v-ok      )
+            no-error.
+            
+            if  v-ok
+            and v-value > ""
+            and p-action-type = "edit"
+            then do :
+              is-com-tanks = yes .
+              
+              find first buf_place no-lock
+                where buf_place.obj-type = t-doc.obj-type
+                  and buf_place.obj-code = t-doc.obj-code
+                  and buf_place.pl-code  = tt-doc-pl.pl-code
+              .
+              
+  /*            v-value = buf_place.loc1 + "," + v-value  .*/
+              do ii = 1 to num-entries(v-value) :
+                find first buf_place no-lock where buf_place.obj-type = tt-doc-pl.obj-type
+                                               and buf_place.obj-code = tt-doc-pl.obj-code
+                                               and buf_place.loc1     = entry(ii, v-value)
+                                               and buf_place.status_  = ""
+                                               no-error .
+                if available buf_place
+                then do :
+                  find first buf_rvs-line no-lock
+                    where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                      and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                      and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                      and buf_rvs-line.pl-code  = buf_place.pl-code
+                      and buf_rvs-line.gds-code = tt-doc-pl.gds-code
+                    no-error .
+                  if not available buf_rvs-line
+                  then do:
+                    if t-doc.status_ <> {&fact}
+                    then do :
+                      message
+                        "Ќе найдена строка сверки:" skip
+                        substitute( "товар &1", tt-doc-pl.gds-code ) skip
+                        substitute( "место хранени€ &1", buf_place.pl-code ) skip
+                        view-as alert-box error .
+                      undo block_tr, return error .
+                    end .
+                  end.
+                  else do :
+                    assign
+                      p-pl-code      = buf_rvs-line.pl-code
+                      v-pl-list      = v-pl-list + string(buf_rvs-line.pl-code) + "," 
+                    .
+                  end .
+                end .
+              end .
+            end .
+              
+          end. /* for each tt-doc-pl */
+        end .
+        
         assign v-pl-list = trim(v-pl-list, ",") .
 
         if num-entries(v-pl-list) > 1
@@ -3169,6 +3199,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define buffer buf_goods      for ub.goods .
         define buffer buf_place      for ub.place .
         define buffer buf_rvs-doc    for ub.rvs-doc .
+        define buffer buf_rvs-line   for ub.rvs-line .
         define buffer cur_shift-obj  for ub.shift-obj.
         define buffer prev_shift-obj for ub.shift-obj.
         define buffer prev_rvs-doc   for ub.rvs-doc.
@@ -3809,8 +3840,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                                                no-error .
                 if available buf_place
                 then do :
-                  for each buf_rvs-doc
-                    where buf_rvs-doc.out-code = buf_trn-doc.doc-code
+                  for each buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_trn-doc.doc-code,
+                     first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                                  and buf_rvs-line.gds-code = buf_doc-pl.gds-code
+                                                  and buf_rvs-line.pl-code <> buf_place.pl-code
                   on error undo tr, return error return-value
                   :
                     assign
