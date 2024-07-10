@@ -440,7 +440,7 @@ procedure print-report :
     '</TR>'skip    
   .
     
-  for each tt-result:
+  for each tt-result by tt-result.num :
     put stream OutStr-html unformatted
       '<TR>' skip
       '<TH style="text-align: center; font-weight: normal;">' + string(tt-result.num) + '</TH>' skip
