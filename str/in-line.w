@@ -3358,7 +3358,7 @@ do:
   end.
   
   delete object infoSectionsTotal no-error.
-  tanksForm:Dispose() .
+  tanksForm:Dispose() no-error .
   delete object tanksForm no-error.
 
   if v-lgas-gds
