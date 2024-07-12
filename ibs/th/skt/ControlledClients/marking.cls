@@ -1010,8 +1010,10 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     
     vTimeStart = now.
     
+    /* перебираем площадки (если надо) */
     block_chgcdn:
     do  while true:
+        /* определяем адрес площадки, к которой обращаться */
        if gismt-cdnTurnOn then do:           
            vGisAdrCDN = GetCDNAdress().
            if vGisAdrCDN = "" then do:
@@ -1027,12 +1029,14 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        end.
        else vGisAdress = gismt-GisAdress.
        
+       /* обращение несколько раз к одной и той же площадке (если надо) */
        block_repeat:
        do vNumRep = 1 to vNumMax:
            if vNumRep > 1 then do:
                dbgPrint("marking.log", substitute("Повторный запрос на площадку &1 ", vGisAdress)).
            end.
-               
+           /* вычисляем и запоминаем имена временных файлов 
+           ** (на каждом шаге цикла и для каждой площадки новое имя) */    
            run gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", output vFileResult ) .
            create tt-file-name.
            assign tt-file-name.tmpFileName = vFileResult.           
@@ -1060,7 +1064,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
            PUT STREAM out_data UNFORMATTED  
               vGisAdress chr(9) vTimeNow chr(9).
            OUTPUT STREAM out_data CLOSE.
-           
+           /* есть ли файл ответа проверяем независимо от результата в vRetVal */
            if searchFile(vfileresult) = ?
            then do :            
                /* формируем лог файл */
@@ -1089,6 +1093,11 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                      dbgPrint("marking.log", substitute("Возникла ошибка при чтении ответа для записи в лог: &1 ", error-status:get-message(1))). 
                   end.  
                   else do:   
+                      /* если думали, что ответа нет, а он оказывается есть, то еще раз определяем, есть ли в ответе ошибки */
+                      if vRetVal = -1 then do:
+                         vRetVal = ChkCurlGisMT (vlongJson).
+                         dbgPrint("marking.log", substitute("Думали, что ответа нет, а файл есть, новый результат проверки: &1 ", vRetVal)). 
+                      end.
                       /* добавляем в лог ответ Гис МТ */
                       copy-lob from vlongJson to file vFileLog append no-error.                   
                       if error-status:error or 
@@ -1096,7 +1105,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                       then do:
                           dbgPrint("marking.log", substitute("Возникла ошибка при добавлении ответа в лог: &1 ", error-status:get-message(1))).
                       end.    
-                      else dbgPrint("marking.log", substitute("Ответ ГИС МТ успешно добавлен в файл &1 ", vFileLog)).
+                      else dbgPrint("marking.log", substitute("Ответ ГИС МТ успешно добавлен в файл &1 ", vFileLog)).                          
                   end.
                end.              
            end.                     
@@ -1836,8 +1845,8 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
   
  /* Вызывает curl с переданным адресом и возвращает ответ:
  ** -1 - не получен ответ от curl
- ** -xxx - код ответа ошибки в формате html
- ** xxx - код ответа  */
+ ** 0 - нет ошибки
+ ** xxx - код ошибки в ответе  */
   method private integer RunCurlGisMT (
      vGisAdress as character,     
      vDataMark as character,
@@ -1874,8 +1883,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                       
     dbgPrint("marking.log", "cmd: " + cmd).
     vBefCurl = now.
-    /*os-command silent value(cmd).*/
-    
+    /*os-command silent value(cmd).*/    
     /* запуск curl в ассинхронном режиме */ 
     vpid = runProcFile(cmd, vFileBat).    
     /* ждем окончания работы */
@@ -1920,17 +1928,34 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     vAftCurl = now. 
     dbgPrint("marking.log", substitute("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
     
-    /* Проверяем наличие ошибки в ответе */
-    if vlongJson begins "<html>" and index(vlongJson,"<title>") > 0 then 
-       vRetVal =  int64(substring(vLongJson, index(vLongJson,"<title>") + 7,3)) no-error.
-    else if index(vlongJson,'"code":') > 0 then do:  
-       vNumCode = index(vLongJson,'"code":') + 7. 
-       vlongJson2 = substring(vLongJson, vNumCode).
-       vNumCode2 = index(vLongJson2,",") - 1. 
-       vCh = String(substring(vLongJson, vNumCode, vNumCode2)).   
-       vRetVal  = int64(vCh).
-    end.   
+    vRetVal = ChkCurlGisMT (vlongJson). 
   
+    return vRetVal.
+    
+  end method.    
+  
+  method private integer ChkCurlGisMT (
+    ilongJson as longchar
+    ):
+         
+    define variable vRetVal as integer   no-undo.
+    define variable vlongJson2 as longchar no-undo.
+    define variable vCh as character no-undo. 
+    define variable vNumCode as integer no-undo.
+    define variable vNumCode2 as integer no-undo.
+     
+    vRetVal = -1.
+     /* Проверяем наличие ошибки в ответе */
+    if ilongJson begins "<html>" and index(ilongJson,"<title>") > 0 then 
+       vRetVal =  int(substring(iLongJson, index(iLongJson,"<title>") + 7,3)) no-error.
+    else if index(ilongJson,'"code":') > 0 then do:  
+       vNumCode = index(iLongJson,'"code":') + 7. 
+       vlongJson2 = substring(iLongJson, vNumCode).
+       vNumCode2 = index(vLongJson2,",") - 1. 
+       vCh = String(substring(iLongJson, vNumCode, vNumCode2)).   
+       vRetVal  = int(vCh).
+    end.
+    
     return vRetVal.
     
   end method.    

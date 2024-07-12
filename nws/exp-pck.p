@@ -75,9 +75,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-dsh-dump      as handle    no-undo .
   define variable v-xmlh          as handle    no-undo .
   define variable v-found-gate    as logical   no-undo .
-  define variable mFrameView      as logical   no-undo init yes.
-  mFrameView = writelogvalue ne "AsyncProc". 
-
   define variable v-sys-key  as character no-undo . /* для чтения параметра конфигурации */
 
   define frame exp-pck
@@ -87,7 +84,17 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     rec-cnt      label "Записей в пакете"
     lin-cnt      label "Строк в пакете"
     with view-as dialog-box side-labels 1 columns three-d title "** Экспорт пакета".
+  define variable mFrameView      as logical   no-undo init yes.
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame exp-pck:handle.
 
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameNWSError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameNWSError"). 
+  end.
+  mFrameView = writelogvalue ne "AsyncProc" and not session:batch-mode and mFramHandle:visible.
+  
   if transaction then do:
     message
       vss-workfile vss-revision vss-description skip

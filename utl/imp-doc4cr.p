@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 022d9db987b8, 3255, rls $
+$Author: EShklyar $
+$Date: 2023/01/27 13:45:26 $
+$Workfile: imp-doc4cr.p $
+$Archive: utl/imp-doc4cr.p $
 
 Импорт накладных. Создание документов.
 
@@ -74,11 +74,11 @@ define output parameter p-count-err1     as integer no-undo . /* - нет соответст
 define output parameter p-count-err2     as integer no-undo . /* - нет соответствий по поставщикам */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 022d9db987b8, 3255, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/01/27 13:45:26 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-doc4cr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/imp-doc4cr.p $":U .
 define variable vss-description as character no-undo init "Импорт накладных. Создание документов.".
 { cmp/vssrevis.i }
 
@@ -561,18 +561,26 @@ define buffer new_clients  for ub.clients .
 
 
     if first-of (buf_tt-parts.gds-code) then do:
+    
+             
+
       /* поиск соответствия старого gds-code из версии p-from-version в новых кодах версии 16.0 */
       find first w-gds where w-gds.gds-code-15_0 = buf_tt-parts.gds-code no-error .
       if available w-gds then do :
         new_gds-code = w-gds.gds-code-16_0 .
         find first buf_goods no-lock
              where buf_goods.gds-code = new_gds-code no-error .
+        
         if available buf_goods then assign
           v-artic     = buf_goods.artic
           v-prod-type = buf_goods.prod-type
           v-prod-code = buf_goods.prod-code
           v-is-good-err = false
         .
+        
+        
+        
+        
         else assign
           v-artic     = ""
           v-prod-type = ""
@@ -581,15 +589,44 @@ define buffer new_clients  for ub.clients .
           v-my-message  = substitute ("Отсутствует товар с кодом &1 в справочнике товаров БД вер.16. Код в 15 &2", new_gds-code ,buf_tt-parts.gds-code )
         .
       end .
+      
+      IF AVAILABLE buf_goods THEN DO:
+            
+            run unitqnty (
+             input "", 
+             input buf_goods.artic,
+             input buf_goods.prod-type,
+             input buf_goods.prod-code,
+             input "",
+             input buf_tt-parts.fact-qnty ) 
+             no-error.
+            
+            if error-status:error then   do:
+                
+                 v-is-good-err = TRUE .
+                 v-my-message  = RETURN-VALUE .
+            end.
+            
+      END.
       else assign
         v-my-message  = substitute ("Отсутствует код товара &1 из вер.15 в файле соответствия &2", buf_tt-parts.gds-code, p-art-fname )
         v-is-good-err = true
       .
       /* 28/IV-2018 Ошибку выводить в лог-файл, как и в случае отвергнутого поставщика. */
+      
+  
+  
+  /*if error-status:error then do:
+    run pcall-log-file in p-log-handle (input return-value) .
+    is-unit-error  = true.
+  end. */
+      
+      
       if v-is-good-err then do :
         {&display-message}.
       end .
     end .
+    
     
     
     /* 26/IV-2018  Партии с ненайденным товаром надо отвергать */
@@ -710,6 +747,13 @@ if local-trace-on then do:
 end .
 &undefine my-message
 end procedure . /* create_temp_parts */
+
+
+
+
+
+
+
 
 
 procedure import-hed :
@@ -1423,3 +1467,136 @@ define variable v-cntxt-base-code as integer   no-undo .
     end.
 end. /*doe*/
 end procedure. /* clos-trn2 */
+
+procedure unitqnty :
+  /*
+
+  Контроль допустимых количеств для данной единицы измерения (товара)
+
+  Для серийного и штучного товара количество должно быть целым
+
+  Параметры:
+
+  Необходимо задать контролируемое количество p-qnty
+  И либо единицу измерения p-unit-name
+  либо артикул товара, которые необходимо контролировать.
+
+  Если задан только артикул товара, то будет контролироваться базовая единица
+  измерения товара.
+
+  Необязательный параметр p-unit-description определяет
+  имя единицы измерения.
+  Например можно задать его как
+    p-unit-description = "Единица измерения поставщика"
+    или
+    p-unit-description = "Базовая единица измерения"
+
+  */
+
+  define input parameter  p-unit-name        like ub.units.unit-name no-undo .
+  define input parameter  p-artic            like ub.goods.artic     no-undo .
+  define input parameter  p-prod-type        like ub.goods.prod-type no-undo .
+  define input parameter  p-prod-code        like ub.goods.prod-code no-undo .
+  define input parameter  p-unit-description as character            no-undo .
+  define input parameter  p-qnty             as decimal              no-undo .
+
+  define variable vss-description as character no-undo initial "unitqnty-01: Контроль допустимых количеств для данной единицы измерения (товара)".
+  define variable message_err as character no-undo .
+  define buffer buf_units for ub.units .
+  define buffer buf_goods for ub.goods .
+
+  define variable v-artic as character no-undo .
+
+  if p-unit-description = ''
+  or p-unit-description = ?
+  then do:
+    assign
+      p-unit-description = "Единица измерения"
+    .
+  end.
+
+  if  p-unit-name <> ''
+  and p-unit-name <> ?
+  then do:
+    find first buf_units no-lock
+      where buf_units.unit-name = p-unit-name
+      no-error .
+    if not available buf_units
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Не найдена единица измерения" skip
+        "p-unit-name"   p-unit-name skip
+        "p-artic"       p-artic  skip
+        "p-prod-type"   p-prod-type skip
+        "p-proc-code"   p-prod-code skip
+        "p-qnty"        p-qnty skip
+        view-as alert-box error .
+      message_err = substitute("Не найдена единица измерения &1 &2 &3 &4 &4",p-unit-name, p-artic, p-prod-type, p-prod-code, p-qnty ).          
+      undo, return error message_err .
+    end.
+  end.
+  else do:
+    find first buf_goods no-lock
+      where buf_goods.artic     = p-artic
+        and buf_goods.prod-type = p-prod-type
+        and buf_goods.prod-code = p-prod-code
+      no-error .
+    if not available buf_goods
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Не найден товар" skip
+        "p-unit-name"   p-unit-name skip
+        "p-artic"       p-artic  skip
+        "p-prod-type"   p-prod-type skip
+        "p-proc-code"   p-prod-code skip
+        "p-qnty"        p-qnty skip
+        view-as alert-box error .
+        message_err = substitute("Не найден товар &1 &2 &3", p-artic, p-prod-code, p-qnty ).
+      undo, return error message_err .
+    end.
+
+    find first buf_units no-lock
+      where buf_units.unit-name = buf_goods.unit-base
+      no-error .
+    if not available buf_units
+    then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Не найдена единица измерения" skip
+        "p-unit-name"   p-unit-name skip
+        "p-artic"       p-artic  skip
+        "p-prod-type"   p-prod-type skip
+        "p-proc-code"   p-prod-code skip
+        "p-qnty"        p-qnty skip
+        view-as alert-box error .
+      message_err = substitute("Не найдена единица измерения &1 &2 &3 &4 &4",p-unit-name, p-artic, p-prod-type, p-prod-code, p-qnty ).        
+      undo, return error message_err .
+    end.
+
+    assign
+      v-artic = "Артикул " + string(p-artic) + " " + string(p-prod-type)
+              + " " + string(p-prod-code)
+      p-unit-description = "Базовая единица измерения"
+    .
+  end.
+
+
+  if lookup({&pieces}, buf_units.type) > 0
+  or lookup({&serial}, buf_units.type) > 0
+  then do:
+    if p-qnty <> truncate(p-qnty, 0)
+    then do:
+    message_err = substitute("Ошибка. Для штучного и серийного товаров резервируемое количество должно быть целым &1 &2 &3 Запрошено количество &4", v-artic, p-unit-description, buf_units.unit-name, p-qnty ).
+      message
+        "Для штучного и серийного товаров резервируемое количество должно быть целым" skip
+        v-artic skip
+        p-unit-description buf_units.unit-name skip
+        "Запрошено количество " p-qnty skip
+        view-as alert-box .
+      undo, return error message_err .
+    end.
+  end.
+
+end procedure. /* unitqnty */

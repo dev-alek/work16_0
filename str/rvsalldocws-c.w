@@ -939,6 +939,9 @@ end case.
 &scop flt-open-waitfram yes
 
 define variable l-open-query as logical   no-undo .
+define variable vartest-asi like ub.rvs-doc.rvs-type no-undo .
+
+assign vartest-asi = {&test-asi} .
 
 CASE parlist-mode :
 WHEN {&g___object} THEN DO:
@@ -952,14 +955,16 @@ WHEN {&g___object} THEN DO:
     &where-cond = " ~
       X_c-rvs-doc.host-code = v-cntxt-host-code-obj AND ~
       X_c-rvs-doc.obj-type  = v-cntxt-obj-type  AND ~
-      X_c-rvs-doc.obj-code  = v-cntxt-obj-code  AND  ~
+      X_c-rvs-doc.obj-code  = v-cntxt-obj-code  AND ~
+      X_c-rvs-doc.rvs-type <> vartest-asi       AND ~
       X_c-rvs-doc.is-del = yes and ~
      x_c-rvs-doc.action = integer({&hn-delete})
       ~ "
     &dyn_where-cond = " substitute(' X_c-rvs-doc.host-code = &1 AND ~
       X_c-rvs-doc.obj-type  = &2&3&2  AND ~
       X_c-rvs-doc.obj-code  = &4  AND  ~
-      X_c-rvs-doc.is-del = yes ', v-cntxt-host-code-obj, ~{&double-quote~}, v-cntxt-obj-type, v-cntxt-obj-code)  "
+      X_c-rvs-doc.rvs-type <> &2&5&2
+      X_c-rvs-doc.is-del = yes ', v-cntxt-host-code-obj, ~{&double-quote~}, v-cntxt-obj-type, v-cntxt-obj-code, vartest-asi )  "
 
     &use-ind    = " USE-INDEX stat-fact "
     &by         = "  " }

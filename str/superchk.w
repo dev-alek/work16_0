@@ -3481,6 +3481,7 @@ if error-status:error then return error.
 assign
 locked_chk-doc.netto = 0
 locked_chk-doc.tot-doc = 0
+locked_chk-doc.src-tot-doc = 0 
 locked_chk-doc.discnt = 0
 locked_chk-doc.sub-discnt = 0
 locked_chk-doc.correct = yes

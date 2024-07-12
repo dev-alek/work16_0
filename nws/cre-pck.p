@@ -70,7 +70,6 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   define variable v-sys-key  as character no-undo . /* для чтения параметра конфигурации */
 
   define variable mFrameView      as logical   no-undo init yes.
-  mFrameView = writelogvalue ne "AsyncProc". 
   
   define frame inf
     p-db-num    label "для БД" format ">>>>>>>>9"
@@ -78,7 +77,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     route-cnt   label "Основных записей"
     rec-cnt     label "Привязанных"
     with view-as dialog-box side-labels 1 columns three-d title "** Формирование пакета".
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame inf:handle.
 
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameNWSError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameNWSError"). 
+  end.
+  mFrameView = writelogvalue ne "AsyncProc" and not session:batch-mode and mFramHandle:visible.
   if transaction then do:
     message
       vss-workfile vss-revision vss-description skip

@@ -122,6 +122,14 @@ class ibs.th.str.InfoSection:
     get.
     set.
 
+  define property TankWeightRvs as decimal no-undo
+    get.
+    set.
+  
+  define property AvgTempRvs as decimal no-undo init ?
+    get.
+    set.
+    
   define property Mouth as decimal no-undo
     get.
     set.
@@ -179,6 +187,10 @@ class ibs.th.str.InfoSection:
     set.
 
   define property TankVolPomi as decimal no-undo
+    get.
+    set.
+  
+  define property TankVolPomiRvs as decimal no-undo
     get.
     set.
 
@@ -526,6 +538,11 @@ class ibs.th.str.InfoSection:
           assign
             TankTemp = decimal (inAttrValue) no-error.
         end.
+      when 'avg-temp-rvs' then 
+        do:
+          assign
+            AvgTempRvs = decimal (inAttrValue) no-error.
+        end.
       when 'tank-water' then 
         do:
           assign
@@ -541,6 +558,11 @@ class ibs.th.str.InfoSection:
         do:
           assign
             TankWeight = decimal (inAttrValue) no-error.
+        end.
+      when 'tank-weight-rvs' then 
+        do:
+          assign
+            TankWeightRvs = decimal (inAttrValue) no-error.
         end.
       when 'mouth' then 
         do:
@@ -566,6 +588,11 @@ class ibs.th.str.InfoSection:
         do:
           assign
             TankVolPomi = decimal (inAttrValue) no-error.
+        end.
+      when 'tank-vol-pomi-rvs' then 
+        do:
+          assign
+            TankVolPomiRvs = decimal (inAttrValue) no-error.
         end.
       when 'dens-temp' then 
         do:

@@ -286,8 +286,30 @@ class ibs.th.file.asyncproc:
    end.
    
    method public char Writefile (ifile as character ,itext as character):
+      define variable vFile       as character no-undo. 
+      define variable vNameFolder as character no-undo.
+      define variable vFileName   as character no-undo.
+      define variable vNum        as integer   no-undo.
+ 
       if itext eq ""
       then do:
+        if ifile <> ? then 
+          /* проверяем, что есть такой каталог */
+         if num-entries(ifile,"\") > 1 or 
+            num-entries(ifile,"/") > 1 
+         then do:
+           vFile = replace(ifile,"/","\").  
+           vFileName = entry(num-entries(vFile,"\"),vFile,"\").
+           vNum = index(vFile,vFileName) - 1.   
+           vNameFolder = substring(vFile, 1, vNum). 
+           if not FolderExists(vNameFolder) then do:                
+               if vWritelog
+               then
+                  putmes (substitute ("Не удалось записать файл &1 : Не найден рабочий каталог &2 ",ifile,vNameFolder)).
+               else
+                  return substitute ("Не удалось записать файл &1 : Не найден рабочий каталог &2 ",ifile,vNameFolder).
+           end.    
+         end. 
          output stream sWriteFile to value(ifile).
          output stream sWriteFile close.
       end.

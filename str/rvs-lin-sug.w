@@ -87,7 +87,7 @@ define variable vss-description as character no-undo initial "Экран работы со ст
 { gbl/getsect.i def }
 { str/initiator.i }
 { gbl/color.i }
-
+{ str/get-pokmi-dll-version.i }
 
 define variable g-log        as logical   no-undo.
 define variable g-log2       as logical   no-undo.
@@ -111,6 +111,7 @@ define variable v-hand-input-tmp as logical no-undo initial no .
 define variable v-hand-input-lvl as logical no-undo initial no .
 define variable v-sug-struct-val as character no-undo .
 define variable v-POkMI-result-attr     as character no-undo.
+define variable v-POkMI-warnings        as character no-undo init "" .
 
 define variable place-diameter    as decimal no-undo .
 define variable pl-dens-sr-izm    as integer no-undo .
@@ -948,7 +949,13 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-POkMI-result Dialog-Frame
 ON CHOOSE OF b-POkMI-result IN FRAME Dialog-Frame /* Отмена */
 DO:
-  message v-POkMI-result-attr view-as alert-box information .
+  if trim(v-POkMI-warnings) > ""
+  then do :
+    message (v-POkMI-result-attr + {&new-line} + " " + {&new-line} + " " + {&new-line} + "Предупреждения:" + {&new-line} + v-POkMI-warnings) view-as alert-box information .
+  end .
+  else do :
+    message v-POkMI-result-attr view-as alert-box information .
+  end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1465,6 +1472,7 @@ DO:
 
 define variable v-mm as com-handle.
 define variable v-proc as character no-undo.
+define variable v-pokmi-dll-version as character no-undo .
 
 define variable v-code            as character no-undo.
 define variable ii                as integer   no-undo.
@@ -1485,12 +1493,14 @@ define variable DeltaAbs_R_SUG          as decimal no-undo.
 define variable DeltaAbs_R_SUG-vapor    as decimal no-undo.
 define variable DeltaAbs_Tv             as decimal no-undo.
 define variable DeltaAbs_Tr             as decimal no-undo.
-define variable DeltaOtn_N              as decimal no-undo.
+define variable DeltaOtn_N              as decimal no-undo init 0.05 .
 define variable DeltaOtn_H              as decimal no-undo.
 define variable DeltaOtn_H_Water        as decimal no-undo.
 define variable DeltaOtn_R              as decimal no-undo.
 define variable DeltaOtn_K              as decimal no-undo.
 define variable DeltaOtn_K_Full         as decimal no-undo.
+define variable Use_DeltaOtn_R_liquid_IN as logical no-undo.
+define variable DeltaOtn_R_liquid_IN    as decimal no-undo.
 define variable A_Reservoir             as decimal no-undo init 0.0000125 .
 define variable temp-for-pomi           as integer no-undo.
 define variable error-string            as character no-undo.
@@ -1745,6 +1755,8 @@ define buffer bf_place for ub.place .
             DeltaAbs_R_SUG         = buf_sr-izmerenia.sr-abs-err-dens-lgas-liquid
             DeltaAbs_R_SUG-vapor   = buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor
             DeltaOtn_R             = buf_sr-izmerenia.sr-relative-err-dens
+            Use_DeltaOtn_R_liquid_IN = buf_sr-izmerenia.sr-relative-err-dens-lgas-liquid <> ?
+            DeltaOtn_R_liquid_IN     = buf_sr-izmerenia.sr-relative-err-dens-lgas-liquid
 /*            DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol */
 /*            DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens*/
             DeltaOtn_N             = 0.05
@@ -1805,23 +1817,31 @@ define buffer bf_place for ub.place .
       then do :
         find first dens_sr-izmerenia no-lock where dens_sr-izmerenia.node-code = v-mi-dnst no-error.
         if not available dens_sr-izmerenia then do :
-/*          message                                                                      */
-/*          "Ошибка работы с библиотекой ПО МИ "                                         */
-/*          substitute( 'Не найдено средство измерения с кодом &1', pl-dens-sr-izm ) skip*/
-/*          view-as alert-box error.                                                     */
-/*          undo _trpomi, return no-apply.*/
+          message
+          "Ошибка работы с библиотекой ПОкМИ "
+          substitute( 'Не найдено средство измерения с кодом &1', pl-dens-sr-izm ) skip
+          view-as alert-box error.
+          undo _trpomi, return no-apply.
         end.
         else do :
-          message 'Для показателя "Плотность" настройки вспомогательного средства измерения не применяются. Применяются параметры и настройки библиотеки ПОкМИ.' view-as alert-box information .
+/*          BTS-146                                                                                                                                                                               */
+/*          message 'Для показателя "Плотность" настройки вспомогательного средства измерения не применяются. Применяются параметры и настройки библиотеки ПОкМИ.' view-as alert-box information .*/
 /*          assign                                                           */
 /*            ToolType               = dens_sr-izmerenia.sr-type-id          */
 /*            DeltaAbs_R             = dens_sr-izmerenia.sr-abs-err-dens     */
 /*            DeltaOtn_R             = dens_sr-izmerenia.sr-relative-err-dens*/
 /*          .                                                                */
+          assign
+            DeltaAbs_R_SUG            = dens_sr-izmerenia.sr-abs-err-dens-lgas-liquid
+            DeltaAbs_R_SUG-vapor      = dens_sr-izmerenia.sr-abs-err-dens-lgas-vapor
+            Use_DeltaOtn_R_liquid_IN  = dens_sr-izmerenia.sr-relative-err-dens-lgas-liquid <> ?
+            DeltaOtn_R_liquid_IN      = dens_sr-izmerenia.sr-relative-err-dens-lgas-liquid
+          .
         end.
       end .
-      DeltaAbs_R_SUG       = 0 .
-      DeltaAbs_R_SUG-vapor = 0 .
+/*      BTS-146                   */
+/*      DeltaAbs_R_SUG       = 0 .*/
+/*      DeltaAbs_R_SUG-vapor = 0 .*/
     end .
     
 /*    if pl-rvd-temp                                                                                                           */
@@ -1873,8 +1893,21 @@ define buffer bf_place for ub.place .
     if DeltaOtn_R       = ? then DeltaOtn_R = 0 .
     if LevelToolType    = ? then LevelToolType = 0 .
     if A_LevelMeasurementTool = ? then A_LevelMeasurementTool = 0 .
+    if Use_DeltaOtn_R_liquid_IN = ? then Use_DeltaOtn_R_liquid_IN = false.
+    if DeltaOtn_R_liquid_IN = ? then DeltaOtn_R_liquid_IN = 0.
     
     /*..........................................*/
+    
+    v-pokmi-dll-version = get-pokmi-dll-version() .
+    if v-pokmi-dll-version = "error"
+    then do :
+      release object v-mm no-error.
+      v-mm = ?.
+      message
+        substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) skip
+      view-as alert-box error.
+      undo _trpomi, return no-apply .
+    end .
 
     /*метод применяемый к данному типу резервуара и */
     find first buf_place no-lock
@@ -1925,6 +1958,7 @@ define buffer bf_place for ub.place .
               "    " SKIP
               cur-time-string()           FORMAT "x(16)"    SKIP
               'Процедура             '                 v-proc                      FORMAT "x(128)"   SKIP
+              'Версия dll: '              v-pokmi-dll-version                              SKIP
               'CODE_PL                = ' tt-rvs-line.pl-code                           SKIP
               'H                      = ' v-mm:H                                             SKIP
               'CalibrationTable       = ' v-mm:CalibrationTable                    SKIP
@@ -1938,11 +1972,36 @@ define buffer bf_place for ub.place .
               'DeltaAbs_R_liquid      = ' v-mm:DeltaAbs_R_liquid                             SKIP
               'DeltaAbs_R_gas         = ' v-mm:DeltaAbs_R_gas                                SKIP
               'DeltaOtn_N             = ' v-mm:DeltaOtn_N                                    SKIP
-                  .
+      .
+      
+      if v-pokmi-dll-version = "1.0.5.6"
+      then do :
+        assign
+          v-mm:Use_DeltaOtn_R_liquid_IN = Use_DeltaOtn_R_liquid_IN
+/*          v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN*/
+        .
+        if DeltaOtn_R_liquid_IN = 0.42
+        then do :
+          v-mm:Set_DeltaOtn_R_liquid_IN(replace(string(DeltaOtn_R_liquid_IN), ".", ",")) no-error .
+          if string(v-mm:DeltaOtn_R_liquid_IN) = ".0000000000"
+          then do :
+            v-mm:Set_DeltaOtn_R_liquid_IN(string(DeltaOtn_R_liquid_IN)) no-error .
+          end .
+        end .
+        else do :
+          v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN .
+        end .
+        PUT STREAM outstream unformatted
+          'Use_DeltaOtn_R_liquid_IN = ' v-mm:Use_DeltaOtn_R_liquid_IN SKIP
+          'DeltaOtn_R_liquid_IN     = ' v-mm:DeltaOtn_R_liquid_IN     SKIP
+          
+        .
+      end .
+      
       output stream outstream close.
       v-mm:Exec() .
       if v-mm:Result <> 0 then do :
-        error-string = v-mm:ResultDetail .
+        error-string = substitute("~nРезервуар: &1.~n", buf_place.loc1) + replace(v-mm:ResultDetail,";0x","~n0x") .
         output stream outstream to value ("pomi.log")  append.
         put stream outstream error-string format "X(1024)" skip.
         message
@@ -1954,6 +2013,22 @@ define buffer bf_place for ub.place .
         undo _trpomi, return no-apply .
       end.
       else do :
+
+        if v-pokmi-dll-version = "1.0.5.6" and v-mm:C_HN = 0 then
+        do:
+          error-string = "Ошибка входного параметра CalibrationTable. Библеотека ПОкМИ вернула C_HN = 0." .
+          output stream outstream to value ("pomi.log")  append.
+          put stream outstream error-string skip.
+          message
+            substitute('Ошибка входных параметров в библиотеку ПОкМИ.~n &1',error-string)
+            view-as alert-box error
+          .
+          RELEASE OBJECT v-mm NO-ERROR.
+          v-mm = ?.
+          output stream outstream close.
+          undo _trpomi, return no-apply .
+        end.      
+          
         assign 
           tt-rvs-line.state-measure-qnty      = v-mm:V_liquid * 1000 
           tt-rvs-line.state-measure-tc-qnty   = v-mm:V_liquid * 1000 
@@ -1976,7 +2051,8 @@ define buffer bf_place for ub.place .
         tt-rvs-line.state-brutto-qnty = tt-rvs-line.fact-sum-vol .
         tt-rvs-line.state-brutto-cli-qnty  = tt-rvs-line.state-brutto-qnty * tt-rvs-line.state-density .
         
-        if v-mm:DeltaOtn_M > 0.65 then delta-mass-qnty = 0.65. else delta-mass-qnty = v-mm:DeltaOtn_M  .
+/*        if v-mm:DeltaOtn_M > 0.65 then delta-mass-qnty = 0.65. else delta-mass-qnty = v-mm:DeltaOtn_M  .*/
+        if  tt-rvs-line.state-measure-cli-qnty > 200000 then delta-mass-qnty = 0.5 . else delta-mass-qnty = 0.65. 
         
         abs-delta-mass-qnty = tt-rvs-line.state-measure-cli-qnty * delta-mass-qnty / 100 .
         
@@ -2016,7 +2092,8 @@ define buffer bf_place for ub.place .
           "MM:H_min_liquid      = " v-mm:H_min_liquid  SKIP
           "MM:H_min             = " v-mm:H_min  SKIP
           "MM:A                 = " v-mm:A  SKIP
-          "MM:B                 = " v-mm:B  SKIP
+          "MM:B                 = " v-mm:B  SKIP SKIP
+          "MM:Warnings          = " v-mm:Warnings   SKIP
         .
         output stream outstream close.
         
@@ -2026,6 +2103,8 @@ define buffer bf_place for ub.place .
             "Относительная погрешность измерения массы СУГ, %: "  + string(v-mm:DeltaOtn_M, ">>>>>>>9.99") + {&new-line} +
             "Объем ЖФ СУГ, л: " + string((v-mm:V_liquid * 1000), "->>,>>>,>>9":U) + {&new-line} +
             "Объем ПФ СУГ, л: " + string((v-mm:V_gas * 1000), "->>,>>>,>>9":U) + {&new-line}
+            
+          v-POkMI-warnings = v-mm:Warnings
         .
         
         RELEASE OBJECT v-mm NO-ERROR.
@@ -2051,6 +2130,29 @@ define buffer bf_place for ub.place .
             rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
             rvs-line-attr.attr-code = "POkMI-result"
             rvs-line-attr.attr-value = v-POkMI-result-attr
+          .
+        end.
+        
+        find first rvs-line-attr exclusive-lock
+              where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+                and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+                and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+                and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+                and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+                and rvs-line-attr.attr-code = "POkMI-warnings" no-error.
+        if available rvs-line-attr then do :
+          rvs-line-attr.attr-value = v-POkMI-warnings .
+        end.
+        else do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+            rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+            rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+            rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+            rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+            rvs-line-attr.attr-code = "POkMI-warnings"
+            rvs-line-attr.attr-value = v-POkMI-warnings
           .
         end.
         
@@ -5120,6 +5222,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       b-POkMI-result
     with frame Dialog-Frame.
   end.
+  
+  for first rvs-line-attr no-lock
+        where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          and rvs-line-attr.attr-code = "POkMI-warnings"
+  :
+    v-POkMI-warnings = rvs-line-attr.attr-value .
+  end .
   
   assign frame {&frame-name} :title = frame {&frame-name} :title + " - " + parmode
                                     + " - " +  partitle.

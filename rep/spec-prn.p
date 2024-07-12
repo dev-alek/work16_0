@@ -191,7 +191,6 @@ run get-report-num in parParentProc ( output g#report-num ).
   run paramls-write in this-procedure (input "file",input string(v-ind),input v-file-name) .
   run end-proc .
 
-  { rep/repfrm.i off } /* Показать окно информации о текущем процессе */
   { gbl/stopwork.i }
 
   run prn-lib-prn-file in this-procedure (input parParentProc,input 8).

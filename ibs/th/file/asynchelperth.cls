@@ -63,7 +63,7 @@ end.
     set (arg as char):
       if arg eq ""
       then
-         MyParamStart = " -ininame "  + GetStartupParam("-ininame").
+         MyParamStart = " -ininame "  + GetStartupParam("-ininame") +  GetStartupParamAndCode("-pf").
       
       else if arg ne ?
       then
@@ -149,7 +149,7 @@ end.*/
          end.
          else
             MyWorkDir = objExists( arg,"D").
-         if MyWorkDir ne ?
+         if MyWorkDir ne ? 
          then
             Writefile(MyWorkDir + "parentPid.txt", string(mypid) + {&new-line}).
        end.
@@ -298,7 +298,7 @@ end.*/
    
    method public logical firstrun():
       
-      if mFirstrun 
+      if mFirstrun
       or not FolderExists(MyWorkDir)
       then do: /*создадим рабочуюю директорию */ 
          MyWorkDir = "pid_".
@@ -307,7 +307,7 @@ end.*/
             publish "PutFileLogAsunc" from mProcPublish ("Не удалось создать рабочий каталог, задание прервано." ).
             return no.
          end.
-         mIniFile = " -ininame "  + GetStartupParam("-ininame")  .
+         mIniFile = " -ininame "  + GetStartupParam("-ininame") +  GetStartupParamAndCode("-pf")  .
          ConPar = substitute(ConPar, substitute ("-U &1 -P &2 ",myUser,myPass)).
          Writefile(MyWorkDir + "prof.pf", substitute('-DESCRIPTION "&2"&1 -LISTINGS .&1 -FILENAME prof.out&1 ',{&new-line},TaskName)).
          
@@ -338,9 +338,9 @@ end.*/
          if not FileExists  (MyWorkDir + itask + ".txt" )
          then do:
             if FolderExists(MyWorkDir) then do:                  
-                Writefile(MyWorkDir + itask + ".txt", "InitProc " + string(getnow())).
-                Writefile( getLog(itask),"").
-            end.           
+               Writefile(MyWorkDir + itask + ".txt", "InitProc " + string(getnow())).
+               Writefile( getLog(itask),"").           
+            end.
             else do:
                run utl\proc-msg.p ("Не удалось запустить процедуру " + iProc +  " Не найден рабочий каталог: " + MyWorkDir) no-error.
                return error.
@@ -491,7 +491,9 @@ end.*/
         else if    vtime > 120
         then do:
            vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/endproc.txt".
-           Writefile(vFile, "").
+           if FolderExists (MyWorkDir + ttrun.task + string(ttrun.num))
+           then 
+              Writefile(vFile, "").
         end.
         
         PubFileLog (ttrun.task, ttrun.num, no).
@@ -560,15 +562,21 @@ end.*/
         else do:
            vFile = MyWorkDir + ttrun.task + string(ttrun.num) + "/procstatus.txt".
            if FileExists(vFile)
-             then do:
-               define variable vtxt as character no-undo.
-               input STREAM sReadfile FROM  VALUE(vFile). 
-               repeat:
-                  import stream sReadfile unformatted vtxt.
-                  
-                  ttrun.fstatus =  vtxt   .
-               end.
-               input STREAM sReadfile close.
+           then do:
+              define variable vtext as longchar no-undo.
+              copy-lob from file vFile to vtext no-error.
+              if error-status:error
+              then do:
+/*                  run write-to-log (substitute ("Не удалось прочесть файл &1",iFile)).*/
+              end.
+              else do:
+                 vtext = replace (vtext,{&carriage-return} + {&new-line},{&new-line}).
+                 if length(vtext) < 32000
+                 then
+                    ttrun.fstatus = vtext.
+                 else
+                    ttrun.fstatus = substring (vtext,1,32000).
+              end.
             end.
         end.       
      end.
@@ -789,7 +797,10 @@ Phase 1 of Load completed.  Working.  Please wait ...~
        vCountend = 0. 
        WAIT-FOR-COMPLETE = false.      /* на всякий случай */
        mstop = no.
-       Writefile(MyWorkDir + "Stop.txt", "").
+       
+       if FolderExists(MyWorkDir) then       
+          Writefile(MyWorkDir + "Stop.txt", "").
+       
        do while not WAIT-FOR-COMPLETE:
           
           WAIT-FOR-COMPLETE = true.
@@ -1071,7 +1082,9 @@ end.
             Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "propath.txt", propath).
             os-delete value(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log").
             Writefile(MyWorkDir + vTask + v-path-tls-dir-delim +  "meslogasync.log", "error Ошибка запуска сессии.").
-            Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt","").       
+            if FolderExists(MyWorkDir + vTask) then            
+               Writefile(MyWorkDir + vTask + v-path-tls-dir-delim + "stop.txt","").       
+            else return.
                
          define variable vruncomand as character no-undo.
          vruncomand =  vtask + " & " + ttrun.cmd + " & copy /y param.txt endproc.txt & del /F stop.txt & exit".
@@ -1097,6 +1110,16 @@ end.
       os-delete   value(trim(MyWorkDir,v-path-tls-dir-delim )) RECURSIVE.
      
    end method.    
+   
+   method public character GetStartupParamAndCode (input iParam as character  ):
+      def var vText as char no-undo.
+      vText = GetStartupParam ( iParam).
+      if vText eq ?
+      then
+         return "".
+      else
+         return " " + iParam + " " + vText.
+   end.
    
    method public character GetStartupParamEx (input iParam as character  ):
       define variable vText as character no-undo.
@@ -1251,33 +1274,22 @@ end.
             vFile = vdir + "procstatus.txt".
              if FileExists(vFile)
              then do:
-               input STREAM sReadfile FROM  VALUE(vFile). 
-               repeat:
-                  import stream sReadfile unformatted vCount.
-                  if vCount ne ""
-                  then do:
-                     assign
-                        ttrun.fstatus =  vCount
-                     no-error.
-                  end.
+               define variable vtext as longchar no-undo.
+               copy-lob from file vFile to vtext no-error.
+               if error-status:error
+               then do:
+/*                  run write-to-log (substitute ("Не удалось прочесть файл &1",iFile)).*/
                end.
-               input STREAM sReadfile close.
-            end.
-            vFile = vdir + "procstatus.txt".
-             if FileExists(vFile)
-             then do:
-               input STREAM sReadfile FROM  VALUE(vFile). 
-               repeat:
-                  import stream sReadfile unformatted vCount.
-                  if vCount ne ""
-                  then do:
-                     assign
-                        ttrun.fstatus =  vCount
-                     no-error.
-                  end.
+               else do:
+                  vtext = replace (vtext,{&carriage-return} + {&new-line},{&new-line}).
+                  if length(vtext) < 32000
+                  then
+                     ttrun.fstatus = vtext.
+                  else
+                     ttrun.fstatus = substring (vtext,1,32000).
                end.
-               input STREAM sReadfile close.
             end.
+            
          end.
          else do:
              if available ttrun

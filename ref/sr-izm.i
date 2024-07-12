@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0425b3e124f6, 2861, rls $
+$Author: Ostroukhov $
+$Date: Пн ноя 22 19:49:08 2021 +0300 $
+$Workfile: sr-izm.i $
+$Archive: ref/sr-izm.i $
 
 Справочник средств измерений
 
@@ -18,7 +18,7 @@ Creation date: 28/12/11
 { gbl/color.i }
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: sr-izm.i $ $Revision: 0425b3e124f6, 2861, rls $".
 
 &if "{2}" <> "proc" &then
 
@@ -99,6 +99,10 @@ view-as fill-in size 15  by 1
 
 field sr-abs-err-dens-lgas-liquid as decimal column-label "Абсолютная погрешность измерений плотности ЖФ продукта, кг/м3"
 format "9.9999" initial 0 label "Абсолютная погрешность измерений плотности ЖФ продукта, кг/м3"
+view-as fill-in size 15  by 1
+
+field sr-relative-err-dens-lgas-liquid as decimal column-label "Относительная погрешность измерений плотности ЖФ продукта, %"
+format "9.999" label "Относительная погрешность измерений плотности ЖФ продукта, %"
 view-as fill-in size 15  by 1
 
 field sr-abs-err-dens-lgas-vapor as decimal column-label " Абсолютная погрешность измерений плотности ПГФ продукта, кг/м3"

@@ -48,9 +48,12 @@ Creation date: 12/22/11
 &global-define place-is-main       "place-is-main"                    /*признак главного резервуара (СР)*/
 &global-define place-gate-valve    "place-gate-valve"                    /*Задвижка в резервуаре при переподключении рукавов при прие-ме СУГ*/
 &global-define place-gate-valve-tanks "place-gate-valve-tanks"              /*коды резервуаров, объединенных задвижкой*/
+&global-define place-auto-gate-valve "place-auto-gate-valve"              /* Автоматическая задвижка между сообщающимися резервуарами с НП */
+
+&global-define place-current      "place-current"      /* Текущий резервуар для СР с автоматической задвижкой (в список не добавлять!) */
 &global-define place-need-RVD-rvs "place-need-RVD-rvs" /* Необходимо сделать сверку с РВД (в список не добавлять!) */
 
-&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height,place-com-vessel,place-com-tanks,place-is-main,place-gate-valve,place-gate-valve-tanks':u /*список атрибутов резервуара*/
+&global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height,place-com-vessel,place-com-tanks,place-is-main,place-gate-valve,place-gate-valve-tanks,place-auto-gate-valve':u /*список атрибутов резервуара*/
 
 
 procedure placelib_write-attr:

@@ -265,6 +265,7 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,factur-connect~
 ,pl-level~
 ,c-pl-level~
+,pl-level-mm~
 ,prod-bc-db~
 ,cd-clu~
 ,c-cd-clu~

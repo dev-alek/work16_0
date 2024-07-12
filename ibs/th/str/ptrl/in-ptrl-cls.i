@@ -50,6 +50,8 @@
       define buffer buf_rvs-line      for ub.rvs-line .
       define buffer buf_rvs-line-pump for ub.rvs-line-pump .
       define buffer buf_place         for ub.place .
+      define buffer buf_place-attr    for ub.place-attr .
+      define buffer buf2_place        for ub.place .
       define buffer buf_goods         for ub.goods .
       define buffer bf_pump-nozzle    for ub.pump-nozzle.
       define buffer bf_pl-pump-nozzle for ub.pl-pump-nozzle.
@@ -78,7 +80,9 @@
       define variable v-prt-end-real-time    like ub.rvs-line.real-time    no-undo .
       
       define variable infoSecObj as class InfoSection .
-
+      
+      define variable v-pl-list      as character no-undo init "":U .
+      define variable v-com-tanks    as character no-undo init "":U .
 
       infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
       
@@ -95,19 +99,98 @@
         undo block_tr, return error .
       end.
       
+      find first buf_goods no-lock where buf_goods.gds-code = infoSecsObj:GdsCode .
+      
       { gbl/conf-rd.i "'ptoldfil'" buf_rvs-doc.host-code buf_rvs-doc.obj-type buf_rvs-doc.obj-code "''" "''" "''" no ptoldfilvalue ptoldfiltype no-error }
 
-      for first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
-                                    and buf_place.obj-code = buf_rvs-doc.obj-code
-                                    and buf_place.loc1 = infoSecObj:ListTank
-                                    and buf_place.status_ = ""
-      :
-        assign
-          v-pl-code = buf_place.pl-code
-        .
+      assign v-pl-code = ? .
+      
+      if pAction = {&lookup}
+      then do :
+        for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                        and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                        and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                        and buf_rvs-line.gds-code = buf_goods.gds-code
+        :
+          assign
+            v-pl-code      = buf_rvs-line.pl-code
+            v-pl-list      = v-pl-list + string(buf_rvs-line.pl-code) + "," 
+          .
+        end .
+        if v-pl-code = ?
+        then do :
+          message
+            "Не найдена строка сверки:" skip
+            substitute( "товар &1", buf_goods.gds-code ) skip
+            substitute( "место хранения &1", infoSecObj:ListTank ) skip
+            view-as alert-box error .
+          undo block_tr, return error .
+        end .
+      end .
+      else do :
+        for first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                                      and buf_place.obj-code = buf_rvs-doc.obj-code
+                                      and buf_place.loc1 = infoSecObj:ListTank
+                                      and buf_place.status_ = ""
+        :
+          assign
+            v-pl-code = buf_place.pl-code
+            v-pl-list = v-pl-list + string(buf_place.pl-code) + ","
+            v-com-tanks = ""
+          .
+          for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-com-tanks"
+                                              and buf_place-attr.obj-code = buf_place.obj-code
+                                              and buf_place-attr.obj-type = buf_place.obj-type
+                                              and buf_place-attr.pl-code  = buf_place.pl-code
+          :
+            assign v-com-tanks = buf_place-attr.attr-value .
+          end .
+          if pActionType = "edit"
+          then
+          do ii = 1 to num-entries(v-com-tanks) :
+            for each buf2_place no-lock where buf2_place.obj-type = buf_place.obj-type
+                                          and buf2_place.obj-code = buf_place.obj-code
+                                          and buf2_place.loc1     = entry(ii, v-com-tanks)
+  /*                                          and buf2_place.status_  = ""*/
+            :
+              for first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                               and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                               and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                               and buf_rvs-line.pl-code  = buf2_place.pl-code
+                                               and buf_rvs-line.gds-code = buf_goods.gds-code
+              :
+                assign v-pl-list = v-pl-list + string(buf2_place.pl-code) + "," .
+              end .
+              release buf_rvs-line no-error .
+            end .
+          end .
+        end .
       end .
       
-      find first buf_goods no-lock where buf_goods.gds-code = infoSecsObj:GdsCode .
+      assign v-pl-list = trim(v-pl-list, ",") .
+      
+      if num-entries(v-pl-list) > 1
+      or v-pl-code = ?
+      then do:
+        run ref/pl-gds-list.w
+          ( input v-pl-list
+          , output v-pl-code
+          ) no-error .
+        if v-pl-code = ? 
+        or v-pl-code = 0
+        then do:
+          message "Не выбрано место хранения " view-as alert-box .
+          undo block_tr, return error .
+        end.
+        if error-status :error then do:
+          message
+            substitute( "Ошибка при выборе места хранения по товару &1.", buf_goods.gds-code ) skip
+            return-value skip
+            error-status :get-message(1) skip
+            view-as alert-box error .
+          undo block_tr, return error .
+        end.
+      end .
 
       find first buf_rvs-line
         where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
@@ -213,45 +296,104 @@
               and buf_place.pl-code  = v-pl-code
             .
             
-          if buf_place.is-meas <> yes then do:
-            message
-              substitute( 'Резервуар &1 не измеряется приборами.', buf_place.pl-code)
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
-          if buf_place.loc1 = "":U
-            or buf_place.loc1 = ?
-          then do:
-            message
-              substitute( 'Не указан локальный код на складском месте &1 .', buf_place.pl-code )
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
-        
-          create tt-meas .
-          assign
-            tt-meas.obj-type = buf_rvs-doc.obj-type
-            tt-meas.obj-code = buf_rvs-doc.obj-code
-            tt-meas.pl-code  = v-pl-code
-          .
+          if v-com-tanks > ""
+          then do :
+            v-com-vessel-rvs = yes .
+            v-com-vessel-is-meas = no .
+            v-com-tanks = buf_place.loc1 + "," + v-com-tanks .
+            do ii = 1 to num-entries(v-com-tanks) :
+              find first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                                             and buf_place.obj-code = buf_rvs-doc.obj-code
+                                             and buf_place.loc1     = entry(ii, v-com-tanks)
+                                             and buf_place.status_  = ""
+                                             no-error .
+              if available buf_place
+              then do :
+                
+                if buf_place.is-meas
+/*                  and not pl-rvd-dens*/
+/*                  and not pl-rvd-lvl */
+/*                  and not pl-rvd-temp*/
+                then do :
+                  v-com-vessel-is-meas = yes .
+                  create tt-meas .
+                  assign
+                    tt-meas.obj-type = buf_rvs-doc.obj-type
+                    tt-meas.obj-code = buf_rvs-doc.obj-code
+                    tt-meas.pl-code  = buf_place.pl-code
+                    tt-meas.loc1     = buf_place.loc1
+                  .
+                  for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = buf_place.obj-type 
+                                                       and bf_pl-pump-nozzle.obj-code = buf_place.obj-code
+                                                       and bf_pl-pump-nozzle.pl-code  = buf_place.pl-code,
+                  first bf_pump-nozzle no-lock where bf_pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type 
+                                                 and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
+                                                 and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                                                 and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+/*                                                   and bf_pump-nozzle.is-meas     = yes*/
+                  :
+                    create tt-pump-nozzle.
+                    assign
+                      tt-pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type
+                      tt-pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code
+                      tt-pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                      tt-pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                      tt-pump-nozzle.gds-code    = buf_goods.gds-code
+                    .
+                  end .
+                end .
+              end .
+              
+            end .
+            if not v-com-vessel-is-meas
+            then do :
+              message
+                substitute( 'Ни один из сообщающихся резервуаров не измеряется приборами.', buf_place.pl-code)
+                view-as alert-box error .
+              undo block_tr, return error .
+            end .
+          end .
+          else do :
+            if buf_place.is-meas <> yes then do:
+              message
+                substitute( 'Резервуар &1 не измеряется приборами.', buf_place.pl-code)
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+            if buf_place.loc1 = "":U
+              or buf_place.loc1 = ?
+            then do:
+              message
+                substitute( 'Не указан локальный код на складском месте &1 .', buf_place.pl-code )
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
           
-          for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = buf_place.obj-type 
-                                               and bf_pl-pump-nozzle.obj-code = buf_place.obj-code
-                                               and bf_pl-pump-nozzle.pl-code  = buf_place.pl-code,
-          first bf_pump-nozzle no-lock where bf_pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type 
-                                         and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
-                                         and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
-                                         and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
-/*                                         and bf_pump-nozzle.is-meas     = yes*/
-          :
-            create tt-pump-nozzle.
+            create tt-meas .
             assign
-              tt-pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type
-              tt-pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code
-              tt-pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
-              tt-pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
-              tt-pump-nozzle.gds-code    = buf_goods.gds-code
+              tt-meas.obj-type = buf_rvs-doc.obj-type
+              tt-meas.obj-code = buf_rvs-doc.obj-code
+              tt-meas.pl-code  = v-pl-code
             .
+            
+            for each bf_pl-pump-nozzle no-lock where bf_pl-pump-nozzle.obj-type = buf_place.obj-type 
+                                                 and bf_pl-pump-nozzle.obj-code = buf_place.obj-code
+                                                 and bf_pl-pump-nozzle.pl-code  = buf_place.pl-code,
+            first bf_pump-nozzle no-lock where bf_pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type 
+                                           and bf_pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code 
+                                           and bf_pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                                           and bf_pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+  /*                                         and bf_pump-nozzle.is-meas     = yes*/
+            :
+              create tt-pump-nozzle.
+              assign
+                tt-pump-nozzle.obj-type    = bf_pl-pump-nozzle.obj-type
+                tt-pump-nozzle.obj-code    = bf_pl-pump-nozzle.obj-code
+                tt-pump-nozzle.pump-code   = bf_pl-pump-nozzle.pump-code
+                tt-pump-nozzle.nozzle-code = bf_pl-pump-nozzle.nozzle-code
+                tt-pump-nozzle.gds-code    = buf_goods.gds-code
+              .
+            end .
           end .
           
           find first sys-ctrl no-lock.
@@ -327,198 +469,379 @@
             undo block_tr, return error .
           end.
           
-          { str/fill1plc.i
-            buf_rvs-doc.obj-type
-            buf_rvs-doc.obj-code
-            v-pl-code
-            recid(buf_rvs-line)
-            buf_rvs-line.rvs-prev-code
-            tt-meas
-            no-error
-          }
-          if error-status :error then do:
-            message
-              "Ошибка при заполнении данных с приборов на резервуарах." skip( 0 )
-              return-value skip
-              error-status :get-message(1) skip
-              view-as alert-box error .
-            undo block_tr, return error .
-          end.
-        
-          find first rvs-line-attr exclusive-lock
-               where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                 and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                 and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                 and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                 and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                 and rvs-line-attr.attr-code = "input-type-p" no-error.
-          if not available rvs-line-attr then do :
-            create rvs-line-attr.
-            assign
-              rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-              rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-              rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-              rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-              rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-              rvs-line-attr.attr-code = "input-type-p"
-            .
-          end.
-          if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
-          else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
-          
-          find first rvs-line-attr exclusive-lock
-               where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                 and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                 and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                 and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                 and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                 and rvs-line-attr.attr-code = "input-type-t" no-error.
-          if not available rvs-line-attr then do :
-            create rvs-line-attr.
-            assign
-              rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-              rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-              rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-              rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-              rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-              rvs-line-attr.attr-code = "input-type-t"
-            .
-          end.
-          if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
-          else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
-          
-          find first rvs-line-attr exclusive-lock
-               where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                 and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                 and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                 and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                 and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                 and rvs-line-attr.attr-code = "input-type-l" no-error.
-          if not available rvs-line-attr then do :
-            create rvs-line-attr.
-            assign
-              rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-              rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-              rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-              rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-              rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-              rvs-line-attr.attr-code = "input-type-l"
-            .
-          end.
-          if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
-          else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
-          
-          release rvs-line-attr no-error .
-
-          cur-time
-            ( output v-today
-            , output v-time
-            ) .
-          { gbl/curobjdt.i
-            buf_rvs-doc.obj-type
-            buf_rvs-doc.obj-code
-            v-today
-          }
-
-          assign
-            buf_rvs-line.real-date = v-today
-            buf_rvs-line.real-time = v-time
-          .
-          
-          infoSecsObj:CalculateTotal().
-          if pRvsType = {&rvs-before-doc}  then do:
-            v-prt-start-real-date = buf_rvs-line.real-date .
-            v-prt-start-real-time = buf_rvs-line.real-time .
-          end.
-          else do:
-            v-prt-end-real-date = buf_rvs-line.real-date .
-            v-prt-end-real-time = buf_rvs-line.real-time .
-          end.
-          
-          if varcur-rvs = 1
-          or ptoldfilvalue <> "yes":u
+          if v-com-vessel-rvs
           then do :
-            { str/anls-pmp.i
-              infoSecsObj:Parentproc
-              buf_rvs-doc.obj-type
-              buf_rvs-doc.obj-code
-              yes
-              tt-pump-nozzle-file
-              tt-pump-nozzle
-              yes
-              ?
-              no-error
-            }
-          end.
-          else do :
-            { str/anls-pmp.i
-              infoSecsObj:Parentproc
-              buf_rvs-doc.obj-type
-              buf_rvs-doc.obj-code
-              yes
-              tt-pump-nozzle-file
-              tt-pump-nozzle
-              no
-              ?
-              no-error
-            }
-          end.
-          for each tt-pump-nozzle :
-            find first tt-pump-nozzle-file where
-                       tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
-                       tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
-                       tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
-                       tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
-            if available tt-pump-nozzle-file
-            then
-            assign
-              tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
-              tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
-              tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
-            .
-          end. /* for each tt-pump-nozzle */
-/*          for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
-/*            v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
-/*          end. /* for each tt-pump-nozzle */                                                                                                        */
-/*          if v-pump-err > ""                                                                                                                        */
-/*          then do :                                                                                                                                 */
-/*            message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
-/*          end .                                                                                                                                     */
-          
-          for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                               and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                               and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                               and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                               and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-          :
-            { str/fill1pmp.i
-              "recid( buf_rvs-line-pump )"
-              tt-pump-nozzle
-            }
+            for each buf_rvs-line exclusive-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                                                   and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
+                                                   and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
+                                                   and buf_rvs-line.gds-code = buf_goods.gds-code,
+            first tt-meas where tt-meas.pl-code = buf_rvs-line.pl-code
+            :
+              { str/fill1plc.i
+                buf_rvs-doc.obj-type
+                buf_rvs-doc.obj-code
+                buf_rvs-line.pl-code
+                recid(buf_rvs-line)
+                buf_rvs-line.rvs-prev-code
+                tt-meas
+                no-error
+              }
+              if error-status :error then do:
+                message
+                  "Ошибка при заполнении данных с приборов на резервуарах." skip( 0 )
+                  return-value skip
+                  error-status :get-message(1) skip
+                  view-as alert-box error .
+                undo block_tr, return error .
+              end.
+              
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                     and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                     and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                     and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                     and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-p" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                  rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                  rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                  rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                  rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-p"
+                .
+              end.
+              if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                     and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                     and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                     and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                     and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-t" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                  rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                  rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                  rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                  rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-t"
+                .
+              end.
+              if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              find first rvs-line-attr exclusive-lock
+                   where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                     and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                     and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                     and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                     and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                     and rvs-line-attr.attr-code = "input-type-l" no-error.
+              if not available rvs-line-attr then do :
+                create rvs-line-attr.
+                assign
+                  rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                  rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                  rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                  rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                  rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                  rvs-line-attr.attr-code = "input-type-l"
+                .
+              end.
+              if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+              else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+              
+              release rvs-line-attr no-error .
+  
+              cur-time
+                ( output v-today
+                , output v-time
+                ) .
+              { gbl/curobjdt.i
+                buf_rvs-doc.obj-type
+                buf_rvs-doc.obj-code
+                v-today
+              }
+  
+              assign
+                buf_rvs-line.real-date = v-today
+                buf_rvs-line.real-time = v-time
+              .
+              
+              if pRvsType = {&rvs-before-doc}
+              then do:
+                v-prt-start-real-date = buf_rvs-line.real-date .
+                v-prt-start-real-time = buf_rvs-line.real-time .
+              end.
+              else do:
+                v-prt-end-real-date = buf_rvs-line.real-date .
+                v-prt-end-real-time = buf_rvs-line.real-time .
+              end.
+              
+              if varcur-rvs = 1
+              or ptoldfilvalue <> "yes":u
+              then do :
+                { str/anls-pmp.i
+                  infoSecsObj:Parentproc
+                  buf_rvs-doc.obj-type
+                  buf_rvs-doc.obj-code
+                  yes
+                  tt-pump-nozzle-file
+                  tt-pump-nozzle
+                  yes
+                  ?
+                  no-error
+                }
+              end.
+              else do :
+                { str/anls-pmp.i
+                  infoSecsObj:Parentproc
+                  buf_rvs-doc.obj-type
+                  buf_rvs-doc.obj-code
+                  yes
+                  tt-pump-nozzle-file
+                  tt-pump-nozzle
+                  no
+                  ?
+                  no-error
+                }
+              end.
+              for each tt-pump-nozzle :
+                find first tt-pump-nozzle-file where
+                           tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                           tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                           tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                           tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+                if available tt-pump-nozzle-file
+                then
+                assign
+                  tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+                  tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+                  tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+                .
+              end. /* for each tt-pump-nozzle */
+/*                for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+/*                  v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+/*                end. /* for each tt-pump-nozzle */                                                                                                        */
+/*                if v-pump-err > ""                                                                                                                        */
+/*                then do :                                                                                                                                 */
+/*                  message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+/*                end .                                                                                                                                     */
+              
+              for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                   and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                   and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                   and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                   and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                { str/fill1pmp.i
+                  "recid( buf_rvs-line-pump )"
+                  tt-pump-nozzle
+                }
+              end .
+              for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                          and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                          and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                          and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                          and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+              :
+                assign
+                  buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                  buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+                .
+              end .
+            end .
           end .
-          for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                      and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                      and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                      and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                      and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-          :
+          else do :
+          
+            { str/fill1plc.i
+              buf_rvs-doc.obj-type
+              buf_rvs-doc.obj-code
+              v-pl-code
+              recid(buf_rvs-line)
+              buf_rvs-line.rvs-prev-code
+              tt-meas
+              no-error
+            }
+            if error-status :error then do:
+              message
+                "Ошибка при заполнении данных с приборов на резервуарах." skip( 0 )
+                return-value skip
+                error-status :get-message(1) skip
+                view-as alert-box error .
+              undo block_tr, return error .
+            end.
+          
+            find first rvs-line-attr exclusive-lock
+                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                   and rvs-line-attr.attr-code = "input-type-p" no-error.
+            if not available rvs-line-attr then do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "input-type-p"
+              .
+            end.
+            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+            
+            find first rvs-line-attr exclusive-lock
+                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                   and rvs-line-attr.attr-code = "input-type-t" no-error.
+            if not available rvs-line-attr then do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "input-type-t"
+              .
+            end.
+            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+            
+            find first rvs-line-attr exclusive-lock
+                 where rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                   and rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                   and rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                   and rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                   and rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                   and rvs-line-attr.attr-code = "input-type-l" no-error.
+            if not available rvs-line-attr then do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "input-type-l"
+              .
+            end.
+            if varcur-rvs > 0 then rvs-line-attr.attr-value = 'а' .
+            else if ptoldfilvalue = "yes":u then rvs-line-attr.attr-value = 'ф' .
+            
+            release rvs-line-attr no-error .
+  
+            cur-time
+              ( output v-today
+              , output v-time
+              ) .
+            { gbl/curobjdt.i
+              buf_rvs-doc.obj-type
+              buf_rvs-doc.obj-code
+              v-today
+            }
+  
             assign
-              buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
-              buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-              buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
-              buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-              buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-              buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-              buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-              buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-              buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-              buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-              buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-              buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-              buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-              buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
+              buf_rvs-line.real-date = v-today
+              buf_rvs-line.real-time = v-time
             .
-          end .      
+            
+            infoSecsObj:CalculateTotal().
+            if pRvsType = {&rvs-before-doc}  then do:
+              v-prt-start-real-date = buf_rvs-line.real-date .
+              v-prt-start-real-time = buf_rvs-line.real-time .
+            end.
+            else do:
+              v-prt-end-real-date = buf_rvs-line.real-date .
+              v-prt-end-real-time = buf_rvs-line.real-time .
+            end.
+            
+            if varcur-rvs = 1
+            or ptoldfilvalue <> "yes":u
+            then do :
+              { str/anls-pmp.i
+                infoSecsObj:Parentproc
+                buf_rvs-doc.obj-type
+                buf_rvs-doc.obj-code
+                yes
+                tt-pump-nozzle-file
+                tt-pump-nozzle
+                yes
+                ?
+                no-error
+              }
+            end.
+            else do :
+              { str/anls-pmp.i
+                infoSecsObj:Parentproc
+                buf_rvs-doc.obj-type
+                buf_rvs-doc.obj-code
+                yes
+                tt-pump-nozzle-file
+                tt-pump-nozzle
+                no
+                ?
+                no-error
+              }
+            end.
+            for each tt-pump-nozzle :
+              find first tt-pump-nozzle-file where
+                         tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
+                         tt-pump-nozzle-file.obj-code    = tt-pump-nozzle.obj-code    and
+                         tt-pump-nozzle-file.pump-code   = tt-pump-nozzle.pump-code   and
+                         tt-pump-nozzle-file.nozzle-code = tt-pump-nozzle.nozzle-code no-error .
+              if available tt-pump-nozzle-file
+              then
+              assign
+                tt-pump-nozzle.meas-el-cnt = tt-pump-nozzle-file.meas-el-cnt
+                tt-pump-nozzle.meas-am-cnt = tt-pump-nozzle-file.meas-am-cnt
+                tt-pump-nozzle.meas-cf-cnt = tt-pump-nozzle-file.meas-cf-cnt
+              .
+            end. /* for each tt-pump-nozzle */
+  /*          for each tt-pump-nozzle where not (tt-pump-nozzle.meas-el-cnt > 0) :                                                                      */
+  /*            v-pump-err = v-pump-err + "ТРК " + string(tt-pump-nozzle.pump-code) + " Пистолету " + string(tt-pump-nozzle.nozzle-code) + {&new-line} .*/
+  /*          end. /* for each tt-pump-nozzle */                                                                                                        */
+  /*          if v-pump-err > ""                                                                                                                        */
+  /*          then do :                                                                                                                                 */
+  /*            message "Данные по:" + {&new-line} + v-pump-err + "Не получены." view-as alert-box .                                                    */
+  /*          end .                                                                                                                                     */
+            
+            for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                 and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                 and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                 and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                 and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+            :
+              { str/fill1pmp.i
+                "recid( buf_rvs-line-pump )"
+                tt-pump-nozzle
+              }
+            end .
+            for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                        and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                        and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                        and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                        and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+            :
+              assign
+                buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+              .
+            end .   
+          end .   
         end.
         when "edit":U then do:
           if not available buf_rvs-line
@@ -700,30 +1023,17 @@
                   tt-pump-nozzle
                 }
               end .
-              
-              for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
-                                                          and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
-                                                          and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
-                                                          and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
-                                                          and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
-              :
-                assign
-                  buf_rvs-line-pump.meas-el-cnt     = 0 when buf_rvs-line-pump.meas-el-cnt = ?
-                  buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
-                  buf_rvs-line-pump.meas-mh-cnt     = 0 when buf_rvs-line-pump.meas-mh-cnt = ?
-                  buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
-                  buf_rvs-line-pump.meas-am-cnt     = 0 when buf_rvs-line-pump.meas-am-cnt = ?
-                  buf_rvs-line-pump.state-am-cnt    = 0 when buf_rvs-line-pump.state-am-cnt = ?
-                  buf_rvs-line-pump.meas-cf-cnt     = 0 when buf_rvs-line-pump.meas-cf-cnt = ?
-                  buf_rvs-line-pump.state-cf-cnt    = 0 when buf_rvs-line-pump.state-cf-cnt = ?
-                  buf_rvs-line-pump.meas-am-qnty    = 0 when buf_rvs-line-pump.meas-am-qnty = ?
-                  buf_rvs-line-pump.state-am-qnty   = 0 when buf_rvs-line-pump.state-am-qnty = ?
-                  buf_rvs-line-pump.meas-cf-qnty    = 0 when buf_rvs-line-pump.meas-cf-qnty = ?
-                  buf_rvs-line-pump.state-cf-qnty   = 0 when buf_rvs-line-pump.state-cf-qnty = ?
-                  buf_rvs-line-pump.meas-mh-qnty    = 0 when buf_rvs-line-pump.meas-mh-qnty = ?
-                  buf_rvs-line-pump.state-mh-qnty   = 0 when buf_rvs-line-pump.state-mh-qnty = ?
-                .
-              end .
+            end .
+            for each buf_rvs-line-pump exclusive-lock where buf_rvs-line-pump.obj-type = buf_rvs-line.obj-type
+                                                        and buf_rvs-line-pump.obj-code = buf_rvs-line.obj-code
+                                                        and buf_rvs-line-pump.rvs-code = buf_rvs-line.rvs-code
+                                                        and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
+                                                        and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
+            :
+              assign
+                buf_rvs-line-pump.state-el-cnt    = 0 when buf_rvs-line-pump.state-el-cnt = ?
+                buf_rvs-line-pump.state-mh-cnt    = 0 when buf_rvs-line-pump.state-mh-cnt = ?
+              .
             end .
           end .
           
@@ -743,6 +1053,9 @@
           infoSecsObj:InfoSectionCurr:DateEnd   = v-prt-end-real-date . 
           infoSecsObj:InfoSectionCurr:TimeEnd   = v-prt-end-real-time .
         end .
+        infoSecsObj:InfoSectionCurr:TankWeightRvs = ? .
+        infoSecsObj:InfoSectionCurr:TankVolPomiRvs = ? .
+        infoSecsObj:InfoSectionCurr:AvgTempRvs = ? .
       end.
       infoSecsObj:SaveDB().
       

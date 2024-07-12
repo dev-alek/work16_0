@@ -6264,6 +6264,18 @@ end procedure.
 &scop manual-edit-attr-item-matter-mark 1
 &scop batch-edit-attr-item-matter-mark  1
 
+&scop type-attr-type-method-calc {&type-char}
+&scop format-attr-type-method-calc  ">9"
+&scop label-attr-type-method-calc   "ѕризнак способа расчета"
+&scop tooltip-attr-type-method-calc   "ѕризнак способа расчета"
+&scop user-can-edit-attr-type-method-calc  true
+&scop output-display-attr-type-method-calc  true
+&scop other-attr-type-method-calc  "spr-ext=ref\gds-tmc.w/spr-param=type-method-calc/check=gds-attr_check-type-method-calc/cd=IBM-XML"
+&scop news-attr-type-method-calc true
+&scop copy-attr-type-method-calc  true
+&scop manual-edit-attr-type-method-calc 1
+&scop batch-edit-attr-type-method-calc  1
+
 &scop type-attr-cash-book-id {&type-int}
 &scop format-attr-cash-book-id  ">>>>>>>>9"
 &scop label-attr-cash-book-id   " ассова€ книга"
@@ -6299,7 +6311,6 @@ end procedure.
 &scop copy-attr-is-oss-payment  true
 &scop manual-edit-attr-is-oss-payment 1
 &scop batch-edit-attr-is-oss-payment  1
-
 
 &scop type-attr-is-loyalty-payment {&type-log}
 &scop format-attr-is-loyalty-payment  "+/ "
@@ -6786,6 +6797,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-item-matter-mark
       {&attr-temp-full-code}
+      &scop attr-code attr-type-method-calc
+      {&attr-temp-full-code}
       &scop attr-code attr-cash-book-id
       {&attr-temp-full-code}
       &scop attr-code attr-oper-serv-id
@@ -6895,6 +6908,8 @@ do
       &scop attr-code attr-emrc-type
       {&attr-temp-code}      
       &scop attr-code attr-item-matter-mark
+      {&attr-temp-code}
+      &scop attr-code attr-type-method-calc
       {&attr-temp-code}
       &scop attr-code attr-cash-book-id
       {&attr-temp-code}
@@ -7085,9 +7100,7 @@ procedure gds-attr-write :
       .
     end.
     ELSE
-    assign
-    buf_goods-attr.attr-value = p-value no-error
-    .
+      buf_goods-attr.attr-value = p-value no-error.
     if error-status :error then do:
       undo, return error return-value .
     end.
@@ -7258,6 +7271,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-item-matter-mark
       {&attr-news-code}
+      &scop attr-code attr-type-method-calc
+      {&attr-news-code}
       &scop attr-code attr-cash-book-id
       {&attr-news-code}
       &scop attr-code attr-oper-serv-id
@@ -7361,6 +7376,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-emrc-type
       {&attr-copy-code}
       &scop attr-code attr-item-matter-mark
+      {&attr-copy-code}
+      &scop attr-code attr-type-method-calc
       {&attr-copy-code}
       &scop attr-code attr-cash-book-id
       {&attr-copy-code}
@@ -7709,6 +7726,40 @@ on error undo, return error return-value
       if    lookup(p-value, {&prop-list-attr-item-matter-mark}) = 0  
       then do:
          p-error-code =  "«начение атрибута должно быть одним из списка {&prop-list-attr-item-matter-mark}" .
+      end.
+     
+     if p-error-code <> "" then
+        return p-error-code.
+    end.
+  END CASE.
+end.
+assign
+p-correct = yes.
+end procedure.
+
+procedure gds-attr_check-type-method-calc :
+define input parameter p-gds-code like ub.goods-attr.gds-code     no-undo .
+define input parameter p-code     like ub.goods-attr.attr-code  no-undo .
+define input parameter p-value as character no-undo .
+define input parameter p-mode  as character no-undo .
+/*может быть {&add-def} {&update} {&deletion}*/
+define output parameter p-correct     as logical no-undo .
+define output parameter p-error-code  as character no-undo .
+
+do
+on error undo, return error return-value
+:
+  CASE p-mode:
+    when {&add-def} 
+    or
+    when {&update}
+    then do:
+      
+      if num-entries(p-value) <> 2 or 
+         lookup(entry(1,p-value), {&prop-list-attr-type-method-calc}) = 0 or
+         lookup(entry(2,p-value), "1,2") = 0   
+      then do:
+         p-error-code =  "«начение атрибута не соответствует допустимым значени€м" .
       end.
      
      if p-error-code <> "" then
@@ -8088,6 +8139,8 @@ do
       
       &scop attr-code attr-item-matter-mark
       {&attr-manual-edit-code}
+      &scop attr-code attr-type-method-calc
+      {&attr-manual-edit-code}
       &scop attr-code attr-cash-book-id
       {&attr-manual-edit-code}
       &scop attr-code attr-oper-serv-id
@@ -8192,6 +8245,8 @@ do
       &scop attr-code attr-emrc-type
       {&attr-batch-edit-code}
       &scop attr-code attr-item-matter-mark
+      {&attr-batch-edit-code}
+      &scop attr-code attr-type-method-calc
       {&attr-batch-edit-code}
       &scop attr-code attr-cash-book-id
       {&attr-batch-edit-code}

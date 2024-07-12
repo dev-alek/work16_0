@@ -201,7 +201,14 @@ end.
     end.
     if v-val-integer = 2 and vVal <> "" then do:
         run bgelib-tag-put in this-procedure ( input 3, input "ItemImage"    , input string(string(cash-gds.gds-code) + "/" + entry(1,vVal)), input 1 ).
-    end.      
+    end. 
+    if cash-gds.CalculationMethod > 0 then 
+    do: 
+        run bgelib-tag-put in this-procedure ( input 3, input "ItemCalculationMethod" ,
+                                              input string(cash-gds.CalculationMethod), input 1 ).
+        run bgelib-tag-put in this-procedure ( input 3, input "ItemCalculationMethodRestr" ,
+                                              input if cash-gds.CalculationMethodRestr > 0 then string(cash-gds.CalculationMethodRestr) else "", input 1 ).
+    end.
     /*статус*/
     run bgelib-tag-open in this-procedure ( input 3, input "ItemStatus", input "" ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISWeight" ,

@@ -1894,8 +1894,7 @@ procedure lib-trn2_filinvbd :
                                   ,output v-value
                                   ,output v-ok      ) no-error.
     
-          if is-sug(cb_pl-gds.gds-code)
-          and v-ok
+          if  v-ok
           and v-value > ""
           then do :
             run placelib_get-attr  ( input {&place-is-main}
@@ -2060,8 +2059,7 @@ procedure lib-trn2_filinvbd :
                                   ,output v-value
                                   ,output v-ok      ) no-error.
     
-          if is-sug(temp-pl-gds.gds-code)
-          and v-ok
+          if  v-ok
           and v-value > ""
           then do :
             run placelib_get-attr  ( input {&place-is-main}

@@ -79,6 +79,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
           and buf_rvs-doc.status_  <> {&fact}
           and buf_rvs-doc.rvs-type <> {&rvs-before-doc}
           and buf_rvs-doc.rvs-type <> {&rvs-after-doc}
+          and buf_rvs-doc.rvs-type <> {&test-asi}
         no-error.
       if available buf_rvs-doc then do:
         if not( buf_rvs-doc.rvs-type = {&rvs-shift} and buf_rvs-doc.rvs-code = p-PS ) then do:

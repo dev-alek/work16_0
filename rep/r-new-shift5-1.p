@@ -738,9 +738,18 @@ for each buf_cashbook no-lock where buf_cashbook.Status_ = 0:
                         .
                         end.
                         else do:  
+                        find first ub.CashBookRule no-lock where ub.CashBookRule.CashBookID = buf_fin-doc.CashBookId and
+                        ub.CashBookRule.Code = "Avanscli-code" and ub.CashBookRule.RuleValue = string(buf_fin-doc.payer-code) no-error .
+                        if available (ub.CashBookRule) and buf_fin-doc.payer-type = {&cmp} then do:
+                        assign
+                          v-income-realiZ = v-income-realiZ + buf_fin-doc.sum-doc
+                        .
+                        end.
+                        else do:                         
                         assign
                           v-income-other = v-income-other + buf_fin-doc.sum-doc
                         .
+                        end.
                         end.
                       end.
 

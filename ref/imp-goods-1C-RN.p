@@ -54,6 +54,7 @@ define variable vss-description as character no-undo init "Загрузка товара из ER
 { ref/gds-attr.i}
 { ref/gdsoattr.i }
 { gbl/objsrv.i } 
+{ cmp/ini-lib.i }
 define input parameter p-GdsObj         as class goods .
 
   
@@ -939,6 +940,14 @@ end.
   if p-GdsObj:pay-flag ne ?
   then do :
     RUN gds-attr-write (v-nbc, {&attr-item-matter-mark}, string(p-GdsObj:pay-flag)).  
+  end.
+
+  if p-GdsObj:method-flag ne ?
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-type-method-calc}, p-GdsObj:method-flag).  
+  end.
+  else do :
+    RUN gds-attr-delete (v-nbc, {&attr-type-method-calc}, output v-attr-del).
   end.
   
   if p-GdsObj:enbl-exc = 1

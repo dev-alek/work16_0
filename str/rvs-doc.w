@@ -1186,12 +1186,10 @@ procedure cycle-add :
       ,output v-value
       ,output v-ok      ) no-error.
 
-    if is-sug(buf_goods.gds-code)
-      and v-ok
-      and v-value > ""
-      then 
-    do :
-      /*    Сообщающиеся резервуары СУГ   */
+    if  v-ok
+    and v-value > ""
+    then do :
+      /*    Сообщающиеся резервуары  */
       find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
         and buf_place.obj-code = buf_pl-gds.obj-code
         and buf_place.pl-code = buf_pl-gds.pl-code
@@ -2356,6 +2354,7 @@ procedure proc_m-meas-4 :
    
   define variable VErrorFlag as logical no-undo.
   define buffer meas_pump-nozzle for ub.pump-nozzle.
+  apply "entry" to {&browse-name-pump} in frame {&frame-name}.
   if available ub.rvs-line-pump then 
   do:
     find first ub.rvs-line where ub.rvs-line.rvs-code = ub.rvs-line-pump.rvs-code and
@@ -2690,6 +2689,7 @@ procedure proc_m-meas-3 :
   define buffer meas-place            for ub.place.
   define buffer olddens_rvs-line-attr for ub.rvs-line-attr .
   define variable VErrorFlag as logical no-undo.
+  apply "entry" to {&browse-name} in frame {&frame-name}.
   if available ub.rvs-line then 
   do:
     assign 

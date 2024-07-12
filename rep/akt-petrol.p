@@ -761,62 +761,10 @@ do
             tt-petrol.urov-AC = "".
             tt-petrol.density-AC = ? .
             tt-petrol.temp-AC    = ? .
-            tt-petrol.limit      = ? .
-            tt-petrol.vol-AC     = 0 .
-            tt-petrol.weight-AC  = 0 .
-            
-            v-sec-name = v-InfoSection:SectionName .
-            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
-                                                and buf_rvs-doc.out-code = v-doc-code
-                                                and num-entries(buf_rvs-doc.rvs-code, "-") = 3
-                                                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec-name
-                                                no-error .
-            if not available buf_rvs-doc
-            then do :
-              find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-after-doc}
-                                                  and buf_rvs-doc.out-code = v-doc-code
-                                                  and num-entries(buf_rvs-doc.rvs-code, "-") = 2
-                                                  no-error .
-            end .
-            if available buf_rvs-doc
-            then do :
-              for each buf_rvs-line no-lock
-                where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                  and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
-                  and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
-                  and buf_rvs-line.gds-code = buf_goods.gds-code
-              :
-                tt-petrol.vol-AC     = tt-petrol.vol-AC     + buf_rvs-line.state-measure-qnty .
-                tt-petrol.weight-AC  = tt-petrol.weight-AC  + buf_rvs-line.state-measure-cli-qnty .
-              end .
-            end .
-            
-            find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
-                                                and buf_rvs-doc.out-code = v-doc-code
-                                                and num-entries(buf_rvs-doc.rvs-code, "-") = 3
-                                                and entry(2, buf_rvs-doc.rvs-code, "-") = v-sec-name
-                                                no-error .
-            if not available buf_rvs-doc
-            then do :
-              find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
-                                                  and buf_rvs-doc.out-code = v-doc-code
-                                                  and num-entries(buf_rvs-doc.rvs-code, "-") = 2
-                                                  no-error .
-            end .
-            if available buf_rvs-doc
-            then do :
-              for each buf_rvs-line no-lock
-                where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                  and buf_rvs-line.obj-type = buf_rvs-doc.obj-type
-                  and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
-                  and buf_rvs-line.gds-code = buf_goods.gds-code
-              :
-                tt-petrol.vol-AC     = tt-petrol.vol-AC     - buf_rvs-line.state-measure-qnty .
-                tt-petrol.weight-AC  = tt-petrol.weight-AC  - buf_rvs-line.state-measure-cli-qnty .
-              end .
-            end .
-            tt-petrol.vol-AC = tt-petrol.vol-AC / 1000 .
+            tt-petrol.vol-AC     = decimal(v-InfoSection:TankVolPomiRvs) / 1000 .
+            tt-petrol.weight-AC  = v-InfoSection:TankWeightRvs .
           end .
+          
 
         /*                    for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type     */
         /*                        and buf_doc-pl.obj-code = buf_doc-line.obj-code                               */

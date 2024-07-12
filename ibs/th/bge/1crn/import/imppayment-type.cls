@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: efc656e40086, 2908, rls $
+$Author: EShklyar $
+$Date: Пн ноя 22 19:49:13 2021 +0300 $
+$Workfile: imppayment-type.cls $
+$Archive: ibs/th/bge/1crn/import/imppayment-type.cls $
 
 Класс ипорта данных payment-type-group из 1С
 
@@ -179,7 +179,6 @@ class ibs.th.bge.1crn.import.imppayment-type implements ibs.th.bge.1crn.import.i
           ub.cash-pay.status_ = if objPaymentType:del-l = 1 then {&deleted-status} else {&current-status} .
         .
       end.
-  
       find first buf_cash-pay-attr EXCLUSIVE-LOCK where buf_cash-pay-attr.cdpay-code = ub.cash-pay.cdpay-code
         and buf_cash-pay-attr.curr-code = ub.cash-pay.curr-code
         and buf_cash-pay-attr.attr-code = "cash-prop" no-error .
@@ -222,9 +221,14 @@ class ibs.th.bge.1crn.import.imppayment-type implements ibs.th.bge.1crn.import.i
           do:
             buf_cash-pay-attr.attr-value = "6" .
           end.           
+        when 7 then 
+          do:
+            buf_cash-pay-attr.attr-value = "7" .
+          end.           
       end case.  
       if objPaymentType:pay-type_ <> 0 and objPaymentType:pay-type_ <> 1 and objPaymentType:pay-type_ <> 2
-        and objPaymentType:pay-type_ <> 3 and objPaymentType:pay-type_ <> 4 and objPaymentType:pay-type_ <> 5 and objPaymentType:pay-type_ <> 6 then 
+        and objPaymentType:pay-type_ <> 3 and objPaymentType:pay-type_ <> 4 and objPaymentType:pay-type_ <> 5
+        and objPaymentType:pay-type_ <> 6 and objPaymentType:pay-type_ <> 7 then 
       do:
         
         buf_cash-pay-attr.attr-value = "0" .

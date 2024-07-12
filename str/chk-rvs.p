@@ -239,7 +239,8 @@ on stop    undo tr, return error
                open_rvs-doc.obj-type  = ub.rvs-doc.obj-type and
                open_rvs-doc.obj-code  = ub.rvs-doc.obj-code and
                open_rvs-doc.status_   > {&fact}             and
-               recid( open_rvs-doc ) <> recid( ub.rvs-doc ) no-error.
+               recid( open_rvs-doc ) <> recid( ub.rvs-doc ) and
+               open_rvs-doc.rvs-type <> {&test-asi}         no-error.
     if available open_rvs-doc then do:
       undo tr, return error
         substitute( 'Есть открытый документ сверки "&1". Создание сверки по смене недопустимо.', open_rvs-doc.rvs-code ).
@@ -248,7 +249,8 @@ on stop    undo tr, return error
                open_rvs-doc.obj-type =  ub.rvs-doc.obj-type and
                open_rvs-doc.obj-code =  ub.rvs-doc.obj-code and
                open_rvs-doc.status_  <  {&fact}             and
-               recid( open_rvs-doc ) <> recid( ub.rvs-doc ) no-error.
+               recid( open_rvs-doc ) <> recid( ub.rvs-doc ) and
+               open_rvs-doc.rvs-type <> {&test-asi}         no-error.
     if available open_rvs-doc then do:
       undo tr, return error
         substitute( 'Есть открытый документ сверки "&1". Создание сверки по смене недопустимо.', open_rvs-doc.rvs-code ).

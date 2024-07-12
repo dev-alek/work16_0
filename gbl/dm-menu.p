@@ -6158,6 +6158,56 @@ PROCEDURE all-all-rvs :
   end.
 END PROCEDURE.
 
+PROCEDURE new-all-test-asi :
+define variable v-rvs-rid as recid no-undo.    
+run str/all-test-asi.w (input parparentproc, input {&status}, input {&g___new}, output v-rvs-rid).
+END PROCEDURE.
+
+PROCEDURE fact-all-test-asi :
+define variable v-rvs-rid as recid no-undo.
+run str/all-test-asi.w (input parparentproc, input {&status}, input {&fact}, output v-rvs-rid).
+END PROCEDURE.
+
+PROCEDURE obj-all-test-asi :
+define variable v-rvs-rid as recid no-undo.
+run str/all-test-asi.w (input parparentproc, input {&g___object}, input ?, output v-rvs-rid).
+END PROCEDURE.
+
+
+PROCEDURE c-obj-test-asi :
+define variable v-rvs-rid as recid no-undo.
+run str/test-asi_alldocws-c.w (input parparentproc, input {&g___object}, input ?, output v-rvs-rid).
+END PROCEDURE.
+
+
+PROCEDURE firm-all-test-asi :
+define variable v-rvs-rid as recid no-undo.
+run str/all-test-asi.w (input parparentproc, input {&company}, input ?, output v-rvs-rid).
+END PROCEDURE.
+
+PROCEDURE all-all-test-asi :
+  define variable v-rvs-rid as recid no-undo.  
+  define variable v-ok as logical   no-undo .
+  { gbl/chk-actg.i
+    v-cntxt-db-num
+    v-cntxt-userid
+    {&action-head-code-main}
+    'actn_documents_all':U
+    {&cntxt-global}
+    0
+    '':U
+    0
+    0
+    0
+    0
+    true
+    v-ok
+  }
+  if v-ok then do:
+    run str/all-test-asi.w (input parparentproc, input {&work}, input ?, output v-rvs-rid).
+  end.
+END PROCEDURE.
+
 PROCEDURE new-all-icnt :
 define variable v-rid-list as character no-undo .
 run ref/icntdocs.w ( input parparentproc

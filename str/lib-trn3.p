@@ -119,7 +119,14 @@ define temp-table ttDump no-undo
    index et EndTime
    . 
    
-def stream out_s.
+define stream out_s.
+
+define temp-table tt-place-volume-loss no-undo
+  field pl-code     like ub.place.pl-code
+  field volume-loss as decimal
+  index pi as primary unique
+    pl-code
+.
 
 procedure lib-trn3_add-scal :
   define input parameter parparentproc as widget-handle no-undo .
@@ -2314,6 +2321,7 @@ procedure lib-trn3_reclcptr :
         where buf-next_rvs-doc.obj-type   = tt_doc-line.obj-type
           and buf-next_rvs-doc.obj-code   = tt_doc-line.obj-code
           and buf-next_rvs-doc.status_    = {&fact}
+          and buf-next_rvs-doc.rvs-type  <> {&test-asi}
           and buf-next_rvs-doc.fact-order > tt_doc-line.fact-order
       on error undo, return error substitute( "lib-trn3_reclcptr. &1&2&3", return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
       :
@@ -2598,6 +2606,369 @@ procedure lib-trn3_getwtqty :
   end. /* on error */
 end procedure. /* lib-trn3_getwtqty */
 
+/* Сравнительный анализ убыли объема в СР по окаймляющим сверкам  */
+procedure lib-trn3_vollosan :
+  define input  parameter p-gds-code   like ub.goods.gds-code        no-undo .
+  define input  parameter p-obj-type   like ub.trn-doc.obj-type      no-undo .
+  define input  parameter p-obj-code   like ub.trn-doc.obj-code      no-undo .
+  define input  parameter p-pl-list    as character                  no-undo .
+  define input  parameter p-shift-date like ub.trn-doc.shift-date    no-undo .
+  define input  parameter p-shift-num  like ub.trn-doc.shift-num     no-undo .
+  define input  parameter p-fact-date  like ub.trn-doc.fact-date     no-undo .
+  define input  parameter p-fact-time  like ub.trn-doc.fact-time     no-undo .
+  define output parameter p-pl-code    like ub.pl-gds.pl-code no-undo .
+
+  do
+  on error  undo, return error substitute( "&1 (lib-trn3_vollosan). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
+  on stop   undo, return error substitute( "&1 (lib-trn3_vollosan). stop", vss-workfile )
+  on endkey undo, return error substitute( "&1 (lib-trn3_vollosan). endkey", vss-workfile )
+  :
+    define variable is-petrol           as logical   no-undo .
+    define variable is-pieces           as logical   no-undo .
+    define variable from_fact-order     as decimal   no-undo .
+
+    define variable v-next-fact-order   as decimal   no-undo .
+    define variable v-prev-fact-order   as decimal   no-undo .
+    define variable v-next-date         as date      no-undo .
+    define variable v-prev-date         as date      no-undo .
+    define variable v-prev-doc          like ub.rvs-doc.rvs-code      no-undo .
+    define variable v-next-time         as integer   no-undo .
+    define variable v-prev-time         as integer   no-undo .
+    define variable v-num-rvs           as integer   no-undo .
+    define variable v-prev-rvs-doc      as character no-undo .
+    define variable v-next-rvs-doc      as character no-undo .
+    define variable vNeedSkip           as logical   no-undo .
+    define variable ii                  as integer   no-undo .
+    define variable v-max-volume-loss   as decimal   no-undo init 0.0 .
+    define variable v-value             as character no-undo.
+    define variable v-ok                as logical no-undo.
+    
+    define buffer buf_goods          for ub.goods .
+    define buffer buf_rvs-doc        for ub.rvs-doc .
+    define buffer buf_rvs-line       for ub.rvs-line .
+    define buffer buf-curr_shift-obj for ub.shift-obj .
+    define buffer buf-prev_shift-obj for ub.shift-obj .
+    define buffer buf-prev_rvs-doc   for ub.rvs-doc .
+    define buffer buf-prev_rvs-line  for ub.rvs-line .
+    
+    define buffer buf_tt-place-volume-loss for tt-place-volume-loss .
+    
+    find first buf_goods no-lock
+      where buf_goods.gds-code = p-gds-code
+      no-error.
+    if not available buf_goods then do:
+      undo, return error substitute( "&1 (lib-trn3_avrgdens). Не найден товар &2 ", vss-workfile, p-gds-code ).
+    end.
+
+    { str/is-petrl.i
+      buf_goods.artic
+      buf_goods.prod-type
+      buf_goods.prod-code
+      is-petrol
+      is-pieces
+    }
+    
+    if is-petrol = yes
+      and is-pieces = no 
+    then do:
+    
+      { gbl/ptrlprop.i run p-obj-type p-obj-code }
+
+      assign
+        from_fact-order = 0.0
+      .
+  
+      /* для проверки параметров попробуем найти смену */
+      find first buf-curr_shift-obj no-lock
+        where buf-curr_shift-obj.obj-type   = p-obj-type
+          and buf-curr_shift-obj.obj-code   = p-obj-code
+          and buf-curr_shift-obj.shift-date = p-shift-date
+          and buf-curr_shift-obj.shift-num  = p-shift-num
+        no-error .
+      if not available buf-curr_shift-obj then do:
+        undo, return error substitute( 'lib-trn3_avrgdens: не найдена смена &1 &2 на объекте &3 &4'
+                                    , p-shift-num
+                                    , p-shift-date
+                                    , p-obj-type
+                                    , p-obj-code
+                                    ) .
+      end.
+      find last buf-prev_shift-obj no-lock
+        where buf-prev_shift-obj.obj-type   = p-obj-type
+          and buf-prev_shift-obj.obj-code   = p-obj-code
+          and ( ( buf-prev_shift-obj.shift-date = p-shift-date
+                  and buf-prev_shift-obj.shift-num  < p-shift-num
+                )
+                or ( buf-prev_shift-obj.shift-date < p-shift-date
+                      and buf-prev_shift-obj.shift-num  > 0
+                    )
+              )
+        use-index pi
+        no-error.
+      if available buf-prev_shift-obj then do:
+        find first buf-prev_rvs-doc no-lock
+          where buf-prev_rvs-doc.obj-type   = buf-prev_shift-obj.obj-type
+            and buf-prev_rvs-doc.obj-code   = buf-prev_shift-obj.obj-code
+            and buf-prev_rvs-doc.shift-date = buf-prev_shift-obj.shift-date
+            and buf-prev_rvs-doc.shift-num  = buf-prev_shift-obj.shift-num
+            and buf-prev_rvs-doc.status_    = {&fact}
+            and buf-prev_rvs-doc.rvs-type   = {&rvs-shift}
+          use-index shift-type
+          no-error .
+        if available buf-prev_rvs-doc then do:
+          find first buf-prev_rvs-line no-lock
+            where buf-prev_rvs-line.rvs-code   = buf-prev_rvs-doc.rvs-code
+              and buf-prev_rvs-line.obj-type   = buf-prev_rvs-doc.obj-type
+              and buf-prev_rvs-line.obj-code   = buf-prev_rvs-doc.obj-code
+              and buf-prev_rvs-line.pl-code    = integer(entry(1, p-pl-list)) /* главный резервуар в связке СР */
+              and buf-prev_rvs-line.gds-code   = buf_goods.gds-code
+            no-error .
+          if available buf-prev_rvs-line then do:
+            assign
+              from_fact-order = buf-prev_rvs-doc.fact-order
+            .
+          end.
+        end.
+      end.
+      
+      assign
+        v-next-fact-order = ?
+        v-prev-fact-order = ?
+        v-next-date       = ?
+        v-prev-date       = ?
+        v-next-time       = 0
+        v-prev-time       = 0
+        v-num-rvs         = 0
+        v-prev-rvs-doc    = ""
+        v-next-rvs-doc    = ""
+      .
+
+      if available buf-prev_rvs-line then do:
+        assign
+          v-prev-date       = buf-prev_rvs-doc.sys-date
+          v-prev-time       = buf-prev_rvs-doc.sys-time-int
+          v-prev-fact-order = buf-prev_rvs-doc.fact-order
+          v-num-rvs         = 1
+        .
+      end.
+      
+      do ii = 1 to num-entries(p-pl-list) :
+        run CrTempDump (p-obj-type,
+                        p-obj-code, 
+                        p-shift-date,
+                        p-shift-num,
+                        integer(entry(ii, p-pl-list)),
+                        buf_goods.gds-code).
+      end .
+      rvsdoc:
+      for each buf_rvs-doc no-lock
+        where buf_rvs-doc.obj-type   = p-obj-type
+          and buf_rvs-doc.obj-code   = p-obj-code
+          and buf_rvs-doc.shift-date = p-shift-date
+          and buf_rvs-doc.shift-num  = p-shift-num
+          and buf_rvs-doc.status_    = {&fact}
+        ,each buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
+          and buf_rvs-line.obj-type   = buf_rvs-doc.obj-type
+          and buf_rvs-line.obj-code   = buf_rvs-doc.obj-code
+          and buf_rvs-line.gds-code   = buf_goods.gds-code
+          and can-do(p-pl-list, string(buf_rvs-line.pl-code))
+        by buf_rvs-doc.fact-order
+      on error undo, return error substitute( "&1 (lib-trn3_vollosan). &2 ", vss-workfile, return-value )
+      :
+        /* сверку до и сверку после пропускаем (как и документы проверки корректности работы АСИ) */
+        if buf_rvs-doc.rvs-type  = {&rvs-before-doc}
+        or buf_rvs-doc.rvs-type  = {&rvs-after-doc}
+        or buf_rvs-doc.rvs-type  = {&test-asi}
+          then next rvsdoc.
+           
+        assign
+          v-num-rvs = v-num-rvs + 1
+        .
+        if buf_rvs-doc.sys-date < p-fact-date
+          or ( buf_rvs-doc.sys-date = p-fact-date
+              and buf_rvs-doc.sys-time-int < p-fact-time
+             )
+        then do:
+          if v-prev-fact-order = ?
+            or ( v-prev-date = ?
+                and v-prev-time = 0
+              )
+            or v-prev-date < buf_rvs-doc.sys-date
+            or ( v-prev-date = buf_rvs-doc.sys-date
+                and v-prev-time < buf_rvs-doc.sys-time-int
+              )
+            or ( v-prev-date = buf_rvs-doc.sys-date
+                and v-prev-time = buf_rvs-doc.sys-time-int
+                and v-prev-fact-order < buf_rvs-doc.fact-order
+              )
+          then do:   
+             run ChkRvsSkip(buf_rvs-line.obj-type,
+                            buf_rvs-line.obj-code,
+                            buf_rvs-line.rvs-code,
+                            buf_rvs-line.pl-code,
+                            buf_rvs-line.gds-code,
+                            buf_rvs-doc.sys-date,
+                            buf_rvs-doc.sys-time-int,
+                            output vNeedSkip).
+             if vNeedSkip then .
+             else
+               assign
+                 v-prev-date       = buf_rvs-doc.sys-date
+                 v-prev-time       = buf_rvs-doc.sys-time-int
+                 v-prev-fact-order = buf_rvs-doc.fact-order
+                 v-prev-rvs-doc    = buf_rvs-doc.rvs-code
+               .
+          end.               
+        end.
+        if buf_rvs-doc.sys-date > p-fact-date
+          or ( buf_rvs-doc.sys-date = p-fact-date
+              and buf_rvs-doc.sys-time-int > p-fact-time
+            )
+        then do:
+          if v-next-fact-order = ?
+            or ( v-next-date = ?
+                 and v-next-time = 0
+                )
+            or v-next-date > buf_rvs-doc.sys-date
+            or ( v-next-date = buf_rvs-doc.sys-date
+                  and v-next-time > buf_rvs-doc.sys-time-int
+                )
+            or ( v-next-date = buf_rvs-doc.sys-date
+                  and v-next-time = buf_rvs-doc.sys-time-int
+                  and v-next-fact-order > buf_rvs-doc.fact-order
+                )
+          then do:
+             run ChkRvsSkip(buf_rvs-line.obj-type,
+                            buf_rvs-line.obj-code,
+                            buf_rvs-line.rvs-code,
+                            buf_rvs-line.pl-code,
+                            buf_rvs-line.gds-code,
+                            buf_rvs-doc.sys-date,
+                            buf_rvs-doc.sys-time-int,
+                            output vNeedSkip).
+             if vNeedSkip then .
+             else
+               assign
+                 v-next-date       = buf_rvs-doc.sys-date
+                 v-next-time       = buf_rvs-doc.sys-time-int
+                 v-next-fact-order = buf_rvs-doc.fact-order
+                 v-next-rvs-doc    = buf_rvs-doc.rvs-code
+               .                  
+          end.
+        end. /* date & time */
+      end. /* for each buf_rvs-doc, first buf_rvs-line */
+      
+      empty temp-table ttDump.
+      if v-num-rvs = 0 then do:
+        undo, return error substitute( 'lib-trn3_vollosan: нет ни одной сверки за смену &1 &2 и нет сменной сверки за предыдущую смену на объекте &3 &4 по месту хранения &5'
+                                      ,p-shift-num
+                                      ,p-shift-date
+                                      ,p-obj-type
+                                      ,p-obj-code
+                                      ,integer(entry(1, p-pl-list))
+                                     ) .
+      end.
+      
+      if v-next-rvs-doc = ""
+      and v-prev-rvs-doc > ""
+      then do :
+        assign v-next-rvs-doc = v-prev-rvs-doc .
+      end .
+      
+      if v-prev-rvs-doc = ""
+      and v-next-rvs-doc > ""
+      then do :
+        assign v-prev-rvs-doc = v-next-rvs-doc .
+      end .
+      
+      for first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = v-next-rvs-doc,
+        each buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
+          and buf_rvs-line.obj-type   = buf_rvs-doc.obj-type
+          and buf_rvs-line.obj-code   = buf_rvs-doc.obj-code
+          and buf_rvs-line.gds-code   = buf_goods.gds-code
+          and can-do(p-pl-list, string(buf_rvs-line.pl-code))
+      :
+        create tt-place-volume-loss .
+        assign
+          tt-place-volume-loss.pl-code     = buf_rvs-line.pl-code
+          tt-place-volume-loss.volume-loss = buf_rvs-line.state-measure-qnty
+        .
+      end .
+      
+      for first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = v-prev-rvs-doc,
+        each buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code   = buf_rvs-doc.rvs-code
+          and buf_rvs-line.obj-type   = buf_rvs-doc.obj-type
+          and buf_rvs-line.obj-code   = buf_rvs-doc.obj-code
+          and buf_rvs-line.gds-code   = buf_goods.gds-code
+          and can-do(p-pl-list, string(buf_rvs-line.pl-code))
+      :
+        find first tt-place-volume-loss where tt-place-volume-loss.pl-code = buf_rvs-line.pl-code no-error .
+        if available tt-place-volume-loss
+        then do :
+          assign
+            tt-place-volume-loss.volume-loss = tt-place-volume-loss.volume-loss - buf_rvs-line.state-measure-qnty
+          .
+        end .
+      end .
+      
+      for each tt-place-volume-loss :
+        if tt-place-volume-loss.volume-loss > 0 then tt-place-volume-loss.volume-loss = 0 .
+        if tt-place-volume-loss.volume-loss < 0 then tt-place-volume-loss.volume-loss = abs(tt-place-volume-loss.volume-loss) .
+      end .
+      for each tt-place-volume-loss :
+        v-max-volume-loss = max(v-max-volume-loss, tt-place-volume-loss.volume-loss) .
+      end .
+      
+      find tt-place-volume-loss where tt-place-volume-loss.volume-loss = v-max-volume-loss no-wait no-error .
+      if ambiguous tt-place-volume-loss /* невозможно определить резервуар с максимальной убылью - берём резервуар с признаком "текущий" */
+      then do :
+        for each tt-place-volume-loss :
+          run placelib_get-attr(input {&place-current}
+                               ,input p-obj-code
+                               ,input p-obj-type
+                               ,input tt-place-volume-loss.pl-code
+                               ,output v-value
+                               ,output v-ok)
+          no-error .
+          if v-ok
+          and logical(v-value)
+          then do :
+            p-pl-code = tt-place-volume-loss.pl-code .
+            leave .
+          end .
+        end .
+      end .
+      else do :
+        if available tt-place-volume-loss
+        then do :
+          p-pl-code = tt-place-volume-loss.pl-code .
+          run placelib_write-attr (input {&place-current}
+                                  ,input p-obj-code
+                                  ,input p-obj-type
+                                  ,input p-pl-code
+                                  ,input "yes"
+                                  ,output v-ok      )
+          no-error.
+          for each buf_tt-place-volume-loss where buf_tt-place-volume-loss.pl-code <> tt-place-volume-loss.pl-code :
+            run placelib_write-attr (input {&place-current}
+                                    ,input p-obj-code
+                                    ,input p-obj-type
+                                    ,input buf_tt-place-volume-loss.pl-code
+                                    ,input "no"
+                                    ,output v-ok      )
+            no-error.
+          end .
+        end .
+      end .
+      
+      empty temp-table tt-place-volume-loss .
+    end . /* petrol */
+  end .
+end procedure . /* lib-trn3_vollosan */
+
 /* остатки на начало смены и обороты (внешний приход) за смену */
 procedure lib-trn3_avrgdens :
   define input  parameter p-gds-code   like ub.goods.gds-code        no-undo .
@@ -2609,6 +2980,7 @@ procedure lib-trn3_avrgdens :
   define input  parameter p-fact-date  like ub.trn-doc.fact-date     no-undo .
   define input  parameter p-fact-time  like ub.trn-doc.fact-time     no-undo .
   define output parameter p-density    like ub.doc-line.fact-density no-undo .
+  define output parameter p-Reconc-tank-attr as character no-undo .
 
   do
   on error  undo, return error substitute( "&1 (lib-trn3_avrgdens). &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
@@ -2820,10 +3192,11 @@ procedure lib-trn3_avrgdens :
               by buf_rvs-doc.fact-order
             on error undo, return error substitute( "&1 (lib-trn3_avrgdens). &2 ", vss-workfile, return-value )
             :
-                /* сверку до и сверку после пропускаем */
-              if buf_rvs-doc.rvs-type  = {&rvs-before-doc} or 
-                 buf_rvs-doc.rvs-type  = {&rvs-after-doc}
-                 then next rvsdoc.
+              /* сверку до и сверку после пропускаем (как и документы проверки корректности работы АСИ) */
+              if buf_rvs-doc.rvs-type  = {&rvs-before-doc}
+              or buf_rvs-doc.rvs-type  = {&rvs-after-doc}
+              or buf_rvs-doc.rvs-type  = {&test-asi}
+                then next rvsdoc.
                  
               assign
                 v-num-rvs = v-num-rvs + 1
@@ -2946,6 +3319,7 @@ procedure lib-trn3_avrgdens :
 
             assign
               p-density = ( v-next-density + v-prev-density ) / 2.0
+              p-Reconc-tank-attr = v-prev-rvs-doc + "," + v-next-rvs-doc + "," + string(p-pl-code)
             .
           end. /* avrg-chk */
           when 'avrg-rvs':U then do:
@@ -2978,6 +3352,8 @@ procedure lib-trn3_avrgdens :
               by buf_rvs-doc.fact-order
             on error undo, return error substitute( "&1 (lib-trn3_avrgdens). &2 ", vss-workfile, return-value )
             :
+              if buf_rvs-doc.rvs-type = {&test-asi} then next .
+              
               if buf_rvs-line.state-density <> ?
                 and buf_rvs-doc.rvs-type <> {&rvs-shift}
               then do:

@@ -251,7 +251,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     this-object:tabControl:Location = new System.Drawing.Point(3, 45).
     this-object:tabControl:Name = "tabControl".
     this-object:tabControl:SelectedIndex = 0.
-    this-object:tabControl:Size = new System.Drawing.Size(710, 812).
+    this-object:tabControl:Size = new System.Drawing.Size(710, 832).
     this-object:tabControl:TabIndex = 1.
     /*  */
     /* imageList */
@@ -400,7 +400,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     /*  */
     /* tanksections */
     /*  */
-    this-object:ClientSize = new System.Drawing.Size(715, 862).
+    this-object:ClientSize = new System.Drawing.Size(715, 882).
     this-object:Controls:Add(this-object:tableLayoutPanel1).
     this-object:Controls:Add(this-object:tabControl).
     this-object:Icon = cast(resources:GetObject("$this.Icon"), System.Drawing.Icon).
@@ -463,7 +463,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
      
     tabThis = tabControl:TabPages[tabControl:SelectedIndex].
     int (tabThis:Name) no-error.
-    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes) 
+    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes, yes) 
     then do:
       tankSectionControl[integer (tabThis:Name)]:SetForcus ().
       tbcontrol = cast(sender, tabControl).
@@ -534,6 +534,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
         end .
       end .
     end .
+    
 		return.
 
 	end method.
@@ -585,7 +586,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
 /*    end.                                                                                                                                          */
     
     do ii = 1 to infoSecsObj:SectionNum:
-      if not tankSectionControl[ii]:CheckSec(yes)
+      if not tankSectionControl[ii]:CheckSec(yes, if infoSecsObj:FlagTrn then no else yes)
         then return.
     end.
     
@@ -710,6 +711,9 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
   end method.
   
   destructor public tanksections ( ):
+    
+    tankSectionSumControl:Dispose() .
+    delete object tankSectionSumControl no-error .
 
   end destructor.
 

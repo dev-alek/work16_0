@@ -39,8 +39,6 @@ define variable vss-description as character no-undo init "процедура импорта пак
 { gbl/gate-clb.i }
 { nws/lib-nws.i  }
 { nws/imp-pck1.i }
-define variable mFrameView      as logical   no-undo init yes.
-mFrameView = writelogvalue ne "AsyncProc". 
 
 define stream imp-stream.
 
@@ -59,7 +57,17 @@ define frame imp-pck
   v-sub-rec-cnt   label "Привязанных" format ">>>>>>>>>9" skip
   with view-as dialog-box side-labels 1 columns three-d title "** Разбор пакета"
 .
+  define variable mFrameView      as logical   no-undo init yes.
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame imp-pck:handle.
 
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameNWSError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameNWSError"). 
+  end.
+  mFrameView = writelogvalue ne "AsyncProc" and not session:batch-mode and mFramHandle:visible.
+  
 if transaction then do:
   message
     vss-workfile vss-revision vss-description skip
@@ -572,7 +580,9 @@ procedure local-imp-pck :
             assign
               v-del-cnt = 0
             .
-            view frame del-route .
+            if mFrameView
+            then  
+               view frame del-route .
 
             for each buf_route exclusive-lock
               where buf_route.db-num    = buf-for-rcvd_pck-sent.db-num
@@ -584,7 +594,8 @@ procedure local-imp-pck :
               assign
                 v-del-cnt = v-del-cnt + 1
               .
-              do with frame del-route
+              if mFrameView
+              then do with frame del-route
               :
                 assign
                   v-del-pck-num :screen-value   = string( buf_route.last-pack, v-del-pck-num :format)

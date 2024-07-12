@@ -25,4 +25,23 @@ define variable vss-description as character no-undo init "Асинхронные процессы"
 
 {utl/asuncprocauto.i}
 
+def buffer buf_code for ub.code.
+
+find first buf_code where 
+           buf_code.parent = "CDN_GisMt" 
+       and buf_code.code = "CDN_Upd"              
+    no-lock no-error.
+ 
+if not avail buf_code then do:
+   create buf_code.
+   assign
+      buf_code.parent = "CDN_GisMt" 
+      buf_code.code = "CDN_Upd"
+      buf_code.codename = "Запущен процесс обновления площадок ГИС МТ"
+      buf_code.codeval = string(now)   
+      .  
+end.   
+
 run AddTask in this-procedure("utl/proc-gismtcdn", "*").
+
+ 

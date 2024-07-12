@@ -176,6 +176,8 @@ class ibs.th.bge.is_PM.is_PM:
   define variable vIsOtherMoves   as character no-undo .
   define variable vType           as character no-undo .
   
+  define variable v-Reconc-tank-attr as character no-undo .
+  
   define stream OutStr-html .
   
   constructor public is_PM
@@ -865,6 +867,7 @@ class ibs.th.bge.is_PM.is_PM:
                   buf_chk-doc.chk-date
                   buf_chk-doc.chk-time
                   v-density
+                  v-Reconc-tank-attr
                   no-error
                 }
               end .
@@ -879,6 +882,7 @@ class ibs.th.bge.is_PM.is_PM:
                   buf_chk-doc.chk-date
                   buf_chk-doc.chk-time
                   v-density
+                  v-Reconc-tank-attr
                   no-error
                 }
               end .
@@ -1076,6 +1080,7 @@ class ibs.th.bge.is_PM.is_PM:
                       buf_chk-doc.chk-date
                       buf_chk-doc.chk-time
                       v-density
+                      v-Reconc-tank-attr
                       no-error
                     }
                   end .
@@ -1090,6 +1095,7 @@ class ibs.th.bge.is_PM.is_PM:
                       buf_chk-doc.chk-date
                       buf_chk-doc.chk-time
                       v-density
+                      v-Reconc-tank-attr
                       no-error
                     }
                   end .
@@ -1105,6 +1111,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -1313,6 +1320,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -1327,6 +1335,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -1342,6 +1351,7 @@ class ibs.th.bge.is_PM.is_PM:
                   buf_chk-doc.chk-date
                   buf_chk-doc.chk-time
                   v-density
+                  v-Reconc-tank-attr
                   no-error
                 }
               end .
@@ -1547,6 +1557,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -1561,6 +1572,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -1576,6 +1588,7 @@ class ibs.th.bge.is_PM.is_PM:
                   buf_chk-doc.chk-date
                   buf_chk-doc.chk-time
                   v-density
+                  v-Reconc-tank-attr
                   no-error
                 }
               end .
@@ -1830,6 +1843,7 @@ class ibs.th.bge.is_PM.is_PM:
                   buf_chk-doc.chk-date
                   buf_chk-doc.chk-time
                   v-density
+                  v-Reconc-tank-attr
                   no-error
                 }
               end .
@@ -1844,6 +1858,7 @@ class ibs.th.bge.is_PM.is_PM:
                   buf_chk-doc.chk-date
                   buf_chk-doc.chk-time
                   v-density
+                  v-Reconc-tank-attr
                   no-error
                 }
               end .
@@ -2101,6 +2116,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -2115,6 +2131,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -2373,6 +2390,7 @@ class ibs.th.bge.is_PM.is_PM:
                 buf_chk-doc.chk-date
                 buf_chk-doc.chk-time
                 v-density
+                v-Reconc-tank-attr
                 no-error
               }
             end .
@@ -2387,6 +2405,7 @@ class ibs.th.bge.is_PM.is_PM:
                 buf_chk-doc.chk-date
                 buf_chk-doc.chk-time
                 v-density
+                v-Reconc-tank-attr
                 no-error
               }
             end .
@@ -2402,6 +2421,7 @@ class ibs.th.bge.is_PM.is_PM:
               buf_chk-doc.chk-date
               buf_chk-doc.chk-time
               v-density
+              v-Reconc-tank-attr
               no-error
             }
           end .
@@ -2816,6 +2836,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -2830,6 +2851,7 @@ class ibs.th.bge.is_PM.is_PM:
                     buf_chk-doc.chk-date
                     buf_chk-doc.chk-time
                     v-density
+                    v-Reconc-tank-attr
                     no-error
                   }
                 end .
@@ -2845,6 +2867,7 @@ class ibs.th.bge.is_PM.is_PM:
                   buf_chk-doc.chk-date
                   buf_chk-doc.chk-time
                   v-density
+                  v-Reconc-tank-attr
                   no-error
                 }
               end .

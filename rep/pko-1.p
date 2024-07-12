@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b285b6565daa, 3011, rls $
+$Author: EShklyar $
+$Date: —р апр 06 16:23:44 2022 +0300 $
+$Workfile: pko-1.p $
+$Archive: rep/pko-1.p $
 
 ѕечать платежа  типа приход наличные
 
@@ -22,11 +22,11 @@ define input parameter p-is-last as logical no-undo .
 define input parameter p-from-forms as logical no-undo .
 define input-output parameter p-format as integer no-undo .
 /*1 - Landscape 0 -portrait*/
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b285b6565daa, 3011, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: —р апр 06 16:23:44 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pko-1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/pko-1.p $":U .
 define variable vss-description as character no-undo init "ѕечать платежа  типа приход наличные".
 
 &SCOP f-l MonthNameRusGen
@@ -170,17 +170,19 @@ on error undo, return error return-value
                    else "":U
   v-payer-name-p1 = entry(1, v-payer-name-p1, {&delim-par})
   .
+
   assign
-  v-naznach-plat-p1 = Break-n-line(Buf_fin-doc.naznach-plat, "74,85,85,85", output num-lines)
+  v-naznach-plat-p1 = Break-n-line(trim(Buf_fin-doc.naznach-plat), "28,35,35,35", output num-lines) .
+  
   v-naznach-plat-p4 = if num-lines >=4
                       then entry(4, v-naznach-plat-p1, {&delim-par})
-                      else "":U
+                      else "":U .
   v-naznach-plat-p3 = if num-lines >=3
                       then entry(3, v-naznach-plat-p1, {&delim-par})
-                      else "":U
+                      else "":U .
   v-naznach-plat-p2 = if num-lines >=2
                       then entry(2, v-naznach-plat-p1, {&delim-par})
-                      else "":U
+                      else "":U .
   v-naznach-plat-p1 = entry(1, v-naznach-plat-p1, {&delim-par})
   .
   assign
@@ -241,6 +243,7 @@ on error undo, return error return-value
   v-sum-doc-p1 = v-sum-doc-p1 +  fill("-":U, 21 - length(v-sum-doc-p1))
   v-sum-doc-p1 = caps(substring(v-sum-doc-p1, 1, 1)) + substring(v-sum-doc-p1, 2)
   .
+
   assign
   v-sum-doc-l1 = Break-n-line(v-dops, ("66,":U + string(v-line2)), output num-lines)
   v-sum-doc-l2 = If num-lines >= 2
@@ -257,6 +260,7 @@ on error undo, return error return-value
   v-including = trim(v-including, {&comma-char})
   v-including = replace(v-including, "в том числе", "")
   v-including = replace(v-including, "в т.ч.:", "")
+  v-including = replace(v-including, "в т.ч.", "")
   no-error .
 
     define variable v-sumRubKop         as character    no-undo.

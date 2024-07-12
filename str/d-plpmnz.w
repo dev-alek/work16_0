@@ -228,7 +228,6 @@ DO:
                                       and buf_pl-gds.pl-code = place.pl-code
                                       no-error .
       if available buf_pl-gds
-      and is-sug(buf_pl-gds.gds-code)
       then do :
         run placelib_get-attr  (
            input {&place-com-tanks}

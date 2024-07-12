@@ -639,6 +639,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define fbr-stat 
 { cmp/cr-prep.i 1 rvs-after-doc    после_док          " " after_doc  }
 { cmp/cr-prep.i 1 rvs-shift        смена              " " shift      }
 { cmp/cr-prep.i 1 rvs-control      контроль           " " control    }
+{ cmp/cr-prep.i 1 test-asi         проверка           " " test-asi   }
 { cmp/cr-prep.i 1 sht-expected     ожд                " " exp        }
 { cmp/cr-prep.i 1 sht-current      тек                " " cur        }
 { cmp/cr-prep.i 1 sht-closed       зкр                " " cls        }

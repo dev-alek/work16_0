@@ -165,8 +165,10 @@ class ibs.th.bge.1crn.subjects.cashparam inherits ibs.th.bge.1crn.subjects.code:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public cashparam ( ):
-      delete object mCashDevice.
-      delete object mCashSection.
+	  if valid-object(mCashDevice) then
+        delete object mCashDevice.
+      if valid-object(mCashSection) then
+        delete object mCashSection.
 	end destructor.
 
   

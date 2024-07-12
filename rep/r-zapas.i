@@ -1881,7 +1881,6 @@ define variable l-m   as integer no-undo .
       run print-footer-o.
   end.
   run print-footer.
-  { rep/repfrm.i off}
     run paramls-write in this-procedure
       (input "file"
       ,input string(v-ind)

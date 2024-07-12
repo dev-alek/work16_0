@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,21 +8,22 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE TEMP-TABLE tt-staff NO-UNDO LIKE ub.staff.
-DEFINE BUFFER X_clients FOR ub.clients.
-DEFINE BUFFER X_person FOR ub.person.
-DEFINE BUFFER X_staff FOR ub.staff.
+DEFINE TEMP-TABLE tt-staff NO-UNDO LIKE staff.
+DEFINE TEMP-TABLE tt-staff-attr NO-UNDO LIKE staff-attr.
+DEFINE BUFFER X_clients FOR clients.
+DEFINE BUFFER X_person FOR person.
+DEFINE BUFFER X_staff FOR staff.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-sel 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a44284873617, 2302, rls $
+$Author: SSlivenko $
+$Date: Fri Feb 14 16:31:04 2020 +0300 $
+$Workfile: staffs.w $
+$Archive: ref/staffs.w $
 
 Справочник персонала
 
@@ -44,11 +45,11 @@ DEFINE input parameter p-db-num   like ub.db.db-num NO-UNDO .
 DEFINE input parameter p-psn-code like ub.person.psn-code NO-UNDO .
 define output parameter rid-list    as  char no-undo . /* список recid'ов выбранных человеков */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a44284873617, 2302, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Feb 14 16:31:04 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: staffs.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/staffs.w $":U .
 define variable vss-description as character no-undo init "Справочник персонала".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }
@@ -64,6 +65,7 @@ define variable vss-description as character no-undo init "Справочник персонала"
 { gbl/flt-def.i }
 { gbl/fltfield.i }
 { gbl/fltopend.i defproc }
+{ str/defc-csh.i "NEW SHARED" }
 
 /* Local Variable Definitions ---                                       */
 
@@ -91,8 +93,8 @@ define variable filter-label0 as character no-undo init "Список персонала" .
 define variable filter-label as character no-undo init "Список персонала" .
 define variable filter-point0 as character no-undo init "staffs" .
 define variable filter-point as character no-undo init "staffs" .
-
-
+define variable log-file-name as character no-undo init "send-cd.txt".
+define variable v-view-log as logical no-undo .
 
 FUNCTION get-staff-name RETURNS CHARACTER ( input p-obj-name as character
                                           , input p-psn-code as integer
@@ -138,7 +140,7 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -153,8 +155,8 @@ END FUNCTION.
 &Scoped-define INTERNAL-TABLES X_staff X_person X_clients
 
 /* Definitions for BROWSE br-staff                                      */
-&Scoped-define FIELDS-IN-QUERY-br-staff {&sort-clmn_1} {&sort-clmn_2} {&sort-clmn_3} {&sort-clmn_4} {&sort-clmn_5} {&sort-clmn_6} {&sort-clmn_7} {&sort-clmn_8}
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-staff {&sort-clmn_2}
+&Scoped-define FIELDS-IN-QUERY-br-staff {&sort-clmn_1} {&sort-clmn_2} {&sort-clmn_3} {&sort-clmn_4} {&sort-clmn_5} {&sort-clmn_6} {&sort-clmn_7} {&sort-clmn_8}   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-staff {&sort-clmn_2}   
 &Scoped-define SELF-NAME br-staff
 &Scoped-define QUERY-STRING-br-staff FOR EACH X_staff NO-LOCK , ~
        first X_person NO-LOCK   WHERE X_person.psn-code = X_staff.num-code, ~
@@ -174,9 +176,9 @@ END FUNCTION.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-mark b-sel b-add b-lkp b-chg b-del ~
-b-print b-hist b-sch b-help RS-status b-arch f-db-num f-staff-code br-staff ~
-mark-num
-&Scoped-Define DISPLAYED-OBJECTS RS-status f-db-num f-staff-code mark-num
+b-qrCode b-print b-hist b-sch b-help RS-status b-arch f-db-num f-staff-code ~
+br-staff mark-num 
+&Scoped-Define DISPLAYED-OBJECTS RS-status f-db-num f-staff-code mark-num 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -191,95 +193,103 @@ mark-num
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-add
+DEFINE MENU MENU-add 
        MENU-ITEM m-add-new      LABEL "Новое физ-лицо"
        MENU-ITEM m-add-old      LABEL "Выбрать из справочника".
 
-DEFINE MENU MENU-b-chg
-       MENU-ITEM m_psn          LABEL "Физ.лицо"
+DEFINE MENU MENU-b-chg 
+       MENU-ITEM m_psn          LABEL "Физ.лицо"      
        MENU-ITEM m_staff        LABEL "Данные персонала".
 
-DEFINE MENU MENU-b-del
-       MENU-ITEM m_client       LABEL "Физ.лицо"
+DEFINE MENU MENU-b-chg-2 
+       MENU-ITEM m_psn-2        LABEL "Физ.лицо"      
+       MENU-ITEM m_staff-2      LABEL "Данные персонала".
+
+DEFINE MENU MENU-b-del 
+       MENU-ITEM m_client       LABEL "Физ.лицо"      
        MENU-ITEM m_delstaff     LABEL "Данные персонала".
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-add
-     LABEL "&Добавить"
+DEFINE BUTTON b-add 
+     LABEL "&Добавить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-arch
-     LABEL "&Архив"
+DEFINE BUTTON b-arch 
+     LABEL "&Архив" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-chg
-     LABEL "&Изменить"
+DEFINE BUTTON b-chg 
+     LABEL "&Изменить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-del
-     LABEL "&Удалить"
+DEFINE BUTTON b-del 
+     LABEL "&Удалить" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь":L
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь":L 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-hist
-     LABEL "Ис&тория"
+DEFINE BUTTON b-hist 
+     LABEL "Ис&тория" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-lkp
-     LABEL "&Просмотр"
+DEFINE BUTTON b-lkp 
+     LABEL "&Просмотр" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-mark
-     LABEL "&*"
+DEFINE BUTTON b-mark 
+     LABEL "&*" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-print
-     LABEL "Пе&чать":L
+DEFINE BUTTON b-print 
+     LABEL "Пе&чать":L 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-quit AUTO-GO
-     LABEL "&Выход ":L
+DEFINE BUTTON b-qrCode 
+     LABEL "&QR-код кассира" 
+     SIZE 15 BY 1.
+
+DEFINE BUTTON b-quit AUTO-GO 
+     LABEL "&Выход ":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-sch
-     LABEL "&Фильтр"
+DEFINE BUTTON b-sch 
+     LABEL "&Фильтр" 
      SIZE 3 BY 1.
 
-DEFINE BUTTON b-sel AUTO-GO
-     LABEL "Вы&бор ":L
+DEFINE BUTTON b-sel AUTO-GO 
+     LABEL "Вы&бор ":L 
      SIZE 10 BY 1.
 
-DEFINE VARIABLE f-db-num AS INTEGER FORMAT ">>>>9":U INITIAL 0
-     LABEL "№ БД"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-db-num AS INTEGER FORMAT ">>>>9":U INITIAL 0 
+     LABEL "№ БД" 
+     VIEW-AS FILL-IN 
      SIZE 7 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-staff-code AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0
-     LABEL "Код"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE f-staff-code AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 0 
+     LABEL "Код" 
+     VIEW-AS FILL-IN 
      SIZE 9.5 BY 1 NO-UNDO.
 
-DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>>9":U INITIAL 0
-      VIEW-AS TEXT
+DEFINE VARIABLE mark-num AS INTEGER FORMAT ">>>9":U INITIAL 0 
+      VIEW-AS TEXT 
      SIZE 4.75 BY .75
      FGCOLOR 10  NO-UNDO.
 
-DEFINE VARIABLE RS-status AS INTEGER
+DEFINE VARIABLE RS-status AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS
+     RADIO-BUTTONS 
           "Все", 0,
 "Текущие", 1
      SIZE 28 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-staff FOR
-      X_staff,
-      X_person,
+DEFINE QUERY br-staff FOR 
+      X_staff, 
+      X_person, 
       X_clients SCROLLING.
 &ANALYZE-RESUME
 
@@ -311,6 +321,7 @@ DEFINE FRAME d-sel
      b-lkp AT ROW 1 COL 35
      b-chg AT ROW 1 COL 45
      b-del AT ROW 1 COL 55
+     b-qrCode AT ROW 1 COL 65 WIDGET-ID 2
      b-print AT ROW 1 COL 86
      b-hist AT ROW 1 COL 89
      b-sch AT ROW 1 COL 92
@@ -322,8 +333,8 @@ DEFINE FRAME d-sel
      br-staff AT ROW 4 COL 1
      mark-num AT ROW 2.96 COL 3.5 COLON-ALIGNED NO-LABEL
      SPACE(88.75) SKIP(15.41)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "ПЕРСОНАЛ":L.
 
 
@@ -349,22 +360,25 @@ DEFINE FRAME d-sel
 /* SETTINGS FOR DIALOG-BOX d-sel
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-staff f-staff-code d-sel */
-ASSIGN
+ASSIGN 
        FRAME d-sel:SCROLLABLE       = FALSE
-       FRAME d-sel:PRIVATE-DATA     =
+       FRAME d-sel:PRIVATE-DATA     = 
                 "DLGCLOSE".
 
-ASSIGN
+ASSIGN 
        b-add:POPUP-MENU IN FRAME d-sel       = MENU MENU-add:HANDLE.
 
-ASSIGN
+ASSIGN 
        b-arch:HIDDEN IN FRAME d-sel           = TRUE.
 
-ASSIGN
+ASSIGN 
        b-chg:POPUP-MENU IN FRAME d-sel       = MENU MENU-b-chg:HANDLE.
 
-ASSIGN
+ASSIGN 
        b-del:POPUP-MENU IN FRAME d-sel       = MENU MENU-b-del:HANDLE.
+
+ASSIGN 
+       b-qrCode:POPUP-MENU IN FRAME d-sel       = MENU MENU-b-chg-2:HANDLE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
@@ -390,7 +404,7 @@ BY X_staff.staff-code.
 */  /* BROWSE br-staff */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -406,6 +420,51 @@ DO:
   */
 END.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME B-quit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-quit d-sel
+ON CHOOSE OF B-quit IN FRAME d-sel /* Ввод */
+DO:
+  define variable recid_attr as character no-undo .
+  /*Отправка qrCode на кассу*/
+  for each tt-staff-attr :
+    find first X_staff no-lock where X_staff.staff-code = tt-staff-attr.staff-code and
+    X_staff.role = tt-staff-attr.role no-error .
+    find first X_clients NO-LOCK WHERE X_clients.obj-type = {&prs}
+        AND X_clients.obj-code = X_staff.psn-code no-error .
+          create cash-cash.
+          assign
+          cash-cash.cash-code = X_staff.staff-code
+          cash-cash.cash-name = X_clients.obj-name
+          cash-cash.stts = (if X_staff.date-end < today then 1 else 0)
+          cash-cash.psn-code = X_staff.psn-code
+          cash-cash.psswd = X_staff.password
+          .
+          find first ub.staff-attr no-lock where ub.staff-attr.attr-code = "CashierQRCode"
+          and ub.staff-attr.role = X_staff.role 
+          and ub.staff-attr.role-level = X_staff.role-level
+          and ub.staff-attr.staff-code = X_staff.staff-code no-error .
+          if available (ub.staff-attr) then 
+          recid_attr = recid_attr + {&comma-char} + string(recid(ub.staff-attr)) .
+          
+   end.
+  if can-find(first cash-cash) then do:
+          
+  /* Отсылка на кассу */
+      run str/diallog.w (
+            input parparentproc
+          , input this-procedure
+          , input "str/send-all.p":U
+          , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'qrCode' + {&delim-par} + 'Отсылка QR-code на кассы':U + {&delim-par} + string(recid_attr))
+          , input ? /*p-auto-go*/
+          , input "":U
+          , input substitute("Отсылка QR-code на кассы &1", {&cd-type-IBm-XML})
+        ) no-error.
+
+  end.
+END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -736,6 +795,49 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-qrCode
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-qrCode d-sel
+ON CHOOSE OF b-qrCode IN FRAME d-sel /* QR-код кассира */
+DO:
+  define variable v-update as logical no-undo .
+  define variable attr-value as character no-undo .
+  
+  if available (X_staff) then do:
+    buffer-copy X_staff to tt-staff .
+    find first ub.staff-attr no-lock where ub.staff-attr.attr-code = "CashierQRCode" and
+    ub.staff-attr.date-start <= today and
+    ub.staff-attr.role = X_staff.role and
+    ub.staff-attr.staff-code = X_staff.staff-code no-error .
+    attr-value = if available (ub.staff-attr) then ub.staff-attr.attr-value else "" .
+    run ref\view-qrCode.w(parparentproc, input-output attr-value, input table tt-staff, output v-update).
+  if v-update then do:
+    find first tt-staff-attr no-lock where tt-staff-attr.attr-code = "CashierQRCode" and
+    tt-staff-attr.date-start = today and
+    tt-staff-attr.role = X_staff.role and
+    tt-staff-attr.staff-code = X_staff.staff-code no-error .
+    if not available (tt-staff-attr) then do:
+      create tt-staff-attr .
+      assign
+      tt-staff-attr.attr-code = "CashierQRCode"
+      tt-staff-attr.date-start = today
+      tt-staff-attr.role = X_staff.role
+      tt-staff-attr.role-level = X_staff.role-level
+      tt-staff-attr.staff-code = X_staff.staff-code
+      .
+    end.
+    tt-staff-attr.attr-value = attr-value .
+  end.
+  end.
+  else do:
+    message "Не выбран кассир."
+    view-as alert-box.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-sch
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sch d-sel
 ON CHOOSE OF b-sch IN FRAME d-sel /* Фильтр */
@@ -913,9 +1015,35 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME m_psn-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_psn-2 d-sel
+ON CHOOSE OF MENU-ITEM m_psn-2 /* Физ.лицо */
+DO:
+  ASSIGN
+  change-option = {&prs}.
+  APPLY "CHOOSE" TO b-chg IN FRAME {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME m_staff
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_staff d-sel
 ON CHOOSE OF MENU-ITEM m_staff /* Данные персонала */
+DO:
+  ASSIGN
+  change-option = 'staff'.
+  APPLY "CHOOSE" TO b-chg  IN FRAME {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME m_staff-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_staff-2 d-sel
+ON CHOOSE OF MENU-ITEM m_staff-2 /* Данные персонала */
 DO:
   ASSIGN
   change-option = 'staff'.
@@ -944,7 +1072,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-sel 
 
 
 /* ***************************  Main Block  *************************** */
@@ -1024,6 +1152,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       v-db-num = p-db-num
       .
     end.
+
     run enable_UI  in this-procedure .
     HIDE mark-num in frame {&frame-name} .
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
@@ -1037,7 +1166,7 @@ run disable_UI in this-procedure .
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calc-arch d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calc-arch d-sel 
 PROCEDURE calc-arch :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -1530,7 +1659,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -1541,7 +1670,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-sel 
 PROCEDURE enable_UI :
 define buffer buf_db for ub.db.
 ASSIGN
@@ -1561,6 +1690,7 @@ v-tab-order = "b-exit,b-mark,b-add,b-sel,b-lkp,b-chg,b-del,b-hist,b-print,b-help
 ENABLE
 br-staff
 b-quit
+b-qrCode when p-role = {&role-cashier}
 b-mark WHEN lookup( "b-mark", bttns) > 0
 b-sel  WHEN lookup( "b-sel", bttns) > 0
 b-print
@@ -1576,6 +1706,10 @@ f-staff-code
 RS-status
 b-arch when p-role = {&role-cashier}
 WITH FRAME {&frame-name} .
+
+disable b-qrCode  WHEN lookup( "b-sel", bttns) > 0 with frame {&frame-name} .
+if p-role <> {&role-cashier} then
+hide b-qrCode in frame {&frame-name} .
 assign
 MENU-ITEM m-add-new:sensitive in menu menu-add = (lookup( "b-add", bttns) > 0  and buf_db.add-clients)
 MENU-ITEM m_psn:sensitive in menu menu-b-chg = (lookup( "b-add", bttns) > 0  and buf_db.add-clients)
@@ -1611,7 +1745,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenBr d-sel 
 PROCEDURE OpenBr :
 define input  parameter p-open-query     as logical   no-undo .
 define input  parameter p-find-next      as logical   no-undo .
@@ -1808,7 +1942,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-add d-sel 
 PROCEDURE proc-b-add :
 DEFINE INPUT PARAMETER p-option AS CHARACTER NO-UNDO.
 define variable glog as logical no-undo .
@@ -1849,7 +1983,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-chg d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-chg d-sel 
 PROCEDURE proc-b-chg :
 DEFINE INPUT PARAMETER p-option AS CHARACTER NO-UNDO.
 define variable v-old-cshr as integer no-undo .
@@ -1948,7 +2082,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-del d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-del d-sel 
 PROCEDURE proc-b-del :
 DEFINE INPUT PARAMETER p-option AS CHARACTER NO-UNDO.
 define variable glog as logical no-undo .
@@ -2047,7 +2181,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-b-sch d-sel 
 PROCEDURE proc-b-sch :
 assign
   tbl = 'staff'
@@ -2090,7 +2224,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find_staff-code d-sel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-find_staff-code d-sel 
 PROCEDURE proc-find_staff-code :
 define input parameter p-next as logical no-undo.
 define input parameter p-staff-code like ub.staff.staff-code no-undo.
@@ -2104,3 +2238,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

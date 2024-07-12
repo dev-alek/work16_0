@@ -82,8 +82,16 @@ define variable vss-description as character no-undo init "Подготовка пакета(ов)
     route-cnt   label "Основных записей"
     rec-cnt     label "Привязанных"
     with view-as dialog-box side-labels 1 columns three-d title "** Формирование пакета".
+  define variable mFrameView      as logical   no-undo init yes.
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame inf:handle.
 
-
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameoxmError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameoxmError"). 
+  end.
+  mFrameView = not session:batch-mode and mFramHandle:visible.
 do
 on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
 on stop   undo, return error substitute( "&1. stop", vss-workfile )
@@ -151,12 +159,15 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   .
   v-last-tbl-ord = if available buf_esys-route then buf_esys-route.esr-tbl-ord else 0 .
 
-  view frame inf.
-  do with frame inf
-  :
-    assign
-      p-esys-id :screen-value   = string( p-esys-id, p-esys-id :format)
-    .
+  if mFrameView
+  then do:
+     view frame inf.
+     do with frame inf
+     :
+        assign
+        p-esys-id :screen-value   = string( p-esys-id, p-esys-id :format)
+     .
+     end.
   end.
   
       run ext-system-attr-exist (
@@ -306,7 +317,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       end.
     end.
 
-    do with frame inf
+    if mFrameView
+    then do with frame inf
     :
       assign
         p-esys-id :screen-value   = string( p-esys-id, p-esys-id :format)
@@ -475,8 +487,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         then do:
           leave route-label.
         end.
-  
-        do with frame inf
+        if mFrameView
+        then do with frame inf
         :
           assign
             p-esys-id :screen-value   = string( p-esys-id, p-esys-id :format)
@@ -526,8 +538,10 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     end.
 
   end.
-
-  hide frame inf.
+  if mFrameView
+  then do:
+    hide frame inf.
+  end. 
 end.
 
 procedure initial-export :

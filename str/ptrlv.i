@@ -306,7 +306,8 @@ if lookup('b-del', varbuttons) = 0 then
                              bf_rvs-doc.obj-code =  parobj-code       and
                              bf_rvs-doc.status_  <> {&fact}           and
                              bf_rvs-doc.rvs-type <> {&rvs-before-doc} and
-                             bf_rvs-doc.rvs-type <> {&rvs-after-doc}  no-lock no-error.
+                             bf_rvs-doc.rvs-type <> {&rvs-after-doc}  and
+                             bf_rvs-doc.rvs-type <> {&test-asi}       no-lock no-error.
 if available bf_rvs-doc then do:
    return error SUBSTITUTE("На объекте есть открытый документ сверки &1 .", bf_rvs-doc.rvs-code).
 end.

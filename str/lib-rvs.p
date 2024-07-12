@@ -69,10 +69,12 @@ define variable vss-description as character no-undo initial "Библиотека процеду
 { gbl/getsect.i def }
 { str/is-sug.i }
 { gbl/db-attr.i }
-{utl\search.i}
-{bge/place-def.i}
-{str/revis.i }
-{gbl/objsrv.i}
+{ utl\search.i }
+{ bge/place-def.i }
+{ str/revis.i }
+{ gbl/objsrv.i }
+{ str/get-pokmi-dll-version.i }
+{ str/calibrationbelt.i }
 
 define stream str-err.
 define stream str-log.
@@ -160,12 +162,12 @@ procedure lib-rvs_place-sh : /* place-sh */
     on error undo, return error return-value
     :
       
-          IF CAN-FIND( FIRST doc-attr
+      IF CAN-FIND( FIRST doc-attr
       WHERE doc-attr.doc-code  = p-rvs-code
         AND doc-attr.attr-code = "rvs-auto":U
         AND doc-attr.attr-value = "Yes":U and  p-rvs-full = yes and buf_place.is-meas = no
       NO-LOCK)
-  THEN next.
+      THEN next.
         
       run gds-attr-value in this-procedure
         ( input  buf_pl-gds.gds-code
@@ -645,8 +647,13 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
   define buffer crl_prev_rvs-doc for ub.rvs-doc.
   define buffer buf_place        for ub.place.
 
-
-
+  define variable c-value as character no-undo.
+  define variable c-type as character no-undo.
+  
+  /* для вирт рез */
+  define variable is-vir as logical no-undo.
+  define variable v-value as character no-undo.
+  define variable v-ok as logical no-undo.
 
   do on error undo, return error return-value :
 
@@ -679,6 +686,98 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
     then do:
       return 'Товар не является жидким топливом' .
     end.
+    
+    if p-rvs-type = {&test-asi}
+    then do :
+      &scop proc-name gds-attr-value
+      {&run_proc_attr-lib}
+        (input  p-gds-code
+        ,input  {&attr-fuel-type}
+        ,output c-value
+        ,output c-type)
+      no-error.
+      if c-value = 'lgas':U
+      or c-value = 'metan':U
+      or c-value = 'propan':U
+      then do :
+        return substitute('GAS! Проверка корректности работы АСИ в резервуаре НП возможна только по резервуарам с НП. Выбранный резервуар с типом топлива &1 не может быть добавлен в документ!', c-value).
+      end .
+      find first buf_place no-lock  where buf_place.obj-type = p-obj-type
+                                      and buf_place.obj-code = p-obj-code
+                                      and buf_place.pl-code  = p-pl-code
+                                      no-error .
+      if not available buf_place
+      then do :
+        return error return-value .
+      end .
+      if not buf_place.is-meas
+      then do :
+        return substitute('NMS! Проверка корректности работы АСИ в резервуаре НП возможна только по измеряемым резервуарам. Выбранный резервуар неизмеряемый и не может быть добавлен в документ!', c-value).
+      end .
+      /* Для виртуального резервуара */
+      run placelib_get-attr(input {&place-virtual}
+                       ,input buf_place.obj-code
+                       ,input buf_place.obj-type
+                       ,input buf_place.pl-code
+                       ,output v-value
+                       ,output v-ok) no-error.
+      is-vir = if (v-ok and logical(v-value)) then true else false.
+      if is-vir
+      then do :
+        return substitute('VIR! Проверка корректности работы АСИ в резервуаре НП не возможна по виртуальным резервуарам. Выбранный резервуар виртуальный и не может быть добавлен в документ!', c-value).
+      end .
+      
+      find first buf_rvs-line no-lock
+        where buf_rvs-line.rvs-code = p-rvs-code
+          and buf_rvs-line.obj-type = p-obj-type
+          and buf_rvs-line.obj-code = p-obj-code
+          and buf_rvs-line.pl-code  = p-pl-code
+          and buf_rvs-line.gds-code = p-gds-code
+      no-error .
+      if not available buf_rvs-line
+      then do :
+        create buf_rvs-line.
+        assign
+          buf_rvs-line.rvs-code      = p-rvs-code
+          buf_rvs-line.obj-type      = p-obj-type
+          buf_rvs-line.obj-code      = p-obj-code
+          buf_rvs-line.pl-code       = p-pl-code
+          buf_rvs-line.gds-code      = p-gds-code
+          buf_rvs-line.rvs-prev-code = ?
+          buf_rvs-line.measure-qnty = ?
+          buf_rvs-line.brutto-qnty = ?
+          buf_rvs-line.measure-cli-qnty = ?
+          buf_rvs-line.brutto-cli-qnty = ?
+          buf_rvs-line.density = ?
+          buf_rvs-line.temperature = ?
+          buf_rvs-line.level-total = ?
+          buf_rvs-line.level-petrol = ?
+          buf_rvs-line.level-water = ?
+          buf_rvs-line.temp-layer1 = ?
+          buf_rvs-line.temp-layer2 = ?
+          buf_rvs-line.temp-layer3 = ?
+          buf_rvs-line.measure-tc-qnty = ?
+          buf_rvs-line.brutto-tc-qnty = ?
+          buf_rvs-line.state-measure-qnty = ?
+          buf_rvs-line.state-brutto-qnty = ?
+          buf_rvs-line.state-measure-cli-qnty = ?
+          buf_rvs-line.state-brutto-cli-qnty = ?
+          buf_rvs-line.state-density = ?
+          buf_rvs-line.state-temperature = ?
+          buf_rvs-line.state-level-total = ?
+          buf_rvs-line.state-level-petrol = ?
+          buf_rvs-line.state-level-water = ?
+          buf_rvs-line.state-temp-layer1 = ?
+          buf_rvs-line.state-temp-layer2 = ?
+          buf_rvs-line.state-temp-layer3 = ?
+          buf_rvs-line.state-measure-tc-qnty = ?
+          buf_rvs-line.state-brutto-tc-qnty = ?
+          buf_rvs-line.add-qnty       = ?
+          buf_rvs-line.state-add-qnty = ?
+        .
+      end .
+      return .
+    end .
 
     { gbl/ptrlprop.i run p-obj-type p-obj-code }
 
@@ -713,6 +812,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
             and contr_rvs-doc.shift-date = p-cur_shift-obj_shift-date
             and contr_rvs-doc.shift-num  = p-cur_shift-obj_shift-num
             and contr_rvs-doc.status_    = {&fact}
+            and contr_rvs-doc.rvs-type  <> {&test-asi}
           by contr_rvs-doc.fact-order
         on error undo, return error return-value
         :
@@ -1052,7 +1152,8 @@ procedure lib-rvs_crrvslnp : /* create-rvs-line-pump */
                      contr_rvs-doc.obj-code   = p-obj-code                 and
                      contr_rvs-doc.shift-date = p-cur_shift-obj_shift-date and
                      contr_rvs-doc.shift-num  = p-cur_shift-obj_shift-num  and
-                     contr_rvs-doc.status_    = {&fact}
+                     contr_rvs-doc.status_    = {&fact}                    and
+                     contr_rvs-doc.rvs-type  <> {&test-asi}
             :
               find first prev_rvs-line-pump no-lock
                 where prev_rvs-line-pump.rvs-code    = contr_rvs-doc.rvs-code
@@ -1971,15 +2072,19 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-ok              as logical   no-undo.
   define variable  p-prev-rvs-date  as logical no-undo.
 
-    /*параметры для видеонаблюдения */
-    define variable v-vid-ok  as logical   no-undo .
-    define variable v-vid-mes as character no-undo .
-    define variable v-vid-action as integer    no-undo .
-    define variable v-vid-param  as longchar   no-undo .  
-    /*параметры для работы с библиотекой ПО МИ*/
-    define variable v-mm         as com-handle.
-    define variable v-proc       as character  no-undo.
-    define variable v-mm57       as com-handle.
+  /*параметры для видеонаблюдения */
+  define variable v-vid-ok  as logical   no-undo .
+  define variable v-vid-mes as character no-undo .
+  define variable v-vid-action as integer    no-undo .
+  define variable v-vid-param  as longchar   no-undo .  
+  /*параметры для работы с библиотекой ПОкМИ*/
+  define variable v-mm         as com-handle.
+  define variable v-proc       as character  no-undo.
+  define variable v-mm57       as com-handle.
+  
+  define variable Tv as decimal no-undo .
+  define variable Tr as decimal no-undo .
+  define variable R  as decimal no-undo .
 
   define variable place-type        as integer no-undo.
   define variable place-SI          as integer no-undo.
@@ -1989,6 +2094,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable dens-prov         as decimal no-undo format "9.9999999999":U.
   define variable pl-twice-code as character no-undo.
   define variable CalibTable        as character no-undo initial "".
+  define variable CalibBelt         as character no-undo initial "".
   define variable ToolType          as integer no-undo.
   define variable LevelToolType          as integer no-undo.
   define variable A_LevelMeasurementTool  as decimal no-undo.
@@ -1999,7 +2105,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable DeltaAbs_R_Sug-vapor    as decimal no-undo.
   define variable DeltaAbs_Tv             as decimal no-undo.
   define variable DeltaAbs_Tr             as decimal no-undo.
-  define variable DeltaOtn_N              as decimal no-undo.
+  define variable DeltaOtn_N              as decimal no-undo init 0.05 .
   define variable DeltaOtn_K              as decimal no-undo.
   define variable DeltaOtn_K_Full         as decimal no-undo.
   define variable A_Reservoir             as decimal no-undo init 0.0000125 .
@@ -2007,6 +2113,15 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable DeltaOtn_H              as decimal no-undo.
   define variable DeltaOtn_H_Water        as decimal no-undo.
   define variable DeltaOtn_R              as decimal no-undo.
+  define variable ToolAutomationLevel_H   as integer no-undo.
+  define variable ToolAutomationLevel_H_Water as integer no-undo.
+  define variable ToolAutomationLevel_R   as integer no-undo.
+  define variable ToolAutomationLevel_Tv  as integer no-undo.
+  define variable ToolAutomationLevel_Tr  as integer no-undo.
+  define variable DeltaAbs_H_CalcType     as integer no-undo.
+  define variable DeltaAbs_H_Water_CalcType as integer no-undo.
+  define variable Use_DeltaOtn_R_liquid_IN  as logical no-undo.
+  define variable DeltaOtn_R_liquid_IN    as decimal no-undo.
   define variable temp-for-pomi           as integer no-undo.
   define variable temp-izm-vol            as decimal no-undo init ? .
   define variable izmer-density           as decimal no-undo init ? .
@@ -2014,6 +2129,8 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable v-mm-density            as decimal no-undo.
   define variable v-POkMI-result          as character no-undo.
   define variable v-POkMI-result-attr     as character no-undo.
+  define variable v-POkMI-warnings        as character no-undo.
+  define variable v-pokmi-dll-version     as character no-undo .
   define variable place-ponton            as logical no-undo .
   define variable place-ponton-mass       as decimal no-undo .
   define variable place-ponton-height     as decimal no-undo .
@@ -2082,6 +2199,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define variable is-main-tank as logical no-undo .
   
   define variable v-prev-temp as logical no-undo .
+  define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
 
   find first bf_rvs-line exclusive-lock
     where recid( bf_rvs-line ) = p-rec-line
@@ -2106,6 +2224,59 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
     no-error.
   
   { gbl/ptrlprop.i run p-obj-type p-obj-code }
+  
+  find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-code = bf_rvs-line.rvs-code .
+  
+  if buf_rvs-doc.rvs-type = {&test-asi}
+  then do :
+    assign
+      bf_rvs-line.measure-qnty           = tt-meas.measure-qnty
+      bf_rvs-line.brutto-qnty            = tt-meas.brutto-qnty
+      bf_rvs-line.measure-cli-qnty       = tt-meas.measure-cli-qnty
+      bf_rvs-line.brutto-cli-qnty        = tt-meas.brutto-cli-qnty
+      bf_rvs-line.level-total            = tt-meas.level-total
+      bf_rvs-line.level-petrol           = tt-meas.level-petrol
+      bf_rvs-line.level-water            = tt-meas.level-water
+      bf_rvs-line.temp-layer1            = tt-meas.temp-layer1
+      bf_rvs-line.temp-layer2            = tt-meas.temp-layer2
+      bf_rvs-line.temp-layer3            = tt-meas.temp-layer3
+      bf_rvs-line.measure-tc-qnty        = tt-meas.measure-tc-qnty
+      bf_rvs-line.brutto-tc-qnty         = tt-meas.brutto-tc-qnty
+      bf_rvs-line.temperature            = tt-meas.temperature    
+      bf_rvs-line.density                = if tt-meas.density > 0 then tt-meas.density else  bf_rvs-line.state-density
+      bf_rvs-line.brutto-cli-qnty        = if bf_rvs-line.brutto-cli-qnty <> 0 then bf_rvs-line.brutto-cli-qnty else bf_rvs-line.brutto-qnty * bf_rvs-line.density     
+      bf_rvs-line.measure-cli-qnty       = if bf_rvs-line.measure-cli-qnty <> 0 then bf_rvs-line.measure-cli-qnty else bf_rvs-line.measure-qnty * bf_rvs-line.density
+    
+      bf_rvs-line.state-level-total = 0
+      bf_rvs-line.state-level-water = 0
+      bf_rvs-line.state-density = 0
+      bf_rvs-line.state-temperature = ?
+    .
+    
+    if tt-meas.water-qnty <> ?
+    then do :
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+             and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+             and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+             and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "measure-water-qnty" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+          rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+          rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+          rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+          rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+          rvs-line-attr.attr-code = "measure-water-qnty"
+        .
+      end.
+      rvs-line-attr.attr-value = string(tt-meas.water-qnty) .
+    end .  
+    return .
+  end .
 
   assign
     bf_rvs-line.measure-qnty           = tt-meas.measure-qnty
@@ -2804,6 +2975,7 @@ then do:
                 AND crl_prev_rvs-doc.shift-date = rvs-doc.shift-date 
                 AND crl_prev_rvs-doc.shift-num  = rvs-doc.shift-num
                 AND crl_prev_rvs-doc.status_    = {&fact}
+                AND crl_prev_rvs-doc.rvs-type  <> {&test-asi}
                 /* and contr_rvs-doc.rvs-type = {&rvs-control} */
                 BY crl_prev_rvs-doc.fact-order DESC
                 ON ERROR UNDO, RETURN ERROR RETURN-VALUE
@@ -3853,10 +4025,10 @@ THEN DO:
       define buffer temp_sr-izmerenia for sr-izmerenia .
       define buffer level_sr-izmerenia for sr-izmerenia .
       
+      find first bf_place no-lock where bf_place.pl-code = p-pl-code no-error .
       find first sr-izmerenia no-lock where sr-izmerenia.node-code = place-si no-error.
       if error-status :error or not available sr-izmerenia then do :
         find first bf_goods no-lock where bf_goods.gds-code = bf_rvs-line.gds-code no-error .
-        find first bf_place no-lock where bf_place.pl-code = p-pl-code no-error .
         undo _trpomi, return error substitute( 'Для резервуара &1 (&2) не указано основное средство измерения. Создание сверки не возможно.'
                                              ,(if available bf_place then bf_place.loc1 else "?")
                                              ,(if available bf_goods then bf_goods.gds-name else "?") ) .
@@ -3867,10 +4039,15 @@ THEN DO:
           ToolType               = sr-izmerenia.sr-type-id
           LevelToolType          = sr-izmerenia.sr-type-level-measuring
           A_LevelMeasurementTool = sr-izmerenia.sr-temp-line
+          ToolAutomationLevel_H  = vAutomationDegree[sr-izmerenia.sr-type-izm + 1]
+          ToolAutomationLevel_H_Water = vAutomationDegree[sr-izmerenia.sr-type-izm + 1]
           DeltaAbs_H             = sr-izmerenia.sr-abs-err-neft-water
           DeltaAbs_H_Water       = sr-izmerenia.sr-abs-err-water
+          ToolAutomationLevel_R  = vAutomationDegree[sr-izmerenia.sr-type-izm + 1]
           DeltaAbs_R             = sr-izmerenia.sr-abs-err-dens
+          ToolAutomationLevel_Tv = vAutomationDegree[sr-izmerenia.sr-type-izm + 1]
           DeltaAbs_Tv            = sr-izmerenia.sr-abs-err-temp-vol
+          ToolAutomationLevel_Tr = vAutomationDegree[sr-izmerenia.sr-type-izm + 1]
           DeltaAbs_Tr            = sr-izmerenia.sr-abs-err-temp-dens
           DeltaOtn_N             = 0.05
           DeltaOtn_H             = sr-izmerenia.sr-relative-err-neft-water
@@ -3878,6 +4055,10 @@ THEN DO:
           DeltaOtn_R             = sr-izmerenia.sr-relative-err-dens
           DeltaAbs_R_Sug         = sr-izmerenia.sr-abs-err-dens-lgas-liquid
           DeltaAbs_R_Sug-vapor   = sr-izmerenia.sr-abs-err-dens-lgas-vapor
+          DeltaAbs_H_CalcType    = sr-izmerenia.sr-type-level-measuring + 1
+          DeltaAbs_H_Water_CalcType = sr-izmerenia.sr-type-level-measuring + 1
+          Use_DeltaOtn_R_liquid_IN  = sr-izmerenia.sr-relative-err-dens-lgas-liquid <> ?
+          DeltaOtn_R_liquid_IN      = sr-izmerenia.sr-relative-err-dens-lgas-liquid
         .
       end.
       if is-sug(bf_rvs-line.gds-code)
@@ -3935,15 +4116,16 @@ THEN DO:
               ToolType               = dens_sr-izmerenia.sr-type-id
               DeltaAbs_R             = dens_sr-izmerenia.sr-abs-err-dens
               DeltaOtn_R             = dens_sr-izmerenia.sr-relative-err-dens
+              ToolAutomationLevel_R  = vAutomationDegree[dens_sr-izmerenia.sr-type-izm + 1].
             .
           end.
         end .
         
-        if pl-rvd-dens
-        then do :
-          DeltaAbs_R_Sug         = 0 .
-          DeltaAbs_R_Sug-vapor   = 0 .
-        end .
+/*        if pl-rvd-dens                */
+/*        then do :                     */
+/*          DeltaAbs_R_Sug         = 0 .*/
+/*          DeltaAbs_R_Sug-vapor   = 0 .*/
+/*        end .                         */
         
         find first rvs-line-attr no-lock
           where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
@@ -3970,6 +4152,8 @@ THEN DO:
             assign
               DeltaAbs_Tv            = temp_sr-izmerenia.sr-abs-err-temp-vol
               DeltaAbs_Tr            = temp_sr-izmerenia.sr-abs-err-temp-dens
+              ToolAutomationLevel_Tv = vAutomationDegree[temp_sr-izmerenia.sr-type-izm + 1]
+              ToolAutomationLevel_Tr = vAutomationDegree[temp_sr-izmerenia.sr-type-izm + 1]
             .
           end.
         end .
@@ -4071,6 +4255,7 @@ THEN DO:
       and dens_sr-izmerenia.sr-temperature
       then do :
         DeltaAbs_Tr = dens_sr-izmerenia.sr-abs-err-temp-dens .
+        ToolAutomationLevel_Tr = vAutomationDegree[dens_sr-izmerenia.sr-type-izm + 1].
       end .
       
       if DeltaAbs_H       = ? then DeltaAbs_H = 0 .
@@ -4086,9 +4271,33 @@ THEN DO:
       if DeltaAbs_R_Sug-vapor = ? then DeltaAbs_R_Sug-vapor = 0 .
       if LevelToolType    = ? then LevelToolType = 0 .
       if ToolType         = ? then ToolType = 0 .
-      if A_LevelMeasurementTool = ? then A_LevelMeasurementTool = 0 .
+      if A_LevelMeasurementTool      = ? then A_LevelMeasurementTool = 0 .
+      if ToolAutomationLevel_Tr      = ? then ToolAutomationLevel_Tr =0.
+      if ToolAutomationLevel_H       = ? then ToolAutomationLevel_H = 0.
+      if ToolAutomationLevel_H_Water = ? then ToolAutomationLevel_H_Water = 0.
+      if ToolAutomationLevel_Tv      = ? then ToolAutomationLevel_Tv = 0.
+      if ToolAutomationLevel_R       = ? then ToolAutomationLevel_R = 0.
+      if DeltaAbs_H_CalcType         = ? then DeltaAbs_H_CalcType = 0.
+      if DeltaAbs_H_Water_CalcType   = ? then DeltaAbs_H_Water_CalcType = 0.
+      if Use_DeltaOtn_R_liquid_IN = ? then Use_DeltaOtn_R_liquid_IN = false.
+      if DeltaOtn_R_liquid_IN     = ? then DeltaOtn_R_liquid_IN = 0.
+      
+      if bf_rvs-line.level-water = 0
+      then do :
+        ToolAutomationLevel_H_Water = 0 .
+        DeltaAbs_H_Water_CalcType = 0 .
+        DeltaAbs_H_Water = 0 .
+      end .
       
       /*..........................................*/
+      
+      v-pokmi-dll-version = get-pokmi-dll-version() .
+      if v-pokmi-dll-version = "error"
+      then do :
+        release object v-mm no-error.
+        v-mm = ?.
+        undo _trpomi, return error substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) .
+      end .
       
       if LevelToolType > 0
       and not is-sug(bf_rvs-line.gds-code)
@@ -4115,6 +4324,7 @@ THEN DO:
                       "    " SKIP
                       cur-time-string()           FORMAT "x(16)"    SKIP
                       'Процедура             "ADMM.CMethodOfMetering57"'       SKIP
+                      'Версия dll: '              v-pokmi-dll-version                               SKIP
                       'CODE_PL                = ' bf_rvs-line.pl-code                           SKIP
                       'H                      = ' v-mm57:H                  SKIP
                       'ToolType               = ' v-mm57:ToolType                                      SKIP
@@ -4235,8 +4445,8 @@ THEN DO:
             v-mm:H                      = bf_rvs-line.level-total * 10
             v-mm:CalibrationTable       = CalibTable
             v-mm:T                      = bf_rvs-line.state-temperature
-            v-mm:R_liquid               = bf_rvs-line.state-density * 1000
-            v-mm:R_gas                  = if state-vapor-density <> ? then (state-vapor-density * 1000) else (vapor-density * 1000)
+            v-mm:R_liquid               = round(bf_rvs-line.state-density * 1000,1)
+            v-mm:R_gas                  = round(if state-vapor-density <> ? then (state-vapor-density * 1000) else (vapor-density * 1000),1)
             v-mm:DeltaOtn_K             = DeltaOtn_K
             v-mm:DeltaOtn_K_Full        = DeltaOtn_K
             v-mm:DeltaAbs_H             = DeltaAbs_H
@@ -4249,16 +4459,17 @@ THEN DO:
           then do :
             v-mm:Set_A_Reservoir(replace(string(A_Reservoir), ".", ",")) no-error .
           end .
-    
+          
           OUTPUT stream outstream to value ("pomi.log") append.
                   PUT STREAM outstream  unformatted
                   "    " SKIP
                   "    " SKIP
                   cur-time-string()           FORMAT "x(16)"    SKIP
-                  'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
-                  'CODE_PL                = ' bf_rvs-line.pl-code                           SKIP
+                  'Процедура'                 v-proc                      FORMAT "x(128)"        SKIP
+                  'Версия dll: '              v-pokmi-dll-version                                SKIP
+                  'CODE_PL                = ' bf_rvs-line.pl-code                                SKIP
                   'H                      = ' v-mm:H                                             SKIP
-                  'CalibrationTable       = ' v-mm:CalibrationTable                    SKIP
+                  'CalibrationTable       = ' v-mm:CalibrationTable                              SKIP
                   'T                      = ' v-mm:T                                             SKIP
                   'R_liquid               = ' v-mm:R_liquid                                      SKIP
                   'R_gas                  = ' v-mm:R_gas                                         SKIP
@@ -4270,6 +4481,30 @@ THEN DO:
                   'DeltaAbs_R_gas         = ' v-mm:DeltaAbs_R_gas                                SKIP
                   'DeltaOtn_N             = ' v-mm:DeltaOtn_N                                    SKIP
                       .
+          if v-pokmi-dll-version = "1.0.5.6"
+          then do :
+            assign
+              v-mm:Use_DeltaOtn_R_liquid_IN = Use_DeltaOtn_R_liquid_IN
+/*              v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN*/
+            .
+            if DeltaOtn_R_liquid_IN = 0.42
+            then do :
+              v-mm:Set_DeltaOtn_R_liquid_IN(replace(string(DeltaOtn_R_liquid_IN), ".", ",")) no-error .
+              if string(v-mm:DeltaOtn_R_liquid_IN) = ".0000000000"
+              then do :
+                v-mm:Set_DeltaOtn_R_liquid_IN(string(DeltaOtn_R_liquid_IN)) no-error .
+              end .
+            end .
+            else do :
+              v-mm:DeltaOtn_R_liquid_IN     = DeltaOtn_R_liquid_IN .
+            end .
+            PUT STREAM outstream unformatted
+              'Use_DeltaOtn_R_liquid_IN = ' v-mm:Use_DeltaOtn_R_liquid_IN SKIP
+              'DeltaOtn_R_liquid_IN     = ' v-mm:DeltaOtn_R_liquid_IN     SKIP
+              
+            .
+          end .
+    
           output stream outstream close.
         end .
         else do :
@@ -4306,10 +4541,102 @@ THEN DO:
               "    " SKIP
               cur-time-string()           FORMAT "x(16)"    SKIP
               'Процедура '                v-proc                          FORMAT "x(128)"    SKIP
+              'Версия dll: '              v-pokmi-dll-version                                SKIP
               'CODE_PL                = ' bf_rvs-line.pl-code                                SKIP
               'H                      = ' v-mm:H                                             SKIP
               'H_water                = ' v-mm:H_water                                       SKIP
               'CalibrationTable       = ' v-mm:CalibrationTable                              SKIP
+          .
+          if v-pokmi-dll-version = "1.0.5.6"
+          then do :
+            CalibBelt = getCalibrationBelt(
+                bf_rvs-line.obj-type, 
+                bf_rvs-line.obj-code,
+                bf_rvs-line.pl-code,
+                bf_rvs-line.state-level-total,
+                if bf_rvs-line.state-level-water <> ? then bf_rvs-line.state-level-water else 0
+            ).
+            assign
+              v-mm:CalibrationBelt        = CalibBelt
+              v-mm:ToolAutomationLevel_H  = ToolAutomationLevel_H
+              v-mm:ToolAutomationLevel_H_Water = ToolAutomationLevel_H_Water
+              v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
+              v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
+              v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
+              v-mm:DeltaAbs_H_CalcType    = DeltaAbs_H_CalcType
+              v-mm:DeltaAbs_H_Water_CalcType = DeltaAbs_H_Water_CalcType
+              
+              v-mm:A_LevelMeasurementTool = 0
+            .
+            if A_LevelMeasurementTool = 0.0001
+            then do :
+              v-mm:Set_A_LevelMeasurementTool(replace(string(A_LevelMeasurementTool), ".", ",")) no-error .
+              if string(v-mm:A_LevelMeasurementTool) = ".0000000000"
+              then do :
+                v-mm:Set_A_LevelMeasurementTool(string(A_LevelMeasurementTool)) no-error .
+              end .
+            end .
+            else do :
+              v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool .
+            end .
+            
+            assign
+              Tv = if temp-izm-vol <> ? then temp-izm-vol else bf_rvs-line.state-temperature
+              Tr = bf_rvs-line.state-temperature
+              R  = if izmer-density <> ? then ( izmer-density * 1000 ) else ( bf_rvs-line.state-density * 1000 )
+            .
+            
+            v-mm:Set_Tv(replace(string(Tv), ".", ",")) no-error .
+            if string(v-mm:Tv) = ".0000000000"
+            and Tv <> 0
+            then do :
+              v-mm:Set_Tv(string(Tv)) no-error .
+            end .
+            if substring(string(v-mm:Tv), length(string(v-mm:Tv)) - 2) = "999"
+            then do :
+              v-mm:Set_Tv(replace(string(Tv + 0.0000000001), ".", ",")) no-error .
+              if string(v-mm:Tv) = ".0000000000"
+              and Tv <> 0
+              then do :
+                v-mm:Set_Tv(string(Tv + 0.0000000001)) no-error .
+              end .
+            end .
+            
+            v-mm:Set_Tr(replace(string(Tr), ".", ",")) no-error .
+            if string(v-mm:Tr) = ".0000000000"
+            and Tr <> 0
+            then do :
+              v-mm:Set_Tr(string(Tr)) no-error .
+            end .
+            if substring(string(v-mm:Tr), length(string(v-mm:Tr)) - 2) = "999"
+            then do :
+              v-mm:Set_Tr(replace(string(Tr + 0.0000000001), ".", ",")) no-error .
+              if string(v-mm:Tr) = ".0000000000"
+              and Tr <> 0
+              then do :
+                v-mm:Set_Tr(string(Tr + 0.0000000001)) no-error .
+              end .
+            end .
+            
+            v-mm:Set_R(replace(string(R), ".", ",")) no-error .
+            if string(v-mm:R) = ".0000000000"
+            then do :
+              v-mm:Set_R(string(R)) no-error .
+            end .
+            
+            PUT STREAM outstream unformatted
+              'CalibrationBelt       = ' v-mm:CalibrationBelt           SKIP
+              'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP
+              'ToolAutomationLevel_H_Water = ' ToolAutomationLevel_H_Water    SKIP
+              'ToolAutomationLevel_R       = ' v-mm:ToolAutomationLevel_R     SKIP
+              'ToolAutomationLevel_Tv      = ' v-mm:ToolAutomationLevel_Tv    SKIP
+              'ToolAutomationLevel_Tr      = ' v-mm:ToolAutomationLevel_Tr    SKIP
+              'DeltaAbs_H_CalcType         = ' v-mm:DeltaAbs_H_CalcType       SKIP
+              'DeltaAbs_H_Water_CalcType   = ' v-mm:DeltaAbs_H_Water_CalcType SKIP
+              
+            .
+          end.
+          PUT STREAM outstream unformatted
               'Tv                     = ' v-mm:Tv                                            SKIP
               'Tr                     = ' v-mm:Tr                                            SKIP
               'R                      = ' v-mm:R                                             SKIP
@@ -4351,7 +4678,8 @@ THEN DO:
         v-mm:Exec() no-error.
 
         if v-mm:Result <> 0 then do :
-          error-string = v-mm:ResultDetail .
+          error-string = substitute("~nРезервуар: &1.~n", if avail bf_place then bf_place.loc1 else "") 
+                       + replace(v-mm:ResultDetail,";0x","~n0x") .
           output stream outstream to value ("pomi.log")  append.
           put stream outstream error-string format "X(1024)" skip.
           RELEASE OBJECT v-mm NO-ERROR.
@@ -4362,6 +4690,17 @@ THEN DO:
         else do :
           if is-sug(bf_rvs-line.gds-code)
           then do :
+            if v-pokmi-dll-version = "1.0.5.6" and v-mm:C_HN = 0 then
+            do:
+              error-string = substitute("~nРезервуар: &1.~n", bf_place.loc1) + "Ошибка входного параметра CalibrationTable. Библеотека ПОкМИ вернула C_HN = 0." .
+              output stream outstream to value ("pomi.log")  append.
+              put stream outstream error-string skip.
+              RELEASE OBJECT v-mm NO-ERROR.
+              v-mm = ?.
+              output stream outstream close.
+              undo _trpomi, return error substitute('Ошибка входных параметров в библиотеку ПОкМИ.~n &1',error-string).
+            end.     
+
             if tt-meas-file.log-brutto = no
             or pl-rvd-lvl
             or pl-rvd-dens
@@ -4526,27 +4865,30 @@ THEN DO:
                 rvs-line-attr.attr-value = string ( v-mm-density )
               .
             end.
-            find first rvs-line-attr exclusive-lock
-                  where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                    and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                    and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                    and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                    and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                    and rvs-line-attr.attr-code = "meas-cli-calc-qnty" no-error.
-            if available rvs-line-attr then do :
-              rvs-line-attr.attr-value = v-mm:Mcy .
-            end.
-            else do :
-              create rvs-line-attr.
-              assign
-                rvs-line-attr.obj-code  = bf_rvs-line.obj-code
-                rvs-line-attr.obj-type  = bf_rvs-line.obj-type
-                rvs-line-attr.gds-code  = bf_rvs-line.gds-code
-                rvs-line-attr.pl-code   = bf_rvs-line.pl-code
-                rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
-                rvs-line-attr.attr-code = "meas-cli-calc-qnty"
-                rvs-line-attr.attr-value = v-mm:Mcy
-              .
+            if v-pokmi-dll-version <> "1.0.5.6" then
+            do:
+                find first rvs-line-attr exclusive-lock
+                      where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                        and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                        and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                        and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                        and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                        and rvs-line-attr.attr-code = "meas-cli-calc-qnty" no-error.
+                if available rvs-line-attr then do :
+                  rvs-line-attr.attr-value = v-mm:Mcy .
+                end.
+                else do :
+                  create rvs-line-attr.
+                  assign
+                    rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                    rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                    rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                    rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                    rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                    rvs-line-attr.attr-code = "meas-cli-calc-qnty"
+                    rvs-line-attr.attr-value = v-mm:Mcy
+                  .
+                end.
             end.
             
             if izmer-density = ?
@@ -4669,7 +5011,9 @@ THEN DO:
                 "MM:DeltaV              = " + v-mm:DeltaV     + {&new-line} +
                 "MM:Vcy                 = " + v-mm:Vcy     + {&new-line} +
                 "MM:Rcy                 = " + v-mm:Rcy          + {&new-line} +
-                "MM:Mcy                 = " + v-mm:Mcy + {&new-line} +
+                (if v-pokmi-dll-version <> "1.0.5.6" then 
+                  "MM:Mcy                 = " + v-mm:Mcy + {&new-line}
+                 else "") +
                 "MM:V_product           = " + v-mm:V_product  + {&new-line} +
                 "MM:V                   = " + v-mm:V  + {&new-line} + 
                 "MM:Rv                  = " + v-mm:Rv  + {&new-line} +
@@ -4685,7 +5029,8 @@ THEN DO:
                 "MM:DeltaOtn_Vcy        = " + v-mm:DeltaOtn_Vcy  + {&new-line} +
                 "MM:DeltaOtn_Vm         = " + v-mm:DeltaOtn_Vm  + {&new-line} +
                 "MM:DeltaOtn_M          = " + v-mm:DeltaOtn_M  + {&new-line} +
-                "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion
+                "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion + {&new-line} + {&new-line} +
+                "MM:Warnings            = " + v-mm:Warnings
             .
             OUTPUT stream outstream to value ("pomi.log")  append.
             PUT STREAM outstream unformatted v-POkMI-result skip .
@@ -4699,6 +5044,8 @@ THEN DO:
                 "Объем, приведенный к стандартным условиям, л: " + string((v-mm:Vcy * 1000), "->>,>>>,>>9":U) + {&new-line} +
                 "Объем НП при температуре его измерения, л: " + string((v-mm:V * 1000), "->>,>>>,>>9":U) + {&new-line} +
                 "Объем воды, л: " + string((v-mm:V_water * 1000), "->>,>>>,>>9":U)
+                
+              v-POkMI-warnings = v-mm:Warnings
             .
             
             find first rvs-line-attr exclusive-lock
@@ -4721,6 +5068,28 @@ THEN DO:
                 rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
                 rvs-line-attr.attr-code = "POkMI-result"
                 rvs-line-attr.attr-value = v-POkMI-result-attr
+              .
+            end.
+            find first rvs-line-attr exclusive-lock
+                  where rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                    and rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                    and rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                    and rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                    and rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                    and rvs-line-attr.attr-code = "POkMI-warnings" no-error.
+            if available rvs-line-attr then do :
+              rvs-line-attr.attr-value = v-POkMI-warnings .
+            end.
+            else do :
+              create rvs-line-attr.
+              assign
+                rvs-line-attr.obj-code  = bf_rvs-line.obj-code
+                rvs-line-attr.obj-type  = bf_rvs-line.obj-type
+                rvs-line-attr.gds-code  = bf_rvs-line.gds-code
+                rvs-line-attr.pl-code   = bf_rvs-line.pl-code
+                rvs-line-attr.rvs-code  = bf_rvs-line.rvs-code
+                rvs-line-attr.attr-code = "POkMI-warnings"
+                rvs-line-attr.attr-value = v-POkMI-warnings
               .
             end.
           end .
@@ -5247,6 +5616,7 @@ define variable p-prev-rvs-date as logical no-undo.
                 AND crl_prev_rvs-doc.shift-date = rvs-doc.shift-date 
                 AND crl_prev_rvs-doc.shift-num  = rvs-doc.shift-num
                 AND crl_prev_rvs-doc.status_    = {&fact}
+                AND crl_prev_rvs-doc.rvs-type  <> {&test-asi}
                 /* and contr_rvs-doc.rvs-type = {&rvs-control} */
                 BY crl_prev_rvs-doc.fact-order DESC
                 ON ERROR UNDO, RETURN ERROR RETURN-VALUE
@@ -5448,6 +5818,12 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
           v-chk-act = 'actn_rvs-control_fact':U
         .
       end.
+      when {&test-asi}
+      then do:
+        assign
+          v-chk-act = 'no-ckeck':U
+        .
+      end.
       otherwise do:
         message
           vss-workfile vss-revision vss-description skip
@@ -5458,7 +5834,9 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
         undo, return error return-value .
       end.
     end case .
-    if not g#auto then do:
+    if not g#auto
+    and v-chk-act <> 'no-ckeck':U
+    then do:
       { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
@@ -5527,20 +5905,23 @@ procedure lib-rvs_rvsclose : /* rvs-clos */
       end.
 
       /* прописывание оборота по документам в атрибуты */
-      define variable v-ok    as logical      no-undo.
-      run str/rvs-attr.p
-        ( input rc_rvs-doc.rvs-code
-        , input rc_rvs-doc.obj-type
-        , input rc_rvs-doc.obj-code
-        , output v-ok
-        ) no-error.
-      if error-status :error
-        or v-ok = false
-      then do:
-         /*
-         undo tr, return error SUBSTITUTE( "Ошибка прописывания остатков. &1", return-value ) .
-         */
-      end.
+      if rc_rvs-doc.rvs-type <> {&test-asi}
+      then do :
+        define variable v-ok    as logical      no-undo.
+        run str/rvs-attr.p
+          ( input rc_rvs-doc.rvs-code
+          , input rc_rvs-doc.obj-type
+          , input rc_rvs-doc.obj-code
+          , output v-ok
+          ) no-error.
+        if error-status :error
+          or v-ok = false
+        then do:
+           /*
+           undo tr, return error SUBSTITUTE( "Ошибка прописывания остатков. &1", return-value ) .
+           */
+        end.
+      end .
 
       run str/rvs-stat.p
         ( input parparentproc

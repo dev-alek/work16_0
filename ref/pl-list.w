@@ -15,11 +15,11 @@ DEFINE BUFFER X_place FOR ub.place.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-pl-list
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 34480d5fe7d9, 3332, rls $
+$Author: SSlivenko $
+$Date: 2023/05/19 13:37:09 $
+$Workfile: pl-list.w $
+$Archive: ref/pl-list.w $
 
 Справочник складских мест
 
@@ -44,11 +44,11 @@ define input parameter p-mode as character no-undo .
 define input-output parameter p-rid-list as character no-undo.
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 34480d5fe7d9, 3332, rls $":u .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":u .
+define variable vss-date        as character no-undo init "$Date: 2023/05/19 13:37:09 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: pl-list.w $":u .
+define variable vss-archive     as character no-undo init "$Archive: ref/pl-list.w $":u .
 define variable vss-description as character no-undo init "справочник складских мест" .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -484,6 +484,7 @@ ON CHOOSE OF b-chg IN FRAME d-pl-list /* Изменить */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del d-pl-list
 ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
   DO:
+
     define variable placelog as logical no-undo.
     define variable new-rec  as recid   no-undo.
     define buffer buf_place for ub.place.
@@ -556,16 +557,7 @@ ON CHOOSE OF b-del IN FRAME d-pl-list /* Удалить */
                         
           if glog = yes then 
           do:
-            ii = 0.
-            do ii = 1 to num-entries({&list-place-attr}):
-              v-code = entry(ii,{&list-place-attr}) .
-              run placelib_del-attr in this-procedure  (input v-code
-                ,input p-obj-code
-                ,input p-obj-type
-                ,input buf_place.pl-code
-                ,input v-value
-                ,output v-ok      ) no-error.
-            end.
+            buf_place.status_ = "".
             delete buf_place.
             {&browse-name}:delete-current-row().
           end.

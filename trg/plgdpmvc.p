@@ -52,6 +52,7 @@ find first ub.pl-gds no-lock where
 find first ub.rvs-doc no-lock where
            ub.rvs-doc.obj-type = pobj-type and
            ub.rvs-doc.obj-code = pobj-code and
+           ub.rvs-doc.rvs-type <> {&test-asi} and
            ub.rvs-doc.status_ <> {&fact}  no-error.
 if available ub.rvs-doc then do:
   return error

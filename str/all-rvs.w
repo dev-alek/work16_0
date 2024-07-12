@@ -115,6 +115,7 @@ define variable varobj-type      like ub.rvs-doc.obj-type no-undo .
 define variable varobj-code      like ub.rvs-doc.obj-code no-undo .
 define variable varhost-code     like ub.rvs-doc.host-code no-undo .
 define variable varstatus_       like ub.rvs-doc.status_ no-undo .
+define variable vartest-asi      like ub.rvs-doc.rvs-type no-undo .
 
 /* ‰Îˇ ‚ËÚ ÂÁ */
 define variable is-vir           as logical   no-undo.
@@ -2196,7 +2197,7 @@ define variable sort-column-phrase as character no-undo .
   &scop flt-open-dyn_open-query     FOR EACH r-doc
   &scop flt-open-query-handle       query {&browse-name}:handle
   &scop flt-open-find-buffer-name   r-doc
-  &scop flt-open-open-query-tail
+  &scop flt-open-open-query-tail      
   &scop flt-open-query-was-opened   l-query-was-opened
   &scop flt-open-sort-column-phrase sort-column-phrase
   &scop flt-open-call-point         filter-point
@@ -2209,7 +2210,9 @@ define variable sort-column-phrase as character no-undo .
     assign
         varobj-type  = v-cntxt-obj-type
         varobj-code  = v-cntxt-obj-code
-        varhost-code = v-cntxt-host-code-obj.
+        varhost-code = v-cntxt-host-code-obj
+        vartest-asi  = {&test-asi}   
+    .
     find first bf_clients  where bf_clients.obj-type = v-cntxt-obj-type and
         bf_clients.obj-code = v-cntxt-obj-code no-lock.
         
@@ -2220,33 +2223,34 @@ define variable sort-column-phrase as character no-undo .
                 assign 
                     frame {&frame-name}:title = "ƒŒ ”Ã≈Õ“€ —¬≈– »".
                 { gbl/fltopend.i
-              &where-cond = " true "
-              &dyn_where-cond = " 'true' "
-              &use-ind    = "  "
-              &by         = "  " }
+                  &where-cond = " r-doc.rvs-type <> vartest-asi "
+                  &dyn_where-cond = " substitute( '  r-doc.rvs-type <> &1&2&1 ' , ~{&double-quote~} , vartest-asi ) "
+                  &use-ind    = "  "
+                  &by         = "  " }
             end.
         when {&company} then 
             do:
                 assign 
                     frame {&frame-name}:title = "ƒŒ ”Ã≈Õ“€ —¬≈– » ‘ËÏ‡ : " + string(varhost-code).
                 { gbl/fltopend.i
-              &where-cond = " r-doc.host-code = varhost-code "
-              &dyn_where-cond = " substitute( '  r-doc.host-code = &2 ' , ~{&double-quote~} , varhost-code ) "
-              &use-ind    = " use-index host-date "
-              &by         = "  " }
+                  &where-cond = " r-doc.host-code = varhost-code and r-doc.rvs-type <> vartest-asi "
+                  &dyn_where-cond = " substitute( '  r-doc.host-code = &2 and r-doc.rvs-type <> &1&3&1 ' , ~{&double-quote~} , varhost-code , vartest-asi ) "
+                  &use-ind    = " use-index host-date "
+                  &by         = "  " }
             end.
         when {&g___object} then 
             do:
                 assign 
                     frame {&frame-name}:title = "ƒŒ ”Ã≈Õ“€ —¬≈– » Œ·˙ÂÍÚ : " + varobj-type + " " + string (varobj-code).
                 { gbl/fltopend.i
-              &where-cond = " r-doc.obj-type = varobj-type and   r-doc.obj-code = varobj-code  "
-              &dyn_where-cond = " substitute( '  ~
-                                r-doc.obj-type =  &1&2&1 and ~
-                                r-doc.obj-code =  &3    ~
-                               ' , ~{&double-quote~} , varobj-type , varobj-code  ) "
-              &use-ind    = "use-index stat-date "
-              &by         = "  " }
+                  &where-cond = " r-doc.obj-type = varobj-type and   r-doc.obj-code = varobj-code  and r-doc.rvs-type <> vartest-asi "
+                  &dyn_where-cond = " substitute( '  ~
+                                    r-doc.obj-type =  &1&2&1 and ~
+                                    r-doc.obj-code =  &3 and   ~
+                                    r-doc.rvs-type <> &1&4&1  ~
+                                   ' , ~{&double-quote~} , varobj-type , varobj-code , vartest-asi  ) "
+                  &use-ind    = "use-index stat-date "
+                  &by         = "  " }
                 if v-cntxt-db-num = bf_clients.db-num then
                     enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
             end.
@@ -2258,17 +2262,19 @@ define variable sort-column-phrase as character no-undo .
                 assign 
                     frame {&frame-name}:title = "Œ·˙ÂÍÚ : " + varobj-type + " " + string (varobj-code) + "  —Ú‡ÚÛÒ : " + varstatus_.
                 { gbl/fltopend.i
-          &where-cond = "r-doc.obj-type = varobj-type and
-                        r-doc.obj-code = varobj-code and
-                        r-doc.status_  = varstatus_      "
-          &dyn_where-cond = " substitute( '  ~
-                            r-doc.obj-type =  &1&2&1 and ~
-                            r-doc.obj-code =  &3  and  ~
-                            r-doc.status_  =  &1&4&1  ~
-                            ' , ~{&double-quote~} , varobj-type , varobj-code , varstatus_ ) "
-
-          &use-ind    = "use-index stat-date"
-          &by         = "  " }
+                  &where-cond = "r-doc.obj-type = varobj-type and
+                                r-doc.obj-code = varobj-code and
+                                r-doc.status_  = varstatus_ and
+                                r-doc.rvs-type <> vartest-asi     "
+                  &dyn_where-cond = " substitute( '  ~
+                                    r-doc.obj-type =  &1&2&1 and ~
+                                    r-doc.obj-code =  &3  and  ~
+                                    r-doc.status_  =  &1&4&1 and ~
+                                    r-doc.rvs-type <> &1&5&1  ~
+                                    ' , ~{&double-quote~} , varobj-type , varobj-code , varstatus_ , vartest-asi ) "
+        
+                  &use-ind    = "use-index stat-date"
+                  &by         = "  " }
                 if v-cntxt-db-num = bf_clients.db-num and
                     parstatus <> {&fact}            then
                     enable b-add b-chg b-del b-close b-open b-inv btn_copy with frame {&frame-name}.
@@ -2278,19 +2284,19 @@ define variable sort-column-phrase as character no-undo .
                 assign 
                     frame {&frame-name}:title = "ƒŒ ”Ã≈Õ“€ —¬≈– » Œ·˙ÂÍÚ : " + varobj-type + " " + string (varobj-code) + "  —Ú‡ÚÛÒ : Ù‡ÍÚ    “ËÔ: ÍÓÌÚÓÎ¸".
                 { gbl/fltopend.i
-          &where-cond = "r-doc.obj-type = varobj-type and
-                        r-doc.obj-code = varobj-code and
-                        r-doc.status_  = {&fact}     and
-                        r-doc.rvs-type = {&rvs-control} "
-          &dyn_where-cond = " substitute( '  ~
-                            r-doc.obj-type =  &1&2&1 and ~
-                            r-doc.obj-code =  &3  and  ~
-                            r-doc.status_  =  &1&4&1  ~
-                            r-doc.rvs-type =  &1&5&1  ~
-                            ' , ~{&double-quote~} , varobj-type , varobj-code , {&fact}, {&rvs-control} ) "
-
-          &use-ind    = "  "
-          &by         = "  " }
+                  &where-cond = "r-doc.obj-type = varobj-type and
+                                r-doc.obj-code = varobj-code and
+                                r-doc.status_  = {&fact}     and
+                                r-doc.rvs-type = {&rvs-control} "
+                  &dyn_where-cond = " substitute( '  ~
+                                    r-doc.obj-type =  &1&2&1 and ~
+                                    r-doc.obj-code =  &3  and  ~
+                                    r-doc.status_  =  &1&4&1  ~
+                                    r-doc.rvs-type =  &1&5&1  ~
+                                    ' , ~{&double-quote~} , varobj-type , varobj-code , {&fact}, {&rvs-control} ) "
+        
+                  &use-ind    = "  "
+                  &by         = "  " }
                 enable b-sel with frame {&frame-name}.   
             end.    
     end case.
@@ -2406,20 +2412,20 @@ define variable del-rec   as recid   no-undo.
                         when {&rvs-control} then 
                             do:
                                 { gbl/chk-actg.i
-                v-cntxt-db-num
-                v-cntxt-userid
-                {&action-head-code-main}
-                'actn_rvs-control_del-fact':U
-                {&cntxt-object}
-                r-doc.host-code
-                r-doc.obj-type
-                r-doc.obj-code
-                0
-                0
-                0
-                true
-                varlog
-              }
+                                  v-cntxt-db-num
+                                  v-cntxt-userid
+                                  {&action-head-code-main}
+                                  'actn_rvs-control_del-fact':U
+                                  {&cntxt-object}
+                                  r-doc.host-code
+                                  r-doc.obj-type
+                                  r-doc.obj-code
+                                  0
+                                  0
+                                  0
+                                  true
+                                  varlog
+                                }
                             end.
                         otherwise 
                         do:

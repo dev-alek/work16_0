@@ -41,6 +41,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { rep/html-conv.i }
 { str/is-sug.i }
 { str/placelib.i }
+{ rep/c-temp-place.i }
 { rep/c-place-attr.i }
 
 define variable g#report-num  as integer no-undo .
@@ -313,7 +314,7 @@ procedure data-print :
       tt-sug.density  = bf_rvs-line.state-density
       tt-sug.temp     = bf_rvs-line.state-temperature
       tt-sug.qnty     = bf_rvs-line.state-measure-cli-qnty
-      tt-sug.volue-pl = bf_place.add-qnty
+      tt-sug.volue-pl = bf_rvs-line.add-qnty
       tt-sug.qnty1    = tt-sug.volue-pl * tt-sug.density
       tt-sug.pl-type  = "трубопровод"
       .

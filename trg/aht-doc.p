@@ -69,10 +69,24 @@ on error undo, return error
     with view-as dialog-box side-labels three-d
     title "–асчет складского архива по типам приобретени€"
     .
-  view frame a .
-  display
-    p-doc-code
-    with frame a .
+   define variable mFrameView      as logical   no-undo init yes.
+  define variable mFramHandle as handle no-undo.      
+  mFramHandle = frame a:handle.
+
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameoxmError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameoxmError"). 
+  end.
+  mFrameView = not session:batch-mode and mFramHandle:visible.
+  if mFrameView
+  then do:
+  
+     view frame a .
+     display
+        p-doc-code
+     with frame a .
+  end.
   v-message-on = (not g#auto) .
 
   run process-trn-doc in this-procedure
@@ -132,7 +146,8 @@ procedure process-trn-doc :
     assign
       v-doc-date = buf_trn-doc.fact-date
     .
-    display
+  if mFrameView
+  then display
       v-doc-date
       with frame a .
 
@@ -352,7 +367,8 @@ procedure process-trn-doc :
         assign
           v-current-time = string(v-time - v-start-time, "HH:MM:SS")
         .
-        display
+        if mFrameView
+        then display
           v-ind
           v-current-time
           with frame a .
@@ -723,7 +739,8 @@ procedure show-action :
       v-current-time = string(v-time - v-start-time, "HH:MM:SS")
       v-current-action = p-action
     .
-    display
+    if mFrameView
+    then display
       v-current-time
       v-current-action
       with frame a.

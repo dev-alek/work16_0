@@ -1033,7 +1033,8 @@ IF p-mode = {&add-def} then do:
       and  buf_rvs-doc.obj-code =  p-obj-code
       and  buf_rvs-doc.status_  <> {&fact}
       and  buf_rvs-doc.rvs-type <> {&rvs-before-doc}
-      and  buf_rvs-doc.rvs-type <> {&rvs-after-doc}  no-lock no-error.
+      and  buf_rvs-doc.rvs-type <> {&rvs-after-doc} 
+      and  buf_rvs-doc.rvs-type <> {&test-asi} no-lock no-error.
   if available buf_rvs-doc then do:
     message
     substitute("»меетс€ открытый документ сверки под номером &1", buf_rvs-doc.rvs-code)

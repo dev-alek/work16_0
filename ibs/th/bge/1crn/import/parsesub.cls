@@ -121,8 +121,10 @@ class ibs.th.bge.1crn.import.parsesub:
 
   define variable tank-impSubjectObj                       as class tank-imp                    no-undo.
   define variable tank-imp_cal-tblSubjectObj               as class tank-imp_cal-tbl            no-undo.
+  define variable tank-imp_belt-tblSubjectObj              as class tank-imp_belt-tbl           no-undo.
   define variable imptank-impEventHndlrObj                 as class imptank-imp                 no-undo.
   define variable tank-imp_cal-tbllistSubjectsObj          as class subjects                    no-undo.
+  define variable tank-imp_belt-tbllistSubjectsObj         as class subjects                    no-undo.
   
   define variable trn-gd-doc-inSubjectObj                  as class trn-gd-doc-in               no-undo.
   define variable trn-gdSubjectObj                         as class trn-gd                      no-undo.
@@ -327,6 +329,7 @@ class ibs.th.bge.1crn.import.parsesub:
     tank-impSubjectObj = new tank-imp ().
     imptank-impEventHndlrObj = new imptank-imp ().
     tank-imp_cal-tbllistSubjectsObj = new subjects ("cal-tbl").
+    tank-imp_belt-tbllistSubjectsObj = new subjects ("belt-tbl").
 		    
     /* перенесено внутрь парсинга создание экземпл€ров объектов:
        - стран
@@ -862,7 +865,6 @@ class ibs.th.bge.1crn.import.parsesub:
       end case .
     end. // end_of_valid_object_subjectObj
 
-      
     repeat i = 1 to hParent:num-children:
       good = hparent:get-child(hnoderef,i) no-error.
       if not good then 
@@ -879,7 +881,7 @@ class ibs.th.bge.1crn.import.parsesub:
       case hnoderef:name:
         /* ----- имена секций любого уровн€ вложенности ----- */
         when "sections" or when "calibration-table" or
-        when "cal-tbl" or
+        when "cal-tbl" or when "belt-tbl" or
         when "nb-carriers" or when "nb-suppliers" or when "prts"
         then do:
           GetChildrenSub (hNoderef, (level + 1), ?).
@@ -1188,6 +1190,34 @@ class ibs.th.bge.1crn.import.parsesub:
               tank-imp_cal-tblSubjectObj = cast (tank-imp_cal-tbllistSubjectsObj:SubjectObjCurr, tank-imp_cal-tbl).
               GetChildrenSub (hNoderef, (level + 1), tank-imp_cal-tblSubjectObj).
               tank-impSubjectObj:SetProp (tank-imp_cal-tbllistSubjectsObj).
+            end.
+            otherwise do:
+              
+            end.
+          end case.
+        end.
+        when "belt-tbl" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
+          case true : 
+            when tank-impSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
+              if not valid-object(tank-imp_belt-tbllistSubjectsObj) then tank-imp_belt-tbllistSubjectsObj = new subjects ("belt-tbl") .        
+              tank-imp_belt-tbllistSubjectsObj:Add(new tank-imp_belt-tbl()). /* а вот здесь уже создаем объект сущнности*/
+              tank-imp_belt-tblSubjectObj = cast (tank-imp_belt-tbllistSubjectsObj:SubjectObjCurr, tank-imp_belt-tbl).
+              GetChildrenSub (hNoderef, (level + 1), transport_section_ct-lvlSubjectObj).
+              tank-impSubjectObj:SetProp (tank-imp_belt-tbllistSubjectsObj).
+            end.
+            otherwise do:
+              
+            end.
+          end case.
+        end.
+        when "belt-tbl-line" then do: /* второй уровень с данными. обработка зависимой сущности transportSubjectObj  */
+          case true : 
+            when tank-impSubjectObj:IsInitSubForWrite then do: /*идет запись transportSubjectObj*/  
+              if not valid-object(tank-imp_belt-tbllistSubjectsObj) then tank-imp_belt-tbllistSubjectsObj = new subjects ("belt-tbl") .        
+              tank-imp_belt-tbllistSubjectsObj:Add(new tank-imp_belt-tbl()). /* а вот здесь уже создаем объект сущнности*/
+              tank-imp_belt-tblSubjectObj = cast (tank-imp_belt-tbllistSubjectsObj:SubjectObjCurr, tank-imp_belt-tbl).
+              GetChildrenSub (hNoderef, (level + 1), tank-imp_belt-tblSubjectObj).
+              tank-impSubjectObj:SetProp (tank-imp_belt-tbllistSubjectsObj).
             end.
             otherwise do:
               

@@ -1261,25 +1261,39 @@ define input  parameter p-sess-name as character no-undo .
   do
   on error undo, return error return-value
   :
+    define variable vDopParamSession     as character no-undo .
+    get-key-value section "THAutoSessions"
+                    key "DopParamSession"
+                  value vDopParamSession.
+    define variable vDopParamSessionRandom     as int no-undo .
+    if vDopParamSession eq ?
+    then
+       vDopParamSession = "".
+    else do:
+       vDopParamSessionRandom = random(1,9999999).
+       vDopParamSession = substitute (vDopParamSession,vDopParamSessionRandom).
+    end.
     define variable v-command-line     as character no-undo .
     define variable v-command-line-log as character no-undo .
     assign
       /* ковычки одинарные и двойные должны быть именно такими!!! иначе не увидит ini-файла!!! */
-      v-command-line = substitute( '&1 -ininame &2 -basekey "INI" -p &3 -param "U:&4,P:&5,M:&6"'
+      v-command-line = substitute( '&1 -ininame &2 -basekey "INI" -p &3 -param "U:&4,P:&5,M:&6" &7'
                                    , v-exefile
                                    , v-inifile
                                    , p-proc-name
                                    , g#auto-user-login
                                    , g#auto-user-password
                                    , replace( p-mode, ",":U, {&delim-par} )
+                                   , vDopParamSession 
                                  )
-      v-command-line-log = substitute( '&1 -ininame &2 -basekey "INI" -p &3 -param "U:&4,P:&5,M:&6"'
+      v-command-line-log = substitute( '&1 -ininame &2 -basekey "INI" -p &3 -param "U:&4,P:&5,M:&6" &7'
                                    , v-exefile
                                    , v-inifile
                                    , p-proc-name
                                    , g#auto-user-login
                                    , "***"
                                    , replace( p-mode, ",":U, {&delim-par} )
+                                   , vDopParamSession
                                  )
     .
     run gbl/run-gpid.p

@@ -278,6 +278,7 @@ on error undo, return error return-value
     for each cdl_rvs-doc no-lock ~
       where cdl_rvs-doc.obj-type = p-obj-type  ~
         and cdl_rvs-doc.obj-code = p-obj-code  ~
+        and cdl_rvs-doc.rvs-type ne ~{&test-asi} ~
         and cdl_rvs-doc.status_  ~{&znak} {&fact} ~
     ,first cdl_rvs-line no-lock ~
       where cdl_rvs-line.gds-code = v-gds-code ~

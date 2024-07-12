@@ -277,7 +277,7 @@ procedure   for-cash-cycle:
               input 1
             , input log-file-name
             , input 1
-            , input substitute( "«арос данных с кассы не требуетс€ - касса &1", for-cash-desk.cash-num
+            , input substitute( "«апрос данных с кассы не требуетс€ - касса &1", for-cash-desk.cash-num
                               )
                                               ).
         { str/send-all-gencloc.i

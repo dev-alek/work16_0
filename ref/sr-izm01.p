@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c93c7157b47d, 2925, rls $
+$Author: VRukavishnikov $
+$Date: Пн ноя 22 19:49:14 2021 +0300 $
+$Workfile: sr-izm01.p $
+$Archive: ref/sr-izm01.p $
 
 Сохранение изменений в карточке средства измерения (прибора)
 
@@ -41,16 +41,17 @@ define input parameter p-sr-abs-err-temp-vol         as decimal   no-undo . /* l
 define input parameter p-sr-abs-err-temp-dens        as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-temp-dens */
 define input parameter p-sr-relative-err-dens        as decimal   no-undo . /* like ub.sr-izmerenia.sr-relative-err-dens */
 define input parameter p-sr-abs-err-dens-lgas-liquid as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-dens-lgas-liquid */
+define input parameter p-sr-relative-err-dens-lgas-liquid as decimal   no-undo . /* like ub.sr-izmerenia.sr-relative-err-dens-lgas-liquid */
 define input parameter p-sr-abs-err-dens-lgas-vapor  as decimal   no-undo . /* like ub.sr-izmerenia.sr-abs-err-dens-lgas-vapor */
 define input parameter p-sr-otnos                    as decimal   no-undo . /* like ub.sr-izmerenia.sr-otnos */
 define input parameter p-sr-temp-line                as decimal   no-undo . /* like ub.sr-izmerenia.sr-temp-line */
 define input parameter p-sr-not-used                 as integer   no-undo . /*  */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c93c7157b47d, 2925, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VRukavishnikov $":U .
+define variable vss-date        as character no-undo init "$Date: Пн ноя 22 19:49:14 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sr-izm01.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/sr-izm01.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений в карточке средства измерения (прибора)".
 { cmp/vssrevis.i }
 
@@ -66,6 +67,15 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
                  vss-workfile, vss-revision, vss-description, {&new-line})
     ) .
   end .
+
+  if p-sr-density = 1 and (p-sr-abs-err-dens-lgas-liquid = 0.0 or p-sr-abs-err-dens-lgas-liquid = ?) and
+     (p-sr-relative-err-dens-lgas-liquid = 0.0 or p-sr-relative-err-dens-lgas-liquid = ?) then do:
+        undo, throw new Progress.Lang.AppError(
+                substitute("&1 &2 &3&4Хотя бы один из атрибутов <dnst-abs-me-lpg-l> и <dnst-rel-me-lpg-l> должен быть не нулевым [&5]",
+                 vss-workfile, vss-revision, vss-description, {&new-line},
+                 p-node-code) 
+      ) .  
+  end.
 
   if can-find (first buf_sr-izmerenia
   where buf_sr-izmerenia.sr-model                    = p-sr-model
@@ -87,8 +97,9 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
     AND buf_sr-izmerenia.sr-relative-err-water       = p-sr-relative-err-water       
     AND buf_sr-izmerenia.sr-relative-err-dens        = p-sr-relative-err-dens        
     AND buf_sr-izmerenia.sr-abs-err-dens-lgas-liquid = p-sr-abs-err-dens-lgas-liquid 
-    AND buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor  = p-sr-abs-err-dens-lgas-vapor  
-    AND buf_sr-izmerenia.node-code                  <> p-node-code
+    AND buf_sr-izmerenia.sr-relative-err-dens-lgas-liquid = p-sr-relative-err-dens-lgas-liquid 
+    AND buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor       = p-sr-abs-err-dens-lgas-vapor  
+    AND buf_sr-izmerenia.node-code                       <> p-node-code
   ) then do:
     undo, throw new Progress.Lang.AppError(
       substitute("&1 &2 &3&4Уже существует запись с совпадающими характеристиками, код которой отличается от [&5]",
@@ -136,6 +147,7 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
     buf_sr-izmerenia.sr-relative-err-water       = p-sr-relative-err-water       
     buf_sr-izmerenia.sr-relative-err-dens        = p-sr-relative-err-dens        
     buf_sr-izmerenia.sr-abs-err-dens-lgas-liquid = p-sr-abs-err-dens-lgas-liquid 
+    buf_sr-izmerenia.sr-relative-err-dens-lgas-liquid = p-sr-relative-err-dens-lgas-liquid 
     buf_sr-izmerenia.sr-abs-err-dens-lgas-vapor  = p-sr-abs-err-dens-lgas-vapor  
     buf_sr-izmerenia.sr-not-used                 = (p-sr-not-used > 0)
   .

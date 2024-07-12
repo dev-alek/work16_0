@@ -506,13 +506,14 @@ procedure getreqAsi:
       run waitfram-hide in this-procedure no-error .
       display v-status with frame {&frame-name} .
       run asi-send-cmd no-error .
+  
       if error-status:error
       then do :
         v-status = return-value .
         message v-status
            view-as alert-box.
         display v-status with frame {&frame-name} .
-           
+	
       end .
       
     end .
@@ -551,9 +552,10 @@ procedure asi-send-cmd :
   define variable cmd                   as character    no-undo .
   define variable v-pid                 as integer      no-undo .
   define variable v-addr                as character    no-undo .
-
+      
   mWaitProcEvent = false.
   run SendReqSocet (v-asi-ip,v-asi-port,"getmeas/?loclist=all","","xml","getResponseMy").
+  
   if oErrMsg ne ""
   then do:
      v-status = oErrMsg.
@@ -655,6 +657,9 @@ procedure checkttPlace :
     end .
     err-msg = trim(err-msg) .
     err-msg = trim(err-msg, ",") .
+
+       v-date = date(now) .
+       v-time = time .   
     return error err-msg .
   end .
 end.
