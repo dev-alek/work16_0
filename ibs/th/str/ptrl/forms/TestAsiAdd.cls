@@ -168,6 +168,7 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
     /*  */
     this-object:cb2:Checked = true.
     this-object:cb2:CheckState = System.Windows.Forms.CheckState:Checked.
+    this-object:cb2:Enabled = false.
     this-object:cb2:Location = new System.Drawing.Point(352, 85).
     this-object:cb2:Name = "cb2".
     this-object:cb2:Size = new System.Drawing.Size(70, 24).
@@ -210,6 +211,7 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
     /*  */
     /* rb2 */
     /*  */
+    this-object:rb2:Enabled = false.
     this-object:rb2:Location = new System.Drawing.Point(10, 55).
     this-object:rb2:Name = "rb2".
     this-object:rb2:Size = new System.Drawing.Size(294, 44).
