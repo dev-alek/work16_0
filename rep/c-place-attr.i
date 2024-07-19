@@ -86,41 +86,6 @@ FUNCTION get_meas returns logical (
             ,input  {&fields-name-list}
             ,input  v-label-param).
 
-
-      /*  find last bf_c-place no-lock where bf_c-place.pl-code = pl-code and                  */
-      /*    bf_c-place.obj-code = obj-code and                                                 */
-      /*    bf_c-place.obj-type = obj-type and                                                 */
-      /*    ((bf_c-place.corr-date = endDate and                                               */
-      /*    bf_c-place.corr-time < endTime) or                                                 */
-      /*    bf_c-place.corr-date < endDate) no-error .                                         */
-      /*  if available (bf_c-place) then                                                       */
-      /*  do:                                                                                  */
-      /*    find last buf_c-place no-lock where buf_c-place.pl-code = bf_c-place.pl-code and   */
-      /*      buf_c-place.obj-code = bf_c-place.obj-code and                                   */
-      /*      buf_c-place.obj-type = bf_c-place.obj-type and                                   */
-      /*      ((buf_c-place.corr-date = bf_c-place.corr-date and                               */
-      /*      buf_c-place.corr-time < bf_c-place.corr-time) or                                 */
-      /*      buf_c-place.corr-date < bf_c-place.corr-date) no-error .                         */
-      /*    if available (buf_c-place) then                                                    */
-      /*    do:                                                                                */
-      /*      if buf_c-place.is-meas <> bf_c-place.is-meas then return not bf_c-place.is-meas .*/
-      /*      else return bf_c-place.is-meas .                                                 */
-      /*    end.                                                                               */
-      /*    else                                                                               */
-      /*    do:                                                                                */
-      /*      find first bf_place no-lock where bf_place.pl-code = pl-code and                 */
-      /*        bf_place.obj-code = obj-code and                                               */
-      /*        bf_place.obj-type = obj-type no-error .                                        */
-      /*      return bf_place.is-meas .                                                        */
-      /*    end.                                                                               */
-      /*  end.                                                                                 */
-      /*  else                                                                                 */
-      /*  do:                                                                                  */
-      /*    find first bf_place no-lock where bf_place.pl-code = pl-code and                   */
-      /*      bf_place.obj-code = obj-code and                                                 */
-      /*      bf_place.obj-type = obj-type no-error .                                          */
-      /*    return bf_place.is-meas .                                                          */
-      /*  end.*/
       end.
    end.
    for each with-action:
@@ -132,6 +97,200 @@ FUNCTION get_meas returns logical (
    return bf_place.is-meas . 
 
 end function. 
+
+FUNCTION get_com-tanks returns character (
+  input obj-code as integer, 
+  input obj-type as character,
+  input attr-code as character,
+  input pl-code as integer,
+  input openDate as date,
+  input endDate as date,
+  input openTime as integer,
+  input endTime as integer ):
+     
+  define buffer current_c-place-attr for ub.c-place-attr .
+  define buffer curr_c-place-attr for ub.c-place-attr .
+  define buffer buf_place-attr for ub.place-attr .
+  define variable com-tanks as character no-undo .
+  define variable p-ok as logical no-undo .
+
+  find last current_c-place-attr no-lock where
+    current_c-place-attr.obj-type = obj-type
+    AND current_c-place-attr.obj-code = obj-code
+    AND current_c-place-attr.pl-code = pl-code  
+    and current_c-place-attr.attr-code = attr-code
+    and current_c-place-attr.attr-value <> ""
+    and ((current_c-place-attr.corr-date = endDate and 
+    current_c-place-attr.corr-time < endTime) or 
+    current_c-place-attr.corr-date < endDate) no-error .
+    if available (current_c-place-attr) then return current_c-place-attr.attr-value .
+    else do:
+  find first curr_c-place-attr no-lock where
+    curr_c-place-attr.obj-type = obj-type
+    AND curr_c-place-attr.obj-code = obj-code
+    AND curr_c-place-attr.pl-code = pl-code  
+    and curr_c-place-attr.attr-code = attr-code
+    and curr_c-place-attr.attr-value > ""
+    and ((curr_c-place-attr.corr-date = endDate and 
+    curr_c-place-attr.corr-time > endTime) or 
+    curr_c-place-attr.corr-date > endDate) no-error .
+    if available (curr_c-place-attr) then return curr_c-place-attr.attr-value .
+          
+     find first buf_place-attr no-lock where buf_place-attr.attr-code   = attr-code
+                                                and buf_place-attr.obj-code    = obj-code
+                                                and buf_place-attr.obj-type    = obj-type
+                                                and buf_place-attr.pl-code     = pl-code no-error.
+     if available (buf_place-attr) then return buf_place-attr.attr-value .                                           
+
+    end.
+
+  return "" .
+end function. 
+
+FUNCTION get_com-vessel returns logical (
+  input obj-code as integer, 
+  input obj-type as character,
+  input attr-code as character,
+  input pl-code as integer,
+  input openDate as date,
+  input endDate as date,
+  input openTime as integer,
+  input endTime as integer ):
+     
+  define buffer current_c-place-attr for c-place-attr .
+  define buffer buf_c-plc-hist       for ub.c-plc-hist .
+  define variable ii        as integer   no-undo init 0.
+  define variable is-meas   as logical   no-undo .
+  define variable is-true   as logical   no-undo .
+  define variable v-label   as character no-undo .
+  define variable p-ok as logical no-undo .
+
+  find last current_c-place-attr no-lock where
+    current_c-place-attr.obj-type = obj-type
+    AND current_c-place-attr.obj-code = obj-code
+    AND current_c-place-attr.pl-code = pl-code  
+    and current_c-place-attr.attr-code = attr-code
+    and ((current_c-place-attr.corr-date = endDate and 
+    current_c-place-attr.corr-time < endTime) or 
+    current_c-place-attr.corr-date < endDate) and
+    ((current_c-place-attr.corr-date = openDate and 
+    current_c-place-attr.corr-time > openTime) or 
+    current_c-place-attr.corr-date > openDate)
+    no-error .
+  if avail current_c-place-attr then 
+  do:
+
+    find first buf_c-plc-hist no-lock where
+      buf_c-plc-hist.obj-type = obj-type
+      AND buf_c-plc-hist.obj-code = obj-code
+      AND buf_c-plc-hist.pl-code = pl-code
+      AND buf_c-plc-hist.subject  = "place-attr" 
+      and buf_c-plc-hist.chip-num = current_c-place-attr.chip-num no-error .
+    if available (buf_c-plc-hist) then 
+    do:
+        
+&scop fields-name-list  "attr-code,attr-value,PS,status_"
+
+      define variable v-label-param as character no-undo .
+
+      if current_c-place-attr.attr-code = "place-SI"
+        or current_c-place-attr.attr-code = "place-SI-temp"
+        or current_c-place-attr.attr-code = "place-SI-dens"
+        or current_c-place-attr.attr-code = "place-SI-level"
+        then 
+      do :
+        v-label-param =
+          "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getSIname" + {&delim-flf}
+          + "attr-code" + {&delim-par} + "Код атрибута" + {&delim-par} + "getPlaceAttrCode"   .
+      end .
+      else 
+      do :
+        v-label-param =
+          "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getPlaceAttrValue" + {&delim-flf}
+          + "attr-code" + {&delim-par} + "Код атрибута" + {&delim-par} + "getPlaceAttrCode" + {&delim-flf}
+          + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
+          + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
+      end . 
+
+      run proc-full-temp-changes in this-procedure (
+        input buf_c-plc-hist.action = integer({&hn-create})
+        ,input buf_c-plc-hist.action = integer({&hn-delete})
+        ,input  buffer current_c-place-attr:handle
+        ,input  {&table_place-attr}
+        ,input  {&fields-name-list}
+        ,input  v-label-param).
+
+    end.
+  end.
+
+  for each with-action:
+     p-ok = logical (with-action.v_new) no-error .
+     if error-status:error then p-ok = false .
+    return   p-ok .
+
+  end.
+
+  return no .
+
+end function. 
+
+function getSIname returns character (si-code as char) :
+  for first sr-izmerenia no-lock where sr-izmerenia.node-code = integer(si-code) :
+    return sr-izmerenia.sr-model .
+  end .
+end .
+
+function  getPlaceAttrCode returns character (istr as char ):
+   define variable OStr as character no-undo.
+   if istr eq "disable-level-alarm"
+   then
+      OStr = "Сообщения о переполнении".
+   else if istr eq "disable-water-alarm"
+   then
+      OStr = "Сообщения по воде".
+   else if istr eq "place-need-RVD-rvs"
+   then
+      OStr = "Необходимо сделать сверку с РВД".
+   else if istr eq "place-SI-level"
+   then
+      OStr = "Доп. средство измерения уровня".  
+   else if istr eq "place-SI-dens"
+   then
+      OStr = "Доп. средство измерения плотности".
+   else if istr eq "place-SI-temp"
+   then
+      OStr = "Доп. средство измерения температуры". 
+   else if istr eq "place-SI"
+   then
+      OStr = "Основное средство измерения".
+   else
+      OStr = istr.
+   return OStr.
+end.
+
+function  getPlaceAttrValue returns character (istr as char ):
+   define variable OStr as character no-undo.
+   define variable vFlag as logical no-undo.
+   if    entry(1,istr,{&delim-par}) eq "enable"
+   then
+      assign
+         OStr = "Включено"
+         vFlag = yes
+      .
+   else if    entry(1,istr,{&delim-par}) eq "disable"
+   then
+      assign
+         OStr  = "Выключено"
+         vFlag = yes
+      .
+   else
+      OStr = istr.
+   if     vFlag
+      and num-entries (istr,{&delim-par}) > 2
+   then
+      OStr = OStr + " для смены № " + entry(3,istr,{&delim-par}) + " Дата " + entry(2,istr,{&delim-par}).
+   return OStr.
+end.
 
 PROCEDURE proc-full-temp-changes :
 
