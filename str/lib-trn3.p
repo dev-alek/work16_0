@@ -3166,6 +3166,7 @@ procedure lib-trn3_avrgdens :
                 v-prev-time       = buf-prev_rvs-doc.sys-time-int
                 v-prev-density    = buf-prev_rvs-line.state-density
                 v-prev-fact-order = buf-prev_rvs-doc.fact-order
+                v-prev-rvs-doc    = buf-prev_rvs-doc.rvs-code
                 v-num-rvs         = 1
               .
             end.
