@@ -2493,12 +2493,13 @@ class ibs.th.bge.is_PM.is_PM:
           v-is-own = false
           v-is-own-nb  = false
         .
-        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
-                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
-                                             and buf_clients-attr.attr-code = {&attr-NPZ}
-                                             :
-          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then v-is-npz = true . else v-is-npz = false .
-        end .
+/*        ÇÈ 7700238152: ÈÇÌÅÍÅÍÈß ÀËÃÎÐÈÒÌÀ ÐÀÇÄÅËÅÍÈß ÏÎÑÒÀÂÎÊ ÏÌ                                                */
+/*        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type               */
+/*                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code               */
+/*                                             and buf_clients-attr.attr-code = {&attr-NPZ}                        */
+/*                                             :                                                                   */
+/*          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then v-is-npz = true . else v-is-npz = false .*/
+/*        end .                                                                                                    */
         for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                              and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                              and buf_clients-attr.attr-code = {&attr-own-supp}
@@ -2518,6 +2519,13 @@ class ibs.th.bge.is_PM.is_PM:
                                              and buf_clients-attr.attr-code = {&attr-owner-code}
                                              :
           if (buf_clients-attr.attr-value = {&cmp} + string(buf_trn-doc.host-code)) then v-is-own-nb = true . else v-is-own-nb = false .
+        end .
+/*        ÇÈ 7700238152: ÈÇÌÅÍÅÍÈß ÀËÃÎÐÈÒÌÀ ÐÀÇÄÅËÅÍÈß ÏÎÑÒÀÂÎÊ ÏÌ*/
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = v-nb-obj-type
+                                             and buf_clients-attr.obj-code  = v-nb-obj-code
+                                             and buf_clients-attr.attr-code = {&attr-NPZ}
+                                             :
+          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then v-is-npz = true . else v-is-npz = false .
         end .
         if ABS((buf_doc-line.fact-qnty * buf_doc-line.fact-density) - buf_doc-line.cli-qnty) < 0.002
         then do :

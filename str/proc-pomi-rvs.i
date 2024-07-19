@@ -1443,16 +1443,31 @@ procedure calc-pomi-rvs :
       end.  
       
       output stream outstream to value ("pomi.log") append.
-      put stream outstream unformatted
-        'V_total1                   = ' v-mm:V_total1                          SKIP 
-        'V_total2                   = ' v-mm:V_total2                          SKIP 
-        'V_water1                   = ' v-mm:V_water1                          SKIP 
-        'V_water2                   = ' v-mm:V_water2                          SKIP
-        'Delta_V1                   = ' v-mm:Delta_V1                          SKIP 
-        'Delta_V2                   = ' v-mm:Delta_V2                          SKIP 
-        'M                          = ' v-mm:M                                 SKIP 
-        'DeltaOtn_M                 = ' v-mm:DeltaOtn_M                        SKIP 
-      .
+      if not (string(v-mm:M) = ".0000000000")
+      then do :
+        put stream outstream unformatted
+          'V_total1                   = ' v-mm:V_total1                          SKIP 
+          'V_total2                   = ' v-mm:V_total2                          SKIP 
+          'V_water1                   = ' v-mm:V_water1                          SKIP 
+          'V_water2                   = ' v-mm:V_water2                          SKIP
+          'Delta_V1                   = ' v-mm:Delta_V1                          SKIP 
+          'Delta_V2                   = ' v-mm:Delta_V2                          SKIP 
+          'M                          = ' v-mm:M                                 SKIP 
+          'DeltaOtn_M                 = ' v-mm:DeltaOtn_M                        SKIP 
+        .
+      end .
+      else do :
+        put stream outstream unformatted
+          'V_total1                   = ' v-mm:V_total1                          SKIP 
+          'V_total2                   = ' v-mm:V_total2                          SKIP 
+          'V_water1                   = ' v-mm:V_water1                          SKIP 
+          'V_water2                   = ' v-mm:V_water2                          SKIP
+          'Delta_V1                   = ' v-mm:Delta_V1                          SKIP 
+          'Delta_V2                   = ' v-mm:Delta_V2                          SKIP 
+          'M                          = ' v-mm:M                                 SKIP 
+          'DeltaOtn_M                 = ' "?"                                    SKIP 
+        .
+      end .
       output stream outstream close.
       
       assign

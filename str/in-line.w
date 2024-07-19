@@ -3871,6 +3871,8 @@ assign
   b-alc-attr                            :visible = no
 .
 
+hide tt-fr-doc-line.propan-perc cb-connect-hoses in frame {&frame-name}.
+
 /*---------------------------------------------------------*/
 /*          Создадим экранную временную таблицу            */
 /*---------------------------------------------------------*/
@@ -6112,7 +6114,8 @@ procedure proc-quit:
       end.
     end.
     
-    if infoSectionsTotal:PlChanged
+    if valid-object(infoSectionsTotal)
+    and infoSectionsTotal:PlChanged
     then do :
       for each tmp_doc-line-attr exclusive-lock where tmp_doc-line-attr.doc-code = t-doc.doc-code
                                                   and tmp_doc-line-attr.gds-code = buf_goods.gds-code
@@ -6793,6 +6796,8 @@ procedure edit-doc-pl :
   define variable d_cli-doc-qnty  as decimal   no-undo initial 0.00 .
 
   define variable v-log           as logical   no-undo .
+  
+  define variable v-tmp-pl-code as integer no-undo .
 
   if varrvs-place = false then do:
     message
@@ -6834,6 +6839,12 @@ procedure edit-doc-pl :
       end.
     end.
   end.
+  
+  if v-lgas-gds
+  then
+    for first tt-doc-pl :
+      assign v-tmp-pl-code = tt-doc-pl.pl-code no-error .
+    end .
 
   run str/doc-pls.w
     ( input parparentproc
@@ -6959,6 +6970,14 @@ procedure edit-doc-pl :
     if v-lgas-gds
     then do :
       for first tt-doc-pl :
+        if v-tmp-pl-code <> tt-doc-pl.pl-code
+        then do :
+          assign
+            cb-connect-hoses:screen-value in frame {&FRAME-NAME} = " "
+          .
+          assign cb-connect-hoses .
+          display cb-connect-hoses with frame {&FRAME-NAME} .
+        end .
         find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
                                            and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
                                            and bf_place-attr.pl-code   = tt-doc-pl.pl-code

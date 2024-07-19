@@ -956,7 +956,7 @@ do :
 
   end.
   
-  if not v-old-auto-gate-valve /* Включаем */
+  if (not v-old-auto-gate-valve or v-com-vessel-changed) /* Включаем */
   and t-auto-gate-valve        /* автозадвижку */
   and is-main                  /* на главном резервуаре */
   then do :                    /* ставим на резервуар признак ТЕКУЩИЙ и включаем автозадвижку на всех СР */

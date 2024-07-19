@@ -652,6 +652,11 @@ on error undo, return error return-value
                 {&display-message-laud} .
                 UNDO _one-check, leave _one-check.
               end.
+              if v-pl-code = 0
+              or v-pl-code = ?
+              then do :
+                assign v-pl-code = plcode .
+              end .
             end .
           end .
           
