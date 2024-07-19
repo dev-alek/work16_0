@@ -889,8 +889,8 @@ procedure processTrn :
               then do :
                 assign
                   is-com-tanks = yes .
-                  v-num-com-tanks = 1 + num-entries(buf_c-place-attr.attr-value) .
-                  v-place-num  = buf_place.loc1 + "," + buf_c-place-attr.attr-value
+                  v-num-com-tanks = 1 + num-entries(buf2_c-place-attr.attr-value) .
+                  v-place-num  = buf_place.loc1 + "," + buf2_c-place-attr.attr-value
                 .
               end .
             end .
@@ -972,8 +972,8 @@ procedure processTrn :
             then do :
               assign
                 is-com-tanks = yes .
-                v-num-com-tanks = 1 + num-entries(buf_c-place-attr.attr-value) .
-                v-place-num  = buf_place.loc1 + "," + buf_c-place-attr.attr-value
+                v-num-com-tanks = 1 + num-entries(buf2_c-place-attr.attr-value) .
+                v-place-num  = buf_place.loc1 + "," + buf2_c-place-attr.attr-value
               .
             end .
           end .
@@ -1378,6 +1378,7 @@ procedure processTrn :
         if is-com-tanks
         and not available buf_place
         then do :
+          empty temp-table tt-rvs-line-pump-delta .
           find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
                                            and buf_rvs-doc.out-code = buf_doc-line.doc-code
                                            and num-entries(buf_rvs-doc.rvs-code, "-") = 3
