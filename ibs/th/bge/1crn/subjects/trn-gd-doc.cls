@@ -483,13 +483,30 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     define variable v-int  as integer no-undo.
     define variable vIsSGDKK as logical no-undo init no .
     
-    
+    define buffer buf_clients-attr for ub.clients-attr .
     
     infoSecsObj = new InfoSectionsTotal(). 
 
+    release buf_doc-attr no-error.
     &scop attr-code trdcattr-ptbobj
     &scop tag-code nb
     {&create-record-cust-obj-code}
+    if available buf_doc-attr
+    and buf_doc-attr.attr-value > ""
+    then do :
+      find first buf_clients-attr no-lock where buf_clients-attr.obj-type  = entry(1, buf_doc-attr.attr-value, ";")
+                                            and buf_clients-attr.obj-code  = integer(entry(2, buf_doc-attr.attr-value, ";"))
+                                            and buf_clients-attr.attr-code = {&attr-owner-code}
+                                            no-error .
+      if available buf_clients-attr
+      and buf_clients-attr.attr-value > ""
+      then do :
+        write-data-element ('org-code', substring(buf_clients-attr.attr-value, 4)) no-error.
+      end .
+      else do :
+        write-data-element ('org-code', "") no-error.
+      end .
+    end .
     &scop attr-code trdcattr-ptb-item-pour
     &scop tag-code ptb-item-pour
     {&create-record-cust}
