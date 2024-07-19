@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7aa39a4c7e01, 2814, rls $
+$Author: SSlivenko $
+$Date: Чт сен 02 12:05:36 2021 +0300 $
+$Workfile: sxg-pack.p $
+$Archive: bge/sxg-pack.p $
 
 отправка и прием пакета новостей (файла)
 
@@ -36,11 +36,11 @@ define input parameter p-cr-db-num   as integer no-undo .
 define input parameter p-delivery-method as integer no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7aa39a4c7e01, 2814, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Чт сен 02 12:05:36 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sxg-pack.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/sxg-pack.p $":U .
 define variable vss-description as character no-undo init "отправка и прием пакета новостей (файла)".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -55,6 +55,32 @@ define variable vss-description as character no-undo init "отправка и прием паке
 { utl/search.i }
 DEFINE VARIABLE v-today as date no-undo .
 DEFINE VARIABLE v-time as integer no-undo .
+FUNCTION availFile RETURNS logical
+  ( INPUT ifile AS character ) :
+
+    def var vii as int no-undo.
+    do vii = 1 to 5:
+       assign
+          file-info:file-name = ifile
+       .
+               
+       if    file-info:file-type = ?
+          or not ( file-info:file-type begins "F":U )
+          or file-info:file-size = 0
+       then do:
+          if vii = 5
+          then do:
+             return false.
+          end.
+          else do:
+             pause 1 no-message.
+          end. 
+       end.
+       else do:
+          return true.
+       end.  
+    end.
+end.
 
   define stream FLStream.
 
@@ -585,12 +611,7 @@ procedure file-s-g private :
                
               os-command silent value( v-zip-command ) .
               /* проверим наличие заархивированного файла */
-              assign
-                file-info:file-name = v-file-source-arj
-              .
-              if file-info:file-type = ?
-                or not ( file-info:file-type begins "F":U )
-                or file-info:file-size = 0
+              if not availfile(v-file-source-arj)
               then do:
                 return error substitute( "&1. Заархивированный файл &2 не найден или имеет нулевой размер.", vss-workfile, v-file-source-arj ).
               end.
@@ -1078,4 +1099,4 @@ end.
 end procedure. /* cb_getnextfilename */
 
 
-/* $Workfile$ end */
+/* $Workfile: sxg-pack.p $ end */
