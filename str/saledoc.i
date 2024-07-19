@@ -141,7 +141,7 @@ CASE p-doc-kind:
    p-msign = 1
    p-main = no
    p-in-inkas = no
-   p-order = 1
+   p-order = 700
    p-dir_ = 1
    .
    return {&sale-add-nat-gas}.
@@ -151,7 +151,7 @@ CASE p-doc-kind:
    p-msign = -1
    p-main = no
    p-in-inkas = no
-   p-order = 700
+   p-order = 701
    p-dir_ = -1
    .
    return {&sale-add-ret-nat-gas}.
