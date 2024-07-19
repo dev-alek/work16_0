@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 31d98d0f4d05, 3249, rls $
+$Author: SSlivenko $
+$Date: 2023/03/29 08:47:58 $
+$Workfile: akt-topl.p $
+$Archive: rep/akt-topl.p $
 
 Акт несоответствия по топливной накладной
 
@@ -24,11 +24,11 @@ define input parameter p-mainmenu-handle as widget-handle no-undo.
 define input parameter rec_id            as recid         no-undo.
 define input parameter parprint-water    as logical       no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 31d98d0f4d05, 3249, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/03/29 08:47:58 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: akt-topl.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/akt-topl.p $":U .
 define variable vss-description as character no-undo initial "Акт несоответствия по топливной накладной":U .
 
 { cmp/vssrevis.i }
@@ -495,9 +495,18 @@ for each buf_doc-line no-lock
           "По ТТН"    format "X(6)"           at {&P-S} + 2
           ":"         format "X(1)"           at {&P-C2-S}
           buf_doc-line.doc-qnty          format "zz,zz9.999"    at right-field( {&P-C3-S} - 2, 10)
-          ":"         format "X(1)"           at {&P-C3-S}
-          buf_doc-line.temperature       format "->>9.99"           at right-field( {&P-C4-S} - 1, 7)
-          ":"         format "X(1)"           at {&P-C4-S}
+          ":"         format "X(1)"           at {&P-C3-S} .
+      if v-InfoSectionsTotal:GetInfoSectionProp(1):TTNTemp <> ? then do:
+          put stream out-stream
+          v-InfoSectionsTotal:GetInfoSectionProp(1):TTNTemp       format "->>9.99"           at right-field( {&P-C4-S} - 1, 7)
+          ":"         format "X(1)"           at {&P-C4-S} .
+      end.
+      else do:
+          put stream out-stream
+          buf_doc-line.temperature       format "->>9.99"           at right-field( {&P-C4-S} - 1, 7) 
+          ":"         format "X(1)"           at {&P-C4-S} .
+       end.
+      put stream out-stream
           buf_doc-line.doc-density       format "9.9999999999"            at right-field( {&P-C5-S} - 2, 12)
           ":"         format "X(1)"           at {&P-C5-S}
           buf_doc-line.doc-qnty * buf_doc-line.doc-density
