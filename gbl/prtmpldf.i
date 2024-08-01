@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 06dcfe20b136, 752, rls $
+$Author: SSlivenko $
+$Date: Wed Aug 17 15:45:44 2016 +0300 $
+$Workfile: prtmpldf.i $
+$Archive: gbl/prtmpldf.i $
 
 Переменные для вызов шаблона печати
 
@@ -16,7 +16,7 @@ Creation date: 07/08/03
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: prtmpldf.i $ $Revision: 06dcfe20b136, 752, rls $".
 
 define variable {1}c-point  as character no-undo .
 define variable {1}tbl      as character no-undo .
@@ -112,10 +112,10 @@ define variable v-max as integer no-undo .
     end.
     if p-format = "99:99" then return MAXIMUM(v-max,8).
     CASE p-type:
-      when {&type-char} or when {&abl-datatype-character} then do:
+       when {&type-char} or when {&abl-datatype-character} then do:
         if p-format = "99:99" or p-format = "99:99-99:99" then return maximum(v-max, 8).
         else
-        return maximum(v-max, integer(right-trim(left-trim(left-trim(p-format, "X":U), "(":U), ")":U))).
+        return maximum(v-max, integer(left-trim(right-trim(left-trim(left-trim(p-format, "X":U), "(":U), ")":U),">") )).
       end.
       when {&type-int} or when {&type-dec} or when {&type-date} or
       when {&abl-datatype-integer} or when {&abl-datatype-decimal} or when {&abl-datatype-date}
@@ -156,4 +156,4 @@ return v-excel-format .
 end function.
 
 
-/* $Workfile$ e n d */
+/* $Workfile: prtmpldf.i $ e n d */
