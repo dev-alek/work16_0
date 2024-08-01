@@ -122,10 +122,12 @@ assign v-account = ( if integer( {2} ) = 0 then 100 else integer( {2} ) ).
   &else
 assign v-account = 100.
   &endif
-  if mFrameView
-  then do:
-     VIEW FRAME InfoFrame.
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("ON mFrameView=" + string(mFrameView), "frameRepError"). 
   end.
+  VIEW FRAME InfoFrame.
+  mFrameView = true.
 &IF "{3}" <> ""  &then
         Assign  RecordsDone: label = {3} .
 &endif
@@ -174,6 +176,10 @@ IF ( {2} modulo v-account = 0 )  then DO: &endif
     RecordsString3 = fill(' ',v-kol-spice) + string({5})
     .
 &endif
+          if  log-manager:logfile-name ne ?
+          then DO:
+              log-manager:write-message("DISP mFrameView=" + string(mFrameView), "frameRepError"). 
+          end.
            if mFrameView
            then do:
             DISPLAY
