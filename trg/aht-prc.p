@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: aht-prc.p $
+$Archive: trg/aht-prc.p $
 
 —оздание складского архива по типам приобретени€ дл€ документа переоценки
 
@@ -30,11 +30,11 @@ temp-ot-line -> temp-aht-ot-tot
 define input  parameter p-doc-code as character no-undo .
 define input  parameter p-cut-date as date      no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: aht-prc.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: trg/aht-prc.p $":U .
 define variable vss-description as character no-undo initial "—оздание складского архива по типам приобретени€ по переоценке".
 { cmp/vssrevis.i "substitute('&1|&2':u,p-doc-code,p-cut-date)" }
 { cmp/trg-def.i  }
@@ -64,10 +64,24 @@ on error undo main-block, return error
     with view-as dialog-box side-labels three-d
     title "–асчет складского архива по типам приобретени€"
     .
-  view frame a .
-  display
-    p-doc-code
-    with frame a .
+
+  define variable mFrameView  as logical no-undo init yes.
+  define variable mFramHandle as handle  no-undo.      
+  mFramHandle = frame a:handle.
+
+  if  log-manager:logfile-name ne ?
+  then DO:
+      log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameoxmError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameoxmError"). 
+  end.
+  mFrameView = not session:batch-mode and mFramHandle:visible.
+  if mFrameView
+  then do:
+    view frame a .
+    display
+      p-doc-code
+      with frame a .
+  end.
 
   run process-price-doc in this-procedure
     (input p-doc-code
@@ -124,7 +138,8 @@ procedure process-price-doc :
     assign
       v-doc-date = buf_price-doc.fact-date
     .
-    display
+    if mFrameView
+    then display
       v-doc-date
       with frame a .
 
@@ -370,7 +385,8 @@ procedure process-price-doc :
         assign
           v-current-time = string(v-time - v-start-time, "HH:MM:SS")
         .
-        display
+        if mFrameView
+        then display
           v-ind
           v-current-time
           with frame a .
@@ -1078,7 +1094,8 @@ procedure show-action :
       v-current-time = string(v-time - v-start-time, "HH:MM:SS")
       v-current-action = p-action
     .
-    display
+    if mFrameView
+    then display
       v-current-time
       v-current-action
       with frame a .

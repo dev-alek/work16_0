@@ -876,10 +876,9 @@ procedure file-s-g private :
       /* 11/I-2019  для импорта из 1с распаковка файлов выполняется без копирования архива */
       if p-delivery-method = integer({&esys-dm-erp-1C-RN}) then do:
         if v-arch then do:
-          file-info:file-name = p-fullfile-name .
-          if file-info:file-size = 0
+          if not availfile(p-fullfile-name)
           then do:
-            run write-to-log in p-parent-handle ( substitute("Файл &1 пустой! Пропускаем..."
+            run write-to-log in p-parent-handle ( substitute("Файл &1 не найден или пустой! Пропускаем..."
                                                             , p-fullfile-name)  ) .
           end .
           else do :
@@ -900,6 +899,10 @@ procedure file-s-g private :
                                                             , p-file-ext, v-unzip-command)  ) .
             os-command silent value( v-unzip-command ) .
   
+            if os-error <> 0 and log-manager:logfile-name ne ?
+            then do:
+                log-manager:write-message("Ошибка при распаковке os-error: " + string(os-error) , "!sxg-pack!"). 
+            end.
             if searchfile(p-target-dir + {&back-slash-char} + p-file-name-no-ext + ".xml":U) = ?
             then do :
               run write-to-log in p-parent-handle ( substitute("Ошибка при распаковке! Файл &1 не является архивом, либо архив битый. Пропускаем..."

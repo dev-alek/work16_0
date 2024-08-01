@@ -335,14 +335,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable mFramHandle as handle no-undo.      
   mFramHandle = frame {&frame-name}:handle.
 
+  mFrameView = not session:batch-mode and mFramHandle:visible.
+  publish "IsAsyncProc" (output mSilent).
   if  log-manager:logfile-name ne ?
   then DO:
       log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameoxmError"). 
       log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameoxmError"). 
+      log-manager:write-message("mSilent=" + string(mSilent), "frameoxmError"). 
+      log-manager:write-message("create-window-option=" + string(create-window-option), "frameoxmError"). 
   end.
-  mFrameView = not session:batch-mode and mFramHandle:visible.
-   publish "IsAsyncProc" (output mSilent).
-   mSilent = mSilent or mFrameView.
+/*   mSilent = mSilent or mFrameView.*/
    if mSilent ne true
    then do:
      IF create-window-option = 1 THEN DO:
