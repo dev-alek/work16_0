@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c96af91888ad, 3081, rls $
+$Author: SSlivenko $
+$Date: 2022/08/05 16:16:26 $
+$Workfile: trn-docw.p $
+$Archive: trg/trn-docw.p $
 
 Триггер на запись документа
 
@@ -22,11 +22,11 @@ using ibs.th.str.alcohol.*.
 
 TRIGGER PROCEDURE FOR WRITE OF ub.trn-doc OLD BUFFER old-doc .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: c96af91888ad, 3081, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/08/05 16:16:26 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: trn-docw.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: trg/trn-docw.p $":U .
 define variable vss-description as character no-undo initial "Триггер на запись документа":U .
 
 define variable chg-qnty      as   decimal no-undo .
@@ -821,7 +821,7 @@ end.
     assign
       v-message = substitute( "&1. Не удалось наложить блокировку на все товары принадлежащие документу.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
     .
-    if g#news = false then do:
+    if g#news = false and not g#esys then do:
       message
         v-message
         view-as alert-box error .
