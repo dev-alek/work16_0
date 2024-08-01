@@ -438,7 +438,7 @@ define variable prt-fact as decimal format "->>,>>>,>>9.999":u initial 0
 define variable cb-connect-hoses as character init ""
    LABEL "Подключение рукавов при приеме СУГ" 
    VIEW-AS COMBO-BOX INNER-LINES 3
-   LIST-ITEM-PAIRS "","",
+   LIST-ITEM-PAIRS "","empty",
    "Подключение рукавов было","yes",
    "Подключение рукавов не было","no"
    DROP-DOWN-LIST
@@ -3401,7 +3401,7 @@ do:
         end .
         assign
           buf_doc-line-attr.attr-value = cb-connect-hoses
-          buf_doc-line-attr.attr-value = ? when cb-connect-hoses = ""
+          buf_doc-line-attr.attr-value = ? when cb-connect-hoses = "empty"
         .
       end .
     end .
@@ -4125,7 +4125,7 @@ else do: /* не добавление (изменение и просмотр) */
     if available bf_doc-line-attr
     then do :
       if bf_doc-line-attr.attr-value = ?
-      then cb-connect-hoses = "" .
+      then cb-connect-hoses = "empty" .
       else cb-connect-hoses = bf_doc-line-attr.attr-value .
       display cb-connect-hoses with frame {&frame-name}.
     end .
@@ -6973,9 +6973,8 @@ procedure edit-doc-pl :
         if v-tmp-pl-code <> tt-doc-pl.pl-code
         then do :
           assign
-            cb-connect-hoses:screen-value in frame {&FRAME-NAME} = " "
+            cb-connect-hoses = "empty"
           .
-          assign cb-connect-hoses .
           display cb-connect-hoses with frame {&FRAME-NAME} .
         end .
         find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 

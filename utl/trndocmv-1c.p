@@ -867,6 +867,9 @@ on error undo, return error return-value
     end.   
   end.
         buf_gds-dtl.fact-qnty = 0 .*/
+  validate buf_trn-doc no-error.
+  if error-status:error then
+    return error return-value.
 end.
 
 procedure add-nn :

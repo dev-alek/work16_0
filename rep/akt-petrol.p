@@ -48,6 +48,7 @@ define stream out-stream.
 { ref/gds-attr.i }
 { gbl/prn-lib.i     }
 { rep/html-conv.i }
+{ str/placelib.i }
 
     
 define variable is-petrolium         as logical   no-undo.
@@ -118,6 +119,8 @@ define variable is-kp               as logical   no-undo .
 define variable is-kprvs            as logical   no-undo .
 define variable v-dec               as decimal   no-undo .
 define variable v-sec-name          as character no-undo .
+define variable varvalue            as character no-undo .
+define variable v-ok                as logical   no-undo .
 
 define buffer buf_trn-doc       for ub.trn-doc.
 define buffer buf_doc-line      for ub.doc-line.
@@ -125,6 +128,8 @@ define buffer buf_doc-line-attr for ub.doc-line-attr.
 define buffer buf_doc-attr      for ub.doc-attr.
 define buffer buf_goods         for ub.goods.
 define buffer buf_place         for ub.place.
+define buffer buf_c-place-attr  for ub.c-place-attr .
+define buffer buf2_c-place-attr for ub.c-place-attr .
 define buffer buf_rvs-line      for ub.rvs-line.
 define buffer buf_rvs-doc       for ub.rvs-doc.
 define buffer buf_clients       for ub.clients.
@@ -748,6 +753,78 @@ do
             tt-petrol.weight-pri = v-InfoSection:FactKgQnty
             tt-petrol.num-pl     = v-InfoSection:ListTank
             .  
+          
+          pl_ :
+          for each buf_place no-lock where buf_place.obj-type = buf_doc-line.obj-type
+                                       and buf_place.obj-code = buf_doc-line.obj-code
+                                       and buf_place.loc1     = tt-petrol.num-pl :
+            find first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type
+                                            and buf_doc-pl.obj-code = buf_doc-line.obj-code
+                                            and buf_doc-pl.out-code = buf_doc-line.doc-code
+                                            and buf_doc-pl.gds-code = buf_goods.gds-code
+                                            and buf_doc-pl.pl-code  = buf_place.pl-code
+                                            no-error .
+            if available buf_doc-pl
+            then do :
+              leave pl_ .
+            end .
+          end .
+          
+          find last buf_c-place-attr no-lock where buf_c-place-attr.obj-type  = buf_place.obj-type
+                                               and buf_c-place-attr.obj-code  = buf_place.obj-code
+                                               and buf_c-place-attr.pl-code   = buf_place.pl-code
+                                               and buf_c-place-attr.attr-code = {&place-com-tanks}
+                                               and (buf_c-place-attr.corr-date < buf_trn-doc.fact-date
+                                                 or buf_c-place-attr.corr-date = buf_trn-doc.fact-date and buf_c-place-attr.corr-time < buf_trn-doc.fact-time)
+                                               no-error .
+          if available buf_c-place-attr
+          then do :
+            find first buf2_c-place-attr no-lock where buf2_c-place-attr.obj-type = buf_c-place-attr.obj-type
+                                                   and buf2_c-place-attr.obj-code = buf_c-place-attr.obj-code
+                                                   and buf2_c-place-attr.pl-code  = buf_c-place-attr.pl-code
+                                                   and buf2_c-place-attr.attr-code = buf_c-place-attr.attr-code
+                                                   and buf2_c-place-attr.chip-num > buf_c-place-attr.chip-num
+                                                   no-error .
+            if available buf2_c-place-attr
+            then do :
+              if buf2_c-place-attr.attr-value > ""
+              then do :
+                assign
+                  tt-petrol.num-pl  = buf_place.loc1 + "," + buf2_c-place-attr.attr-value
+                .
+              end .
+            end .
+            else do :
+              run placelib_get-attr  ( input {&place-com-tanks}
+                ,input buf_place.obj-code
+                ,input buf_place.obj-type
+                ,input buf_place.pl-code
+                ,output varvalue
+                ,output v-ok      ) no-error.
+              if v-ok
+              and varvalue > ""
+              then do :
+                assign
+                  tt-petrol.num-pl  = buf_place.loc1 + "," + varvalue
+                .
+              end .
+            end .
+          end .
+          else do :
+            run placelib_get-attr  ( input {&place-com-tanks}
+              ,input buf_place.obj-code
+              ,input buf_place.obj-type
+              ,input buf_place.pl-code
+              ,output varvalue
+              ,output v-ok      ) no-error.
+            if v-ok
+            and varvalue > ""
+            then do :
+              assign
+                tt-petrol.num-pl  = buf_place.loc1 + "," + varvalue
+              .
+            end .
+          end .
             
           if sgdkk
           and not v-InfoSection:IsKP

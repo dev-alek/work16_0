@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f4eb1c45dbd4, 240, rls $
+$Author: ASMorozov $
+$Date: Mon Aug 31 16:26:51 2015 +0400 $
+$Workfile: lock-gds.p $
+$Archive: trg/lock-gds.p $
 
 Блокировка товаров по документу
 
@@ -38,14 +38,15 @@ define input parameter p-fact-close       as logical no-undo .
 define input parameter p-is-news          as logical no-undo .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: f4eb1c45dbd4, 240, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Aug 31 16:26:51 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: lock-gds.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: trg/lock-gds.p $":U .
 define variable vss-description as character no-undo initial "Блокировка товаров по документу":U .
 
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4|&5|&6|&7',v-trn-doc-doc-code,p-check-inv,p-check-inv-rasr-minus,p-document-fact-order,p-document-fact-order-price,p-fact-close,p-is-news)" }
+{ cmp/trg-def.i  }
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { str/lib-trn.i  }
@@ -62,6 +63,7 @@ define buffer buf_rvs-doc  for ub.rvs-doc .
 define variable l-reserv-pl-code         as logical no-undo .
 define variable can-process              as logical no-undo .
 define variable v-rvs-list               as character no-undo .
+define variable vErrorMessage            as character no-undo .
 
 define variable num_rec       as integer   no-undo initial 0 .
 define variable start_time    as integer   no-undo .
@@ -331,13 +333,19 @@ on error undo main-block, return error
               .
             end.
             else do:
-              message
-                "Товар :" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-                buf_goods.gds-name skip
-                "на объекте" inv_doc-line.obj-type inv_doc-line.obj-code skip
-                "сейчас в инвентаризации (Документ №" inv_doc-line.doc-code ")." skip
-                view-as alert-box information .
-              undo main-block, return error .
+              vErrorMessage = substitute(
+                "Товар: &1 &2 &3~n&4~nна объекте &5 &6~nсейчас в инвентаризации (Документ № &7).",
+                buf_goods.artic,
+                buf_goods.prod-type,
+                buf_goods.prod-code,
+                buf_goods.gds-name,
+                inv_doc-line.obj-type,
+                inv_doc-line.obj-code,
+                inv_doc-line.doc-code
+              ).
+              if not g#esys then
+                message vErrorMessage view-as alert-box information .
+              undo main-block, return error vErrorMessage.
             end.
           end.
         end.
@@ -357,13 +365,19 @@ on error undo main-block, return error
             and inv_trn-doc.ext-doc-type = {&TDEDT_Corr_Acc_Price}
         on error undo main-block, return error
         :
-          message
-            "Товар :" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-            buf_goods.gds-name skip
-            "на объекте" inv_doc-line.obj-type inv_doc-line.obj-code skip
-            "сейчас в коррекции учетных цен (Документ №" inv_doc-line.doc-code ")." skip
-            view-as alert-box information .
-          undo main-block, return error .
+          vErrorMessage = substitute(
+                "Товар: &1 &2 &3~n&4~nна объекте &5 &6~nсейчас в коррекции учетных цен (Документ № &7).",
+                buf_goods.artic,
+                buf_goods.prod-type,
+                buf_goods.prod-code,
+                buf_goods.gds-name,
+                inv_doc-line.obj-type,
+                inv_doc-line.obj-code,
+                inv_doc-line.doc-code
+              ).
+          if not g#esys then
+            message vErrorMessage view-as alert-box information .
+          undo main-block, return error vErrorMessage.
         end.
         for each inv_doc-line no-lock
           where inv_doc-line.obj-type  = buf_doc-line.obj-type
@@ -379,24 +393,34 @@ on error undo main-block, return error
             and inv_trn-doc.flag_        = false
             and inv_trn-doc.ext-doc-type = {&TDEDT_Peresort}
         on error undo main-block, return error
-        :
-          message
-            "Товар :" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-            buf_goods.gds-name skip
-            "на объекте" inv_doc-line.obj-type inv_doc-line.obj-code skip
-            "сейчас в пересортице (Документ №" inv_doc-line.doc-code ")." skip
-            view-as alert-box information .
-          undo main-block, return error .
+        : 
+          vErrorMessage = substitute(
+            "Товар :&1 &2 &3~n&4~nна объекте &5 &6~nсейчас в пересортице (Документ № &7).",
+            buf_goods.artic,
+            buf_goods.prod-type,
+            buf_goods.prod-code,
+            buf_goods.gds-name, 
+            inv_doc-line.obj-type, 
+            inv_doc-line.obj-code,
+            inv_doc-line.doc-code).
+          if not g#esys then
+              message vErrorMessage view-as alert-box information .
+          undo main-block, return error vErrorMessage.
         end.
 
         if v-doc-with-inv = false then do:
-          message
-            "Товар :" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
-            "на объекте" buf_doc-line.obj-type buf_doc-line.obj-code skip
-            "Отмечен, как принадлежащий документу с типом инвентаризация" skip
-            "Документ коррекции учетных цен не найден" skip
-            view-as alert-box information .
-          undo main-block, return error .
+          vErrorMessage = substitute(
+                "Товар: &1 &2 &3~nна объекте &4 &5~nотмечен, как принадлежащий документу с типом инвентаризация~n~
+Документ коррекции учетных цен не найден.",
+                buf_goods.artic,
+                buf_goods.prod-type,
+                buf_goods.prod-code,
+                inv_doc-line.obj-type,
+                inv_doc-line.obj-code
+              ).
+          if not g#esys then
+            message vErrorMessage view-as alert-box information .
+          undo main-block, return error vErrorMessage.
         end.
       end.
     end.
@@ -426,14 +450,21 @@ on error undo main-block, return error
           and ub.trn-doc.flag_          = no
       on error undo main-block, return error
       :
-        message
-          "На объекте" inv_doc-line.obj-type inv_doc-line.obj-code skip
-          "существует инвентаризация (Документ №" inv_doc-line.doc-code ") по товару" skip
-          buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-          buf_goods.gds-name skip
-          "Находящаяся в статусе '" STRING(ub.trn-doc.status_) STRING(ub.trn-doc.flag_, "+/-") "'." skip
-          view-as alert-box information .
-        undo main-block, return error .
+        vErrorMessage = substitute(
+          "На объекте &1 &2~nсуществует инвентаризация (Документ №&3) по товару~n&4 &5 &6~n&7~nНаходящаяся в статусе ~"&8&9~".",
+          inv_doc-line.obj-type,
+          inv_doc-line.obj-code,
+          inv_doc-line.doc-code,
+          buf_goods.artic,
+          buf_goods.prod-type,
+          buf_goods.prod-code,
+          buf_goods.gds-name,
+          STRING(ub.trn-doc.status_),
+          STRING(ub.trn-doc.flag_, "+/-")
+        ).
+        if not g#esys then
+            message vErrorMessage view-as alert-box information .
+        undo main-block, return error vErrorMessage.
       end.
     end.
 
@@ -451,15 +482,23 @@ on error undo main-block, return error
           and inv_doc-line.fact-order   > p-document-fact-order
       on error undo main-block, return error
       :
-        message
-          "На объекте" inv_doc-line.obj-type inv_doc-line.obj-code skip
-          "существует инвентаризация " inv_doc-line.doc-code " по товару" skip
-          buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-          buf_goods.gds-name skip
-          "с большим логическим номером " inv_doc-line.fact-order "." skip
-          "Невозможно закрыть документ " buf_doc-line.doc-code " с логическим номером" p-document-fact-order "." skip
-          view-as alert-box information .
-        undo main-block, return error .
+        vErrorMessage = substitute(
+          "На объекте &1 &2~nсуществует инвентаризация (Документ №&3) по товару~n&4 &5 &6~n&7~nс большим логическим номером &8.~n&9.",
+          inv_doc-line.obj-type,
+          inv_doc-line.obj-code,
+          inv_doc-line.doc-code,
+          buf_goods.artic,
+          buf_goods.prod-type,
+          buf_goods.prod-code,
+          buf_goods.gds-name,
+          inv_doc-line.fact-order,
+          substitute("Невозможно закрыть документ &1 с логическим номером &2.",
+                     buf_doc-line.doc-code,
+                     p-document-fact-order)
+        ).
+        if not g#esys then
+            message vErrorMessage view-as alert-box information .
+        undo main-block, return error vErrorMessage.
       end.
     end.
 
@@ -473,15 +512,18 @@ on error undo main-block, return error
         no-error
       }
       if error-status :error then do:
-        message
-          vss-workfile vss-revision vss-description skip
-          "Ошибка при поиске корневого бар-кода" skip
-          "Документ" buf_doc-line.doc-code skip
-          "Артикул" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-          error-status :get-message(1) skip
-          return-value skip
-          view-as alert-box error .
-        undo main-block, return error .
+        vErrorMessage = substitute(
+          "Ошибка при поиске корневого бар-кода~nДокумент &1~nАртикул &2 &3 &4~n&5~n&6.",
+          buf_doc-line.doc-code,
+          buf_goods.artic,
+          buf_goods.prod-type,
+          buf_goods.prod-cod,
+          error-status :get-message(1),
+          return-value
+        ).
+        if not g#esys then
+          message vErrorMessage view-as alert-box information .
+        undo main-block, return error vErrorMessage.
       end.
 
       find last ub.price-list no-lock
@@ -494,15 +536,22 @@ on error undo main-block, return error
       if available ub.price-list
       and ub.price-list.fact-order > p-document-fact-order
       then do:
-        message
-          "На объекте" buf_doc-line.obj-type buf_doc-line.obj-code skip
-          "существует переоценка (Документ №" ub.price-list.doc-num ") по товару" skip
-          buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-          buf_goods.gds-name skip
-          "с более высоким логическим номером" ub.price-list.fact-order "." skip
-          "Невозможно закрыть документ с логическим номером" p-document-fact-order "." skip
-          view-as alert-box information .
-        undo main-block, return error .
+        vErrorMessage = substitute(
+          "На объекте &1 &2~nсуществует переоценка (Документ №&3) по товару~n&4 &5 &6~n&7~nс более высоким логическим номером &8.~n~
+Невозможно закрыть документ с логическим номером &9.",
+          buf_doc-line.obj-type,
+          buf_doc-line.obj-code,
+          ub.price-list.doc-num,
+          buf_goods.artic,
+          buf_goods.prod-type,
+          buf_goods.prod-code,
+          buf_goods.gds-name,
+          ub.price-list.fact-order,
+          p-document-fact-order
+        ).
+        if not g#esys then
+            message vErrorMessage view-as alert-box information .
+        undo main-block, return error vErrorMessage.
       end.
     end. /* if fact-order <> 0 */
   end. /* for each buf_doc-line */
