@@ -839,7 +839,13 @@ define private temp-table tt-recid-TranFuel no-undo
         for each buf_marking-chk no-lock where buf_marking-chk.doc-code =  buf_chk-gds.doc-code and buf_marking-chk.line-num = buf_chk-gds.line-num:
           v-marking = repSpecSimbforXlm(GetCodeIdent(buf_marking-chk.mark)).
           /*          for first buf_marking no-lock where buf_marking.mark begins v-marking :*/
+          if v-marking = "" then do:
+          message "Ошибка. В чеке " buf_chk-gds.doc-code  " отсутствует марка." view-as alert-box.
+          end.
+          if v-marking <> "" then do:
           insw:write-data-element (  "dm",  v-marking ) . /* Datamatrix (строка) */
+          end.
+
 /*          insw:write-data-element (  "dm",  addBracketForCode(v-marking) ) . /* Datamatrix (строка) */*/
         end.       
 /*        find first buf_chk-gds-attr no-lock                                                                      */
