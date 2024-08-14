@@ -888,11 +888,11 @@ DO:
           ) .
     end.
     else do :
-        if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and pl-j = 1 
-          then v-mode = {&lookup}.
+/*        if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and pl-j = 1*/
+/*          then v-mode = {&lookup}.                                   */ 
         run str/doc-pl.w
           ( input parparentproc
-          , input v-mode
+          , input (if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and pl-j = 1 then {&lookup} else v-mode)
           , input p-upd-field
           , input v-upd-units
           , input p-doc-code
