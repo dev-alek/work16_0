@@ -378,14 +378,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       tt-cashbook.cli-type          = {&cmp}                     
       when objImp:code-payer <> ?
       tt-cashbook.cli-code          = objImp:code-payer          
-      when objImp:code-payer <> ?
-      tt-cashbook.Vnecli-type       = {&cmp}                     
       when objImp:code-payer-nonop-inc <> ?
-      tt-cashbook.Vnecli-code       = objImp:code-payer-nonop-inc          
+      tt-cashbook.Vnecli-type       = {&cmp}
+      tt-cashbook.Vnecli-code       = objImp:code-payer-nonop-inc     
+      tt-cashbook.Avanscli-type       = {&cmp}
       when objImp:code-payer-prepayment <> ?
-      tt-cashbook.Avanscli-type       = {&cmp}                     
-      when objImp:code-payer-prepayment <> ?
-      tt-cashbook.Avanscli-code       = objImp:code-payer-prepayment  
+      tt-cashbook.Avanscli-code       = integer(objImp:code-payer-prepayment)  
       when objImp:code-payer-prepayment <> ?
       tt-cashbook.RulePril          = string(objImp:rule-att)    
       when objImp:rule-att <> ?

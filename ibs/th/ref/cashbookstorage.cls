@@ -229,14 +229,14 @@ class ibs.th.ref.cashbookstorage final:
   end.
   
    method public void updateAttrForcashbook (input iBuffer as handle):
-     
+
      define variable vField as handle no-undo.
      define variable vitm  as integer no-undo.
      define buffer buf_file  for _file.
      define buffer buf_field for _field.
      define buffer CashBookrule for CashBookrule.
       find first buf_file where buf_file._file-name eq "cashbook" no-lock.
-     
+
      do vitm = 1 to iBuffer:num-fields:
          vField = iBuffer:buffer-field(vItm).
          if lookup (vField:name,{&cashbookSysField}) eq 0
@@ -263,7 +263,8 @@ class ibs.th.ref.cashbookstorage final:
                   .
                   
                end.
-               ub.CashBookRule.RuleValue =  vField:buffer-value ().                          
+               ub.CashBookRule.RuleValue =  vField:buffer-value ().   
+               release ub.CashBookRule .                       
             end.
          end.
       end.
