@@ -60,6 +60,16 @@ define frame waitfram
   .
 define variable mWaitFramHandle as handle no-undo.      
 mWaitFramHandle = frame waitfram:handle.
+
+define variable mBatchMode as logical no-undo.
+define variable mFameOldVis as logical no-undo.
+define variable mVisCUrentVin as logical no-undo.
+mVisCUrentVin = current-window:visible.
+mFameOldVis = mWaitFramHandle:visible.
+mWaitFramHandle:visible  = yes.
+mBatchMode = not mWaitFramHandle:visible.
+mWaitFramHandle:visible = mFameOldVis.
+current-window:visible = mVisCUrentVin.
 on choose of B-WaitFramStop in frame waitfram /* Добавить в АМ */
 do:
   mWaitFramStop = yes.
@@ -165,11 +175,11 @@ procedure waitfram-show :
     end.
     B-viewProcInfo:visible   in frame waitfram = no. /*session:debug-alert.*/
     B-viewProcInfo:sensitive in frame waitfram = no. /*session:debug-alert.*/
-    B-WaitFramStop:visible   in frame waitfram = if mWaitFramHandle:visible then mWaitFramView else no .
-    B-WaitFramStop:sensitive in frame waitfram = if mWaitFramHandle:visible then mWaitFramView else no .
+    B-WaitFramStop:visible   in frame waitfram = if not mBatchMode then mWaitFramView else no .
+    B-WaitFramStop:sensitive in frame waitfram = if not mBatchMode then mWaitFramView else no .
     if  (   mWaitFramView
        or  mWaitProcEvent)
-       and mWaitFramHandle:visible 
+       and not mBatchMode 
     then
        display
           v-waitfram-action01 skip
@@ -180,13 +190,13 @@ procedure waitfram-show :
     if     mWaitFramView 
        then do:
           if     mWaitFramInterval ne ?
-             and mWaitFramHandle:visible
+             and not mBatchMode
           then
              wait-for go of frame waitfram pause mWaitFramInterval.
        end.
        else
           if     mWaitProcEvent
-             and mWaitFramHandle:visible
+             and not mBatchMode
           then
              process events .
 &endif

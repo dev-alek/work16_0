@@ -3404,6 +3404,16 @@ do:
           buf_doc-line-attr.attr-value = ? when cb-connect-hoses = "empty"
         .
       end .
+      else do :
+        find first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = t-doc.doc-code
+                                                      and buf_doc-line-attr.gds-code = buf_goods.gds-code
+                                                      and buf_doc-line-attr.attr-code = "connect-hoses"
+                                                      no-error .
+        if available buf_doc-line-attr
+        then do :
+          delete buf_doc-line-attr .
+        end .
+      end .
     end .
   end .
 
