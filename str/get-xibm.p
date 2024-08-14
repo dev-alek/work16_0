@@ -141,6 +141,7 @@ define TEMP-TABLE tt-bar-code      LIKE ub.bar-code.
 define TEMP-TABLE tt-marking-chk   LIKE ub.marking-chk.
 define TEMP-TABLE tt-chk-discnt   LIKE ub.chk-discnt.
 define TEMP-TABLE tt-chk-discnt-attr LIKE ub.chk-discnt-attr.
+define TEMP-TABLE tt-cd-trans LIKE ub.cd-trans.
 DEFINE VARIABLE doc-code-txt AS CHARACTER NO-UNDO.
 
 FUNCTION fdecimal returns decimal
@@ -930,7 +931,7 @@ procedure proc-00 :
             undo, return .
         end.
         
-        If available  ub.cash-desk and   cash-desk.pos-type = p-pos-type then.
+        If available  ub.cash-desk and  ub.cash-desk.pos-type = p-pos-type then.
         else do:       
             p-pos-type =  ub.cash-desk.pos-type. 
             run get-ibm-parameters in this-procedure no-error.
@@ -1137,7 +1138,7 @@ procedure proc-00 :
                 
                 if vCHMgrKey ne ""
                 then do:
-                    create chk-doc-attr.
+                    create buf_chk-doc-attr.
                     assign
                         buf_chk-doc-attr.doc-code   = buf_chk-doc.doc-code
                         buf_chk-doc-attr.attr-code  = "CHMgrKey"
@@ -1561,7 +1562,7 @@ end procedure. /* proc-FuelPump */
 
 procedure proc-CAuthorization :
     define buffer buf_temp-temp for temp-temp.
-    define buffer buf_chk-doc for ub.chk-doc.
+    define buffer buf_chk-doc for tt-chk-doc.
     define buffer buf_shift-obj for ub.shift-obj.
     
     do
@@ -1601,18 +1602,18 @@ procedure proc-CAuthorization :
         define variable v-value as character no-undo .
         define variable v-type  as character no-undo .
         
-        
+        find first buf_chk-doc no-error.
         
         if AuthType_ = 2 then do: /*пиво*/
             run chkdocat-write IN THIS-PROCEDURE(
-                input chk-doc.doc-code
+                input buf_chk-doc.doc-code
                 ,INPUT "qr-alchol-pv"
                 ,INPUT qr-alchol_ ) NO-ERROR.
             
         end.  
         if AuthType_ <> 2 and AuthType_ <> 0 then do: /*алкоголь*/
             run chkdocat-write IN THIS-PROCEDURE(
-                input chk-doc.doc-code
+                input buf_chk-doc.doc-code
                 ,INPUT "qr-alchol"
                 ,INPUT qr-alchol_ ) NO-ERROR.
         end.  
@@ -2411,7 +2412,9 @@ end procedure. /* proc-01-gds */
 
 procedure proc-02-gds :
     define variable v-attr-code as character no-undo .
+    define buffer buf_chk-doc for tt-chk-doc.
     define buffer buf_chk-gds for tt-chk-gds.
+    define buffer buf_chk-gds-attr for tt-chk-gds-attr.
     define buffer buf_temp-temp for temp-temp.
     define buffer buf_tt-sum-grp for tt-sum-grp.
     define buffer buf_marking-chk for tt-marking-chk .
@@ -2479,12 +2482,14 @@ procedure proc-02-gds :
                 ).
 /*               undo, return . */
             end.
-
+            
+            FIND FIRST buf_chk-doc NO-ERROR.
+            
             if v-attr-code = "tobacco-mark" 
             then do :
                 if CBCBarcode_ <> "" then do :
                 find first buf_marking-chk exclusive-lock where buf_marking-chk.mark      = CBCBarcode_
-                    and buf_marking-chk.doc-code  = ub.chk-doc.doc-code
+                    and buf_marking-chk.doc-code  = buf_chk-doc.doc-code
                     and buf_marking-chk.line-num  = CBCString_
                     no-error .
                 if not available buf_marking-chk
@@ -2492,7 +2497,7 @@ procedure proc-02-gds :
                     create buf_marking-chk .
                     assign
                         buf_marking-chk.mark      = CBCBarcode_         
-                        buf_marking-chk.doc-code  = ub.chk-doc.doc-code 
+                        buf_marking-chk.doc-code  = buf_chk-doc.doc-code 
                         buf_marking-chk.line-num  = CBCString_          
                         .
                 end .
@@ -2504,21 +2509,21 @@ procedure proc-02-gds :
             end .
 
             else do :
-                find first ub.chk-gds-attr exclusive-lock
-                    where ub.chk-gds-attr.doc-code  = ub.chk-doc.doc-code
-                    and ub.chk-gds-attr.line-num  = CBCString_
-                    and ub.chk-gds-attr.attr-code = v-attr-code no-error.
-                if available ub.chk-gds-attr then do:
-                    CBCBarcode_ = ub.chk-gds-attr.attr-value + "," + CBCBarcode_ .
-                    ub.chk-gds-attr.attr-value =  CBCBarcode_ .
+                find first buf_chk-gds-attr 
+                    where buf_chk-gds-attr.doc-code  = buf_chk-doc.doc-code
+                    and buf_chk-gds-attr.line-num  = CBCString_
+                    and buf_chk-gds-attr.attr-code = v-attr-code no-error.
+                if available buf_chk-gds-attr then do:
+                    CBCBarcode_ = buf_chk-gds-attr.attr-value + "," + CBCBarcode_ .
+                    buf_chk-gds-attr.attr-value =  CBCBarcode_ .
                 end.  
                 else do:
-                    create ub.chk-gds-attr.
+                    create buf_chk-gds-attr.
                     assign
-                        ub.chk-gds-attr.doc-code = ub.chk-doc.doc-code
-                        ub.chk-gds-attr.line-num = CBCString_
-                        ub.chk-gds-attr.attr-code = v-attr-code
-                        ub.chk-gds-attr.attr-value =  CBCBarcode_ 
+                        buf_chk-gds-attr.doc-code = buf_chk-doc.doc-code
+                        buf_chk-gds-attr.line-num = CBCString_
+                        buf_chk-gds-attr.attr-code = v-attr-code
+                        buf_chk-gds-attr.attr-value =  CBCBarcode_ 
                         .
                 end.
             end .
@@ -2528,7 +2533,7 @@ procedure proc-02-gds :
         
     end.
     
-end procedure. /* proc-01 */
+end procedure. /* proc-02-gds */
 /*
 todo поскольку  ј∆≈“—я сумма ручной скидки входит  одноверемнно в шапку чека и в строки  то пока закоментарим!!!
 procedure proc-02-gds :
@@ -2659,7 +2664,7 @@ procedure proc-end :
         define variable  prev-code2 as character no-undo .
         define variable netto-sum2_ as decimal no-undo .
         /*ппроверка всего что только что прин€ли*/
-        if p-pos-type = {&cd-type-magia-XML}
+        /*if p-pos-type = {&cd-type-magia-XML}
         and v-create-return-write-off
         and prev-code <> "":U then do:
             release ub.chk-doc.
@@ -2671,7 +2676,7 @@ procedure proc-end :
                     , output prev-code2
                     , output netto-sum2_
                     ).
-        end.
+        end.*/
         if v-to-delete[1] = no then do:
             
             get-chkc_context.ll = lll.
@@ -2823,14 +2828,32 @@ procedure proc-end-chk :
                   END.
               END.
           END.
+          
+          FOR EACH tt-cd-trans:
+              find first ub.cd-trans no-lock where 
+                         ub.cd-trans.db-num = tt-cd-trans.db-num 
+                     and ub.cd-trans.trans-id = tt-cd-trans.trans-id 
+                     no-error. 
+              if not available ub.cd-trans then do:        
+                create ub.cd-trans.
+                buffer-copy tt-cd-trans to ub.cd-trans.
+              end.
+          end.    
      
           FOR EACH  tt-bar-code:      
              CREATE ub.bar-code.
              buffer-copy tt-bar-code to ub.bar-code.              
           END.       
        
-          FOR EACH  tt-marking-chk:      
-             CREATE ub.marking-chk.
+          FOR EACH  tt-marking-chk:
+             find first ub.marking-chk exclusive-lock where 
+                        ub.marking-chk.mark      = tt-marking-chk.mark
+                    and ub.marking-chk.doc-code  = tt-marking-chk.doc-code
+                    and ub.marking-chk.line-num  = tt-marking-chk.line-num
+                    no-error .
+             if not available ub.marking-chk 
+             then             
+             CREATE ub.marking-chk.             
              buffer-copy tt-marking-chk to ub.marking-chk.              
           END.       
 
@@ -2846,7 +2869,8 @@ procedure proc-end-chk :
        EMPTY TEMP-TABLE     tt-chk-discnt.
        EMPTY TEMP-TABLE     tt-chk-discnt-attr.
        EMPTY TEMP-TABLE     tt-bar-code.
-       EMPTY TEMP-TABLE     tt-marking-chk.       
+       EMPTY TEMP-TABLE     tt-marking-chk.
+       EMPTY TEMP-TABLE     tt-cd-trans.         
     END.
 
  END.
@@ -2865,6 +2889,7 @@ procedure proc-inv :
     define variable v-line-type as character no-undo .
     define buffer buf_chk-gds for tt-chk-gds.
     define buffer buf_temp-temp for temp-temp.
+    define buffer buf_chk-doc for tt-chk-doc.
     
     do
         on error undo, return error return-value
@@ -2914,26 +2939,29 @@ procedure proc-inv :
                 else string-IS0-8601-to-sec(v-time-char))
                 no-error
                 .
-            CREATE ub.chk-gds.
+                
+            FIND FIRST buf_chk-doc NO-ERROR.
+                
+            CREATE buf_chk-gds.
             assign
-                ub.chk-gds.doc-code = ub.chk-doc.doc-code
+                buf_chk-gds.doc-code = buf_chk-doc.doc-code
                 lng = lng + 1
-                ub.chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl)
-                ub.chk-gds.grp-code = 0
-                ub.chk-gds.chk-date = ub.chk-doc.chk-date
-                ub.chk-gds.src-code = i-code_
-                ub.chk-gds.src-qnty = i-qnty_
-                ub.chk-gds.src-discnt = 0
-                ub.chk-gds.src-price = 0
-                ub.chk-gds.doc-qnty = 0
-                ub.chk-gds.price-service = 0
-                ub.chk-gds.time-oper = time-oper_
-                ub.chk-gds.is-error = no
-                ub.chk-gds.doc-qnty = 0
-                ub.chk-gds.pump = 0
-                ub.chk-gds.road-tax = 0
-                ub.chk-gds.line-sign = ub.chk-gds.src-qnty >= 0
-                ub.chk-gds.line-type =  '':U
+                buf_chk-gds.line-num = (if lng-spl = 0 then - lng else lng-spl)
+                buf_chk-gds.grp-code = 0
+                buf_chk-gds.chk-date = buf_chk-doc.chk-date
+                buf_chk-gds.src-code = i-code_
+                buf_chk-gds.src-qnty = i-qnty_
+                buf_chk-gds.src-discnt = 0
+                buf_chk-gds.src-price = 0
+                buf_chk-gds.doc-qnty = 0
+                buf_chk-gds.price-service = 0
+                buf_chk-gds.time-oper = time-oper_
+                buf_chk-gds.is-error = no
+                buf_chk-gds.doc-qnty = 0
+                buf_chk-gds.pump = 0
+                buf_chk-gds.road-tax = 0
+                buf_chk-gds.line-sign = buf_chk-gds.src-qnty >= 0
+                buf_chk-gds.line-type =  '':U
                 .
         end.
     end.
@@ -3186,6 +3214,7 @@ procedure proc-disc :
     define buffer buf_chk-gds for tt-chk-gds.
     define buffer buf_chk-doc for tt-chk-doc.
     define buffer buf_chk-discnt for tt-chk-discnt.
+    define buffer buf2_chk-discnt for tt-chk-discnt.
     define buffer buf_chk-discnt-attr for tt-chk-discnt-attr.
     define variable disc-gds-reason as int no-undo .
     
@@ -3275,7 +3304,7 @@ procedure proc-disc :
             if disc-mode_ = "B":U  then return.  /* »гнорируем тип скидки B, который используетс€ дл€ хранени€ бонусов на кассе */ 
             if disc-mode_ <> 'T':U then do:
                 find first buf_chk-gds where
-                    buf_chk-gds.doc-code = chk-doc.doc-code
+                    buf_chk-gds.doc-code = buf_chk-doc.doc-code
                     AND buf_chk-gds.line-num = lnd-spl no-error .
                 if disc-mode_ = 'I':U then do:
                     if not Available buf_chk-gds then do:
@@ -3470,12 +3499,12 @@ procedure proc-disc :
             if kriv3 = yes
             and disc-mode_ = "I" then do:
                 /*должны пройти по всем скидка на итог и скинуть object-sum*/
-                for each buf_chk-discnt where
-                    buf_chk-discnt.doc-code = ub.chk-discnt.doc-code
-                        AND buf_chk-discnt.line-type = integer({&discnt-sub-total})
-                        and buf_chk-discnt.line-num >= ub.chk-discnt.object-line-num:
+                for each buf2_chk-discnt where
+                    buf2_chk-discnt.doc-code = buf_chk-discnt.doc-code
+                        AND buf2_chk-discnt.line-type = integer({&discnt-sub-total})
+                        and buf2_chk-discnt.line-num >= buf_chk-discnt.object-line-num:
                     assign
-                        buf_chk-discnt.object-sum = buf_chk-discnt.object-sum - ub.chk-discnt.discnt-value-abs.
+                        buf2_chk-discnt.object-sum = buf2_chk-discnt.object-sum - buf_chk-discnt.discnt-value-abs.
                 end.
             end.
         end. /*if exist*/
@@ -3632,6 +3661,8 @@ PROCEDURE cb-xmlvalid-procedure-not-found :
         define buffer first_temp-temp for temp-temp.
         define buffer slave_temp-temp for temp-temp.
         define buffer buf_cash-desk-attr for ub.cash-desk-attr .
+        define buffer buf_chk-pay-attr for tt-chk-pay-attr.
+        define buffer buf_chk-pay for tt-chk-pay.
         
         case p-type
             :
@@ -3724,14 +3755,17 @@ PROCEDURE cb-xmlvalid-procedure-not-found :
                                 run proc-03 in this-procedure (input (if gbl-type = "4" then 1 else 0)
                                     , input (if gbl-type = "4" then mc-exist else exist)
                                     ) no-error .
-                                create ub.chk-pay-attr.
-                                assign ub.chk-pay-attr.doc-code = ub.chk-pay.doc-code
-                                    ub.chk-pay-attr.line-num = 2
-                                    ub.chk-pay-attr.attr-code = "autotank-sum-return"
-                                    ub.chk-pay-attr.attr-value = string(autotank-sum-return)
-                                    autotank-sum-return = 0
-                                    .
-                                
+                                find first buf_chk-pay no-error.    
+                                if available buf_chk-pay 
+                                then do: 
+                                    create buf_chk-pay-attr.
+                                    assign buf_chk-pay-attr.doc-code = buf_chk-pay.doc-code
+                                        buf_chk-pay-attr.line-num = 2
+                                        buf_chk-pay-attr.attr-code = "autotank-sum-return"
+                                        buf_chk-pay-attr.attr-value = string(autotank-sum-return)
+                                        autotank-sum-return = 0
+                                        .
+                                end.
                             end .
                         end .
                     end.  
@@ -4618,9 +4652,10 @@ procedure proc-ach :
     define variable v-ach-id as character no-undo .
     
     define buffer buf_temp-temp for temp-temp.
-    define buffer buf_cd-trans for ub.cd-trans.
-    define buffer buf2_cd-trans for ub.cd-trans.
-    define buffer buf3_cd-trans for ub.cd-trans.
+    define buffer buf_cd-trans for tt-cd-trans.
+    define buffer buf2_cd-trans for tt-cd-trans.
+    define buffer buf3_cd-trans for tt-cd-trans.
+    define buffer buf_chk-doc for tt-chk-doc.
     define buffer buf_achd for achd.
     define buffer buf_ache for ache.
     do
@@ -4637,6 +4672,9 @@ procedure proc-ach :
             v-ach-id = ''
             .
         if loc-exist then return.
+        
+        find first buf_chk-doc no-error.
+        
         for each buf_temp-temp where
             buf_temp-temp.record-name = "CACHistory":U
                 AND buf_temp-temp.id = v-id:
@@ -4725,7 +4763,7 @@ procedure proc-ach :
                 {&error-in-file-format}
             end.
             delete buf_temp-temp.
-        end. /*for each buf_temp-temp*/
+        end. /*for each buf_temp-temp*/        
         find first buf_cd-trans share-lock where
             buf_cd-trans.trans-id-chr = v-ach-id
             and buf_cd-trans.trans-type  = integer({&cdt-ach})
@@ -4748,9 +4786,9 @@ procedure proc-ach :
                 .
         end.
         assign
-            buf_cd-trans.src-shift-date = ub.chk-doc.src-shift-date
-            buf_cd-trans.src-shift-name = ub.chk-doc.src-shift-name
-            buf_cd-trans.pay-desk = ub.chk-doc.pay-desk
+            buf_cd-trans.src-shift-date = buf_chk-doc.src-shift-date
+            buf_cd-trans.src-shift-name = buf_chk-doc.src-shift-name
+            buf_cd-trans.pay-desk = buf_chk-doc.pay-desk
             buf_cd-trans.{&achcheckid} = chk-id_
             buf_cd-trans.{&achcardnum} = d-card_
             buf_cd-trans.{&achcode} = bc-buf
@@ -4850,7 +4888,9 @@ procedure proc-cfiscal :
     define variable v-datatype as character no-undo .
     define variable v-int-trans-type as integer no-undo .
     define buffer buf_temp-temp for temp-temp.
-    define buffer buf_cd-trans for ub.cd-trans .
+    define buffer buf_cd-trans for tt-cd-trans .
+    defin buffer buf_chk-doc for tt-chk-doc.
+    defin buffer buf_chk-pay for tt-chk-pay.
     
     do
         on error undo, return error
@@ -4860,6 +4900,9 @@ procedure proc-cfiscal :
                 tot_sum = 0
                 z-num_ = 0
                 .
+            
+            find first buf_chk-doc no-error.
+                
             for each buf_temp-temp where
                 buf_temp-temp.record-name = "CFiscal":U
                     AND buf_temp-temp.id = v-id:
@@ -4965,7 +5008,7 @@ procedure proc-cfiscal :
                         and buf_cd-trans.obj-code = shop-code
                         and buf_cd-trans.chk-date = chk-date_
                         and buf_cd-trans.chk-time = chk-time_
-                        and buf_cd-trans.pay-desk = ub.chk-doc.pay-desk
+                        and buf_cd-trans.pay-desk = buf_chk-doc.pay-desk
                         and buf_cd-trans.chk-id = v-id
                         no-error.
                     if not available buf_cd-trans then do:
@@ -4979,16 +5022,16 @@ procedure proc-cfiscal :
                             buf_cd-trans.chk-date = chk-date_
                             buf_cd-trans.chk-time = chk-time_
                             buf_cd-trans.chk-id = v-id
-                            buf_cd-trans.z-number = ub.chk-doc.z-number
-                            buf_cd-trans.doc-code = ub.chk-doc.doc-code
-                            buf_cd-trans.src-shift-date = ub.chk-doc.src-shift-date
-                            buf_cd-trans.src-shift-name = ub.chk-doc.src-shift-name
-                            buf_cd-trans.pay-desk = ub.chk-doc.pay-desk
-                            buf_cd-trans.chk-num = ub.chk-doc.chk-num
+                            buf_cd-trans.z-number = buf_chk-doc.z-number
+                            buf_cd-trans.doc-code = buf_chk-doc.doc-code
+                            buf_cd-trans.src-shift-date = buf_chk-doc.src-shift-date
+                            buf_cd-trans.src-shift-name = buf_chk-doc.src-shift-name
+                            buf_cd-trans.pay-desk = buf_chk-doc.pay-desk
+                            buf_cd-trans.chk-num = buf_chk-doc.chk-num
                             .
                     end.
                     assign
-                        buf_cd-trans.doc-code = ub.chk-doc.doc-code
+                        buf_cd-trans.doc-code = buf_chk-doc.doc-code
                         .
                     case v-datatype:
                         when {&abl-datatype-character} then do:
@@ -5018,42 +5061,42 @@ procedure proc-cfiscal :
                 end. /*if v-field-name > '' then do:*/
                 delete buf_temp-temp.
             end. /*for each buf_temp-temp*/
-            FIND ub.chk-pay WHERE
-                ub.chk-pay.doc-code = ub.chk-doc.doc-code
-                AND ub.chk-pay.curr-code = 0
-                AND ub.chk-pay.pay-code = 0
+            FIND buf_chk-pay WHERE
+                 buf_chk-pay.doc-code = buf_chk-doc.doc-code
+                AND buf_chk-pay.curr-code = 0
+                AND buf_chk-pay.pay-code = 0
                 NO-ERROR.
-            if NOT available ub.chk-pay
+            if NOT available buf_chk-pay
             then  do:
-                create ub.chk-pay.
+                create buf_chk-pay.
                 assign
                     lnp = lnp + 1
-                    ub.chk-pay.doc-code = ub.chk-doc.doc-code
-                    ub.chk-pay.line-num = lnp
-                    ub.chk-pay.chk-date = ub.chk-doc.chk-date
-                    ub.chk-pay.obj-code = shop-code
-                    ub.chk-pay.obj-type = shop-type
-                    ub.chk-pay.tot-rubl = 0
-                    ub.chk-pay.tot-sum = 0
-                    ub.chk-pay.tot-base = 0
-                    ub.chk-pay.pay-code = 0
-                    ub.chk-pay.curr-code = 0
-                    ub.chk-pay.time-oper = ub.chk-doc.chk-time
-                    ub.chk-pay.cash-rate = ub.chk-doc.cash-rate
-                    ub.chk-pay.bank-rate = 1
-                    ub.chk-pay.bank-scale = 1
-                    ub.chk-pay.pass-pay =  0
-                    ub.chk-pay.pay-card = '':U
-                    ub.chk-pay.line-type = "":U
-                    ub.chk-pay.line-sign = yes
-                    ub.chk-pay.is-error = no
-                    ub.chk-doc.z-number = ( if z-num_ < ub.chk-doc.z-number
+                    buf_chk-pay.doc-code = buf_chk-doc.doc-code
+                    buf_chk-pay.line-num = lnp
+                    buf_chk-pay.chk-date = buf_chk-doc.chk-date
+                    buf_chk-pay.obj-code = shop-code
+                    buf_chk-pay.obj-type = shop-type
+                    buf_chk-pay.tot-rubl = 0
+                    buf_chk-pay.tot-sum = 0
+                    buf_chk-pay.tot-base = 0
+                    buf_chk-pay.pay-code = 0
+                    buf_chk-pay.curr-code = 0
+                    buf_chk-pay.time-oper = buf_chk-doc.chk-time
+                    buf_chk-pay.cash-rate = buf_chk-doc.cash-rate
+                    buf_chk-pay.bank-rate = 1
+                    buf_chk-pay.bank-scale = 1
+                    buf_chk-pay.pass-pay =  0
+                    buf_chk-pay.pay-card = '':U
+                    buf_chk-pay.line-type = "":U
+                    buf_chk-pay.line-sign = yes
+                    buf_chk-pay.is-error = no
+                    buf_chk-doc.z-number = ( if z-num_ < buf_chk-doc.z-number
                     and z-num_ > 0
-                    then z-num_ else ub.chk-doc.z-number)
+                    then z-num_ else buf_chk-doc.z-number)
                     .
             end.
             assign
-                ub.chk-pay.tot-sum = ub.chk-pay.tot-sum + tot_sum
+                buf_chk-pay.tot-sum = buf_chk-pay.tot-sum + tot_sum
                 .
             
         end.
@@ -5066,7 +5109,8 @@ procedure proc-cfreg :
     define variable v-cframount as decimal no-undo .
     define variable v-cfrcount as integer no-undo .
     define buffer buf_temp-temp for temp-temp.
-    define buffer buf_cd-trans for ub.cd-trans.
+    define buffer buf_cd-trans for tt-cd-trans.
+    define buffer buf_chk-doc for tt-chk-doc.
     do
         on error undo, return error
             :
@@ -5101,6 +5145,9 @@ procedure proc-cfreg :
             end.
             delete buf_temp-temp.
         end. /*for each buf_temp-temp*/
+        
+        find first buf_chk-doc no-error.
+        
         find first buf_cd-trans share-lock where
             buf_cd-trans.trans-type = integer({&cdt-cfreg})
             and buf_cd-trans.obj-type = shop-type
@@ -5109,7 +5156,7 @@ procedure proc-cfreg :
             and buf_cd-trans.chk-date = chk-date_
             and buf_cd-trans.chk-time = chk-time_
             and buf_cd-trans.chk-id = v-id
-            and buf_cd-trans.doc-code = ub.chk-doc.doc-code
+            and buf_cd-trans.doc-code = buf_chk-doc.doc-code
             no-error.
         if not available buf_cd-trans then do:
             create buf_cd-trans.
@@ -5122,13 +5169,13 @@ procedure proc-cfreg :
                 buf_cd-trans.chk-date = chk-date_
                 buf_cd-trans.chk-time = chk-time_
                 buf_cd-trans.chk-id = v-id
-                buf_cd-trans.z-number = ub.chk-doc.z-number
-                buf_cd-trans.doc-code = ub.chk-doc.doc-code
-                buf_cd-trans.src-shift-date = ub.chk-doc.src-shift-date
-                buf_cd-trans.src-shift-name = ub.chk-doc.src-shift-name
-                buf_cd-trans.pay-desk = ub.chk-doc.pay-desk
-                buf_cd-trans.chk-num = ub.chk-doc.chk-num
-                buf_cd-trans.chk-num = ub.chk-doc.chk-num
+                buf_cd-trans.z-number = buf_chk-doc.z-number
+                buf_cd-trans.doc-code = buf_chk-doc.doc-code
+                buf_cd-trans.src-shift-date = buf_chk-doc.src-shift-date
+                buf_cd-trans.src-shift-name = buf_chk-doc.src-shift-name
+                buf_cd-trans.pay-desk = buf_chk-doc.pay-desk
+                buf_cd-trans.chk-num = buf_chk-doc.chk-num
+                buf_cd-trans.chk-num = buf_chk-doc.chk-num
                 buf_cd-trans.{&cfreg_cfrtype} = v-cfrtype
                 buf_cd-trans.{&cfreg_cfrcount} = v-cfrcount
                 buf_cd-trans.{&cfreg_cframount} = v-cframount
@@ -5152,6 +5199,9 @@ procedure proc-promo :
     
     define buffer buf_temp-temp for temp-temp .
     define buffer buf_chk-gds for tt-chk-gds.
+    define buffer buf_chk-doc for tt-chk-doc.    
+    define buffer buf_chk-discnt for tt-chk-discnt.
+    define buffer buf_chk-discnt-attr for tt-chk-discnt-attr.
     define variable local-netto-for-sub-d as decimal no-undo .
     /* run gbl\inidebug.p. */
     do
@@ -5188,41 +5238,46 @@ procedure proc-promo :
                 delete buf_temp-temp.
             end.
             
-            find first ub.chk-discnt-attr exclusive-lock where ub.chk-discnt-attr.doc-code = ub.chk-doc.doc-code and
-                ub.chk-discnt-attr.record-type = 5 and 
-                ub.chk-discnt-attr.line-num = 0 and
-                ub.chk-discnt-attr.attr-code = "promo-id" and
-                ub.chk-discnt-attr.attr-value = Promo-Id no-error .
-            if not available (ub.chk-discnt-attr) then 
+            FIND FIRST buf_chk-doc NO-ERROR.               
+            
+            find first buf_chk-discnt-attr exclusive-lock where 
+                buf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and
+                buf_chk-discnt-attr.record-type = 5 and 
+                buf_chk-discnt-attr.line-num = 0 and
+                buf_chk-discnt-attr.attr-code = "promo-id" and
+                buf_chk-discnt-attr.attr-value = Promo-Id no-error .
+            if not available (buf_chk-discnt-attr) then 
             do:
-                create ub.chk-discnt-attr .
+                create buf_chk-discnt-attr .
                 assign
-                    ub.chk-discnt-attr.doc-code        = ub.chk-doc.doc-code
-                    ub.chk-discnt-attr.record-type     = 5 
-                    ub.chk-discnt-attr.line-num        = 0
-                    ub.chk-discnt-attr.discnt-id       = (var-discnt-id + 1)
-                    ub.chk-discnt-attr.object-line-num = 0
-                    ub.chk-discnt-attr.attr-code       = "promo-id"
-                    ub.chk-discnt-attr.attr-value      = Promo-Id
+                    buf_chk-discnt-attr.doc-code        = buf_chk-doc.doc-code
+                    buf_chk-discnt-attr.record-type     = 5 
+                    buf_chk-discnt-attr.line-num        = 0
+                    buf_chk-discnt-attr.discnt-id       = (var-discnt-id + 1)
+                    buf_chk-discnt-attr.object-line-num = 0
+                    buf_chk-discnt-attr.attr-code       = "promo-id"
+                    buf_chk-discnt-attr.attr-value      = Promo-Id
                     var-discnt-id                      = var-discnt-id + 1.
                 .         
                 
             end.   
-            find first ub.chk-discnt exclusive-lock where   ub.chk-discnt.doc-code = ub.chk-discnt-attr.doc-code
-                and ub.chk-discnt.record-type = ub.chk-discnt-attr.record-type and ub.chk-discnt.discnt-id = ub.chk-discnt-attr.discnt-id no-error.
-            if available ub.chk-discnt then 
+            find first buf_chk-discnt exclusive-lock where   
+                       buf_chk-discnt.doc-code = buf_chk-discnt-attr.doc-code
+                   and buf_chk-discnt.record-type = buf_chk-discnt-attr.record-type 
+                   and buf_chk-discnt.discnt-id = buf_chk-discnt-attr.discnt-id no-error.
+            if available buf_chk-discnt then 
             do:
-                ub.chk-discnt.object-sum = ub.chk-discnt.object-sum + promo-count.
+                buf_chk-discnt.object-sum = buf_chk-discnt.object-sum + promo-count.
             end.    
             else do:
-                create ub.chk-discnt.
+                create buf_chk-discnt.
                 assign
-                    ub.chk-discnt.doc-code = ub.chk-doc.doc-code
-                    ub.chk-discnt.record-type = ub.chk-discnt-attr.record-type
-                    ub.chk-discnt.promo-id = Promo-Id
-                    ub.chk-discnt.line-num = 0
-                    ub.chk-discnt.object-sum = promo-count
-                    ub.chk-discnt.discnt-id =  ub.chk-discnt-attr.discnt-id
+                    buf_chk-discnt.doc-code = buf_chk-doc.doc-code
+                    buf_chk-discnt.record-type = buf_chk-discnt-attr.record-type
+                    buf_chk-discnt.promo-id = Promo-Id
+                    buf_chk-discnt.line-num = 0
+                    buf_chk-discnt.object-sum = promo-count
+                    buf_chk-discnt.discnt-id =  buf_chk-discnt-attr.discnt-id
                     /* ub.chk-discnt.discnt-id = (if bonus-trans-id_ = 0 then ub.chk-discnt.line-num else bonus-trans-id_) 
                     chk-discnt.time-oper = chk-gds.time-oper
                     chk-discnt.line-type = (if bonus-type-chr_ = 'I' or bonus-type-chr_ = '0'
@@ -5251,14 +5306,14 @@ procedure proc-promo :
                     then bonus-string
                     else chk-gds.line-num)
                     */
-                    chk-discnt.object-line-num = 0                              
-                    chk-discnt.pay-desk = chk-doc.pay-desk
-                    chk-discnt.obj-code = chk-doc.obj-code
-                    chk-discnt.obj-type = chk-doc.obj-type
-                    chk-discnt.chk-date = chk-doc.chk-date
-                    chk-discnt.shift-date = chk-doc.shift-date
-                    chk-discnt.shift-num = chk-doc.shift-num
-                    chk-discnt.chk-time = chk-doc.chk-time
+                    buf_chk-discnt.object-line-num = 0                              
+                    buf_chk-discnt.pay-desk = buf_chk-doc.pay-desk
+                    buf_chk-discnt.obj-code = buf_chk-doc.obj-code
+                    buf_chk-discnt.obj-type = buf_chk-doc.obj-type
+                    buf_chk-discnt.chk-date = buf_chk-doc.chk-date
+                    buf_chk-discnt.shift-date = buf_chk-doc.shift-date
+                    buf_chk-discnt.shift-num = buf_chk-doc.shift-num
+                    buf_chk-discnt.chk-time = buf_chk-doc.chk-time
                     .
                 var-discnt-id = var-discnt-id + 1.
             end.
