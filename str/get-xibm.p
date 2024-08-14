@@ -2468,8 +2468,21 @@ procedure proc-02-gds :
                 v-attr-code = "mark-code":U .
             end .
             
-            if v-attr-code = "tobacco-mark"
+            if v-attr-code = "tobacco-mark" AND CBCBarcode_ = ""
             then do :
+               assign  p-view-log = yes  .
+                run write-log-and-file in p-log-handle (
+                input 1
+                , input log-file-name
+                , input 1
+                , input substitute("Ошибка при загрузке чека &1. Не заполнен тег CBCBarcode", chk-num_ )
+                ).
+/*               undo, return . */
+            end.
+
+            if v-attr-code = "tobacco-mark" 
+            then do :
+                if CBCBarcode_ <> "" then do :
                 find first buf_marking-chk exclusive-lock where buf_marking-chk.mark      = CBCBarcode_
                     and buf_marking-chk.doc-code  = ub.chk-doc.doc-code
                     and buf_marking-chk.line-num  = CBCString_
@@ -2487,7 +2500,9 @@ procedure proc-02-gds :
                     buf_marking-chk.date-modify = today
                     buf_marking-chk.time-modify = time
                     .                                                
+                end .
             end .
+
             else do :
                 find first ub.chk-gds-attr exclusive-lock
                     where ub.chk-gds-attr.doc-code  = ub.chk-doc.doc-code
