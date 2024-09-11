@@ -1404,6 +1404,18 @@ procedure processTrn :
                 tt-rep.col30str = tt-rep.col30str + fDec2Str(buf_rvs-line.state-measure-cli-qnty, "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
                 tt-rep.col31str = tt-rep.col31str + fDec2Str(buf_rvs-line.state-density, "->>>>>>>>9.9999") + "<br>" + {&new-line}
               .
+              run placelib_get-attr  ( input {&place-is-main}
+                ,input buf_rvs-line.obj-code
+                ,input buf_rvs-line.obj-type
+                ,input buf_rvs-line.pl-code
+                ,output varvalue
+                ,output v-ok      ) no-error.
+              if v-ok
+              and varvalue > ""
+              and logical(varvalue)
+              then do :
+                assign v-avrg-dens = buf_rvs-line.state-density .
+              end .
               find first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                                      and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                                      and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
@@ -1495,6 +1507,18 @@ procedure processTrn :
                 tt-rep.col37str = tt-rep.col37str + fDec2Str(buf_rvs-line.state-measure-cli-qnty, "->>>>>>>>>>>9.9") + "<br>" + {&new-line}
                 tt-rep.col38str = tt-rep.col38str + fDec2Str(buf_rvs-line.state-density, "->>>>>>>>9.9999") + "<br>" + {&new-line}
               .
+              run placelib_get-attr  ( input {&place-is-main}
+                ,input buf_rvs-line.obj-code
+                ,input buf_rvs-line.obj-type
+                ,input buf_rvs-line.pl-code
+                ,output varvalue
+                ,output v-ok      ) no-error.
+              if v-ok
+              and varvalue > ""
+              and logical(varvalue)
+              then do :
+                assign v-avrg-dens = (v-avrg-dens + buf_rvs-line.state-density) / 2 .
+              end .
               find first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-type = buf_rvs-line.obj-type
                                                      and buf_rvs-line-attr.obj-code = buf_rvs-line.obj-code
                                                      and buf_rvs-line-attr.rvs-code = buf_rvs-line.rvs-code
@@ -1576,8 +1600,6 @@ procedure processTrn :
             assign
               tt-rep.col38 = tt-rep.col37 / tt-rep.col36
               tt-rep.col39 = tt-rep.col39 / v-num-com-tanks
-              v-avrg-dens = (tt-rep.col31 + tt-rep.col38) / 2 
-              tt-rep.col34 = tt-rep.col33 * v-avrg-dens 
             .
           end .
           for each tt-rvs-line-pump-delta :
@@ -1592,6 +1614,7 @@ procedure processTrn :
             end .
             tt-rep.col33 = tt-rep.col33 + tt-rvs-line-pump-delta.deltaVol .
           end .
+          assign tt-rep.col34 = tt-rep.col33 * v-avrg-dens .
           assign
             tt-rep.col29str = trim(tt-rep.col29str, "<br>" + {&new-line})
             tt-rep.col30str = trim(tt-rep.col30str, "<br>" + {&new-line})

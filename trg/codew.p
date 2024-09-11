@@ -135,7 +135,7 @@ do:
     { gbl/objserref.i }
 end.
 
-if g#news and g#db-num <> 0 and 
+if g#db-num <> 0 and 
    new-{&main-tbl}.parent <> "" and
    not new-{&main-tbl}.parent begins "Versions" then
 do:  /* создадим запись версии справочника  */

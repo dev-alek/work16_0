@@ -326,7 +326,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
              if entry(jj, v-other, {&slash-char}) = "" then NEXT _do.
              assign
              v-dop1 = entry(1, entry(jj, v-other, {&slash-char}), '=':U)
-             v-dop2 = entry(2, entry(jj, v-other, {&slash-char}), '=':U)
+             v-dop2 = if num-entries(entry(jj, v-other, {&slash-char}), '=':U) > 1 
+                      then entry(2, entry(jj, v-other, {&slash-char}), '=':U)
+                      else ""
              .
              if v-dop1 = "check":U  then do:
                run value(v-dop2) in this-procedure (

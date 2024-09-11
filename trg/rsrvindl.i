@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: rsrvindl.i $
+$Archive: trg/rsrvindl.i $
 
 Снятие резервов по инвентаризации (уничтожение партий)
 
@@ -21,7 +21,7 @@ Creation date: 09/24/07
 
 */
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: rsrvindl.i $ $Revision: f29df1d5f130, 3104, rls $".
 procedure rsrvindl :
   define input  parameter p-trn-doc-recid  as recid     no-undo .
   define input  parameter p-doc-line-recid as recid     no-undo .
@@ -221,7 +221,8 @@ procedure rsrvindl :
           . 
         end .
         for first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark 
-          and not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
+          and not (available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
+            /* BTS-572 - статус марки не меняем для док-тов инвентаризации */
             assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
         end . 
         delete orig_marking-lines .
@@ -277,4 +278,4 @@ procedure rsrvindl :
   end.
 
 end.
-/* $Workfile$ e n d */
+/* $Workfile: rsrvindl.i $ e n d */
