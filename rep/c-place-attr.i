@@ -194,57 +194,79 @@ FUNCTION get_com-tanks returns character (
   input endTime as integer ):
      
   define buffer current_c-place-attr for ub.c-place-attr .
-  define buffer curr_c-place-attr    for ub.c-place-attr .
-  define buffer buf_place-attr       for ub.place-attr .
-  define buffer buf_place            for ub.place .
-  define variable com-tanks as character no-undo .
-  define variable p-ok      as logical   no-undo .
-  define variable ii        as integer   no-undo .
-  
+    define buffer buf_c-plc-hist       for ub.c-plc-hist .
+  define variable ii        as integer   no-undo init 0.
+  define variable is-meas   as logical   no-undo .
+  define variable is-true   as logical   no-undo .
+  define variable v-label   as character no-undo .
+  define variable p-ok as character no-undo .
+/*  define buffer curr_c-place-attr for ub.c-place-attr .*/
+/*  define buffer buf_place-attr for ub.place-attr .     */
+/*  define buffer buf_place for ub.place .               */
+/*  define variable com-tanks as character no-undo .     */
+/*  define variable p-ok as logical no-undo .            */
+/*  define variable ii as integer no-undo .              */
+
   find last current_c-place-attr no-lock where
     current_c-place-attr.obj-type = obj-type
     AND current_c-place-attr.obj-code = obj-code
     AND current_c-place-attr.pl-code = pl-code  
     and current_c-place-attr.attr-code = attr-code
-    and current_c-place-attr.attr-value <> ""
-    and ((current_c-place-attr.corr-date = endDate and 
-    current_c-place-attr.corr-time < endTime) or 
-    current_c-place-attr.corr-date < endDate) no-error .
-  if available (current_c-place-attr) then 
+    and ((current_c-place-attr.corr-date = endDate 
+    and current_c-place-attr.corr-time < endTime) or
+    current_c-place-attr.corr-date < endDate)
+    
+    no-error .
+  if avail current_c-place-attr then 
   do:
-    do ii = 0 to num-entries (current_c-place-attr.attr-value):
-      find first buf_place no-lock where buf_place.obj-type = obj-type
-        and buf_place.obj-code = obj-code
-        and buf_place.loc1 = entry(ii, current_c-place-attr.attr-value)
-        and buf_place.status_ = "" no-error .
-      if available (buf_place) then 
-      do:
-        if get_com-vessel(obj-code, obj-type, {&place-com-vessel}, buf_place.pl-code, openDate, 
-          endDate, openTime, endTime) then com-tanks = com-tanks + "," + entry(ii, current_c-place-attr.attr-value) .
-      end.
+
+    find first buf_c-plc-hist no-lock where
+      buf_c-plc-hist.obj-type = obj-type
+      AND buf_c-plc-hist.obj-code = obj-code
+      AND buf_c-plc-hist.pl-code = pl-code
+      AND buf_c-plc-hist.subject  = "place-attr" 
+      and buf_c-plc-hist.chip-num = current_c-place-attr.chip-num no-error .
+    if available (buf_c-plc-hist) then 
+    do:
+        
+&scop fields-name-list  "attr-code,attr-value,PS,status_"
+
+      define variable v-label-param as character no-undo .
+
+      if current_c-place-attr.attr-code = "place-SI"
+        or current_c-place-attr.attr-code = "place-SI-temp"
+        or current_c-place-attr.attr-code = "place-SI-dens"
+        or current_c-place-attr.attr-code = "place-SI-level"
+        then 
+      do :
+        v-label-param =
+          "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getSIname" + {&delim-flf}
+          + "attr-code" + {&delim-par} + "Код атрибута" + {&delim-par} + "getPlaceAttrCode"   .
+      end .
+      else 
+      do :
+        v-label-param =
+          "attr-value" + {&delim-par} + "Значение атрибута" + {&delim-par} + "getPlaceAttrValue" + {&delim-flf}
+          + "attr-code" + {&delim-par} + "Код атрибута" + {&delim-par} + "getPlaceAttrCode" + {&delim-flf}
+          + "PS" + {&delim-par} + "Примечание" + {&delim-par} + "" + {&delim-flf}
+          + "status_" + {&delim-par} + "Статус" + {&delim-par} + ""  .
+      end . 
+
+      run proc-full-temp-changes in this-procedure (
+        input buf_c-plc-hist.action = integer({&hn-create})
+        ,input buf_c-plc-hist.action = integer({&hn-delete})
+        ,input  buffer current_c-place-attr:handle
+        ,input  {&table_place-attr}
+        ,input  {&fields-name-list}
+        ,input  v-label-param).
 
     end.
-    com-tanks = trim(com-tanks,",").
-    return com-tanks .
   end.
-  else 
-  do:
-    find first curr_c-place-attr no-lock where
-      curr_c-place-attr.obj-type = obj-type
-      AND curr_c-place-attr.obj-code = obj-code
-      AND curr_c-place-attr.pl-code = pl-code  
-      and curr_c-place-attr.attr-code = attr-code
-      and curr_c-place-attr.attr-value > ""
-      and ((curr_c-place-attr.corr-date = endDate and 
-      curr_c-place-attr.corr-time > endTime) or 
-      curr_c-place-attr.corr-date > endDate) no-error .
-    if available (curr_c-place-attr) then return curr_c-place-attr.attr-value .
-          
-    find first buf_place-attr no-lock where buf_place-attr.attr-code   = attr-code
-      and buf_place-attr.obj-code    = obj-code
-      and buf_place-attr.obj-type    = obj-type
-      and buf_place-attr.pl-code     = pl-code no-error.
-    if available (buf_place-attr) then return buf_place-attr.attr-value .                                           
+
+  for each with-action:
+     p-ok = with-action.v_new no-error .
+     if error-status:error then p-ok = "" .
+    return   p-ok .
 
   end.
 
