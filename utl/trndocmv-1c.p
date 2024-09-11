@@ -391,7 +391,9 @@ on error undo, return error return-value
       /* количество мест и вес брутто копируется из исходной накладной */
 /*      buf_doc-line.num-place      = ub.doc-line.num-place * v-doc-line-chg-qnty / ub.doc-line.fact-qnty*/
 /*      buf_doc-line.wt-brutto      = ub.doc-line.wt-brutto * v-doc-line-chg-qnty / ub.doc-line.fact-qnty*/
-    .
+    no-error.
+    if error-status:error then
+      return error error-status:get-message(1).
 
     assign
       buf_doc-line.fact-density  = buf_doc-line.doc-density
