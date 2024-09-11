@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 63c9a434965b, 3578, rls $
+$Author: VSpiridonov $
+$Date: 2023/12/14 13:36:13 $
+$Workfile: r-dispet.p $
+$Archive: rep/r-dispet.p $
 
 Отчет диспетчера
 
@@ -38,11 +38,11 @@ define input parameter p-dir-xml          as character no-undo .
 define output parameter p-dataseth as handle no-undo .
 define output parameter p-xmlh as handle no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 63c9a434965b, 3578, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/12/14 13:36:13 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-dispet.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-dispet.p $":U .
 define variable vss-description as character no-undo init "Отчет диспетчера".
 
 define variable g#report-num  as integer      no-undo .
@@ -708,9 +708,9 @@ on error undo, return error
         and buf_tt-place.obj-code = p-obj-code
       :
 
-         IF v-prev-gds-code = buf_tt-place.gds-code THEN DO:
-            NEXT _place.
-         END.
+/*         IF v-prev-gds-code = buf_tt-place.gds-code THEN DO:*/
+/*            NEXT _place.                                    */
+/*         END.                                               */
 
          FIND FIRST buf_bar-code
                where buf_bar-code.gds-code = buf_tt-place.gds-code
@@ -721,6 +721,7 @@ on error undo, return error
          FOR each buf_chk-gds
          where buf_chk-gds.doc-code = buf_chk-doc.doc-code
             and buf_chk-gds.b-code = buf_bar-code.b-code
+            and buf_chk-gds.loc1 = buf_tt-place.loc1
          no-lock
          :
             IF p-day then do:
