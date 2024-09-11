@@ -1,9 +1,9 @@
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: eaa8cb55810d, 3483, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:35 $
+$Workfile: r-new-shift.p $
+$Archive: rep/r-new-shift.p $
 
 сменный отчет
 
@@ -63,11 +63,11 @@ define input-output parameter p-dataseth        as   handle                no-un
 define input parameter table      for temp-xml-tables .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: eaa8cb55810d, 3483, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/10/16 15:13:35 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-new-shift.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-new-shift.p $":U .
 define variable vss-description as character no-undo initial "сменный отчет":U .
 
 /* Parameters Definitions ---                                           */
@@ -1437,7 +1437,9 @@ procedure first-line-tog1-html :
                         <td style="width:30px"></td>
                         <td style="width:80px"></td>
                         <td style="width:80px"></td>
+                        <td style="width:80px"></td>
                         <td style="width:60px"></td>
+                        <td style="width:50px"></td>
                         <td style="width:60px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
@@ -1445,15 +1447,13 @@ procedure first-line-tog1-html :
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
                         <td style="width:50px"></td>
-                        <td style="width:50px"></td>
-                        <td style="width:50px"></td>
                         <td style="width:65px"></td>
                         <td style="width:65px"></td>
-                        <td style="width:40px"></td>
-                        <td style="width:40px"></td>
                         <td style="width:65px"></td>
                         <td style="width:65px"></td>
-                        <td style="width:40px"></td>
+                        <td style="width:65px"></td>
+                        <td style="width:80px"></td>
+                        <td style="width:60px"></td>
                       </tr>
                     <tr>
                       <td colspan="22"></td>

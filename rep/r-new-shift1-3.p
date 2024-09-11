@@ -986,7 +986,7 @@ procedure print-total:
             
     '<tbody>' skip
     '<tr>' skip
-    '<th text_wrap="true" colspan="22" style="text-align: center;">Нефтепродукты: бензины и ДТ</th>' skip
+    '<th text_wrap="true" colspan="23" style="text-align: center;">Нефтепродукты: бензины и ДТ</th>' skip
     '</tr>' skip
     '<tr>' skip
     '<th text_wrap="true" rowspan="2" style="text-align: center;">Наим продукта</th>' skip
@@ -1061,7 +1061,6 @@ procedure print-total:
     '</tr>' skip
     .
   /*Сбор данных*/
-
   for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
     if first-of(temp-rvs-line.gds-code) and not is-sug(temp-rvs-line.gds-code) then 
     do:
@@ -1153,7 +1152,7 @@ procedure print-total:
         '<td text_wrap="true" rowspan="3" num="0.0000" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol18,"->>>>>>>>>>>>>9.9999",4) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol18 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol18,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
         '<td text_wrap="true" rowspan="3" style="text-align: right;"></td>' skip
         '<td text_wrap="true" num="0.00" rowspan="3" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right; vertical-align: bottom;">' + if temp-rvs-line.itog-pol20-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-        '<td text_wrap="true" num="0.00" rowspan="2" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right; vertical-align: bottom;">' + if temp-rvs-line.itog-pol21-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" num="0.00" rowspan="2" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right; vertical-align: bottom;">' + if temp-rvs-line.itog-pol21-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
         '<td text_wrap="true" rowspan="2" style="text-align: right;"></td>' skip
         '</tr>' skip
         '<tr></tr>' skip
@@ -1180,7 +1179,7 @@ procedure print-total:
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol17-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
 /*            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol20-kg <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip*/
-        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol21 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+        '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if temp-rvs-line.itog-pol21 <> ? then fnc-convert-dot-to-colon(temp-rvs-line.itog-pol21,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
         '<td text_wrap="true" style="text-align: right;"></td>' skip
         '</tr>' skip
         .        
@@ -1191,10 +1190,10 @@ procedure print-total:
       for each bf_temp-rvs-line where bf_temp-rvs-line.gds-code = temp-rvs-line.gds-code  : 
 
         if get_com-vessel(p-obj-code, p-obj-type, {&place-com-vessel}, bf_temp-rvs-line.pl-code, ub.shift-obj.open-date, 
-          ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) then
+          ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) then /*сообщающиеся резервуары*/
         do:
           v-com-tanks = get_com-tanks(p-obj-code, p-obj-type, {&place-com-tanks}, bf_temp-rvs-line.pl-code, 
-            ub.shift-obj.open-date, ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) .  
+            ub.shift-obj.open-date, ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) .  /*коды сообщающихся сосудов*/
           if v-com-tanks > "" then 
           do:
             v-main-tanks = trim(v-main-tanks,",") .
@@ -1265,8 +1264,8 @@ procedure print-total:
                 '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
                 '<td text_wrap="true" num="0.0000" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>>>9.9999",4) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol18 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
                 '<td text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol19 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>9.9",1) + '</td>' else "" + '</td>' skip
-                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks * 2), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
                 '<td text_wrap="true" style="text-align: right;"></td>' skip
                 '</tr>' skip.
           
@@ -1348,8 +1347,8 @@ procedure print-total:
                 '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
                 '<td text_wrap="true" style="text-align: right;"></td>' skip
                 '<td text_wrap="true" style="text-align: right;"></td>' skip
-                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+/*                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip*/
+                '<td text_wrap="true" rowspan="' + string((v-num-com-tanks), ">9") + '" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
                 '<td text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol22,"->>>>>>>>>>>>>9.999",3) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol22 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol22,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
                 '</tr>' skip.
           
@@ -1428,8 +1427,8 @@ procedure print-total:
               '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
               '<td text_wrap="true" rowspan="2" num="0.0000" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>>>9.9999",4) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol18 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
               '<td text_wrap="true" rowspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol19 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>9.9",1) + '</td>' else "" + '</td>' skip
-              '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-              '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+              '<td text_wrap="true" rowspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+              '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
               '<td text_wrap="true" style="text-align: right;"></td>' skip
               '</tr>' skip
               '<tr>' skip
@@ -1446,8 +1445,8 @@ procedure print-total:
               '<td text_wrap="true" colspan=2 style="text-align: right;"></td>' skip
               '<td text_wrap="true" style="text-align: right;"></td>' skip
               '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-              '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-              '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+/*              '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip*/
+              '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
               '<td text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol22,"->>>>>>>>>>>>>9.999",3) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol22 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol22,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
               '</tr>' skip
               .
@@ -1455,6 +1454,12 @@ procedure print-total:
         end.  
         else 
         do:
+          assign
+            bf_temp-rvs-line.pol14 = bf_temp-rvs-line.state-level-total * 10
+            bf_temp-rvs-line.pol15 = bf_temp-rvs-line.state-level-water * 10
+            bf_temp-rvs-line.pol16 = bf_temp-rvs-line.state-brutto-qnty
+            bf_temp-rvs-line.pol19 = bf_temp-rvs-line.state-temperature
+            .          
           put stream OutStr-html unformatted
             '<tr>' skip 
             '<td text_wrap="true" rowspan="2" style="text-align: right;">   по резер.</td>' skip 
@@ -1476,8 +1481,8 @@ procedure print-total:
             '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
             '<td text_wrap="true" rowspan="2" num="0.0000" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>>>9.9999",4) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol18 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
             '<td text_wrap="true" rowspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol19 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>9.9",1) + '</td>' else "" + '</td>' skip
-            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-l,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-l <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-l,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" rowspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
             '<td text_wrap="true" style="text-align: right;"></td>' skip
             '</tr>' skip
             '<tr>' skip 
@@ -1494,8 +1499,8 @@ procedure print-total:
             '<td text_wrap="true" colspan=2 style="text-align: right;"></td>' skip
             '<td text_wrap="true" style="text-align: right;"></td>' skip
             '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol17-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol17-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+/*            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip*/
+            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
             '<td text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol22,"->>>>>>>>>>>>>9.999",3) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol22 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol22,"->>>>>>>>>>>9.999",3) + '</td>' else "" + '</td>' skip
             '</tr>' skip
             .   
@@ -1678,7 +1683,6 @@ procedure print-sug:
           temp-rvs-line.itog-pol21-kg = temp-rvs-line.itog-pol21-kg + buf_temp-rvs-line.pol21-kg .
       end.
  
-    
       put stream OutStr-html unformatted
         '<tr>' skip 
         '<td text_wrap="true" rowspan="2" style="text-align: right;">' + temp-rvs-line.gds-name + '</td>' skip /*товар*/
