@@ -749,7 +749,7 @@ DEFINE BROWSE br-utd
    X_utd-lines.LineNum COLUMN-LABEL "№ п/п" FORMAT ">>>9":U
    X_utd-lines.gds-code COLUMN-LABEL "Код товара" FORMAT ">>>>999999":U
    X_utd-lines.ProductCode COLUMN-LABEL "Наименование!УПД" FORMAT "x(40)":U width 25
-   X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(40)":U width 25
+   X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(112)":U width 25
    X_utd-lines.Quantity COLUMN-LABEL "Кол-во в ед.!изм TH по!УПД" FORMAT "->>,>>9.999":U
    X_utd-lines.qnty-scan COLUMN-LABEL "Факт!кол-во" FORMAT "->>>>>>>>>9":U
    gdsunit (X_utd-lines.gds-code) @ mgdsunit COLUMN-LABEL "Ед.изм!TH" FORMAT "x(6)":U
@@ -783,7 +783,7 @@ DEFINE BROWSE br-utd-nomark
    X_utd-lines.LineNum COLUMN-LABEL "№ п/п" FORMAT ">>>>9":U
    X_utd-lines.gds-code COLUMN-LABEL "Код товара" FORMAT "999999999":U
    X_utd-lines.ProductCode COLUMN-LABEL "Наименование" FORMAT "x(40)":U width 25
-   X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(128)":U width 20
+   X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(112)":U width 20
    X_utd-lines.Quantity COLUMN-LABEL "Кол-во!в ед.изм ТН" FORMAT "->>,>>9.999":U
    X_utd-lines.Price COLUMN-LABEL "Цена!(без НДС)" FORMAT "->>,>>99.99":U width 10
    X_utd-lines.Total COLUMN-LABEL "Сумма!(с НДС)" FORMAT "->>,>>99.99":U width 10
