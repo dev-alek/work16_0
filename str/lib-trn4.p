@@ -2427,7 +2427,32 @@ define variable v-ischg-ext-type as logical no-undo .
         return error substitute( 'Ошибки по соответствию товаров в накладной и Ассортиментной политике. ' +
                                  'Смотри файл "&1.err"'
                                 , v-file-n  ).
-      end.
+      end. 
+  
+  /*
+     { gbl/objat.i
+        buf_trn-doc.obj-type
+        buf_trn-doc.obj-code
+        "'shift-on=request'"
+        l-shift-on
+        } 
+      if l-shift-on then do:
+      { gbl/curshift.i
+          buf_trn-doc.obj-type
+          buf_trn-doc.obj-code
+          varshift-date
+          varshift-num
+          varshift-name
+          no-error
+        }
+           if  varshift-date <> buf_trn-doc.shift-date  
+            or varshift-num  <> buf_trn-doc.shift-num 
+              then do: 
+              message "Смена в накладной отличается от текущей!" 	view-as alert-box.
+              undo, return error.
+           END.
+      END. */
+      
       run str/trn-stat.p (
             input   parparentproc,
             input   this-procedure ,
