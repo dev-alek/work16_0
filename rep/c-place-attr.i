@@ -170,12 +170,19 @@ FUNCTION get_com-vessel returns logical (
     AND current_c-place-attr.obj-code = obj-code
     AND current_c-place-attr.pl-code = pl-code  
     and current_c-place-attr.attr-code = attr-code
-    and ((current_c-place-attr.corr-date = endDate and 
-    current_c-place-attr.corr-time < endTime) or 
-    current_c-place-attr.corr-date < endDate) and
-    ((current_c-place-attr.corr-date = openDate and 
-    current_c-place-attr.corr-time > openTime) or 
-    current_c-place-attr.corr-date > openDate)
+    and ((current_c-place-attr.corr-date = endDate 
+    and current_c-place-attr.corr-time < endTime) or
+    current_c-place-attr.corr-date < endDate)
+/*    and (((current_c-place-attr.corr-date = endDate and*/
+/*    current_c-place-attr.corr-time < endTime) or       */
+/*    current_c-place-attr.corr-date < endDate) and      */
+/*    ((current_c-place-attr.corr-date = openDate and    */
+/*    current_c-place-attr.corr-time > openTime) or      */
+/*    current_c-place-attr.corr-date > openDate)) or     */
+/*    current_c-place-attr.corr-date < openDate or       */
+/*    (current_c-place-attr.corr-date = openDate and     */
+/*    current_c-place-attr.corr-time < openTime)         */
+    
     no-error .
   if avail current_c-place-attr then 
   do:
