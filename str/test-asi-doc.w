@@ -1123,6 +1123,7 @@ procedure mode-on :
                 run waitfram-hide in this-procedure.
                 undo tr, return error.
               end.
+              run waitfram-hide in this-procedure.
               { str/fall-plc.i
                  r-doc.obj-type
                  r-doc.obj-code
