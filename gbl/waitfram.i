@@ -58,18 +58,8 @@ define frame waitfram
   B-WaitFramStop at row 4 col 30
   with view-as dialog-box side-labels three-d cancel-button B-WaitFramStop
   .
-define variable mWaitFramHandle as handle no-undo.      
-mWaitFramHandle = frame waitfram:handle.
 
-define variable mBatchMode as logical no-undo.
-define variable mFameOldVis as logical no-undo.
-define variable mVisCUrentVin as logical no-undo.
-mVisCUrentVin = current-window:visible.
-mFameOldVis = mWaitFramHandle:visible.
-mWaitFramHandle:visible  = yes.
-mBatchMode = not mWaitFramHandle:visible.
-mWaitFramHandle:visible = mFameOldVis.
-current-window:visible = mVisCUrentVin.
+{gbl/batchmode.i waitfram}
 on choose of B-WaitFramStop in frame waitfram /* Добавить в АМ */
 do:
   mWaitFramStop = yes.

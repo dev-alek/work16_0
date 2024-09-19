@@ -1258,8 +1258,6 @@ define input  parameter p-sess-name as character no-undo .
   define input  parameter p-mode      as character no-undo .
   define output parameter p-pid       as integer   no-undo .
 
-  define variable vService as character no-undo.
-  
   do
   on error undo, return error return-value
   :
@@ -1273,9 +1271,7 @@ define input  parameter p-sess-name as character no-undo .
        vDopParamSession = "".
     else do:
        vDopParamSessionRandom = random(1,9999999).
-       vService = entry(num-entries(p-proc-name,"/"),p-proc-name,"/").
-       vService = replace(replace(vService,".w",""),"l-i-","").
-       vDopParamSession = substitute (vDopParamSession,substitute("-&1_&2",vService,vDopParamSessionRandom)).
+       vDopParamSession = substitute (vDopParamSession,vDopParamSessionRandom).
     end.
     define variable v-command-line     as character no-undo .
     define variable v-command-line-log as character no-undo .
