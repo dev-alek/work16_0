@@ -43,8 +43,6 @@ on error undo, return error return-value
   .
 
   run GetCurrentProcessID (output g#auto-pid) .
-  if LOG-MANAGER:LOGFILE-NAME <> ? then 
-    LOG-MANAGER:WRITE-MESSAGE(substitute("g#auto-pid: &1.",g#auto-pid), "MYLOG").
 end.
 
 PROCEDURE GetCurrentProcessId EXTERNAL "kernel32.dll" :

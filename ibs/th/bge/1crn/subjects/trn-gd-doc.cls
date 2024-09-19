@@ -476,7 +476,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 
     define variable infoSecsObj     as class InfoSectionsTotal no-undo.
     define variable infoSecObj      as class InfoSection       no-undo.
-/*    define variable infoSecObjFirst as class InfoSection       no-undo.*/
+    define variable infoSecObjFirst as class InfoSection       no-undo.
     define variable ii as integer no-undo.
     define variable is-exist-sec as logical no-undo.
     define variable v-date as date no-undo.
@@ -637,7 +637,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           
         infoSecsObj:Initialization(buf_doc-line.doc-code, buf_gds.gds-code).
         infoSecsObj:GetDBAllAttr ().
-/*        infoSecObjFirst = infoSecsObj:GetInfoSectionProp(1).*/
+        infoSecObjFirst = infoSecsObj:GetInfoSectionProp(1).
         do ii = 1 to infoSecsObj:SectionNum:
           infoSecObj = infoSecsObj:GetInfoSectionProp(ii).
           if infoSecObj:FactQnty = 0  or infoSecObj:FactQnty = ?
@@ -771,10 +771,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
           write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
           write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
-          write-data-element ("sl-date-s", string (iso-date (infoSecObj:DateStart))).
-          write-data-element ("sl-time-s", string (infoSecObj:TimeStart, "HH:MM")).
-          write-data-element ("sl-date-e", string (iso-date (infoSecObj:DateEnd))).
-          write-data-element ("sl-time-e", string (infoSecObj:TimeEnd, "HH:MM")).
+          write-data-element ("sl-date-s", string (iso-date (infoSecObjFirst:DateStart))).
+          write-data-element ("sl-time-s", string (infoSecObjFirst:TimeStart, "HH:MM")).
+          write-data-element ("sl-date-e", string (iso-date (infoSecObjFirst:DateEnd))).
+          write-data-element ("sl-time-e", string (infoSecObjFirst:TimeEnd, "HH:MM")).
           write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
           if infoSecObj:IsKP
           then do :

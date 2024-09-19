@@ -1780,9 +1780,6 @@ else do:
     if error-status:error then return error.
 
 end.
-if p-mode eq {&add-def}
-then 
-   run update_prc-doc-code-mask(yes).
 &scop prfx tt-fin-doc.
 run ref/findoc0.p (
 input-output p-doc-rec
@@ -1799,6 +1796,9 @@ if error-status:error then do:
  { gbl/reterhnd.i error }
   undo, return error.
 end.
+if p-mode eq {&add-def}
+then 
+   run update_prc-doc-code-mask(yes).
 
 
 END PROCEDURE.

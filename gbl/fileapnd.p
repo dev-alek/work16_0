@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d3f7ea4aa09e, 3307, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:07 $
+$Workfile: fileapnd.p $
+$Archive: gbl/fileapnd.p $
 
 Записать информацию в файл в режиме добавления.
 
@@ -45,15 +45,15 @@ define input  parameter p-file-name            as character no-undo .
 define input  parameter p-write-string         as longchar  no-undo .
 define input  parameter p-time-to-wait-seconds as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d3f7ea4aa09e, 3307, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/05/19 13:37:07 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fileapnd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/fileapnd.p $":U .
 define variable vss-description as character no-undo init "Записать информацию в файл в режиме добавления. Версия с позиционированием на конец файла".
 { cmp/vssrevis.i "substitute('&1|&2|&3',p-file-name,p-write-string,p-time-to-wait-seconds)" }
 { cmp/str-glbl.i }
-{ gbl/waitfram.i }
+/*{ gbl/waitfram.i }*/
 
 &scoped-define FILE_APPEND_DATA 4
 &scoped-define GENERIC_READ -2147483648
