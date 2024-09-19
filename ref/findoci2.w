@@ -1830,9 +1830,7 @@ tt-fin-doc.doc-author = (if p-mode = {&add-def} then {&manual} else tt-fin-doc.d
 if not p-save then return.
 run check-sums-rate in this-procedure no-error.
 if error-status:error then return error.
-if p-mode eq {&add-def}
-then 
-   run update_prc-doc-code-mask(yes).
+
 &scop prfx tt-fin-doc.
 
    find first buf_clients-attr no-lock where buf_clients-attr.attr-code = {&attr-is-inkassator} and 
@@ -1864,7 +1862,9 @@ if error-status:error then do:
  { gbl/reterhnd.i error }
   undo, return error.
 end.
-
+if p-mode eq {&add-def}
+then 
+   run update_prc-doc-code-mask(yes).
 
 END PROCEDURE.
 
