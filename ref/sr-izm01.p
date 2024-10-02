@@ -67,7 +67,7 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
                  vss-workfile, vss-revision, vss-description, {&new-line})
     ) .
   end .
-
+/*
   if p-sr-density = 1 and (p-sr-abs-err-dens-lgas-liquid = 0.0 or p-sr-abs-err-dens-lgas-liquid = ?) and
      (p-sr-relative-err-dens-lgas-liquid = 0.0 or p-sr-relative-err-dens-lgas-liquid = ?) then do:
         undo, throw new Progress.Lang.AppError(
@@ -76,6 +76,8 @@ define buffer buf_sr-izmerenia for ub.sr-izmerenia .
                  p-node-code) 
       ) .  
   end.
+/*  BTS-778 Удаление проверок на обязательность/заполненность тегов   */
+*/
 
   if can-find (first buf_sr-izmerenia
   where buf_sr-izmerenia.sr-model                    = p-sr-model
