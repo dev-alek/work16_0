@@ -659,7 +659,7 @@ then do:
             message   "В документе " bf_trn-doc.doc-code skip
                       "На объекте  " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
                       "По товару " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code skip
-                      "Подкотрольного ФГИС Меркурий не заведен ВСД."
+                      "Подконтрольного ФГИС Меркурий не заведен ВСД."
                       "Продолжить закрытие документа?"
                       view-as alert-box buttons yes-no update varlog.
             if varlog <> yes
@@ -673,7 +673,7 @@ then do:
           message   "В документе " bf_trn-doc.doc-code skip
                     "На объекте  " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
                     "По товару " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code skip
-                    "Подкотрольного ФГИС Меркурий не заведен ВСД."
+                    "Подконтрольного ФГИС Меркурий не заведен ВСД."
                     view-as alert-box error.
 
           run waitfram-hide in this-procedure no-error.
