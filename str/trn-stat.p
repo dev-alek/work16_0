@@ -626,7 +626,12 @@ then do:
           view-as alert-box error .
         undo, return error .
       end.
-      
+
+      if  bf_trn-doc.fact-date  <> ?
+      and bf_trn-doc.shift-date <> ?
+      and bf_trn-doc.shift-num  <> ? 
+      and bf_trn-doc.shift-name <> ? 
+      then do:
        run corr-date in this-procedure
           ( input bf_trn-doc.obj-type
           , input bf_trn-doc.obj-code
@@ -635,6 +640,7 @@ then do:
           , input bf_trn-doc.shift-num
           , input bf_trn-doc.shift-name
           ).
+      end.
       
       keyrecObj:GenKeyRec({&table_parts}, buffer bf_parts:handle, output keypart).
       vsdsubsObj = vsdStr:getVSDsubs(input "part-key", input keypart).
