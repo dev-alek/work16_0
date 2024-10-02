@@ -626,7 +626,12 @@ then do:
           view-as alert-box error .
         undo, return error .
       end.
-      
+
+      if  bf_trn-doc.fact-date  <> ?
+      and bf_trn-doc.shift-date <> ?
+      and bf_trn-doc.shift-num  <> ? 
+      and bf_trn-doc.shift-name <> ? 
+      then do:
        run corr-date in this-procedure
           ( input bf_trn-doc.obj-type
           , input bf_trn-doc.obj-code
@@ -635,6 +640,7 @@ then do:
           , input bf_trn-doc.shift-num
           , input bf_trn-doc.shift-name
           ).
+      end.
       
       keyrecObj:GenKeyRec({&table_parts}, buffer bf_parts:handle, output keypart).
       vsdsubsObj = vsdStr:getVSDsubs(input "part-key", input keypart).
@@ -653,7 +659,7 @@ then do:
             message   "В документе " bf_trn-doc.doc-code skip
                       "На объекте  " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
                       "По товару " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code skip
-                      "Подкотрольного ФГИС Меркурий не заведен ВСД."
+                      "Подконтрольного ФГИС Меркурий не заведен ВСД."
                       "Продолжить закрытие документа?"
                       view-as alert-box buttons yes-no update varlog.
             if varlog <> yes
@@ -667,7 +673,7 @@ then do:
           message   "В документе " bf_trn-doc.doc-code skip
                     "На объекте  " bf_trn-doc.obj-type " " bf_trn-doc.obj-code skip
                     "По товару " bf_goods.artic " " bf_goods.prod-type " " bf_goods.prod-code skip
-                    "Подкотрольного ФГИС Меркурий не заведен ВСД."
+                    "Подконтрольного ФГИС Меркурий не заведен ВСД."
                     view-as alert-box error.
 
           run waitfram-hide in this-procedure no-error.

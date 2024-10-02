@@ -186,11 +186,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
                         ,p-time-to-wait-seconds
                         ) .
           end.
-          run waitfram-show in this-procedure
-            (input substitute("Файл &1 занят. Ожидание освобождения файла."
-                            ,p-file-name
-                            )
-            ) .
+/*          run waitfram-show in this-procedure                              */
+/*            (input substitute("Файл &1 занят. Ожидание освобождения файла."*/
+/*                            ,p-file-name                                   */
+/*                            )                                              */
+/*            ) .                                                            */
           assign
             v-random-wait-time = random(50, 300)
           .
