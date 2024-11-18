@@ -604,7 +604,9 @@ define buffer new_clients  for ub.clients .
       pltn = ROUND ((buf_tt-parts.cli-qnty / buf_tt-parts.fact-qnty), 4 ) .
       IF (buf_tt-parts.cli-qnty / buf_tt-parts.fact-qnty  > 1 ) THEN DO:
       MESSAGE 'плотность более 1, остатки с такой плотностью не переносятся.' pltn VIEW-AS ALERT-BOX.
-      v-is-good-err = TRUE.
+      v-is-good-err = TRUE. 
+      p-count-err = p-count-err + 1 .
+      v-is-cont-err = TRUE.
       v-my-message  = substitute ("Ошибка. Плотность &1, остатки с такой плотностью не переносятся, код товара &2", pltn, new_gds-code ).
       END.
       
