@@ -235,6 +235,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
                                                and buf_marking-lines.out-code = buf_fbr-line.doc-code
                                                and buf_marking-lines.part-code = buf_fbr-line.recipe-code
                                                and buf_marking-lines.prt-code = 0
+                                               and buf_marking-lines.doc-level = 1
           :
             sw:start-element ("mark").
             write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
@@ -340,6 +341,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
                                                and buf_marking-lines.out-code = buf_fbr-line.doc-code
                                                and buf_marking-lines.part-code = buf_fbr-line.recipe-code
                                                and buf_marking-lines.prt-code = 0
+                                               and buf_marking-lines.doc-level = 1
           :
             sw:start-element ("mark").
             write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
