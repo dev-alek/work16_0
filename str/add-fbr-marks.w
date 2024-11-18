@@ -427,6 +427,7 @@ PROCEDURE CrCheckMark :
   define buffer buf_recipe for ub.recipe .
   define buffer buf_recipe-gds for ub.recipe-gds .
   define buffer buf_marking-child for ub.marking .
+  define buffer buf_marking-parent for ub.marking .
   define buffer buf_gds-obj for ub.gds-obj .
   
   define variable v-par-type as character no-undo.
@@ -710,6 +711,12 @@ PROCEDURE CrCheckMark :
       tt-marking-lines.box-qnty = 1.0
       tt-marking-lines.doc-level = 2
     .
+  end .
+  
+  for first buf_marking-parent exclusive-lock where buf_marking-parent.mark = buf_marking.mark-parent
+                                                and buf_marking.mark-parent > ""
+  :
+    assign buf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .
   end .
   
 end.
