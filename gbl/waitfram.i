@@ -96,7 +96,8 @@ procedure waitfram-hide :
   on error undo, return error return-value
   :
     pause 0 before-hide .
-    hide frame waitfram .
+    if not mBatchMode then
+      hide frame waitfram .
 
 &if "{1}" = "" &then
   if     not mWaitFramView
@@ -165,8 +166,8 @@ procedure waitfram-show :
     end.
     B-viewProcInfo:visible   in frame waitfram = no. /*session:debug-alert.*/
     B-viewProcInfo:sensitive in frame waitfram = no. /*session:debug-alert.*/
-    B-WaitFramStop:visible   in frame waitfram = if not mBatchMode then mWaitFramView else no .
-    B-WaitFramStop:sensitive in frame waitfram = if not mBatchMode then mWaitFramView else no .
+    B-WaitFramStop:visible   in frame waitfram = if not mBatchMode and mWaitFramView then yes else no .
+    B-WaitFramStop:sensitive in frame waitfram = if not mBatchMode and mWaitFramView then yes else no .
     if  (   mWaitFramView
        or  mWaitProcEvent)
        and not mBatchMode 

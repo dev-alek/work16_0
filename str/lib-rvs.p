@@ -6182,13 +6182,15 @@ procedure getpump:
           , substitute("&1 &2 Отправка команды &3 на кассу № &4 (&5:&6) Пользователь &7 &8", string(today),string(time, "HH:MM:SS"),"pumpread",cash-desk.cash-num,vadr,vport ,vuser,{&carriage-return} + {&new-line})
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .            
+/*      if  log-manager:logfile-name ne ? then                                                       */
+/*        log-manager:write-message(substitute("mWaitFramView=&1.",string(mWaitFramView)) , "MYLOG").*/
       run ConectSocet (vadr,
                        vport,
                        ?,
                        "pumpread" + chr(13) + chr(10), 
                        "text",
                        30,
-                       not imessageon,
+                       yes /*not imessageon*/,
                        "Получение данных по ТРК. ") no-error.
       if     not error-status:error
          and length(mWebResp) > 0
