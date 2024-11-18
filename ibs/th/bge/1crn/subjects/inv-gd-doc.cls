@@ -476,18 +476,19 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code:
           write-data-element ("ordernum", ub.inv-doc-attr.attr-value).
         end.
+
         for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-date} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code:
-          write-data-element ("orderdate", ub.inv-doc-attr.attr-value).
+          write-data-element ("orderdate", if ub.inv-doc-attr.attr-value = "" then "0" else iso-date (date (ub.inv-doc-attr.attr-value))).
         end.      
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-inv-date} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
         if available (ub.inv-doc-attr) then do:
-          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", string(date(ub.inv-doc-attr.attr-value),"99.99.9999")).
-          else write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
+          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", iso-date (date (ub.inv-doc-attr.attr-value))).
+          else write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
         end.
         else do:
-          write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
+          write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
         end. 
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-agent} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
