@@ -702,6 +702,7 @@ PROCEDURE CrCheckMark :
     tt-marking-lines.gds-name = buf_goods.gds-name
     tt-marking-lines.obj-type = v-cntxt-obj-type
     tt-marking-lines.obj-code = v-cntxt-obj-code
+    tt-marking-lines.sts      = buf_marking.sts
     tt-marking-lines.old-sts  = v-old-sts
     tt-marking-lines.box-qnty = v-GTIN-qnty
     tt-marking-lines.doc-level = 1
@@ -719,6 +720,7 @@ PROCEDURE CrCheckMark :
       tt-marking-lines.gds-name = buf_goods.gds-name
       tt-marking-lines.obj-type = v-cntxt-obj-type
       tt-marking-lines.obj-code = v-cntxt-obj-code
+      tt-marking-lines.sts      = buf_marking-child.sts
       tt-marking-lines.old-sts  = v-old-sts
       tt-marking-lines.box-qnty = 1.0
       tt-marking-lines.doc-level = 2

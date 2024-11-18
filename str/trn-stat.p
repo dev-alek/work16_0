@@ -3894,43 +3894,44 @@ vartechproliv = no
                   tt-fbr-line.recipe-type = {&alternative}
                   tt-fbr-line.ingr-gds-code = v-ingr-gds-code
                 .  
-              end .
-              RUN gds-attr-value (
-                                  INPUT bf_goods.gds-code,
-                                  INPUT {&attr-mark-type},
-                                  OUTPUT varvalue,
-                                  OUTPUT vartype
-                                  ).
-              if varvalue > ""
-              and EDOParSec:GetIsEdoForType(varvalue)
-              then do:
-                mark-lines_ :
-                for each buf_marking-lines no-lock where buf_marking-lines.out-code   = bf_doc-line.doc-code
-                                                     and buf_marking-lines.gds-code   = bf_goods.gds-code
-                :
-                  for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
-                    if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
-                    and not(index(bf_trn-doc.doc-code, "=") > 0 and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
-                    then
-                      next mark-lines_
-                    .
-                  end .
-                  create tt-marking-lines .
-                  assign
-                    tt-marking-lines.mark = buf_marking-lines.mark
-                    tt-marking-lines.gds-code = bf_goods.gds-code
-                    tt-marking-lines.gds-name = bf_goods.gds-name
-                    tt-marking-lines.obj-type = bf_trn-doc.obj-type
-                    tt-marking-lines.obj-code = bf_trn-doc.obj-code
-                    tt-marking-lines.doc-level = buf_marking-lines.doc-level
-                  .
-                  for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+              
+                RUN gds-attr-value (
+                                    INPUT bf_goods.gds-code,
+                                    INPUT {&attr-mark-type},
+                                    OUTPUT varvalue,
+                                    OUTPUT vartype
+                                    ).
+                if varvalue > ""
+                and EDOParSec:GetIsEdoForType(varvalue)
+                then do:
+                  mark-lines_ :
+                  for each buf_marking-lines no-lock where buf_marking-lines.out-code   = bf_doc-line.doc-code
+                                                       and buf_marking-lines.gds-code   = bf_goods.gds-code
+                  :
+                    for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
+                      if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+                      and not(index(bf_trn-doc.doc-code, "=") > 0 and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
+                      then
+                        next mark-lines_
+                      .
+                    end .
+                    create tt-marking-lines .
                     assign
-                      buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+                      tt-marking-lines.mark = buf_marking-lines.mark
+                      tt-marking-lines.gds-code = bf_goods.gds-code
+                      tt-marking-lines.gds-name = bf_goods.gds-name
+                      tt-marking-lines.obj-type = bf_trn-doc.obj-type
+                      tt-marking-lines.obj-code = bf_trn-doc.obj-code
+                      tt-marking-lines.doc-level = buf_marking-lines.doc-level
                     .
+                    for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+                      assign
+                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+                      .
+                    end .
                   end .
-                end .
-              end . /* EDOParSec:GetIsEdoForType(varvalue) */
+                end . /* EDOParSec:GetIsEdoForType(varvalue) */
+              end . /* v-num-recipes = 1 */
             end . /* v-production-only */
           end . /* for each doc-line */
           assign
