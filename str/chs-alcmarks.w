@@ -450,7 +450,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end.
   end.
   
-  if v-scan-qnty >= v-free-qnty then
+  if v-free-qnty = 0 then
   do:
     message "Количество просканированных марок достигло книжного остатка." view-as alert-box.
     return.
