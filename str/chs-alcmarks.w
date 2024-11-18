@@ -848,20 +848,13 @@ PROCEDURE save_update :
           run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
           return.
         end .
-        if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
+        if marking.sts <> thMarkSts:FreeZone:KeyIntDB and
+           marking.sts <> thMarkSts:ReturnLock:KeyIntDB then 
         do:
-          if marking.sts = thMarkSts:ReturnLock:KeyIntDB then
-          do:
-            ChekTypeMarkByDm(v-mark).
-          end.
-          if marking.sts <> thMarkSts:ReturnLock:KeyIntDB or
-             (mTypeMark <> "" and not EDOParSec:GetIsSaleReturnForType(mTypeMark)) then
-          do: 
-              run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
-                               thMarkSts:GetLabel(marking.sts))
-                               ).
-              return.
-          end.
+          run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
+                           thMarkSts:GetLabel(marking.sts))
+                           ).
+          return.
         end.
       end.
         
@@ -1018,6 +1011,11 @@ PROCEDURE save_update :
                            "Необходимо либо закрыть документ, либо удалить его.").
           return.
         end.
+        if marking.sts = thMarkSts:Moved:KeyIntDB then
+        do:
+          run dispmessage ("Товар перемещен на другой АЗК.").
+          return.
+        end. 
         if marking.sts <> thMarkSts:OutZone:KeyIntDB and
            marking.sts <> thMarkSts:Checked_:KeyIntDB and
            marking.sts <> thMarkSts:SaleLock:KeyIntDB and
