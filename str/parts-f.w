@@ -9,11 +9,11 @@
 using ibs.th.str.marking.sts.*.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c96af91888ad, 3081, rls $
+$Author: SSlivenko $
+$Date: 2022/08/05 16:16:26 $
+$Workfile: parts-f.w $
+$Archive: str/parts-f.w $
 
 Редактирование партий документов
 
@@ -45,11 +45,11 @@ define input-output parameter p-parts-recid as recid     no-undo .
 
 define variable chg-qnty      as   decimal no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c96af91888ad, 3081, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/08/05 16:16:26 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: parts-f.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/parts-f.w $":U .
 define variable vss-description as character no-undo init "Редактирование партий документов".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4|&5|&6':u,h-call-prog,p-mode,p-doc-code,p-gds-code,p-pl-code,p-parts-recid)"}
 { cmp/str-glbl.i }
@@ -2935,6 +2935,21 @@ PROCEDURE determine-enable-qnty :
   define input  parameter p-flag_        like ub.trn-doc.flag_        no-undo .
   define input  parameter p-disable-qnty as logical   no-undo .
   define output parameter p-enable-qnty  as character no-undo .
+
+  define buffer buf_trn-doc for ub.trn-doc.
+  define variable vIsExemplarGoods as logical no-undo.
+
+  if p-ext-doc-type = {&TDEDT_Pri_Perem} then
+  do:
+    find first buf_trn-doc no-lock where
+               buf_trn-doc.doc-code = p-doc-code.
+    run isExemplarGoods in this-procedure 
+      (buf_trn-doc.obj-type, buf_trn-doc.obj-code, p-gds-code, output vIsExemplarGoods).
+    if vIsExemplarGoods then do: 
+      p-enable-qnty = "".
+      return.
+    end. 
+  end.
 
   if  p-doc-type = {&inventory}
   then do:

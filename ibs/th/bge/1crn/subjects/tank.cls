@@ -460,11 +460,11 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
         sw:write-data-element ("pipe-er"  , string-mth(tt-place-attr.place-error-mass)).
         sw:write-data-element ("tank-tk" , string(tt-place-attr.place-tank-tk)).  
         sw:write-data-element ("rvd-dnsty"  , string(tt-place-attr.place-rvd-dnsty)).
-        sw:write-data-element ("dnst-mi-code" , string(tt-place-attr.place-dnst-mi-code)).  
+        sw:write-data-element ("dnst-mi-code" , string(if tt-place-attr.place-dnst-mi-code = ? then "0" else tt-place-attr.place-dnst-mi-code)).  
         sw:write-data-element ("rvd-lvl"  , string(tt-place-attr.place-rvd-lvl)).
-        sw:write-data-element ("lvl-mi-code" , string(tt-place-attr.place-lvl-mi-code)).
+        sw:write-data-element ("lvl-mi-code" , string(if tt-place-attr.place-lvl-mi-code = ? then "0" else tt-place-attr.place-lvl-mi-code)).
         sw:write-data-element ("rvd-tmp"  , string(tt-place-attr.place-rvd-tmp)).
-        sw:write-data-element ("tmp-mi-code" , string(tt-place-attr.place-tmp-mi-code)). 
+        sw:write-data-element ("tmp-mi-code" , string(if tt-place-attr.place-tmp-mi-code = ? then "0" else tt-place-attr.place-tmp-mi-code)). 
         sw:write-data-element ("gd-code", string(tt-place.gds-code)).
         sw:write-data-element ("izm-pr", if tt-place.is-meas = yes then "1" else "0").
         sw:write-data-element ("passport-num" , string(tt-place-attr.place-passport-num)).  

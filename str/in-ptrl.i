@@ -676,7 +676,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
                 if infoSecObj:ListTank = buf_place.loc1
                 then do :
-                  if infoSecObj:AccMeth = 1
+                  if infoSecObj:IsKP
                   then do :
                     v-KPrvs-doc-pl = yes .
                   end .
@@ -686,7 +686,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
               
               if v-KPrvs-doc-pl
-              and num-entries(v-KPrvs-secs) > 1
+              and num-entries(v-KPrvs-secs) >= 1
               then do :
                 next tt-doc-pl_ .
               end .
@@ -914,12 +914,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 .
               end .
             end.
-            if infoSectionsTotal:IsKP
-            then do :
-              assign
-                v-act-name = 'actn_income_petrol-сommission':U /* Право на комиссионный приём */
-              .
-            end .
+/*            if infoSectionsTotal:IsKP                                                           */
+/*            then do :                                                                           */
+/*              assign                                                                            */
+/*                v-act-name = 'actn_income_petrol-сommission':U /* Право на комиссионный приём */*/
+/*              .                                                                                 */
+/*            end .                                                                               */
             case p-rvs-type :
               when {&rvs-before-doc} then do:
                 run check-before in this-procedure
@@ -1197,6 +1197,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               yes
               varcur-rvs
               yes
+              no
               tt-meas-file
               tt-meas
               no-error
@@ -1338,6 +1339,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     tt-pump-nozzle
                     yes
                     ?
+                    no
                     no-error
                   }
                 end.
@@ -1351,6 +1353,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     tt-pump-nozzle
                     no
                     ?
+                    no
                     no-error
                   }
                 end.
@@ -1511,6 +1514,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   tt-pump-nozzle
                   yes
                   ?
+                  no
                   no-error
                 }
               end.
@@ -1524,6 +1528,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   tt-pump-nozzle
                   no
                   ?
+                  no
                   no-error
                 }
               end.
@@ -1756,6 +1761,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       tt-pump-nozzle
                       yes
                       ?
+                      no
                       no-error
                     }
                   end.
@@ -1769,6 +1775,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                       tt-pump-nozzle
                       no
                       ?
+                      no
                       no-error
                     }
                   end.
@@ -1933,6 +1940,49 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 undo block_tr, return error return-value .
               end.
               
+              run placelib_get-attr  (
+                 input {&place-com-tanks}
+                ,input t-doc.obj-code
+                ,input t-doc.obj-type
+                ,input p-pl-code
+                ,output v-value
+                ,output v-ok      )
+              no-error.
+              if v-ok
+              and v-value > ""
+              then do :
+                do ii = 1 to num-entries(v-value) :
+                  find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
+                                                 and buf_place.obj-code = t-doc.obj-code
+                                                 and buf_place.loc1     = entry(ii, v-value)
+                                                 and buf_place.status_  = ""
+                                                 no-error .
+                  if available buf_place
+                  then do :
+                    run return-rvs-qnty in this-procedure
+                      ( input t-doc.doc-code
+                       ,input buf_goods.gds-code
+                       ,input buf_place.pl-code
+                       ,output v-com-tank-rvs-qnty-before
+                       ,output v-com-tank-rvs-qnty-after
+                       ,output v-com-tank-rvs-cli-qnty-before
+                       ,output v-com-tank-rvs-cli-qnty-after
+                       ,output v-com-tank-delta-mass-qnty
+                       ,output v-trk-err
+                      ) no-error .
+                    if error-status :error then do:
+                      undo block_tr, return error return-value .
+                    end.
+                    assign
+                      v-rvs-qnty-before     = v-rvs-qnty-before     + v-com-tank-rvs-qnty-before
+                      v-rvs-qnty-after      = v-rvs-qnty-after      + v-com-tank-rvs-qnty-after
+                      v-rvs-cli-qnty-before = v-rvs-cli-qnty-before + v-com-tank-rvs-cli-qnty-before
+                      v-rvs-cli-qnty-after  = v-rvs-cli-qnty-after  + v-com-tank-rvs-cli-qnty-after
+                    .
+                  end.
+                end .
+              end .
+              
               if p-rvs-type = {&rvs-after-doc} then do:
                 if v-rvs-qnty-after = ?
                   or v-rvs-qnty-after = 0
@@ -2043,49 +2093,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   ) no-error .
                   if v-cardifLgas = ?
                     then v-cardifLgas = 0.
-                    
-                  run placelib_get-attr  (
-                     input {&place-com-tanks}
-                    ,input t-doc.obj-code
-                    ,input t-doc.obj-type
-                    ,input p-pl-code
-                    ,output v-value
-                    ,output v-ok      )
-                  no-error.
-                  if v-ok
-                  and v-value > ""
-                  then do :
-                    do ii = 1 to num-entries(v-value) :
-                      find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
-                                                     and buf_place.obj-code = t-doc.obj-code
-                                                     and buf_place.loc1     = entry(ii, v-value)
-                                                     and buf_place.status_  = ""
-                                                     no-error .
-                      if available buf_place
-                      then do :
-                        run return-rvs-qnty in this-procedure
-                          ( input t-doc.doc-code
-                           ,input buf_goods.gds-code
-                           ,input buf_place.pl-code
-                           ,output v-com-tank-rvs-qnty-before
-                           ,output v-com-tank-rvs-qnty-after
-                           ,output v-com-tank-rvs-cli-qnty-before
-                           ,output v-com-tank-rvs-cli-qnty-after
-                           ,output v-com-tank-delta-mass-qnty
-                           ,output v-trk-err
-                          ) no-error .
-                        if error-status :error then do:
-                          undo block_tr, return error return-value .
-                        end.
-                        assign
-                          v-rvs-qnty-before     = v-rvs-qnty-before     + v-com-tank-rvs-qnty-before
-                          v-rvs-qnty-after      = v-rvs-qnty-after      + v-com-tank-rvs-qnty-after
-                          v-rvs-cli-qnty-before = v-rvs-cli-qnty-before + v-com-tank-rvs-cli-qnty-before
-                          v-rvs-cli-qnty-after  = v-rvs-cli-qnty-after  + v-com-tank-rvs-cli-qnty-after
-                        .
-                      end.
-                    end .
-                  end .
                   
                   dM = buf_doc-line.cli-qnty - (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
                   dmdop = SQRT ((v-rvs-cli-qnty-after *  v-cardifLgas) * (v-rvs-cli-qnty-after *  v-cardifLgas) + (v-rvs-cli-qnty-before *  v-cardifLgas) * (v-rvs-cli-qnty-before *  v-cardifLgas)) / 100.
@@ -2161,6 +2168,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-log               as   logical                  no-undo .
         define variable v-st-doc            as   logical                  no-undo .
         define variable v-setting           as   logical                  no-undo .
+        define variable v-need-message      as   logical                  no-undo init yes .
 
         block_tr:
         do transaction
@@ -2325,6 +2333,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   then do :
                     assign v-calc-density = infoSectionObj:TankWeightRvs / infoSectionObj:TankVolPomiRvs .
                   end .
+                  if (v-calc-density = ? or v-calc-density <= 0 or v-calc-density > 1)
+                  and infoSectionObj:KPnoMeas
+                  then do :
+                    assign v-need-message = no .
+                  end .
                   p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
                   if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
                   then do:
@@ -2369,6 +2382,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     if infoSectionObj:AccMeth = 1
                     then do :
                       assign v-calc-density = infoSectionObj:TankWeightRvs / infoSectionObj:TankVolPomiRvs .
+                    end .
+                    if (v-calc-density = ? or v-calc-density <= 0 or v-calc-density > 1)
+                    and infoSectionObj:Alarm-SGDKK
+                    then do :
+                      assign v-need-message = no .
                     end .
                     p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
                     if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
@@ -2453,12 +2471,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             
             
-            if v-calc-density = ? and not infoSectionsTotal:isFlagKPChg
+            if v-calc-density = ?
+            and not infoSectionsTotal:isFlagKPChg
             then do:
-              message
-                substitute( "Невозможно рассчитать фактическое кол-во." )
-                view-as alert-box warning.
-                return.
+/*              if v-need-message                                            */
+/*              then do :                                                    */
+/*                message                                                    */
+/*                  substitute( "Невозможно рассчитать фактическое кол-во." )*/
+/*                  view-as alert-box warning.                               */
+/*              end .                                                        */
+              return.
             end.
             
             if (p-new-fact-qnty <> v-new-fact-qnty
@@ -2928,7 +2950,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             ,output v-value
             ,output v-ok      )
           no-error.
-          
           if  v-ok
           and v-value > ""
           then do :
@@ -3265,9 +3286,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionsTotal:GetDBAllAttr().
               do ii = 1 to infoSectionsTotal:SectionNum :
                 infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-                if not (infoSecObj:TankWeight > 0)
+                if not infoSecObj:KPnoMeas
+                and (not (infoSecObj:TankWeight > 0)
                 or infoSecObj:TankWeight = ?
-                or infoSecObj:TankDensity = ?
+                or infoSecObj:TankDensity = ?)
                 then do :
                   delete object infoSectionsTotal.
                   message
@@ -3327,47 +3349,22 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           v-kpsecs = trim(v-kpsecs, ", ") .
         end .
         
-        if v-kpsecs > ""
-        then do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_income_petrol-сommission':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            false
-            varlog
-            no-error
-          }
-          if varlog <> yes then do:
-            message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
-            return error return-value .
-          end.
-        end .
-        else do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-on-doc_cr-revision':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            true
-            varlog
-            no-error
-          }
-        end .
+        { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_rvs-on-doc_cr-revision':U
+          {&cntxt-object}
+          buf_trn-doc.host-code
+          buf_trn-doc.obj-type
+          buf_trn-doc.obj-code
+          0
+          0
+          0
+          true
+          varlog
+          no-error
+        }
         if varlog <> yes then do:
           return error return-value .
         end.
@@ -3429,68 +3426,28 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
         if v-kpsecs > ""
         then do :
-          run gbl/d-askw.w (
-             input "Выбор способа выполнения комиссионного приёма"
-            ,input ("Для секций " + v-kpsecs + " требуется комиссионный прием. Каким способом будет выполняться комиссионный прием?")
-            ,input "|"
-            ,input "Замеры в АЦ|По сверкам|Отмена"
-            ,input "Выполнение комиссионного приёма стандартным способом по замерам в автоцистерне|Выполнение комиссионного приёма по данным сверок в резервуаре|Отказ от создания сверок"
-            ,input 1
-            ,input 3
-            ,output choice).
-          case choice :
-            when 1
-            then do :
-              kpsecs_ :
-              for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-                                                   and buf_doc-line-attr.attr-code = "n"
-              :
-                infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
-                infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
-                infoSectionsTotal:GetDBAllAttr().
-                do ii = 1 to infoSectionsTotal:SectionNum : 
-                  infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-                  if infoSecObj:isKP
+          kpsecs_ :
+          for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                               and buf_doc-line-attr.attr-code = "n"
+          :
+            infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
+            infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+            infoSectionsTotal:GetDBAllAttr().
+            do ii = 1 to infoSectionsTotal:SectionNum : 
+              infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+              if infoSecObj:isKP
+              then do :
+                for first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank
+                                         and not tt-place-sec.own-rvs :
+                  if num-entries(tt-place-sec.secs) >= 1
                   then do :
-                    infoSecObj:AccMeth = 0 .
+                    tt-place-sec.own-rvs = yes .
+                    v-need-rvs-sec = v-need-rvs-sec + tt-place-sec.secs + "," .
                   end .
                 end .
-                infoSectionsTotal:SaveDB() .
-                delete object infoSectionsTotal.
               end .
             end .
-            when 2
-            then do :
-              kpsecs_ :
-              for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-                                                   and buf_doc-line-attr.attr-code = "n"
-              :
-                infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
-                infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
-                infoSectionsTotal:GetDBAllAttr().
-                do ii = 1 to infoSectionsTotal:SectionNum : 
-                  infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-                  if infoSecObj:isKP
-                  then do :
-                    for first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank
-                                             and not tt-place-sec.own-rvs :
-                      if num-entries(tt-place-sec.secs) > 1
-                      then do :
-                        tt-place-sec.own-rvs = yes .
-                        v-need-rvs-sec = v-need-rvs-sec + tt-place-sec.secs + "," .
-                      end .
-                    end .
-                    infoSecObj:AccMeth = 1 .
-                  end .
-                end .
-                infoSectionsTotal:SaveDB() .
-                delete object infoSectionsTotal.
-              end .
-            end .
-            when 3
-            then do :
-              return .
-            end .
+            delete object infoSectionsTotal.
           end .
         end .
         v-need-rvs-sec = trim(v-need-rvs-sec, ",") .
@@ -3987,7 +3944,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define buffer aft-rvs-doc for ub.rvs-doc.
         define buffer buf_doc-line-attr for ub.doc-line-attr .
         
-        define variable v-isKP           as logical   no-undo init no .
         define variable varlog           as logical   no-undo .
         define variable ii               as integer   no-undo .
         define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo .
@@ -3997,63 +3953,22 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           where buf_trn-doc.doc-code = p-doc-code
           .
           
-        kpsecs_ :
-        for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-                                             and buf_doc-line-attr.attr-code = "n"
-        :
-          infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
-          infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
-          infoSectionsTotal:GetDBAllAttr().
-          do ii = 1 to infoSectionsTotal:SectionNum :
-            if infoSectionsTotal:GetInfoSectionProp(ii):isKP
-            then do :
-              v-isKP = yes .
-            end .
-          end .
-          delete object infoSectionsTotal.
-        end .
-        
-        if v-isKP
-        then do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_income_petrol-сommission':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            false
-            varlog
-            no-error
-          }
-          if varlog <> yes then do:
-            message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
-            return error return-value .
-          end.
-        end .
-        else do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-on-doc_deletion':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            true
-            varlog
-            no-error
-          }
-        end .
+        { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_rvs-on-doc_deletion':U
+          {&cntxt-object}
+          buf_trn-doc.host-code
+          buf_trn-doc.obj-type
+          buf_trn-doc.obj-code
+          0
+          0
+          0
+          true
+          varlog
+          no-error
+        }
         if varlog <> yes then do:
           return error return-value .
         end.
@@ -4085,11 +4000,17 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionObj:TankWeight = ? .
               infoSectionObj:AccPomi = ? .
             end .
+            if infoSectionObj:AccMeth = 1
+            then do :
+              infoSectionObj:TankVolPomiRvs = ? .
+              infoSectionObj:TankWeightRvs = ? .
+            end .
             infoSectionObj:AccMeth = ? .
             infoSectionObj:DateStart = ? .
             infoSectionObj:TimeStart = ? .
             infoSectionObj:DateEnd = ? .
             infoSectionObj:TimeEnd = ? .
+            if not (infoSectionObj:KPnoMeas or infoSectionObj:alarm-SGDKK) then infoSectionObj:IsKP = no .
           end .
           infoSectionsTotal:SaveDB().
           delete object infoSectionsTotal.

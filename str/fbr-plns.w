@@ -50,6 +50,7 @@ define variable vss-description as character no-undo init "Список План-меню или 
 { str/doc-code.i }
 { trg/partslib.i }
 { str/writelog.i def "'fbrpln.log'" no-create }
+{ str/temp_upd.i }
 { gbl/objsrv.i   }
 { str/fbrpln.i   }
 { str/fbrlib.i   }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ebeab477cbe5, 3616, rls $
+$Author: EShklyar $
+$Date: 2023/12/28 12:56:37 $
+$Workfile: r-orioxl-sug.p $
+$Archive: rep/r-orioxl-sug.p $
 
 Инвентаризационная описись СУГ
 
@@ -22,11 +22,11 @@ define input parameter p-parent-proc as widget-handle no-undo .
 define input parameter p-rec-invent  as recid         no-undo .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: ebeab477cbe5, 3616, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/12/28 12:56:37 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-orioxl-sug.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-orioxl-sug.p $":U .
 define variable vss-description as character no-undo initial "Инвентаризационная описись СУГ":U .
 
 { cmp/vssrevis.i }
@@ -43,6 +43,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { str/placelib.i }
 { rep/c-temp-place.i }
 { rep/c-place-attr.i }
+{ str/trdcalib.i }
 
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print as logical no-undo initial yes .
@@ -201,6 +202,97 @@ do
     t_inv-date = ( if bf_trn-doc.status_ = {&fact} then bf_trn-doc.fact-date else bf_trn-doc.doc-date )
     .
 
+  define variable v-prikaz-num  as character no-undo .
+  define variable v-prikaz-date as character no-undo .
+  define variable v-doc-date    as character no-undo .
+  define variable p-type        as character no-undo .      
+  define variable v-pos-agent   as character no-undo .
+  define variable v-fio-agent   as character no-undo .
+  define variable v-pos-player1 as character no-undo .
+  define variable v-fio-player1 as character no-undo .
+  define variable v-pos-player2 as character no-undo .
+  define variable v-fio-player2 as character no-undo .
+  define variable v-pos-player3 as character no-undo .
+  define variable v-fio-player3 as character no-undo .
+  
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-inv-date}
+          v-doc-date
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-prikaz-number}
+          v-prikaz-num
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-prikaz-date}
+          v-prikaz-date
+          p-type
+          no-error
+      }  
+
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-agent}
+          v-fio-agent
+          p-type
+          
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-agent}
+          v-pos-agent
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player1}
+          v-fio-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player1}
+          v-pos-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player2}
+          v-fio-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player2}
+          v-pos-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player3}
+          v-fio-player3
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player3}
+          v-pos-player3
+          p-type
+          no-error
+      } 
   /*печать*/
   run get-report-num (output p-report-id).
     
@@ -318,6 +410,7 @@ procedure data-print :
       tt-sug.qnty1    = tt-sug.volue-pl * tt-sug.density
       tt-sug.pl-type  = "трубопровод"
       .
+
     find first c-rvs-doc no-lock where c-rvs-doc.rvs-code = bf_rvs-doc.rvs-code and c-rvs-doc.obj-code = bf_rvs-doc.obj-code and
       c-rvs-doc.obj-type = bf_rvs-doc.obj-type and c-rvs-doc.status_ = {&permitted} .
       
@@ -435,7 +528,7 @@ procedure table-inv:
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность СУГ, г/см3</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура СУГ, °С</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса СУГ, кг</TD>' skip
-    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг*</TD>' skip
     '</TR>'skip       
 
     '<TR style="height: 45px">' skip
@@ -497,7 +590,7 @@ procedure table-inv:
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность СУГ, кг/м3</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура СУГ, °С</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса СУГ, кг</TD>' skip
-    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг**</TD>' skip
     '</TR>'skip       
 
     '<TR style="height: 65px">' skip

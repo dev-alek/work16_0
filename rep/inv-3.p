@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ea50b6f7ec06, 1082, rls $
+$Author: EShklyar $
+$Date: Thu Oct 12 16:33:09 2017 +0300 $
+$Workfile: inv-3.p $
+$Archive: rep/inv-3.p $
 
 Инвентаризационная опись и сличительная ведомость
 
@@ -24,11 +24,11 @@ on error undo, return error
   define input parameter p-grp              as character no-undo. /* используется для печати только сумм по группам */
   define input parameter print-graft        as logical          no-undo.
 
-  define variable vss-revision    as character no-undo initial "$Revision$":U .
-  define variable vss-author      as character no-undo initial "$Author$":U .
-  define variable vss-date        as character no-undo initial "$Date$":U .
-  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-  define variable vss-archive     as character no-undo initial "$Archive$":U .
+  define variable vss-revision    as character no-undo initial "$Revision: ea50b6f7ec06, 1082, rls $":U .
+  define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+  define variable vss-date        as character no-undo initial "$Date: Thu Oct 12 16:33:09 2017 +0300 $":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile: inv-3.p $":U .
+  define variable vss-archive     as character no-undo initial "$Archive: rep/inv-3.p $":U .
   define variable vss-description as character no-undo initial "Формы по инвентаризации ".
 
   define variable g#report-num as integer   no-undo .
@@ -189,7 +189,8 @@ on error undo, return error
   define variable v-line-price          as decimal      no-undo.
   define variable v-line-price-before   as decimal      no-undo.
   define variable v-line-price-after    as decimal      no-undo.
-
+  define variable p-type                as character    no-undo.
+  
   define variable FullNameGds as character no-undo .
   define variable gds-str as character no-undo.
   define variable gds-str1 as character no-undo.
@@ -495,6 +496,15 @@ DEFINE FRAME sl-gold
 
   /*на каждой странице */
   if rep-tipe = "invent" THEN  DO:
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_num}
+        , input string( f-wp-qnty (decimal(PgNPP)) )
+        ). 
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_qntyFact}
+        , input string( f-wp-qnty (decimal(PgQnty)) )
+        ).     
     FORM with frame invent .
     FORM HEADER
       LineBuf format {&format-inv} SKIP
@@ -503,7 +513,6 @@ DEFINE FRAME sl-gold
       "Итого по странице : " skip
       "а) количество порядковых номеров " + string(PgNPP) + " (" + f-wp-qnty (decimal(PgNPP)) + ")" format {&format-inv} AT 18  skip
       "б) общее количество единиц фактически " + string(PgQnty) + " (" + f-wp-qnty (decimal(PgQnty)) + ")"  format {&format-inv} AT 18  SKIP
-      "в) на сумму фактически " + trim(string(PgSum, "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr + " (" + f-wp-sum (decimal(PgSum)) + ")"  format {&format-inv} AT 18 SKIP(1)
       "Вкладной лист к форме № ИНВ-3 №  " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") format "x(170)" AT 30 SKIP
     with FRAME BottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
     VIEW stream Out-Stream FRAME BottomFrame .
@@ -518,7 +527,6 @@ DEFINE FRAME sl-gold
       "Итого по странице : " skip
       "а) количество порядковых номеров " + string(PgNPP) + " (" + f-wp-qnty (decimal(PgNPP)) + ")" format {&format-inv-gold} AT 18  skip
       "б) общее количество единиц фактически " + string(PgQnty) + " (" + f-wp-qnty (decimal(PgQnty)) + ")"  format {&format-inv-gold} AT 18  SKIP
-      "в) на сумму фактически " + trim(string(PgSum, "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr +  " (" + f-wp-sum (decimal(Pgsum)) + ")"  format {&format-inv-gold} AT 18 SKIP(1)
       "Вкладной лист к форме № ИНВ-3 №  " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") format "x(170)" AT 30 SKIP
     with FRAME BottomFrame2 width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
     VIEW stream Out-Stream FRAME BottomFrame2 .
@@ -892,8 +900,10 @@ on error undo, return error return-value  :
     define variable v-str         as character no-undo .
     define variable v-abbr-str    as character no-undo .
     define variable v-doc-date    as character no-undo .
+    define variable v-fact-date   as character no-undo .
     define variable v-frame-str   as character no-undo .
-
+    define variable v-prikaz-num  as character no-undo .
+    define variable v-prikaz-date as character no-undo .
 
     run gbl/conf-rd.p ("outprncd", "":U, "":U, 0, "":U, "":U, "":U, no, output v-outprncd, output v-par-type) no-error.
     if v-outprncd = "yes" then
@@ -914,7 +924,7 @@ on error undo, return error return-value  :
       v-buh-sum-str = 'К началу проведения инвентаризации все расходные и приходные документы на товарно-материальные ценности сданы в бухгалтерию и все товарно-материальные ценности, поступившие на мою ( нашу ) отвественность, оприходованы, а выбывшие списаны в расход.'
     .
 
-    if lookup( 'L-Rus' , v-sys-key) > 0
+    if v-doc-date = ""
     then do:
       for each temp-str
       :
@@ -929,14 +939,42 @@ on error undo, return error return-value  :
         v-object      = v-object + ", " + v-torgconf-self-obj-addres
       .
     end. /* if lookup( 'L-Rus' , v-sys-key) > 0 */
-
+      { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-inv-date}
+          v-doc-date
+          p-type
+          no-error
+      }
+      { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-prikaz-number}
+          v-prikaz-num
+          p-type
+          no-error
+      }
+      { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-prikaz-date}
+          v-prikaz-date
+          p-type
+          no-error
+      }            
+    
+    v-prikaz-date = replace(v-prikaz-date,".","") .
+    v-doc-date = replace(v-doc-date,".","") .
+    
     if rep-tipe begins "invent"
     and p-grp = "no"
     then do:
-        run inv3xl-write-cell-data in this-procedure ( input {&inv3xl-h_BuhSum} , input v-buh-sum-str ).
+/*        run inv3xl-write-cell-data in this-procedure ( input {&inv3xl-h_BuhSum} , input v-buh-sum-str ).*/
         run inv3xl-write-cell-data in this-procedure (
             input {&inv3xl-h_organization}
             , input v-organization
+        ).
+       run inv3xl-write-cell-data in this-procedure (
+            input {&km7xl-h_OKPO}
+            , input t-okpo  
         ).
         run inv3xl-write-cell-data in this-procedure (
             input {&inv3xl-h_object}
@@ -950,29 +988,29 @@ on error undo, return error return-value  :
             input {&inv3xl-h_docDate}
             , input string( tdoc-date, "99/99/9999")
         ).
-        if lookup( 'L-Rus' , v-sys-key) = 0
-        then do:
+          run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-h_tbl_prikaz_num}
+              , input string(v-prikaz-num)
+          ).
+          run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-h_tbl_prikaz_date}
+              , input string( v-prikaz-date, "99/99/9999")
+          ).
           run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-h_tbl_startDate}
-              , input string( buf_trn-doc.doc-date, "99/99/9999")
+              , input string( if v-doc-date <> "" then string(v-doc-date, "99/99/9999") else string(buf_trn-doc.doc-date, "99/99/9999"))
           ).
-        end.
         run inv3xl-write-cell-data in this-procedure (
             input {&inv3xl-h_tbl_endDate}
-            , input ( if buf_trn-doc.status_ <> {&fact} then string( tdoc-date, "99/99/9999") else "":U )
+            , input ( if buf_trn-doc.status_ = {&fact} then string( tdoc-date, "99/99/9999") else "":U )
         ).
     end.
 
-    if lookup( 'L-Rus' , v-sys-key) > 0
+
+    if v-doc-date = ""
     then do:
       assign
-        v-doc-date = ""
-        v-frame-str = "в расход. Остаток товара на начало инвентаризации составляет сумму: " + v-str
-      .
-    end.
-    else do:
-      assign
-        v-doc-date = string(buf_trn-doc.doc-date,"99/99/9999")
+        v-doc-date = string(buf_trn-doc.doc-date,"99999999")
         v-frame-str = "в расход."
       .
     end.
@@ -990,12 +1028,11 @@ on error undo, return error return-value  :
         space(5) v-object format "X(160)" "| " AT 180  "|" AT 198 skip
         space(5) "Вид деятельности по ОКДП" format "X(25)" AT 155 "| " AT 180 "|" AT 198 skip
         space(5) string( "Основание для проведения инвентаризации:                 приказ, постановление, распоряжение " ) format "X(160)"
-                       "номер" format "X(5)" AT 174 "| " AT 180 "|" AT 198 skip
+                       "номер" format "X(5)" AT 174 "| " AT 180 v-prikaz-num "|" AT 198 skip
         space(5) string( "ненужное зачеркнуть " ) format "X(20)" AT 67
-                       "дата" format "X(4)" AT 175 "| " AT 180 "|" AT 198 skip
-        space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 v-doc-date format "X(10)" "|" AT 198 skip
-        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180
-                       (if buf_trn-doc.status_ <> {&fact} then tdoc-date else ?) format "99/99/9999" "|" AT 198 skip
+                       "дата" format "X(4)" AT 175 "| " AT 180 v-prikaz-date format "99/99/9999" "|" AT 198 skip
+        space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 v-doc-date format "99/99/9999" "|" AT 198 skip
+        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180  tdoc-date format "99/99/9999" "|" AT 198 skip
         space(5) "Вид операции" format "X(12)" AT 167 "| " AT 180 " инвентаризация" format "X(16)" "|" AT 198 skip
         space(5) Line format  "X(19)" AT 180 skip(2)
         space(79) Line format "X(33)" skip
@@ -1035,7 +1072,7 @@ on error undo, return error return-value  :
         space(5) v-object format "X(160)" "| " AT 180  "|" AT 198 skip
         space(5) "Вид деятельности по ОКДП" format "X(25)" AT 155 "| " AT 180 "|" AT 198 skip
         space(5) string( "Основание для проведения инвентаризации:                 приказ, постановление, распоряжение " ) format "X(160)"
-                       "номер" format "X(5)" AT 174 "| " AT 180 "|" AT 198 skip
+                       "номер" format "X(5)" AT 174 "| " AT 180 v-prikaz-num "|" AT 198 skip
         space(5) string( "ненужное зачеркнуть " ) format "X(20)" AT 67
                        "дата" format "X(4)" AT 175 "| " AT 180 "|" AT 198 skip
         space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 buf_trn-doc.doc-date format "99/99/9999" "|" AT 198 skip
@@ -1074,6 +1111,111 @@ procedure PrintPodval :
     if PropisCount = '' Then PropisCount = 'Ноль'.
 
     if rep-tipe begins "invent"  THEN DO:
+      define variable v-pos-agent as character no-undo .
+      define variable v-fio-agent as character no-undo .
+      define variable v-pos-player1 as character no-undo .
+      define variable v-fio-player1 as character no-undo .
+      define variable v-pos-player2 as character no-undo .
+      define variable v-fio-player2 as character no-undo .
+      define variable v-pos-player3 as character no-undo .
+      define variable v-fio-player3 as character no-undo .
+
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-agent}
+          v-fio-agent
+          p-type
+          
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-agent}
+          v-pos-agent
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player1}
+          v-fio-player1
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player1}
+          v-pos-player1
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player2}
+          v-fio-player2
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player2}
+          v-pos-player2
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player3}
+          v-fio-player3
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player3}
+          v-pos-player3
+          p-type
+          no-error
+      }      
+      
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_agent}
+        , input v-fio-agent
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_agent}
+        , input v-pos-agent
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player1}
+        , input v-fio-player1
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player1}
+        , input v-pos-player1
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player2}
+        , input v-fio-player2
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player2}
+        , input v-pos-player2
+        ).      
+        
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player3}
+        , input v-fio-player3
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player3}
+        , input v-pos-player3
+        ).              
       PAGE stream Out-Stream.
       HIDE stream Out-Stream FRAME BottomFrame .
       HIDE stream Out-Stream FRAME BottomFrame2 .
@@ -1094,18 +1236,18 @@ procedure PrintPodval :
               input {&inv3xl-f_itQntyFactStr}
             , input PropisQnty
         ).
-        run inv3xl-write-cell-data in this-procedure (
-              input {&inv3xl-f_itSumFactStr}
-            , input PropisSumall
-        ).
+/*        run inv3xl-write-cell-data in this-procedure (*/
+/*              input {&inv3xl-f_itSumFactStr}          */
+/*            , input PropisSumall                      */
+/*        ).                                            */
         run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-it_qntyFact}
             , input string( sum1-a-qnty )
         ).
-        run inv3xl-write-cell-data in this-procedure (
-              input {&inv3xl-it_sumFact}
-            , input string( sum1-a-stoim )
-        ).
+/*        run inv3xl-write-cell-data in this-procedure (*/
+/*              input {&inv3xl-it_sumFact}              */
+/*            , input string( sum1-a-stoim )            */
+/*        ).                                            */
         run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-it_qntyBuh}
             , input string( sum1-b-qnty )
@@ -1114,33 +1256,83 @@ procedure PrintPodval :
               input {&inv3xl-it_sumBuh}
             , input string( sum1-b-stoim )
         ).
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_agent}
+            , input string( v-pos-agent )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_agent}
+            , input string( v-fio-agent )
+        ).   
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player1}
+            , input string( v-pos-player1 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player1}
+            , input string( v-fio-player1 )
+        ).                      
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player2}
+            , input string( v-pos-player2 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player2}
+            , input string( v-fio-player2 )
+        ).  
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player3}
+            , input string( v-pos-player3 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player3}
+            , input string( v-fio-player3 )
+        ).          
     end.
+            
       PUT  STREAM Out-Stream
               "Итого по описи :" Skip
                 "а) количество порядковых номеров: " + string( num-ln ) + " (" + PropisCount + ")"  format "x(179)"                         at 18 SKIP
                 "б) общее количество единиц фактически: " + string( sum1-a-qnty ) + " (" + PropisQnty + ")"  format "x(179)"  at 18 SKIP
-                "в) на сумму фактически : " + trim(string((sum1-a-stoim ), "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr +
-                              " (" + PropisSumall + ")"  format "x(179)"                                                 at 18 SKIP(1)
               "   Все цены, подсчеты итогов по строкам, страницам и в целом по инвентаризационной описи товарно-материальных ценностей проверены." SKIP
-              "Председатель комиссии: " format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              " " format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              "Члены комиссии: " format "X(25)" AT 10 SKIP
+
+              "Председатель комиссии:: " format "X(25)" AT 10 SKIP
+              string(v-pos-agent) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-agent) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+                           
+              "Состав комиссии: " format "X(25)" AT 10 SKIP
+              string(v-pos-player1) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player1) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+              string(v-pos-player2) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player2) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № ___________ по № _________" SKIP
-              "комиссией проверены в натуре в моем (нашем) личном присутствии  и внесены в опись, в связи с чем претензий к инвентаризационной " SKIP
-              "комиссии не имею (не имеем). Товарно-материальные ценности, перечисленные в описи, находятся на моем (нашем) ответственном хранении." SKIP(1)
+              string(v-pos-player3) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player3) format "X(50)" AT 70 SKIP
+              LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
+              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 skip .
+
+      if PgNPP = 0 then 
+      do:
+        PUT  STREAM Out-Stream
+          "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № 0 по № " + string(PgNPP) format "x(179)" skip.
+      end.
+      else 
+      do:
+        PUT  STREAM Out-Stream
+          "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № 1 по № " + string(PgNPP) format "x(179)" skip.
+      end. 
+       PUT  STREAM Out-Stream
+                 "комиссией проверены в натуре в моем (нашем) личном присутствии  и внесены в опись, в связи с чем претензий к инвентаризационной " SKIP
+          "комиссии не имею (не имеем). Товарно-материальные ценности, перечисленные в описи, находятся на моем (нашем) ответственном хранении." SKIP(1)
               "   Лицо(а), ответственное(ые) за сохранность товарно-материальных ценностей : " SKIP(1)
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP(1)
+              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+
               "<<       >> _________________        г. "   SKIP(1)
               "Указанные в настоящей описи данные и расчеты проверил"
                   LineBuf format "X(25)" AT 10 LineBuf format "X(25)"   AT 40 LineBuf format "X(50)"               AT 70 SKIP

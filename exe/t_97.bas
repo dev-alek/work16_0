@@ -27,7 +27,8 @@ Dim g_sSubtotalPropisList As String
 Dim g_iSubtotalPropisAmount As Integer
 
 Dim g_dCurrentPageDataHeight  As Double
-
+Dim jj as integer 
+Dim ii as integer 
 
 Sub startFormFromTemplate( _
       sHeaderFileName As String _
@@ -189,7 +190,7 @@ On Error GoTo errStartFromTemplate
                 NewSheet.PageSetup.PrintGridlines = .PrintGridlines
                 NewSheet.PageSetup.PrintComments = .PrintComments
                 NewSheet.PageSetup.PaperSize = .PaperSize
-'                NewSheet.PageSetup.PrintQuality = .PrintQuality
+                NewSheet.PageSetup.PrintQuality = .PrintQuality
             End With
             If iSheetNumber = 1 Then
                 Call clearGlobalVariables
@@ -396,7 +397,7 @@ Dim sPrefix As String
 Dim dMaxDataHeight As Double
 
 Dim nmName As Name
-
+ii = 0
 On Error GoTo ErrorHandler
 
     Call printPageHeader( _
@@ -463,8 +464,16 @@ With ActiveWorkbook.Worksheets("Template")
                     sPrefix = "d_"
                 End If
             End If
+
             For iCounter = 1 To g_iColumnAmount
                 sValue = CStr(.Range("tempRow").Cells(1, iCounter + 1).Value)
+                    if iCounter = 1 Then
+                    if jj <> Range("tempRow").Cells(1, iCounter + 1).Value Then
+                    ii = ii + 1
+                    jj = Range("tempRow").Cells(1, iCounter + 1).Value
+                    End If
+                    End If
+
                 If sValue = "" Then
                     .Range(sPrefix & Format(.Range("columnList").Cells(1, iCounter))).Value = ""
                 Else
@@ -608,6 +617,7 @@ On Error GoTo errPrintPageSubTotal
             End If
             If .Range("subtotalPropisMark").Cells(1, iCounter).Value = "X" Then
                 sLabel = "itp_s_" & Format(.Range("columnList").Cells(1, iCounter))
+
                 Call CheckLabel( _
                       ByVal sLabel _
                     , bLabelExists _
@@ -615,7 +625,7 @@ On Error GoTo errPrintPageSubTotal
                 If bLabelExists = True Then
                     Select Case .Range("columnType").Cells(1, iCounter).Value
                         Case "I"
-                            .Range(sLabel).Value = IntegerToWords(CLng(.Range("tempSubTotals").Cells(1, iCounter).Value), True)
+                            .Range(sLabel).Value = IntegerToWords(CLng(ii), True)
                         Case "D"
                             .Range(sLabel).Value = DecimalToWords(CDbl(.Range("tempSubTotals").Cells(1, iCounter).Value))
                         Case "C"

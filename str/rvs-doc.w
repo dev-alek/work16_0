@@ -1585,6 +1585,7 @@ procedure mode-on :
                 no
                 varcur-data
                 yes
+                no
                 tt-meas-file
                 tt-meas
                 no-error
@@ -2450,6 +2451,7 @@ procedure proc_m-meas-4 :
             tt-pump-nozzle
             varcur-pump
             yes
+            no
             no-error
           }
           if error-status :error then 
@@ -2790,6 +2792,7 @@ procedure proc_m-meas-3 :
          yes
          varcur-rvs
          yes
+         no
          tt-meas-file
          tt-meas
          no-error
@@ -3346,6 +3349,7 @@ procedure proc_m-meas-1:
           no
           varcur-rvs
           yes
+          no
           tt-meas-file
           tt-meas
           no-error

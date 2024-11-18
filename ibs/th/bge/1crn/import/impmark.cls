@@ -56,6 +56,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define buffer buf_goods      for ub.goods .
     define buffer marking for marking.
     define buffer marking-attr for ub.marking-attr .
+    define buffer parentMarking for marking.
 
 
     objImp = cast (subjectObj, {&impclass}).
@@ -87,6 +88,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    if not available marking
    then do:
       create marking.
+      marking.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts).
    end.
    else 
      
@@ -119,12 +121,21 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       marking.gds-ext-id   = objImp:GTIN
       marking.mark-parent  = repTegforDm(objImp:mark-parent) when objImp:mark-parent ne ? 
       marking.box-qnty     = objImp:qnty-box
-      marking.sts          = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
       marking.unit-ext     = objImp:unit-ext
    .
    if marking.gds-code eq 0
    then 
       marking.gds-code = ?.
+   if marking.mark-parent <> "" and
+      can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(marking.sts)) then
+   do:   /* если марка продана или возвращена, то разгруппируем упаковку */
+     for first parentMarking where
+               parentMarking.mark = marking.mark-parent
+         exclusive-lock:
+       parentMarking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+     end.
+   end.
+
    if marking.sts eq ? then
       undo, throw new Progress.Lang.AppError(substitute("Ќе известный статус марки &1",objImp:stts)) .
    

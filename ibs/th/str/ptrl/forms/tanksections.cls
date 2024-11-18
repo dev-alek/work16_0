@@ -463,7 +463,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
      
     tabThis = tabControl:TabPages[tabControl:SelectedIndex].
     int (tabThis:Name) no-error.
-    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes, yes) 
+    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes, yes, no) 
     then do:
       tankSectionControl[integer (tabThis:Name)]:SetForcus ().
       tbcontrol = cast(sender, tabControl).
@@ -522,6 +522,36 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
               end.
             end .
           end .
+          
+          numsecs = "" .
+          do ii = 1 to infoSecsObj:SectionNum:
+            if infoSecsObj:GetInfoSectionProp(ii):KPnoMeas
+            then do :
+              numsecs = numsecs + infoSecsObj:GetInfoSectionProp(ii):SectionName + {&new-line} .
+            end .
+          end.
+          if numsecs > ""
+          then do :
+            message "Для секций " skip
+                    numsecs
+                    "установлены флаги «Переход к комиссионному приему НП без замеров секции АЦ». По обозначенным  секциям будет активирован  комиссионный прием. Продолжить?"
+            view-as alert-box question buttons yes-no update vlog .
+            if not vlog
+            then do :
+              e:Cancel = yes .
+              vClickSave = no .
+              infoSecsObj:WasSetting = no .
+            end .
+            else do :
+              do ii = 1 to infoSecsObj:SectionNum:
+                if infoSecsObj:GetInfoSectionProp(ii):KPnoMeas
+                then do :
+                  infoSecsObj:GetInfoSectionProp(ii):IsKP = yes .
+                end .
+              end.
+            end .
+          end .
+          
           if infoSecsObj:Mode = "ИЗМЕНЕНИЕ" then infoSecsObj:SaveDB() .
 		    end . /* if not infoSecsObj:FlagTrn (в накл-) */
 		  end .
@@ -592,8 +622,11 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
 /*    end.                                                                                                                                          */
     
     do ii = 1 to infoSecsObj:SectionNum:
-      if not tankSectionControl[ii]:CheckSec(yes, if infoSecsObj:FlagTrn then no else yes)
-        then return.
+      if not tankSectionControl[ii]:CheckSec(yes, if infoSecsObj:FlagTrn then no else yes, yes)
+      then do :
+        tabControl:SelectTab(ii - 1) .
+        return.
+      end .
     end.
     
     do ii = 1 to infoSecsObj:SectionNum:
@@ -626,7 +659,14 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     end.
     
     tabsel = tabControl:SelectedTab.
-    v-idSel = integer (tabsel:Name).
+    
+    if tabsel:Name = "tabPageSum"
+    then do :
+      v-idSel = infoSecsObj:SectionNum .
+    end .
+    else do :
+      v-idSel = integer (tabsel:Name).
+    end .
     
 /*    this-object:tabControl:Controls:Remove(tabPageSum).*/
 

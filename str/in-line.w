@@ -317,7 +317,14 @@ define variable v-lgas-gds                  as logical                       no-
 define variable v-tth             as handle    no-undo.
 define variable v-Param-Type      as character no-undo.
 define variable list-pl           as character no-undo.
-/*define variable isKPrvsSet        as logical   no-undo init no .*/
+
+define variable infoSecObj        as class ibs.th.str.InfoSection no-undo .
+define variable l-ok as logical   no-undo .
+define variable ii as integer no-undo .
+define variable disable-rvs as logical no-undo init no .
+define variable isKPrvs as logical no-undo .
+define variable v-KPrvs-secs      as character no-undo .
+define variable v-KPrvs-doc-pl    as logical   no-undo .
 
 define rectangle rect-tot  edge-pixels 2 graphic-edge size 99 by 1.5 bgcolor 8 dcolor 5.
 define rectangle rect-tax1 edge-pixels 2 graphic-edge size 40 by 2.9 bgcolor 8 dcolor 5.
@@ -1528,6 +1535,12 @@ do:
   define variable v-new-density          like ub.doc-line.fact-density no-undo .
   define variable v-new-cli-fact-qnty    like ub.doc-line.fact-qnty    no-undo .
   define variable ii as integer no-undo .
+  define variable choice as integer no-undo .
+  define variable v-kpsecs as character no-undo .
+  define variable v-kpsecs-nomeas as character no-undo .
+  
+  define variable vAccMethChoosed as logical no-undo .
+  define variable v-need-measure as logical no-undo init no .
 
   assign
     v-new-fact-qnty     = tt-fr-doc-line.fact-qnty
@@ -1538,86 +1551,116 @@ do:
   infoSectionsTotal:DocDensLine = tt-fr-doc-line.doc-density.
   infoSectionsTotal:DocCliLine = tt-fr-doc-line.cli-qnty.
   infoSectionsTotal:FlagTrn = t-doc.flag_.
-  /*
-  if infoSectionsTotal:IsKPrvs
-  and b-rvs-af:sensitive
-  and b-rvs-bf:sensitive
+  
+  if infoSectionsTotal:IsKP
   and parline-mode <> {&lookup}
   then do :
-    find first bf_rvs-doc no-lock where bf_rvs-doc.rvs-type = {&rvs-before-doc}
-                                    and bf_rvs-doc.out-code = t-doc.doc-code
-                                    and num-entries(bf_rvs-doc.rvs-code, "-") = 2
-                                    no-error .
-    if not available bf_rvs-doc
-    then do :
-      message "Включен комиссионный приём 'По сверкам'. Не найден документ сверки ДО!"
-      view-as alert-box error .
-      return no-apply .
-    end .
-    find first bf_rvs-line no-lock where bf_rvs-line.rvs-code   = bf_rvs-doc.rvs-code
-                                     and bf_rvs-line.obj-type   = bf_rvs-doc.obj-type
-                                     and bf_rvs-line.obj-code   = bf_rvs-doc.obj-code
-                                     and bf_rvs-line.gds-code   = buf_goods.gds-code
-                                     and bf_rvs-line.state-measure-cli-qnty = ?
-                                     no-error .
-    if available bf_rvs-line
-    then do :
-      for first bf_place no-lock where bf_place.obj-type = bf_rvs-line.obj-type
-                                   and bf_place.obj-code = bf_rvs-line.obj-code
-                                   and bf_place.pl-code  = bf_rvs-line.pl-code
-      :
-        do ii = 1 to infoSectionsTotal:SectionNum : 
-          if infoSectionsTotal:GetInfoSectionProp(ii):ListTank = bf_place.loc1
-          then do :
-            if infoSectionsTotal:GetInfoSectionProp(ii):AccMeth = 1
-            then do :
-              message "Включен комиссионный приём 'По сверкам'. Не заполнена сверка ДО!" skip
-                      "Внесите данные по сверкам и повторите."
-              view-as alert-box .
-              return no-apply .
-            end .
-          end .
+    vAccMethChoosed = yes .
+    do ii = 1 to infoSectionsTotal:SectionNum : 
+      infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+      if infoSecObj:IsKP
+      then do :
+        if infoSecObj:AccMeth = ?
+        then do :
+          vAccMethChoosed = no .
+        end .
+        assign v-kpsecs = v-kpsecs + infoSecObj:SectionName + " с " + buf_goods.gds-name + ", " .
+      end .
+      if infoSecObj:KPnoMeas
+      then do :
+        assign v-kpsecs-nomeas = v-kpsecs-nomeas + infoSecObj:SectionName + " с " + buf_goods.gds-name + ", " .
+      end .
+      if infoSectionsTotal:IsSGDKK
+      then do :
+        v-need-measure = no .
+      end .
+      else do :
+        if not infoSecObj:KPnoMeas
+        and (not (infoSecObj:TankWeight > 0)
+        or infoSecObj:TankWeight = ?
+        or infoSecObj:TankDensity = ?)
+        then do :
+          v-need-measure = yes .
         end .
       end .
     end .
-    find first bf_rvs-doc no-lock where bf_rvs-doc.rvs-type = {&rvs-after-doc}
-                                    and bf_rvs-doc.out-code = t-doc.doc-code
-                                    and num-entries(bf_rvs-doc.rvs-code, "-") = 2
-                                    no-error .
-    if not available bf_rvs-doc
+    assign
+      v-kpsecs = trim(v-kpsecs, ", ")
+      v-kpsecs-nomeas = trim(v-kpsecs-nomeas, ", ")
+    .
+    if not vAccMethChoosed
+    and infoSectionsTotal:IsActnComm
     then do :
-      message "Включен комиссионный приём 'По сверкам'. Не найден документ сверки ПОСЛЕ!"
-      view-as alert-box error .
-      return no-apply .
-    end .
-    find first bf_rvs-line no-lock where bf_rvs-line.rvs-code   = bf_rvs-doc.rvs-code
-                                     and bf_rvs-line.obj-type   = bf_rvs-doc.obj-type
-                                     and bf_rvs-line.obj-code   = bf_rvs-doc.obj-code
-                                     and bf_rvs-line.gds-code   = buf_goods.gds-code
-                                     and bf_rvs-line.state-measure-cli-qnty = ?
-                                     no-error .
-    if available bf_rvs-line
-    then do :
-      for first bf_place no-lock where bf_place.obj-type = bf_rvs-line.obj-type
-                                   and bf_place.obj-code = bf_rvs-line.obj-code
-                                   and bf_place.pl-code  = bf_rvs-line.pl-code
-      :
-        do ii = 1 to infoSectionsTotal:SectionNum : 
-          if infoSectionsTotal:GetInfoSectionProp(ii):ListTank = bf_place.loc1
+      if v-kpsecs > ""
+      then do :
+        run gbl/d-askw.w (
+           input "Выбор способа выполнения комиссионного приёма"
+          ,input ("Для секций " + v-kpsecs + " требуется комиссионный прием. Каким способом будет выполняться комиссионный прием?")
+          ,input "|^"
+          ,input "Замеры в АЦ" + (if v-kpsecs-nomeas > "" then "^disable" else "") + "|По сверкам|Отмена"
+          ,input "Выполнение комиссионного приёма стандартным способом по замерам в автоцистерне|Выполнение комиссионного приёма по данным сверок в резервуаре|Отказ от выбора способа"
+          ,input 1
+          ,input 3
+          ,output choice).
+        case choice :
+          when 1
           then do :
-            if infoSectionsTotal:GetInfoSectionProp(ii):AccMeth = 1
-            then do :
-              message "Включен комиссионный приём 'По сверкам'. Не заполнена сверка ДО!" skip
-                      "Внесите данные по сверкам и повторите."
-              view-as alert-box .
-              return no-apply .
+/*            if v-kpsecs-nomeas > ""                                                                                                                                                                 */
+/*            then do :                                                                                                                                                                               */
+/*              message "Для секций " + v-kpsecs-nomeas + " установлен флаг «Переход к комиссионному приему НП без замеров секции АЦ». Невозможно провести замеры в АЦ. Выберите способ «По сверкам»!"*/
+/*              view-as alert-box .                                                                                                                                                                   */
+/*              return no-apply .                                                                                                                                                                     */
+/*            end .                                                                                                                                                                                   */
+            kpsecs_ :
+            do ii = 1 to infoSectionsTotal:SectionNum :
+              infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+              if infoSecObj:isKP
+              then do :
+                infoSecObj:AccMeth = 0 .
+              end .
             end .
           end .
-        end .
+          when 2
+          then do :
+            kpsecs_ :
+            do ii = 1 to infoSectionsTotal:SectionNum :
+              infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+              if infoSecObj:isKP
+              then do :
+                infoSecObj:AccMeth = 1 .
+                infoSectionsTotal:IsKPrvs = yes .
+              end .
+            end .
+          end .
+          when 3
+          then do :
+            return no-apply .
+          end .
+        end case .
+      end .
+      infoSectionsTotal:SaveDB() .
+      
+      find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = t-doc.doc-code no-error.
+      if not available buf_rvs-doc
+      and not v-need-measure
+      then do :
+        run cr-rvs-doc in this-procedure:instantiating-procedure
+          ( input parparentproc
+           ,input t-doc.doc-code
+          ) no-error .
+        if error-status :error then do:
+          message
+            vss-workfile vss-revision vss-description skip
+            substitute("Ошибка при создании документов сверок.") skip
+            error-status :get-message(1) skip
+            return-value skip
+            view-as alert-box error .
+        end.
       end .
     end .
   end .
-  */
+  
+  
   run proc-b-addinfo in this-procedure
     ( input        parparentproc
      ,input        ( if parline-mode <> {&lookup} then {&update} else {&lookup} )
@@ -1656,7 +1699,8 @@ do:
       ) no-error .
 /*    if infoSectionsTotal:IsKPrvs then isKPrvsSet = yes .*/
   end.
-  
+  run display-b-rvs in this-procedure
+    no-error .
   run display-measure in this-procedure
     no-error .
 
@@ -3158,6 +3202,7 @@ do:
     define variable v-calc-density as decimal no-undo .
     define variable v-log as logical no-undo .
     define variable v-need-save as logical no-undo .
+    define buffer bf_rvs-doc for ub.rvs-doc .
     
     define variable infoSectionObj as class InfoSection no-undo.
     
@@ -3173,8 +3218,10 @@ do:
       do ii = 1 to infoSectionsTotal:SectionNum :
         infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii) .
         
-        if infoSectionObj:TankWeightRvs = ?
-        or infoSectionObj:TankWeightRvs <= 0
+        find first bf_rvs-doc no-lock where bf_rvs-doc.out-code = infoSectionsTotal:TrnDocNum no-error .
+        
+        if (infoSectionObj:TankWeightRvs = ? or infoSectionObj:TankWeightRvs <= 0)
+        and available bf_rvs-doc
         then do :
           run calc-pomi-rvs (input ii,
                              input t-doc.doc-code,
@@ -3283,6 +3330,7 @@ do:
         end .
         else do :
           if length(trim(infoSectionsTotal:GetInfoSectionProp(ii):AukKey)) < 4
+          and infoSectionsTotal:IsActnComm
           then do :
             message substitute( "Некорректная длина идентификатора доступа (ключа) верхнего уровня или одноразового кода для разблокировки API-адаптера. Проверьте введенное в секции &1 значение и скорректируйте." , infoSectionsTotal:GetInfoSectionProp(ii):SectionName)
             view-as alert-box .
@@ -3353,6 +3401,7 @@ do:
     
   end.
   
+  delete object infoSecObj no-error .
   delete object infoSectionsTotal no-error.
   tanksForm:Dispose() no-error .
   delete object tanksForm no-error.
@@ -4315,13 +4364,6 @@ if varrvs-place = yes then do:
       infoSectionsTotal:NewSection().
     end.
     
-    define variable l-ok as logical   no-undo .
-    define variable ii as integer no-undo .
-    define variable disable-rvs as logical no-undo init no .
-    define variable isKPrvs as logical no-undo .
-    define variable v-KPrvs-secs      as character no-undo .
-    define variable v-KPrvs-doc-pl    as logical   no-undo .
-
     if not (v-is-lgas or v-is-lgas-corr)  
     then do:  
         { gbl/chk-actg.i
@@ -4438,52 +4480,8 @@ if varrvs-place = yes then do:
       hide
         b-docsec
         in frame {&frame-name}.
-      if lookup(v-ptrl-without-rvs, 'true,yes':u) = 0 and not v-is-lgas-corr then do:
-        enable
-          b-rvs-bf
-          b-rvs-af
-          with frame {&frame-name}.
-        if infoSectionsTotal:IsKPrvs
-        then do :
-          
-          for each tt-doc-pl,
-            first bf_place no-lock where bf_place.pl-code = tt-doc-pl.pl-code
-          :
-            v-KPrvs-secs = "" .
-            v-KPrvs-doc-pl = no .
-            disable-rvs = no .
-            do ii = 1 to infoSectionsTotal:SectionNum : 
-              if infoSectionsTotal:GetInfoSectionProp(ii):ListTank = bf_place.loc1
-              then do :
-                if infoSectionsTotal:GetInfoSectionProp(ii):AccMeth = 1
-                then do :
-                  v-KPrvs-doc-pl = yes .
-                end .
-                v-KPrvs-secs = v-KPrvs-secs + "," + infoSectionsTotal:GetInfoSectionProp(ii):SectionName .
-              end .
-            end .
-            v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
-            if not v-KPrvs-doc-pl
-            then do :
-              disable-rvs = no .
-              leave .
-            end .
-            if v-KPrvs-doc-pl
-            and num-entries(v-KPrvs-secs) > 1
-            then do :
-              disable-rvs = yes .
-            end .
-            
-          end .
-          if disable-rvs
-          then do :
-            disable
-              b-rvs-bf
-              b-rvs-af
-            with frame {&frame-name}.
-          end .
-        end .
-      end.
+      run display-b-rvs in this-procedure
+        no-error .
       enable
         b-addinf
         with frame {&frame-name}.
@@ -7192,6 +7190,55 @@ procedure check-place-rsrv :
   end. /* on error */
 end procedure. /* check-place-rsrv */
 
+procedure display-b-rvs :
+  if lookup(v-ptrl-without-rvs, 'true,yes':u) = 0 and not v-is-lgas-corr then do:
+    enable
+      b-rvs-bf
+      b-rvs-af
+      with frame {&frame-name}.
+    if infoSectionsTotal:IsKP
+    then do :
+      
+      for each tt-doc-pl,
+        first bf_place no-lock where bf_place.pl-code = tt-doc-pl.pl-code
+      :
+        v-KPrvs-secs = "" .
+        v-KPrvs-doc-pl = no .
+        disable-rvs = no .
+        do ii = 1 to infoSectionsTotal:SectionNum : 
+          if infoSectionsTotal:GetInfoSectionProp(ii):ListTank = bf_place.loc1
+          then do :
+            if infoSectionsTotal:GetInfoSectionProp(ii):IsKP
+            then do :
+              v-KPrvs-doc-pl = yes .
+            end .
+            v-KPrvs-secs = v-KPrvs-secs + "," + infoSectionsTotal:GetInfoSectionProp(ii):SectionName .
+          end .
+        end .
+        v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
+        if not v-KPrvs-doc-pl
+        then do :
+          disable-rvs = no .
+          leave .
+        end .
+        if v-KPrvs-doc-pl
+        and num-entries(v-KPrvs-secs) >= 1
+        then do :
+          disable-rvs = yes .
+        end .
+        
+      end .
+      if disable-rvs
+      then do :
+        disable
+          b-rvs-bf
+          b-rvs-af
+        with frame {&frame-name}.
+      end .
+    end .
+  end.
+end procedure .
+
 procedure display-measure :
 
   do
@@ -7202,11 +7249,15 @@ procedure display-measure :
     define buffer aft_rvs-doc  for ub.rvs-doc  .
     define buffer bef_rvs-line for ub.rvs-line .
     define buffer aft_rvs-line for ub.rvs-line .
+    define buffer bef2_rvs-line for ub.rvs-line .
+    define buffer aft2_rvs-line for ub.rvs-line .
     define buffer buf_rvs-line-pump for ub.rvs-line-pump .
+    define buffer bf2_place    for ub.place .
     
     define variable v-old-qnty as decimal no-undo .
     define variable v-old-cli-qnty as decimal no-undo .
     define variable v-trk-err as logical no-undo .
+    define variable jj as integer no-undo .
     
     assign
       v-old-qnty = tt-fr-doc-line.state-measure-qnty
@@ -7223,7 +7274,7 @@ procedure display-measure :
     
     empty temp-table tt-rvs-line-pump-delta .
     
-    if infoSectionsTotal:IsKPrvs
+    if infoSectionsTotal:IsKP
     then do :
       block-clc-rvs:
       for each tt-doc-pl
@@ -7266,7 +7317,62 @@ procedure display-measure :
               end .
             end. /* for each bf_rvs-line-pump */
           end .
-        end .
+          
+          find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
+                                             and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
+                                             and bf_place-attr.pl-code   = tt-doc-pl.pl-code
+                                             and bf_place-attr.attr-code = "place-com-tanks"
+                                             no-error .
+          if available bf_place-attr
+          and trim(bf_place-attr.attr-value) > ""
+          then do : /* place-com-tanks */
+            do jj = 1 to num-entries(bf_place-attr.attr-value) :
+              find first bf2_place no-lock where bf2_place.obj-type = tt-doc-pl.obj-type
+                                             and bf2_place.obj-code = tt-doc-pl.obj-code
+                                             and bf2_place.loc1     = entry(jj, bf_place-attr.attr-value)
+                                             and bf2_place.status_  = ""
+                                             no-error .
+              if available bf2_place
+              then do :
+                find first bef2_rvs-line no-lock
+                  where bef2_rvs-line.rvs-code = bef_rvs-doc.rvs-code
+                    and bef2_rvs-line.obj-type = bef_rvs-doc.obj-type
+                    and bef2_rvs-line.obj-code = bef_rvs-doc.obj-code
+                    and bef2_rvs-line.pl-code  = bf2_place.pl-code
+                    and bef2_rvs-line.gds-code = tt-doc-pl.gds-code
+                  no-error .
+                if available bef2_rvs-line
+                then do:
+                  assign
+                    tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     - bef2_rvs-line.state-measure-qnty
+                    tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           - bef2_rvs-line.measure-qnty
+                    tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty - bef2_rvs-line.state-measure-cli-qnty
+                    tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       - bef2_rvs-line.measure-cli-qnty
+                  .
+                  for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = bef2_rvs-line.rvs-code
+                                                       and buf_rvs-line-pump.obj-type = bef2_rvs-line.obj-type
+                                                       and buf_rvs-line-pump.obj-code = bef2_rvs-line.obj-code
+                                                       and buf_rvs-line-pump.pl-code  = bef2_rvs-line.pl-code
+                                                       and buf_rvs-line-pump.gds-code = bef2_rvs-line.gds-code
+                  :
+                    create tt-rvs-line-pump-delta .
+                    buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                    assign
+                      tt-rvs-line-pump-delta.rvs-code = "before-doc"
+                      tt-rvs-line-pump-delta.density = (bef_rvs-line.state-density / 2)
+                    .
+                    if tt-rvs-line-pump-delta.state-el-cnt = ?
+                    or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                    then do :
+                      tt-rvs-line-pump-delta.is-err = yes .
+                    end .
+                  end. /* for each bf_rvs-line-pump */
+                end .
+              end .
+            end .
+          end . /* place-com-tanks */
+        end . /* for each bef_rvs-doc no-lock */
+        
         for each aft_rvs-doc no-lock
           where aft_rvs-doc.out-code  = t-doc.doc-code
             and aft_rvs-doc.rvs-type  = {&rvs-after-doc}
@@ -7321,7 +7427,80 @@ procedure display-measure :
               end .
             end . /* for each bf_rvs-line-pump */
           end .
-        end .
+          
+          find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
+                                             and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
+                                             and bf_place-attr.pl-code   = tt-doc-pl.pl-code
+                                             and bf_place-attr.attr-code = "place-com-tanks"
+                                             no-error .
+          if available bf_place-attr
+          and trim(bf_place-attr.attr-value) > ""
+          then do : /* place-com-tanks */
+            do jj = 1 to num-entries(bf_place-attr.attr-value) :
+              find first bf2_place no-lock where bf2_place.obj-type = tt-doc-pl.obj-type
+                                             and bf2_place.obj-code = tt-doc-pl.obj-code
+                                             and bf2_place.loc1     = entry(jj, bf_place-attr.attr-value)
+                                             and bf2_place.status_  = ""
+                                             no-error .
+              if available bf2_place
+              then do :
+                find first aft2_rvs-line no-lock
+                  where aft2_rvs-line.rvs-code = aft_rvs-doc.rvs-code
+                    and aft2_rvs-line.obj-type = aft_rvs-doc.obj-type
+                    and aft2_rvs-line.obj-code = aft_rvs-doc.obj-code
+                    and aft2_rvs-line.pl-code  = bf2_place.pl-code
+                    and aft2_rvs-line.gds-code = tt-doc-pl.gds-code
+                  no-error .
+                if available aft2_rvs-line
+                then do:
+                  assign
+                    tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     + aft2_rvs-line.state-measure-qnty    
+                    tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           + aft2_rvs-line.measure-qnty          
+                    tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty + aft2_rvs-line.state-measure-cli-qnty
+                    tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       + aft2_rvs-line.measure-cli-qnty      
+                  .
+                  
+                  for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = aft2_rvs-line.rvs-code
+                                                       and buf_rvs-line-pump.obj-type = aft2_rvs-line.obj-type
+                                                       and buf_rvs-line-pump.obj-code = aft2_rvs-line.obj-code
+                                                       and buf_rvs-line-pump.pl-code  = aft2_rvs-line.pl-code
+                                                       and buf_rvs-line-pump.gds-code = aft2_rvs-line.gds-code
+                  :
+                    find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+                                                        and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                        and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                        and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                        and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                        and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                        and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                        no-error .
+                    if not available tt-rvs-line-pump-delta
+                    then do :
+                      create tt-rvs-line-pump-delta .
+                      buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                      assign
+                        tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                        tt-rvs-line-pump-delta.is-err = yes
+                      .
+                    end .
+                    else do :
+                      tt-rvs-line-pump-delta.find-pair = yes .
+                      if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                      then do :
+                        tt-rvs-line-pump-delta.is-err = yes .
+                      end .
+                      else do :
+                        tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                        tt-rvs-line-pump-delta.density = tt-rvs-line-pump-delta.density + (aft_rvs-line.state-density / 2) .
+                      end .
+                    end .
+                  end . /* for each bf_rvs-line-pump */
+                end .
+              end .
+            end .
+          end . /* place-com-tanks */
+        end . /* for each aft_rvs-doc no-lock */
+        
         assign
           tt-fr-doc-line.state-measure-qnty     = ? when tt-fr-doc-line.state-measure-qnty <= 0
           tt-fr-doc-line.measure-qnty           = ? when tt-fr-doc-line.measure-qnty <= 0
@@ -7420,6 +7599,104 @@ procedure display-measure :
               end .
             end .
           end . /* for each bf_rvs-line-pump */
+          
+          find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
+                                             and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
+                                             and bf_place-attr.pl-code   = tt-doc-pl.pl-code
+                                             and bf_place-attr.attr-code = "place-com-tanks"
+                                             no-error .
+          if available bf_place-attr
+          and trim(bf_place-attr.attr-value) > ""
+          then do : /* place-com-tanks */
+            do jj = 1 to num-entries(bf_place-attr.attr-value) :
+              find first bf2_place no-lock where bf2_place.obj-type = tt-doc-pl.obj-type
+                                             and bf2_place.obj-code = tt-doc-pl.obj-code
+                                             and bf2_place.loc1     = entry(jj, bf_place-attr.attr-value)
+                                             and bf2_place.status_  = ""
+                                             no-error .
+              if available bf2_place
+              then do :
+                find first bef2_rvs-line no-lock
+                  where bef2_rvs-line.rvs-code = bef_rvs-doc.rvs-code
+                    and bef2_rvs-line.obj-type = bef_rvs-doc.obj-type
+                    and bef2_rvs-line.obj-code = bef_rvs-doc.obj-code
+                    and bef2_rvs-line.pl-code  = bf2_place.pl-code
+                    and bef2_rvs-line.gds-code = tt-doc-pl.gds-code
+                  no-error .
+                find first aft2_rvs-line no-lock
+                  where aft2_rvs-line.rvs-code = aft_rvs-doc.rvs-code
+                    and aft2_rvs-line.obj-type = aft_rvs-doc.obj-type
+                    and aft2_rvs-line.obj-code = aft_rvs-doc.obj-code
+                    and aft2_rvs-line.pl-code  = bf2_place.pl-code
+                    and aft2_rvs-line.gds-code = tt-doc-pl.gds-code
+                  no-error .
+                if available aft2_rvs-line
+                and available bef2_rvs-line
+                then do:
+                  assign
+                    tt-fr-doc-line.state-measure-qnty     = tt-fr-doc-line.state-measure-qnty     + aft2_rvs-line.state-measure-qnty      - bef2_rvs-line.state-measure-qnty
+                    tt-fr-doc-line.measure-qnty           = tt-fr-doc-line.measure-qnty           + aft2_rvs-line.measure-qnty            - bef2_rvs-line.measure-qnty
+                    tt-fr-doc-line.state-measure-cli-qnty = tt-fr-doc-line.state-measure-cli-qnty + aft2_rvs-line.state-measure-cli-qnty  - bef2_rvs-line.state-measure-cli-qnty
+                    tt-fr-doc-line.measure-cli-qnty       = tt-fr-doc-line.measure-cli-qnty       + aft2_rvs-line.measure-cli-qnty        - bef2_rvs-line.measure-cli-qnty
+                  .
+                  for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = bef2_rvs-line.rvs-code
+                                                       and buf_rvs-line-pump.obj-type = bef2_rvs-line.obj-type
+                                                       and buf_rvs-line-pump.obj-code = bef2_rvs-line.obj-code
+                                                       and buf_rvs-line-pump.pl-code  = bef2_rvs-line.pl-code
+                                                       and buf_rvs-line-pump.gds-code = bef2_rvs-line.gds-code
+                  :
+                    create tt-rvs-line-pump-delta .
+                    buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                    assign
+                      tt-rvs-line-pump-delta.rvs-code = "before-doc"
+                      tt-rvs-line-pump-delta.density = (bef_rvs-line.state-density / 2)
+                    .
+                    if tt-rvs-line-pump-delta.state-el-cnt = ?
+                    or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                    then do :
+                      tt-rvs-line-pump-delta.is-err = yes .
+                    end .
+                  end. /* for each bf_rvs-line-pump */
+                  
+                  for each buf_rvs-line-pump no-lock where buf_rvs-line-pump.rvs-code = aft2_rvs-line.rvs-code
+                                                       and buf_rvs-line-pump.obj-type = aft2_rvs-line.obj-type
+                                                       and buf_rvs-line-pump.obj-code = aft2_rvs-line.obj-code
+                                                       and buf_rvs-line-pump.pl-code  = aft2_rvs-line.pl-code
+                                                       and buf_rvs-line-pump.gds-code = aft2_rvs-line.gds-code
+                  :
+                    find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc"
+                                                        and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                        and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                        and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                        and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                        and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                        and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                        no-error .
+                    if not available tt-rvs-line-pump-delta
+                    then do :
+                      create tt-rvs-line-pump-delta .
+                      buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                      assign
+                        tt-rvs-line-pump-delta.rvs-code = "after-doc"
+                        tt-rvs-line-pump-delta.is-err = yes
+                      .
+                    end .
+                    else do :
+                      tt-rvs-line-pump-delta.find-pair = yes .
+                      if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                      then do :
+                        tt-rvs-line-pump-delta.is-err = yes .
+                      end .
+                      else do :
+                        tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                        tt-rvs-line-pump-delta.density = tt-rvs-line-pump-delta.density + (aft_rvs-line.state-density / 2) .
+                      end .
+                    end .
+                  end . /* for each bf_rvs-line-pump */
+                end .
+              end .
+            end .
+          end . /* place-com-tanks */
         end.
         else do:
           assign

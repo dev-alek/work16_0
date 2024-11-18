@@ -868,7 +868,7 @@ define variable vss-description as character no-undo init "$Печать сменного отче
           end.
         end. /* for each ub.trn-doc */
       end.
-       
+
       define variable is-vir  as logical   no-undo.
       define variable v-value as character no-undo.
       define variable v-ok    as logical   no-undo.
@@ -1547,7 +1547,8 @@ procedure print-total:
             '<td text_wrap="true" rowspan="2" num="0.0000" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>>>9.9999",4) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol18 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol18,"->>>>>>>>>>>9.9999",4) + '</td>' else "" + '</td>' skip
             '<td text_wrap="true" rowspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol19 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>9.9",1) + '</td>' else "" + '</td>' skip
             '<td text_wrap="true" rowspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
-            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21_nebal,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21_nebal <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21_nebal,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+         /* '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21_nebal,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21_nebal <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21_nebal,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip */
+			'<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
             '<td text_wrap="true" style="text-align: right;"></td>' skip
             '</tr>' skip
             '<tr>' skip 
@@ -1697,10 +1698,12 @@ procedure print-sug:
     '<th style="text-align: center;">42</th>' skip
     '</tr>' skip
     .
+
   /*Сбор данных*/
   for each temp-rvs-line break by temp-rvs-line.gds-code by temp-rvs-line.pl-code:
     if first-of(temp-rvs-line.gds-code) and is-sug(temp-rvs-line.gds-code) then 
     do:
+
       for each buf_temp-rvs-line where buf_temp-rvs-line.gds-code = temp-rvs-line.gds-code:
         for each temp-line-pump where buf_temp-rvs-line.gds-code = temp-line-pump.gds-code
           and temp-line-pump.pl-code = buf_temp-rvs-line.pl-code
@@ -1796,14 +1799,15 @@ procedure print-sug:
       find first ub.shift-obj no-lock where ub.shift-obj.obj-code = p-obj-code and
         ub.shift-obj.obj-type = p-obj-type and ub.shift-obj.shift-date = x-date-end and
         ub.shift-obj.shift-num = x-shift-end no-error .
-            
+
+     
       for each bf_temp-rvs-line where bf_temp-rvs-line.gds-code = temp-rvs-line.gds-code: 
-        
+      
         if get_com-vessel(p-obj-code, p-obj-type, {&place-com-vessel}, bf_temp-rvs-line.pl-code, ub.shift-obj.open-date, 
-          ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) then
+          ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) then  /*сообщающиеся резервуары*/
         do:
           v-com-tanks = get_com-tanks(p-obj-code, p-obj-type, {&place-com-tanks}, bf_temp-rvs-line.pl-code, 
-            ub.shift-obj.open-date, ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) .  
+            ub.shift-obj.open-date, ub.shift-obj.close-date, ub.shift-obj.open-time, ub.shift-obj.close-time) .   /*коды сообщающиеся резервуары*/
           if v-com-tanks > "" then 
           do:
             v-main-tanks = trim(v-main-tanks,",") .
@@ -1840,6 +1844,7 @@ procedure print-sug:
                 do :
                   bf_temp-rvs-line.pol21-kg = bf_temp-rvs-line.pol21-kg + com_temp-rvs-line.pol21-kg .
                   bf_temp-rvs-line.pol20-kg = bf_temp-rvs-line.pol20-kg + com_temp-rvs-line.pol20-kg .
+                  bf_temp-rvs-line.pol4-kg-system = bf_temp-rvs-line.pol4-kg-system + com_temp-rvs-line.pol4-kg-system .
                 /*                  bf_temp-rvs-line.pol21-l = bf_temp-rvs-line.pol21-l + com_temp-rvs-line.pol21-l .*/
                 /*                  bf_temp-rvs-line.pol20-l = bf_temp-rvs-line.pol20-l + com_temp-rvs-line.pol20-l .*/
                 end .
@@ -1853,7 +1858,6 @@ procedure print-sug:
                 bf_temp-rvs-line.pol19    = bf_temp-rvs-line.state-temperature
                 .
 
-            
               put stream OutStr-html unformatted
                 '<tr>' skip 
                 '<td text_wrap="true" rowspan="' + string((2 * v-num-com-tanks), ">9") + '" style="text-align: right;">   по резер.</td>' skip 
@@ -2106,10 +2110,13 @@ procedure print-sug:
           temp-rvs-line.itog-pol20-kg = 0
           temp-rvs-line.itog-pol21-l  = 0
           temp-rvs-line.itog-pol21-kg = 0
+          v-main-tanks = "" 
+          v-com-tanks = ""     
           .
       end.
     end.
   end.
+
   put stream OutStr-html unformatted                                                                     
 
     '</tbody>' skip .                                                                                                    

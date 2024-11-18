@@ -49,6 +49,7 @@ if new-{&main-tbl}.gds-code eq 0
 then 
    new-{&main-tbl}.gds-code = ?.
 
+/*run gbl/inidebug.p.*/
 if not new(new-{&main-tbl}) then do:
 if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
@@ -69,7 +70,12 @@ if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB)
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB)
 then do:
   new-{&main-tbl}.sts = old-{&main-tbl}.sts.
   if old-{&main-tbl}.loc-key <> "" then
@@ -101,7 +107,6 @@ if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
    for each c-marking-attr where c-marking-attr.mark eq old-{&main-tbl}.mark exclusive-lock:
       c-marking.mark = new-{&main-tbl}.mark.
    end.
-
 end .  
 end. 
   
@@ -110,7 +115,7 @@ do:   /* при создании новой дочерней марки меняем статус марки как у родителя, е
   for first parentMarking where
             parentMarking.mark = new-{&main-tbl}.mark-parent 
       no-lock:
-    if can-do(objSrv:Env:Marking:Sts:Mark:EqualChecked,string(parentMarking.sts)) then
+    if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(parentMarking.sts)) then
      new-{&main-tbl}.sts = parentMarking.sts.
   end.
 end.

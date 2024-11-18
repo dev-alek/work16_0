@@ -83,6 +83,12 @@
       
       define variable v-pl-list      as character no-undo init "":U .
       define variable v-com-tanks    as character no-undo init "":U .
+      
+      define variable pl-rvd-dens as logical no-undo .
+      define variable pl-rvd-lvl as logical no-undo .
+      define variable pl-rvd-temp as logical no-undo .
+      
+      define variable waitForm as class ibs.th.str.ptrl.forms.waitform no-undo.
 
       infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
       
@@ -209,9 +215,65 @@
       case pAction :
         when {&update}
         then do:
-          assign
-            v-act-name = 'actn_income_petrol-сommission':U /* Право на комиссионный приём */
-          .
+          if infoSecObj:IsKP
+          then do :
+            assign
+              v-act-name = 'actn_income_petrol-сommission':U /* Право на комиссионный приём */
+            .
+          end .
+          else do :
+            find first buf_place no-lock where buf_place.obj-type = buf_rvs-doc.obj-type
+                                           and buf_place.obj-code = buf_rvs-doc.obj-code
+                                           and buf_place.pl-code  = v-pl-code
+                                           no-error .
+            if not available buf_place
+            then do :
+              undo block_tr, return error return-value .
+            end .
+            if pActionType = "meas" or not buf_place.is-meas
+            then do :
+              assign
+                v-act-name = 'actn_rvs-on-doc_cr-revision':U /* Право на создание сверки */
+              .
+            end .
+            else do :
+              for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-rvd-dnsty"
+                                                 and buf_place-attr.obj-code = buf_place.obj-code
+                                                 and buf_place-attr.obj-type = buf_place.obj-type
+                                                 and buf_place-attr.pl-code  = buf_place.pl-code
+              :
+                assign pl-rvd-dens = logical(buf_place-attr.attr-value) no-error .
+              end .
+              for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-rvd-lvl"
+                                                 and buf_place-attr.obj-code = buf_place.obj-code
+                                                 and buf_place-attr.obj-type = buf_place.obj-type
+                                                 and buf_place-attr.pl-code  = buf_place.pl-code
+              :
+                assign pl-rvd-lvl = logical(buf_place-attr.attr-value) no-error .
+              end .
+              for first buf_place-attr no-lock where buf_place-attr.attr-code = "place-rvd-tmp"
+                                                 and buf_place-attr.obj-code = buf_place.obj-code
+                                                 and buf_place-attr.obj-type = buf_place.obj-type
+                                                 and buf_place-attr.pl-code  = buf_place.pl-code
+              :
+                assign pl-rvd-temp = logical(buf_place-attr.attr-value) no-error .
+              end .
+              if buf_place.is-meas
+              and not pl-rvd-dens
+              and not pl-rvd-lvl
+              and not pl-rvd-temp
+              then do :
+                assign
+                  v-act-name = 'actn_rvs-on-doc_upd-revision':U /* Право на изменение сверки */
+                .
+              end .
+              else do :
+                assign
+                  v-act-name = 'actn_rvs-control_upd-immeas':U /* Право на изменение сверки */
+                .
+              end .
+            end .
+          end .
           case pRvsType :
             when {&rvs-before-doc} then do:
               check-before
@@ -264,7 +326,7 @@
         if v-log <> yes then do:
           if pAction = {&update}
           then do :
-            message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
+            message "Не достаточно прав! Работа со сверками запрещена!" view-as alert-box .
           end .
           undo block_tr, return error .
         end.
@@ -450,17 +512,22 @@
             end.
           end.
 
+          waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос АСИ...") .
+          waitForm:Show() .
           { str/rvsplace.i
             buf_rvs-doc.obj-type
             buf_rvs-doc.obj-code
             yes
             varcur-rvs
             yes
+            yes
             tt-meas-file
             tt-meas
             no-error
           }
           if error-status :error then do:
+            waitForm:Close() .
+            delete object waitForm no-error .
             message
               "Ошибка при получении данных с приборов на резервуарах." skip( 0 )
               return-value skip
@@ -468,6 +535,8 @@
               view-as alert-box error .
             undo block_tr, return error .
           end.
+          waitForm:Close() .
+          delete object waitForm no-error .
           
           if v-com-vessel-rvs
           then do :
@@ -585,6 +654,8 @@
                 v-prt-end-real-time = buf_rvs-line.real-time .
               end.
               
+              waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос ТРК...") .
+              waitForm:Show() .
               if varcur-rvs = 1
               or ptoldfilvalue <> "yes":u
               then do :
@@ -597,6 +668,7 @@
                   tt-pump-nozzle
                   yes
                   ?
+                  yes
                   no-error
                 }
               end.
@@ -610,9 +682,13 @@
                   tt-pump-nozzle
                   no
                   ?
+                  yes
                   no-error
                 }
               end.
+              waitForm:Close() .
+              delete object waitForm no-error .
+              
               for each tt-pump-nozzle :
                 find first tt-pump-nozzle-file where
                            tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
@@ -769,6 +845,8 @@
               v-prt-end-real-time = buf_rvs-line.real-time .
             end.
             
+            waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос ТРК...") .
+            waitForm:Show() .
             if varcur-rvs = 1
             or ptoldfilvalue <> "yes":u
             then do :
@@ -781,6 +859,7 @@
                 tt-pump-nozzle
                 yes
                 ?
+                yes
                 no-error
               }
             end.
@@ -794,9 +873,13 @@
                 tt-pump-nozzle
                 no
                 ?
+                yes
                 no-error
               }
             end.
+            waitForm:Close() .
+            delete object waitForm no-error .
+              
             for each tt-pump-nozzle :
               find first tt-pump-nozzle-file where
                          tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
@@ -961,6 +1044,8 @@
             
             if varcur-rvs <> 3
             then do :
+              waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос ТРК...") .
+              waitForm:Show() .
               if varcur-rvs = 1
               or ptoldfilvalue <> "yes":u
               then do :
@@ -973,6 +1058,7 @@
                   tt-pump-nozzle
                   yes
                   ?
+                  yes
                   no-error
                 }
               end.
@@ -986,9 +1072,12 @@
                   tt-pump-nozzle
                   no
                   ?
+                  yes
                   no-error
                 }
               end.
+              waitForm:Close() .
+              delete object waitForm no-error .
               
               for each tt-pump-nozzle :
                 find first tt-pump-nozzle-file where

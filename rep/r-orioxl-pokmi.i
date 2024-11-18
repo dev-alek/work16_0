@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b6b5ab1a3177, 3577, rls $
+$Author: VSpiridonov $
+$Date: 2023/12/14 13:36:12 $
+$Workfile: r-orioxl-pokmi.i $
+$Archive: rep/r-orioxl-pokmi.i $
 
 Шапка и подвал для отчета инвентаризации ПОкМИ
 
@@ -18,7 +18,7 @@ Creation date: 05/23/06
 &scoped-define vssseq {&sequence}
 
 define variable vss-include-info{&vssseq} as character no-undo format "x(65)":U
-  initial "@(#)$Workfile$ $Revision$":U .
+  initial "@(#)$Workfile: r-orioxl-pokmi.i $ $Revision: b6b5ab1a3177, 3577, rls $":U .
 
 { gbl/std-func.i {&f-l} }
 
@@ -195,19 +195,19 @@ procedure shapka-inv :
     '<TD text_wrap="true" colspan="86" style="">Материально ответственные (ое) лица (лицо):</TD>' skip
     '</TR>'skip
 
-    '<TR>' skip
+    '<TR style="height:20px;">' skip
     '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip  
+    '</TR>'skip
     
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
@@ -225,7 +225,7 @@ procedure shapka-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
@@ -243,7 +243,7 @@ procedure shapka-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
@@ -252,11 +252,22 @@ procedure shapka-inv :
     '<TR>' skip
     '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
-    
+    .
+    if v-prikaz-date <> "" then do:
+       put stream OutStr-html unformatted
+      '<TR>' skip
+      '<TD text_wrap="true" colspan="86" style="">На основании распоряжения от ' + string (day( date(v-prikaz-date) )) + " " + string(MonthNameRusCase( month( date(v-prikaz-date) ), 2 )) + " " + string(year( date(v-prikaz-date) )) + "г. " + if v-prikaz-num = "" then "№ __________" + '</TD>' else '№ ' + string(v-prikaz-num) + '</TD>' skip
+      '</TR>'skip
+      .
+    end.
+    else do:
+     put stream OutStr-html unformatted  
     '<TR>' skip
     '<TD text_wrap="true" colspan="86" style="">На основании распоряжения от "_____" _______________ 20____ г. № __________ </TD>' skip
     '</TR>'skip
-                                                            
+    .
+    end.
+     put stream OutStr-html unformatted                                                        
     '<TR>' skip
     '<TD text_wrap="true" colspan="86" style="">произведено снятие фактических остатков нефтепродуктов</TD>' skip
     '</TR>'skip
@@ -268,19 +279,43 @@ procedure shapka-inv :
     '<TR>' skip
     '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
-    
+    .
+    if v-doc-date <> "" then do:
+     put stream OutStr-html unformatted
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: right;">Инвентаризация начата</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="54" style="">"_____" ______________ 20 _____ г. в _____ час. _____ мин.</TD>' skip
+    '<TD text_wrap="true" colspan="54" style="">' + string (day( date(v-doc-date) )) + " " + string(MonthNameRusCase( month( date(v-doc-date) ), 2 )) + " " + string(year( date(v-doc-date) )) + "г. " 'в _____ час. _____ мин.</TD>' skip
     '</TR>'skip
-
+    .
+    end.
+    else do:
+     put stream OutStr-html unformatted
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: right;">Инвентаризация начата</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="54" style="">' + string (day( date(bf_trn-doc.doc-date) )) + " " + string(MonthNameRusCase( month( date(bf_trn-doc.doc-date) ), 2 )) + " " + string(year( date(bf_trn-doc.doc-date) )) + "г. " 'в _____ час. _____ мин.</TD>' skip
+    '</TR>'skip
+    .
+    end.
+    if bf_trn-doc.fact-date <> ? then do:
+    put stream OutStr-html unformatted
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: right;">окончена</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="54" style="">' + string (day( bf_trn-doc.fact-date )) + " " + string(MonthNameRusCase( month( bf_trn-doc.fact-date ), 2 )) + " " + string(year( bf_trn-doc.fact-date )) + "г. " 'в _____ час. _____ мин.</TD>' skip
+    '</TR>'skip
+    .
+    end.
+    else do:
+     put stream OutStr-html unformatted
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: right;">окончена</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="54" style="">"_____" ______________ 20 _____ г. в _____ час. _____ мин.</TD>' skip
     '</TR>'skip
-      .
+    .
+    end.
   put stream OutStr-html unformatted            
     '</thead>' skip
     .        
@@ -386,8 +421,8 @@ procedure foot-inv :
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="35" style="">Общие замечания по нефтебазе</TD>' skip
-    '<TD text_wrap="true" colspan="51" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD text_wrap="true" colspan="15" style="">Общие замечания</TD>' skip
+    '<TD text_wrap="true" colspan="71" style="border-bottom: 1px solid black;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
@@ -411,7 +446,18 @@ procedure foot-inv :
     '</TR>'skip
                 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">Все ценности, поименованные в описи c №         ______ по № ______, комиссией проверены в натуре</TD>' skip
+    .
+    if j_LineCount = 0 then do:
+    put stream OutStr-html unformatted
+    '<TD text_wrap="true" colspan="86" style="">Все ценности, поименованные в описи c №  ' + "0" + ' по № ' + string(j_LineCount) + ', комиссией проверены в натуре</TD>' skip
+    .
+    end.
+    else do:
+    put stream OutStr-html unformatted
+    '<TD text_wrap="true" colspan="86" style="">Все ценности, поименованные в описи c №  ' + "1" + ' по № ' + string(j_LineCount) + ', комиссией проверены в натуре</TD>' skip
+    .  
+    end.  
+     put stream OutStr-html unformatted
     '</TR>'skip
     '<TR>' skip
     '<TD text_wrap="true" colspan="86" style=""> в моем (нашем) присутствии и внесены в опись, в связи с чем претензий к инвентаризационной</TD>' skip
@@ -430,7 +476,7 @@ procedure foot-inv :
     '<TD text_wrap="true" colspan="86" style="">Материально ответственные(ое) лица(лицо):</TD>' skip
     '</TR>'skip
 
-    '<TR>' skip
+    '<TR style="height:20px;">' skip
     '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
@@ -442,7 +488,25 @@ procedure foot-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
@@ -460,128 +524,99 @@ procedure foot-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '</TR>'skip                                                        
 
-    '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip          
     '<TR>' skip
     '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
     '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="">Члены инвентаризационной комиссии (проверяющий):</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="">Председатель комиссии:</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="50" style=""></TD>' skip
-    '<TD colspan="4" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-agent + '</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-agent + '</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '</TR>'skip  
     
     '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                        
-
-    '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '</TR>'skip                                                        
 
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="20" style="">Состав комиссии:</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-player1 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-player1 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip           
+    
     '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style=""></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-player2 + '</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-player2 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip           
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="20" style=""></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-player3 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-player3 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                 
-
-    '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip     
-
-    '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                        
+    
     '<TR>' skip
     '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
@@ -617,7 +652,7 @@ procedure foot-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
@@ -635,7 +670,7 @@ procedure foot-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
@@ -653,11 +688,12 @@ procedure foot-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip    
+    '</TR>'skip   
+    '<tr><td text_wrap="true" colspan="86">* ** Указанное значение выводится для справки</td></tr>' skip 
     .  
                 
   put stream OutStr-html unformatted            
@@ -665,4 +701,4 @@ procedure foot-inv :
     .        
 
 end procedure. /* foot-inv */
-/* $Workfile$   E n d */
+/* $Workfile: r-orioxl-pokmi.i $   E n d */

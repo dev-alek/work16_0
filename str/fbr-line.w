@@ -29,6 +29,7 @@ define input parameter p-fbrhist-handle     as widget-handle    no-undo.
 define input parameter p-line-mode          as character        no-undo.
 define input parameter p-fbr-doc-doc-code   as character        no-undo.
 define input parameter p-fbr-line-recid     as recid            no-undo.
+define input parameter p-mark-qnty          as decimal          no-undo.
 define output parameter p-cancel            as logical          no-undo.
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -487,6 +488,12 @@ ON ERROR UNDO MAIN-BLOCK, return error
             fbr-line.fact-qnty
             fbr-line.price-sale
         with frame {&frame-name}.
+        if p-mark-qnty <> ?
+        then do :
+          assign fbr-line.fact-qnty = p-mark-qnty .
+          display fbr-line.fact-qnty with frame {&frame-name}.
+          disable fbr-line.fact-qnty with frame {&frame-name}.
+        end .
         wait-for go of frame {&frame-name} focus fbr-line.fact-qnty.
     end.
 END.

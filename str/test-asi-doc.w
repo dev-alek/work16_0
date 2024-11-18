@@ -1111,6 +1111,7 @@ procedure mode-on :
                 no
                 varcur-data
                 yes
+                no
                 tt-meas-file
                 tt-meas
                 no-error
@@ -1370,6 +1371,7 @@ procedure proc_m-meas-3 :
          yes
          varcur-rvs
          yes
+         no
          tt-meas-file
          tt-meas
          no-error
@@ -1567,6 +1569,7 @@ procedure proc_m-meas-1:
            yes
            varcur-rvs
            yes
+           no
            tt-meas-file
            tt-meas
            no-error

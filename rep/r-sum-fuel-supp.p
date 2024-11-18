@@ -795,13 +795,23 @@ procedure processTrn :
     
     v-InfoSectionsTotal = new InfoSectionsTotal(p-doc-code, buf_goods.gds-code, "").
     
-    do iNum = 1 to v-InfoSectionsTotal:SectionNum :
-      if v-infoSectionsTotal:GetInfoSectionProp(iNum):IsKP
-      then do :
-        v-infoSectionsTotal:IsKP = yes .
-        if v-infoSectionsTotal:GetInfoSectionProp(iNum):AccMeth = 1
+    if not v-is-sug-gds
+    then do :
+      do iNum = 1 to v-InfoSectionsTotal:SectionNum :
+        v-InfoSection = v-InfoSectionsTotal:GetInfoSectionProp(iNum) .
+        v-SectionName = v-InfoSection:SectionName .
+        if v-InfoSection:IsKP
         then do :
-          v-infoSectionsTotal:IsKPrvs = yes .
+          v-infoSectionsTotal:IsKP = yes .
+          find first buf_rvs-doc no-lock where buf_rvs-doc.rvs-type = {&rvs-before-doc}
+                                           and buf_rvs-doc.out-code = p-doc-code
+                                           and num-entries(buf_rvs-doc.rvs-code, "-") = 3
+                                           and entry(2, buf_rvs-doc.rvs-code, "-") = v-SectionName
+                                           no-error .
+          if available buf_rvs-doc
+          then do :
+            v-infoSectionsTotal:IsKPrvs = yes .
+          end .
         end .
       end .
     end .
@@ -1635,7 +1645,7 @@ procedure processTrn :
           tt-rep.col41  = v-InfoSection:FactKgQnty
         .
         
-        if v-sep = "ÀÖ áåç ÑİÏ"
+        if v-InfoSection:TankWeight > 0
         then do :
           assign
             tt-rep.col42  = tt-rep.col25 - tt-rep.col21
@@ -1646,20 +1656,6 @@ procedure processTrn :
             tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
             tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
           .
-        end .
-        else do :
-          if v-InfoSection:TankWeight > 0
-          then do :
-            assign
-              tt-rep.col42  = tt-rep.col25 - tt-rep.col21
-              tt-rep.col43  = tt-rep.col42 / tt-rep.col21 * 100
-            .
-          
-            assign
-              tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
-              tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
-            .
-          end .
         end .
         
         assign
@@ -1777,7 +1773,7 @@ procedure processTrn :
           tt-rep.col41  = tt-rep.col41 + v-InfoSection:FactKgQnty
         .
         
-        if v-sep = "ÀÖ áåç ÑİÏ"
+        if tt-rep.ac-measured
         then do :
           assign
             tt-rep.col42  = tt-rep.col25 - tt-rep.col21
@@ -1790,26 +1786,12 @@ procedure processTrn :
           .
         end .
         else do :
-          if tt-rep.ac-measured
-          then do :
-            assign
-              tt-rep.col42  = tt-rep.col25 - tt-rep.col21
-              tt-rep.col43  = tt-rep.col42 / tt-rep.col21 * 100
-            .
-          
-            assign
-              tt-rep.col44  = tt-rep.col37 + tt-rep.col34 - tt-rep.col30 - tt-rep.col25
-              tt-rep.col45  = tt-rep.col44 / tt-rep.col25 * 100
-            .
-          end .
-          else do :
-            assign
-              tt-rep.col42  = 0
-              tt-rep.col43  = 0
-              tt-rep.col44  = 0
-              tt-rep.col45  = 0
-            .
-          end .
+          assign
+            tt-rep.col42  = 0
+            tt-rep.col43  = 0
+            tt-rep.col44  = 0
+            tt-rep.col45  = 0
+          .
         end .
         
         assign

@@ -569,6 +569,7 @@ on error undo, return error
                 , input {&update}
                 , input fbr-line.doc-code
                 , input v-fbr-line-recid
+                , input ?
                 , output v-cancel
             ).
         end.

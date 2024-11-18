@@ -65,4 +65,21 @@ run get-db-num in parparentproc ( output v-cntxt-db-num) .
 end.
 
 { cmp/gds-list.i gds-list def shared }
+define variable v-production-only as logical init false.
+for each gds-list :
+  { gbl/gdscdat.i
+    gds-list.gds-code
+    "'production-only=request':u"
+    v-production-only
+    no-error
+  }
+  if error-status :error
+  then do:
+    assign v-production-only = no .
+  end.
+  if v-production-only
+  then do :
+    delete gds-list .
+  end .
+end .
 { str/sendgood.i }

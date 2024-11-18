@@ -22,6 +22,7 @@ p-free-output-copy  false  копирование партии в документ, в свободную, расходную
                            закрытие документа до статуса {&fact}
 */
 { str/marks.i }
+{ utl/gtin.i }
 { gbl/objsrv.i }
   
 &scoped-define vssseq {&sequence}
@@ -303,6 +304,7 @@ procedure partcopy :
               ub.marking-lines.out-code  = p-out-code
               ub.marking-lines.fact-order = pri_trn-doc.fact-order when available pri_trn-doc
             .
+            validate ub.marking-lines.
           end .
           if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} then do:
           for first buf_marking exclusive-lock where buf_marking.mark = buf_orig_ml.mark 
@@ -334,6 +336,7 @@ procedure partcopy :
 /*                assign buf_marking-pack.sts = v-parent-mark-sts .                                                 */
 /*              end.                                                                                                */
 /*            end.                                                                                                  */
+              validate buf_marking.
           end .
 
         end .
@@ -363,12 +366,11 @@ procedure partcopy :
 /*                                                                                 */
 /*      end .                                                                      */
 /*                                                                                 */
-      
+
       find first buf_goods no-lock where buf_goods.artic = buf_orig_parts.artic
                                      and buf_goods.prod-type = buf_orig_parts.prod-type
                                      and buf_goods.prod-code = buf_orig_parts.prod-code
                                      .
-      
       if available pri_trn-doc
       and pri_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass}
       then do :
@@ -422,6 +424,7 @@ procedure partcopy :
                       buf_marking-lines.part-code  = buf_parts.part-code
                       buf_marking-lines.prt-code   = buf_parts.prt-code
                     .
+                    validate buf_marking-lines.
                   end .
                   
                   for first buf_marking exclusive-lock where buf_marking.mark = p-mark :
@@ -431,6 +434,7 @@ procedure partcopy :
                                                       and buf_chk-doc.out-code = buf_orig_parts.out-code
                                                       :
                         assign buf_marking-chk.sts = 0 . 
+                        validate buf_marking-chk.
                       end .                                         
                     end .
                     if buf_marking.unit-ext = "LEVEL1"
@@ -460,6 +464,7 @@ procedure partcopy :
                             buf_marking-lines-childs.fact-order = buf_marking-lines.fact-order
                             buf_marking-lines-childs.doc-level  = buf_marking-lines.doc-level + 1
                           .
+                          validate buf_marking-childs.
                         end . 
                         assign buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
                         for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking-childs.mark :
@@ -467,6 +472,7 @@ procedure partcopy :
                                                           and buf_chk-doc.out-code = buf_orig_parts.out-code
                                                           :
                             assign buf_marking-chk.sts = 0 . 
+                            validate buf_marking-chk.
                           end .                                         
                         end .
                         find first orig_marking-lines-childs exclusive-lock where orig_marking-lines-childs.mark       = buf_marking-childs.mark
@@ -505,8 +511,8 @@ procedure partcopy :
                                                            and orig_marking-lines.part-code  = buf_orig_parts.part-code
                                                            and orig_marking-lines.prt-code   = buf_orig_parts.prt-code
                                                            no-error .
-            if available orig_marking-lines
-            then do :
+/*            if available orig_marking-lines*/
+/*            then do :   переверка перенесена ниже, т.к. не менялся статус на Зарезервирован у новой марки                   */
               
               find first buf_marking-lines no-lock where  buf_marking-lines.mark       = p-mark
                                                       and buf_marking-lines.gds-code   = buf_goods.gds-code
@@ -530,15 +536,29 @@ procedure partcopy :
                   buf_marking-lines.out-code   = buf_parts.out-code
                   buf_marking-lines.part-code  = buf_parts.part-code
                   buf_marking-lines.prt-code   = buf_parts.prt-code
+                  buf_marking-lines.sts        = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
                 .
+                validate buf_marking-lines.
               end .
+
               for first buf_marking exclusive-lock where buf_marking.mark = p-mark :
                 assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                validate buf_marking.
+                /* если марка в упаковке, то разгруппируем упаковку */
+                for first buf_marking-childs exclusive-lock where
+                          buf_marking-childs.mark = buf_marking.mark-parent:
+                  buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .            
+                  validate buf_marking-childs.
+                end.
                 for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking.mark :
                   for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code
                                                   and buf_chk-doc.out-code = buf_parts.out-code
                                                   :
-                    if buf_marking-chk.sts <> 2 then assign buf_marking-chk.sts = 1 . 
+                    if buf_marking-chk.sts <> 2 then 
+                    do:
+                       assign buf_marking-chk.sts = 1 . 
+                       validate buf_marking-chk.
+                    end.
                   end .                                         
                 end .
                 if buf_marking.unit-ext = "LEVEL1"
@@ -568,15 +588,19 @@ procedure partcopy :
                         buf_marking-lines-childs.fact-order = buf_marking-lines.fact-order
                         buf_marking-lines-childs.doc-level  = buf_marking-lines.doc-level + 1
                       .
+                      validate buf_marking-childs.
                     end . 
-                    assign buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                    assign buf_marking-childs.sts = buf_marking.sts .
                     for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking-childs.mark :
                       for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code
                                                       and buf_chk-doc.out-code = buf_parts.out-code
                                                       :
                         assign buf_marking-chk.sts = 0 . 
+                        validate buf_marking-chk.
                       end .                                         
                     end .
+                    if available orig_marking-lines
+                    then do :
                     find first orig_marking-lines-childs exclusive-lock where orig_marking-lines-childs.mark       = buf_marking-childs.mark
                                                                           and orig_marking-lines-childs.gds-code   = buf_goods.gds-code
                                                                           and orig_marking-lines-childs.obj-type   = buf_orig_parts.obj-type
@@ -589,7 +613,8 @@ procedure partcopy :
                     if available orig_marking-lines-childs
                     then do :
                       delete orig_marking-lines-childs .
-                    end .                                                      
+                    end .
+                    end.                                                      
                   end .
                 end . /* if level1 */
                 
@@ -599,8 +624,9 @@ procedure partcopy :
 /*                  ObjSrv:Lib:MarkingTree:UnGroupMark(buf_marking.mark).*/
 /*                end.                                                   */
               end.
-              delete orig_marking-lines .
-            end . /* available orig_marking-lines */                                       
+              if available orig_marking-lines then 
+                delete orig_marking-lines .
+/*            end . /* available orig_marking-lines */*/
           end. /* p-out-code <> {&free-code} */
         end.
       end .
@@ -631,6 +657,7 @@ procedure partcopy :
               if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
               then do :
                 assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+                validate buf_marking.
 /*                if buf_marking.mark-parent <> ""                       */
 /*                and buf_marking.unit-ext = "UNIT"                      */
 /*                then do :                                              */
@@ -653,6 +680,7 @@ procedure partcopy :
               buf_marking-lines.part-code  = buf_parts.part-code
               buf_marking-lines.prt-code   = buf_parts.prt-code
             . 
+            validate buf_marking-lines.
             if buf_parts.out-code <> buf_parts.in-code
             and buf_parts.out-code <> {&free-code}
             and buf_parts.out-code <> {&output-code}
@@ -722,6 +750,7 @@ procedure partcopy :
               then assign ub.marking.sts = oMarkSts:FreeZone:KeyIntDB.
             if p-out-code = {&output-code} and not ub.marking.sts = oMarkSts:MarkError:KeyIntDB
               then assign ub.marking.sts = oMarkSts:OutZone:KeyIntDB.
+            validate ub.marking.
           end.
           
           run partcopy-to-childs-mark (buffer buf_marking-lines, buffer orig_marking-lines, input buf_parts.out-code, oMarkSts).
@@ -738,6 +767,7 @@ procedure partcopy :
               buf_marking-lines.out-code   = buf_parts.out-code
               buf_marking-lines.part-code  = buf_parts.part-code
             .
+            validate buf_marking-lines.
           end.
         end.
           
@@ -2389,7 +2419,7 @@ procedure partcopy-update-parts-delete :
                   free_marking-lines.prt-code   = buf_parts.prt-code      
                 .
               end .
-              if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} and
+              if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} and buf_trn-doc.doc-type <> {&write-off} and
                  not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv})
                 then assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}

@@ -24,7 +24,7 @@
 
 /* ***************************  Definitions  ************************** */
 
-define shared temp-table tt-temps no-undo
+define shared temp-table tt-temps-tab no-undo
   field ii as integer
   field key_ as character
   field temperature as decimal format "->>>9.<<"
@@ -109,13 +109,13 @@ define button b-fill-empty
     label "Заполнить пустые"
     size 18 by 1 .    
 
-define query br-temp for tt-temps .
+define query br-temp for tt-temps-tab .
 define browse br-temp query br-temp exclusive-lock
   display
-    tt-temps.key_         label "Уровень " format "X(4)"
-    tt-temps.temperature  label "Значение,°C" format "->>9.9"
+    tt-temps-tab.key_         label "Уровень " format "X(4)"
+    tt-temps-tab.temperature  label "Значение,°C" format "->>9.9"
   enable
-    tt-temps.temperature
+    tt-temps-tab.temperature
   with size 30 by 10 separators
 .
 
@@ -178,12 +178,12 @@ END.
 
 on choose of b-ok in frame Dialog-Frame
 do :
-  define buffer buf_tt-temps for tt-temps .
-  define buffer buf1_tt-temps for tt-temps .
-  define buffer buf2_tt-temps for tt-temps .
-  define buffer buf3_tt-temps for tt-temps .
+  define buffer buf_tt-temps for tt-temps-tab .
+  define buffer buf1_tt-temps for tt-temps-tab .
+  define buffer buf2_tt-temps for tt-temps-tab .
+  define buffer buf3_tt-temps for tt-temps-tab .
   
-  for first tt-temps no-lock where tt-temps.temperature = ? :
+  for first tt-temps-tab no-lock where tt-temps-tab.temperature = ? :
     message "Необходимо заполнить значения на всех уровнях!" view-as alert-box .
     return no-apply .                                  
   end .
@@ -265,7 +265,7 @@ end .
 on value-changed of cb-calc-type in frame Dialog-Frame
 do :
   assign cb-calc-type .
-  empty temp-table tt-temps .
+  empty temp-table tt-temps-tab .
   
   if cb-calc-type = 3
   then do :
@@ -278,7 +278,7 @@ do :
   
   
   run fill-tt .
-  open query br-temp for each tt-temps .
+  open query br-temp for each tt-temps-tab .
 end .
 
 on return of v-calc-num-izm in frame Dialog-Frame
@@ -291,22 +291,22 @@ do :
   if input frame Dialog-Frame v-calc-num-izm <> v-calc-num-izm
   then do :
     assign v-calc-num-izm .
-    empty temp-table tt-temps .
+    empty temp-table tt-temps-tab .
     run fill-tt .
-    open query br-temp for each tt-temps .
+    open query br-temp for each tt-temps-tab .
   end .
 end .
 
-on return of tt-temps.temperature in browse br-temp
+on return of tt-temps-tab.temperature in browse br-temp
 do :
   apply "leave" to self .
 end .
 
-on leave of tt-temps.temperature in browse br-temp
+on leave of tt-temps-tab.temperature in browse br-temp
 do :
   define variable is-empty as logical no-undo .
-  define buffer buf_tt-temps for tt-temps .
-  assign tt-temps.temperature = decimal(tt-temps.temperature:screen-value in browse br-temp) .
+  define buffer buf_tt-temps for tt-temps-tab .
+  assign tt-temps-tab.temperature = decimal(tt-temps-tab.temperature:screen-value in browse br-temp) .
 /*  if tt-temps.ii = 1                                                                             */
 /*  then do :                                                                                      */
 /*    is-empty = yes .                                                                             */
@@ -329,15 +329,15 @@ end .
 
 on choose of b-fill-empty in frame Dialog-Frame
 do :
-  define buffer buf_tt-temps for tt-temps .
+  define buffer buf_tt-temps for tt-temps-tab .
   
-  if available tt-temps
-  and tt-temps.temperature <> ?
+  if available tt-temps-tab
+  and tt-temps-tab.temperature <> ?
   then do :
     for each buf_tt-temps :
       if buf_tt-temps.temperature = ?
       then do :
-        buf_tt-temps.temperature = tt-temps.temperature .
+        buf_tt-temps.temperature = tt-temps-tab.temperature .
       end .
     end .
     br-temp:refresh() in frame Dialog-Frame .
@@ -368,7 +368,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   and p-place-type = 1
   then do :
     jj = 0 .
-    for each tt-temps :
+    for each tt-temps-tab :
       jj = jj + 1 .
     end .
     v-calc-num-izm = jj .
@@ -393,10 +393,10 @@ procedure fill-tt :
       case p-sr-izm-type :
         when 0 /* 0 - Автоматизированное СИ s*/ 
         then do :
-          find first tt-temps where tt-temps.key_ = "tн" no-error .
-          if available tt-temps
+          find first tt-temps-tab where tt-temps-tab.key_ = "tн" no-error .
+          if available tt-temps-tab
           then do :
-            empty temp-table tt-temps .
+            empty temp-table tt-temps-tab .
           end .
           if cb-calc-type = 1
           then do :
@@ -408,78 +408,78 @@ procedure fill-tt :
               v-num-izm = integer(truncate((p-fuel-level / 500), 0)) .
             end .
             if v-num-izm = 0 then v-num-izm = 1 .
-            find first tt-temps no-error .
-            if not available tt-temps
+            find first tt-temps-tab no-error .
+            if not available tt-temps-tab
             then do ii = 1 to v-num-izm :
-              create tt-temps .
+              create tt-temps-tab .
               assign
-                tt-temps.ii = ii
-                tt-temps.key_ = "t" + string(ii)
-                tt-temps.temperature = ?
+                tt-temps-tab.ii = ii
+                tt-temps-tab.key_ = "t" + string(ii)
+                tt-temps-tab.temperature = ?
               .        
             end .
           end .
           if cb-calc-type = 2
           then do :
             v-num-izm = 1 .
-            find first tt-temps no-error .
-            if not available tt-temps
+            find first tt-temps-tab no-error .
+            if not available tt-temps-tab
             then do :
-              create tt-temps .
+              create tt-temps-tab .
               assign
-                tt-temps.ii = 1
-                tt-temps.key_ = "t1"
-                tt-temps.temperature = ?
+                tt-temps-tab.ii = 1
+                tt-temps-tab.key_ = "t1"
+                tt-temps-tab.temperature = ?
               .        
             end .
           end .
           if cb-calc-type = 3
           then do :
-            find first tt-temps no-error .
-            if not available tt-temps
+            find first tt-temps-tab no-error .
+            if not available tt-temps-tab
             then do ii = 1 to v-calc-num-izm :
-              create tt-temps .
+              create tt-temps-tab .
               assign
-                tt-temps.ii = ii
-                tt-temps.key_ = "t" + string(ii)
-                tt-temps.temperature = ?
+                tt-temps-tab.ii = ii
+                tt-temps-tab.key_ = "t" + string(ii)
+                tt-temps-tab.temperature = ?
               .        
             end .
           end .
         end .
         when 1 /*  1 - Неавтоматизированное СИ */
         then do :
-          find first tt-temps where tt-temps.key_ = "t1" no-error .
-          if available tt-temps
+          find first tt-temps-tab where tt-temps-tab.key_ = "t1" no-error .
+          if available tt-temps-tab
           then do :
-            empty temp-table tt-temps .
+            empty temp-table tt-temps-tab .
           end .
-          find first tt-temps no-error .
-          if not available tt-temps
+          find first tt-temps-tab no-error .
+          if not available tt-temps-tab
           then do :
-            create tt-temps .
+            create tt-temps-tab .
             assign
-              tt-temps.ii = 1
-              tt-temps.key_ = "tн"
-              tt-temps.temperature = ?
+              tt-temps-tab.ii = 1
+              tt-temps-tab.key_ = "tн"
+              tt-temps-tab.temperature = ?
             .
             if p-fuel-level > 1000
             then do :
-              create tt-temps .
+              create tt-temps-tab .
               assign
-                tt-temps.ii = 2
-                tt-temps.key_ = "tв"
-                tt-temps.temperature = ?
+                tt-temps-tab.ii = 2
+                tt-temps-tab.key_ = "tв"
+                tt-temps-tab.temperature = ?
               .
             end .
             if p-fuel-level > 2000
             then do :
-              tt-temps.key_ = "tср" .
-              create tt-temps .
+              tt-temps-tab.key_ = "tср" .
+              create tt-temps-tab .
               assign
-                tt-temps.ii = 3
-                tt-temps.key_ = "tв"
-                tt-temps.temperature = ?
+                tt-temps-tab.ii = 3
+                tt-temps-tab.key_ = "tв"
+                tt-temps-tab.temperature = ?
               .
             end .
           end .
@@ -493,56 +493,56 @@ procedure fill-tt :
         then do :
           v-num-izm = integer(truncate((p-fuel-level / 500), 0)) .
           if v-num-izm = 0 then v-num-izm = 1 .
-          find first tt-temps where tt-temps.key_ = "tн" no-error .
-          if available tt-temps
+          find first tt-temps-tab where tt-temps-tab.key_ = "tн" no-error .
+          if available tt-temps-tab
           then do :
-            empty temp-table tt-temps .
+            empty temp-table tt-temps-tab .
           end .
-          find first tt-temps no-error .
-          if not available tt-temps
+          find first tt-temps-tab no-error .
+          if not available tt-temps-tab
           then do ii = 1 to v-num-izm :
-            create tt-temps .
+            create tt-temps-tab .
             assign
-              tt-temps.ii = ii
-              tt-temps.key_ = "t" + string(ii)
-              tt-temps.temperature = ?
+              tt-temps-tab.ii = ii
+              tt-temps-tab.key_ = "t" + string(ii)
+              tt-temps-tab.temperature = ?
             .        
           end .
         end .
         when 1 /*  1 - Неавтоматизированное СИ */
         then do :
-          find first tt-temps where tt-temps.key_ = "t1" no-error .
-          if available tt-temps
+          find first tt-temps-tab where tt-temps-tab.key_ = "t1" no-error .
+          if available tt-temps-tab
           then do :
-            empty temp-table tt-temps .
+            empty temp-table tt-temps-tab .
           end .
-          find first tt-temps no-error .
-          if not available tt-temps
+          find first tt-temps-tab no-error .
+          if not available tt-temps-tab
           then do :
-            create tt-temps .
+            create tt-temps-tab .
             assign
-              tt-temps.ii = 1
-              tt-temps.key_ = "tн"
-              tt-temps.temperature = ?
+              tt-temps-tab.ii = 1
+              tt-temps-tab.key_ = "tн"
+              tt-temps-tab.temperature = ?
             .
             if (p-diameter >= 2500 and p-fuel-level >= (p-diameter / 2))
             or (p-diameter < 2500 and p-fuel-level >= 500)
             or (p-fuel-level >= 500 and p-fuel-level <= (p-diameter / 2))
             then do :
-              create tt-temps .
+              create tt-temps-tab .
               assign
-                tt-temps.ii = 2
-                tt-temps.key_ = "tср"
-                tt-temps.temperature = ?
+                tt-temps-tab.ii = 2
+                tt-temps-tab.key_ = "tср"
+                tt-temps-tab.temperature = ?
               .
             end .
             if (p-diameter >= 2500 and p-fuel-level >= (p-diameter / 2))
             then do :
-              create tt-temps .
+              create tt-temps-tab .
               assign
-                tt-temps.ii = 3
-                tt-temps.key_ = "tв"
-                tt-temps.temperature = ?
+                tt-temps-tab.ii = 3
+                tt-temps-tab.key_ = "tв"
+                tt-temps-tab.temperature = ?
               .
             end .
           end .
@@ -607,7 +607,7 @@ PROCEDURE enable_UI :
       v-calc-num-izm
     in FRAME Dialog-Frame.
   end .
-  open query br-temp for each tt-temps .
+  open query br-temp for each tt-temps-tab .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

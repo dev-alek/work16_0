@@ -27,14 +27,17 @@ define variable vss-description as character no-undo init "".
 define variable vFileReq1     as character no-undo. /* имя файла с логом */
 define variable vFileReq2     as character no-undo. /* имя файла с логом */
 define variable vFileReq3     as character no-undo. /* имя файла с логом */
+define variable vFileReq4     as character no-undo. /* имя файла с логом */
 
 define variable vFileReqPathArh1 as character no-undo. /* полное имя с путем файла с логом в каталоге для архивации */
 define variable vFileReqPathArh2 as character no-undo. /* полное имя с путем файла с логом в каталоге для архивации */
 define variable vFileReqPathArh3 as character no-undo. /* полное имя с путем файла с логом в каталоге для архивации */
+define variable vFileReqPathArh4 as character no-undo. /* полное имя с путем файла с логом в каталоге для архивации */
 
 define variable vFileReqPath1 as character no-undo. /* Полный путь к файлу логу */
 define variable vFileReqPath2 as character no-undo. /* Полный путь к файлу логу */
 define variable vFileReqPath3 as character no-undo. /* Полный путь к файлу логу */
+define variable vFileReqPath4 as character no-undo. /* Полный путь к файлу логу */
 
 define variable vFileArh     as character no-undo. /* имя файла архива */
 define variable vFolderPath  as character no-undo. /* Путь к каталогу с архивами */
@@ -61,7 +64,8 @@ assign
    vDate     = today - 1
    vFileReq1 = "GisMtReq-" + replace(string(vDate),"/","-") + ".log"   
    vFileReq2 = "GisMtCDN-" + replace(string(vDate),"/","-") + ".log"
-   vFileReq3 = "sktsrv-" + replace(string(vDate),"/","-") + ".log"      
+   vFileReq3 = "sktsrv-" + replace(string(vDate),"/","-") + ".log"
+   vFileReq4 = "GisMtOffLine-" + replace(string(vDate),"/","-") + ".log"        
    vFolder   = "Архивы взаимодействия с ГИС МТ"
    vPref  = "Архив взаимодействия с ГИС МТ - "
    vArhName = vPref + replace(string(vDate),"/","-")    
@@ -71,7 +75,8 @@ assign
 /* архивируем лог и удаляем его */
 vFileReqPath1 = searchFile(vFileReq1).
 vFileReqPath2 = searchFile(vFileReq2).
-vFileReqPath3 = searchFile(vFileReq3).                               
+vFileReqPath3 = searchFile(vFileReq3).
+vFileReqPath4 = searchFile(vFileReq4).                               
                                  
 if vFileReqPath1 <> ? then do:
     assign
@@ -91,7 +96,8 @@ if vFileReqPath1 <> ? then do:
     assign
        vFileReqPathArh1 = vArchPath + vDirDelim + vFileReq1
        vFileReqPathArh2 = vArchPath + vDirDelim + vFileReq2
-       vFileReqPathArh3 = vArchPath + vDirDelim + vFileReq3              
+       vFileReqPathArh3 = vArchPath + vDirDelim + vFileReq3
+       vFileReqPathArh4 = vArchPath + vDirDelim + vFileReq4              
        vFileArh         = vArchPath + ".zip"
        .
           
@@ -109,7 +115,12 @@ if vFileReqPath1 <> ? then do:
        copy-lob from file(vFileReqPath3) to file(vFileReqPathArh3) no-error.
        run write-to-log( substitute("Архивирование лога &1.log", 
                                     entry(1,vFileReqPath3,"."))).
-    end.   
+    end.
+    if vFileReqPath4 <> ? then do:   
+       copy-lob from file(vFileReqPath4) to file(vFileReqPathArh4) no-error.
+       run write-to-log( substitute("Архивирование лога &1.log", 
+                                    entry(1,vFileReqPath4,"."))).
+    end.      
                                                               
     run utl\arh7z.p(quoter(vFileArh),quoter(vArchPath)).
     
@@ -124,27 +135,28 @@ if vFileReqPath1 <> ? then do:
        then  run write-to-log( "Временный каталог для архивирования удален" ) .
        else  run write-to-log( "Не удалось удалить временный каталог для архивирования" ) .
        
-       os-delete value (vFileReqPath1) no-error .
-       /*os-delete value (vFileReqPathArh1) no-error .*/
+       os-delete value (vFileReqPath1) no-error .       
        if searchFile(vFileReq1) = ? 
        then  run write-to-log( "Лог проверки марок успешно удален" ) .
        else  run write-to-log( "Не удалось удалить лог проверки марок" ) .
        
        if vFileReqPath2 <> ? then do:
-           os-delete value (vFileReqPath2) no-error .
-           /*os-delete value (vFileReqPathArh2) no-error .*/
+           os-delete value (vFileReqPath2) no-error .           
            if searchFile(vFileReq2) = ? 
            then  run write-to-log( "Лог опроса CDN площадок успешно удален" ) .
            else  run write-to-log( "Не удалось удалить лог опроса CDN площадок" ) .
        end.
        if vFileReqPath3 <> ? then do:
-           os-delete value (vFileReqPath3) no-error .
-           /*os-delete value (vFileReqPathArh3) no-error .*/
+           os-delete value (vFileReqPath3) no-error .           
            if searchFile(vFileReq3) = ? 
            then  run write-to-log( "Лог сокет-сервера успешно удален" ) .
            else  run write-to-log( "Не удалось удалить лог сокет-сервера" ) .
        end.    
-                     
+       if vFileReqPath4 <> ? then do:
+           os-delete value (vFileReqPath4) no-error .           
+           if searchFile(vFileReq4) = ? 
+           then  run write-to-log( "Лог проверки статуса ЛМ ЧЗ удален" ) .           
+       end.              
     end.
     else run write-to-log( "Произошла ошибка при архивировании логов").
 end.

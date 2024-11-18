@@ -1251,6 +1251,7 @@ case pardoc-mode :
                 no
                 varcur-data
                 yes
+                no
                 tt-meas-file
                 tt-meas
                 no-error
@@ -1750,6 +1751,7 @@ define buffer meas_pump-nozzle for ub.pump-nozzle.
             tt-pump-nozzle
             varcur-pump
             yes
+            no
             no-error
           }
           if error-status :error then do:
@@ -1970,6 +1972,7 @@ if available ub.rvs-line then do:
          yes
          varcur-rvs
          yes
+         no
          tt-meas-file
          tt-meas
          no-error
@@ -2359,6 +2362,7 @@ procedure proc_m-meas-1:
           no
           varcur-rvs
           yes
+          no
           tt-meas-file
           tt-meas
           no-error

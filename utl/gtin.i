@@ -923,4 +923,92 @@ define output parameter vok as logical   no-undo init yes.
    end.
       
 end.       
+{&CommentStartNoClass}
+method private character addGs2Mark
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function addGs2Mark return character    
+{utl\comment.i} */ 
+(iMark as char):
+   define variable vDM   as character no-undo.
+   define variable vIdx  as integer   no-undo.
+   
+   if substring(iMark,26,4) = "8005" then
+   do:   /* табак блок */
+     vIdx = index(iMark,"93",26).
+     if vIdx > 1 then
+       vDM = substitute("&1&4&2&4&3",
+                        substring(iMark,1,25),
+                        substring(iMark,26,vIdx - 26 - 1),
+                        substring(iMark,vIdx),
+                        chr(29)) no-error.
+     else 
+       vDM = substitute("&1&3&2",
+                        substring(iMark,1,25),
+                        substring(iMark,26),
+                        chr(29)) no-error.
+   end.
+   else if substring(iMark,32,2) = "91" then
+   do:  /* легпром, духи, обувь, шины, лекарства, велосипеды, кресла-коляски, консервы  */
+     vIdx = index(iMark,"92",32).
+     if vIdx > 1 then
+       vDM = substitute("&1&4&2&4&3",
+                        substring(iMark,1,31),
+                        substring(iMark,32,vIdx - 31 - 1),
+                        substring(iMark,vIdx),
+                        chr(29)) no-error.
+     else 
+       vDM = substitute("&1&3&2",
+                        substring(iMark,1,31),
+                        substring(iMark,32),
+                        chr(29)) no-error.
+   end.
+   else if substring(iMark,39,2) = "91" then
+   do:  /* фото */
+     vIdx = index(iMark,"92",38).
+     if vIdx > 1 then
+       vDM = substitute("&1&4&2&4&3",
+                        substring(iMark,1,38),
+                        substring(iMark,39,vIdx - 38 - 1),
+                        substring(iMark,vIdx),
+                        chr(29)) no-error.
+     else 
+       vDM = substitute("&1&3&2",
+                        substring(iMark,1,38),
+                        substring(iMark,39),
+                        chr(29)) no-error.
+   end.
+   else if substring(iMark,25,2) = "93" then
+   do:  /* молочная продукция */
+     vIdx = index(iMark,"92",25).
+     if vIdx > 1 then
+       vDM = substitute("&1&4&2&4&3",
+                        substring(iMark,1,24),
+                        substring(iMark,25,vIdx - 24 - 1),
+                        substring(iMark,vIdx),
+                        chr(29)) no-error.
+     else 
+       vIdx = index(iMark,"3103",25).
+       if vIdx > 0 then
+       vDM = substitute("&1&4&2&4&3",
+                        substring(iMark,1,24),
+                        substring(iMark,25,vIdx - 24 - 1),
+                        substring(iMark,vIdx),
+                        chr(29)) no-error.
+       else
+         vDM = substitute("&1&3&2",
+                          substring(iMark,1,24),
+                          substring(iMark,25),
+                          chr(29)) no-error.
+   end.
+   else if substring(iMark,32,2) = "93" then
+   do:  /* упак. вода, БАД, пиво, антисептики */
+     vDM = substitute("&1&3&2",
+           substring(iMark,1,31),
+           substring(iMark,32),
+           chr(29)) no-error.
+   end.
+   
+   return if vDM <> "" then vDm else iMark.
+end.
+
 &endif

@@ -255,6 +255,7 @@ define variable Tree                 as class     tree         no-undo .
 define variable v-is-return          as logical   no-undo init no .
 define variable varpart-rec          as   recid                      no-undo.
 define variable vExist as logical no-undo.
+define variable vOk    as logical no-undo.
 
 define new shared temp-table tt-doc-pl no-undo
 field pl-code as integer format "99999999999"
@@ -379,7 +380,7 @@ define menu m-outs
 .
 DEFINE MENU m-marks 
   MENU-ITEM m_add-marks          LABEL "Добавить"      
-  MENU-ITEM m_del-marks          LABEL "Удалить"      
+/*  MENU-ITEM m_del-marks          LABEL "Удалить"*/
   MENU-ITEM m_lookup-marks       LABEL "Просмотр"      
   MENU-ITEM m_no-marks           LABEL "Немаркированная продукция"
 .
@@ -1287,7 +1288,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     define variable v-gds-code as integer   no-undo . 
     define variable ungroup    as logical   no-undo .
     define variable v-message  as character no-undo .
-    
+    define variable vIsExemplarGoods as logical no-undo .
     
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
     and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
@@ -1301,13 +1302,31 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
       end.
     end .
     v-add = yes .
+    
+    if not avail ub.goods then
+    do:
+      message "Сначала добавьте товар в документ" view-as alert-box .
+      return no-apply.
+    end.
+        
+    run isExemplarGoods in this-procedure 
+       (t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code, output vIsExemplarGoods).
+       
+    if not vIsExemplarGoods /* not isExemplarType(ub.goods.gds-code) */ then
+    do:
+      message "Для выбранного товара в документе не требуется ввод марок." skip
+              "Выполняется ручное добавление товара и ввод количества." view-as alert-box .
+      return no-apply.
+    end.
+
     do while v-add:
     
     run str/chs-alcmarks.w (
       input parparentproc,
       input t-doc.doc-code,
       input {&add-def},
-      input v-message,
+      input ub.goods.gds-code,
+      input "",
       output mark) no-error.
     if error-status :error or mark = "" or mark = ? then 
     do: 
@@ -1318,84 +1337,27 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     find first marking where marking.mark begins mark
       no-lock no-error  .
 
-    if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
+    if available marking then
     do:
-      v-gds-code = marking.gds-code .
-
-      find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-      if not available (buf_goods) then 
-      do:
-        v-message = "Марка отсутствует в документе" .
-      end.
-      
-        find first buf_marking-lines exclusive-lock where buf_marking-lines.out-code = t-doc.doc-code
-                                                      and buf_marking-lines.obj-code = t-doc.obj-code 
-                                                      and buf_marking-lines.obj-type = t-doc.obj-type 
-          and buf_marking-lines.mark begins mark no-error .
-        if available (buf_marking-lines) then 
-        do:
-          if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then do:
-                    v-message = "Марка уже просканирована" .
-          end.  
-          if buf_marking-lines.doc-level > 1 then 
-          do:
-            message "Разгруппировать упаковки?"
-              view-as alert-box question buttons yes-no update ungroup.
-            if ungroup then 
-            do:
-              if tree:UnGroupDoc(buf_marking-lines.mark, buf_marking-lines.in-code, buf_marking-lines.out-code, buf_marking-lines.obj-code, buf_marking-lines.obj-type) then 
-              do:
-                v-message = "Упаковка с маркой " + buf_marking-lines.mark + " разгруппирована." .
-              end.
-            /*              end.*/
-            end.  
-          end.   
-          if tree:LevelDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code) then 
-          do:
-            tree:StatusDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code, ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB) .
-          end.
-          buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB .
-        end.
-        else 
-        do:
-          v-message = "Марка " + mark + " отсутствует в документе" . 
-        end.  
-      end.
-
-    else 
-    do:
-      if     available marking
-        and marking.sts ne objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
-        then 
-      do:
-        v-message = "Марка не в свободной зоне." .
-      end.
-      else 
-      do:      
-        v-gds-code = marking.gds-code.
-        find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-        if not available (buf_goods) then 
-        do:
-          v-message = "Марка отсутствует в документе" .
-        end.   
+        find first buf_goods no-lock where recid(buf_goods) = recid(ub.goods) no-error .
         find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code
           and buf_doc-line.artic = buf_goods.artic and buf_doc-line.prod-code = buf_goods.prod-code
           and buf_doc-line.prod-type = buf_goods.prod-type no-error .
-        if not available (buf_doc-line) then 
+        if not available (buf_doc-line) then
         do:
-        find first buf_marking-lines exclusive-lock where buf_marking-lines.out-code = {&free-code} and 
-          buf_marking-lines.gds-code = buf_goods.gds-code and buf_marking-lines.obj-code = t-doc.obj-code and buf_marking-lines.obj-type = t-doc.obj-type 
+        find first buf_marking-lines exclusive-lock where buf_marking-lines.out-code = {&free-code} and
+          buf_marking-lines.gds-code = buf_goods.gds-code and buf_marking-lines.obj-code = t-doc.obj-code and buf_marking-lines.obj-type = t-doc.obj-type
           and buf_marking-lines.mark begins mark no-error .
-        if available (buf_marking-lines) then 
+        if available (buf_marking-lines) then
         do:
           /*разблокировка товара*/
-          if buf_marking-lines.doc-level > 1 then 
+          if buf_marking-lines.doc-level > 1 then
           do:
-              if tree:UnGroupDoc(buf_marking-lines.mark, buf_marking-lines.in-code, buf_marking-lines.out-code, buf_marking-lines.obj-code, buf_marking-lines.obj-type) then 
+              if tree:UnGroupDoc(buf_marking-lines.mark, buf_marking-lines.in-code, buf_marking-lines.out-code, buf_marking-lines.obj-code, buf_marking-lines.obj-type) then
               do:
-            end.  
-          end.   
-       end.
+            end.
+          end.
+        end.
           if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
           and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
           then do :
@@ -1475,54 +1437,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
           end .
 
         end. 
-      end.
     end.
-    if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} and pardoc-mode <> {&lookup} then 
-    do:
-      
-    ii = 0 .
-
-        for each buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code,
-          first buf_gds-dtl exclusive-lock where buf_gds-dtl.doc-code = buf_doc-line.doc-code and 
-                                                 buf_gds-dtl.artic = buf_doc-line.artic and
-                                                 buf_gds-dtl.prod-code = buf_doc-line.prod-code and 
-                                                 buf_gds-dtl.prod-type = buf_doc-line.prod-type:
-          jj = 0 .        
-          
-          find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
-                                             buf_goods.prod-code = buf_doc-line.prod-code and
-                                             buf_goods.prod-type = buf_doc-line.prod-type no-error .
-          
-          for each buf_marking-lines exclusive-lock where buf_marking-lines.obj-code = buf_doc-line.obj-code and 
-                                                          buf_marking-lines.obj-type = buf_doc-line.obj-type and 
-                                                          buf_marking-lines.out-code = buf_doc-line.doc-code and 
-                                                          buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and
-                                                          buf_marking-lines.gds-code = buf_goods.gds-code,
-            first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark and 
-                                            buf_marking.obj-code = buf_marking-lines.obj-code and
-                                            buf_marking.obj-type = buf_marking-lines.obj-type and buf_marking.unit-ext = "UNIT": 
-              jj = jj + 1 .
-          buf_doc-line.fact-qnty = jj .
-          buf_gds-dtl.fact-qnty = buf_doc-line.fact-qnty .
-          for first buf_parts exclusive-lock where buf_parts.out-code = buf_marking-lines.out-code and 
-                                                   buf_parts.artic = buf_doc-line.artic and
-                                                   buf_parts.prod-code = buf_doc-line.prod-code and 
-                                                   buf_parts.prod-type = buf_doc-line.prod-type and 
-                                                   buf_parts.obj-code = buf_marking-lines.obj-code and
-                                                   buf_parts.obj-type = buf_marking-lines.obj-type and
-                                                   buf_parts.part-code = buf_marking-lines.part-code and 
-                                                   buf_parts.in-code = buf_marking-lines.in-code and
-                                                   buf_parts.prt-code = buf_marking-lines.prt-code:
-            buf_parts.fact-qnty = buf_doc-line.fact-qnty .
-          end. 
-          ii = ii + 1 . 
-          end.
-        
-        t-doc.fact-qnty = ii .         
-                                    
-        end.
-
-  end.  
 
     run ui-on in this-procedure ( input "line" ).
 
@@ -1532,261 +1447,275 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME m_del-marks
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_del-marks d-out-doc
-ON CHOOSE OF MENU-ITEM m_del-marks /* Удаление */
-  DO:
-    define buffer buf_marking-lines for ub.marking-lines .
-    define buffer bf_marking-lines  for ub.marking-lines .
-    define buffer buf_marking       for ub.marking .
-    define buffer buf_goods         for ub.goods .
-    define buffer buf_doc-line      for ub.doc-line .
-    define buffer buf_gds-dtl       for ub.gds-dtl .
-    define buffer buf_parts         for ub.parts .
-    define buffer buf_gds-obj       for ub.gds-obj .
-    define variable ii   as integer   no-undo .
-    define variable jj   as integer   no-undo .
-    define variable mark as character no-undo .
-    define buffer buf_gds-prt for ub.gds-prt .
-    define variable v-qnty      as decimal   no-undo .
-    define variable v-parts     as character no-undo .
-    define variable gds-rec     as recid     no-undo .
-    define variable v-gds-code  as integer   no-undo .
-    define variable v-host-code like sysconf.host-code no-undo.
-    define variable v-tax-date  as date      no-undo.
-    define variable v-vat-pc    like ub.doc-line.vat-pc no-undo.
-    define variable v-slt-pc    like ub.doc-line.slt-pc no-undo.
-    define variable ungroup     as logical   no-undo . 
-    define variable v-message   as character no-undo .
-    define variable chg-qnty    as integer   no-undo .
-    define variable v-GTIN      as character no-undo .
-    define variable v-qnty-doc  as decimal   no-undo .
-    define variable v-qnty-fact as decimal   no-undo .
-    define variable v-in-code   as character no-undo .
-    define buffer bf_parts    for ub.parts .
-    define buffer cpl_gds-prt for ub.gds-prt.  
-    define buffer cpl_prt-obj for ub.prt-obj.       
-    define variable v-sts as integer no-undo .
-
-v-del = yes .
-do while v-del:
-    if available (t-doc) then 
-    do:
-      
-      run str/chs-alcmarks.w (
-        input parparentproc,
-        input t-doc.doc-code,
-        input {&update},
-        input v-message,
-        output mark) no-error.
-      if error-status :error or mark = "" or mark = ? then 
-      do: 
-        return no-apply. 
-      end.
-      v-message = "" .
-
-      find first marking where marking.mark begins mark
-        exclusive-lock no-error.
-      if not available (marking) then do:
-        v-message = "Марка не найдена" .
-      end.  
-      v-gds-code = marking.gds-code .
-
-      find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-      if available (buf_goods) then
-      do:
-
-        if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then v-sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
-        else v-sts = 99 .
-
-
-          find first buf_marking-lines exclusive-lock where buf_marking-lines.out-code = t-doc.doc-code 
-                                                        and buf_marking-lines.gds-code = buf_goods.gds-code 
-                                                        and buf_marking-lines.obj-code = t-doc.obj-code 
-                                                        and buf_marking-lines.obj-type = t-doc.obj-type
-                                                        and buf_marking-lines.mark begins mark no-error .
-          if available (buf_marking-lines) then
-          do:
-            if buf_marking-lines.doc-level = 1 then do:
-            if tree:LevelDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code) then
-            do:
-              tree:StatusDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code, v-sts) .
-            end.
-            buf_marking-lines.sts = v-sts .
-            
-            end.
-            else do:
-              v-message = "Марка входит в состав упаковки, просканируйте марку упаковки" .
-            end.  
-          end.
-          else
-          do:
-            v-message = "Марка " + mark + " отсутствует в документе" .
-          end.
-      end.
-      else 
-      do:
-        v-message = "Товар не найден" .
-      end.  
-
-
-      if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} and pardoc-mode <> {&lookup} then 
-      do:
-    ii = 0 .
-
-        for each buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code,
-          first buf_gds-dtl exclusive-lock where buf_gds-dtl.doc-code = buf_doc-line.doc-code and 
-                                                 buf_gds-dtl.artic = buf_doc-line.artic and
-                                                 buf_gds-dtl.prod-code = buf_doc-line.prod-code and 
-                                                 buf_gds-dtl.prod-type = buf_doc-line.prod-type:
-          jj = 0 .        
-          
-          find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
-                                             buf_goods.prod-code = buf_doc-line.prod-code and
-                                             buf_goods.prod-type = buf_doc-line.prod-type no-error .
-          
-          for each buf_marking-lines exclusive-lock where buf_marking-lines.obj-code = buf_doc-line.obj-code and 
-                                                          buf_marking-lines.obj-type = buf_doc-line.obj-type and 
-                                                          buf_marking-lines.out-code = buf_doc-line.doc-code and 
-                                                          buf_marking-lines.gds-code = buf_goods.gds-code,
-            first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark and 
-                                            buf_marking.obj-code = buf_marking-lines.obj-code and
-                                            buf_marking.obj-type = buf_marking-lines.obj-type and buf_marking.unit-ext = "UNIT": 
-          if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then do:
-          jj = jj + 1 .
-          ii = ii + 1 . 
-          end.
-          buf_doc-line.fact-qnty = jj .
-          buf_gds-dtl.fact-qnty = buf_doc-line.fact-qnty .          
-          for first buf_parts exclusive-lock where buf_parts.out-code = buf_marking-lines.out-code and 
-                                                   buf_parts.artic = buf_doc-line.artic and
-                                                   buf_parts.prod-code = buf_doc-line.prod-code and 
-                                                   buf_parts.prod-type = buf_doc-line.prod-type and 
-                                                   buf_parts.obj-code = buf_marking-lines.obj-code and
-                                                   buf_parts.obj-type = buf_marking-lines.obj-type and
-                                                   buf_parts.part-code = buf_marking-lines.part-code and 
-                                                   buf_parts.in-code = buf_marking-lines.in-code and
-                                                   buf_parts.prt-code = buf_marking-lines.prt-code:
-            buf_parts.fact-qnty = buf_doc-line.fact-qnty .
-          end. 
-          
-          end.
-        
-        t-doc.fact-qnty = ii .                                     
-        end.               
-
-      end.  
-      else 
-      do:
-        
-        v-qnty = 0 .
-        jj = 0 .
-        find first bf_marking-lines where bf_marking-lines.obj-code = t-doc.obj-code 
-                                      and bf_marking-lines.obj-type = t-doc.obj-type
-                                      and bf_marking-lines.out-code = t-doc.doc-code 
-                                      and bf_marking-lines.sts <> 99 
-                                      and bf_marking-lines.gds-code = v-gds-code no-error .
-        if available (bf_marking-lines) then 
-        do:
-          v-in-code = bf_marking-lines.in-code .
-                  for each buf_marking-lines exclusive-lock where buf_marking-lines.out-code = bf_marking-lines.out-code
-                                                     and buf_marking-lines.obj-code = bf_marking-lines.obj-code
-                                                     and buf_marking-lines.obj-type = bf_marking-lines.obj-type
-/*                                                     and buf_marking-lines.sts = 99*/
-                                                     and buf_marking-lines.gds-code = bf_marking-lines.gds-code:
-                                                                         
-          if  v-in-code <> buf_marking-lines.in-code then do:
-            message "Удаление марок по товару не возможно. Удалите полностью товар и просканируйте марки"
-            view-as alert-box.
-            return no-apply .
-          end. 
-                 v-in-code = buf_marking-lines.in-code        .                                        
-                  end.                                                       
-         for each buf_marking-lines exclusive-lock where buf_marking-lines.out-code = bf_marking-lines.out-code
-/*                                                     and buf_marking-lines.in-code = bf_marking-lines.in-code*/
-                                                     and buf_marking-lines.obj-code = bf_marking-lines.obj-code
-                                                     and buf_marking-lines.obj-type = bf_marking-lines.obj-type
-                                                     and buf_marking-lines.sts = 99
-                                                     and buf_marking-lines.gds-code = bf_marking-lines.gds-code,
-            first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark:
-            if buf_marking-lines.in-code = bf_marking-lines.in-code then do:
-            if  buf_marking.unit-ext = "UNIT" then  jj = jj + 1 .
-              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
-              buf_marking-lines.out-code = {&free-code} .
-              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
-            end.
-            else do:
-              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .
-            end.  
-          end.
- 
-          find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-          if available (buf_goods) then 
-          do:
-            for first buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code and buf_doc-line.artic = buf_goods.artic and
-              buf_doc-line.prod-code = buf_goods.prod-code and buf_doc-line.prod-type = buf_goods.prod-type,
-              first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = buf_doc-line.doc-code and ub.gds-dtl.artic = buf_doc-line.artic and
-              ub.gds-dtl.prod-code = buf_doc-line.prod-code and ub.gds-dtl.prod-type = buf_doc-line.prod-type:
-              /*проверять на маркирование?*/
-              if not t-doc.flag_ then
-              do:
-                v-qnty = ub.gds-dtl.doc-qnty - jj .
-                ub.gds-dtl.doc-qnty:screen-value in browse {&browse-name} = string(v-qnty) .
-                if decimal( ub.gds-dtl.doc-qnty  :screen-value in browse {&browse-name} ) <> ub.gds-dtl.doc-qnty  then 
-                do:
-                  { str/chg-qnty.i doc}
-                end.
-              end.
-              else 
-              do:
-                v-qnty = ub.gds-dtl.fact-qnty - jj .
-                ub.gds-dtl.fact-qnty:screen-value in browse {&browse-name} = string(v-qnty) .
-                if decimal( ub.gds-dtl.fact-qnty  :screen-value in browse {&browse-name} ) <> ub.gds-dtl.fact-qnty  then 
-                do:
-                  { str/chg-qnty.i fact}
-                end.
-              end.  
-            end.  
-          end.
-        end.
-        else 
-        do:
-/*          prt-rec  = recid (gds-dtl) .*/
-/*          find gds-dtl where recid (gds-dtl) = prt-rec exclusive.*/
-        
-          find gds-dtl exclusive-lock where gds-dtl.doc-code = t-doc.doc-code and 
-                                                 gds-dtl.artic = buf_goods.artic and
-                                                 gds-dtl.prod-code = buf_goods.prod-code and 
-                                                 gds-dtl.prod-type = buf_goods.prod-type .
-          prt-rec  = recid (gds-dtl) .
-          find gds-dtl where recid (gds-dtl) = prt-rec exclusive.
-          find doc-line where doc-line.doc-code = gds-dtl.doc-code
-            and doc-line.prod-code = gds-dtl.prod-code
-            and doc-line.prod-type = gds-dtl.prod-type
-            and doc-line.artic     = gds-dtl.artic exclusive.
-          find goods where goods.prod-code = gds-dtl.prod-code
-            and goods.prod-type = gds-dtl.prod-type
-            and goods.artic     = gds-dtl.artic no-lock.
-          run str/out-add.p (parparentproc,
-            recid(t-doc),
-            recid(doc-line),
-            recid(gds-dtl),
-            recid (goods),
-            "delete",
-            ?) no-error.     
-        end.   
-
-
-      end.
-      
-    end.
-    run ui-on in this-procedure ( input "line" ).  
-  end.
-
-  END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
+/*&Scoped-define SELF-NAME m_del-marks                                                                                                                                            */
+/*&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_del-marks d-out-doc                                                                                                                 */
+/*ON CHOOSE OF MENU-ITEM m_del-marks /* Удаление */                                                                                                                               */
+/*  DO:                                                                                                                                                                           */
+/*    define buffer buf_marking-lines for ub.marking-lines .                                                                                                                      */
+/*    define buffer bf_marking-lines  for ub.marking-lines .                                                                                                                      */
+/*    define buffer buf_marking       for ub.marking .                                                                                                                            */
+/*    define buffer buf_goods         for ub.goods .                                                                                                                              */
+/*    define buffer buf_doc-line      for ub.doc-line .                                                                                                                           */
+/*    define buffer buf_gds-dtl       for ub.gds-dtl .                                                                                                                            */
+/*    define buffer buf_parts         for ub.parts .                                                                                                                              */
+/*    define buffer buf_gds-obj       for ub.gds-obj .                                                                                                                            */
+/*    define variable ii   as integer   no-undo .                                                                                                                                 */
+/*    define variable jj   as integer   no-undo .                                                                                                                                 */
+/*    define variable mark as character no-undo .                                                                                                                                 */
+/*    define buffer buf_gds-prt for ub.gds-prt .                                                                                                                                  */
+/*    define variable v-qnty      as decimal   no-undo .                                                                                                                          */
+/*    define variable v-parts     as character no-undo .                                                                                                                          */
+/*    define variable gds-rec     as recid     no-undo .                                                                                                                          */
+/*    define variable v-gds-code  as integer   no-undo .                                                                                                                          */
+/*    define variable v-host-code like sysconf.host-code no-undo.                                                                                                                 */
+/*    define variable v-tax-date  as date      no-undo.                                                                                                                           */
+/*    define variable v-vat-pc    like ub.doc-line.vat-pc no-undo.                                                                                                                */
+/*    define variable v-slt-pc    like ub.doc-line.slt-pc no-undo.                                                                                                                */
+/*    define variable ungroup     as logical   no-undo .                                                                                                                          */
+/*    define variable v-message   as character no-undo .                                                                                                                          */
+/*    define variable chg-qnty    as integer   no-undo .                                                                                                                          */
+/*    define variable v-GTIN      as character no-undo .                                                                                                                          */
+/*    define variable v-qnty-doc  as decimal   no-undo .                                                                                                                          */
+/*    define variable v-qnty-fact as decimal   no-undo .                                                                                                                          */
+/*    define variable v-in-code   as character no-undo .                                                                                                                          */
+/*    define buffer bf_parts    for ub.parts .                                                                                                                                    */
+/*    define buffer cpl_gds-prt for ub.gds-prt.                                                                                                                                   */
+/*    define buffer cpl_prt-obj for ub.prt-obj.                                                                                                                                   */
+/*    define variable v-sts as integer no-undo .                                                                                                                                  */
+/*                                                                                                                                                                                */
+/*v-del = yes .                                                                                                                                                                   */
+/*do while v-del:                                                                                                                                                                 */
+/*    if available (t-doc) then                                                                                                                                                   */
+/*    do:                                                                                                                                                                         */
+/*                                                                                                                                                                                */
+/*      if not avail ub.goods then                                                                                                                                                */
+/*      do:                                                                                                                                                                       */
+/*        return no-apply.                                                                                                                                                        */
+/*      end.                                                                                                                                                                      */
+/*      if not isExemplarType(ub.goods.gds-code) then                                                                                                                             */
+/*      do:                                                                                                                                                                       */
+/*        message "Для выбранного товара в документе не требуется ввод марок." skip                                                                                               */
+/*                "Выполняется ручное изменение количества товара." view-as alert-box .                                                                                           */
+/*        return no-apply.                                                                                                                                                        */
+/*      end.                                                                                                                                                                      */
+/*                                                                                                                                                                                */
+/*      run str/chs-alcmarks.w (                                                                                                                                                  */
+/*        input parparentproc,                                                                                                                                                    */
+/*        input t-doc.doc-code,                                                                                                                                                   */
+/*        input {&update},                                                                                                                                                        */
+/*        input v-message,                                                                                                                                                        */
+/*        output mark) no-error.                                                                                                                                                  */
+/*      if error-status :error or mark = "" or mark = ? then                                                                                                                      */
+/*      do:                                                                                                                                                                       */
+/*        return no-apply.                                                                                                                                                        */
+/*      end.                                                                                                                                                                      */
+/*      v-message = "" .                                                                                                                                                          */
+/*                                                                                                                                                                                */
+/*      find first marking where marking.mark begins mark                                                                                                                         */
+/*        exclusive-lock no-error.                                                                                                                                                */
+/*      if not available (marking) then do:                                                                                                                                       */
+/*        v-message = "Марка не найдена" .                                                                                                                                        */
+/*      end.                                                                                                                                                                      */
+/*      v-gds-code = marking.gds-code .                                                                                                                                           */
+/*                                                                                                                                                                                */
+/*      find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .                                                                                             */
+/*      if available (buf_goods) then                                                                                                                                             */
+/*      do:                                                                                                                                                                       */
+/*                                                                                                                                                                                */
+/*        if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then v-sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .                                                      */
+/*        else v-sts = 99 .                                                                                                                                                       */
+/*                                                                                                                                                                                */
+/*                                                                                                                                                                                */
+/*          find first buf_marking-lines exclusive-lock where buf_marking-lines.out-code = t-doc.doc-code                                                                         */
+/*                                                        and buf_marking-lines.gds-code = buf_goods.gds-code                                                                     */
+/*                                                        and buf_marking-lines.obj-code = t-doc.obj-code                                                                         */
+/*                                                        and buf_marking-lines.obj-type = t-doc.obj-type                                                                         */
+/*                                                        and buf_marking-lines.mark begins mark no-error .                                                                       */
+/*          if available (buf_marking-lines) then                                                                                                                                 */
+/*          do:                                                                                                                                                                   */
+/*            if buf_marking-lines.doc-level = 1 then do:                                                                                                                         */
+/*            if tree:LevelDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code) then    */
+/*            do:                                                                                                                                                                 */
+/*              tree:StatusDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code, v-sts) .*/
+/*            end.                                                                                                                                                                */
+/*            buf_marking-lines.sts = v-sts .                                                                                                                                     */
+/*                                                                                                                                                                                */
+/*            end.                                                                                                                                                                */
+/*            else do:                                                                                                                                                            */
+/*              v-message = "Марка входит в состав упаковки, просканируйте марку упаковки" .                                                                                      */
+/*            end.                                                                                                                                                                */
+/*          end.                                                                                                                                                                  */
+/*          else                                                                                                                                                                  */
+/*          do:                                                                                                                                                                   */
+/*            v-message = "Марка " + mark + " отсутствует в документе" .                                                                                                          */
+/*          end.                                                                                                                                                                  */
+/*      end.                                                                                                                                                                      */
+/*      else                                                                                                                                                                      */
+/*      do:                                                                                                                                                                       */
+/*        v-message = "Товар не найден" .                                                                                                                                         */
+/*      end.                                                                                                                                                                      */
+/*                                                                                                                                                                                */
+/*                                                                                                                                                                                */
+/*      if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} and pardoc-mode <> {&lookup} then                                                                                              */
+/*      do:                                                                                                                                                                       */
+/*    ii = 0 .                                                                                                                                                                    */
+/*                                                                                                                                                                                */
+/*        for each buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code,                                                                                      */
+/*          first buf_gds-dtl exclusive-lock where buf_gds-dtl.doc-code = buf_doc-line.doc-code and                                                                               */
+/*                                                 buf_gds-dtl.artic = buf_doc-line.artic and                                                                                     */
+/*                                                 buf_gds-dtl.prod-code = buf_doc-line.prod-code and                                                                             */
+/*                                                 buf_gds-dtl.prod-type = buf_doc-line.prod-type:                                                                                */
+/*          jj = 0 .                                                                                                                                                              */
+/*                                                                                                                                                                                */
+/*          find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and                                                                                           */
+/*                                             buf_goods.prod-code = buf_doc-line.prod-code and                                                                                   */
+/*                                             buf_goods.prod-type = buf_doc-line.prod-type no-error .                                                                            */
+/*                                                                                                                                                                                */
+/*          for each buf_marking-lines exclusive-lock where buf_marking-lines.obj-code = buf_doc-line.obj-code and                                                                */
+/*                                                          buf_marking-lines.obj-type = buf_doc-line.obj-type and                                                                */
+/*                                                          buf_marking-lines.out-code = buf_doc-line.doc-code and                                                                */
+/*                                                          buf_marking-lines.gds-code = buf_goods.gds-code,                                                                      */
+/*            first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark and                                                                                       */
+/*                                            buf_marking.obj-code = buf_marking-lines.obj-code and                                                                               */
+/*                                            buf_marking.obj-type = buf_marking-lines.obj-type and buf_marking.unit-ext = "UNIT":                                                */
+/*          if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then do:                                                                                     */
+/*          jj = jj + 1 .                                                                                                                                                         */
+/*          ii = ii + 1 .                                                                                                                                                         */
+/*          end.                                                                                                                                                                  */
+/*          buf_doc-line.fact-qnty = jj .                                                                                                                                         */
+/*          buf_gds-dtl.fact-qnty = buf_doc-line.fact-qnty .                                                                                                                      */
+/*          for first buf_parts exclusive-lock where buf_parts.out-code = buf_marking-lines.out-code and                                                                          */
+/*                                                   buf_parts.artic = buf_doc-line.artic and                                                                                     */
+/*                                                   buf_parts.prod-code = buf_doc-line.prod-code and                                                                             */
+/*                                                   buf_parts.prod-type = buf_doc-line.prod-type and                                                                             */
+/*                                                   buf_parts.obj-code = buf_marking-lines.obj-code and                                                                          */
+/*                                                   buf_parts.obj-type = buf_marking-lines.obj-type and                                                                          */
+/*                                                   buf_parts.part-code = buf_marking-lines.part-code and                                                                        */
+/*                                                   buf_parts.in-code = buf_marking-lines.in-code and                                                                            */
+/*                                                   buf_parts.prt-code = buf_marking-lines.prt-code:                                                                             */
+/*            buf_parts.fact-qnty = buf_doc-line.fact-qnty .                                                                                                                      */
+/*          end.                                                                                                                                                                  */
+/*                                                                                                                                                                                */
+/*          end.                                                                                                                                                                  */
+/*                                                                                                                                                                                */
+/*        t-doc.fact-qnty = ii .                                                                                                                                                  */
+/*        end.                                                                                                                                                                    */
+/*                                                                                                                                                                                */
+/*      end.                                                                                                                                                                      */
+/*      else                                                                                                                                                                      */
+/*      do:                                                                                                                                                                       */
+/*                                                                                                                                                                                */
+/*        v-qnty = 0 .                                                                                                                                                            */
+/*        jj = 0 .                                                                                                                                                                */
+/*        find first bf_marking-lines where bf_marking-lines.obj-code = t-doc.obj-code                                                                                            */
+/*                                      and bf_marking-lines.obj-type = t-doc.obj-type                                                                                            */
+/*                                      and bf_marking-lines.out-code = t-doc.doc-code                                                                                            */
+/*                                      and bf_marking-lines.sts <> 99                                                                                                            */
+/*                                      and bf_marking-lines.gds-code = v-gds-code no-error .                                                                                     */
+/*        if available (bf_marking-lines) then                                                                                                                                    */
+/*        do:                                                                                                                                                                     */
+/*          v-in-code = bf_marking-lines.in-code .                                                                                                                                */
+/*                  for each buf_marking-lines exclusive-lock where buf_marking-lines.out-code = bf_marking-lines.out-code                                                        */
+/*                                                     and buf_marking-lines.obj-code = bf_marking-lines.obj-code                                                                 */
+/*                                                     and buf_marking-lines.obj-type = bf_marking-lines.obj-type                                                                 */
+/*/*                                                     and buf_marking-lines.sts = 99*/                                                                                         */
+/*                                                     and buf_marking-lines.gds-code = bf_marking-lines.gds-code:                                                                */
+/*                                                                                                                                                                                */
+/*          if  v-in-code <> buf_marking-lines.in-code then do:                                                                                                                   */
+/*            message "Удаление марок по товару не возможно. Удалите полностью товар и просканируйте марки"                                                                       */
+/*            view-as alert-box.                                                                                                                                                  */
+/*            return no-apply .                                                                                                                                                   */
+/*          end.                                                                                                                                                                  */
+/*                 v-in-code = buf_marking-lines.in-code        .                                                                                                                 */
+/*                  end.                                                                                                                                                          */
+/*         for each buf_marking-lines exclusive-lock where buf_marking-lines.out-code = bf_marking-lines.out-code                                                                 */
+/*/*                                                     and buf_marking-lines.in-code = bf_marking-lines.in-code*/                                                               */
+/*                                                     and buf_marking-lines.obj-code = bf_marking-lines.obj-code                                                                 */
+/*                                                     and buf_marking-lines.obj-type = bf_marking-lines.obj-type                                                                 */
+/*                                                     and buf_marking-lines.sts = 99                                                                                             */
+/*                                                     and buf_marking-lines.gds-code = bf_marking-lines.gds-code,                                                                */
+/*            first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark:                                                                                   */
+/*            if buf_marking-lines.in-code = bf_marking-lines.in-code then do:                                                                                                    */
+/*            if  buf_marking.unit-ext = "UNIT" then  jj = jj + 1 .                                                                                                               */
+/*              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .                                                                                                 */
+/*              buf_marking-lines.out-code = {&free-code} .                                                                                                                       */
+/*              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .                                                                                */
+/*            end.                                                                                                                                                                */
+/*            else do:                                                                                                                                                            */
+/*              buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB .                                                                                */
+/*            end.                                                                                                                                                                */
+/*          end.                                                                                                                                                                  */
+/*                                                                                                                                                                                */
+/*          find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .                                                                                         */
+/*          if available (buf_goods) then                                                                                                                                         */
+/*          do:                                                                                                                                                                   */
+/*            for first buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code and buf_doc-line.artic = buf_goods.artic and                                     */
+/*              buf_doc-line.prod-code = buf_goods.prod-code and buf_doc-line.prod-type = buf_goods.prod-type,                                                                    */
+/*              first ub.gds-dtl exclusive-lock where ub.gds-dtl.doc-code = buf_doc-line.doc-code and ub.gds-dtl.artic = buf_doc-line.artic and                                   */
+/*              ub.gds-dtl.prod-code = buf_doc-line.prod-code and ub.gds-dtl.prod-type = buf_doc-line.prod-type:                                                                  */
+/*              /*проверять на маркирование?*/                                                                                                                                    */
+/*              if not t-doc.flag_ then                                                                                                                                           */
+/*              do:                                                                                                                                                               */
+/*                v-qnty = ub.gds-dtl.doc-qnty - jj .                                                                                                                             */
+/*                ub.gds-dtl.doc-qnty:screen-value in browse {&browse-name} = string(v-qnty) .                                                                                    */
+/*                if decimal( ub.gds-dtl.doc-qnty  :screen-value in browse {&browse-name} ) <> ub.gds-dtl.doc-qnty  then                                                          */
+/*                do:                                                                                                                                                             */
+/*                  { str/chg-qnty.i doc}                                                                                                                                         */
+/*                end.                                                                                                                                                            */
+/*              end.                                                                                                                                                              */
+/*              else                                                                                                                                                              */
+/*              do:                                                                                                                                                               */
+/*                v-qnty = ub.gds-dtl.fact-qnty - jj .                                                                                                                            */
+/*                ub.gds-dtl.fact-qnty:screen-value in browse {&browse-name} = string(v-qnty) .                                                                                   */
+/*                if decimal( ub.gds-dtl.fact-qnty  :screen-value in browse {&browse-name} ) <> ub.gds-dtl.fact-qnty  then                                                        */
+/*                do:                                                                                                                                                             */
+/*                  { str/chg-qnty.i fact}                                                                                                                                        */
+/*                end.                                                                                                                                                            */
+/*              end.                                                                                                                                                              */
+/*            end.                                                                                                                                                                */
+/*          end.                                                                                                                                                                  */
+/*        end.                                                                                                                                                                    */
+/*        else                                                                                                                                                                    */
+/*        do:                                                                                                                                                                     */
+/*/*          prt-rec  = recid (gds-dtl) .*/                                                                                                                                      */
+/*/*          find gds-dtl where recid (gds-dtl) = prt-rec exclusive.*/                                                                                                           */
+/*                                                                                                                                                                                */
+/*          find gds-dtl no-lock where gds-dtl.doc-code = t-doc.doc-code and                                                                                                      */
+/*                                            gds-dtl.artic = buf_goods.artic and                                                                                                 */
+/*                                            gds-dtl.prod-code = buf_goods.prod-code and                                                                                         */
+/*                                            gds-dtl.prod-type = buf_goods.prod-type no-error.                                                                                   */
+/*          if avail gds-dtl then                                                                                                                                                 */
+/*          do:                                                                                                                                                                   */
+/*          prt-rec  = recid (gds-dtl) .                                                                                                                                          */
+/*          find gds-dtl where recid (gds-dtl) = prt-rec exclusive-lock.                                                                                                          */
+/*          find doc-line where doc-line.doc-code = gds-dtl.doc-code                                                                                                              */
+/*            and doc-line.prod-code = gds-dtl.prod-code                                                                                                                          */
+/*            and doc-line.prod-type = gds-dtl.prod-type                                                                                                                          */
+/*            and doc-line.artic     = gds-dtl.artic exclusive.                                                                                                                   */
+/*          find goods where goods.prod-code = gds-dtl.prod-code                                                                                                                  */
+/*            and goods.prod-type = gds-dtl.prod-type                                                                                                                             */
+/*            and goods.artic     = gds-dtl.artic no-lock.                                                                                                                        */
+/*          run str/out-add.p (parparentproc,                                                                                                                                     */
+/*            recid(t-doc),                                                                                                                                                       */
+/*            recid(doc-line),                                                                                                                                                    */
+/*            recid(gds-dtl),                                                                                                                                                     */
+/*            recid (goods),                                                                                                                                                      */
+/*            "delete",                                                                                                                                                           */
+/*            ?) no-error.                                                                                                                                                        */
+/*          end.                                                                                                                                                                  */
+/*        end.                                                                                                                                                                    */
+/*                                                                                                                                                                                */
+/*                                                                                                                                                                                */
+/*      end.                                                                                                                                                                      */
+/*                                                                                                                                                                                */
+/*    end.                                                                                                                                                                        */
+/*    run ui-on in this-procedure ( input "line" ).                                                                                                                               */
+/*  end.                                                                                                                                                                          */
+/*                                                                                                                                                                                */
+/*  END.                                                                                                                                                                          */
+/*                                                                                                                                                                                */
+/*/* _UIB-CODE-BLOCK-END */                                                                                                                                                       */
+/*&ANALYZE-RESUME                                                                                                                                                                 */
 
 &Scoped-define SELF-NAME m_lookup-marks
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_lookup-marks d-out-doc
@@ -1798,6 +1727,12 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
     define variable par-type    as character no-undo .
     define variable p-alcohol   as logical   no-undo .
     define variable v-type      as integer   no-undo .
+    define variable v-fact-qnty as integer   no-undo .
+    define variable v-fact-part as integer   no-undo .
+    
+    define buffer buf_doc-line for ub.doc-line.
+    define buffer buf_gds-dtl  for ub.gds-dtl.
+    define buffer buf_parts    for ub.parts.
     
     if t-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} or t-doc.ext-doc-type = {&TDEDT_Ras_Perem} then v-type = 0. else v-type = 2 .        
     for each bf_doc-line no-lock where bf_doc-line.doc-code = t-doc.doc-code :
@@ -1825,7 +1760,8 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
         for each ub.marking-lines no-lock where
           ub.marking-lines.obj-type = t-doc.obj-type
           and ub.marking-lines.obj-code = t-doc.obj-code
-          and ub.marking-lines.out-code = t-doc.doc-code:
+          and ub.marking-lines.out-code = t-doc.doc-code
+          and ub.marking-lines.gds-code = ub.goods.gds-code:
           if v-is-return
           then do :
             create tt-marking-lines.
@@ -1859,11 +1795,62 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
       do:
         run str/mark_browse.w (input parparentproc,
           input-output table tt-marking-lines by-reference,
-          input {&lookup},
-          input "Марки по: " + t-doc.ext-doc-type + " " + t-doc.doc-code,
+          input if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then {&update} else {&lookup},
+          input "Марки по: " + t-doc.doc-code + {&delim-par} + t-doc.ext-doc-type,
           input v-type,
           input "" /*тип продукции*/
           )  .
+
+          if pardoc-mode <> {&lookup} and t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
+          do:    /* для приход перемещение вычислим отсканированные марки */
+             /* идем по партиям и учтем принятые марки в факт */
+             for each buf_parts exclusive-lock where
+                      buf_parts.artic = ub.goods.artic
+                  and buf_parts.prod-type = ub.goods.prod-type
+                  and buf_parts.prod-code = ub.goods.prod-code
+                  and buf_parts.obj-type = t-doc.obj-type
+                  and buf_parts.obj-code = t-doc.obj-code
+                  and buf_parts.out-code = t-doc.doc-code
+                 : 
+               v-fact-part = 0.
+               for each tt-marking-lines no-lock where
+                        tt-marking-lines.doc-level = 1
+                    and tt-marking-lines.in-code = buf_parts.in-code
+                    and tt-marking-lines.out-code = buf_parts.out-code
+                    and tt-marking-lines.part-code = buf_parts.part-code
+                    and tt-marking-lines.prt-code = buf_parts.prt-code
+               :
+                   if tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB and
+                      tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB then
+                      v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
+               end.
+               if buf_parts.fact-qnty <> v-fact-part then
+                 buf_parts.fact-qnty = v-fact-part.
+               v-fact-qnty = v-fact-qnty + v-fact-part.
+             end.
+             if ub.gds-dtl.fact-qnty <> v-fact-qnty then
+             do:
+               find first buf_doc-line where rowid(buf_doc-line) = rowid(ub.doc-line) exclusive-lock.
+               find first buf_gds-dtl where rowid(buf_gds-dtl) = rowid(ub.gds-dtl) exclusive-lock.
+               assign
+                 buf_doc-line.fact-qnty = v-fact-qnty
+                 buf_gds-dtl.fact-qnty  = v-fact-qnty                
+               . 
+               br-dtl:refresh() in frame {&frame-name}.   
+               for each bf_doc-line no-lock where
+                        bf_doc-line.obj-type = t-doc.obj-type
+                    and bf_doc-line.obj-code = t-doc.obj-code
+                    and bf_doc-line.doc-code = t-doc.doc-code
+               :
+                 accum bf_doc-line.fact-qnty (total).  
+               end.
+               if t-doc.fact-qnty <> accum total bf_doc-line.fact-qnty then
+               do:
+                 t-doc.fact-qnty = accum total bf_doc-line.fact-qnty.
+                 display t-doc.fact-qnty with frame {&frame-name}.
+               end.  
+             end.
+          end.
       end.
       else 
       do:
@@ -3702,6 +3689,7 @@ then frame {&frame-name}:parent = active-window.
 
 on window-close of frame {&frame-name} apply "end-error":u to self.
 
+/*run gbl/inidebug.p.*/
 { gbl/app_help.i }
 { gbl/ed_date.i t-doc.fact-date }
 { gbl/ed_date.i t-doc.doc-date }
@@ -3914,16 +3902,17 @@ else
 do:
   menu-item m_no-marks:sensitive in menu m-marks = no .
 end.
-      if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} then 
+      if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
+         t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
       do:
         menu-item m_add-marks:sensitive in menu m-marks = no.
-        menu-item m_del-marks:sensitive in menu m-marks = no.
+/*        menu-item m_del-marks:sensitive in menu m-marks = no.*/
       end .  
       
       if pardoc-mode = {&lookup} or t-doc.status_  <> {&wayb} and t-doc.status_ <> {&inquiry} then 
       do:
         menu-item m_add-marks:sensitive in menu m-marks = no.
-        menu-item m_del-marks:sensitive in menu m-marks = no.
+/*        menu-item m_del-marks:sensitive in menu m-marks = no.*/
       end.
       
       if pardoc-mode = {&add-def} 
@@ -3949,8 +3938,8 @@ end.
       }
       if varvalue = "yes" then do:
         v-is-return = yes .
-        menu-item m_add-marks:sensitive in menu m-marks = no.
-        menu-item m_del-marks:sensitive in menu m-marks = no.
+/*        menu-item m_add-marks:sensitive in menu m-marks = no.*/
+/*        menu-item m_del-marks:sensitive in menu m-marks = no.*/
         disable b-bc with frame {&frame-name} .
         gds-dtl.doc-qnty:read-only in browse br-dtl = yes .
         gds-dtl.fact-qnty:read-only in browse br-dtl = yes .
@@ -4108,7 +4097,7 @@ end.
                                            , input {&trdcattr-othermoves}
                                            , input "yes":U
                                            , output vExist ) .
-  end.       
+  end.      
 if pardoc-mode = {&add-def} then do:
   wait-for go of frame {&frame-name} focus t-doc.cli-code.
 end.
@@ -6257,6 +6246,7 @@ define variable  var_is-petrol as logical   no-undo .
 define variable  var_is-pieces as logical   no-undo .
 define variable varvalue        as character no-undo .
 define variable vartype         as character no-undo .
+define variable vIsExemplarGoods as logical no-undo .
 
 define variable v-type-mode-spr as character no-undo .
 define variable varschartic like doc-line.artic initial " " no-undo.
@@ -6579,6 +6569,7 @@ do while varlns-cnt <= num-entries (varnotes):
         varlns-cnt = varlns-cnt + 1.
       next.
     end.
+    
     if bf_gds-obj.free-qnty <= 0
     then do :
       message "Невозможно выполнить возврат товара " bf_goods.artic " " bf_goods.gds-name ", т.к. текущие свободные остатки равны 0."
@@ -6656,7 +6647,6 @@ do while varlns-cnt <= num-entries (varnotes):
       end .
     end .
           
-          
     if EDOParSec:GetIsEDOForType(varvalue)
     or EDOParSec:GetIsArticForType(varvalue)
     or EDOParSec:GetIsMarkingForType(varvalue)
@@ -6670,69 +6660,13 @@ do while varlns-cnt <= num-entries (varnotes):
                                             no-error .
       if available bf_marking-lines
       or (num-entries(bf_parts.part-code, "_") = 2 and length(entry(1, bf_parts.part-code, "_")) = 14)
+/*      or t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}*/
       then do :
         message "Товар подлежит обязательной маркировке и прослеживаемости, для возврата поставщику необходимо просканировать КМ" view-as alert-box .
         
-        v-add = yes .
-        do while v-add :
-          run str/chs-alcmarks.w (
-            input parparentproc,
-            input t-doc.doc-code,
-            input {&add-def},
-            input string(recid(bf_parts)),
-            output mark) no-error.
-          if error-status :error or mark = "" or mark = ? then 
-          do: 
-            next add-goods_ . 
-          end.
-          find first bf_doc-line exclusive-lock where bf_doc-line.doc-code = t-doc.doc-code
-                                                  and bf_doc-line.artic = bf_goods.artic
-                                                  and bf_doc-line.prod-code = bf_goods.prod-code
-                                                  and bf_doc-line.prod-type = bf_goods.prod-type
-                                                  no-error .
-          if not available (bf_doc-line)
-          then do:
-            run str/out-add.p (parparentproc,
-                recid(t-doc),
-                ?,
-                ?,
-                gds-rec,
-                {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
-                'scan-marks' + {&delim-key} + mark) no-error.
-            if error-status :error then 
-            do:
-              next .
-            end.
-            if return-value = "stop-add-marks"
-            then do :
-              v-add = no .
-            end .
-          end .
-          else do :
-            find first bf_gds-dtl exclusive-lock where bf_gds-dtl.doc-code = bf_doc-line.doc-code
-                                                   and bf_gds-dtl.artic = bf_doc-line.artic
-                                                   and bf_gds-dtl.prod-type = bf_doc-line.prod-type
-                                                   and bf_gds-dtl.prod-code = bf_doc-line.prod-code
-                                                   no-error.
-            run str/out-add.p
-              ( input parparentproc
-              ,input recid(t-doc)
-              ,input recid(bf_doc-line)
-              ,input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?)
-              ,input gds-rec
-              ,input {&update} + {&delim-par} + "return=" + string(recid(bf_parts))
-              ,input 'scan-marks' + {&delim-key} + mark)
-            no-error.
-            if error-status :error then 
-            do:
-              next .
-            end.
-            if return-value = "stop-add-marks"
-            then do :
-              v-add = no .
-            end .
-          end .
-        end .
+        run scanMark in this-procedure (recid(bf_parts), buffer bf_goods, output vOk) no-error.
+        if not vOk then
+          next add-goods_ .
       end .
       else do :
         if EDOParSec:GetIsTransitionalForType(varvalue)
@@ -6740,66 +6674,9 @@ do while varlns-cnt <= num-entries (varnotes):
           message "Возвращаем маркированные упаковки товара?" view-as alert-box question buttons yes-no update varlog .
           if varlog
           then do :
-            v-add = yes .
-            do while v-add :
-              run str/chs-alcmarks.w (
-                input parparentproc,
-                input t-doc.doc-code,
-                input {&add-def},
-                input string(recid(bf_parts)),
-                output mark) no-error.
-              if error-status :error or mark = "" or mark = ? then 
-              do: 
-                next add-goods_ . 
-              end.
-              find first bf_doc-line exclusive-lock where bf_doc-line.doc-code = t-doc.doc-code
-                                                      and bf_doc-line.artic = bf_goods.artic
-                                                      and bf_doc-line.prod-code = bf_goods.prod-code
-                                                      and bf_doc-line.prod-type = bf_goods.prod-type
-                                                      no-error .
-              if not available (bf_doc-line)
-              then do:
-                run str/out-add.p (parparentproc,
-                    recid(t-doc),
-                    ?,
-                    ?,
-                    gds-rec,
-                    {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
-                    'scan-marks' + {&delim-key} + mark) no-error.
-                if error-status :error then 
-                do:
-                  next .
-                end.
-                if return-value = "stop-add-marks"
-                then do :
-                  v-add = no .
-                end .
-              end .
-              else do :
-                find first bf_gds-dtl exclusive-lock where bf_gds-dtl.doc-code = bf_doc-line.doc-code
-                                                       and bf_gds-dtl.artic = bf_doc-line.artic
-                                                       and bf_gds-dtl.prod-type = bf_doc-line.prod-type
-                                                       and bf_gds-dtl.prod-code = bf_doc-line.prod-code
-                                                       no-error.
-                run str/out-add.p
-                  ( input parparentproc
-                  ,input recid(t-doc)
-                  ,input recid(bf_doc-line)
-                  ,input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?)
-                  ,input gds-rec
-                  ,input {&update} + {&delim-par} + "return=" + string(recid(bf_parts))
-                  ,input 'scan-marks' + {&delim-key} + mark)
-                no-error.
-                if error-status :error then 
-                do:
-                  next .
-                end.
-                if return-value = "stop-add-marks"
-                then do :
-                  v-add = no .
-                end .
-              end .
-            end .
+            run scanMark in this-procedure (recid(bf_parts), buffer bf_goods, output vOk) no-error.
+            if not vOk then
+              next add-goods_ .
           end .
           else do :
             run str/out-add.p (parparentproc,
@@ -6818,66 +6695,9 @@ do while varlns-cnt <= num-entries (varnotes):
         else do :
           message "Товар подлежит обязательной маркировке и прослеживаемости, для возврата поставщику необходимо просканировать КМ" view-as alert-box .
           
-          v-add = yes .
-          do while v-add :
-            run str/chs-alcmarks.w (
-              input parparentproc,
-              input t-doc.doc-code,
-              input {&add-def},
-              input string(recid(bf_parts)),
-              output mark) no-error.
-            if error-status :error or mark = "" or mark = ? then 
-            do: 
-              next add-goods_ . 
-            end.
-            find first bf_doc-line exclusive-lock where bf_doc-line.doc-code = t-doc.doc-code
-                                                    and bf_doc-line.artic = bf_goods.artic
-                                                    and bf_doc-line.prod-code = bf_goods.prod-code
-                                                    and bf_doc-line.prod-type = bf_goods.prod-type
-                                                    no-error .
-            if not available (bf_doc-line)
-            then do:
-              run str/out-add.p (parparentproc,
-                  recid(t-doc),
-                  ?,
-                  ?,
-                  gds-rec,
-                  {&add-def} + {&delim-par} + "return=" + string(recid(bf_parts)),
-                  'scan-marks' + {&delim-key} + mark) no-error.
-              if error-status :error then 
-              do:
-                next .
-              end.
-              if return-value = "stop-add-marks"
-              then do :
-                v-add = no .
-              end .
-            end .
-            else do :
-              find first bf_gds-dtl exclusive-lock where bf_gds-dtl.doc-code = bf_doc-line.doc-code
-                                                     and bf_gds-dtl.artic = bf_doc-line.artic
-                                                     and bf_gds-dtl.prod-type = bf_doc-line.prod-type
-                                                     and bf_gds-dtl.prod-code = bf_doc-line.prod-code
-                                                     no-error.
-              run str/out-add.p
-                ( input parparentproc
-                ,input recid(t-doc)
-                ,input recid(bf_doc-line)
-                ,input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?)
-                ,input gds-rec
-                ,input {&update} + {&delim-par} + "return=" + string(recid(bf_parts))
-                ,input 'scan-marks' + {&delim-key} + mark)
-              no-error.
-              if error-status :error then 
-              do:
-                next .
-              end.
-              if return-value = "stop-add-marks"
-              then do :
-                v-add = no .
-              end .
-            end .
-          end .
+          run scanMark in this-procedure (recid(bf_parts), buffer bf_goods, output vOk) no-error.
+          if not vOk then
+            next add-goods_ .
         end .
       end .
     end .
@@ -6911,16 +6731,30 @@ do while varlns-cnt <= num-entries (varnotes):
     end.
   end .
   else do : 
-    run str/out-add.p (parparentproc,
-                   recid(t-doc),
-                   ?,
-                   ?,
-                   gds-rec,
-                   {&add-def},
-                   v-param) no-error.
-    if error-status :error then do:
-      next.
+    run isExemplarGoods in this-procedure 
+       (t-doc.obj-type, t-doc.obj-code, bf_goods.gds-code, output vIsExemplarGoods).
+    if vIsExemplarGoods then
+    do: 
+      /* для списания требуется сканирование марок */
+      message "Товар подлежит обязательной маркировке и прослеживаемости, для списания необходимо просканировать КМ" view-as alert-box .
+
+      run scanMark in this-procedure (?, buffer bf_goods, output vOk) no-error.
+      if not vOk then
+        next add-goods_ .
     end.
+    else
+    do:    
+        run str/out-add.p (parparentproc,
+                       recid(t-doc),
+                       ?,
+                       ?,
+                       gds-rec,
+                       {&add-def},
+                       v-param) no-error.
+        if error-status :error then do:
+          next.
+        end.
+    end. 
   end.
 end.
 
@@ -9432,6 +9266,139 @@ procedure rowdisp :
         bcol[ii]:bgcolor = RED_COLOR when get-vsdsts(buffer ub.gds-dtl) = "-".
     end.
   end.  
+  
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE scanMark d-in-doc 
+procedure scanMark :
+  define input parameter iRecidParts as recid no-undo.
+  define parameter buffer iBufGoods for goods.
+  define output parameter oOk as logical no-undo init true.
+  
+  define variable vRightChngQntyCode as character no-undo .
+  define variable vRightChngQnty     as logical   no-undo .
+  define buffer buf_doc-line for ub.doc-line.
+  define buffer bf_gds-dtl   for ub.gds-dtl.
+  
+  v-add = yes .
+  do while v-add :
+
+    run str/chs-alcmarks.w (
+      input parparentproc,
+      input t-doc.doc-code,
+      input {&add-def},
+      input iBufGoods.gds-code,
+      input if iRecidParts <> ? then string(iRecidParts) else "",
+      output mark) no-error.
+    if error-status :error or mark = "" or mark = ? then 
+    do: 
+      oOk = false.
+      find first buf_doc-line no-lock where 
+                 buf_doc-line.doc-code = t-doc.doc-code
+             and buf_doc-line.artic = iBufGoods.artic
+             and buf_doc-line.prod-code = iBufGoods.prod-code
+             and buf_doc-line.prod-type = iBufGoods.prod-type
+           no-error .
+      release bf_gds-dtl.
+      if avail buf_doc-line then
+          find first bf_gds-dtl no-lock where 
+                     bf_gds-dtl.doc-code = buf_doc-line.doc-code
+                 and bf_gds-dtl.artic = buf_doc-line.artic
+                 and bf_gds-dtl.prod-type = buf_doc-line.prod-type
+                 and bf_gds-dtl.prod-code = buf_doc-line.prod-code
+               no-error.
+      if not avail bf_gds-dtl and 
+         (t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}) then
+      do:  /* строка с товаром не найена, значит еще ничего не просканировали */
+          vRightChngQntyCode = if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} 
+                               then 'actn_write-off_add-no-mark':U
+                               else 'actn_tdedt-ras-perem_add-no-mark':U.
+          { gbl/chk-actg.i
+            v-cntxt-db-num
+            v-cntxt-userid
+            {&action-head-code-main}
+            vRightChngQntyCode
+            {&cntxt-object}
+            t-doc.host-code
+            t-doc.obj-type
+            t-doc.obj-code
+            0
+            0
+            0
+            false
+            vRightChngQnty
+          }
+          if not vRightChngQnty then
+          do:
+            message "Товар не добавлен, т.к. не просканировано ни одой марки."
+              view-as alert-box.
+            return.  
+          end. 
+      end.
+      run str/out-add.p (parparentproc,
+          recid(t-doc),
+          input recid(buf_doc-line),
+          input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?),
+          gds-rec,
+          (if available bf_gds-dtl then {&update} else {&add-def}) + 
+          if iRecidParts <> ? then ({&delim-par} + "return=" + string(iRecidParts)) else "",
+          '') no-error.
+      return. 
+    end.
+    find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code
+                                            and buf_doc-line.artic = iBufGoods.artic
+                                            and buf_doc-line.prod-code = iBufGoods.prod-code
+                                            and buf_doc-line.prod-type = iBufGoods.prod-type
+                                            no-error .
+    if not available (buf_doc-line)
+    then do:
+      run str/out-add.p (parparentproc,
+          recid(t-doc),
+          ?,
+          ?,
+          gds-rec,
+          {&add-def} + 
+          if iRecidParts <> ? then ({&delim-par} + "return=" + string(iRecidParts)) else "",
+          'scan-marks' + {&delim-key} + mark) no-error.
+      if error-status :error then 
+      do:
+        next .
+      end.
+      if return-value = "stop-add-marks"
+      then do :
+        v-add = no .
+      end .
+    end .
+    else do :
+      find first bf_gds-dtl exclusive-lock where bf_gds-dtl.doc-code = buf_doc-line.doc-code
+                                             and bf_gds-dtl.artic = buf_doc-line.artic
+                                             and bf_gds-dtl.prod-type = buf_doc-line.prod-type
+                                             and bf_gds-dtl.prod-code = buf_doc-line.prod-code
+                                             no-error.
+      run str/out-add.p
+        ( input parparentproc
+        ,input recid(t-doc)
+        ,input recid(buf_doc-line)
+        ,input (if available bf_gds-dtl then recid(bf_gds-dtl) else ?)
+        ,input gds-rec
+        ,input {&update} + 
+               if iRecidParts <> ? then ({&delim-par} + "return=" + string(iRecidParts)) else ""
+        ,input 'scan-marks' + {&delim-key} + mark)
+      no-error.
+      if error-status :error then 
+      do:
+        return error.
+      end.
+      if return-value = "stop-add-marks"
+      then do :
+        v-add = no .
+      end .
+    end .
+  end .
+  
   
 end procedure.
 

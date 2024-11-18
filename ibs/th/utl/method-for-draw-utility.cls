@@ -2312,7 +2312,7 @@ class ibs.th.utl.method-for-draw-utility final:
   
 
                   put-log ( string(now) +  "   Ќачинаем загрузку остатков по топливу...") .
-                     MESSAGE   " Ќачинаем загрузку остатков по топливу...@" VIEW-AS ALERT-BOX .
+                  /*   MESSAGE   " Ќачинаем загрузку остатков по топливу...@" VIEW-AS ALERT-BOX . */
                   define variable v-count-err as integer no-undo .
                   
                   run utl/imp-doc4cr-draw-ptrl.p ( this-object

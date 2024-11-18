@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 315b966a6a9b, 3487, rls $
+$Author: BelovaMM $
+$Date: 2023/10/16 15:13:36 $
+$Workfile: inv-doc.w $
+$Archive: str/inv-doc.w $
 
 Документ инвентаризации
 
@@ -56,11 +56,11 @@ define input-output parameter line-rec        as   recid                   no-un
 define input        parameter br-handle       as   handle                  no-undo.
 define input        parameter bf-handle       as   handle                  no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 315b966a6a9b, 3487, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: BelovaMM $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/10/16 15:13:36 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: inv-doc.w $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/inv-doc.w $":U .
 define variable vss-description as character no-undo initial "Документ инвентаризации":U .
 
 { cmp/vssrevis.i }
@@ -84,6 +84,7 @@ define variable vss-description as character no-undo initial "Документ инвентари
 { gbl/thbjattr.i }
 { ref/gds-attr.i }
 { str/temp_upd.i }
+{ str/attrlist.i }
 
 define temp-table tt-gds-list no-undo like ub.goods
 field nn as integer
@@ -320,7 +321,7 @@ define variable v-is-introduce                      as   logical                
 define variable bcol                                as   handle                        extent no-undo.
 define variable hBrowse                             as   handle                        no-undo.
 define variable ii                                  as   integer                       no-undo.
-
+define variable v-other                     as   character                     no-undo.
 { gbl/objsrv.i }
    
 DEFINE VARIABLE f-acc as decimal format "->>>,>>>,>>9.999":U
@@ -342,7 +343,7 @@ DEFINE VARIABLE f-izlnedos as decimal format "->>>,>>>,>>9.999":U
      SIZE 17 BY 1 
      fgcolor 4
      NO-UNDO.
-
+     
 DEFINE VARIABLE f-izlnedos-2 as decimal format "->>>,>>>,>>9.999":U
      VIEW-AS FILL-IN 
      SIZE 18 BY 1 
@@ -1007,6 +1008,10 @@ define button b-alcmark
      label "АлкМарк":l
      size 9 by 1.
 
+DEFINE BUTTON b-attr
+     LABEL "А&трибуты"
+     SIZE 9 BY 1.
+     
 define button b-add
      label "&Добав":l
      size 9 by 1.
@@ -1277,6 +1282,7 @@ define frame {&FRAME-NAME}
     SIZE 3 BY .88 TOOLTIP "Порядок смен"
     FGCOLOR 4
   r-sht AT ROW 3 COL 61.5
+  b-attr                       at row 3   col 82
   rect-trn-doc                 at row 4.2 col 1
   rect-inv-doc                 at row 6.7 col 1
   rect-tog                     at row 6.7 col 48
@@ -1361,7 +1367,6 @@ assign
   b-st     :menu-mouse                           = 1
   b-parts- :popup-menu in frame {&FRAME-NAME}    = menu m-parts- :handle
   b-parts- :menu-mouse                           = 1.
-
 assign
   r-reas            :tooltip in frame {&FRAME-NAME} = "Основание (причина) создания документа. Вызов справочника"
   t-doc.reason-code :tooltip in frame {&FRAME-NAME} = "Основание (причина) создания документа. Ввод кода"
@@ -1948,6 +1953,20 @@ do:
   run local-parts in this-procedure.
 end.
 
+ON CHOOSE OF b-attr IN FRAME {&FRAME-NAME} /* Атрибуты */
+DO:
+
+  run init-attr-general in this-procedure .
+
+    if t-doc.status_ <> {&fact} then do:
+      run str/inv-attr.w (input ParParentproc, input "b-lkp,b-chg", input t-doc.doc-code, input table tt-upd-attr) no-error.
+    end.
+    else do:
+      run str/inv-attr.w (input ParParentproc, input "b-lkp", input t-doc.doc-code, input table tt-upd-attr) no-error.
+    end.
+
+END.
+
 on choose of b-chk-doc in frame {&FRAME-NAME} /* Чеки */
 do:
 define variable loc-chk-doc-option as character no-undo .
@@ -2299,6 +2318,7 @@ define variable p-type  as character no-undo.
 
   ASSIGN {&clmn_8-br-list} :READ-ONLY IN BROWSE {&BROWSE-NAME} = YES.
   enable b-parts with frame {&FRAME-NAME}.
+  enable b-attr with frame {&FRAME-NAME}.
   enable dif-only with frame {&FRAME-NAME}.
   if pardoc-mode = {&lookup} then do:
     if parext-doc-mode = "reason-code" then do:
@@ -2833,6 +2853,125 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
   
   apply "entry":U to {&BROWSE-NAME}.
 end procedure. /* UI-On */
+
+PROCEDURE init-attr-general :
+/* Атрибуты расходного документа */
+do on error undo, return error return-value :
+run cr-tt-upd .
+define variable varexist                  as logical   no-undo.
+  &scop create-record run create-record in this-procedure (  input t-doc.doc-code ~
+                                                        ,  input ~{&~{&attr-code~}~} ~
+                                                        ,  input  ~{&attr-val~} ~
+                                                        , output varexist ) no-error.
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-number
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-inv-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player3
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player3
+{&create-record}
+
+end.
+
+END PROCEDURE.
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE cr-tt-upd d-in-doc
+PROCEDURE cr-tt-upd :
+do on error undo, return error return-value :
+
+for each tt-upd-attr: delete tt-upd-attr. end.
+
+&scop create-record create tt-upd-attr. ~
+ assign~
+  tt-upd-attr.code =  ~{&~{&attr-code~}~}  . ~
+                                        ~
+~{ str/tdatinv-cod.i                   ~
+     tt-upd-attr.code           ~
+     tt-upd-attr.type-attr      ~
+     tt-upd-attr.format-attr    ~
+     tt-upd-attr.fillin_width   ~
+     tt-upd-attr.fillin_height  ~
+     tt-upd-attr.label-attr     ~
+     tt-upd-attr.user-can-edit  ~
+     tt-upd-attr.output-display ~
+     v-other                    ~
+     tt-upd-attr.proc-attr       ~
+     tt-upd-attr.full-screen-val ~
+     tt-upd-attr.sort_  ~
+     no-error         ~
+~}                    ~
+ if error-status :error then do:    ~
+   message "Ошибка при установке атрибутов инвентаризации." skip ~
+           error-status :get-message(1) skip return-value ~
+   view-as alert-box. ~
+   return error. ~
+ end.
+ 
+ 
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-number
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-inv-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player3
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player3
+{&create-record}
+
+
+end.
+end procedure.
+
 
 procedure loc-cr-gds-dtl :
   define variable n-c like ub.gds-prt.node-code          no-undo.

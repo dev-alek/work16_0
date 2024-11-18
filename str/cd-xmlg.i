@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: de2ec29bf3dd, 3632, test $
+$Author: EShklyar $
+$Date: 2024/01/12 09:48:15 $
+$Workfile: cd-xmlg.i $
+$Archive: str/cd-xmlg.i $
 
 Специфические процедуры обработки ПРИЕМА xml почты с касс
 
@@ -16,7 +16,7 @@ Creation date: 06/22/04
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: cd-xmlg.i $ $Revision: de2ec29bf3dd, 3632, test $".
 
 { gbl/cd-attr.i }
 
@@ -592,6 +592,12 @@ define input parameter p-parameter as character no-undo .
 define variable v-file-type as character no-undo .
 define variable v-adresat as character no-undo .
 define variable v-FO-version as character no-undo .
+define variable v-OptVersion as character no-undo .
+define variable v-OptVersion1 as character no-undo .
+define variable v-OptVersion2 as character no-undo .
+define variable v-OptVersion3 as character no-undo .
+define variable v-OptVersion4 as character no-undo .
+define variable v-OptVer      as character no-undo .
 define variable v-old-fo-version as character no-undo .
 define variable v-pay-desk as integer no-undo .
 define variable v-dop as character no-undo .
@@ -607,6 +613,9 @@ on error undo, return error
 :
 
   if v-is-spool-file = no then do:
+  
+    IF INDEX(p-parameter,"OptVersion") > 0 THEN v-OptVer = 'OptVer'.
+
     assign
     v-file-type = cb-xmlparse-get-attr(
                               input this-procedure:handle
@@ -638,8 +647,37 @@ on error undo, return error
                              ,input p-spool-or-data
                              ,input p-parameter
                              ,input "from":U
-                             ,input no)
-
+                             ,input no) 
+    v-OptVersion =  cb-xmlparse-get-attr(
+                              input this-procedure:handle
+                             ,input p-spool-or-data
+                             ,input p-parameter
+                             ,input "OptVersion":U
+                             ,input no)                             
+    v-OptVersion1 =  cb-xmlparse-get-attr(
+                              input this-procedure:handle
+                             ,input p-spool-or-data
+                             ,input p-parameter
+                             ,input "OptVersion1":U
+                             ,input no)                                                          
+    v-OptVersion2 =  cb-xmlparse-get-attr(
+                              input this-procedure:handle
+                             ,input p-spool-or-data
+                             ,input p-parameter
+                             ,input "OptVersion2":U
+                             ,input no)                                                                                       
+    v-OptVersion3 =  cb-xmlparse-get-attr(
+                              input this-procedure:handle
+                             ,input p-spool-or-data
+                             ,input p-parameter
+                             ,input "OptVersion3":U
+                             ,input no)                                                                                                                    
+    v-OptVersion4 =  cb-xmlparse-get-attr(
+                              input this-procedure:handle
+                             ,input p-spool-or-data
+                             ,input p-parameter
+                             ,input "OptVersion4":U
+                             ,input no)                                                                                                                    
     &endif
     .
     if v-file-type = "REPLY":U AND
@@ -712,8 +750,47 @@ on error undo, return error
               ,input 0 /*p-integer*/
               ,input no /*p-logical*/
               ) .
-          end.                                                  
+          end.    
 
+          IF v-OptVer = 'OptVer' THEN DO:
+            v-OptVer = "".
+            IF v-OptVersion  <> ? THEN v-OptVer = TRIM(v-OptVersion," "). 
+            IF v-OptVersion1 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion1," ")) .
+            IF v-OptVersion2 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion2," ")) .
+            IF v-OptVersion3 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion3," ")) .
+            IF v-OptVersion4 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion4," ")) .
+            v-OptVer = TRIM(v-OptVer,",").
+                IF v-OptVer = "" THEN v-OptVer = "?" . 
+                    run cd-attr-write in this-procedure (
+                                                   input cash-desk.db-num
+                                                  ,input cash-desk.obj-code
+                                                  ,input cash-desk.pos-type
+                                                  ,input cash-desk.cash-num
+                                                  ,input  (if cash-desk.pos-type = {&cd-type-ibm-xml}
+                                                           then {&cda-IBM-XML_operative}
+                                                           else {&cda-AUTOTANK_operative})
+                                                  ,input  (if cash-desk.pos-type = {&cd-type-IBM-XML}
+                                                       then {&cda-IBM-XML_operative_OptVer}
+                                                       else {&cda-AUTOTANK_operative_OptVer})
+                                                  ,input v-OptVer
+                                                  ,input no /*p-date*/
+                                                  ,input no /*p-decimal*/
+                                                  ,input no /*p-integer*/
+                                                  ,input no /*p-logical*/
+                                                  ) no-error.
+               v-OptVer = '' . 
+           END.
+
+          if error-status:error then do :
+              v-err-message = return-value . /* чтобы видеть текст сообщения в деббагере*/
+              run write-log-and-file in p-log-handle (
+            input 1
+          , input log-file-name
+          , input 1
+          , input v-err-message
+                                          ).
+              p-view-log = yes .
+            end .                                      
 
            run cd-attr-value in this-procedure (
                                                input cash-desk.db-num
@@ -1192,4 +1269,4 @@ end procedure. /* create-temp-table-record */
 
 
 
-/* $Workfile$ e n d */
+/* $Workfile: cd-xmlg.i $ e n d */

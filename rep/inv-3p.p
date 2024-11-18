@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ea50b6f7ec06, 1082, rls $
+$Author: EShklyar $
+$Date: Thu Oct 12 16:33:09 2017 +0300 $
+$Workfile: inv-3p.p $
+$Archive: rep/inv-3p.p $
 
 Инвентаризационная опись и сличительная ведомость
 
@@ -24,11 +24,11 @@ on error undo, return error
   define input parameter p-grp              as character no-undo. /* используется для печати только сумм по группам */
   define input parameter print-graft        as logical          no-undo.
 
-  define variable vss-revision    as character no-undo initial "$Revision$":U .
-  define variable vss-author      as character no-undo initial "$Author$":U .
-  define variable vss-date        as character no-undo initial "$Date$":U .
-  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-  define variable vss-archive     as character no-undo initial "$Archive$":U .
+  define variable vss-revision    as character no-undo initial "$Revision: ea50b6f7ec06, 1082, rls $":U .
+  define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+  define variable vss-date        as character no-undo initial "$Date: Thu Oct 12 16:33:09 2017 +0300 $":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile: inv-3p.p $":U .
+  define variable vss-archive     as character no-undo initial "$Archive: rep/inv-3p.p $":U .
   define variable vss-description as character no-undo initial "Формы по инвентаризации ".
 
   define variable g#report-num as integer   no-undo .
@@ -42,10 +42,10 @@ on error undo, return error
   { cmp/r-page1.i new  }
   { cmp/breakstr.i     }
   { rep/r-cliprp.i def }
-  { str/trdcalib.i     }
   { rep/fmtcli.i       }
   { rep/torgconf.i     }
   { gbl/paramls.i      }
+  { str/trdcalib.i }
   { str/lib-trn.i      }
   { str/valddnst.i def }
   { ref/grplibfn.i     }
@@ -144,6 +144,7 @@ on error undo, return error
     field   bb-price          as decimal
     field   ubl               as decimal
     field   inv-peresort-qnty as decimal
+    field   schet             as character
     INDEX pi  IS PRIMARY   artic prod-type prod-code
     INDEX pi1              gds-name
     INDEX pi2              grp-name
@@ -199,7 +200,8 @@ on error undo, return error
   define variable v-line-price          as decimal      no-undo.
   define variable v-line-price-before   as decimal      no-undo.
   define variable v-line-price-after    as decimal      no-undo.
-
+  define variable p-type                as character    no-undo.
+  
   define variable FullNameGds as character no-undo .
   define variable gds-str as character no-undo.
   define variable gds-str1 as character no-undo.
@@ -217,7 +219,7 @@ on error undo, return error
 
   define variable tdoc-date     like ub.trn-doc.doc-date no-undo.
   define variable tdoc-code     like ub.trn-doc.doc-code no-undo.
-
+  
   define variable PgQnty            as  decimal no-undo.
   define variable PgQnty-v          as  decimal no-undo.
   define variable PgSum             as  decimal no-undo.
@@ -246,7 +248,7 @@ on error undo, return error
   define variable sym8  as character initial ":"   no-undo.
   define variable sym9  as character initial ":"   no-undo.
   define variable sym10 as character initial ":"   no-undo.
-  define variable sym11 as character initial ":"   no-undo.
+/*  define variable sym11 as character initial ":"   no-undo.*/
   define variable sym12 as character initial ":"   no-undo.
   define variable sym13 as character initial ":"   no-undo.
   define variable sym14 as character initial ":"   no-undo.
@@ -272,30 +274,24 @@ on error undo, return error
 
   DEFINE FRAME invent
         sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)
-        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)
+        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C7 format ">>>>9" space(0)
         sym2 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)
+        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C25 format "X(24)" space(0)
         sym3 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)
+        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C50 format "X(40)" space(0)
         Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-code COLUMN-LABEL "Код товара! ! ! ! ":C10 format "X(9)" space(0)
+        temp-str.b-code COLUMN-LABEL "Код товара! ! ! ! ":C15 format "X(14)" space(0)
         sym5 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код !по!ОКЕИ":C4 format ">>>>" space(0)
+        temp-str.OKEI COLUMN-LABEL "Ед.!-------!Код    !по!ОКЕИ":C7 format ">>>>" space(0)
         sym6 column-label " !-!:!:!:" format "X(1)" space(0)
-        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)
+        temp-str.unit-base COLUMN-LABEL  "изм.!-------!Наим!енов!ание":C7 format "X(6)" space(0)
         sym7 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.Price-after COLUMN-LABEL " ! Цена ! ! ! ":C13 format "->>>>>9.99" space(0)
+        temp-str.Price-befor COLUMN-LABEL " ! Цена ! ! ! ":C13 format "->>>>>9.99" space(0)
         sym8 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.a-qnty COLUMN-LABEL "Фактическое!-------------!Количество! ! ":C13 format "->>>>>>>9.<<<" space(0)
-        sym9 column-label " !-!:!:!:" format "X(1)" space(0)
-        temp-str.a-stoim COLUMN-LABEL " наличие !--------------!Сумма! ! ":C15 format "->>>,>>>,>>9.99" space(0)
+        temp-str.a-qnty COLUMN-LABEL "Фактическое !наличие!-----------------!Количество ! ":C17 format "->>>>>>>9.<<<" space(0)
+        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.b-qnty COLUMN-LABEL "По данным! бухгалтерского учета!----------------------!Количество ! ":C22 format "->>>>>9.99" space(0)
         sym10 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.Price-befor COLUMN-LABEL "По данным!----------------!Цена! ! ":C17 format "->>>>>9.99" space(0)
-        sym11 column-label " !-!:!:!:" format "X(1)" space(0)
-        temp-str.b-qnty COLUMN-LABEL "бухгалтерского!---------------!Количество! ! ":C17 format "->>>>>>>9.<<<" space(0)
-        sym12 column-label " !-!:!:!:" format "X(1)" space(0)
-        temp-str.b-stoim COLUMN-LABEL " учета !----------------!Сумма! ! ":C17 format "->>>,>>>,>>9.99" space(0)
-        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)
        HEADER
         cur-time-print() AT 5 format "X(35)"
         string( "Инвентаризационная опись N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"
@@ -304,113 +300,113 @@ on error undo, return error
         UndLine format {&format-inv} AT 1
         with width {&DOS_CW_2} down stream-io use-text NO-BOX.
 
-  DEFINE FRAME invent-gold
-        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)
-        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)
-        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)
-        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)
-        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-code COLUMN-LABEL "Проба! ! ! ! " format "X(3)" space(0)
-        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)
-        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)
-        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)
-        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.Price-after COLUMN-LABEL "Фактическая!цена ! ! ! ":C12 format "->>>>>>>9.99" space(0)
-        sym8 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.a-qnty COLUMN-LABEL "Фактическое !--------------!Количество!осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)
-        sym14 column-label            " !-!:!:!:" format "X(1)" space(0)
-        temp-str.a-qnty1 COLUMN-LABEL             "наличие   !-----------!Количество ! ! ":C11 format "->>>>>>>9.<<<" space(0)
-        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.a-stoim COLUMN-LABEL "Фактическое!наличие!Сумма! ! ":C15 format "->>>,>>>,>>9.99" space(0)
-        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.Price-befor COLUMN-LABEL "До инв-ции!цена! ! ! ":C11 format "->>>>>>9.99" space(0)
-        sym11 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-qnty COLUMN-LABEL "     До инвент!--------------! Количество !осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)
-        sym15 column-label           "а!-!:!:!:" format "X(1)" space(0)
-        temp-str.b-qnty1 COLUMN-LABEL            "ризации     !------------! Количество ! ! ":C12 format "->>>>>>>9.<<<" space(0)
-        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-stoim COLUMN-LABEL "До инв-ции!Сумма! ! ! ":C14 format "->>>,>>>,>>9.99" space(0)
-        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)
-       HEADER
-        cur-time-print() AT 5 format "X(35)"
-        string( "Инвентаризационная опись N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"
-        string( pp) AT 150 format "X(29)"
-        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 180 format "X(13)" SKIP
-        UndLine format {&format-inv-gold} AT 1
-        with width {&DOS_CW_2} down stream-io use-text NO-BOX.
-
-DEFINE FRAME sl
-        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)
-        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)
-        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)
-        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)
-        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-code COLUMN-LABEL "Код товара! ! ! ! ":C13 format "X(13)" space(0)
-        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)
-        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)
-        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)
-        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.a-qnty COLUMN-LABEL "Излишек!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)
-        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)
-        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-qnty COLUMN-LABEL "Недостача!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)
-        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)
-        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.UBL COLUMN-LABEL "Списано!в пределах!норм!естественной!убыли":C13 format "->>>>>>>>>.<<" space(0)
-        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)
-       HEADER
-        cur-time-print() AT 5 format "X(35)"
-        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"
-        string( pp ) AT 130 format "X(29)"
-        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP
-        UndLine format {&format-sl} AT 1
-        with width {&DOS_CW_2} down stream-io use-text NO-BOX.
-
-DEFINE FRAME sl-gold
-        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)
-        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)
-        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)
-        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)
-        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-code COLUMN-LABEL "Проба! ! ! ! " format "X(3)" space(0)
-        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)
-        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)
-        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)
-        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.a-qnty COLUMN-LABEL "Изл!-------------!Количество !осн.ед.изм ! " format "->>>>>>>9.<<<" space(0)
-        sym8 column-label "и!-!:!:!:" format "X(1)" space(0)
-        temp-str.a-qnty1 COLUMN-LABEL "шек          !-------------!Количество ! ! " format "->>>>>>>9.<<<" space(0)
-        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C16 format "->>>,>>>,>>9.99" space(0)
-        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-qnty COLUMN-LABEL "         Недос!--------------!Количество!осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)
-        sym11 column-label "т!-!:!:!:" format "X(1)" space(0)
-        temp-str.b-qnty1 COLUMN-LABEL "ача         !------------!Количество! ! ":C12 format "->>>>>>>9.<<<" space(0)
-        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)
-        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)
-        temp-str.UBL COLUMN-LABEL   "Списано   !норм ес! !------------!осн.ед.изм":R12 format "->>>>>>>>>.<<" space(0)
-        sym15 column-label         "в!т! !-!:" format "X(1)" space(0)
-        UBL-v COLUMN-LABEL "   пределах!ественной!убыли!------------! ":L12 format "->>>>>>>>>.<<" space(0)
-        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)
-       HEADER
-        cur-time-print() AT 5 format "X(35)"
-        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"
-        string( pp ) AT 130 format "X(29)"
-        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP
-        UndLine format {&format-sl-gold} AT 1
-        with width {&DOS_CW_2} down stream-io use-text NO-BOX.
+/*  DEFINE FRAME invent-gold                                                                                                        */
+/*        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)                                                                     */
+/*        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)                                                       */
+/*        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)                                                 */
+/*        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)                                  */
+/*        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.b-code COLUMN-LABEL "Проба! ! ! ! " format "X(3)" space(0)                                                       */
+/*        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)                                               */
+/*        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)                                                              */
+/*        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)                                        */
+/*        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.Price-after COLUMN-LABEL "Фактическая!цена ! ! ! ":C12 format "->>>>>>>9.99" space(0)                            */
+/*        sym8 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.a-qnty COLUMN-LABEL "Фактическое !--------------!Количество!осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)    */
+/*        sym14 column-label            " !-!:!:!:" format "X(1)" space(0)                                                          */
+/*        temp-str.a-qnty1 COLUMN-LABEL             "наличие   !-----------!Количество ! ! ":C11 format "->>>>>>>9.<<<" space(0)    */
+/*        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.a-stoim COLUMN-LABEL "Фактическое!наличие!Сумма! ! ":C15 format "->>>,>>>,>>9.99" space(0)                       */
+/*        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.Price-befor COLUMN-LABEL "До инв-ции!цена! ! ! ":C11 format "->>>>>>9.99" space(0)                               */
+/*        sym11 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.b-qnty COLUMN-LABEL "     До инвент!--------------! Количество !осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)*/
+/*        sym15 column-label           "а!-!:!:!:" format "X(1)" space(0)                                                           */
+/*        temp-str.b-qnty1 COLUMN-LABEL            "ризации     !------------! Количество ! ! ":C12 format "->>>>>>>9.<<<" space(0) */
+/*        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.b-stoim COLUMN-LABEL "До инв-ции!Сумма! ! ! ":C14 format "->>>,>>>,>>9.99" space(0)                              */
+/*        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*       HEADER                                                                                                                     */
+/*        cur-time-print() AT 5 format "X(35)"                                                                                      */
+/*        string( "Инвентаризационная опись N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)" */
+/*        string( pp) AT 150 format "X(29)"                                                                                         */
+/*        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 180 format "X(13)" SKIP                              */
+/*        UndLine format {&format-inv-gold} AT 1                                                                                    */
+/*        with width {&DOS_CW_2} down stream-io use-text NO-BOX.                                                                    */
+/*                                                                                                                                  */
+/*DEFINE FRAME sl                                                                                                                   */
+/*        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)                                                                     */
+/*        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)                                                       */
+/*        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)                                                 */
+/*        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)                                  */
+/*        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.b-code COLUMN-LABEL "Код товара! ! ! ! ":C13 format "X(13)" space(0)                                             */
+/*        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)                                               */
+/*        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)                                                              */
+/*        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)                                        */
+/*        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.a-qnty COLUMN-LABEL "Излишек!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)                               */
+/*        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)                                 */
+/*        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.b-qnty COLUMN-LABEL "Недостача!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)                             */
+/*        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)                               */
+/*        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.UBL COLUMN-LABEL "Списано!в пределах!норм!естественной!убыли":C13 format "->>>>>>>>>.<<" space(0)                */
+/*        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*       HEADER                                                                                                                     */
+/*        cur-time-print() AT 5 format "X(35)"                                                                                      */
+/*        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"   */
+/*        string( pp ) AT 130 format "X(29)"                                                                                        */
+/*        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP                              */
+/*        UndLine format {&format-sl} AT 1                                                                                          */
+/*        with width {&DOS_CW_2} down stream-io use-text NO-BOX.                                                                    */
+/*                                                                                                                                  */
+/*DEFINE FRAME sl-gold                                                                                                              */
+/*        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)                                                                     */
+/*        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)                                                       */
+/*        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)                                                 */
+/*        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)                                  */
+/*        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.b-code COLUMN-LABEL "Проба! ! ! ! " format "X(3)" space(0)                                                       */
+/*        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)                                               */
+/*        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)                                                              */
+/*        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)                                        */
+/*        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.a-qnty COLUMN-LABEL "Изл!-------------!Количество !осн.ед.изм ! " format "->>>>>>>9.<<<" space(0)                */
+/*        sym8 column-label "и!-!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.a-qnty1 COLUMN-LABEL "шек          !-------------!Количество ! ! " format "->>>>>>>9.<<<" space(0)               */
+/*        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
+/*        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C16 format "->>>,>>>,>>9.99" space(0)                                 */
+/*        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.b-qnty COLUMN-LABEL "         Недос!--------------!Количество!осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)  */
+/*        sym11 column-label "т!-!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.b-qnty1 COLUMN-LABEL "ача         !------------!Количество! ! ":C12 format "->>>>>>>9.<<<" space(0)              */
+/*        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)                               */
+/*        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*        temp-str.UBL COLUMN-LABEL   "Списано   !норм ес! !------------!осн.ед.изм":R12 format "->>>>>>>>>.<<" space(0)            */
+/*        sym15 column-label         "в!т! !-!:" format "X(1)" space(0)                                                             */
+/*        UBL-v COLUMN-LABEL "   пределах!ественной!убыли!------------! ":L12 format "->>>>>>>>>.<<" space(0)                       */
+/*        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
+/*       HEADER                                                                                                                     */
+/*        cur-time-print() AT 5 format "X(35)"                                                                                      */
+/*        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"   */
+/*        string( pp ) AT 130 format "X(29)"                                                                                        */
+/*        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP                              */
+/*        UndLine format {&format-sl-gold} AT 1                                                                                     */
+/*        with width {&DOS_CW_2} down stream-io use-text NO-BOX.                                                                    */
 
   FIND buf_trn-doc WHERE recid(buf_trn-doc) = rec_id NO-LOCK .
   assign
@@ -507,15 +503,16 @@ DEFINE FRAME sl-gold
   run PrintTitul in this-procedure .
   /*на каждой странице */
   if rep-tipe = "invent" THEN  DO:
-    FORM with frame invent .
-    FORM HEADER
+    FORM with frame invent .    FORM HEADER
       LineBuf format {&format-inv} SKIP
-      String(sym1 + String(PgQnty ,  "->>>>>>>>>9.<<<" ) + sym2 + String(PgSum , "->>>>>>>>>>9.99"   ) +  sym6 + "                 " +
-             sym3 + String(PgQnty-b,  "->>>>>>>>>>>>9.<<<" ) + sym4 + String(PgSum-b , "->>>>>>>>>>>>>9.99"   ) + sym5)  at 100 Format "x(90)" skip
+/*            String(sym1 + String(PgQnty ,  "->>>>>>>>>9.<<<" ) + sym2 + String(PgSum , "->>>>>>>>>>9.99"   ) +  sym6 + "                 " +       */
+/*             sym3 + String(PgQnty-b,  "->>>>>>>>>>>>9.<<<" ) + sym4 + String(PgSum-b , "->>>>>>>>>>>>>9.99"   ) + sym5)  at 100 Format "x(90)" skip*/
+      
+      String("        " + "                " + "              " + String(PgQnty ,  "->>>>>>>>>9.<<<" ) + sym8 + "       "+
+             String(PgQnty-b,  "->>>>>>>>>>>>9.<<<" ) + sym5 )  at 100 Format "x(90)" skip
       "Итого по странице : " skip
       "а) количество порядковых номеров " + string(PgNPP) + " (" + f-wp-qnty (decimal(PgNPP)) + ")" format {&format-inv} AT 18  skip
       "б) общее количество единиц фактически " + string(PgQnty) + " (" + f-wp-qnty (decimal(PgQnty)) + ")"  format {&format-inv} AT 18  SKIP
-      "в) на сумму фактически " + trim(string(PgSum, "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr + " (" + f-wp-sum (decimal(PgSum)) + ")"  format {&format-inv} AT 18 SKIP(1)
       "Вкладной лист к форме № ИНВ-3 №  " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") format "x(170)" AT 30 SKIP
     with FRAME BottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
     VIEW stream Out-Stream FRAME BottomFrame .
@@ -530,7 +527,6 @@ DEFINE FRAME sl-gold
       "Итого по странице : " skip
       "а) количество порядковых номеров " + string(PgNPP) + " (" + f-wp-qnty (decimal(PgNPP)) + ")" format {&format-inv-gold} AT 18  skip
       "б) общее количество единиц фактически " + string(PgQnty) + " (" + f-wp-qnty (decimal(PgQnty)) + ")"  format {&format-inv-gold} AT 18  SKIP
-      "в) на сумму фактически " + trim(string(PgSum, "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr +  " (" + f-wp-sum (decimal(Pgsum)) + ")"  format {&format-inv-gold} AT 18 SKIP(1)
       "Вкладной лист к форме № ИНВ-3 №  " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") format "x(170)" AT 30 SKIP
     with FRAME BottomFrame2 width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
     VIEW stream Out-Stream FRAME BottomFrame2 .
@@ -673,61 +669,61 @@ procedure print-grp-itog :
         display stream Out-Stream
           "ИТОГО"      @  temp-str.artic
           TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym8 sym11
+          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10  sym8
           sum-a-qnty   @ temp-str.a-qnty
-          sum-a-stoim  @ temp-str.a-stoim
+/*          sum-a-stoim  @ temp-str.a-stoim*/
           sum-b-qnty   @ temp-str.b-qnty
-          sum-b-stoim  @ temp-str.b-stoim
+/*          sum-b-stoim  @ temp-str.b-stoim*/
         with FRAME invent.
         DOWN stream Out-Stream 1 with FRAME invent .
         if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv} SKIP.
       End.
-      when "invent-gold" THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11
-          sum-a-qnty1  @ temp-str.a-qnty1
-          sum-b-qnty1  @ temp-str.b-qnty1
-          sum-a-qnty   @ temp-str.a-qnty
-          sum-a-stoim  @ temp-str.a-stoim
-          sum-b-qnty   @ temp-str.b-qnty
-          sum-b-stoim  @ temp-str.b-stoim
-        with FRAME invent-gold.
-        DOWN stream Out-Stream 1 with FRAME invent-gold .
-        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.
-      End.
-      when  "sl"  THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13
-          sym14 sum-ubl @ temp-str.UBL
-          sum-a-qnty   @ temp-str.a-qnty
-          sum-a-stoim  @ temp-str.a-stoim
-          sum-b-qnty   @ temp-str.b-qnty
-          sum-b-stoim  @ temp-str.b-stoim
-        with FRAME sl.
-        DOWN stream Out-Stream 1 with FRAME sl .
-        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.
-      End.
-      when  "sl-gold"  THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11
-          sym14 sum-ubl @ temp-str.UBL
-          sym15 UBL-v
-          sum-a-qnty1  @ temp-str.a-qnty1
-          sum-b-qnty1  @ temp-str.b-qnty1
-          sum-a-qnty   @ temp-str.a-qnty
-          sum-a-stoim  @ temp-str.a-stoim
-          sum-b-qnty   @ temp-str.b-qnty
-          sum-b-stoim  @ temp-str.b-stoim
-        with FRAME sl-gold.
-        DOWN stream Out-Stream 1 with FRAME sl-gold .
-        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl-gold} SKIP.
-      End.
+/*      when "invent-gold" THEN DO:                                                                */
+/*        display stream Out-Stream                                                                */
+/*          "ИТОГО"      @  temp-str.artic                                                         */
+/*          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name                                      */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11                  */
+/*          sum-a-qnty1  @ temp-str.a-qnty1                                                        */
+/*          sum-b-qnty1  @ temp-str.b-qnty1                                                        */
+/*          sum-a-qnty   @ temp-str.a-qnty                                                         */
+/*          sum-a-stoim  @ temp-str.a-stoim                                                        */
+/*          sum-b-qnty   @ temp-str.b-qnty                                                         */
+/*          sum-b-stoim  @ temp-str.b-stoim                                                        */
+/*        with FRAME invent-gold.                                                                  */
+/*        DOWN stream Out-Stream 1 with FRAME invent-gold .                                        */
+/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.*/
+/*      End.                                                                                       */
+/*      when  "sl"  THEN DO:                                                                       */
+/*        display stream Out-Stream                                                                */
+/*          "ИТОГО"      @  temp-str.artic                                                         */
+/*          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name                                      */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13                             */
+/*          sym14 sum-ubl @ temp-str.UBL                                                           */
+/*          sum-a-qnty   @ temp-str.a-qnty                                                         */
+/*          sum-a-stoim  @ temp-str.a-stoim                                                        */
+/*          sum-b-qnty   @ temp-str.b-qnty                                                         */
+/*          sum-b-stoim  @ temp-str.b-stoim                                                        */
+/*        with FRAME sl.                                                                           */
+/*        DOWN stream Out-Stream 1 with FRAME sl .                                                 */
+/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.      */
+/*      End.                                                                                       */
+/*      when  "sl-gold"  THEN DO:                                                                  */
+/*        display stream Out-Stream                                                                */
+/*          "ИТОГО"      @  temp-str.artic                                                         */
+/*          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name                                      */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11                  */
+/*          sym14 sum-ubl @ temp-str.UBL                                                           */
+/*          sym15 UBL-v                                                                            */
+/*          sum-a-qnty1  @ temp-str.a-qnty1                                                        */
+/*          sum-b-qnty1  @ temp-str.b-qnty1                                                        */
+/*          sum-a-qnty   @ temp-str.a-qnty                                                         */
+/*          sum-a-stoim  @ temp-str.a-stoim                                                        */
+/*          sum-b-qnty   @ temp-str.b-qnty                                                         */
+/*          sum-b-stoim  @ temp-str.b-stoim                                                        */
+/*        with FRAME sl-gold.                                                                      */
+/*        DOWN stream Out-Stream 1 with FRAME sl-gold .                                            */
+/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl-gold} SKIP. */
+/*      End.                                                                                       */
     End.
 
     assign
@@ -755,61 +751,61 @@ procedure print-prod-itog :
         display stream Out-Stream
           "ИТОГО"      @  temp-str.artic
           TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym8 sym11
+          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym9   sym10  sym8 
           sum2-a-qnty   @ temp-str.a-qnty
-          sum2-a-stoim  @ temp-str.a-stoim
+/*          sum2-a-stoim  @ temp-str.a-stoim*/
           sum2-b-qnty   @ temp-str.b-qnty
-          sum2-b-stoim  @ temp-str.b-stoim
+/*          sum2-b-stoim  @ temp-str.b-stoim*/
         with FRAME invent.
         DOWN stream Out-Stream 1 with FRAME invent .
         if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv} SKIP.
       End.
-      when "invent-gold" THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11
-          sum2-a-qnty1  @ temp-str.a-qnty1
-          sum2-b-qnty1  @ temp-str.b-qnty1
-          sum2-a-qnty   @ temp-str.a-qnty
-          sum2-a-stoim  @ temp-str.a-stoim
-          sum2-b-qnty   @ temp-str.b-qnty
-          sum2-b-stoim  @ temp-str.b-stoim
-        with FRAME invent-gold.
-        DOWN stream Out-Stream 1 with FRAME invent-gold .
-        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.
-      End.
-      when  "sl"  THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14
-          sum2-ubl     @ temp-str.UBL
-          sum2-a-qnty   @ temp-str.a-qnty
-          sum2-a-stoim  @ temp-str.a-stoim
-          sum2-b-qnty   @ temp-str.b-qnty
-          sum2-b-stoim  @ temp-str.b-stoim
-        with FRAME sl.
-        DOWN stream Out-Stream 1 with FRAME sl .
-        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.
-      End.
-      when  "sl-gold"  THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11
-          sym14 sum2-ubl @ temp-str.UBL
-          sym15 UBL-v
-          sum2-a-qnty1  @ temp-str.a-qnty1
-          sum2-b-qnty1  @ temp-str.b-qnty1
-          sum2-a-qnty   @ temp-str.a-qnty
-          sum2-a-stoim  @ temp-str.a-stoim
-          sum2-b-qnty   @ temp-str.b-qnty
-          sum2-b-stoim  @ temp-str.b-stoim
-        with FRAME sl-gold.
-        DOWN stream Out-Stream 1 with FRAME sl-gold .
-        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl-gold} SKIP.
-      End.
+/*      when "invent-gold" THEN DO:                                                                */
+/*        display stream Out-Stream                                                                */
+/*          "ИТОГО"      @  temp-str.artic                                                         */
+/*          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name                                   */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11                  */
+/*          sum2-a-qnty1  @ temp-str.a-qnty1                                                       */
+/*          sum2-b-qnty1  @ temp-str.b-qnty1                                                       */
+/*          sum2-a-qnty   @ temp-str.a-qnty                                                        */
+/*          sum2-a-stoim  @ temp-str.a-stoim                                                       */
+/*          sum2-b-qnty   @ temp-str.b-qnty                                                        */
+/*          sum2-b-stoim  @ temp-str.b-stoim                                                       */
+/*        with FRAME invent-gold.                                                                  */
+/*        DOWN stream Out-Stream 1 with FRAME invent-gold .                                        */
+/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.*/
+/*      End.                                                                                       */
+/*      when  "sl"  THEN DO:                                                                       */
+/*        display stream Out-Stream                                                                */
+/*          "ИТОГО"      @  temp-str.artic                                                         */
+/*          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name                                   */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14                      */
+/*          sum2-ubl     @ temp-str.UBL                                                            */
+/*          sum2-a-qnty   @ temp-str.a-qnty                                                        */
+/*          sum2-a-stoim  @ temp-str.a-stoim                                                       */
+/*          sum2-b-qnty   @ temp-str.b-qnty                                                        */
+/*          sum2-b-stoim  @ temp-str.b-stoim                                                       */
+/*        with FRAME sl.                                                                           */
+/*        DOWN stream Out-Stream 1 with FRAME sl .                                                 */
+/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.      */
+/*      End.                                                                                       */
+/*      when  "sl-gold"  THEN DO:                                                                  */
+/*        display stream Out-Stream                                                                */
+/*          "ИТОГО"      @  temp-str.artic                                                         */
+/*          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name                                   */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11                  */
+/*          sym14 sum2-ubl @ temp-str.UBL                                                          */
+/*          sym15 UBL-v                                                                            */
+/*          sum2-a-qnty1  @ temp-str.a-qnty1                                                       */
+/*          sum2-b-qnty1  @ temp-str.b-qnty1                                                       */
+/*          sum2-a-qnty   @ temp-str.a-qnty                                                        */
+/*          sum2-a-stoim  @ temp-str.a-stoim                                                       */
+/*          sum2-b-qnty   @ temp-str.b-qnty                                                        */
+/*          sum2-b-stoim  @ temp-str.b-stoim                                                       */
+/*        with FRAME sl-gold.                                                                      */
+/*        DOWN stream Out-Stream 1 with FRAME sl-gold .                                            */
+/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl-gold} SKIP. */
+/*      End.                                                                                       */
     End.
 
     assign
@@ -833,57 +829,57 @@ procedure print-all-itog :
       when "invent" THEN DO:
         display stream Out-Stream
           "ИТОГО"      @  temp-str.artic
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym8 sym11
+          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10  sym8
           sum1-a-qnty   @ temp-str.a-qnty
-          sum1-a-stoim  @ temp-str.a-stoim
+/*          sum1-a-stoim  @ temp-str.a-stoim*/
           sum1-b-qnty   @ temp-str.b-qnty
-          sum1-b-stoim  @ temp-str.b-stoim
+/*          sum1-b-stoim  @ temp-str.b-stoim*/
         with FRAME invent.
         DOWN stream Out-Stream 1 with FRAME invent .
         Put stream Out-Stream LineBuf format {&format-inv} SKIP.
       End.
-      when "invent-gold" THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11
-          sum1-a-qnty1  @ temp-str.a-qnty1
-          sum1-b-qnty1  @ temp-str.b-qnty1
-          sum1-a-qnty   @ temp-str.a-qnty
-          sum1-a-stoim  @ temp-str.a-stoim
-          sum1-b-qnty   @ temp-str.b-qnty
-          sum1-b-stoim  @ temp-str.b-stoim
-        with FRAME invent-gold.
-        DOWN stream Out-Stream 1 with FRAME invent-gold .
-        Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.
-      End.
-      when  "sl"  THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14
-          sum1-a-qnty   @ temp-str.a-qnty
-          sum1-a-stoim  @ temp-str.a-stoim
-          sum1-b-qnty   @ temp-str.b-qnty
-          sum1-b-stoim  @ temp-str.b-stoim
-          sum1-ubl      @ temp-str.ubl
-        with FRAME sl.
-        DOWN stream Out-Stream 1 with FRAME sl .
-        Put stream Out-Stream LineBuf format {&format-sl} SKIP.
-      End.
-      when  "sl-gold"  THEN DO:
-        display stream Out-Stream
-          "ИТОГО"      @  temp-str.artic
-          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11    sym14  sym15
-          sum1-a-qnty1  @ temp-str.a-qnty1
-          sum1-b-qnty1  @ temp-str.b-qnty1
-          sum1-a-qnty   @ temp-str.a-qnty
-          sum1-a-stoim  @ temp-str.a-stoim
-          sum1-b-qnty   @ temp-str.b-qnty
-          sum1-b-stoim  @ temp-str.b-stoim
-          sum1-ubl      @ temp-str.ubl
-        with FRAME sl-gold.
-        DOWN stream Out-Stream 1 with FRAME sl-gold .
-        Put stream Out-Stream LineBuf format {&format-sl-gold} SKIP.
-      End.
+/*      when "invent-gold" THEN DO:                                                              */
+/*        display stream Out-Stream                                                              */
+/*          "ИТОГО"      @  temp-str.artic                                                       */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11                */
+/*          sum1-a-qnty1  @ temp-str.a-qnty1                                                     */
+/*          sum1-b-qnty1  @ temp-str.b-qnty1                                                     */
+/*          sum1-a-qnty   @ temp-str.a-qnty                                                      */
+/*          sum1-a-stoim  @ temp-str.a-stoim                                                     */
+/*          sum1-b-qnty   @ temp-str.b-qnty                                                      */
+/*          sum1-b-stoim  @ temp-str.b-stoim                                                     */
+/*        with FRAME invent-gold.                                                                */
+/*        DOWN stream Out-Stream 1 with FRAME invent-gold .                                      */
+/*        Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.                          */
+/*      End.                                                                                     */
+/*      when  "sl"  THEN DO:                                                                     */
+/*        display stream Out-Stream                                                              */
+/*          "ИТОГО"      @  temp-str.artic                                                       */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14                    */
+/*          sum1-a-qnty   @ temp-str.a-qnty                                                      */
+/*          sum1-a-stoim  @ temp-str.a-stoim                                                     */
+/*          sum1-b-qnty   @ temp-str.b-qnty                                                      */
+/*          sum1-b-stoim  @ temp-str.b-stoim                                                     */
+/*          sum1-ubl      @ temp-str.ubl                                                         */
+/*        with FRAME sl.                                                                         */
+/*        DOWN stream Out-Stream 1 with FRAME sl .                                               */
+/*        Put stream Out-Stream LineBuf format {&format-sl} SKIP.                                */
+/*      End.                                                                                     */
+/*      when  "sl-gold"  THEN DO:                                                                */
+/*        display stream Out-Stream                                                              */
+/*          "ИТОГО"      @  temp-str.artic                                                       */
+/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13 sym8 sym11    sym14  sym15*/
+/*          sum1-a-qnty1  @ temp-str.a-qnty1                                                     */
+/*          sum1-b-qnty1  @ temp-str.b-qnty1                                                     */
+/*          sum1-a-qnty   @ temp-str.a-qnty                                                      */
+/*          sum1-a-stoim  @ temp-str.a-stoim                                                     */
+/*          sum1-b-qnty   @ temp-str.b-qnty                                                      */
+/*          sum1-b-stoim  @ temp-str.b-stoim                                                     */
+/*          sum1-ubl      @ temp-str.ubl                                                         */
+/*        with FRAME sl-gold.                                                                    */
+/*        DOWN stream Out-Stream 1 with FRAME sl-gold .                                          */
+/*        Put stream Out-Stream LineBuf format {&format-sl-gold} SKIP.                           */
+/*      End.                                                                                     */
     End.
   end.
 end procedure. /* print-all-itog */
@@ -904,8 +900,10 @@ on error undo, return error return-value  :
     define variable v-str         as character no-undo .
     define variable v-abbr-str    as character no-undo .
     define variable v-doc-date    as character no-undo .
+    define variable v-fact-date   as character no-undo .
     define variable v-frame-str   as character no-undo .
-
+    define variable v-prikaz-num  as character no-undo .
+    define variable v-prikaz-date as character no-undo .
 
     run gbl/conf-rd.p ("outprncd", "":U, "":U, 0, "":U, "":U, "":U, no, output v-outprncd, output v-par-type) no-error.
     if v-outprncd = "yes" then
@@ -926,7 +924,7 @@ on error undo, return error return-value  :
       v-buh-sum-str = 'К началу проведения инвентаризации все расходные и приходные документы на товарно-материальные ценности сданы в бухгалтерию и все товарно-материальные ценности, поступившие на мою ( нашу ) отвественность, оприходованы, а выбывшие списаны в расход.'
     .
 
-    if lookup( 'L-Rus' , v-sys-key) > 0
+    if v-doc-date = ""
     then do:
       for each temp-str
       :
@@ -941,11 +939,35 @@ on error undo, return error return-value  :
         v-object      = v-object + ", " + v-torgconf-self-obj-addres
       .
     end. /* if lookup( 'L-Rus' , v-sys-key) > 0 */
-
+      { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-inv-date}
+          v-doc-date
+          p-type
+          no-error
+      }
+      { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-prikaz-number}
+          v-prikaz-num
+          p-type
+          no-error
+      }
+      { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-prikaz-date}
+          v-prikaz-date
+          p-type
+          no-error
+      }            
+    
+    v-prikaz-date = replace(v-prikaz-date,".","") .
+    v-doc-date = replace(v-doc-date,".","") .
+    
     if rep-tipe begins "invent"
     and p-grp = "no"
     then do:
-        run inv3xl-write-cell-data in this-procedure ( input {&inv3xl-h_BuhSum} , input v-buh-sum-str ).
+/*        run inv3xl-write-cell-data in this-procedure ( input {&inv3xl-h_BuhSum} , input v-buh-sum-str ).*/
         run inv3xl-write-cell-data in this-procedure (
             input {&inv3xl-h_organization}
             , input v-organization
@@ -962,32 +984,33 @@ on error undo, return error return-value  :
             input {&inv3xl-h_docDate}
             , input string( tdoc-date, "99/99/9999")
         ).
-        if lookup( 'L-Rus' , v-sys-key) = 0
-        then do:
+          run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-h_tbl_prikaz_num}
+              , input string(v-prikaz-num)
+          ).
+          run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-h_tbl_prikaz_date}
+              , input string( v-prikaz-date, "99/99/9999")
+          ).
           run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-h_tbl_startDate}
-              , input string( buf_trn-doc.doc-date, "99/99/9999")
+              , input string( if v-doc-date <> "" then string(v-doc-date, "99/99/9999") else string(buf_trn-doc.doc-date, "99/99/9999"))
           ).
-        end.
         run inv3xl-write-cell-data in this-procedure (
             input {&inv3xl-h_tbl_endDate}
-            , input ( if buf_trn-doc.status_ <> {&fact} then string( tdoc-date, "99/99/9999") else "":U )
+            , input ( if buf_trn-doc.status_ = {&fact} then string( tdoc-date, "99/99/9999") else "":U )
         ).
     end.
 
-    if lookup( 'L-Rus' , v-sys-key) > 0
+
+    if v-doc-date = ""
     then do:
       assign
-        v-doc-date = ""
-        v-frame-str = "в расход. Остаток товара на начало инвентаризации составляет сумму: " + v-str
-      .
-    end.
-    else do:
-      assign
-        v-doc-date = string(buf_trn-doc.doc-date,"99/99/9999")
+        v-doc-date = string(buf_trn-doc.doc-date,"99999999")
         v-frame-str = "в расход."
       .
     end.
+
     if rep-tipe begins "invent"
     then do:
       PUT STREAM Out-Stream
@@ -1002,12 +1025,11 @@ on error undo, return error return-value  :
         space(5) v-object format "X(160)" "| " AT 180  "|" AT 198 skip
         space(5) "Вид деятельности по ОКДП" format "X(25)" AT 155 "| " AT 180 "|" AT 198 skip
         space(5) string( "Основание для проведения инвентаризации:                 приказ, постановление, распоряжение " ) format "X(160)"
-                       "номер" format "X(5)" AT 174 "| " AT 180 "|" AT 198 skip
+                       "номер" format "X(5)" AT 174 "| " AT 180 v-prikaz-num "|" AT 198 skip
         space(5) string( "ненужное зачеркнуть " ) format "X(20)" AT 67
-                       "дата" format "X(4)" AT 175 "| " AT 180 "|" AT 198 skip
-        space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 v-doc-date format "X(10)" "|" AT 198 skip
-        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180
-                       (if buf_trn-doc.status_ <> {&fact} then tdoc-date else ?) format "99/99/9999" "|" AT 198 skip
+                       "дата" format "X(4)" AT 175 "| " AT 180 v-prikaz-date format "99/99/9999" "|" AT 198 skip
+        space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 v-doc-date format "99/99/9999" "|" AT 198 skip
+        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180  tdoc-date format "99/99/9999" "|" AT 198 skip
         space(5) "Вид операции" format "X(12)" AT 167 "| " AT 180 " инвентаризация" format "X(16)" "|" AT 198 skip
         space(5) Line format  "X(19)" AT 180 skip(2)
         space(79) Line format "X(33)" skip
@@ -1047,7 +1069,7 @@ on error undo, return error return-value  :
         space(5) v-object format "X(160)" "| " AT 180  "|" AT 198 skip
         space(5) "Вид деятельности по ОКДП" format "X(25)" AT 155 "| " AT 180 "|" AT 198 skip
         space(5) string( "Основание для проведения инвентаризации:                 приказ, постановление, распоряжение " ) format "X(160)"
-                       "номер" format "X(5)" AT 174 "| " AT 180 "|" AT 198 skip
+                       "номер" format "X(5)" AT 174 "| " AT 180 v-prikaz-num "|" AT 198 skip
         space(5) string( "ненужное зачеркнуть " ) format "X(20)" AT 67
                        "дата" format "X(4)" AT 175 "| " AT 180 "|" AT 198 skip
         space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 buf_trn-doc.doc-date format "99/99/9999" "|" AT 198 skip
@@ -1086,6 +1108,111 @@ procedure PrintPodval :
     if PropisCount = '' Then PropisCount = 'Ноль'.
 
     if rep-tipe begins "invent"  THEN DO:
+      define variable v-pos-agent as character no-undo .
+      define variable v-fio-agent as character no-undo .
+      define variable v-pos-player1 as character no-undo .
+      define variable v-fio-player1 as character no-undo .
+      define variable v-pos-player2 as character no-undo .
+      define variable v-fio-player2 as character no-undo .
+      define variable v-pos-player3 as character no-undo .
+      define variable v-fio-player3 as character no-undo .
+
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-agent}
+          v-fio-agent
+          p-type
+          
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-agent}
+          v-pos-agent
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player1}
+          v-fio-player1
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player1}
+          v-pos-player1
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player2}
+          v-fio-player2
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player2}
+          v-pos-player2
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player3}
+          v-fio-player3
+          p-type
+          no-error
+      }
+            { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player3}
+          v-pos-player3
+          p-type
+          no-error
+      }      
+      
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_agent}
+        , input v-fio-agent
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_agent}
+        , input v-pos-agent
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player1}
+        , input v-fio-player1
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player1}
+        , input v-pos-player1
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player2}
+        , input v-fio-player2
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player2}
+        , input v-pos-player2
+        ).      
+        
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player3}
+        , input v-fio-player3
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player3}
+        , input v-pos-player3
+        ).              
       PAGE stream Out-Stream.
       HIDE stream Out-Stream FRAME BottomFrame .
       HIDE stream Out-Stream FRAME BottomFrame2 .
@@ -1105,18 +1232,18 @@ procedure PrintPodval :
               input {&inv3xl-f_itQntyFactStr}
             , input PropisQnty
         ).
-        run inv3xl-write-cell-data in this-procedure (
-              input {&inv3xl-f_itSumFactStr}
-            , input PropisSumall
-        ).
+/*        run inv3xl-write-cell-data in this-procedure (*/
+/*              input {&inv3xl-f_itSumFactStr}          */
+/*            , input PropisSumall                      */
+/*        ).                                            */
         run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-it_qntyFact}
             , input string( sum1-a-qnty )
         ).
-        run inv3xl-write-cell-data in this-procedure (
-              input {&inv3xl-it_sumFact}
-            , input string( sum1-a-stoim )
-        ).
+/*        run inv3xl-write-cell-data in this-procedure (*/
+/*              input {&inv3xl-it_sumFact}              */
+/*            , input string( sum1-a-stoim )            */
+/*        ).                                            */
         run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-it_qntyBuh}
             , input string( sum1-b-qnty )
@@ -1125,24 +1252,84 @@ procedure PrintPodval :
               input {&inv3xl-it_sumBuh}
             , input string( sum1-b-stoim )
         ).
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_agent}
+            , input string( v-pos-agent )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_agent}
+            , input string( v-fio-agent )
+        ).   
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player1}
+            , input string( v-pos-player1 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player1}
+            , input string( v-fio-player1 )
+        ).                      
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player2}
+            , input string( v-pos-player2 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player2}
+            , input string( v-fio-player2 )
+        ).  
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player3}
+            , input string( v-pos-player3 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player3}
+            , input string( v-fio-player3 )
+        ). 
+
+                 
     end.
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_num}
+        , input string( PropisCount )
+        ). 
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_qntyFact}
+        , input string( PropisQnty )
+        ). 
       PUT  STREAM Out-Stream
               "Итого по описи :" Skip
                 "а) количество порядковых номеров: " + string( num-ln ) + " (" + PropisCount + ")"  format "x(179)"                         at 18 SKIP
                 "б) общее количество единиц фактически: " + string( sum1-a-qnty ) + " (" + PropisQnty + ")"  format "x(179)"  at 18 SKIP
-                "в) на сумму фактически : " + trim(string((sum1-a-stoim ), "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr +
-                              " (" + PropisSumall + ")"  format "x(179)"                                                 at 18 SKIP(1)
               "   Все цены, подсчеты итогов по строкам, страницам и в целом по инвентаризационной описи товарно-материальных ценностей проверены." SKIP
-              "Председатель комиссии: " format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              " " format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              "Члены комиссии: " format "X(25)" AT 10 SKIP
+
+              "Председатель комиссии:: " format "X(25)" AT 10 SKIP
+              string(v-pos-agent) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-agent) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+                           
+              "Состав комиссии: " format "X(25)" AT 10 SKIP
+              string(v-pos-player1) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player1) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+              string(v-pos-player2) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player2) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № ___________ по № _________" SKIP
+              string(v-pos-player3) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player3) format "X(50)" AT 70 SKIP
+              LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
+              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 skip .
+   
+      if PgNPP = 0 then 
+      do:
+        PUT  STREAM Out-Stream
+          "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № 0 по № " + string(PgNPP) format "x(179)"  skip .
+      end.
+      else 
+      do:
+        PUT  STREAM Out-Stream
+          "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № 1 по № " + string(PgNPP) format "x(179)" skip .
+      end.  
+
+              PUT  STREAM Out-Stream
               "комиссией проверены в натуре в моем (нашем) личном присутствии  и внесены в опись, в связи с чем претензий к инвентаризационной " SKIP
               "комиссии не имею (не имеем). Товарно-материальные ценности, перечисленные в описи, находятся на моем (нашем) ответственном хранении." SKIP(1)
               "   Лицо(а), ответственное(ые) за сохранность товарно-материальных ценностей : " SKIP(1)
@@ -1151,7 +1338,7 @@ procedure PrintPodval :
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP(1)
+              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
               "<<       >> _________________        г. "   SKIP(1)
               "Указанные в настоящей описи данные и расчеты проверил"
                   LineBuf format "X(25)" AT 10 LineBuf format "X(25)"   AT 40 LineBuf format "X(50)"               AT 70 SKIP

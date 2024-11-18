@@ -1,28 +1,26 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
 &Scoped-define FRAME-NAME d-out-prt
-using Progress.Lang.*.
-using ibs.th.gbl.*.
-using ibs.th.gbl.sys.*.
+
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER b-c-b FOR ub.bar-code.
+DEFINE BUFFER b-c-b FOR bar-code.
 DEFINE BUFFER buf_goods FOR ub.goods.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-out-prt 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 81f7d91a817a, 3654, rls $
+$Author: SSlivenko $
+$Date: 2024/01/31 10:15:43 $
+$Workfile: out-prt.w $
+$Archive: str/out-prt.w $
 
 Задание док. и факт. количества по признаку или артикулу в рас, возврат, при, спи накладных (внешних и внутренних)
 
@@ -96,11 +94,11 @@ define input parameter cur-rec       as recid         no-undo .
 define input parameter node-type     as character     no-undo .
 
 /* VSS Variable Definition */
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 81f7d91a817a, 3654, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2024/01/31 10:15:43 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: out-prt.w $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/out-prt.w $":U .
 define variable vss-description as character no-undo initial "Задание док. и факт. количества по признаку или артикулу в рас, возврат, при, спи накладных (внешних и внутренних)":U .
 
 { cmp/vssrevis.i "substitute('&1|&2':u,cur-rec,node-type)" }
@@ -167,9 +165,13 @@ define variable v-new-qnty                 as decimal   no-undo .
 define variable v-free-qnty                as decimal   no-undo .
 define variable v-no-add-marks             as logical   no-undo initial no .
 
+define variable vIsExemplarGoods           as logical   no-undo .
+define variable vRightChngQntyCode         as character no-undo .
+define variable vRightChngQnty             as logical   no-undo .
 { gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 define variable v-pack-qnty as integer no-undo .
+define variable vScanMark   as character no-undo.
 
 define variable varvalue as character no-undo .
 define variable vartype  as character no-undo .
@@ -188,11 +190,12 @@ define temp-table tt-parts-split no-undo like ub.parts
 .
 
 {ref/imagelist.i}
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -203,62 +206,60 @@ define temp-table tt-parts-split no-undo like ub.parts
 &Scoped-define FRAME-NAME d-out-prt
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES ub.price-list
+&Scoped-define INTERNAL-TABLES price-list
 
 /* Definitions for DIALOG-BOX d-out-prt                                 */
-&Scoped-define FIELDS-IN-QUERY-d-out-prt ub.price-list.doc-num
-&Scoped-define ENABLED-FIELDS-IN-QUERY-d-out-prt ub.price-list.doc-num
-&Scoped-define ENABLED-TABLES-IN-QUERY-d-out-prt ub.price-list
-&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-d-out-prt ub.price-list
-&Scoped-define QUERY-STRING-d-out-prt FOR EACH ub.price-list SHARE-LOCK
-&Scoped-define OPEN-QUERY-d-out-prt OPEN QUERY d-out-prt FOR EACH ub.price-list SHARE-LOCK.
-&Scoped-define TABLES-IN-QUERY-d-out-prt ub.price-list
-&Scoped-define FIRST-TABLE-IN-QUERY-d-out-prt ub.price-list
+&Scoped-define FIELDS-IN-QUERY-d-out-prt price-list.doc-num 
+&Scoped-define ENABLED-FIELDS-IN-QUERY-d-out-prt price-list.doc-num 
+&Scoped-define ENABLED-TABLES-IN-QUERY-d-out-prt price-list
+&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-d-out-prt price-list
+&Scoped-define QUERY-STRING-d-out-prt FOR EACH price-list SHARE-LOCK
+&Scoped-define OPEN-QUERY-d-out-prt OPEN QUERY d-out-prt FOR EACH price-list SHARE-LOCK.
+&Scoped-define TABLES-IN-QUERY-d-out-prt price-list
+&Scoped-define FIRST-TABLE-IN-QUERY-d-out-prt price-list
 
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-FIELDS ub.gds-dtl.artic buf_goods.gds-name ~
-ub.gds-dtl.prod-code ub.gds-dtl.prod-type ub.clients.obj-name b-c-b.b-code ~
-ub.gds-prt.f-name ub.prt-obj.free-qnty ub.price-list.doc-num ~
-ub.doc-line.temperature ub.doc-line.road-tax ub.doc-line.doc-density ~
-ub.gds-dtl.discnt-rubl ub.gds-dtl.discnt-base ub.gds-dtl.discnt-pc ~
-ub.gds-dtl.discnt-type ub.gds-dtl.doc-qnty ub.gds-dtl.price-rubl ~
-ub.gds-dtl.price-base ub.gds-dtl.fact-qnty buf_goods.qnty-cart ~
-buf_goods.unit-base
-&Scoped-define ENABLED-TABLES ub.gds-dtl buf_goods ub.clients b-c-b ~
-ub.gds-prt ub.prt-obj ub.price-list ub.doc-line
-&Scoped-define FIRST-ENABLED-TABLE ub.gds-dtl
+&Scoped-Define ENABLED-FIELDS gds-dtl.artic buf_goods.gds-name ~
+gds-dtl.prod-code gds-dtl.prod-type clients.obj-name b-c-b.b-code ~
+gds-prt.f-name prt-obj.free-qnty price-list.doc-num doc-line.temperature ~
+doc-line.road-tax doc-line.doc-density gds-dtl.discnt-rubl ~
+gds-dtl.discnt-base gds-dtl.discnt-pc gds-dtl.discnt-type gds-dtl.doc-qnty ~
+gds-dtl.price-rubl gds-dtl.price-base gds-dtl.fact-qnty buf_goods.qnty-cart ~
+buf_goods.unit-base 
+&Scoped-define ENABLED-TABLES gds-dtl buf_goods clients b-c-b gds-prt ~
+prt-obj price-list doc-line
+&Scoped-define FIRST-ENABLED-TABLE gds-dtl
 &Scoped-define SECOND-ENABLED-TABLE buf_goods
-&Scoped-define THIRD-ENABLED-TABLE ub.clients
+&Scoped-define THIRD-ENABLED-TABLE clients
 &Scoped-define FOURTH-ENABLED-TABLE b-c-b
-&Scoped-define FIFTH-ENABLED-TABLE ub.gds-prt
-&Scoped-define SIXTH-ENABLED-TABLE ub.prt-obj
-&Scoped-define SEVENTH-ENABLED-TABLE ub.price-list
-&Scoped-define EIGHTH-ENABLED-TABLE ub.doc-line
-&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-arch b-place b-history ~
-b-help RECT-gds RECT-tot RECT-discnt RECT-qnty varprod-bc-str r-price ~
-v-price-rubl-kg v-price-base-kg v-qnty-kg v-fact-qnty-kg b-corr-price-sale ~
-tot-rubl tot-base TEXT-1 base-curr
-&Scoped-Define DISPLAYED-FIELDS ub.gds-dtl.artic buf_goods.gds-name ~
-ub.gds-dtl.prod-code ub.gds-dtl.prod-type ub.clients.obj-name b-c-b.b-code ~
-ub.gds-prt.f-name ub.prt-obj.free-qnty ub.price-list.doc-num ~
-ub.doc-line.temperature ub.doc-line.road-tax ub.doc-line.doc-density ~
-ub.gds-dtl.discnt-rubl ub.gds-dtl.discnt-base ub.gds-dtl.discnt-pc ~
-ub.gds-dtl.discnt-type ub.gds-dtl.doc-qnty ub.gds-dtl.price-rubl ~
-ub.gds-dtl.price-base ub.gds-dtl.fact-qnty buf_goods.qnty-cart ~
-buf_goods.unit-base
-&Scoped-define DISPLAYED-TABLES ub.gds-dtl buf_goods ub.clients b-c-b ~
-ub.gds-prt ub.prt-obj ub.price-list ub.doc-line
-&Scoped-define FIRST-DISPLAYED-TABLE ub.gds-dtl
+&Scoped-define FIFTH-ENABLED-TABLE gds-prt
+&Scoped-define SIXTH-ENABLED-TABLE prt-obj
+&Scoped-define SEVENTH-ENABLED-TABLE price-list
+&Scoped-define EIGHTH-ENABLED-TABLE doc-line
+&Scoped-Define ENABLED-OBJECTS b-exit b-quit b-arch b-place c-reason ~
+b-history b-help RECT-gds RECT-tot RECT-discnt RECT-qnty g-image ~
+varprod-bc-str r-price v-price-rubl-kg v-price-base-kg v-qnty-kg ~
+v-fact-qnty-kg b-corr-price-sale tot-rubl tot-base TEXT-1 base-curr 
+&Scoped-Define DISPLAYED-FIELDS gds-dtl.artic buf_goods.gds-name ~
+gds-dtl.prod-code gds-dtl.prod-type clients.obj-name b-c-b.b-code ~
+gds-prt.f-name prt-obj.free-qnty price-list.doc-num doc-line.temperature ~
+doc-line.road-tax doc-line.doc-density gds-dtl.discnt-rubl ~
+gds-dtl.discnt-base gds-dtl.discnt-pc gds-dtl.discnt-type gds-dtl.doc-qnty ~
+gds-dtl.price-rubl gds-dtl.price-base gds-dtl.fact-qnty buf_goods.qnty-cart ~
+buf_goods.unit-base 
+&Scoped-define DISPLAYED-TABLES gds-dtl buf_goods clients b-c-b gds-prt ~
+prt-obj price-list doc-line
+&Scoped-define FIRST-DISPLAYED-TABLE gds-dtl
 &Scoped-define SECOND-DISPLAYED-TABLE buf_goods
-&Scoped-define THIRD-DISPLAYED-TABLE ub.clients
+&Scoped-define THIRD-DISPLAYED-TABLE clients
 &Scoped-define FOURTH-DISPLAYED-TABLE b-c-b
-&Scoped-define FIFTH-DISPLAYED-TABLE ub.gds-prt
-&Scoped-define SIXTH-DISPLAYED-TABLE ub.prt-obj
-&Scoped-define SEVENTH-DISPLAYED-TABLE ub.price-list
-&Scoped-define EIGHTH-DISPLAYED-TABLE ub.doc-line
-&Scoped-Define DISPLAYED-OBJECTS varprod-bc-str v-price-rubl-kg ~
-v-price-base-kg v-qnty-kg v-fact-qnty-kg tot-rubl tot-base TEXT-1 base-curr
+&Scoped-define FIFTH-DISPLAYED-TABLE gds-prt
+&Scoped-define SIXTH-DISPLAYED-TABLE prt-obj
+&Scoped-define SEVENTH-DISPLAYED-TABLE price-list
+&Scoped-define EIGHTH-DISPLAYED-TABLE doc-line
+&Scoped-Define DISPLAYED-OBJECTS c-reason varprod-bc-str v-price-rubl-kg ~
+v-price-base-kg v-qnty-kg v-fact-qnty-kg tot-rubl tot-base TEXT-1 base-curr 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -273,127 +274,135 @@ v-price-base-kg v-qnty-kg v-fact-qnty-kg tot-rubl tot-base TEXT-1 base-curr
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-addinf DEFAULT
-     LABEL "Доп.ин&ф."
+DEFINE BUTTON b-addinf DEFAULT 
+     LABEL "Доп.ин&ф." 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-arch
-     LABEL "Док.цены":L
+DEFINE BUTTON b-arch 
+     LABEL "Док.цены":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-corr-price-sale
+DEFINE BUTTON b-corr-price-sale 
      IMAGE-UP FILE "cmp/check.bmp":U
      IMAGE-DOWN FILE "cmp/check.bmp":U
      IMAGE-INSENSITIVE FILE "cmp/check.bmp":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY .79 TOOLTIP "Выбор цены".
 
-DEFINE BUTTON b-exit AUTO-GO
-     LABEL "&Ввод":L
+DEFINE BUTTON b-exit AUTO-GO 
+     LABEL "&Ввод":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь":L
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-history
-     LABEL "Ис&тория"
+DEFINE BUTTON b-history 
+     LABEL "Ис&тория" 
      SIZE 10 BY 1 TOOLTIP "История изменения строки документа".
 
-DEFINE BUTTON b-place
-     LABEL "Место хр.":L
+DEFINE BUTTON b-place 
+     LABEL "Место хр.":L 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-quit AUTO-END-KEY
-     LABEL "&Отмена"
+DEFINE BUTTON b-quit AUTO-END-KEY 
+     LABEL "&Отмена" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-rvs-af DEFAULT
-     LABEL "Св.после"
+DEFINE BUTTON b-rvs-af DEFAULT 
+     LABEL "Св.после" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON b-rvs-bf DEFAULT
-     LABEL "Св.до"
+DEFINE BUTTON b-rvs-bf DEFAULT 
+     LABEL "Св.до" 
      SIZE 10 BY 1.
 
-DEFINE BUTTON r-price
+DEFINE BUTTON r-price 
      IMAGE-UP FILE "btn-down-arrow":U
      IMAGE-DOWN FILE "btn-down-arrow":U
      IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL ""
+     LABEL "" 
      SIZE 3 BY .79 TOOLTIP "Выбор цены".
 
-DEFINE VARIABLE base-curr AS CHARACTER FORMAT "x(3)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE c-reason AS integer FORMAT "-999":U INITIAL 0 
+     LABEL "Причина списания" 
+     VIEW-AS COMBO-BOX INNER-LINES 5
+     LIST-ITEM-PAIRS "",0
+     DROP-DOWN-LIST
+     SIZE 38.25 BY 1 NO-UNDO.
+
+DEFINE VARIABLE base-curr AS CHARACTER FORMAT "x(3)":U 
+      VIEW-AS TEXT 
      SIZE 4 BY 1
      BGCOLOR 3 FGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE TEXT-1 AS CHARACTER FORMAT "x(3)":U
-      VIEW-AS TEXT
+DEFINE VARIABLE TEXT-1 AS CHARACTER FORMAT "x(3)":U 
+      VIEW-AS TEXT 
      SIZE 4 BY 1
      BGCOLOR 3 FGCOLOR 15  NO-UNDO.
 
-DEFINE VARIABLE tot-base AS DECIMAL FORMAT "->>,>>>,>>>,>>9.99":U INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE tot-base AS DECIMAL FORMAT "->>,>>>,>>>,>>9.99":U INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 19 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE tot-rubl AS DECIMAL FORMAT "->>,>>>,>>>,>>>,>>9.99":U INITIAL 0
-     LABEL "Сумма"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE tot-rubl AS DECIMAL FORMAT "->>,>>>,>>>,>>>,>>9.99":U INITIAL 0 
+     LABEL "Сумма" 
+     VIEW-AS FILL-IN 
      SIZE 23 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE v-fact-qnty-kg LIKE ub.inv-line.wast-cli-qnty
-     LABEL "Факт,кг"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-fact-qnty-kg LIKE inv-line.wast-cli-qnty
+     LABEL "Факт,кг" 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE v-price-base-kg AS DECIMAL FORMAT "->>,>>>,>>>,>>9.99" INITIAL 0
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-price-base-kg AS DECIMAL FORMAT "->>,>>>,>>>,>>9.99" INITIAL 0 
+     VIEW-AS FILL-IN 
      SIZE 19 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE v-price-rubl-kg AS DECIMAL FORMAT "->,>>>,>>>,>>>,>>9.99" INITIAL 0
-     LABEL "Цена,кг"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-price-rubl-kg AS DECIMAL FORMAT "->,>>>,>>>,>>>,>>9.99" INITIAL 0 
+     LABEL "Цена,кг" 
+     VIEW-AS FILL-IN 
      SIZE 23 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE v-qnty-kg LIKE ub.inv-line.wast-cli-qnty
-     LABEL "По док,кг"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE v-qnty-kg LIKE inv-line.wast-cli-qnty
+     LABEL "По док,кг" 
+     VIEW-AS FILL-IN 
      SIZE 13 BY 1
      FGCOLOR 4  NO-UNDO.
 
-DEFINE VARIABLE varprod-bc-str AS CHARACTER FORMAT "X(40)"
-     VIEW-AS FILL-IN
+DEFINE VARIABLE varprod-bc-str AS CHARACTER FORMAT "X(40)" 
+     VIEW-AS FILL-IN 
      SIZE 41 BY 1 NO-UNDO.
 
 DEFINE IMAGE g-image
      STRETCH-TO-FIT RETAIN-SHAPE
      SIZE 18.5 BY 3.75.
+
 DEFINE RECTANGLE RECT-discnt
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 95.5 BY 6.
 
 DEFINE RECTANGLE RECT-gds
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 76 BY 3.75.
 
 DEFINE RECTANGLE RECT-qnty
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 41.75 BY 4.5.
 
 DEFINE RECTANGLE RECT-tot
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 95.5 BY 12.25.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY d-out-prt FOR
-      ub.price-list SCROLLING.
+DEFINE QUERY d-out-prt FOR 
+      price-list SCROLLING.
 &ANALYZE-RESUME
 
 /* ************************  Frame Definitions  *********************** */
@@ -405,98 +414,95 @@ DEFINE FRAME d-out-prt
      b-place AT ROW 1 COL 31 WIDGET-ID 2
      b-addinf AT ROW 1 COL 41
      b-rvs-bf AT ROW 1 COL 51 WIDGET-ID 6
+     c-reason AT ROW 1 COL 51.25 COLON-ALIGNED WIDGET-ID 12
      b-rvs-af AT ROW 1 COL 61 WIDGET-ID 4
      b-history AT ROW 1 COL 78.5
      b-help AT ROW 1 COL 88.5
-     ub.gds-dtl.artic AT ROW 2.58 COL 3.75 NO-LABEL
-          VIEW-AS FILL-IN
+     gds-dtl.artic AT ROW 2.58 COL 3.75 NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 17 BY 1
      buf_goods.gds-name AT ROW 2.58 COL 19.38 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 50 BY 1
-          FGCOLOR 4
+          FGCOLOR 4 
      varprod-bc-str AT ROW 3.58 COL 3.75 NO-LABEL
-     ub.gds-dtl.prod-code AT ROW 4.58 COL 3.75 NO-LABEL
-          VIEW-AS FILL-IN
+     gds-dtl.prod-code AT ROW 4.58 COL 3.75 NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 11 BY 1
-     ub.gds-dtl.prod-type AT ROW 4.58 COL 13.5 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+     gds-dtl.prod-type AT ROW 4.58 COL 13.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 8 BY 1
-     ub.clients.obj-name AT ROW 4.58 COL 22.13 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+     clients.obj-name AT ROW 4.58 COL 22.13 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 50 BY 1
-          FGCOLOR 4
-     b-c-b.b-code AT ROW 6.46 COL 20 COLON-ALIGNED FORMAT "99999999999"
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     b-c-b.b-code AT ROW 6.46 COL 20 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 10 BY 1
-          FGCOLOR 4
-     ub.gds-prt.f-name AT ROW 6.46 COL 30.5 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-prt.f-name AT ROW 6.46 COL 30.5 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 25 BY 1
-          FGCOLOR 4
-     ub.prt-obj.free-qnty AT ROW 6.5 COL 70.25 COLON-ALIGNED
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     prt-obj.free-qnty AT ROW 6.5 COL 70.25 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
-          FGCOLOR 4
-     ub.price-list.doc-num AT ROW 7.46 COL 20 COLON-ALIGNED
+          FGCOLOR 4 
+     price-list.doc-num AT ROW 7.46 COL 20 COLON-ALIGNED
           LABEL "Переоценка"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
-     ub.doc-line.temperature AT ROW 7.5 COL 70.25 COLON-ALIGNED
-          VIEW-AS FILL-IN
+     doc-line.temperature AT ROW 7.5 COL 70.25 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 7 BY 1
-          FGCOLOR 4
-     ub.doc-line.road-tax AT ROW 8.46 COL 20 COLON-ALIGNED
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     doc-line.road-tax AT ROW 8.46 COL 20 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 10 BY 1
-     ub.doc-line.doc-density AT ROW 8.5 COL 70.25 COLON-ALIGNED FORMAT "9.9999999999"
-          VIEW-AS FILL-IN
+     doc-line.doc-density AT ROW 8.5 COL 70.25 COLON-ALIGNED FORMAT "9.9999999999"
+          VIEW-AS FILL-IN 
           SIZE 16 BY 1
-          FGCOLOR 4
-     ub.gds-dtl.discnt-rubl AT ROW 9.92 COL 10 COLON-ALIGNED
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-dtl.discnt-rubl AT ROW 9.92 COL 10 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 23 BY 1
-          FGCOLOR 4
-     ub.gds-dtl.discnt-base AT ROW 9.92 COL 34 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-dtl.discnt-base AT ROW 9.92 COL 34 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 19 BY 1
-          FGCOLOR 4
-     ub.gds-dtl.discnt-pc AT ROW 9.92 COL 53 COLON-ALIGNED NO-LABEL
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-dtl.discnt-pc AT ROW 9.92 COL 53 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 8 BY 1
-          FGCOLOR 4
-     ub.gds-dtl.discnt-type AT ROW 9.92 COL 63.5
+          FGCOLOR 4 
+     gds-dtl.discnt-type AT ROW 9.92 COL 63.5
           VIEW-AS TOGGLE-BOX
           SIZE 11 BY 1
-     ub.gds-dtl.doc-qnty AT ROW 11.42 COL 80.25 COLON-ALIGNED
-          format ">>>,>>>,>>9.<<<"
-          VIEW-AS FILL-IN
+     gds-dtl.doc-qnty AT ROW 11.42 COL 80.25 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 13 BY 1
-          FGCOLOR 4
-     ub.gds-dtl.price-rubl AT ROW 11.46 COL 10 COLON-ALIGNED
-          FORMAT ">>,>>>,>>>,>>>,>>9.999"
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-dtl.price-rubl AT ROW 11.46 COL 10 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 23 BY 1
-          FGCOLOR 4
-     ub.gds-dtl.price-base AT ROW 11.46 COL 34 COLON-ALIGNED NO-LABEL
-          FORMAT ">>,>>>,>>>,>>>,>>9.999"
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-dtl.price-base AT ROW 11.46 COL 34 COLON-ALIGNED NO-LABEL
+          VIEW-AS FILL-IN 
           SIZE 19 BY 1
-          FGCOLOR 4
-     ub.gds-dtl.fact-qnty AT ROW 12.42 COL 80.25 COLON-ALIGNED
-          format ">>>,>>>,>>9.<<<"
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-dtl.fact-qnty AT ROW 12.42 COL 80.25 COLON-ALIGNED
+          VIEW-AS FILL-IN 
           SIZE 13 BY 1
-          FGCOLOR 4
+          FGCOLOR 4 
      r-price AT ROW 12.5 COL 31.88
      v-price-rubl-kg AT ROW 13.33 COL 10 COLON-ALIGNED
      v-price-base-kg AT ROW 13.33 COL 34 COLON-ALIGNED NO-LABEL
      v-qnty-kg AT ROW 13.42 COL 80.25 COLON-ALIGNED HELP
           ""
           LABEL "По док,кг"
-          FGCOLOR 4
-    WITH VIEW-AS DIALOG-BOX
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+          FGCOLOR 4 
+    WITH VIEW-AS DIALOG-BOX 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON b-exit.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
@@ -504,32 +510,32 @@ DEFINE FRAME d-out-prt
      v-fact-qnty-kg AT ROW 14.42 COL 80.25 COLON-ALIGNED HELP
           ""
           LABEL "Факт,кг"
-          FGCOLOR 4
-     ub.gds-dtl.new-price-sale AT ROW 14.54 COL 20.75 COLON-ALIGNED WIDGET-ID 8
-          VIEW-AS FILL-IN
+          FGCOLOR 4 
+     gds-dtl.new-price-sale AT ROW 14.54 COL 20.75 COLON-ALIGNED WIDGET-ID 8
+          VIEW-AS FILL-IN 
           SIZE 22 BY 1 TOOLTIP "Переоценка до закрытия документа"
      b-corr-price-sale AT ROW 14.63 COL 45 WIDGET-ID 10
      tot-rubl AT ROW 16 COL 10 COLON-ALIGNED
      tot-base AT ROW 16 COL 34 COLON-ALIGNED NO-LABEL
      buf_goods.qnty-cart AT ROW 16 COL 80.25 COLON-ALIGNED
           LABEL "В упаковке"
-          VIEW-AS FILL-IN
+          VIEW-AS FILL-IN 
           SIZE 13 BY 1
-          FGCOLOR 4
+          FGCOLOR 4 
      TEXT-1 AT ROW 17.25 COL 10 COLON-ALIGNED NO-LABEL
      base-curr AT ROW 17.25 COL 34 COLON-ALIGNED NO-LABEL
      buf_goods.unit-base AT ROW 17.25 COL 80.25 COLON-ALIGNED NO-LABEL
-           VIEW-AS TEXT
+           VIEW-AS TEXT 
           SIZE 4 BY 1
-          BGCOLOR 3 FGCOLOR 15
+          BGCOLOR 3 FGCOLOR 15 
      RECT-gds AT ROW 2.25 COL 2.5
      RECT-tot AT ROW 6.25 COL 2
      RECT-discnt AT ROW 9.75 COL 2
      RECT-qnty AT ROW 11.25 COL 55.75
-	 g-image AT ROW 2.25 COL 79 WIDGET-ID 8
-     SPACE(1.12) SKIP(3.74)
-    WITH VIEW-AS DIALOG-BOX
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     g-image AT ROW 2.25 COL 79 WIDGET-ID 8
+     SPACE(1.12) SKIP(12.50)
+    WITH VIEW-AS DIALOG-BOX 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE ""
          DEFAULT-BUTTON b-exit.
 
@@ -553,33 +559,33 @@ DEFINE FRAME d-out-prt
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX d-out-prt
    FRAME-NAME                                                           */
-ASSIGN
+ASSIGN 
        FRAME d-out-prt:SCROLLABLE       = FALSE.
 
-/* SETTINGS FOR FILL-IN ub.gds-dtl.artic IN FRAME d-out-prt
+/* SETTINGS FOR FILL-IN gds-dtl.artic IN FRAME d-out-prt
    ALIGN-L                                                              */
 /* SETTINGS FOR BUTTON b-addinf IN FRAME d-out-prt
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-addinf:HIDDEN IN FRAME d-out-prt           = TRUE.
 
 /* SETTINGS FOR BUTTON b-rvs-af IN FRAME d-out-prt
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-rvs-af:HIDDEN IN FRAME d-out-prt           = TRUE.
 
 /* SETTINGS FOR BUTTON b-rvs-bf IN FRAME d-out-prt
    NO-ENABLE                                                            */
-ASSIGN
+ASSIGN 
        b-rvs-bf:HIDDEN IN FRAME d-out-prt           = TRUE.
 
-/* SETTINGS FOR FILL-IN ub.doc-line.doc-density IN FRAME d-out-prt
+/* SETTINGS FOR FILL-IN doc-line.doc-density IN FRAME d-out-prt
    EXP-FORMAT                                                           */
-/* SETTINGS FOR FILL-IN ub.price-list.doc-num IN FRAME d-out-prt
+/* SETTINGS FOR FILL-IN price-list.doc-num IN FRAME d-out-prt
    EXP-LABEL                                                            */
-/* SETTINGS FOR FILL-IN ub.gds-dtl.new-price-sale IN FRAME d-out-prt
+/* SETTINGS FOR FILL-IN gds-dtl.new-price-sale IN FRAME d-out-prt
    NO-DISPLAY NO-ENABLE                                                 */
-/* SETTINGS FOR FILL-IN ub.gds-dtl.prod-code IN FRAME d-out-prt
+/* SETTINGS FOR FILL-IN gds-dtl.prod-code IN FRAME d-out-prt
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN buf_goods.qnty-cart IN FRAME d-out-prt
    EXP-LABEL                                                            */
@@ -603,7 +609,7 @@ ASSIGN
 */  /* DIALOG-BOX d-out-prt */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -828,6 +834,22 @@ DO:
               "Кол-во по документу должно быть целым."
       view-as alert-box error.
       return no-apply.
+    end.
+    if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then do:
+      if c-reason > 0 then do:
+        find first ub.doc-line-attr no-lock where ub.doc-line-attr.doc-code = t-doc.doc-code and
+        ub.doc-line-attr.gds-code = buf_goods.gds-code and
+        ub.doc-line-attr.attr-code = "reasonSpisan" no-error .
+        if not available (ub.doc-line-attr) then do:
+          create ub.doc-line-attr .
+          assign
+          ub.doc-line-attr.doc-code = t-doc.doc-code
+          ub.doc-line-attr.gds-code = buf_goods.gds-code
+          ub.doc-line-attr.attr-code = "reasonSpisan"
+          .
+        end.
+        ub.doc-line-attr.attr-value = string (c-reason) .
+      end.
     end.
     if t-doc.doc-type = {&expense}
     and buf_goods.qnty-cart <> 0
@@ -1261,7 +1283,6 @@ DO:
         
         
         node-type = {&g#term} .
-        
       end .
     end .
 
@@ -1404,9 +1425,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.discnt-base
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.discnt-base d-out-prt
-ON LEAVE OF ub.gds-dtl.discnt-base IN FRAME d-out-prt /* Скидка */
+&Scoped-define SELF-NAME gds-dtl.discnt-base
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.discnt-base d-out-prt
+ON LEAVE OF gds-dtl.discnt-base IN FRAME d-out-prt /* Скидка */
 DO:
     assign
     ub.gds-dtl.discnt-base
@@ -1418,9 +1439,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.discnt-pc
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.discnt-pc d-out-prt
-ON LEAVE OF ub.gds-dtl.discnt-pc IN FRAME d-out-prt /* Скидка */
+&Scoped-define SELF-NAME gds-dtl.discnt-pc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.discnt-pc d-out-prt
+ON LEAVE OF gds-dtl.discnt-pc IN FRAME d-out-prt /* Скидка */
 DO:
     assign
     ub.gds-dtl.discnt-pc
@@ -1432,9 +1453,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.discnt-rubl
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.discnt-rubl d-out-prt
-ON LEAVE OF ub.gds-dtl.discnt-rubl IN FRAME d-out-prt /* Скидка */
+&Scoped-define SELF-NAME gds-dtl.discnt-rubl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.discnt-rubl d-out-prt
+ON LEAVE OF gds-dtl.discnt-rubl IN FRAME d-out-prt /* Скидка */
 DO:
     assign
     ub.gds-dtl.discnt-rubl
@@ -1446,9 +1467,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.discnt-type
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.discnt-type d-out-prt
-ON VALUE-CHANGED OF ub.gds-dtl.discnt-type IN FRAME d-out-prt /* Процент */
+&Scoped-define SELF-NAME gds-dtl.discnt-type
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.discnt-type d-out-prt
+ON VALUE-CHANGED OF gds-dtl.discnt-type IN FRAME d-out-prt /* Процент */
 DO:
     assign
     ub.gds-dtl.discnt-type
@@ -1469,10 +1490,21 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME c-reason
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-reason d-out-prt
+ON VALUE-CHANGED OF c-reason IN FRAME d-out-prt /* Процент */
+DO:
+    assign
+    c-reason
+  .
+END.
 
-&Scoped-define SELF-NAME ub.doc-line.doc-density
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.doc-line.doc-density d-out-prt
-ON LEAVE OF ub.doc-line.doc-density IN FRAME d-out-prt /* Плотность */
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME doc-line.doc-density
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL doc-line.doc-density d-out-prt
+ON LEAVE OF doc-line.doc-density IN FRAME d-out-prt /* Плотность */
 DO:
 
   define buffer buf_doc-pl for ub.doc-pl .
@@ -1567,8 +1599,8 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.doc-line.doc-density d-out-prt
-ON RETURN OF ub.doc-line.doc-density IN FRAME d-out-prt /* Плотность */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL doc-line.doc-density d-out-prt
+ON RETURN OF doc-line.doc-density IN FRAME d-out-prt /* Плотность */
 DO:
   if t-doc.doc-type = {&return} then do:
     if v-price-rubl-kg :sensitive then do:
@@ -1640,9 +1672,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.doc-qnty
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.doc-qnty d-out-prt
-ON ENTRY OF ub.gds-dtl.doc-qnty IN FRAME d-out-prt /* Количество по документу */
+&Scoped-define SELF-NAME gds-dtl.doc-qnty
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.doc-qnty d-out-prt
+ON ENTRY OF gds-dtl.doc-qnty IN FRAME d-out-prt /* Количество по документу */
 DO:
   assign
     v-old-doc-qnty = input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty
@@ -1653,8 +1685,8 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.doc-qnty d-out-prt
-ON LEAVE OF ub.gds-dtl.doc-qnty IN FRAME d-out-prt /* Количество по документу */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.doc-qnty d-out-prt
+ON LEAVE OF gds-dtl.doc-qnty IN FRAME d-out-prt /* Количество по документу */
 DO:
   run l-doc-qnty in this-procedure no-error .
   if error-status :error then return no-apply.
@@ -1663,23 +1695,9 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME g-image
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL g-image d-out-prt
-ON mouse-select-dblclick OF g-image IN FRAME {&FRAME-NAME}
-DO:
-   DEFINE VARIABLE v-main-code LIKE ub.bar-code.b-code NO-UNDO.
-    IF AVAILABLE buf_goods THEN
-    DO:
-        { gbl/gdsbcode.i buf_goods.gds-code ? v-main-code }
-        RUN ref/imagelist.w (ParParentProc, "":U, v-main-code, {&lookup}).
-    END.
-END.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.doc-qnty d-out-prt
-ON return OF ub.gds-dtl.doc-qnty IN FRAME d-out-prt /* Количество по документу */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.doc-qnty d-out-prt
+ON return OF gds-dtl.doc-qnty IN FRAME d-out-prt /* Количество по документу */
 DO:
 
   if t-doc.doc-type = {&return} then do:
@@ -1725,9 +1743,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.fact-qnty
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.fact-qnty d-out-prt
-ON ENTRY OF ub.gds-dtl.fact-qnty IN FRAME d-out-prt /* Фактическое количество */
+&Scoped-define SELF-NAME gds-dtl.fact-qnty
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.fact-qnty d-out-prt
+ON ENTRY OF gds-dtl.fact-qnty IN FRAME d-out-prt /* Фактическое количество */
 DO:
   assign
     v-old-fact-qnty = input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty
@@ -1738,8 +1756,8 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.fact-qnty d-out-prt
-ON LEAVE OF ub.gds-dtl.fact-qnty IN FRAME d-out-prt /* Фактическое количество */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.fact-qnty d-out-prt
+ON LEAVE OF gds-dtl.fact-qnty IN FRAME d-out-prt /* Фактическое количество */
 DO:
   run l-fact-qnty in this-procedure no-error .
   if error-status :error then return no-apply.
@@ -1750,8 +1768,8 @@ END.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.fact-qnty d-out-prt
-ON RETURN OF ub.gds-dtl.fact-qnty IN FRAME d-out-prt /* Фактическое количество */
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.fact-qnty d-out-prt
+ON RETURN OF gds-dtl.fact-qnty IN FRAME d-out-prt /* Фактическое количество */
 DO:
   apply "leave":U to {&self-name} in frame {&FRAME-NAME}.
   if error-status :error then do:
@@ -1764,9 +1782,25 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.new-price-sale
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.new-price-sale d-out-prt
-ON LEAVE OF ub.gds-dtl.new-price-sale IN FRAME d-out-prt /* Новая цена продажи */
+&Scoped-define SELF-NAME g-image
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL g-image d-out-prt
+ON mouse-select-dblclick OF g-image IN FRAME d-out-prt
+DO:
+   DEFINE VARIABLE v-main-code LIKE ub.bar-code.b-code NO-UNDO.
+    IF AVAILABLE buf_goods THEN
+    DO:
+        { gbl/gdsbcode.i buf_goods.gds-code ? v-main-code }
+        RUN ref/imagelist.w (ParParentProc, "":U, v-main-code, {&lookup}).
+    END.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME gds-dtl.new-price-sale
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.new-price-sale d-out-prt
+ON LEAVE OF gds-dtl.new-price-sale IN FRAME d-out-prt /* Новая цена продажи */
 DO:
 
   if input frame {&frame-name} ub.gds-dtl.new-price-sale   <>  ub.gds-dtl.new-price-sale  then do:
@@ -1787,9 +1821,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.price-base
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.price-base d-out-prt
-ON LEAVE OF ub.gds-dtl.price-base IN FRAME d-out-prt /* Цена */
+&Scoped-define SELF-NAME gds-dtl.price-base
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.price-base d-out-prt
+ON LEAVE OF gds-dtl.price-base IN FRAME d-out-prt /* Цена */
 DO:
 
   if input frame {&FRAME-NAME} ub.gds-dtl.price-base > 5000
@@ -1838,9 +1872,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.gds-dtl.price-rubl
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.gds-dtl.price-rubl d-out-prt
-ON LEAVE OF ub.gds-dtl.price-rubl IN FRAME d-out-prt /* Цена */
+&Scoped-define SELF-NAME gds-dtl.price-rubl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL gds-dtl.price-rubl d-out-prt
+ON LEAVE OF gds-dtl.price-rubl IN FRAME d-out-prt /* Цена */
 DO:
 
   if ub.gds-dtl.price-rubl <> input frame {&FRAME-NAME} ub.gds-dtl.price-rubl then do:
@@ -1893,9 +1927,9 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME ub.doc-line.temperature
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL ub.doc-line.temperature d-out-prt
-ON LEAVE OF ub.doc-line.temperature IN FRAME d-out-prt /* Температура */
+&Scoped-define SELF-NAME doc-line.temperature
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL doc-line.temperature d-out-prt
+ON LEAVE OF doc-line.temperature IN FRAME d-out-prt /* Температура */
 DO:
     assign
     ub.doc-line.temperature
@@ -2189,7 +2223,7 @@ END.
 
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-out-prt 
 
 
 /* ***************************  Main Block  *************************** */
@@ -2882,7 +2916,7 @@ end.
         g-image:VISIBLE    = NO
         g-image:SENSITIVE  = NO
         .
-  
+  if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then run init-temp in this-procedure no-error .
   run UI-on in this-procedure
     no-error .
   if error-status :error then do:
@@ -2901,6 +2935,9 @@ end.
       in frame {&frame-name}
     .
   end.
+  
+  if node-type begins "scan-marks" then
+    vScanMark = entry(2,node-type,{&delim-key}).
 
   if prt-mode = {&lookup} then do:
     if not is-petrolium then do:
@@ -3037,7 +3074,46 @@ end.
             end.
           end.
         end.
-/*        run gbl/inidebug.p .*/
+        if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or 
+           t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
+        do:
+            run isExemplarGoods in this-procedure 
+              (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+            if vIsExemplarGoods then 
+            do:
+              if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} and 
+                 can-find(first buf_marking-lines no-lock where 
+                                  buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                              and buf_marking-lines.gds-code = buf_goods.gds-code) then
+              do:  /* для ПЕРЕМЕЩЕНИЯ РАСХОД проверим есть ли марки по товару, и если есть, то кол-во редактировать нельзя */
+                vRightChngQnty = false.  
+              end.
+              else
+              do:
+                  vRightChngQntyCode = if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} 
+                      then 'actn_write-off_add-no-mark':U
+                      else 'actn_tdedt-ras-perem_add-no-mark':U.
+                  { gbl/chk-actg.i
+                    v-cntxt-db-num
+                    v-cntxt-userid
+                    {&action-head-code-main}
+                    vRightChngQntyCode
+                    {&cntxt-object}
+                    t-doc.host-code
+                    t-doc.obj-type
+                    t-doc.obj-code
+                    0
+                    0
+                    0
+                    false
+                    vRightChngQnty
+                  }
+              end.
+              if not vRightChngQnty then
+                disable ub.gds-dtl.doc-qnty with frame {&frame-name}.
+            end.
+        end.
+                
         if node-type begins "scan-marks" then do:
           
           find first buf_marking no-lock where buf_marking.mark begins entry(2,node-type,{&delim-key}) no-error .
@@ -3062,7 +3138,13 @@ end.
             then do :
               undo, return error return-value .
             end .
-            if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+            if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB
             then do :
               message "Марка " buf_marking.mark " не в свободной зоне!" view-as alert-box .
               undo, return error .
@@ -3070,7 +3152,7 @@ end.
             case buf_marking.unit-ext : 
               when "LEVEL2"
               then do : 
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 500).
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty).
               end .
               when "LEVEL1"
               then do :
@@ -3080,7 +3162,7 @@ end.
                                                   and buf_marking-lines.out-code = ub.gds-dtl.doc-code :
                   assign v-pack-qnty = v-pack-qnty + 1 .                                  
                 end .
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 10 - v-pack-qnty).
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty - v-pack-qnty).
               end .
               otherwise do :
                 find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
@@ -3103,6 +3185,13 @@ end.
       end. /* q-ty, l */
     end. /* qnty */
     else do: /* fact */
+      if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
+      do:
+        if can-find(first buf_marking-lines where 
+                          buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                      and buf_marking-lines.gds-code = buf_goods.gds-code) then 
+          disable ub.gds-dtl.fact-qnty with frame {&frame-name}. 
+      end. 
       if ptrlprop-expptrl = {&calc-petrol-weight}
         and v-fact-qnty-kg :sensitive in frame {&FRAME-NAME}
       then do:
@@ -3118,6 +3207,8 @@ end.
       end. /* fact, l */
     end. /* fact */
   end.
+
+
 END. /* MAIN-BLOCK */
 RUN disable_UI IN THIS-PROCEDURE.
 
@@ -3135,7 +3226,7 @@ end.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ch-price d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ch-price d-out-prt 
 PROCEDURE ch-price :
 define variable v-cli-type    as character no-undo .
 define variable v-cli-code    as integer   no-undo .
@@ -3229,9 +3320,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-place-rsrv d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-place-rsrv d-out-prt 
 PROCEDURE check-place-rsrv :
-
 define variable d_fact-qnty     as decimal no-undo initial 0.00 .
   define variable d_doc-qnty      as decimal no-undo initial 0.00 .
   define variable d_cli-qnty      as decimal no-undo initial 0.00 .
@@ -3393,9 +3483,8 @@ end procedure. /* check-place-rsrv */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE correct-fact-qnty d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE correct-fact-qnty d-out-prt 
 PROCEDURE correct-fact-qnty :
-
 define input parameter p-newfact-qnty like ub.doc-line.fact-qnty   no-undo .
   define input parameter p-density      like ub.doc-line.doc-density no-undo .
 
@@ -3450,7 +3539,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-out-prt 
 PROCEDURE disable_UI :
 HIDE FRAME {&FRAME-NAME} NO-PAUSE.
 
@@ -3459,9 +3548,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE edit-doc-pl d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE edit-doc-pl d-out-prt 
 PROCEDURE edit-doc-pl :
-
 define input  parameter p-edit-doc-pl-mode as character no-undo .
 
   define variable d_fact-qnty     as decimal   no-undo initial 0.00 .
@@ -3677,13 +3765,35 @@ end procedure. /* edit-doc-pl */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE l-doc-qnty d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE l-doc-qnty d-out-prt 
 PROCEDURE l-doc-qnty :
 /* -----------------------------------------------------------
   Purpose:
   Parameters:  <none>
   Notes:
 -------------------------------------------------------------*/
+  if vIsExemplarGoods then
+  do:  /* для поэкземплярного учета проверим: введенное кол-во не должно быть < просканированных марок */
+    for each buf_marking-lines no-lock where
+             buf_marking-lines.out-code = t-doc.doc-code
+         and buf_marking-lines.obj-type = t-doc.obj-type
+         and buf_marking-lines.obj-code = t-doc.obj-code
+         and buf_marking-lines.gds-code = buf_goods.gds-code
+         and buf_marking-lines.doc-level = 1,
+        first buf_marking no-lock where
+              buf_marking.mark = buf_marking-lines.mark
+    :
+      accum buf_marking.box-qnty (total).  
+    end.
+    if (accum total buf_marking.box-qnty) > input frame {&frame-name} ub.gds-dtl.doc-qnty then 
+    do:
+      message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
+      ub.gds-dtl.doc-qnty:screen-value = string(accum total buf_marking.box-qnty).
+      apply "enrty" to ub.gds-dtl.doc-qnty in frame {&frame-name}.
+      return error.  
+    end.  
+  end.
+
   { str/set-pr.i recid(ub.gds-dtl) yes "input frame {&frame-name} ub.gds-dtl.doc-qnty" no-error }
   if error-status :error then
     message
@@ -3753,7 +3863,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE l-fact-qnty d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE l-fact-qnty d-out-prt 
 PROCEDURE l-fact-qnty :
 /* Если кол-во в базовых единицах товара получается дробное, то ошибка.*/
   if can-find( first ub.units where ub.units.unit-name = buf_goods.unit-base
@@ -3839,7 +3949,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE leave-price-rubl d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE leave-price-rubl d-out-prt 
 PROCEDURE leave-price-rubl :
 /* -----------------------------------------------------------
   Purpose:
@@ -3852,8 +3962,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE new-price-s d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE new-price-s d-out-prt 
 PROCEDURE new-price-s :
 /* продажная цена до закрытия прихода на факт */
   do
@@ -3912,7 +4021,7 @@ end procedure. /* new-price-s */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-case d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-case d-out-prt 
 PROCEDURE proc-case :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4273,7 +4382,38 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE read-doc-line-attr d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE re-calcpr d-out-prt 
+PROCEDURE re-calcpr :
+/* -----------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+-------------------------------------------------------------*/
+if pr-naklvalue = yes and pr-genmrg = {&typeprice_before-margin} and prt-mode <> {&lookup} then do:
+
+  { str/prslnew.i
+    "run"
+    pr-genmrg
+    pr-naklvalue
+    t-doc.doc-code
+    ub.gds-dtl.artic
+    ub.gds-dtl.prod-type
+    ub.gds-dtl.prod-code
+    ub.gds-dtl.price-rubl
+    ub.gds-dtl.price-base
+    ub.gds-dtl.price-rubl
+    ub.gds-dtl.price-base
+    ub.gds-dtl.new-price-sale
+    }
+
+end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE read-doc-line-attr d-out-prt 
 PROCEDURE read-doc-line-attr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4313,7 +4453,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rsrv-out d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rsrv-out d-out-prt 
 PROCEDURE rsrv-out :
 define variable v-chg-qnty      as decimal   no-undo .
   define variable v-chg-doc-qnty  as decimal   no-undo .
@@ -4335,16 +4475,16 @@ define variable v-chg-qnty      as decimal   no-undo .
           )
     then do: /* НЕ топливо */
       if v-work-with-qnty = "doc":U then do:
-        if node-type begins 'scan-marks' then do:
-          { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" "is-marks" entry(2,node-type,{&delim-key})}
+        if vScanMark <> "" then do:
+          { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" "is-marks" vScanMark}
         end.
         else do:  
         { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" }
       end.
       end.
       else do:
-        if node-type begins 'scan-marks' then do:
-          { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" "is-marks" entry(2,node-type,{&delim-key})}
+        if vScanMark <> "" then do:
+          { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" "is-marks" vScanMark}
         end.
       else do:
         { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" }
@@ -4407,7 +4547,7 @@ define variable v-chg-qnty      as decimal   no-undo .
             , input-output ub.doc-line.price-base
             , input-output ub.doc-line.price-rubl
             , input        -1
-            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
+            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else vScanMark
             ) no-error .
           if error-status :error then do:
             undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .
@@ -4452,7 +4592,7 @@ define variable v-chg-qnty      as decimal   no-undo .
             , input-output ub.doc-line.price-base
             , input-output ub.doc-line.price-rubl
             , input        -1
-            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
+            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else vScanMark
             ) no-error .
           if error-status :error then do:
             undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .
@@ -4717,7 +4857,7 @@ define variable v-chg-qnty      as decimal   no-undo .
           , input-output ub.doc-line.price-base
           , input-output ub.doc-line.price-rubl
           , input        -1
-          , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
+          , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else vScanMark
           ) no-error .
         if error-status :error then do:
           undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .
@@ -4773,7 +4913,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on d-out-prt 
 PROCEDURE UI-on :
 define variable v-data-type     as character no-undo.
   define variable calc_after-qnty as decimal   no-undo.
@@ -4866,6 +5006,14 @@ end.
 else do:
    hide r-price in frame {&FRAME-NAME}.
 end.
+
+if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then do:
+  if prt-mode <> {&lookup} then enable c-reason with frame {&frame-name} .
+  else disable c-reason with frame {&frame-name} .
+end.
+else do:
+  c-reason:hidden in frame {&frame-name} .
+end.
 g-image:SENSITIVE = g-image:VISIBLE.
 if prt-mode <> {&lookup} and ub.gds-dtl.price-corr = 0 then do :
   define variable v-pr as decimal   no-undo .
@@ -4896,7 +5044,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-doc-line-attr d-out-prt
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-doc-line-attr d-out-prt 
 PROCEDURE write-doc-line-attr :
 /*------------------------------------------------------------------------------
   Purpose:
@@ -4958,32 +5106,51 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE re-calcpr W-Win
-PROCEDURE re-calcpr :
-/* -----------------------------------------------------------
-  Purpose:
-  Parameters:  <none>
-  Notes:
--------------------------------------------------------------*/
-if pr-naklvalue = yes and pr-genmrg = {&typeprice_before-margin} and prt-mode <> {&lookup} then do:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-temp d-out-prt 
+PROCEDURE init-temp :
+  /* --------------------------------------------------------------------
+                      Purpose:     ENABLE the User Interface
+                      Parameters:  <none>
+                      Notes:       Here we display/view/enable the widgets in the
+                                   user-interface.  In addition, OPEN all queries
+                                   associated with each FRAME and BROWSE.
+                                   These statements here are based on the "Other
+                                   Settings" section of the widget Property Sheets.
+                       -------------------------------------------------------------------- */
 
-  { str/prslnew.i
-    "run"
-    pr-genmrg
-    pr-naklvalue
-    t-doc.doc-code
-    ub.gds-dtl.artic
-    ub.gds-dtl.prod-type
-    ub.gds-dtl.prod-code
-    ub.gds-dtl.price-rubl
-    ub.gds-dtl.price-base
-    ub.gds-dtl.price-rubl
-    ub.gds-dtl.price-base
-    ub.gds-dtl.new-price-sale
-    }
+  define variable ii          as integer   no-undo .
+  define variable reason      as character no-undo .
+  define variable reason-code as character no-undo .
+  define variable reason-name as character no-undo .
+  define buffer buf_trn-reason for ub.trn-reason .
+    { gbl/getsect.i run t-doc.obj-type t-doc.obj-code {&attr-nakl_par} }
 
-end.
-
+  for first thbjattr_thbj-attr no-lock where thbjattr_thbj-attr.prop-code = {&attr-nakl_par_reasons-write-off}:
+    reason-code  = thbjattr_thbj-attr.property-value-character .
+  end.
+  if reason-code <> "" then 
+  do:
+    do ii = 1 to num-entries(reason-code):
+      reason-name = "" .
+      for first buf_trn-reason no-lock where buf_trn-reason.reason-code = integer(entry(ii,reason-code)):
+        reason-name = buf_trn-reason.reason-name .
+      end.  
+      reason = reason + {&comma-char} + reason-name + {&comma-char} + entry(ii,reason-code) .
+    end.
+    reason = trim(reason,{&comma-char}).
+    ASSIGN
+      c-reason:LIST-ITEM-PAIRS  in frame {&frame-name} = reason .
+  end.
+  if prt-mode <> {&add-def} then do:
+        find first ub.doc-line-attr no-lock where ub.doc-line-attr.doc-code = t-doc.doc-code and
+        ub.doc-line-attr.gds-code = buf_goods.gds-code and
+        ub.doc-line-attr.attr-code = "reasonSpisan" no-error .
+        if available (ub.doc-line-attr) then do:
+          c-reason = integer (doc-line-attr.attr-value) .
+          display c-reason with frame {&frame-name} .
+        end.  
+    end.
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

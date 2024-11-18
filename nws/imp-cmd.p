@@ -202,7 +202,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         end.
         when "get-inf-dbs":U then do:
           if g#db-num = 0 then do:
-            for each buf_db
+            for each buf_db no-lock
             on error undo, return error substitute( "&1 &2", return-value, error-status :get-message(1) )
             :
               run str/callnews.p

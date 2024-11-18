@@ -2367,6 +2367,9 @@ procedure lib-trn_copy-inh :
   define variable v-gds-mark       as   logical              no-undo.
   define variable v-gds-attr-value as   character            no-undo.
   define variable v-gds-attr-type  as   character            no-undo.
+  define variable v-level          as   integer              no-undo. 
+  define variable v-is-in-doc      as   logical              no-undo init no .
+  define variable v-program-name   as   character            no-undo.
   { str/get-pr.i def }
 
   define buffer d-l-b       for ub.doc-line.
@@ -2467,6 +2470,27 @@ then
   v-gds-mark = true .
 else
   v-gds-mark = false .
+
+assign v-level = 2 .  
+repeat while program-name( v-level ) <> ? :
+  v-program-name = program-name( v-level ) .
+  v-is-in-doc = index(v-program-name, "in-doc.") > 0 .
+  if v-is-in-doc then leave .
+  assign
+    v-level = v-level + 1
+  .
+end.
+  
+if v-gds-attr-value > ""
+and v-is-in-doc
+and ca_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ca_trn-doc.obj-type, ca_trn-doc.obj-code):IsEDO
+and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ca_trn-doc.obj-type, ca_trn-doc.obj-code):GetIsArticForType(v-gds-attr-value)
+  or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ca_trn-doc.obj-type, ca_trn-doc.obj-code):GetIsEdoForType(v-gds-attr-value))
+then do :
+  return error ("Товар:" + ca_goods.artic + " " + ca_goods.prod-type + " " + string(ca_goods.prod-code) + " " + ca_goods.gds-name + " " + {&new-line} +
+                "нельзя добавлять в ручном режиме, так как он подлежит маркировке.") .
+end .
 
 if l_place-rsrv = yes then do:
   if ca_lib-trn_ret-doc.obj-type = ca_trn-doc.obj-type

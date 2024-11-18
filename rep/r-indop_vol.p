@@ -402,8 +402,13 @@ procedure proc-report:
          buf_rvs-line.obj-type = buf_rvs-doc.obj-type and
          buf_rvs-line.gds-code = buf_doc-pl-attr.gds-code and
          buf_rvs-line.pl-code = buf_doc-pl-attr.pl-code and
-         buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-         tt-report.fact-calc-vol_after = tt-report.fact-calc-vol_after + buf_rvs-line.state-measure-qnty .
+         buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+      :
+         if buf_rvs-line.state-measure-qnty > tt-report.fact-calc-vol_after
+         then do :
+           tt-report.fact-calc-vol_after = buf_rvs-line.state-measure-qnty .
+           tt-report.fact-calc-vol_before = buf_rvs-line.state-measure-qnty .
+         end .
       end.
       /*Измер. объем топлива в резервуаре до слива АЦ, л*/
       for each buf_rvs-doc no-lock where buf_rvs-doc.obj-code = buf_doc-pl-attr.obj-code and
@@ -414,8 +419,11 @@ procedure proc-report:
          buf_rvs-line.obj-type = buf_rvs-doc.obj-type and
          buf_rvs-line.gds-code = buf_doc-pl-attr.gds-code and
          buf_rvs-line.pl-code = buf_doc-pl-attr.pl-code and
-         buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code:
-         tt-report.fact-calc-vol_before = tt-report.fact-calc-vol_before + buf_rvs-line.state-measure-qnty .
+         buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+      :
+         if buf_rvs-line.state-measure-qnty < tt-report.fact-calc-vol_before
+         then
+           tt-report.fact-calc-vol_before = buf_rvs-line.state-measure-qnty .
       end.
       /*Объем по ТТН, л*/
       find first ub.goods no-lock where ub.goods.gds-code = buf_doc-pl-attr.gds-code no-error .

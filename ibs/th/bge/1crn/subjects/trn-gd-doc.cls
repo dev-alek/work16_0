@@ -476,7 +476,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
 
     define variable infoSecsObj     as class InfoSectionsTotal no-undo.
     define variable infoSecObj      as class InfoSection       no-undo.
-    define variable infoSecObjFirst as class InfoSection       no-undo.
+/*    define variable infoSecObjFirst as class InfoSection       no-undo.*/
     define variable ii as integer no-undo.
     define variable is-exist-sec as logical no-undo.
     define variable v-date as date no-undo.
@@ -637,7 +637,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           
         infoSecsObj:Initialization(buf_doc-line.doc-code, buf_gds.gds-code).
         infoSecsObj:GetDBAllAttr ().
-        infoSecObjFirst = infoSecsObj:GetInfoSectionProp(1).
+/*        infoSecObjFirst = infoSecsObj:GetInfoSectionProp(1).*/
         do ii = 1 to infoSecsObj:SectionNum:
           infoSecObj = infoSecsObj:GetInfoSectionProp(ii).
           if infoSecObj:FactQnty = 0  or infoSecObj:FactQnty = ?
@@ -771,10 +771,10 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           write-data-element ("dnsty-uch", string-mth (infoSecObj:FactDensity)).
           write-data-element ("cap-uch", string-mth (infoSecObj:FactQnty)).
           write-data-element ("wght-uch", string-mth (infoSecObj:FactKgQnty)).
-          write-data-element ("sl-date-s", string (iso-date (infoSecObjFirst:DateStart))).
-          write-data-element ("sl-time-s", string (infoSecObjFirst:TimeStart, "HH:MM")).
-          write-data-element ("sl-date-e", string (iso-date (infoSecObjFirst:DateEnd))).
-          write-data-element ("sl-time-e", string (infoSecObjFirst:TimeEnd, "HH:MM")).
+          write-data-element ("sl-date-s", string (iso-date (infoSecObj:DateStart))).
+          write-data-element ("sl-time-s", string (infoSecObj:TimeStart, "HH:MM")).
+          write-data-element ("sl-date-e", string (iso-date (infoSecObj:DateEnd))).
+          write-data-element ("sl-time-e", string (infoSecObj:TimeEnd, "HH:MM")).
           write-data-element ("cmm", string (if infoSecObj:IsKP then "1" else "0")).
           if infoSecObj:IsKP
           then do :
@@ -817,6 +817,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               write-data-element ("auk", string(infoSecObj:aukKey)).
             end .
           end .  
+          else do :
+            write-data-element ("trans-comm", (if infoSecObj:KPnoMeas then string(1) else string(0))).
+          end .
           write-data-element ("tank-num", string (infoSecObj:ListTank)).
           /*сертификат соответствия*/
           write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
@@ -1130,7 +1133,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
               then next .
               
-              if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+              if buf_marking-lines.sts <> ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+              and buf_marking-lines.sts <> ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
               and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
               then next .
               

@@ -116,6 +116,7 @@ on error undo, return error return-value
       if not available buf_parts-attr
       then do:
         if buf_parts.in-code = buf_parts.out-code
+        or (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and index(buf_trn-doc.doc-code, "=") > 0 and p-create-all = false) /* ѕри закрытии ¬нутреннего прихода дл€ него тоже создаЄм атрибут партии */
         then do:
           /* если это порожденна€ парти€, */
           /* то создаем ее атрибут */

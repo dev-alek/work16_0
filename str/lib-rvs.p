@@ -468,6 +468,7 @@ procedure lib-rvs_rvs-pump : /* revision-pump */
       tt-pump-nozzle
       p-cur-pump
       no
+      no
       no-error
   }
   if error-status :error then do:
@@ -1381,6 +1382,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
   define input        parameter           p-one-place  as   logical             no-undo.
   define input        parameter           p-read-cur   as   integer             no-undo.
   define input        parameter           p-message-on as   logical             no-undo.
+  define input        parameter           p-no-waitfram as   logical             no-undo.
   define input-output parameter table for tt-meas-file.
   define input-output parameter table for tt-meas.
   define buffer bf_pl-level     for ub.pl-level.
@@ -1542,7 +1544,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
       end.
       when 2 /* Агент */
       then do :
-        run str/getAsiDataAgent.p (input anl-loc, output table tt-place ) no-error.
+        run str/getAsiDataAgent.p (input anl-loc, input p-no-waitfram, output table tt-place ) no-error.
         if error-status:error
         then do :
           return error return-value + error-status:get-message (1).
@@ -5107,6 +5109,7 @@ END.
     { gbl/ptrlprop.i run p-obj-type p-obj-code }
     
     define variable v-calc-free-vol as logical no-undo init no .
+    define variable v-sec-num as character no-undo init "" .
     
     if (is-sug(bf_rvs-line.gds-code) and ptrlprop-calc-free-vol-sug)
     or (not is-sug(bf_rvs-line.gds-code) and ptrlprop-calc-free-vol)
@@ -5179,11 +5182,18 @@ END.
         end .                           
         else do :
           infoSectionsTotal = new ibs.th.str.InfoSectionsTotal(buf_trn-doc.doc-code, bf_rvs-line.gds-code, {&lookup}).
-          
+          if num-entries(bf_rvs-line.rvs-code, "-") = 3
+          then do :
+            v-sec-num = entry(2, bf_rvs-line.rvs-code, "-") .
+          end .
           sect_ :
           do iisec = 1 to infoSectionsTotal:SectionNum :
             infoSectionsTotal:GetInfoSectionProp (iisec).
             if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1
+            then
+              next sect_ .
+            if v-sec-num <> ""
+            and v-sec-num <> infoSectionsTotal:InfoSectionCurr:SectionName
             then
               next sect_ .
             
@@ -6085,10 +6095,14 @@ procedure getpump:
    define input  parameter iobjtype    as character no-undo.
    define input  parameter iobjcode    as integer no-undo.
    define input  parameter imessageon  as logical no-undo.
+   define input  parameter inowaitfram as logical no-undo.
    define output parameter Opump       as longchar no-undo.
    define variable vadr as character no-undo.
    define variable vport as character no-undo.
    define variable vtext as character no-undo.
+   
+   define variable old-BM as logical no-undo .
+   old-BM = mBatchMode .
 /*   define variable v-value-character as character no-undo .
    define variable v-value-date as date no-undo .
    define variable v-value-decimal as decimal no-undo .
@@ -6182,13 +6196,19 @@ procedure getpump:
           , substitute("&1 &2 Отправка команды &3 на кассу № &4 (&5:&6) Пользователь &7 &8", string(today),string(time, "HH:MM:SS"),"pumpread",cash-desk.cash-num,vadr,vport ,vuser,{&carriage-return} + {&new-line})
           ,input 10 /* время ожинания освобождения файла */
           ) no-error .            
+/*      if  log-manager:logfile-name ne ? then                                                       */
+/*        log-manager:write-message(substitute("mWaitFramView=&1.",string(mWaitFramView)) , "MYLOG").*/
+      if inowaitfram
+      then do :
+        mBatchMode = yes .
+      end .
       run ConectSocet (vadr,
                        vport,
                        ?,
                        "pumpread" + chr(13) + chr(10), 
                        "text",
                        30,
-                       not imessageon,
+                       yes /*not imessageon*/,
                        "Получение данных по ТРК. ") no-error.
       if     not error-status:error
          and length(mWebResp) > 0
@@ -6210,6 +6230,7 @@ procedure getpump:
           ) no-error .            
       
    end.
+   mBatchMode = old-BM .
    mFileLogSocet = "".
    if not vFlag
    then do:
@@ -6238,6 +6259,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   define input-output parameter table for tt-pump-nozzle.
   define input        parameter           p-read-cur          as   logical             no-undo.
   define input        parameter           p-message-on        as   logical             no-undo.
+  define input        parameter           p-no-waitfram       as   logical             no-undo.
 
   define variable j_pump-code   like ub.pump-nozzle.pump-code   no-undo.
   define variable j_nozzle-code like ub.pump-nozzle.nozzle-code no-undo.
@@ -6344,7 +6366,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     .
     output to value(v_File-Err) .
     output close.
-    run getpump(v_File-Err ,p-obj-type, p-obj-code,p-message-on , output vPump) no-error.
+    run getpump(v_File-Err, p-obj-type, p-obj-code, p-message-on, p-no-waitfram, output vPump) no-error.
     if error-status:error
     then
        return error substitute ("&1 Повторите попытку или обратитесь в техническую поддержку.",return-value).

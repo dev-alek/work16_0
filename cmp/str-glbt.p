@@ -275,7 +275,7 @@ attr-contr-in }
 /* атрибутЫ накладных от глобального к объекту  */
 { cmp/cr-prep.i 1 attr-nakl_par  nakl_par nakl_par nakl_par nakl_par  }
 { cmp/cr-prepc.i 1 prop-list-attr-nakl_par
-"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return"
+"date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return,reasons-write-off"
 attr-nakl_par }
 
 /*Планируемые цифры */
@@ -575,7 +575,7 @@ attr-egais-host }
 /*Настройки для подключения к ГИС МТ и проверки КМ*/
 { cmp/cr-prep.i 1 attr-gisMT gisMT " " gisMT }
 { cmp/cr-prepc.i 1 prop-list-attr-gisMT
-"adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest"
+"adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest,OflineAdress,OflineLogin,OflinePswd"
 attr-gisMT }
 
 /*Электронный документооборот*/

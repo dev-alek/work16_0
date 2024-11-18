@@ -23,7 +23,7 @@ Required:
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
 initial "@(#)$Workfile$ $Revision$".
-
+{ gbl/objsrv.i }
 &global-define fbrlib-max-calls-in-recursion 50
 
 define temp-table temp_fbrlib_recipe no-undo
@@ -1886,6 +1886,10 @@ define input parameter p-chip-num   like ub.c-trn-doc.chip-num no-undo .
     define buffer buf_c-fbr-doc     for ub.c-fbr-doc.
     define buffer buf_fbr-recipe     for ub.fbr-recipe.
     define buffer buf_fbr-recipe-gds for ub.fbr-recipe-gds.
+    
+    define buffer buf_marking-lines for ub.marking-lines .
+    define buffer buf_marking       for ub.marking .
+    define buffer buf_goods         for ub.goods .
 
 
 do
@@ -1894,6 +1898,9 @@ for buf_fbr-doc
   , buf_c-fbr-doc
   , buf_fbr-recipe
   , buf_fbr-recipe-gds
+  , buf_goods
+  , buf_marking
+  , buf_marking-lines
 on error undo, return error
 :
     { gbl/getcntxt.i def }
@@ -2030,6 +2037,25 @@ on error undo, return error
     on stop   undo _del-block, return error substitute( "&1. stop", vss-workfile )
     on endkey undo _del-block, return error substitute( "&1. endkey", vss-workfile )
         :
+            for first buf_goods no-lock where buf_goods.artic      = buf_fbr-line.artic
+                                          and buf_goods.prod-type  = buf_fbr-line.prod-type
+                                          and buf_goods.prod-code  = buf_fbr-line.prod-code,
+            each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                                    and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
+                                                    and buf_marking-lines.obj-code = buf_fbr-doc.obj-code
+                                                    and buf_marking-lines.in-code  = "manufacturing"
+                                                    and buf_marking-lines.out-code = buf_fbr-line.doc-code
+                                                    and buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                                                    and buf_marking-lines.prt-code = 0
+            :
+              for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+                assign
+/*  BTS-977                buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB when not buf_fbr-line.is-comp*/
+                  buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB when buf_fbr-line.is-comp
+                .
+              end .
+              delete buf_marking-lines.
+            end .
             delete buf_fbr-line.
         end.
         for each buf_fbr-recipe exclusive-lock

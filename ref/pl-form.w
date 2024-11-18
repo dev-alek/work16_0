@@ -615,8 +615,9 @@ assign
   t-auto-gate-valve
 .
 
+
 if v-mi-dnst = ? then v-mi-dnst = 0 . 
-if v-mi-lvl = ? then v-mi-lvl = 0 . 
+if v-mi-lvl = ?  then v-mi-lvl = 0 . 
 if v-mi-tmp = ? then v-mi-tmp = 0 . 
 
 if input frame {&frame-name} dens-prov <> dens-prov then 
@@ -668,6 +669,10 @@ then do :
     return no-apply.
   end .
 end .
+
+
+
+
 
 if rvd-dnstv <> rvd-tmp
 and ((available dnst_sr-izmerenia and dnst_sr-izmerenia.sr-type-izm = 0 and dnst_sr-izmerenia.sr-density and dnst_sr-izmerenia.sr-temperature)
@@ -2403,16 +2408,16 @@ end .
 
 on del of v-mi-dnst in frame d-pl-form
 do :
-  v-mi-dnst = ? .
-  v-mi-dnst:screen-value = "?" .
+  v-mi-dnst = 0 .
+  v-mi-dnst:screen-value = "0" .
 end .
 
 on leave of v-mi-dnst IN FRAME d-pl-form 
 do:
   define variable vlog as logical no-undo .
   define variable v-old-val as character no-undo .
-  
   v-old-val = string(v-mi-dnst) .
+  if v-mi-dnst:screen-value = "?" then v-mi-dnst:screen-value = "0" .
   find first dnst_sr-izmerenia no-lock where dnst_sr-izmerenia.node-code = integer(v-mi-dnst:screen-value) no-error .
   if not available dnst_sr-izmerenia
   then do :
@@ -2521,8 +2526,8 @@ end .
 
 on del of v-mi-lvl in frame d-pl-form
 do :
-  v-mi-lvl = ? .
-  v-mi-lvl:screen-value = "?" .
+  v-mi-lvl = 0 .
+  v-mi-lvl:screen-value = "0" .
 end . 
   
 on leave of v-mi-lvl IN FRAME d-pl-form 
@@ -2530,6 +2535,7 @@ do:
   define variable v-old-val as character no-undo .
   
   v-old-val = string(v-mi-lvl) .
+  if v-mi-lvl:screen-value = "?" then v-mi-lvl:screen-value = "0".
   find first lvl_sr-izmerenia no-lock where lvl_sr-izmerenia.node-code = integer(v-mi-lvl:screen-value) no-error .
   if not available lvl_sr-izmerenia
   then do :
@@ -2615,8 +2621,20 @@ end .
 
 on del of v-mi-tmp in frame d-pl-form
 do :
-  v-mi-tmp = ? .
-  v-mi-tmp:screen-value = "?" .
+  v-mi-tmp = 0	 .
+  v-mi-tmp:screen-value = "0" .
+end .
+
+on del of v-mi-dnst in frame d-pl-form
+do :
+  v-mi-dnst = 0	 .
+  v-mi-dnst:screen-value = "0" .
+end .
+
+on del of v-mi-lvl in frame d-pl-form
+do :
+  v-mi-lvl = 0	 .
+  v-mi-lvl:screen-value = "0" .
 end .
 
 on leave of v-mi-tmp IN FRAME d-pl-form 
@@ -2625,6 +2643,7 @@ do:
   define variable v-old-val as character no-undo .
   
   v-old-val = string(v-mi-tmp) .
+  if v-mi-tmp:screen-value =  "?" then v-mi-tmp:screen-value = "0" .
   find first tmp_sr-izmerenia no-lock where tmp_sr-izmerenia.node-code = integer(v-mi-tmp:screen-value) no-error .
   if not available tmp_sr-izmerenia
   then do :

@@ -132,9 +132,13 @@ function addMarkforUtd returns recid
             marking.gds-code = ?.
             marking.unit     = getLevelUTDByCodId(marking.mark) .
          end.
-         marking.unit-ext   = getLevelMotpByCodId(marking.mark) .
-         marking.box-qnty   = vQnty. 
-         marking.unit       = getLevelUTDByCodId(marking.mark) .
+         assign
+           marking.unit-ext   = if marking.unit-ext = "" or marking.unit-ext = ? then
+                                   getLevelMotpByCodId(marking.mark)
+                                else marking.unit-ext
+           marking.box-qnty   = vQnty
+           marking.unit       = getLevelUTDByCodId(marking.mark)
+         .
 /*         marking.unit-ext = utd-lines.UnitCode .*/
          if       marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB
             or (     iUtdType eq "UniversalTransferDocument"

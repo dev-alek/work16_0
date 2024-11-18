@@ -930,7 +930,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       mtitle = {&window-name}:title
     .
     if mForDb <> "":U then do:
-      run write-to-log ( substitute( "Сессия работает с БД &1", mForDb ) ).
+      if length(mForDb) > 32000
+      then do :
+        define variable tmp-str as character no-undo .
+        tmp-str = entry(1, mForDb) + "-" + entry(num-entries(mForDb), mForDb) .
+        run write-to-log ( substitute( "Сессия работает с БД &1", tmp-str ) ).
+      end .
+      else do :
+        run write-to-log ( substitute( "Сессия работает с БД &1", mForDb ) ).
+      end .
     end.
     if mForExtsys <> "":U then do:
       run write-to-log ( substitute( "Сессия работает с Внешними Системами &1", mForExtsys ) ).

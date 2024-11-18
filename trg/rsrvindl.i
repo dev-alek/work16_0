@@ -223,7 +223,23 @@ procedure rsrvindl :
         for first buf_marking exclusive-lock where buf_marking.mark = buf_marking-lines.mark 
           and not (available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
             /* BTS-572 - статус марки не меняем для док-тов инвентаризации */
-            assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+            if avail buf_trn-doc and buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
+            do:   /* если СПИСАНИЕ, то проверим предыдущий статус марки */
+               find last ub.c-marking no-lock where
+                         ub.c-marking.mark = buf_marking.mark
+                    use-index pi-2 no-error.
+               if avail ub.c-marking and
+                  (ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB or
+                   ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB or
+                   ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB or
+                   ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB or
+                   ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB) then
+                 buf_marking.sts = ub.c-marking.sts .
+               else  
+                 buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB . 
+            end.
+            else
+              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
         end . 
         delete orig_marking-lines .
       end.

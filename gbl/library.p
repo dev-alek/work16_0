@@ -1500,6 +1500,19 @@ procedure gdscdat :
             p-return-attribute = lookup(v-attr-value, 'true,yes':u) > 0
           .
         end.
+        
+        when 'production-only=request':u
+        then do:
+          run gds-attr-value in this-procedure
+            (input  p-gds-code
+            ,input  {&attr-production-only}
+            ,output v-attr-value
+            ,output v-attr-type
+            ) .
+          assign
+            p-return-attribute = lookup(v-attr-value, 'true,yes':u) > 0
+          .
+        end.
 
         otherwise do:
           message

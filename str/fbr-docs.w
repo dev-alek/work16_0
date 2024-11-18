@@ -99,6 +99,8 @@ define variable g#log           as logical      no-undo.
 define variable v-host-code     as integer      no-undo.
 define variable v-host-name     as character    no-undo.
 
+define variable cStsMark  as class ibs.th.str.marking.sts.mark no-undo.
+
 /* ***********************  Control Definitions  ********************** */
 
 DEFINE BUTTON b-add
@@ -746,6 +748,9 @@ END.
 
 ON CHOOSE OF b-del IN FRAME {&frame-name} /* Удал */ DO:
 define variable del-rec as recid no-undo.
+define buffer buf_marking-lines     for ub.marking-lines.
+define buffer buf_del_marking-lines for ub.marking-lines.
+define buffer buf_marking           for ub.marking.
 { gbl/stdbtn.i }
 {&net-proc}
 
@@ -849,6 +854,8 @@ else do:
         define buffer buf_del_fbr-recipe-gds    for fbr-recipe-gds.
         define buffer buf_fbr-recipe            for fbr-recipe.
         define buffer buf_fbr-recipe-gds        for fbr-recipe-gds.
+        define buffer buf_goods                 for goods.
+        
         for each buf_fbr-recipe-gds no-lock
            where buf_fbr-recipe-gds.doc-code      = f-doc.doc-code
         :
@@ -868,6 +875,33 @@ else do:
         for each fbr-line no-lock
            where fbr-line.doc-code = f-doc.doc-code
         :
+            /* удаляем марки, привязанные к док-ту */
+            for first buf_goods no-lock where buf_goods.artic     = fbr-line.artic
+                                          and buf_goods.prod-type = fbr-line.prod-type
+                                          and buf_goods.prod-code = fbr-line.prod-code,
+            each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                             and buf_marking-lines.obj-code = f-doc.obj-code
+                                             and buf_marking-lines.obj-type = f-doc.obj-type
+                                             and buf_marking-lines.in-code  = "manufacturing"
+                                             and buf_marking-lines.out-code = f-doc.doc-code
+                                             and buf_marking-lines.part-code = fbr-line.recipe-code
+                                             and buf_marking-lines.prt-code = 0
+            :
+              /* меняем статус марки на Свободную Зону */
+              find first buf_marking exclusive-lock
+                   where buf_marking.mark = buf_marking-lines.mark 
+              no-error.
+              if available buf_marking
+              then
+              assign
+                buf_marking.sts = cStsMark:FreeZone:KeyIntDB when not fbr-line.is-comp
+                buf_marking.sts = cStsMark:UsedInProduction:KeyIntDB when fbr-line.is-comp
+              .
+              find first buf_del_marking-lines exclusive-lock
+                   where recid( buf_del_marking-lines ) = recid( buf_marking-lines )
+              .
+              delete buf_del_marking-lines.
+            end .  
             find first buf_del_fbr-line exclusive-lock
                  where recid( buf_del_fbr-line ) = recid( fbr-line )
             .
@@ -1309,6 +1343,8 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 { gbl/app_help.i &browse-name="br-docs" }
 { gbl/setfltnm.i }
 { gbl/brwrefre.i "if available f-doc then doc-rec = recid(f-doc). run UI-on in this-procedure ( input yes ) ." }
+
+cStsMark = ObjSrv:Env:Marking:Sts:Mark.
 
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK

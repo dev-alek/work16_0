@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 94114751b278, 3560, rls $
+$Author: EShklyar $
+$Date: 2023/11/27 08:31:19 $
+$Workfile: rvscrdcs.p $
+$Archive: str/rvscrdcs.p $
 
 создание топливных документов по документу сверки
 
@@ -25,11 +25,11 @@ define input  parameter parparentproc as handle    no-undo.
 define input  parameter p-rvs-rowid   as rowid     no-undo .
 define output parameter p-docs-info   as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 94114751b278, 3560, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/11/27 08:31:19 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rvscrdcs.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/rvscrdcs.p $":U .
 define variable vss-description as character no-undo init "создание топливных документов по документу сверки".
 { cmp/vssrevis.i     }
 { cmp/str-glbl.i     }
@@ -47,7 +47,9 @@ define variable vss-description as character no-undo init "создание топливных до
 { ref/gds-attr.i     }
 { str/is-sug.i       }
 { str/is-gas.i       }
-
+{ str/trdcalib.i }
+{ gbl/thbjattr.i }
+{ str/attrlist.i }
 do
   on error  undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message ( error-status :num-messages ) )
   on stop   undo, return error substitute( "&1. stop", vss-workfile )
@@ -2395,6 +2397,18 @@ do
         .
     end.
   end. /* block_cre-inv transaction */
+  
+  
+  /* ¬ыводим окно с атрибутами по инвентаизации */
+  run init-attr-general in this-procedure .
+      find first buf_doc-line no-lock where buf_doc-line.doc-code = v-inv-code no-error .
+    if available buf_doc-line
+      then 
+    do :
+    run str/inv-attr.w (input ParParentproc, input "b-lkp,b-chg", input v-inv-code, input table tt-upd-attr) no-error.
+    end .
+  
+  
   if v-infom-mess <> ""
     then 
   do:
@@ -2486,4 +2500,121 @@ procedure close-doc :
 
 end procedure. /* close-doc */
 
-/* $Workfile$ e n d */
+PROCEDURE cr-tt-upd :
+do on error undo, return error return-value :
+define variable v-other as character   no-undo.
+for each tt-upd-attr: delete tt-upd-attr. end.
+
+&scop create-record create tt-upd-attr. ~
+ assign~
+  tt-upd-attr.code =  ~{&~{&attr-code~}~}  . ~
+                                        ~
+~{ str/tdat-cod.i                   ~
+     tt-upd-attr.code           ~
+     tt-upd-attr.type-attr      ~
+     tt-upd-attr.format-attr    ~
+     tt-upd-attr.fillin_width   ~
+     tt-upd-attr.fillin_height  ~
+     tt-upd-attr.label-attr     ~
+     tt-upd-attr.user-can-edit  ~
+     tt-upd-attr.output-display ~
+     v-other                    ~
+     tt-upd-attr.proc-attr       ~
+     tt-upd-attr.full-screen-val ~
+     tt-upd-attr.sort_  ~
+     no-error         ~
+~}                    ~
+ if error-status :error then do:    ~
+   message "ќшибка при установке атрибутов инвентаризации." skip ~
+           error-status :get-message(1) skip return-value ~
+   view-as alert-box. ~
+   return error. ~
+ end.
+ 
+ 
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-number
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-inv-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player3
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player3
+{&create-record}
+
+
+end.
+end procedure.
+
+PROCEDURE init-attr-general :
+/* јтрибуты расходного документа */
+do on error undo, return error return-value :
+run cr-tt-upd .
+define variable varexist                  as logical   no-undo.
+  &scop create-record run create-record in this-procedure (  input v-inv-code ~
+                                                        ,  input ~{&~{&attr-code~}~} ~
+                                                        ,  input  ~{&attr-val~} ~
+                                                        , output varexist ) no-error.
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-number
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-prikaz-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-inv-date
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-agent
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player1
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player2
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-fio-player3
+{&create-record}
+&scop attr-val  ""
+&scop attr-code trdcattr-pos-player3
+{&create-record}
+
+end.
+
+END PROCEDURE.
+
+/* $Workfile: rvscrdcs.p $ e n d */

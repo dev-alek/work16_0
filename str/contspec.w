@@ -496,7 +496,7 @@ DEFINE BROWSE spec-List
      {&cop-l1} @ p-bcode  COLUMN-LABEL {&col-l1}  Format "X(16)"
      {&cop-l2}    COLUMN-LABEL {&col-l2}  Format "x(16)"
      {&cop-l3} @ p-prod  COLUMN-LABEL {&col-l3}  Format "x(18)"
-     {&cop-l4}    COLUMN-LABEL {&col-l4}  format "x(50)"
+     {&cop-l4}    COLUMN-LABEL {&col-l4}  format "x(112)"
      {&cop-l5}    COLUMN-LABEL {&col-l5}  format ">,>>>,>>>,>>9.99"
      {&cop-l6}    COLUMN-LABEL {&col-l6}  Format "->>>>9.99"
      {&cop-l7}    COLUMN-LABEL {&col-l7}  Format "->>>>9.99"

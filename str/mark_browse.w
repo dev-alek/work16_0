@@ -61,6 +61,8 @@ define input parameter p-type as integer   no-undo . /*тип документа 0 - все док
 define input parameter p-parent_mark as character   no-undo . /*марка родитель*/
 /* Local Variable Definitions ---                                       */
 
+define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo   no-undo.
+
 define variable log-res     as log       no-undo.
 define variable rr          as recid     no-undo.
 define variable v_type      as char      no-undo.
@@ -216,9 +218,11 @@ FUNCTION GdsName RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusName d-mark 
-FUNCTION StatusName RETURNS CHARACTER
-    ( input p-sts as integer )  FORWARD.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getStatusName d-mark 
+FUNCTION getStatusName RETURNS CHARACTER
+    ( input p-mark     as character,
+      input p-sts-glob as integer,
+      input p-sts-loc  as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -411,7 +415,7 @@ DEFINE BROWSE br-mark
   X_marking.mark COLUMN-LABEL "Марка/Штрих-код" FORMAT "x(56)":U width 33
   
   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  if not ismark(X_marking.mark) then "" else if X_marking.stts-utd = marking:Checked_:Label_ then X_marking.stts-utd else X_marking.stts @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
+  if not ismark(X_marking.mark) then "" else getStatusName(X_marking.mark,X_marking.sts,X_marking.sts-utd) @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
 /*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
 /*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
@@ -436,7 +440,7 @@ DEFINE BROWSE br-mark-item
   else "АОД" @ typem COLUMN-LABEL "Тип!кода" FORMAT "x(3)":U
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  if X_marking-line.stts-utd = marking:Checked_:Label_ then X_marking-line.stts-utd else X_marking-line.stts @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
+  getStatusName(X_marking.mark,X_marking-line.sts,X_marking-line.sts-utd) @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
 /*  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
 /*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
@@ -1603,7 +1607,13 @@ DO:
     
    if isMark(v-mark)
    then
-      run scan-mark .
+   do:
+     run scan-mark .
+     br-mark:refresh() in frame {&frame-name}.
+     {&OPEN-QUERY-br-mark-item}
+     if NUM-RESULTS("br-mark-item") > 0 then 
+       br-mark-item:refresh() in frame {&frame-name}.
+   end.
    else
       run scan-bar-code .
 END.
@@ -1635,6 +1645,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
     { gbl/getcntxt.i get }
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code).
     Marking = ObjSrv:Env:Marking:Sts:Mark .
     tree = ObjSrv:Lib:MarkingTree .
     run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
@@ -1744,7 +1755,7 @@ PROCEDURE enable_UI :
                                        These statements here are based on the "Other
                                        Settings" section of the widget Property Sheets.
                            -------------------------------------------------------------------- */
-    frame {&frame-name}:title = p-doc + " " + p-mode.
+    frame {&frame-name}:title = entry(1,p-doc,{&delim-par}) + " " + p-mode.
     ENABLE
         b-exit
         b-hist
@@ -2101,15 +2112,36 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION StatusName d-mark 
-FUNCTION StatusName RETURNS CHARACTER
-    ( input p-sts as integer ) :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getStatusName d-mark 
+FUNCTION getStatusName RETURNS CHARACTER
+    ( input p-mark as character,
+      input p-sts-glob as integer,
+      input p-sts-loc  as integer ):
     /*------------------------------------------------------------------------------
       Purpose:  
         Notes:  
     ------------------------------------------------------------------------------*/
-    define variable v-status as character no-undo .
-    RETURN v-status.   /* Function return value. */
+    define buffer c-marking for ub.c-marking.
+
+    if p-sts-loc = marking:Reserved:KeyIntDB and 
+       num-entries(p-doc,{&delim-par}) > 1 and entry(2,p-doc,{&delim-par}) = {&TDEDT_Spi_Vnesh} then
+    do:
+      find last c-marking no-lock where
+                c-marking.mark = p-mark
+           use-index pi-2 no-error.
+      ChekTypeMarkByDm(p-mark).
+      if not avail c-marking or
+         c-marking.sts = marking:Checked_:KeyIntDB or 
+         c-marking.sts = marking:FreeZone:KeyIntDB or
+         (c-marking.sts = marking:ReturnLock:KeyIntDB and 
+          mTypeMark <> "" and 
+          EDOParSec:GetIsSaleReturnForType(mTypeMark)) then 
+        return StatusTHName(p-sts-glob).
+      else
+        return substitute("&1_&2",StatusTHName(p-sts-loc),StatusTHName(c-marking.sts)).
+    end.
+    else 
+      return if p-sts-loc = marking:Checked_:KeyIntDB then StatusTHName(p-sts-loc) else StatusTHName(p-sts-glob). 
 
 END FUNCTION.
 
@@ -2180,6 +2212,7 @@ PROCEDURE scan-mark :
     define variable v-GTIN      as character no-undo .
     define variable v-gds-code  as integer   no-undo .
     define VARIABLE vRecKeyLine as character no-undo .
+    define VARIABLE vMsg        as character no-undo .
     define variable vFlag       as log       no-undo.
     define buffer gray_marking                for ub.marking .
     define buffer gray_unit-marking           for ub.marking .
@@ -2228,7 +2261,7 @@ PROCEDURE scan-mark :
         v-mark = "" .
         return no-apply.
     end.  
-    
+
     if p-mode <> {&lookup} then 
     do:
         /*Режим Серая зона*/
@@ -2413,6 +2446,20 @@ PROCEDURE scan-mark :
                 v-mark:screen-value = "" .
                 v-mark = "" .
             end.  
+        end.
+        else if p-type = 2 then
+        do:  /* если это внутренний приход */
+            run checkPriPerem in this-procedure (v-marking, output F-text).
+            if F-text <> "" then
+            do:
+               display F-text with frame {&frame-name}.
+               v-mark:screen-value = "" .
+               v-mark = "" .
+               return no-apply.
+            end.
+            br-mark:refresh().
+            reposition br-mark to recid recid_mark no-error .
+            br-mark-item:refresh () no-error .
         end.
         else /*не серая зона*/
         do:  
@@ -2838,9 +2885,9 @@ PROCEDURE scan-mark :
                 display F-text with frame {&frame-name}.
             end. 
         end.
-        v-mark:screen-value = "" .
-        v-mark = "" .
     end.    
+    v-mark:screen-value = "" .
+    v-mark = "" .
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2992,3 +3039,96 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE checkPriPerem Dialog-Frame 
+PROCEDURE checkPriPerem :
+    define input  parameter iMark as character no-undo.
+    define output parameter oMsg  as character no-undo.
+    
+    define buffer buf_trn-doc          for ub.trn-doc. 
+    define buffer buf_marking          for ub.marking. 
+    define buffer buf_marking-child    for ub.marking. 
+    define buffer buf_marking-lines    for ub.marking-lines. 
+    define buffer buf_tt-marking       for tt-marking-lines.
+    
+/*run gbl/inidebug.p.*/
+    find first X_marking exclusive-lock where X_marking.mark begins iMark no-error .
+    if available (X_marking) then
+    do: 
+        if X_marking.sts-utd = Marking:Checked_:KeyIntDB then
+        do:
+            if x_marking.unit-ext <> "UNIT" then 
+            do:
+                oMsg = "               Упаковка уже проверена полностью".
+                return.              
+            end.
+            else 
+            do:  
+                oMsg = "            Марка уже проверена, просканируйте следующую".
+                display F-text with frame {&frame-name}.
+                return.
+            end.  
+        end.  
+        find first buf_marking exclusive-lock where
+                   buf_marking.mark begins iMark
+             no-error.
+        if buf_marking.sts = Marking:Checked_:KeyIntDB or
+           buf_marking.sts = Marking:SaleLock:KeyIntDB or
+           buf_marking.sts = Marking:ReturnLock:KeyIntDB then
+        do:
+            oMsg = "Марка проверена ранее".
+            return.
+        end.
+        if buf_marking.sts = Marking:FreeZone:KeyIntDB then
+        do:
+          for each buf_marking-lines no-lock where 
+                   buf_marking-lines.mark      = X_marking.mark 
+               and buf_marking-lines.obj-type  = X_marking.obj-type 
+               and buf_marking-lines.obj-code  = X_marking.obj-code 
+               and buf_marking-lines.gds-code  = X_marking.gds-code
+               and buf_marking-lines.out-code  <> X_marking.out-code,
+              first buf_trn-doc no-lock where
+                    buf_trn-doc.doc-code = buf_marking-lines.out-code
+                and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}:
+            oMsg = "Марка уже принята ранее по другому документу внутреннего прихода".
+            return.
+          end.
+        end.
+
+        find first buf_marking-lines exclusive-lock where 
+                   buf_marking-lines.mark      = X_marking.mark 
+               and buf_marking-lines.obj-type  = X_marking.obj-type 
+               and buf_marking-lines.obj-code  = X_marking.obj-code 
+               and buf_marking-lines.gds-code  = X_marking.gds-code 
+               and buf_marking-lines.out-code  = X_marking.out-code no-error .
+        assign
+          buf_marking.sts       = Marking:Checked_:KeyIntDB
+/*          buf_marking.sts       = Marking:DeliveryControl:KeyIntDB*/
+          x_marking.sts         = buf_marking.sts
+          x_marking.sts-utd     = buf_marking.sts
+          buf_marking-lines.sts = buf_marking.sts
+          X_marking.stts-utd    = marking:GetLabel(buf_marking.sts)
+          X_marking.stts        = marking:GetLabel(buf_marking.sts)
+        .
+        for each buf_marking-child where
+                 buf_marking-child.mark-parent = buf_marking.mark
+            exclusive-lock:
+            find first buf_marking-lines exclusive-lock where 
+                       buf_marking-lines.mark      = buf_marking-child.mark 
+                   and buf_marking-lines.obj-type  = X_marking.obj-type 
+                   and buf_marking-lines.obj-code  = X_marking.obj-code 
+                   and buf_marking-lines.gds-code  = X_marking.gds-code 
+                   and buf_marking-lines.out-code  = X_marking.out-code no-error .
+            find first X_marking-line exclusive-lock where X_marking-line.mark begins buf_marking-child.mark no-error .
+            assign
+              X_marking-line.sts      = buf_marking.sts
+              X_marking-line.sts-utd  = buf_marking.sts
+              X_marking-line.stts-utd = marking:GetLabel(buf_marking.sts)
+              X_marking-line.stts     = marking:GetLabel(buf_marking.sts)
+              buf_marking-lines.sts   = buf_marking.sts
+              buf_marking-child.sts   = buf_marking.sts
+            .
+        end.
+    end.
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 03c97b127fc3, 2119, rls $
+$Author: SMMolotkov $
+$Date: Wed Dec 25 15:23:52 2019 +0300 $
+$Workfile: inv-5.p $
+$Archive: rep/inv-5.p $
 
 Инвентаризационная опись ИНВ-5
 
@@ -23,17 +23,17 @@ define input parameter rep-tipe           as character no-undo.
 define input parameter p-grp              as character no-undo. /* используется для печати только сумм по группам */
 define input parameter print-graft        as logical          no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 03c97b127fc3, 2119, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo initial "$Date: Wed Dec 25 15:23:52 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: inv-5.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/inv-5.p $":U .
 define variable vss-description as character no-undo initial "Формы по инвентаризации ".
 { cmp/vssrevis.i     }
 
 { cmp/str-glbl.i     } /* &sum-before-doc, &sum-after-doc */
 { rep/r-cliprp.i def } /* ищет t-okpo для ОКПО */
-
+  { str/trdcalib.i }
 &scop f-l MonthNameRusCase,Sparse
 { gbl/std-func.i {&f-l} }
 
@@ -266,7 +266,7 @@ end. /* end_of each_buf_doc-line */
      v-sfact-prop = ""
    .
    else assign
-     v-sfact-date = string(buf_trn-doc.fact-date)
+     v-sfact-date = string(buf_trn-doc.fact-date,"99/99/9999")
      v-sfact-prop = "&laquo;" + string(day(buf_trn-doc.fact-date)) + "&raquo;" +
                     substitute(" &1 &2 г.",
                                MonthNameRusCase( month( buf_trn-doc.fact-date ), 2 ),
@@ -279,15 +279,29 @@ end. /* end_of each_buf_doc-line */
   /* ----- вывод на печать ----- */
 { rep/html-conv.i } /* fnc-convert-dot-to-colon() */
 { cmp/library.i   } /* filenmln() */
-{ gbl/prn-lib.i   } /* prn-lib-get-report-name() */
+  { gbl/prn-lib.i   } /* prn-lib-get-report-name() */
 
-define variable v-report-name       as character no-undo .
-define variable v-file-name-rep-pg1 as character no-undo .
-define variable v-file-name-rep-pg2 as character no-undo .
-define variable v-file-name-rep-pg3 as character no-undo .
-define variable Lines_Counter as integer no-undo . /* (1) Номер по порядку */
-
-define stream OutStr-html.
+  define variable v-report-name       as character no-undo .
+  define variable v-file-name-rep-pg1 as character no-undo .
+  define variable v-file-name-rep-pg2 as character no-undo .
+  define variable v-file-name-rep-pg3 as character no-undo .
+  define variable Lines_Counter       as integer   no-undo . /* (1) Номер по порядку */
+  define variable v-fact-date         as character no-undo .
+  define variable v-frame-str         as character no-undo .
+  define variable v-prikaz-num        as character no-undo .
+  define variable v-prikaz-date       as character no-undo .
+  define variable p-type              as character no-undo.
+  define variable v-pos-agent         as character no-undo .
+  define variable v-fio-agent         as character no-undo .
+  define variable v-pos-player1       as character no-undo .
+  define variable v-fio-player1       as character no-undo .
+  define variable v-pos-player2       as character no-undo .
+  define variable v-fio-player2       as character no-undo .
+  define variable v-pos-player3       as character no-undo .
+  define variable v-fio-player3       as character no-undo .
+  define variable v-inv-date          as character no-undo .
+      
+  define stream OutStr-html.
 
   run gbl/getrpnum.p (output g#report-num).
   run prn-lib-get-report-name in this-procedure ( input parParentProc, output v-report-name ).
@@ -295,6 +309,88 @@ define stream OutStr-html.
   v-file-name-rep-pg2 = substitute( "&1pg2.html", v-report-name ) .  
   v-file-name-rep-pg3 = substitute( "&1pg3.html", v-report-name ) .  
   
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-inv-date}
+          v-inv-date
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-prikaz-number}
+          v-prikaz-num
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-prikaz-date}
+          v-prikaz-date
+          p-type
+          no-error
+      }  
+
+
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-agent}
+          v-fio-agent
+          p-type
+          
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-agent}
+          v-pos-agent
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player1}
+          v-fio-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player1}
+          v-pos-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player2}
+          v-fio-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player2}
+          v-pos-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-fio-player3}
+          v-fio-player3
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          buf_trn-doc.doc-code
+          {&trdcattr-pos-player3}
+          v-pos-player3
+          p-type
+          no-error
+      }            
+    v-prikaz-date = replace(v-prikaz-date,".","") .
+    v-inv-date = replace(v-inv-date,".","") .
+      
   Lines_Counter = 0 .
   /* 09/XI-2018 согласно образцу, приложенному к ТР, опись выводится на три листа:
      1. титульный лист
@@ -349,6 +445,9 @@ end .
 
   /* -------- лист1 ----------------------------------------------------------------------------------- */
 do :
+  
+  
+  
   put stream OutStr-html unformatted
     '<table class="pg1" name="стр1" orientation="landscape" fit_to_page="true" style="border:0;">' skip
     '<thead>' skip
@@ -421,18 +520,18 @@ do :
     '    <td class="page1lab" style="{&css_align_righit}">Основание для проведения инвентаризации:</td>' skip
     '    <td colspan="6" class="page1nam" style="{&css_border_bottom} text-align:center;">приказ, постановление, распоряжение</td>' skip
     '    <td colspan="2" class="page1kod page1lab"  style="{&css_cell_border} {&css_align_righit}">номер</td>' skip
-    '    <td colspan="2" class="page1kod"           style="{&css_cell_border} text-align:center;">&nbsp;</td>' skip
+    '    <td colspan="2" class="page1kod"           style="{&css_cell_border} text-align:center;">' + v-prikaz-num + '</td>' skip
     '  </tr>' skip
     '  <tr>' skip
     '    <td>&nbsp;</td>' skip
     '    <td colspan="6" class="page1und" style="{&css_align_center}">(ненужное зачеркнуть)</td>' skip
     '    <td colspan="2" class="page1kod page1lab"  style="{&css_cell_border} {&css_align_righit}">дата</td>' skip
-    '    <td colspan="2" class="page1kod"           style="{&css_cell_border} text-align:center;">&nbsp;</td>' skip
+    '    <td colspan="2" class="page1kod"           style="{&css_cell_border} text-align:center;">' + string(v-prikaz-date, "99/99/9999") + '</td>' skip
     '  </tr>' skip
 
     '  <tr>' skip /* 12..15 */
     '    <td colspan="9" class="page1lab" style="{&css_align_righit}">Дата начала инвентаризации</td>' skip
-    '    <td colspan="2" class="page1kod" style="{&css_cell_border} text-align:center;">' v-doc-date '</td>' skip
+    '    <td colspan="2" class="page1kod" style="{&css_cell_border} text-align:center;">' + if v-inv-date <> "" then string(v-inv-date,"99/99/9999") + '</td>' else string(v-doc-date,"99/99/9999") + '</td>' skip
     '  </tr>' skip
     '  <tr>' skip
     '    <td colspan="9" class="page1lab" style="{&css_align_righit}">Дата окончания инвентаризации</td>' skip
@@ -821,11 +920,11 @@ do :
     '  <tr>' skip
     '    <td><br /></td>' skip
     '    <td colspan="3">Председатель комиссии</td>' skip
-    '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
+    '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br />' + v-pos-agent + '</td>' skip
     '    <td><br /></td>' skip
     '    <td colspan="4" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
     '    <td><br /></td>' skip
-    '    <td colspan="8" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
+    '    <td colspan="8" class="page3nam" style="{&css_border_bottom}"><br />' + v-fio-agent + '</td>' skip
     '    <td><br /></td>' skip
     '  </tr>' skip
     '  <tr>' skip
@@ -840,12 +939,12 @@ do :
 
     '  <tr>' skip
     '    <td><br /></td>' skip
-    '    <td colspan="3">Члены комиссии:</td>' skip
-    '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
+    '    <td colspan="3">Состав комиссии:</td>' skip
+    '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br />' + v-pos-player1 + '</td>' skip
     '    <td><br /></td>' skip
     '    <td colspan="4" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
     '    <td><br /></td>' skip
-    '    <td colspan="8" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
+    '    <td colspan="8" class="page3nam" style="{&css_border_bottom}"><br />' + v-fio-player1 + '</td>' skip
     '    <td><br /></td>' skip
     '  </tr>' skip
     '  <tr>' skip
@@ -860,11 +959,11 @@ do :
 
     '  <tr>' skip
     '    <td colspan="4"><br /></td>' skip
-    '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
+    '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br />' + v-pos-player2 + '</td>' skip
     '    <td><br /></td>' skip
     '    <td colspan="4" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
     '    <td><br /></td>' skip
-    '    <td colspan="8" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
+    '    <td colspan="8" class="page3nam" style="{&css_border_bottom}"><br />' + v-fio-player2 + '</td>' skip
     '    <td><br /></td>' skip
     '  </tr>' skip
     '  <tr>' skip
@@ -876,8 +975,28 @@ do :
     '    <td colspan="8" class="page3und" style="{&css_align_center}">(расшифровка подписи)</td>' skip
     '    <td><br /></td>' skip
     '  </tr>' skip
+    '  <tr>' skip
+    '    <td colspan="4"><br /></td>' skip
+    '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br />' + v-pos-player3 + '</td>' skip
+    '    <td><br /></td>' skip
+    '    <td colspan="4" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
+    '    <td><br /></td>' skip
+    '    <td colspan="8" class="page3nam" style="{&css_border_bottom}"><br />' + v-fio-player3 + '</td>' skip
+    '    <td><br /></td>' skip
+    '  </tr>' skip
+    '  <tr>' skip
+    '    <td colspan="4"><br /></td>' skip
+    '    <td colspan="2" class="page3und" style="{&css_align_center}">(должность)</td>' skip
+    '    <td><br /></td>' skip
+    '    <td colspan="4" class="page3und" style="{&css_align_center}">(подпись)</td>' skip
+    '    <td><br /></td>' skip
+    '    <td colspan="8" class="page3und" style="{&css_align_center}">(расшифровка подписи)</td>' skip
+    '    <td><br /></td>' skip
+    '  </tr>' skip    
   .
-  if Lines_Counter > 0 then put stream OutStr-html unformatted
+ 
+  if Lines_Counter > 0 then do:
+    put stream OutStr-html unformatted
     '  <tr style="height: 40px;">' skip
     '    <td><br /></td>' skip
     '    <td text_wrap="true" colspan="20">'
@@ -886,6 +1005,18 @@ do :
         '</td>' skip
     '  </tr>' skip
   .
+  end .
+  else do:
+    put stream OutStr-html unformatted
+    '  <tr style="height: 40px;">' skip
+    '    <td><br /></td>' skip
+    '    <td text_wrap="true" colspan="20">'
+    substitute("Все ценности, поименованные в настоящей инвентаризационной описи с № 0 по № &1, комиссией проверены в натуре в моем (нашем) присутствии и внесены в опись, в связи с чем претензий к инвентаризационной комиссии не имею (не имеем)."
+              , Lines_Counter)
+        '</td>' skip
+    '  </tr>' skip
+  .    
+  end.
   put stream OutStr-html unformatted
     '  <tr>' skip
     '    <td colspan="21">Ценности, перечисленные в описи, находятся на комиссию.</td>' skip

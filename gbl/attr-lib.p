@@ -3165,7 +3165,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-nakl_par   true
 &scop output-display-attr-nakl_par  true
 &scop other-attr-nakl_par           'spr-ext=gbl\naklpa1.w':U
-&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,character,character,character,logical,character':U
+&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,character,character,character,logical,character,character':U
 &scop prop-label-list-attr-nakl_par 'Дата закрытия периода~
 ,Дата факт = Дате документа (для внешних ПН РН и МФ )~
 ,Тип заведения НДС по умолчанию~
@@ -3193,8 +3193,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 ,Расход внешний товары~
 ,Разрешено вводить фактическое количество в статусе Накл-~
 ,Основания для возврата~
+,Причины списания~
 '
-&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return'
+&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return,reasons-write-off'
 &scop global-attr-nakl_par true
 &scop host-attr-nakl_par   true
 &scop shop-attr-nakl_par   true
@@ -3228,6 +3229,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip (attr-mandatory-gds-exp-wayb) Обязательные атрибуты накладной расход внешний товары
 &scop attr-nakl_par_edit-fact-wayb_tooltip (edit-fact-wayb) Разрешено вводить фактическое количество в статусе Накл-
 &scop attr-nakl_par_reasons-for-return_tooltip (reasons-for-return) Основания для внешнего расхода по которым будет определяться что делаем возврат поставщику
+&scop attr-nakl_par_reasons-write-off_tooltip (reasons-write-off) Причины списания
 &scop prop-tooltip-list-attr-nakl_par {&attr-nakl_par_date-close-period_tooltip},~
 {&attr-nakl_par_stfactdt_tooltip},~
 {&attr-nakl_par_type-vat_tooltip},~
@@ -3254,7 +3256,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 {&attr-nakl_par_attr-mandatory-gds-ret-wayb_tooltip},~
 {&attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip},~
 {&attr-nakl_par_edit-fact-wayb_tooltip},~
-{&attr-nakl_par_reasons-for-return_tooltip}
+{&attr-nakl_par_reasons-for-return_tooltip},~
+{&attr-nakl_par_reasons-write-off_tooltip}
 &scop level-way-attr-nakl_par "obj,host,global"
 &scop up-way-attr-nakl_par "nakl_par,nakl_par,nakl_par"
 
@@ -4056,10 +4059,11 @@ logical~
 &scop user-can-edit-attr-gisMT   true
 &scop output-display-attr-gisMT  true
 &scop other-attr-gisMT           'spr-ext=gbl\gis.w':U
-&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical':U
-&scop prop-label-list-attr-gisMT 'Адрес и порт проски-сервера,Дополнительные параметры запроса,Адрес ГИС МТ,Логин,Пароль,Макс.допуст. время разрешения продажи при сбое,ключ авторизации,Время с момента сбоя до начала уведомления персонала,Длительность ожидания ответа ГИС МТ,~
-Аварийная ситуация в ГИС МТ,Опережение срабатывания запрета по сроку годности в минутах,Работа с cdn-площадками,Адрес cdn,Повторный опрос площадки,Смена площадки,Период обновления списка CDN-площадок,Обновление параметров при запросе КМ'
-&scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest'
+&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical,character,character,character':U
+&scop prop-label-list-attr-gisMT 'Адрес и порт проски-сервера,Дополнительные параметры запроса,Адрес ГИС МТ,Логин,Пароль,Макс.допуст. время разрешения продажи при сбое,ключ авторизации,~
+Время с момента сбоя до начала уведомления персонала,Длительность ожидания ответа ГИС МТ,Аварийная ситуация в ГИС МТ,Опережение срабатывания запрета по сроку годности в минутах,~
+Работа с cdn-площадками,Адрес cdn,Повторный опрос площадки,Смена площадки,Период обновления списка CDN-площадок,Обновление параметров при запросе КМ,Адрес ЛМ ЧЗ,Логин в ЛМ ЧЗ,Пароль в ЛМ ЧЗ'
+&scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest,OflineAdress,OflineLogin,OflinePswd'
 &scop global-attr-gisMT true
 &scop host-attr-gisMT false
 &scop shop-attr-gisMT false
@@ -6399,6 +6403,18 @@ end procedure.
 &scop manual-edit-attr-sum-grp-gl  1
 &scop batch-edit-attr-sum-grp-gl  1
 
+/* Только производство */
+&glob type-attr-production-only {&type-log}
+&glob format-attr-production-only  "+/-"
+&glob label-attr-production-only   "Только производство"
+&glob tooltip-attr-production-only   "Используется только для производства (альтернатива)"
+&glob user-can-edit-attr-production-only  true
+&glob output-display-attr-production-only  true
+&glob other-attr-production-only  ""
+&glob news-attr-production-only true
+&glob copy-attr-production-only  true
+&scop manual-edit-attr-production-only  1
+&scop batch-edit-attr-production-only  1
 
 /* Является подконтрольным ФГИС "Меркурий" */
 &glob type-attr-mercur_FGIS {&type-log}
@@ -6821,6 +6837,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-perishable
       {&attr-temp-full-code}
+      &scop attr-code attr-production-only
+      {&attr-temp-full-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-full-code}
       &scop attr-code attr-15x80
@@ -6932,6 +6950,8 @@ do
       &scop attr-code attr-mercur_FGIS
       {&attr-temp-code}
       &scop attr-code attr-perishable
+      {&attr-temp-code}
+      &scop attr-code attr-production-only
       {&attr-temp-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-code}
@@ -7297,6 +7317,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-perishable
       {&attr-news-code}
+      &scop attr-code attr-production-only
+      {&attr-news-code}
       &scop attr-code attr-15x80
       {&attr-news-code}
       &scop attr-code attr-8x50
@@ -7402,6 +7424,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-mercur_FGIS
       {&attr-copy-code}
       &scop attr-code attr-perishable
+      {&attr-copy-code}
+      &scop attr-code attr-production-only
       {&attr-copy-code}
       &scop attr-code attr-15x80
       {&attr-copy-code}
@@ -8161,6 +8185,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-perishable
       {&attr-manual-edit-code}
+      &scop attr-code attr-production-only
+      {&attr-manual-edit-code}
       &scop attr-code attr-mark
       {&attr-manual-edit-code}
       &scop attr-code attr-sum-grp-gl
@@ -8271,6 +8297,8 @@ do
       &scop attr-code attr-mercur_FGIS
       {&attr-batch-edit-code}
       &scop attr-code attr-perishable
+      {&attr-batch-edit-code}
+      &scop attr-code attr-production-only
       {&attr-batch-edit-code}
       &scop attr-code attr-calories
       {&attr-batch-edit-code}
@@ -8921,6 +8949,7 @@ true~
 ,false~
 ,false~
 ,false~
+,false~
 ,false'
 &scop output-display-list-cda-IBM-XML_operative '~
 true~
@@ -8934,13 +8963,15 @@ true~
 ,true~
 ,true~
 ,true~
+,true~
 ,true'
 &scop other-cda-IBM-XML_operative 'spr=cd-attr-last-check-params,,'
-&scop prop-type-list-cda-IBM-XML_operative 'character,character,integer,character,character,character,character,character,character,character,character,character'
-&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)|9|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)'
+&scop prop-type-list-cda-IBM-XML_operative 'character,character,character,integer,character,character,character,character,character,character,character,character,character'
+&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)|X(255)|9|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)'
 &scop prop-label-list-cda-IBM-XML_operative '~
 Параметры последнего принятого чека/док-та~
 ,Версия кассовой программы~
+,Версия ПО «Коннектор»~
 ,Признак исполнения кассы~
 ,ФФД версия~
 ,ККТ версия~
@@ -8951,10 +8982,11 @@ true~
 ,Таймаут ожидания~
 ,Таймаут ожидания проверки ГИСМТ~
 ,Таймаут  открытия соединения ГИСМТ'
-&scop manual-edit-cda-IBM-XML_operative  '1,0,0,0,0,0,0,0,0,0,0,0'
-&scop batch-edit-cda-IBM-XML_operative  '0,0,0,0,0,0,0,0,0,0,0,0'
+&scop manual-edit-cda-IBM-XML_operative  '1,0,0,0,0,0,0,0,0,0,0,0,0'
+&scop batch-edit-cda-IBM-XML_operative   '0,0,0,0,0,0,0,0,0,0,0,0,0'
 &scop news-cda-IBM-XML_operative '~
 false~
+,true~
 ,true~
 ,true~
 ,true~
@@ -8978,9 +9010,11 @@ false~
 ,false~
 ,false~
 ,false~
+,false~
 ,false'
 &scop from-ubd-cda-IBM-XML_operative '~
 true~
+,true~
 ,true~
 ,true~
 ,true~
@@ -9004,9 +9038,11 @@ false~
 ,true~
 ,true~
 ,true~
+,true~
 ,true'
 &scop send-param-cda-IBM-XML_operative  '~
 false~
+,false~
 ,false~
 ,false~
 ,false~
@@ -9064,38 +9100,46 @@ true~
 &scop user-can-edit-list-cda-AUTOTANK_operative '~
 true~
 ,false~
+,false~
 ,false'
 &scop output-display-list-cda-AUTOTANK_operative '~
 true~
 ,true~
+,true~
 ,true'
 &scop other-cda-AUTOTANK_operative 'spr=cd-attr-last-check-params,'
-&scop prop-type-list-cda-AUTOTANK_operative 'character,character,integer'
-&scop prop-format-list-cda-AUTOTANK_operative 'X(19)|X(255)|9'
+&scop prop-type-list-cda-AUTOTANK_operative 'character,character,character,integer'
+&scop prop-format-list-cda-AUTOTANK_operative 'X(19)|X(255)|X(255)|X(9)'
 &scop prop-label-list-cda-AUTOTANK_operative '~
 Параметры последнего принятого чека/док-та~
 ,Версия кассовой программы~
+,Версия ПО «Коннектор»~
 ,Признак исполнения кассы'
-&scop manual-edit-cda-AUTOTANK_operative  '1,0,0'
-&scop batch-edit-cda-AUTOTANK_operative  '0,0,0'
+&scop manual-edit-cda-AUTOTANK_operative  '1,0,0,0,'
+&scop batch-edit-cda-AUTOTANK_operative  '0,0,0,0'
 &scop news-cda-AUTOTANK_operative '~
 false~
+,true~
 ,true~
 ,true'
 &scop from-gbd-cda-AUTOTANK_operative '~
 false~
 ,false~
+,false~
 ,false'
 &scop from-ubd-cda-AUTOTANK_operative '~
 true~
+,true~
 ,true~
 ,true'
 &scop hist-cda-AUTOTANK_operative '~
 false~
 ,true~
+,true~
 ,true'
 &scop send-param-cda-AUTOTANK_operative  '~
 false~
+,false~
 ,false~
 ,false'
 /**/
@@ -17491,5 +17535,33 @@ procedure attr-read :
    finally:
       delete object vBhTbl no-error.
    end.
+end procedure.
+
+/* Возвращает является ли товар с экземплярным учетом */
+procedure isExemplarGoods:
+  define input  parameter p-obj-type like ub.clients-attr.obj-type   no-undo .
+  define input  parameter p-obj-code like ub.clients-attr.obj-code   no-undo .
+  define input  parameter p-gds-code as   integer                    no-undo .
+  define output parameter o-result   as   logical                    no-undo.
+  
+  define variable vAttrValue as character no-undo.
+  define variable vAttrType  as character no-undo.
+  define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo .
+  { gbl/objsrv.i }
+  
+  run gds-attr-value in this-procedure
+      (input  p-gds-code
+      ,input  {&attr-mark-type}
+      ,output vAttrValue
+      ,output vAttrType
+      ) .
+
+  if vAttrValue <> "" then
+  do:
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(p-obj-type, p-obj-code).
+    o-result = EDOParSec:GetIsEDOForType(vAttrValue).
+  end.
+  else 
+    o-result = false.
 end procedure.
 

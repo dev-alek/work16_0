@@ -196,7 +196,7 @@ define input parameter p-have-store             as logical          no-undo.  /*
     define variable v-recipe-found          as logical       no-undo.
     define variable v-gds-code              as integer       no-undo.
     define variable v-yesno                 as logical       no-undo.
-    define variable v-fbr-line-recid        as recid        no-undo.
+    define variable v-fbr-line-recid        as recid         no-undo.
     define variable v-recipe-recid-list     as character     no-undo.
     define variable v-need-goods            as logical       no-undo.
     define variable v-need-goods-list       as character     no-undo.
@@ -209,11 +209,13 @@ define input parameter p-have-store             as logical          no-undo.  /*
     define variable v-add-good              as logical       no-undo.
     define variable v-cancel                as logical       no-undo.
 
-   define variable v-value          as character no-undo .
-   define variable v-type           as character no-undo .
-   define variable v-attr-value     as character no-undo .
-   define variable v-attr-value-rec as character no-undo .
-   define variable v-attr-type      as character no-undo .
+    define variable v-value          as character no-undo .
+    define variable v-type           as character no-undo .
+    define variable v-attr-value     as character no-undo .
+    define variable v-attr-value-rec as character no-undo .
+    define variable v-attr-type      as character no-undo .
+    
+    define variable v-mark-qnty      as decimal no-undo init ? .
 
     define buffer buf_obj_recipe            for recipe.
     define buffer buf_obj_recipe-gds        for recipe-gds.
@@ -227,6 +229,8 @@ define input parameter p-have-store             as logical          no-undo.  /*
     define buffer buf_new_temp_goods-qnty   for temp_goods-qnty.
     define buffer buf_start_temp_goods-qnty for temp_goods-qnty.
     define buffer buf_del_temp_goods-qnty   for temp_goods-qnty.
+    define buffer buf_marking-lines         for ub.marking-lines .
+    define buffer buf_marking               for ub.marking .
    { gbl/objsrv.i }
    define variable v-ban-recipes as logical no-undo .
    define variable v-ban-altr    as logical no-undo .
@@ -562,6 +566,7 @@ define input parameter p-have-store             as logical          no-undo.  /*
                     , input buf_fbr-doc.status_
                     , input p-fbr-doc-doc-code
                     , input recid( buf_fbr-line )
+                    , input ?
                     , output v-cancel
                 ).
                 if error-status :error
@@ -686,11 +691,25 @@ define input parameter p-have-store             as logical          no-undo.  /*
 /*        .*/
         if buf_start_temp_goods-qnty.need-qnty = ?
         then do:
+            find first tt-marking-lines no-error .
+            if available tt-marking-lines
+            then do :
+              assign v-mark-qnty = 0 .
+              for first buf_fbr-line no-lock where recid(buf_fbr-line) = v-fbr-line-recid,
+              first buf_goods no-lock where buf_goods.artic     = buf_fbr-line.artic
+                                        and buf_goods.prod-type = buf_fbr-line.prod-type
+                                        and buf_goods.prod-code = buf_fbr-line.prod-code,
+              each tt-marking-lines where tt-marking-lines.gds-code = buf_goods.gds-code
+              :
+                assign v-mark-qnty = v-mark-qnty + tt-marking-lines.box-qnty .
+              end .
+            end .
             run str/fbr-line.w (
                   input p-fbrhist-handle
                 , input buf_fbr-doc.status_
                 , input p-fbr-doc-doc-code
                 , input v-fbr-line-recid
+                , input v-mark-qnty
                 , output v-cancel
             ) no-error.
             if error-status :error
@@ -699,10 +718,40 @@ define input parameter p-have-store             as logical          no-undo.  /*
                 find first buf_fbr-line exclusive-lock
                      where recid( buf_fbr-line ) = v-fbr-line-recid
                 .
+                for first buf_goods no-lock where buf_goods.artic     = buf_fbr-line.artic
+                                          and buf_goods.prod-type = buf_fbr-line.prod-type
+                                          and buf_goods.prod-code = buf_fbr-line.prod-code,
+                each tt-marking-lines where tt-marking-lines.gds-code = buf_goods.gds-code
+                :
+                  for first buf_marking exclusive-lock where buf_marking.mark begins tt-marking-lines.mark :
+                    assign
+                      buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB
+                    .
+                  end .
+                end .
                 delete buf_fbr-line.
                 run clear-temp-tables in this-procedure.
                 return.
             end.
+            for first buf_fbr-line no-lock where recid(buf_fbr-line) = v-fbr-line-recid,
+            first buf_goods no-lock where buf_goods.artic     = buf_fbr-line.artic
+                                      and buf_goods.prod-type = buf_fbr-line.prod-type
+                                      and buf_goods.prod-code = buf_fbr-line.prod-code,
+            each tt-marking-lines where tt-marking-lines.gds-code = buf_goods.gds-code
+            :
+              create buf_marking-lines .
+              assign 
+                buf_marking-lines.mark      = tt-marking-lines.mark
+                buf_marking-lines.obj-type  = buf_fbr-doc.obj-type
+                buf_marking-lines.obj-code  = buf_fbr-doc.obj-code
+                buf_marking-lines.gds-code  = buf_goods.gds-code
+                buf_marking-lines.in-code   = "manufacturing"
+                buf_marking-lines.out-code  = buf_fbr-line.doc-code
+                buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                buf_marking-lines.prt-code  = 0
+                buf_marking-lines.doc-level = 1
+              .
+            end .
             find first buf_fbr-line exclusive-lock
                  where recid( buf_fbr-line ) = v-fbr-line-recid
             .

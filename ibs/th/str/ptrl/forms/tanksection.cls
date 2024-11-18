@@ -40,11 +40,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable bRvsAft as System.Windows.Forms.Button no-undo.
   define private variable bRvsBef as System.Windows.Forms.Button no-undo.
   define private variable button1 as System.Windows.Forms.Button no-undo.
-  define private variable buttonCalcResult as System.Windows.Forms.Button no-undo.
+  define private variable buttonCalcResultRvs as System.Windows.Forms.Button no-undo.
+  define private variable buttonCalcResultAC as System.Windows.Forms.Button no-undo.
   define private variable buttonCalcWeightRvs as System.Windows.Forms.Button no-undo.
   define private variable buttonCopyPSTemp as System.Windows.Forms.Button no-undo.
   define private variable buttonPl as System.Windows.Forms.Button no-undo.
   define private variable buttonPlSiTemp as System.Windows.Forms.Button no-undo.
+  define private variable cbKPnoMeas as System.Windows.Forms.CheckBox no-undo.
   define private variable cbSGDKK as System.Windows.Forms.CheckBox no-undo.
   define private variable comboBoxGroupNP as System.Windows.Forms.ComboBox no-undo.
   define private variable comboBoxPour as System.Windows.Forms.ComboBox no-undo.
@@ -59,6 +61,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable label41 as System.Windows.Forms.Label no-undo.
   define private variable label40 as System.Windows.Forms.Label no-undo.
   define private variable label49 as System.Windows.Forms.Label no-undo.
+  define private variable label51 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxAukKey as System.Windows.Forms.MaskedTextBox no-undo.
   define private variable label50 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxDocVolume as System.Windows.Forms.MaskedTextBox no-undo.
@@ -73,7 +76,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable maskedTextBoxNumTemp as System.Windows.Forms.MaskedTextBox no-undo.
   define private variable maskedTextBoxPlaceSiTemp as System.Windows.Forms.MaskedTextBox no-undo.
   define private variable maskedTextBoxPressure as System.Windows.Forms.MaskedTextBox no-undo.
-  define private variable tanksecsObj as class tanksections                 no-undo. 
+  define private variable tanksecsObj as class ibs.th.str.ptrl.forms.tanksections no-undo. 
   
   
   define private variable textBoxPlSiName as System.Windows.Forms.TextBox no-undo.
@@ -264,7 +267,33 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
-	method private void buttonCalcResult_Click( input sender as System.Object, input e as System.EventArgs ):
+	method private void buttonCalcResultAC_Click( input sender as System.Object, input e as System.EventArgs ):
+		define variable infoSecObj as class ibs.th.str.InfoSection no-undo .
+    
+    infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) . 
+    
+    if infoSecObj:TankWeight = ?
+    or infoSecObj:TankWeight <= 0
+    then do :
+      if infoSecObj:AccMeth = 0
+      then do :
+        message 'Расчёт не выполнен. Нажмите кнопку "Рассчитать по замерам в АЦ" и повторите.' view-as alert-box .
+      end .
+      return no-apply .
+    end .
+    
+    run str/pomi-resultAC.w (input-output infoSecObj) .
+    
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void buttonCalcResultRvs_Click( input sender as System.Object, input e as System.EventArgs ):
 		define variable infoSecObj as class ibs.th.str.InfoSection no-undo .
     
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) . 
@@ -288,6 +317,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 		return.
 
 	end method.
+
+
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -317,11 +348,38 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end .
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .                   
     infoSecsObj:RNAlgo (integer(infoSecObj:SectionName), output v-new-sec-fact-qnty-kg).     
+    if infoSecObj:IsKP
+    then do :
+      label51:Visible = true .
+    end .   
     infoSecObj:FactQnty = v-new-sec-fact-qnty-kg / v-calc-density .
     infoSecObj:FactDensity = v-calc-density .
     infoSecsObj:SaveDB() .
     infoSecsObj:GetDBAllAttr() .
                           
+		return.
+
+	end method.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void cbKPnoMeas_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		define variable v-log as logical no-undo .
+		
+		if cbKPnoMeas:Checked
+    then do :
+      message "При установке флага «Переход к комиссионному приему НП без замеров секции АЦ» будет активирован комиссионный прием. Продолжить?"
+      view-as alert-box question buttons yes-no update v-log .
+      if not v-log
+      then do :
+        cbKPnoMeas:checked = no .
+      end .
+    end .
+		
 		return.
 
 	end method.
@@ -358,6 +416,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define buffer buf_pl-gds-pump for ub.pl-gds-pump .
     define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
 
+    if infoSecsObj:GetInfoSectionProp(idSecTabPage):isKP
+    and not infoSecsObj:IsActnComm
+    then do :
+      message "Для секции " + infoSecsObj:GetInfoSectionProp(idSecTabPage):SectionName + " установлен флаг комиссионного приема. Работа с сверкой запрещена!"
+      view-as alert-box .
+      return .
+    end .
     
     assign rvslog = no .
     v-sec = infoSecsObj:GetInfoSectionProp(idSecTabPage):SectionName .
@@ -509,6 +574,13 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define buffer buf_pl-gds-pump for ub.pl-gds-pump .
     define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
 
+    if infoSecsObj:GetInfoSectionProp(idSecTabPage):isKP
+    and not infoSecsObj:IsActnComm
+    then do :
+      message "Для секции " + infoSecsObj:GetInfoSectionProp(idSecTabPage):SectionName + " установлен флаг комиссионного приема. Работа с сверкой запрещена!"
+      view-as alert-box .
+      return .
+    end .
     
     assign rvslog = no .
     
@@ -662,6 +734,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define buffer buf_pl-gds-pump for ub.pl-gds-pump .
     define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
     
+    if infoSecsObj:GetInfoSectionProp(idSecTabPage):isKP
+    and not infoSecsObj:IsActnComm
+    then do :
+      message "Для секции " + infoSecsObj:GetInfoSectionProp(idSecTabPage):SectionName + " установлен флаг комиссионного приема. Работа с сверкой запрещена!"
+      view-as alert-box .
+      return .
+    end .
+    
     assign rvslog = no .
     
     find first buf_trn-doc no-lock where buf_trn-doc.doc-code = infoSecsObj:TrnDocNum .
@@ -791,6 +871,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define buffer buf_doc-pl for ub.doc-pl .
     define buffer buf_pl-gds-pump for ub.pl-gds-pump .
     define buffer buf_pl-pump-nozzle for ub.pl-pump-nozzle .
+    
+    if infoSecsObj:GetInfoSectionProp(idSecTabPage):isKP
+    and not infoSecsObj:IsActnComm
+    then do :
+      message "Для секции " + infoSecsObj:GetInfoSectionProp(idSecTabPage):SectionName + " установлен флаг комиссионного приема. Работа с сверкой запрещена!"
+      view-as alert-box .
+      return .
+    end .
     
     find first buf_trn-doc no-lock where buf_trn-doc.doc-code = infoSecsObj:TrnDocNum .
     
@@ -1156,15 +1244,36 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   ------------------------------------------------------------------------------*/
   @VisualDesigner.
   method private void buttonCalcWeight_Click( input sender as System.Object, input e as System.EventArgs ):
+    define variable v-new-sec-fact-qnty-kg as decimal no-undo .
+    define variable v-calc-density as decimal no-undo .
+    define variable infoSecObj as class ibs.th.str.InfoSection no-undo .
     
     SetInfoSec ().
-    if not CheckSec(no, yes)
+    if not CheckSec(no, yes, no)
     then do:
       SetForcus().
       return.
     end.
-    infoSecsObj:GetInfoSectionProp(idSecTabPage).
+    infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage).
     infoSecsObj:CalcWeight().
+    v-calc-density = infoSecObj:TankDensityPomi .
+    if v-calc-density = ?
+    or v-calc-density <= 0
+    or v-calc-density >= 1
+    then do :
+      message "По результатам рассчёта модуля ПОкМИ плотность выходит за допустимые значения!"
+      view-as alert-box error .
+      return .
+    end .
+    infoSecsObj:RNAlgo (integer(infoSecObj:SectionName), output v-new-sec-fact-qnty-kg).   
+    if infoSecObj:IsKP
+    then do :
+      label51:Visible = true .
+    end .      
+    infoSecObj:FactQnty = v-new-sec-fact-qnty-kg / v-calc-density .
+    infoSecObj:FactDensity = v-calc-density .
+    infoSecsObj:SaveDB() .
+    infoSecsObj:GetDBAllAttr() .
     SetControls ().
     return.
 
@@ -1441,6 +1550,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define variable v-num-sec-pl      as integer   no-undo .
     
     define buffer buf_trn-doc for ub.trn-doc .
+    define buffer buf_rvs-doc for ub.rvs-doc .
     
     run adm/shattri.p (
                input "get":U
@@ -1568,6 +1678,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxOnlyReadOnlyArr[ii]:Enabled = false.
       
     end.
+    
+    label51:Visible = false.
 
     if infoSecsObj:RdcDnstvalue = "not"
     then do:
@@ -1609,9 +1721,14 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxTankWater:Enabled = false.
     end.
     
-    if not (infoSecsObj:IsSGDKK)
+    if infoSecsObj:IsSGDKK
     then do :
+      cbSGDKK:Visible = true.
+      cbKPnoMeas:Visible = false.
+    end .
+    else do :
       cbSGDKK:Visible = false.
+      cbKPnoMeas:Visible = true.
     end .
 
     if infoSecsObj:Mode = {&lookup}
@@ -1626,6 +1743,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxDocVolume:Enabled = false.
       cbSGDKK:Enabled = false.
       maskedTextBoxAukKey:Enabled = false.
+      cbKPnoMeas:Enabled = false.
       
       if infoSecsObj:IsSGDKK
       then do :
@@ -1668,7 +1786,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       bRvsAft:enabled = false .
       buttonCalcWeightRvs:Enabled = false.
       
-      if infoSecsObj:IsKPrvs
+      if infoSecsObj:IsKP
       then do :
         tmpInfoSecs = new InfoSectionsTotal () .
         tmpInfoSecs:Initialization(infoSecsObj:TrnDocNum, infoSecsObj:GdsCode) .
@@ -1682,6 +1800,22 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           end .
         end .
         delete object tmpInfoSecs .
+      end .
+      if infoSecsObj:InfoSectionCurr:IsKP
+      then do :
+        bRvsBef:enabled = true .
+        bRvsAft:enabled = true .
+        label51:Visible = true .
+      end .
+      
+      if infoSecsObj:InfoSectionCurr:AccMeth = 1
+      then do :
+        buttonCalcResultAC:enabled = false .
+      end .
+      
+      if infoSecsObj:InfoSectionCurr:TankWeightRvs = ?
+      then do :
+        buttonCalcResultRvs:enabled = false .
       end .
       
     end.
@@ -1700,6 +1834,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxAukKey:visible = false.
       bRvsBef:visible   = false.
       bRvsAft:visible   = false.
+      buttonCalcResultAC:visible   = false.
     end.
     
     if (infoSecsObj:Mode = "ДОБАВЛЕНИЕ" or infoSecsObj:Mode = "ИЗМЕНЕНИЕ") and not infoSecsObj:FlagTrn
@@ -1868,14 +2003,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxDensTemp:TextChanged:Subscribe(this-object:ClWght).
       maskedTextBoxPlaceSi:TextChanged:Subscribe(this-object:ClWght).
       maskedTextBoxPlaceSiTemp:TextChanged:Subscribe(this-object:ClWght).
-      comboBoxShape:Enabled = false.
-      comboBoxPour:Enabled = false.
-      maskedTextBoxCarVol:Enabled = false.
-      comboBoxGroupNP:Enabled = false.
-      maskedTextBoxDocVolume:Enabled = false.
+      comboBoxShape:Enabled = false .
+      comboBoxPour:Enabled = false .
+      maskedTextBoxCarVol:Enabled = false .
+      comboBoxGroupNP:Enabled = false .
+      maskedTextBoxDocVolume:Enabled = false .
       bRvsBef:enabled = false .
       bRvsAft:enabled = false .
-      buttonCalcWeightRvs:Enabled = false.
+      buttonCalcWeightRvs:Enabled = false .
+      buttonCalcResultAC:Enabled = false .
       
       do ii = 1 to extent (maskedTextBoxDocArr):
         this-object:maskedTextBoxArr[ii]:BackColor = this-object:maskedTextBoxArr[ii]:BackColor.
@@ -1906,34 +2042,33 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         groupBox6:Enabled = false.
         groupBox7:Enabled = false.
         groupBox8:Enabled = false.
-        
+        buttonCalcResultAC:Enabled = false.
+      end .
+      else do :
+        cbKPnoMeas:Enabled = false.
+        if cbKPnoMeas:Checked
+        then do :
+          groupBox2:Enabled = false.
+          groupBox3:Enabled = false.
+          groupBox4:Enabled = false.
+          groupBox5:Enabled = false.
+          groupBox6:Enabled = false.
+          groupBox7:Enabled = false.
+          groupBox8:Enabled = false.
+          buttonCalcResultAC:Enabled = false.
+        end .
       end .
       
       if infoSecsObj:InfoSectionCurr:AccMeth = 1
       then do :
         buttonCalcWeightRvs:Enabled = true.
         buttonCalcWeight:Enabled = false.
+        buttonCalcResultAC:Enabled = false.
         groupBox3:Enabled = false.
         groupBox7:Enabled = false.
         groupBox8:Enabled = false.
       end .
       
-      if infoSecsObj:IsKPrvs
-      then do :
-        tmpInfoSecs = new InfoSectionsTotal () .
-        tmpInfoSecs:Initialization(infoSecsObj:TrnDocNum, infoSecsObj:GdsCode) .
-        do ii = 1 to tmpInfoSecs:SectionNum : 
-          if tmpInfoSecs:GetInfoSectionProp(ii):ListTank = infoSecsObj:InfoSectionCurr:ListTank
-          and tmpInfoSecs:GetInfoSectionProp(ii):SectionName <> infoSecsObj:InfoSectionCurr:SectionName
-          and (infoSecsObj:InfoSectionCurr:AccMeth = 1 or tmpInfoSecs:GetInfoSectionProp(ii):AccMeth = 1)
-          then do :
-            bRvsBef:enabled = true .
-            bRvsAft:enabled = true .
-          end .
-        end .
-        delete object tmpInfoSecs .
-      end .
-      else
       if infoSecsObj:IsKP
       then do :
         if cbSGDKK:Checked
@@ -1950,7 +2085,53 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 /*          comboBoxPour:Enabled = true.                   */
 /*          comboBoxShape:Enabled = true.                  */
         end .
+        if infoSecsObj:InfoSectionCurr:AccMeth = 0
+        then do :
+          buttonCalcResultAC:Enabled = true.
+        end .
+        tmpInfoSecs = new InfoSectionsTotal () .
+        tmpInfoSecs:Initialization(infoSecsObj:TrnDocNum, infoSecsObj:GdsCode) .
+        do ii = 1 to tmpInfoSecs:SectionNum : 
+          if tmpInfoSecs:GetInfoSectionProp(ii):ListTank = infoSecsObj:InfoSectionCurr:ListTank
+          and tmpInfoSecs:GetInfoSectionProp(ii):SectionName <> infoSecsObj:InfoSectionCurr:SectionName
+          and (infoSecsObj:InfoSectionCurr:IsKP or tmpInfoSecs:GetInfoSectionProp(ii):IsKP)
+          then do :
+            bRvsBef:enabled = true .
+            bRvsAft:enabled = true .
+          end .
+        end .
+        delete object tmpInfoSecs .
       end .
+      
+      if infoSecsObj:InfoSectionCurr:IsKP
+      then do :
+        label51:Visible = true .
+        if infoSecsObj:IsActnComm
+        then do :
+          find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = infoSecsObj:TrnDocNum no-error .
+          if available buf_rvs-doc
+          then do :
+            bRvsBef:enabled = true .
+            bRvsAft:enabled = true .
+          end .
+        end .
+        else do :
+          groupBox2:Enabled = false.
+          groupBox3:Enabled = false.
+          groupBox4:Enabled = false.
+          groupBox5:Enabled = false.
+          groupBox6:Enabled = false.
+          groupBox7:Enabled = false.
+          groupBox8:Enabled = false.
+          buttonCalcResultAC:Enabled = false.
+          if infoSecsObj:IsSGDKK
+          then do :
+            cbSGDKK:Enabled = false.
+            maskedTextBoxAukKey:Enabled = false.
+          end .
+        end .
+      end .
+      
       
       if infoSecsObj:RdcDnstvalue = "not"
       then do:
@@ -2082,6 +2263,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label9 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxNumPassport = new System.Windows.Forms.MaskedTextBox().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+    this-object:label51 = new System.Windows.Forms.Label().
     this-object:label49 = new System.Windows.Forms.Label().
     this-object:label48 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxDocVolume = new System.Windows.Forms.MaskedTextBox().
@@ -2170,9 +2352,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:cbSGDKK = new System.Windows.Forms.CheckBox().
     this-object:label50 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxAukKey = new System.Windows.Forms.MaskedTextBox().
-    this-object:buttonCalcResult = new System.Windows.Forms.Button().
+    this-object:buttonCalcResultRvs = new System.Windows.Forms.Button().
     this-object:buttonCalcWeightRvs = new System.Windows.Forms.Button().
     this-object:groupBox9 = new System.Windows.Forms.GroupBox().
+    this-object:cbKPnoMeas = new System.Windows.Forms.CheckBox().
+    this-object:buttonCalcResultAC = new System.Windows.Forms.Button().
     this-object:groupBox3:SuspendLayout().
     this-object:groupBox2:SuspendLayout().
     this-object:groupBox1:SuspendLayout().
@@ -2531,6 +2715,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* groupBox1 */
     /*  */
     this-object:groupBox1:AccessibleName = "".
+    this-object:groupBox1:Controls:Add(this-object:label51).
     this-object:groupBox1:Controls:Add(this-object:label49).
     this-object:groupBox1:Controls:Add(this-object:buttonPl).
     this-object:groupBox1:Controls:Add(this-object:label48).
@@ -2571,6 +2756,19 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox1:TabIndex = 0.
     this-object:groupBox1:TabStop = false.
     this-object:groupBox1:UseCompatibleTextRendering = true.
+    /*  */
+    /* label51 */
+    /*  */
+    this-object:label51:BackColor = System.Drawing.Color:Yellow.
+    this-object:label51:Font = new System.Drawing.Font("Times New Roman", Progress.Util.CastUtil:ToSingle(10), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label51:ForeColor = System.Drawing.Color:FromArgb(System.Convert:ToInt32(System.Convert:ToByte(192)), System.Convert:ToInt32(System.Convert:ToByte(0)), System.Convert:ToInt32(System.Convert:ToByte(0))).
+    this-object:label51:Location = new System.Drawing.Point(589, 162).
+    this-object:label51:Name = "label51".
+    this-object:label51:Size = new System.Drawing.Size(94, 13).
+    this-object:label51:TabIndex = 30.
+    this-object:label51:Text = "Комис. приём".
+    this-object:label51:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label51:UseCompatibleTextRendering = true.
     /*  */
     /* label49 */
     /*  */
@@ -3483,20 +3681,20 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxAukKey:TabIndex = 40.
     this-object:maskedTextBoxAukKey:Leave:Subscribe(this-object:maskedTextBoxAukKey_Leave).
     /*  */
-    /* buttonCalcResult */
+    /* buttonCalcResultRvs */
     /*  */
-    this-object:buttonCalcResult:Location = new System.Drawing.Point(32, 3).
-    this-object:buttonCalcResult:Name = "buttonCalcResult".
-    this-object:buttonCalcResult:Size = new System.Drawing.Size(112, 22).
-    this-object:buttonCalcResult:TabIndex = 45.
-    this-object:buttonCalcResult:Text = "Результат расчета".
-    this-object:buttonCalcResult:UseCompatibleTextRendering = true.
-    this-object:buttonCalcResult:UseVisualStyleBackColor = true.
-    this-object:buttonCalcResult:Click:Subscribe(this-object:buttonCalcResult_Click).
+    this-object:buttonCalcResultRvs:Location = new System.Drawing.Point(32, 3).
+    this-object:buttonCalcResultRvs:Name = "buttonCalcResultRvs".
+    this-object:buttonCalcResultRvs:Size = new System.Drawing.Size(171, 22).
+    this-object:buttonCalcResultRvs:TabIndex = 45.
+    this-object:buttonCalcResultRvs:Text = "Результат расчета сверок".
+    this-object:buttonCalcResultRvs:UseCompatibleTextRendering = true.
+    this-object:buttonCalcResultRvs:UseVisualStyleBackColor = true.
+    this-object:buttonCalcResultRvs:Click:Subscribe(this-object:buttonCalcResultRvs_Click).
     /*  */
     /* buttonCalcWeightRvs */
     /*  */
-    this-object:buttonCalcWeightRvs:Location = new System.Drawing.Point(460, 3).
+    this-object:buttonCalcWeightRvs:Location = new System.Drawing.Point(255, 3).
     this-object:buttonCalcWeightRvs:Name = "buttonCalcWeightRvs".
     this-object:buttonCalcWeightRvs:Size = new System.Drawing.Size(211, 22).
     this-object:buttonCalcWeightRvs:TabIndex = 46.
@@ -3507,19 +3705,45 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /*  */
     /* groupBox9 */
     /*  */
-    this-object:groupBox9:Controls:Add(this-object:buttonCalcResult).
+    this-object:groupBox9:Controls:Add(this-object:buttonCalcResultRvs).
     this-object:groupBox9:Controls:Add(this-object:buttonCalcWeightRvs).
     this-object:groupBox9:Location = new System.Drawing.Point(10, 694).
     this-object:groupBox9:Name = "groupBox9".
-    this-object:groupBox9:Size = new System.Drawing.Size(682, 24).
+    this-object:groupBox9:Size = new System.Drawing.Size(473, 24).
     this-object:groupBox9:TabIndex = 47.
     this-object:groupBox9:TabStop = false.
     this-object:groupBox9:UseCompatibleTextRendering = true.
+    /*  */
+    /* cbKPnoMeas */
+    /*  */
+    this-object:cbKPnoMeas:BackColor = System.Drawing.Color:OrangeRed.
+    this-object:cbKPnoMeas:Location = new System.Drawing.Point(326, 181).
+    this-object:cbKPnoMeas:Name = "cbKPnoMeas".
+    this-object:cbKPnoMeas:Padding = new System.Windows.Forms.Padding(5, 0, 0, 0).
+    this-object:cbKPnoMeas:Size = new System.Drawing.Size(361, 20).
+    this-object:cbKPnoMeas:TabIndex = 48.
+    this-object:cbKPnoMeas:Text = "Переход к комиссионному приему НП без замеров секции АЦ".
+    this-object:cbKPnoMeas:UseCompatibleTextRendering = true.
+    this-object:cbKPnoMeas:UseVisualStyleBackColor = false.
+    /*  */
+    /* buttonCalcResultAC */
+    /*  */
+    this-object:buttonCalcResultAC:Location = new System.Drawing.Point(510, 697).
+    this-object:buttonCalcResultAC:Name = "buttonCalcResultAC".
+    this-object:buttonCalcResultAC:Size = new System.Drawing.Size(171, 22).
+    this-object:buttonCalcResultAC:TabIndex = 48.
+    this-object:buttonCalcResultAC:Text = "Результат расчета АЦ".
+    this-object:buttonCalcResultAC:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:buttonCalcResultAC:UseCompatibleTextRendering = true.
+    this-object:buttonCalcResultAC:UseVisualStyleBackColor = true.
+    this-object:buttonCalcResultAC:Click:Subscribe(this-object:buttonCalcResultAC_Click).
     /*  */
     /* tanksection */
     /*  */
     this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
     this-object:BackgroundImage = cast(resources:GetObject("$this.BackgroundImage"), System.Drawing.Image).
+    this-object:Controls:Add(this-object:buttonCalcResultAC).
+    this-object:Controls:Add(this-object:cbKPnoMeas).
     this-object:Controls:Add(this-object:groupBox9).
     this-object:Controls:Add(this-object:bRvsAft).
     this-object:Controls:Add(this-object:maskedTextBoxAukKey).
@@ -3766,6 +3990,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:cbSGDKK:Checked                   = infoSecObj:alarm-SGDKK.
     this-object:cbSGDKK:CheckedChanged:Subscribe(this-object:cbSGDKK_CheckedChanged) no-error.
     this-object:maskedTextBoxAukKey:Text          = infoSecObj:AukKey.
+    
+    this-object:cbKPnoMeas:Checked                 = infoSecObj:KPnoMeas.
+    this-object:cbKPnoMeas:CheckedChanged:Subscribe(this-object:cbKPnoMeas_CheckedChanged) no-error.
 
     v-tank-weight-rvs = infoSecObj:TankWeightRvs .
     v-tank-vol-pomi-rvs = infoSecObj:TankVolPomiRvs .
@@ -4435,6 +4662,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     infoSecObj:alarm-SGDKK     = this-object:cbSGDKK:Checked.
     infoSecObj:AukKey          = this-object:maskedTextBoxAukKey:Text.
     
+    infoSecObj:KPnoMeas         = this-object:cbKPnoMeas:Checked.
+    
     if num-entries (this-object:TimeProb:Text, ":") >= 2
     then do:
       infoSecObj:HourProb = integer (entry (1, this-object:TimeProb:Text, ":")).
@@ -4716,7 +4945,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
   end.
 
-  method public logical CheckSec (input p-save as logical, input p-ShowMsg as logical):
+  method public logical CheckSec (input p-save as logical, input p-ShowMsg as logical, input p-exit as logical):
     
     define variable v-dec as decimal no-undo.
     define variable v-str as character no-undo.
@@ -4732,12 +4961,35 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       then do:
         if not infoSecsObj:IsSGDKK
         then do :
+          
+          if p-save
+          and p-exit
+          and infoSecsObj:GetInfoSectionProp(idSecTabPage):AccMeth = 1
+          and infoSecsObj:IsActnComm
+          then do :
+            find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = infoSecsObj:TrnDocNum no-error .
+            if available buf_rvs-doc
+            then do :
+              v-dec = decimal (v-tank-weight-rvs) no-error.
+              if (error-status:error or v-dec = 0 or v-dec = ?)
+              then do:
+/*                if p-ShowMsg or infoSecsObj:SectionNum = 1 then*/
+                ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                         "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
+                         "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
+                return false.
+              end .
+            end .
+          end .
+          
+          if cbKPnoMeas:Checked then return true .
   
           if lookup("a-b-tarir", v-sec-fields) > 0
           then do :
             if trim (maskedTextBoxABTArir:Text) = ""
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "отклонение от тарировочной пл." ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "отклонение от тарировочной пл." ).
               setFocusMaskTextDoc = maskedTextBoxABTArir.
               return false.
             end.
@@ -4748,13 +5000,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxTankDens:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "плотность топлива" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "плотность топлива" ).
               setFocusMaskTextDoc = maskedTextBoxTankDens.
               return false.
             end.
             if not valid-density(v-dec)
             then do :
-              if p-ShowMsg then ShowMsg( "Неверно введена плотность топлива" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( "Неверно введена плотность топлива" ).
               setFocusMaskTextDoc = maskedTextBoxTankDens.
               return false.
             end .
@@ -4765,7 +5019,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxTankTemp:Text) no-error.
             if (error-status:error or trim (maskedTextBoxTankTemp:Text) = "")
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "температура замера объема" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "температура замера объема" ).
               setFocusMaskTextDoc = maskedTextBoxTankTemp.
               return false.
             end.
@@ -4776,7 +5031,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxDensTemp:Text) no-error.
             if (error-status:error or trim (maskedTextBoxDensTemp:Text) = "")
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "температура замера плотности" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "температура замера плотности" ).
               setFocusMaskTextDoc = maskedTextBoxDensTemp.
               return false.
             end.
@@ -4787,7 +5043,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxPlaceSi:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "средство измерения плотности" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "средство измерения плотности" ).
               setFocusMaskTextDoc = maskedTextBoxPlaceSi.
               return false.
             end.
@@ -4798,7 +5055,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxPlaceSiTemp:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "средство измерения температуры" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "средство измерения температуры" ).
               setFocusMaskTextDoc = maskedTextBoxPlaceSiTemp.
               return false.
             end.
@@ -4809,17 +5067,20 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                        "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                        "Введите данные и нажмите кнопку Рассчитать по замерам в АЦ." ).
               return false.
             end.
             if infoSecsObj:GetInfoSectionProp(idSecTabPage):AccMeth = 1
+            and infoSecsObj:IsActnComm
             then do :
               v-dec = decimal (v-tank-weight-rvs) no-error.
               if (error-status:error or v-dec = 0 or v-dec = ?)
               then do:
-                if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                if p-ShowMsg or infoSecsObj:SectionNum = 1
+                then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                          "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                          "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
                 return false.
@@ -4835,13 +5096,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             and infoSecsObj:isKP
             and trim(maskedTextBoxAukKey:text) > ""
             then do :
-              if p-ShowMsg then ShowMsg( "По накладной установлен флаг комиссионного приема. Недостаточно прав для ввода идентификатора доступа (ключа) верхнего уровня или одноразового кода!" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( "По накладной установлен флаг комиссионного приема. Недостаточно прав для ввода идентификатора доступа (ключа) верхнего уровня или одноразового кода!" ).
               setFocusMaskTextDoc = maskedTextBoxAukKey.
               return false.
             end .
             if length(trim(maskedTextBoxAukKey:text)) < 4
+            and maskedTextBoxAukKey:Enabled
+            and p-exit
             then do :
-              if p-ShowMsg then ShowMsg( "Некорректная длина идентификатора доступа (ключа) верхнего уровня или одноразового кода для разблокировки API-адаптера. Проверьте введенное значение и скорректируйте." ).
+              ShowMsg( "Некорректная длина идентификатора доступа (ключа) верхнего уровня или одноразового кода для разблокировки API-адаптера. Проверьте введенное значение и скорректируйте." ).
               setFocusMaskTextDoc = maskedTextBoxAukKey.
               return false.
             end .
@@ -4850,6 +5114,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             if lookup("accessIDLowerLevel", v-sec-fields) > 0
             then do :
               if length(trim(maskedTextBoxAukKey:text)) < 4
+              and maskedTextBoxAukKey:Enabled
               then do :
                 if p-ShowMsg then ShowMsg( "Некорректная длина идентификатора доступа (ключа) нижнего уровня. Проверьте введенное значение и скорректируйте." ).
                 setFocusMaskTextDoc = maskedTextBoxAukKey.
@@ -4859,6 +5124,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           end .
           
           if p-save
+          and p-exit
           then do :
             if infoSecsObj:IsKPrvs
             then do :
@@ -4867,7 +5133,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
                 v-dec = decimal (v-tank-weight-rvs) no-error.
                 if (error-status:error or v-dec = 0 or v-dec = ?)
                 then do:
-                  if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                  ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                            "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                            "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
                   return false.
@@ -4882,7 +5148,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
                 v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
                 if (error-status:error or v-dec = 0)
                 then do:
-                  if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                  ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                            "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                            "Введите данные и нажмите кнопку Рассчитать по замерам в АЦ." ).
                   return false.
@@ -4901,7 +5167,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
           if (error-status:error or v-dec = 0)
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "объем по свидетельству о поверке" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "объем по свидетельству о поверке" ).
             setFocusMaskTextDoc = maskedTextBoxCarVol.
             return false.
           end.
@@ -4911,7 +5178,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         then do :
           if trim (maskedTextBoxABTArir:Text) = ""
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "отклонение от тарировочной пл." ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "отклонение от тарировочной пл." ).
             setFocusMaskTextDoc = maskedTextBoxABTArir.
             return false.
           end.
@@ -4922,13 +5190,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           v-dec = decimal (maskedTextBoxTankDens:Text) no-error.
           if (error-status:error or v-dec = 0)
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "плотность топлива" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "плотность топлива" ).
             setFocusMaskTextDoc = maskedTextBoxTankDens.
             return false.
           end.
           if not valid-density(v-dec)
           then do :
-            if p-ShowMsg then ShowMsg( "Неверно введена плотность топлива" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( "Неверно введена плотность топлива" ).
             setFocusMaskTextDoc = maskedTextBoxTankDens.
             return false.
           end .
@@ -4939,7 +5209,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           v-dec = decimal (maskedTextBoxDensTemp:Text) no-error.
           if (error-status:error or trim (maskedTextBoxDensTemp:Text) = "")
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "температура замера плотности" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "температура замера плотности" ).
             setFocusMaskTextDoc = maskedTextBoxDensTemp.
             return false.
           end.

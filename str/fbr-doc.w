@@ -64,6 +64,7 @@ define variable vss-description as character no-undo init "Документ производства
 { gbl/color.i    }
 { str/writelog.i def "'fbr.log'" no-create }
 { trg/partslib.i }
+{ str/temp_upd.i }
 { str/fbrcode.i  }
 { str/fbrlib.i   }
 { str/fbrrest.i  }
@@ -74,7 +75,7 @@ define variable vss-description as character no-undo init "Документ производства
 { ref/gds-attr.i }
 { ref/gdsoattr.i   }
 { gbl/ggoattr.i  }
-
+{ utl/gtin.i }
 
 
 define shared variable br-handle as handle no-undo.
@@ -114,6 +115,12 @@ define variable gds-rec                    as recid     no-undo.
 define variable v-ban-recipes   as logical      no-undo .
 define variable v-ban-altr      as logical      no-undo .
 define variable v-base                     as logical   init no no-undo.
+
+define variable bcol as handle extent no-undo.
+define variable hBrowse as handle no-undo.
+define variable bcol_comp as handle extent no-undo.
+define variable hBrowse_comp as handle no-undo.
+define variable ii as integer no-undo.
 
 define new shared buffer flt-gds      for ub.goods.                                /* для режима ТОВАР */
 
@@ -194,7 +201,7 @@ fbr-recipe-gds.is-waste fbr-recipe.recipe-name fbr-recipe.qnty
 &Scoped-Define ENABLED-OBJECTS br-comp br-ingr fi-pay-code b-exit b-prev ~
 b-next b-rsrv b-gds b-parts out-code r-outs obj-price r-price b-help ~
 b-recipe b-lkp b-add b-chg b-del rs-one-all obj-fbroperator r-fbroperator ~
-r-pay shift-sel 
+r-pay shift-sel b-add-marks
 &Scoped-Define DISPLAYED-FIELDS fbr-recipe.recipe-code ~
 fbr-recipe.recipe-type fbr-recipe-gds.is-waste fbr-recipe.recipe-name ~
 fbr-recipe.qnty 
@@ -248,6 +255,12 @@ FUNCTION get-unit-base RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD need-marks D-FBR-DOC 
+FUNCTION need-marks RETURNS logical
+   (  buffer local-fbr-line for ub.fbr-line )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -281,14 +294,18 @@ DEFINE MENU POPUP-MENU-b-rsrv
 DEFINE BUTTON b-add 
    LABEL "&Добавить" 
    SIZE 10 BY 1 TOOLTIP "Добавление строк по рецепту (или без него)".
+   
+DEFINE BUTTON b-add-marks 
+   LABEL "Доб. &марки" 
+   SIZE 12 BY 1 TOOLTIP "Добавление марок по текущей строке".
 
 DEFINE BUTTON b-calc-comp 
    LABEL "С&ост" 
-   SIZE 10 BY 1 TOOLTIP "Расчет полученного товара от строк ингредиентов по рецепту".
+   SIZE 6 BY 1 TOOLTIP "Расчет полученного товара от строк ингредиентов по рецепту".
 
 DEFINE BUTTON b-calc-ingr 
    LABEL "Ин&гр" 
-   SIZE 10 BY 1 TOOLTIP "Расчет строк ингредиентов от полученного товара по рецепту".
+   SIZE 6 BY 1 TOOLTIP "Расчет строк ингредиентов от полученного товара по рецепту".
 
 DEFINE BUTTON b-chg 
    LABEL "&Изменить" 
@@ -545,7 +562,8 @@ DEFINE FRAME D-FBR-DOC
    b-chg AT ROW 12.71 COL 22
    b-del AT ROW 12.71 COL 32
    b-calc-ingr AT ROW 12.71 COL 42
-   b-calc-comp AT ROW 12.71 COL 52
+   b-calc-comp AT ROW 12.71 COL 48
+   b-add-marks AT ROW 12.71 COL 54
    rs-one-all AT ROW 12.71 COL 67.75 NO-LABEL
    fbr-recipe.recipe-code AT ROW 3.75 COL 13.38 COLON-ALIGNED NO-LABEL
    VIEW-AS FILL-IN 
@@ -864,9 +882,12 @@ ON CHOOSE OF b-chg IN FRAME D-FBR-DOC /* Изменить */
       { gbl/stdbtn.i }
       define variable v-cancel   as logical no-undo.
       define variable v-old-qnty as decimal no-undo.
+      define variable v-mark-qnty as decimal no-undo init ? .
 
+      define buffer buf_goods for ub.goods .
       define buffer buf_fbr-recipe for ub.fbr-recipe.
       define buffer buf_fbr-line   for ub.fbr-line.
+      define buffer buf_marking-lines for ub.marking-lines .
 
       if not available buf_comp_fbr-line then 
       do:
@@ -878,13 +899,28 @@ ON CHOOSE OF b-chg IN FRAME D-FBR-DOC /* Изменить */
          on error undo, return no-apply
          :
          assign
-            v-old-qnty = buf_comp_fbr-line.fact-qnty
-            .
+           v-old-qnty = buf_comp_fbr-line.fact-qnty
+         .
+         for first buf_goods no-lock where buf_goods.artic     = buf_comp_fbr-line.artic
+                                       and buf_goods.prod-type = buf_comp_fbr-line.prod-type
+                                       and buf_goods.prod-code = buf_comp_fbr-line.prod-code,
+         each buf_marking-lines where buf_marking-lines.gds-code = buf_goods.gds-code
+                                  and buf_marking-lines.obj-type = f-doc.obj-type
+                                  and buf_marking-lines.obj-code = f-doc.obj-code
+                                  and buf_marking-lines.in-code  = "manufacturing"
+                                  and buf_marking-lines.out-code = buf_comp_fbr-line.doc-code
+                                  and buf_marking-lines.part-code = buf_comp_fbr-line.recipe-code
+                                  and buf_marking-lines.prt-code = 0
+         :
+           if v-mark-qnty = ? then assign v-mark-qnty = 0 .
+           assign v-mark-qnty = v-mark-qnty + 1 .
+         end .
          run str/fbr-line.w (
             input p-fbrhist-handle
             , input {&update}
             , input buf_comp_fbr-line.doc-code
             , input recid (buf_comp_fbr-line)
+            , input v-mark-qnty
             , output v-cancel
             ) no-error.
          if error-status :error
@@ -1089,6 +1125,7 @@ ON CHOOSE OF b-lkp IN FRAME D-FBR-DOC /* Просмотр */
          , input {&lookup}
          , input buf_comp_fbr-line.doc-code
          , input recid (buf_comp_fbr-line)
+         , input ?
          , output v-cancel
          ).
       return no-apply.
@@ -1381,6 +1418,8 @@ ON RETURN OF br-comp IN FRAME D-FBR-DOC
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-comp D-FBR-DOC
 ON ROW-DISPLAY OF br-comp IN FRAME D-FBR-DOC
    DO:
+      define buffer local_ingr_fbr-line for ub.fbr-line .
+      
       if buf_comp_fbr-line.is-waste = yes
          then 
       do:
@@ -1404,6 +1443,20 @@ ON ROW-DISPLAY OF br-comp IN FRAME D-FBR-DOC
             buf_comp_fbr-line.rsrv-qnty             :bgcolor in browse br-comp = gray_color
             .
       end.
+      
+      for first local_ingr_fbr-line no-lock where local_ingr_fbr-line.doc-code = f-doc.doc-code
+                                              and local_ingr_fbr-line.is-comp = no
+                                              and local_ingr_fbr-line.recipe-code = buf_comp_fbr-line.recipe-code
+      :
+        if need-marks(buffer local_ingr_fbr-line)
+        then do ii = 1 to extent (bcol_comp):  
+          if valid-handle (bcol_comp[ii]) 
+          then do:
+            assign
+              bcol_comp[ii]:bgcolor = RED_COLOR.
+          end.
+        end.
+      end .
    END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1742,6 +1795,20 @@ ON LEAVE OF fi-pay-code IN FRAME D-FBR-DOC /* Опл */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-add-marks
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add-marks D-FBR-DOC
+ON CHOOSE OF b-add-marks in frame D-FBR-DOC
+do :
+  if available buf_ingr_fbr-line
+  then do :
+    run str/fbr-doc-ingr-marks-add.w (input parparentproc,
+                                 input recid(buf_ingr_fbr-line)) .
+    br-ingr:refresh () .
+  end .
+end .
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME m-all-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m-all-add D-FBR-DOC
@@ -2510,6 +2577,18 @@ ON CHOOSE OF r-pay IN FRAME D-FBR-DOC /* r-pay */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define BROWSE-NAME br-ingr
+&Scoped-define SELF-NAME br-ingr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-ingr D-FBR-DOC
+ON row-display OF br-ingr IN FRAME D-FBR-DOC
+DO:
+
+  run rowdisp .
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME r-price
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-price D-FBR-DOC
@@ -2793,6 +2872,20 @@ if error-status:error then v-back-date = false.
 
 { gbl/ed_date.i fact-date }
 
+hbrowse = browse br-ingr:handle.
+extent (bcol) = hbrowse:num-columns.
+bcol[1] = hbrowse:first-column.
+do ii = 1 to extent (bcol).  
+  bcol[ii] = hbrowse:get-browse-column (ii).
+end.
+
+hbrowse_comp = browse br-comp:handle.
+extent (bcol_comp) = hbrowse_comp:num-columns.
+bcol_comp[1] = hbrowse_comp:first-column.
+do ii = 1 to extent (bcol_comp).  
+  bcol_comp[ii] = hbrowse_comp:get-browse-column (ii).
+end.
+
 /* зацикливание формы */
 assign
    p-fbr-doc-next-prev = yes
@@ -3050,6 +3143,7 @@ PROCEDURE add-free-fbr-line :
             , input {&update}
             , input buf_fbr-line.doc-code
             , input v-fbr-doc-line-rec
+            , input ?
             , output v-cancel
             ).
       /*        assign*/
@@ -3081,7 +3175,7 @@ PROCEDURE add-proc :
    /*------------------------------------------------------------------------------
      Purpose:     добавление строки по рецепту и без
    ------------------------------------------------------------------------------*/
-   do
+   do transaction
       on error undo, return error
       :
       define input parameter p-mode                   as character    no-undo.
@@ -3131,19 +3225,37 @@ PROCEDURE add-proc :
             find first buf_goods no-lock
                where recid( buf_goods ) = gds-rec
                .
+            
             case p-mode
                :
                when "rcp"
                then 
                   do:
-                           run writelog in this-procedure (log-file-name, 1, substitute( "Добавление товара с артикулом &1 по рецепту.", buf_goods.artic ) ).
-                           run add-recipe in this-procedure (
-                              input f-doc.doc-code
-                              , input buf_goods.artic
-                              , input buf_goods.prod-type
-                              , input buf_goods.prod-code
-                              , input no  /* не раскручивать */
-                              ) .
+                     run writelog in this-procedure (log-file-name, 1, substitute( "Добавление товара с артикулом &1 по рецепту.", buf_goods.artic ) ).
+                     RUN gds-attr-value (
+                          INPUT buf_goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT v-attr-value,
+                          OUTPUT v-attr-type
+                          ).
+                     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-attr-value)
+                     then do : 
+                       empty temp-table tt-marking-lines .
+                       run str/fbr-doc-dish-marks-add.w (input parparentproc,
+                                                         input gds-rec,
+                                                         output table tt-marking-lines) .
+                     end . 
+                     run add-recipe in this-procedure (
+                        input f-doc.doc-code
+                        , input buf_goods.artic
+                        , input buf_goods.prod-type
+                        , input buf_goods.prod-code
+                        , input no  /* не раскручивать */
+                        ) no-error.
+                     if error-status :error
+                     then do:
+                       undo, return error.
+                     end.
                   end.
                when "rcp-all"
                then 
@@ -3267,7 +3379,11 @@ PROCEDURE add-recipe :
          , input v-price-sale-obj-code
          , input no
          , input no
-         ).
+         ) no-error.
+      if error-status :error
+      then do:
+        undo, return error.
+      end.
       run writelog in this-procedure ( log-file-name, 2, "Добавление товаров завершено." ).
    end.
 END PROCEDURE. /* add-recipe */
@@ -3991,6 +4107,10 @@ PROCEDURE del-proc :
       define buffer buf_del_fbr-line       for ub.fbr-line.
       define buffer buf_del_fbr-recipe     for ub.fbr-recipe.
       define buffer buf_del_fbr-recipe-gds for ub.fbr-recipe-gds.
+      
+      define buffer buf_goods              for ub.goods .
+      define buffer buf_marking            for ub.marking .
+      define buffer buf_marking-lines      for ub.marking-lines .
 
       assign
          p-deleted = no
@@ -4052,6 +4172,22 @@ PROCEDURE del-proc :
                            find first buf_ingr_fbr-line exclusive-lock
                               where recid( buf_ingr_fbr-line ) = v-fbr-doc-line-rec
                               .
+                           for first buf_goods no-lock where buf_goods.artic      = buf_ingr_fbr-line.artic
+                                                         and buf_goods.prod-type  = buf_ingr_fbr-line.prod-type
+                                                         and buf_goods.prod-code  = buf_ingr_fbr-line.prod-code,
+                           each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                                                   and buf_marking-lines.obj-type = f-doc.obj-type
+                                                                   and buf_marking-lines.obj-code = f-doc.obj-code
+                                                                   and buf_marking-lines.in-code  = "manufacturing"
+                                                                   and buf_marking-lines.out-code = buf_ingr_fbr-line.doc-code
+                                                                   and buf_marking-lines.part-code = buf_ingr_fbr-line.recipe-code
+                                                                   and buf_marking-lines.prt-code = 0
+                           :
+                             for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+                                assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+                             end .
+                             delete buf_marking-lines.
+                           end .
                            delete buf_ingr_fbr-line.
                         end.
                         assign
@@ -4123,6 +4259,22 @@ PROCEDURE del-proc :
                            find first buf_comp_fbr-line exclusive-lock
                               where recid (buf_comp_fbr-line) = v-fbr-doc-line-rec
                               .
+                           for first buf_goods no-lock where buf_goods.artic      = buf_comp_fbr-line.artic
+                                                         and buf_goods.prod-type  = buf_comp_fbr-line.prod-type
+                                                         and buf_goods.prod-code  = buf_comp_fbr-line.prod-code,
+                           each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                                                   and buf_marking-lines.obj-type = f-doc.obj-type
+                                                                   and buf_marking-lines.obj-code = f-doc.obj-code
+                                                                   and buf_marking-lines.in-code  = "manufacturing"
+                                                                   and buf_marking-lines.out-code = buf_comp_fbr-line.doc-code
+                                                                   and buf_marking-lines.part-code = buf_comp_fbr-line.recipe-code
+                                                                   and buf_marking-lines.prt-code = 0
+                           :
+                             for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+                                assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB .
+                             end .
+                             delete buf_marking-lines.
+                           end .
                            delete buf_comp_fbr-line.
                         end.
                         assign
@@ -4185,6 +4337,25 @@ PROCEDURE del-proc :
                         find first buf_del_fbr-line exclusive-lock
                            where recid( buf_del_fbr-line ) = recid( buf_fbr-line )
                            .
+                        for first buf_goods no-lock where buf_goods.artic      = buf_del_fbr-line.artic
+                                                      and buf_goods.prod-type  = buf_del_fbr-line.prod-type
+                                                      and buf_goods.prod-code  = buf_del_fbr-line.prod-code,
+                        each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                                                and buf_marking-lines.obj-type = f-doc.obj-type
+                                                                and buf_marking-lines.obj-code = f-doc.obj-code
+                                                                and buf_marking-lines.in-code  = "manufacturing"
+                                                                and buf_marking-lines.out-code = buf_del_fbr-line.doc-code
+                                                                and buf_marking-lines.part-code = buf_del_fbr-line.recipe-code
+                                                                and buf_marking-lines.prt-code = 0
+                        :
+                          for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+                             assign
+                               buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB when not buf_del_fbr-line.is-comp
+                               buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB when buf_del_fbr-line.is-comp
+                             .
+                          end .
+                          delete buf_marking-lines.
+                        end .
                         delete buf_del_fbr-line.
                      end.        /* do transaction */
                   end.
@@ -4288,6 +4459,25 @@ PROCEDURE del-proc :
                               find first buf_del_fbr-line exclusive-lock
                                  where recid( buf_del_fbr-line ) = recid( buf_fbr-line )
                                  .
+                              for first buf_goods no-lock where buf_goods.artic      = buf_del_fbr-line.artic
+                                                            and buf_goods.prod-type  = buf_del_fbr-line.prod-type
+                                                            and buf_goods.prod-code  = buf_del_fbr-line.prod-code,
+                              each buf_marking-lines exclusive-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                                                      and buf_marking-lines.obj-type = f-doc.obj-type
+                                                                      and buf_marking-lines.obj-code = f-doc.obj-code
+                                                                      and buf_marking-lines.in-code  = "manufacturing"
+                                                                      and buf_marking-lines.out-code = buf_del_fbr-line.doc-code
+                                                                      and buf_marking-lines.part-code = buf_del_fbr-line.recipe-code
+                                                                      and buf_marking-lines.prt-code = 0
+                              :
+                                for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+                                   assign
+                                     buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB when not buf_del_fbr-line.is-comp
+                                     buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB when buf_del_fbr-line.is-comp
+                                   .
+                                end .
+                                delete buf_marking-lines.
+                              end .
                               delete buf_del_fbr-line.
                            end.        /* do transaction */
                         end.
@@ -5618,6 +5808,73 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-vsdsts d-in-doc 
+FUNCTION need-marks RETURNS logical
+(buffer local-fbr-line for ub.fbr-line ):
+  
+  define buffer bf_gds for ub.goods.
+  define buffer buf_marking-lines      for ub.marking-lines .
+  
+  define variable varvalue as character no-undo .
+  define variable vartype as character no-undo .
+  define variable v-marks-qnty as decimal no-undo init 0.0 .
+  define variable v-GTIN as character no-undo .
+  define variable v-GTIN-qnty as decimal no-undo .
+    
+  find first bf_gds where bf_gds.artic      = local-fbr-line.artic
+                      and bf_gds.prod-type  = local-fbr-line.prod-type
+                      and bf_gds.prod-code  = local-fbr-line.prod-code
+                      .
+  RUN gds-attr-value (
+      INPUT bf_gds.gds-code,
+      INPUT {&attr-mark-type},
+      OUTPUT varvalue,
+      OUTPUT vartype
+      ).
+  if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(varvalue)
+  then do :
+    for each buf_marking-lines no-lock where buf_marking-lines.gds-code = bf_gds.gds-code
+                                         and buf_marking-lines.obj-type = f-doc.obj-type
+                                         and buf_marking-lines.obj-code = f-doc.obj-code
+                                         and buf_marking-lines.in-code  = "manufacturing"
+                                         and buf_marking-lines.out-code = local-fbr-line.doc-code
+                                         and buf_marking-lines.part-code = local-fbr-line.recipe-code
+                                         and buf_marking-lines.prt-code = 0
+    :
+      v-GTIN = getGtinByDM(buf_marking-lines.mark) .
+      v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
+      if v-GTIN-qnty = 1
+      then do :
+        v-marks-qnty = v-marks-qnty + v-GTIN-qnty .
+      end .
+    end .
+    if v-marks-qnty <> local-fbr-line.fact-qnty
+    then return yes .
+    else return no .
+  end .
+  else return no .
+  
+end function.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE rowdisp D-FBR-DOC 
+procedure rowdisp :
+  
+  if need-marks(buffer buf_ingr_fbr-line)
+  then do ii = 1 to extent (bcol):  
+    if valid-handle (bcol[ii]) 
+    then do:
+      assign
+        bcol[ii]:bgcolor = RED_COLOR.
+    end.
+  end.
+  
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-fbrpaycode D-FBR-DOC 
 PROCEDURE select-fbrpaycode :
    /*------------------------------------------------------------------------------
@@ -5982,6 +6239,7 @@ PROCEDURE UI-on :
                         r-fbroperator
                         fi-pay-code
                         r-pay
+                        b-add-marks
                         with frame {&frame-name}.
                      hide
                         b-parts

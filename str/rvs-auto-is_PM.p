@@ -428,6 +428,7 @@ end.
             ?
             varcur-data
             false
+            no
             tt-meas-file
             tt-meas
             no-error

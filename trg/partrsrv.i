@@ -804,7 +804,23 @@ procedure partrsrv :
                   free_marking-lines.prt-code   = ub.marking-lines.prt-code
                 .
               end .
-              assign ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+              if avail buf_trn-doc and buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
+              do:   /* если СПИСАНИЕ, то проверим предыдущий статус марки */
+                 find last ub.c-marking no-lock where
+                           ub.c-marking.mark = ub.marking-lines.mark
+                      use-index pi-2 no-error.
+                 if avail ub.c-marking and
+                    (ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB or
+                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB or
+                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB or
+                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB or
+                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB) then
+                   ub.marking.sts = ub.c-marking.sts .
+                 else  
+                   ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB . 
+              end.
+              else
+                ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
             end .
           end .
           delete ub.marking-lines.

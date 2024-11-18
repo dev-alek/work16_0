@@ -40,7 +40,7 @@ define variable vss-description as character no-undo initial "библиотека процеду
 { str/cont-ms-def.i }
 { str/trdcalib.i }
 
-
+{ utl/gtin.i    }
 
 if valid-handle( g#lib-trn4 ) = yes and
    g#lib-trn4 <> this-procedure :handle and
@@ -545,12 +545,19 @@ define buffer buf_trn-doc   for ub.trn-doc .
 define buffer exp_trn-doc   for ub.trn-doc .
 define buffer buf_parts     for ub.parts  .
 define buffer buf_doc-line for ub.doc-line .
+define buffer buf_gds-dtl   for ub.gds-dtl .
 define buffer buf_goods for ub.goods .
+define buffer buf_marking-lines for ub.marking-lines .
 
 define variable var-ok-assort-pol   as logical   no-undo .
 define variable var-mess-assort-pol as character no-undo .
 define variable v-file-n as character no-undo .
 define variable v-ischg-ext-type as logical no-undo .
+define variable v-is-exemplar-goods as logical   no-undo .
+define variable v-message           as character no-undo .
+define variable v-scan-qnty as  integer   no-undo. 
+define variable v-GTIN     as character no-undo .
+define variable v-codident as character no-undo.
 
   do
   on error undo, return error return-value
@@ -2208,6 +2215,54 @@ define variable v-ischg-ext-type as logical no-undo .
       end.
     end.
 
+    if buf_trn-doc.doc-type = {&write-off} then
+    do:   /* при списании по товару с экземплярным типом учета проверим соответствие списываемого кол-ва и просканировнных марок*/
+      v-message = "".
+      for each buf_doc-line where
+               buf_doc-line.doc-code = buf_trn-doc.doc-code no-lock,
+          each buf_gds-dtl where
+               buf_gds-dtl.doc-code  = buf_trn-doc.doc-code
+           and buf_gds-dtl.artic     = buf_doc-line.artic
+           and buf_gds-dtl.prod-code = buf_doc-line.prod-code
+           and buf_gds-dtl.prod-type = buf_doc-line.prod-type no-lock,
+          first buf_goods where 
+               buf_goods.artic = buf_gds-dtl.artic
+           and buf_goods.prod-code = buf_gds-dtl.prod-code
+           and buf_goods.prod-type = buf_gds-dtl.prod-type no-lock:
+        run isExemplarGoods in g#attr-lib 
+          (buf_trn-doc.obj-type, buf_trn-doc.obj-code, buf_goods.gds-code, output v-is-exemplar-goods).
+        if v-is-exemplar-goods then do:
+          v-scan-qnty = 0.
+          for each buf_marking-lines no-lock where buf_marking-lines.obj-type = buf_trn-doc.obj-type
+                                               and buf_marking-lines.obj-code = buf_trn-doc.obj-code
+                                               and buf_marking-lines.gds-code = buf_goods.gds-code
+                                               and buf_marking-lines.out-code = buf_trn-doc.doc-code
+                                               and buf_marking-lines.doc-level = 1
+          :
+            v-codident = GetCodeIdent(buf_marking-lines.mark).
+            v-GTIN = getGtinByDM(if v-codident <> ? and v-codident <> "" then v-codident else buf_marking-lines.mark) .
+            
+            v-scan-qnty = v-scan-qnty +  getQntyCodeByGtin(v-GTIN) .
+          end .
+          if buf_gds-dtl.doc-qnty <> v-scan-qnty then
+          do:
+            v-message = substitute(
+                "&1~nПо товару &2 &3 списывается &4 просканировано &5", 
+                v-message, buf_goods.artic, buf_goods.gds-name, buf_gds-dtl.doc-qnty, v-scan-qnty).
+          end.
+        end.
+      end.
+      if v-message <> "" then
+      do:
+        varlog = no.
+        message v-message skip
+          "Продолжить?"
+          view-as alert-box question buttons yes-no update varlog.
+        if not varlog then return error.
+      end.
+    end.
+
+
     if  not buf_trn-doc.flag_               and
         buf_trn-doc.status_   = {&wayb}     and
         buf_trn-doc.doc-type  = {&return}   and
@@ -2305,7 +2360,7 @@ define variable v-ischg-ext-type as logical no-undo .
               end.
           end.
 
-      if buf_trn-doc.internal and buf_trn-doc.doc-type = {&income} then do:
+      if buf_trn-doc.doc-type = {&income} and v-ischg-ext-type then do:
           for each ub.doc-line where ub.doc-line.doc-code = buf_trn-doc.doc-code no-lock:
               { str/is-petrl.i
                 ub.doc-line.artic
@@ -2487,13 +2542,13 @@ define variable v-ischg-ext-type as logical no-undo .
         if varlog then run str/gds-list.w (input parparentproc, input buf_trn-doc.host-code, input buf_trn-doc.obj-type, input buf_trn-doc.obj-code).
       end.
       
-      define buffer buf_marking-lines for ub.marking-lines.
       define buffer bf_doc-line       for ub.doc-line.
       define buffer bf_gds-dtl        for ub.gds-dtl.
       { gbl/objsrv.i }
       def var v-attr-value as character no-undo.
       def var v-attr-type as character no-undo.
       def var v-is-introduce  as logical no-undo.
+      def var v-is-return     as logical no-undo.
       def var v-is-wroff-tech-m as logical no-undo.
       def var v-prev-sts        as integer no-undo.
       
@@ -2507,6 +2562,17 @@ define variable v-ischg-ext-type as logical no-undo .
       if not error-status:error and v-attr-value = "yes" then do:
         v-is-introduce = true.
       end.
+      { str/tdat-val.i
+        buf_trn-doc.doc-code
+        {&trdcattr-is-return}
+        v-attr-value
+        v-attr-type
+        no-error
+      }
+      if not error-status:error and v-attr-value = "yes" then do:
+        v-is-return = true.
+      end.
+      
       
         if not v-is-introduce and 
           ((ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType("tabak") 
@@ -2752,7 +2818,43 @@ define variable v-ischg-ext-type as logical no-undo .
             no-error
           }
       end.
-      
+
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та СПИСАНИЯ при закрытии на ФАКТ меняем статус марок на СПИСАН */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           string(ObjSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB)).
+      end.
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та РАСХОДА ПЕРЕМЕЩЕНИЯ при закрытии на ФАКТ меняем статус марок на ПЕРЕМЕЩЕН */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           string(ObjSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB)).
+      end.
+      if v-is-return and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та ВОЗВРАТА при закрытии на ФАКТ меняем статус марок на ВОЗВРАЩЕН ПОСТАВЩИКУ */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           string(ObjSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB)).
+      end.
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and v-ischg-ext-type and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та ПРИХОДА ПЕРЕМЕЩЕНИЯ  при закрытии на ФАКТ меняем статус марок:  */
+              /* ПРОВЕРЕН --> СЗ; ОЖИДАЕТ ПРОВЕРКУ --> ОТСУТСТВУЕТ В ПОСТАВКЕ */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           substitute("&1:&2,&3:&4",
+                      ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB,
+                      ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB,
+                      ObjSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB,
+                      ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB)
+          ).
+      end.
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та ВОЗВРАТ ПЕРЕМЕЩЕНИЯ при закрытии на ФАКТ меняем статус марок на CСВОБОДНАЯ ЗОНА */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           string(ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB)).
+      end.
     if v-ischg-ext-type
     then do:
       buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}.
@@ -3403,5 +3505,55 @@ PROCEDURE userlogingerr :
       , input v-vid-param
   ) no-error.
 end procedure. /* userloging */
+
+procedure change_mark_sts_trn-doc:
+    /* смена статуса марок документа trn_doc */
+    define input parameter iDocCode like ub.trn-doc.doc-code no-undo.
+    define input parameter iObjType like ub.trn-doc.obj-type no-undo.
+    define input parameter iObjCode like ub.trn-doc.obj-code no-undo.
+    define input parameter iStatus  as   character           no-undo.
+    /* Формат iStatus                                                           */
+    /* Одно значение (например: 10), то статус всех марок "тупо" меняем на него */
+    /* Если "*:11", статус всех марок меняем на 11                              */
+    /* Если "7:10,3:6", 7 меняем на 10, 3 на 6, остальные не изменяются         */
+    /* Если "7:10,3:6,*:11", 7 меняем на 10, 3 на 6, остальные на 11            */
+    
+    define variable vCount   as integer   no-undo.   
+    define variable vElem    as character no-undo.   
+    
+    define buffer buf_doc-line      for ub.doc-line.
+    define buffer buf_goods         for ub.goods.
+    define buffer buf_marking-lines for ub.marking-lines.
+    define buffer buf_marking       for ub.marking.
+    
+    if num-entries(iStatus,":") = 1 then iStatus = substitute("*:&1",iStatus). 
+    
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = iDocCode:
+      find first buf_goods no-lock where 
+                 buf_goods.artic     = buf_doc-line.artic 
+             and buf_goods.prod-type = buf_doc-line.prod-type 
+             and buf_goods.prod-code = buf_doc-line.prod-code.
+      for each buf_marking-lines exclusive-lock where
+               buf_marking-lines.gds-code = buf_goods.gds-code
+           and buf_marking-lines.out-code = iDocCode
+           and buf_marking-lines.obj-type = iObjType
+           and buf_marking-lines.obj-code = iObjCode
+      :
+        for each buf_marking exclusive-lock where 
+                 buf_marking.mark = buf_marking-lines.mark:
+          CHNG:
+          do vCount = 1 to num-entries(iStatus):
+              vElem = entry(vCount,iStatus).
+              if can-do(entry(1,vElem,":"),string(buf_marking.sts)) then
+              do:
+                  buf_marking.sts = integer(entry(2,vElem,":")).
+                  buf_marking-lines.sts = buf_marking.sts. 
+                  validate buf_marking.
+              end.
+          end.
+        end.
+      end.
+    end.
+end procedure.
 
 /* $Workfile$   E n d */

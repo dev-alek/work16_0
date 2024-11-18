@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 94114751b278, 3560, rls $
+$Author: EShklyar $
+$Date: 2023/11/27 08:31:19 $
+$Workfile: r-orioxl-pokmi.p $
+$Archive: rep/r-orioxl-pokmi.p $
 
 Инвентаризационная описись для ПОкМИ
 
@@ -20,11 +20,11 @@ define input parameter p-parent-proc as widget-handle no-undo .
 define input parameter p-rec-invent  as recid         no-undo .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 94114751b278, 3560, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/11/27 08:31:19 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-orioxl-pokmi.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-orioxl-pokmi.p $":U .
 define variable vss-description as character no-undo initial "Инвентаризационная описись СУГ":U .
 
 { cmp/vssrevis.i }
@@ -41,6 +41,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { str/placelib.i }
 { rep/c-temp-place.i }
 { rep/c-place-attr.i }
+{ str/trdcalib.i }
 
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print as logical no-undo initial yes .
@@ -215,6 +216,97 @@ do
     t_inv-date = ( if bf_trn-doc.status_ = {&fact} then bf_trn-doc.fact-date else bf_trn-doc.doc-date )
     .
 
+  define variable v-prikaz-num  as character no-undo .
+  define variable v-prikaz-date as character no-undo .
+  define variable v-doc-date    as character no-undo .
+  define variable p-type        as character no-undo .      
+  define variable v-pos-agent   as character no-undo .
+  define variable v-fio-agent   as character no-undo .
+  define variable v-pos-player1 as character no-undo .
+  define variable v-fio-player1 as character no-undo .
+  define variable v-pos-player2 as character no-undo .
+  define variable v-fio-player2 as character no-undo .
+  define variable v-pos-player3 as character no-undo .
+  define variable v-fio-player3 as character no-undo .
+  
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-inv-date}
+          v-doc-date
+          p-type
+          no-error
+      }    
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-prikaz-number}
+          v-prikaz-num
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-prikaz-date}
+          v-prikaz-date
+          p-type
+          no-error
+      }  
+
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-agent}
+          v-fio-agent
+          p-type
+          
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-agent}
+          v-pos-agent
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player1}
+          v-fio-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player1}
+          v-pos-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player2}
+          v-fio-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player2}
+          v-pos-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player3}
+          v-fio-player3
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player3}
+          v-pos-player3
+          p-type
+          no-error
+      } 
   /*печать*/
   run get-report-num (output p-report-id).
     
@@ -446,7 +538,7 @@ procedure table-inv:
     '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность нефтепродукта, кг/м3</TD>' skip
     '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура нефтепродукта, °С</TD>' skip
     '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса нефтепродукта, кг</TD>' skip
-    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
+    '<TD text_wrap="true" colspan = "9" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг*</TD>' skip
     '</TR>'skip       
 
     '<TR style="height: 35px">' skip
@@ -484,7 +576,7 @@ procedure table-inv:
       '<TD colspan = "8" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.volue,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.volue,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD colspan = "9" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD colspan = "9" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD colspan = "9" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9",0) + '</TD>' skip
+      '<TD colspan = "9" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '<TD colspan = "9" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.delta,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.delta,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '</TR>'skip     
       .
@@ -507,7 +599,7 @@ procedure table-inv:
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Плотность нефтепродукта, кг/м3</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Температура нефтепродукта, °С</TD>' skip
     '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Масса нефтепродукта, кг</TD>' skip
-    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг</TD>' skip
+    '<TD text_wrap="true" colspan = "10" rowspan = "2" style="text-align: center; border: 1px solid black;">Погрешность измерения, кг**</TD>' skip
     '</TR>'skip       
 
     '<TR style="height: 65px">' skip
@@ -543,7 +635,7 @@ procedure table-inv:
       '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;">' + string(tt-petrol.log-pl) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.density,"->>>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD colspan = "10" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD colspan = "10" text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9",0) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9",0) + '</TD>' skip
+      '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.qnty1,"->>>>>>>>>>>9.999",3) + '</TD>' skip
 /*      '<TD colspan = "10" text_wrap="true" style="text-align: center; border: 1px solid black;"></TD>' skip*/
       '<TD colspan = "10" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.delta1,"->>>>>>>>>>>9.999",3) + '" style="text-align: center; border: 1px solid black;">' + fnc-convert-dot-to-colon(tt-petrol.delta1,"->>>>>>>>>>>9.999",3) + '</TD>' skip
       '</TR>'skip     

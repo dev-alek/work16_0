@@ -24,6 +24,15 @@ field fact-sum-vol       AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
 field temp-izm-vol       as decimal format "->>>9.9":U initial ? decimals 10
 .
 
+define new shared temp-table tt-temps-tab no-undo
+  field ii as integer
+  field key_ as character
+  field temperature as decimal format "->>>9.9"
+  index pi 
+    as primary unique
+    ii
+.
+
 define new shared temp-table tt-temps no-undo
   field ii as integer
   field key_ as character
@@ -1081,6 +1090,17 @@ DO:
       if integer(v-mi-dnst:screen-value) <> v-node-code
       then do :
         v-mi-tmp-dnst = 0 .
+        find first rvs-line-attr exclusive-lock
+             where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+               and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+               and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+               and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+               and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+               and rvs-line-attr.attr-code = "mi-tmp-dnst" no-error.
+        if available rvs-line-attr
+        then do :
+          rvs-line-attr.attr-value = string(v-mi-tmp-dnst) .
+        end.
       end .
     end .
     v-mi-dnst = v-node-code.
@@ -1157,6 +1177,17 @@ do:
     if string(v-mi-dnst) <> v-old-val
     then do :
       v-mi-tmp-dnst = 0 .
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "mi-tmp-dnst" no-error.
+      if available rvs-line-attr
+      then do :
+        rvs-line-attr.attr-value = string(v-mi-tmp-dnst) .
+      end.
       tt-rvs-line.izmer-density = 0 .
       tt-rvs-line.state-temperature = ? .
     end .
@@ -2483,6 +2514,7 @@ DO:
   define variable v-out-temp as decimal no-undo .
   define variable v-calc-type as integer no-undo init 1 .
   define variable v-izm-temps as character no-undo .
+  define variable v-izm-temps-tab as character no-undo .
   
   if pl-rvd-temp
   or v-revision-mode
@@ -2516,6 +2548,7 @@ DO:
                                     :
     v-calc-type = integer(rvs-line-attr.attr-value) .                                  
   end .        
+
   run str/rvs-lin-temperature.w (input temp_sr-izmerenia.sr-type-izm,
                                  input place-type,
                                  input place-diameter,
@@ -2668,8 +2701,36 @@ DO:
       find first dens_sr-izmerenia no-lock where dens_sr-izmerenia.node-code = place-si no-error.
     end .
   
-    if available dens_sr-izmerenia
-    and dens_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
+    if available dens_sr-izmerenia then do:
+            v-izm-temps-tab = string(dens_sr-izmerenia.sr-type-izm) + ";" .
+      for each tt-temps-tab no-lock by tt-temps-tab.ii :
+        v-izm-temps-tab = v-izm-temps-tab + string(tt-temps-tab.temperature) + "," .
+      end .
+      v-izm-temps-tab = trim(v-izm-temps-tab, ",") .
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "izm-temps-tab" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "izm-temps-tab"
+          rvs-line-attr.attr-value = v-izm-temps-tab
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = v-izm-temps-tab .
+      end.
+      
+    if dens_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
     then do :
 /*      tt-rvs-line.state-temperature = v-out-temp .                   */
 /*      display tt-rvs-line.state-temperature with frame Dialog-Frame .*/
@@ -2702,6 +2763,7 @@ DO:
         rvs-line-attr.attr-value = v-izm-temps .
       end.
     end .
+    end.
   end .                              
 END.
 
@@ -3626,6 +3688,10 @@ if ptrlprop-calc-free-vol then do:
     if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1
     then
       next sect_ .
+    if v-sec-num <> ""
+    and v-sec-num <> infoSectionsTotal:InfoSectionCurr:SectionName
+    then
+      next sect_ .
     
     if infoSectionsTotal:InfoSectionCurr:DocVolume > 0
     then do :
@@ -3646,31 +3712,32 @@ if ptrlprop-calc-free-vol then do:
           and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
           and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
           and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
-          and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-        if available buf_doc-pl-attr then
-        do :
-          buf_doc-pl-attr.attr-value = string(no)  .
-        end.
-        else
-        do :
-          create buf_doc-pl-attr.
-          assign
-            buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
-            buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
-            buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
-            buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
-            buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
-            buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-            buf_doc-pl-attr.attr-value = string(no)
-            .
-        end.
-      end .
-      else 
+          and buf_doc-pl-attr.attr-code = "free-vol-exceed"
+      no-error.
+      if available buf_doc-pl-attr then
       do :
-        run ref/message_volue.w(input string(round(v-doc-volume, 0)),
-          input buf_place.loc1,
-          input string(round(v-free-vol, 0)),
-          input true) no-error .
+        buf_doc-pl-attr.attr-value = string(no)  .
+      end.
+      else
+      do :
+        create buf_doc-pl-attr.
+        assign
+          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+          buf_doc-pl-attr.attr-value = string(no)
+          .
+      end.
+    end .
+    else 
+    do :
+      run ref/message_volue.w(input string(round(v-doc-volume, 0)),
+        input buf_place.loc1,
+        input string(round(v-free-vol, 0)),
+        input true) no-error .
 /*        message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))                                                                 */
 /*          "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "                                                                */
 /*          string(round(v-free-vol, 0)) "л." skip                                                                                                       */
@@ -3678,33 +3745,33 @@ if ptrlprop-calc-free-vol then do:
 /*          " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения. Если данные корректны, прием запрещен!" skip*/
 /*          "ВНИМАНИЕ!!! Прием невозможен, недостаточно свободного объема резервуара!!!"                                                                 */
 /*          view-as alert-box .                                                                                                                          */
-        find first buf_doc-pl-attr exclusive-lock
-          where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
-          and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
-          and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
-          and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
-          and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
-          and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-        if available buf_doc-pl-attr then
-        do :
-          buf_doc-pl-attr.attr-value = string(yes)  .
-        end.
-        else
-        do :
-          create buf_doc-pl-attr.
-          assign
-            buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
-            buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
-            buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
-            buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
-            buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
-            buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-            buf_doc-pl-attr.attr-value = string(yes)
-            .
-        end.       
-      end .
-    end .                            
-  end .
+      find first buf_doc-pl-attr exclusive-lock
+        where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+        and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+        and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+        and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+        and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+        and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+      if available buf_doc-pl-attr then
+      do :
+        buf_doc-pl-attr.attr-value = string(yes)  .
+      end.
+      else
+      do :
+        create buf_doc-pl-attr.
+        assign
+          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+          buf_doc-pl-attr.attr-value = string(yes)
+          .
+      end.       
+    end .
+  end .                            
+end .
 end.
   if buf_rvs-doc.rvs-type = {&rvs-after-doc} then 
   do:
@@ -5590,12 +5657,74 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   
   define variable sr-type-temp as integer no-undo .
+  define variable sr-type-temp-tab as integer no-undo .
   define variable sr-type-dens as integer no-undo .
   define variable v-izm-temps-attr as character no-undo .
+  define variable v-izm-temps-tab-attr as character no-undo .  
   define variable v-izm-denses-attr as character no-undo .
   define variable it as integer no-undo .
   define variable id as integer no-undo .
   define variable ikey as integer no-undo .
+
+  find first rvs-line-attr no-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "izm-temps-tab" no-error.
+  if available rvs-line-attr then do :
+    sr-type-temp-tab = integer(entry(1, rvs-line-attr.attr-value, ";")) no-error .
+    v-izm-temps-tab-attr = entry(2, rvs-line-attr.attr-value, ";") no-error .
+  end . 
+  case sr-type-temp-tab :
+    when 0
+    then do :
+      ikey = num-entries(v-izm-temps-tab-attr) .
+      do it = 1 to num-entries(v-izm-temps-tab-attr) :
+        find first tt-temps-tab no-lock where tt-temps-tab.ii = ikey no-error .
+        if not available tt-temps-tab
+        then do :
+          create tt-temps-tab .
+          assign
+            tt-temps-tab.ii = ikey
+            tt-temps-tab.key_ = "t" + string(ikey)
+            tt-temps-tab.temperature = decimal(entry(it, v-izm-temps-tab-attr))
+          .
+        end .
+        ikey = ikey - 1 .
+      end .
+    end .
+    when 1
+    then do :
+      do it = 1 to num-entries(v-izm-temps-tab-attr) :
+        find first tt-temps-tab no-lock where tt-temps-tab.ii = it no-error .
+        if not available tt-temps-tab
+        then do :
+          if place-type = 1
+          and it = 3
+          then do :
+            tt-temps-tab.key_ = "tср" no-error .
+          end .
+          create tt-temps-tab .
+          assign
+            tt-temps-tab.ii = it
+            tt-temps-tab.temperature = decimal(entry(it, v-izm-temps-tab-attr))
+          .
+          case it :
+            when 1 then tt-temps-tab.key_ = "tн" .
+            when 2 then tt-temps-tab.key_ = "tср" .
+            when 3 then tt-temps-tab.key_ = "tв" .
+          end case .
+          if place-type = 1
+          and it = 2
+          then do :
+            tt-temps-tab.key_ = "tв" no-error .
+          end .
+        end .
+      end .
+    end .
+  end case . 
 
   find first rvs-line-attr no-lock
            where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
@@ -5608,7 +5737,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     sr-type-temp = integer(entry(1, rvs-line-attr.attr-value, ";")) no-error .
     v-izm-temps-attr = entry(2, rvs-line-attr.attr-value, ";") no-error .
   end .  
-  
+ 
   find first rvs-line-attr no-lock
            where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
              and rvs-line-attr.obj-type  = tt-rvs-line.obj-type

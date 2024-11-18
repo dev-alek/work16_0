@@ -23,7 +23,8 @@ Creation date: 12/23/05
                       input-output table {5} ,       /* tt-pump-nozzle-file */
                       input-output table {6} ,       /* tt-pump-nozzle      */
                       input              {7} ,       /* read-cur            */
-                      input              {8} ) {9} . /* message-on          */
+                      input              {8} ,       /* message-on          */
+                      input              {9}) {10} . /* no-waitfram         */
 
 /* $Workfile$   E n d */
 

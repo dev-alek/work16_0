@@ -614,6 +614,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               yes
               varcur-rvs
               yes
+              no
               tt-meas-file
               tt-meas
               no-error
