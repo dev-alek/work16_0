@@ -284,26 +284,26 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     /*найдем schedule*/
     case entry(1, p-uniq-key-rec, {&delim-key}):
       when {&table_schedule} then do:
-    find first buf_schedule no-lock where
-              rowid(buf_schedule) = v-tbl-row no-error.
-    /*првоерим нужно ли запускать паровоз*/
-    if not available buf_schedule
-    and g#db-num = 0
-    then do:
-      v-run-parovoz = yes.
-    end.
-    else do:
-    if g#db-num = 0 then do:
-      if buf_schedule.cre-db-num = g#news-source-db
-      then do:
-        /*нолвости пришли из той бд где помен€ли настройки*/
-        v-run-parovoz = yes.
-      end.
-      else do:
-        v-run-parovoz = no.
-      end.
-    end. /*if g#db-num = 0 then do:*/
-    end.
+        find first buf_schedule no-lock where
+                  rowid(buf_schedule) = v-tbl-row no-error.
+        /*првоерим нужно ли запускать паровоз*/
+        if not available buf_schedule
+        and g#db-num = 0
+        then do:
+          v-run-parovoz = no.   /* ”бран паровоз как засор€ющий эфир*/
+        end.
+        else do:
+          if g#db-num = 0 then do:
+            if buf_schedule.cre-db-num = g#news-source-db
+            then do:
+              /*нолвости пришли из той бд где помен€ли настройки*/
+              v-run-parovoz = no.  /* ”бран паровоз как засор€ющий эфир*/
+            end.
+            else do:
+              v-run-parovoz = no.
+            end.
+          end. /*if g#db-num = 0 then do:*/
+        end.
       end.
       when {&table_thbj-attr} then do:
         find first buf_thbj-attr no-lock where
@@ -357,8 +357,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
         for each buf_db no-lock:
           if buf_db.db-num = 0 then next.
           if g#news
-          and buf_db.db-num = g#news-source-db
-          and p-uniq-key-rec begins {&table_schedule}
+           and buf_db.db-num = g#news-source-db 
           then next.
           assign
           v-db-list = v-db-list + {&delim-nws} + string(buf_db.db-num).
