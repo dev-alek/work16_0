@@ -14,149 +14,169 @@ Modified: Belova Marina 25/10/2023
 
 */
 
-using Progress.Lang.*.
-using ibs.th.skt.Commands.*.
-using ibs.th.skt.ControlledClients.marking.sts.cash.
-using ibs.th.skt.Adapters.LogWrite.
-using ibs.th.gbl.propmap.
-using ibs.th.gbl.sys.objsrv.
-using ibs.th.gbl.sys.objth.
+USING Progress.Lang.*.
+USING ibs.th.skt.Commands.*.
+USING ibs.th.skt.ControlledClients.marking.sts.cash.
+USING ibs.th.skt.Adapters.LogWrite.
+USING ibs.th.gbl.propmap.
+USING ibs.th.gbl.sys.objsrv.
+USING ibs.th.gbl.sys.objth.
 /*using ibs.th.skt.ControlledClients.GisMtCDN.*/
 
 
-class ibs.th.skt.ControlledClients.marking inherits ICommandProc: 
-  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
-  define override public property vss-author      as character no-undo init "$Author:$":U get.
-  define override public property vss-date        as character no-undo init "$Date:$":U get.
-  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
-  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
-  define override public property vss-description as character no-undo init "Обработчик запросов по маркам с кассы" get.
+CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc: 
+  DEFINE OVERRIDE PUBLIC PROPERTY vss-revision    AS CHARACTER NO-UNDO INIT "$Revision:$":U GET .
+  DEFINE OVERRIDE PUBLIC PROPERTY vss-author      AS CHARACTER NO-UNDO INIT "$Author:$":U GET.
+  DEFINE OVERRIDE PUBLIC PROPERTY vss-date        AS CHARACTER NO-UNDO INIT "$Date:$":U GET.
+  DEFINE OVERRIDE PUBLIC PROPERTY vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile:$":U GET.
+  DEFINE OVERRIDE PUBLIC PROPERTY vss-archive     AS CHARACTER NO-UNDO INIT "$Archive:$":U GET.
+  DEFINE OVERRIDE PUBLIC PROPERTY vss-description AS CHARACTER NO-UNDO INIT "Обработчик запросов по маркам с кассы" GET.
 
   {cmp\str-glbl.i class}
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10)  + chr(13) + chr(10)  
-  define private variable cashSts    as class cash     no-undo.
-  define private variable answerFlag as logical        no-undo init false.
-  define private variable thMarkSts  as class ibs.th.str.marking.sts.mark no-undo.
-  define private variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+  DEFINE PRIVATE VARIABLE cashSts    AS CLASS cash     NO-UNDO.
+  DEFINE PRIVATE VARIABLE answerFlag AS LOGICAL        NO-UNDO INIT FALSE.
+  DEFINE PRIVATE VARIABLE thMarkSts  AS CLASS ibs.th.str.marking.sts.mark NO-UNDO.
+  DEFINE PRIVATE VARIABLE EDOParSec AS CLASS ibs.th.gbl.env.prmtrs.edo .
   /*define private variable thGisMtCdn as class GisMtCDN no-undo .*/
-  define variable mAsyncHelper as class ibs.th.file.AsyncHelperth  no-undo.
+  DEFINE VARIABLE mAsyncHelper AS CLASS ibs.th.file.AsyncHelperth  NO-UNDO.
 
-  define private variable cash      as character no-undo.
-  define private variable shift_id  as character no-undo.
-  define private variable chk_id    as character no-undo.
-  define private variable cntx_id   as character no-undo.
-  define private variable mark      as character no-undo.
-  define private variable action    as character no-undo.
-  define private variable shift_tbeg as date no-undo.
-  define private variable shift_num  as integer no-undo.
+  DEFINE PRIVATE VARIABLE cash      AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE shift_id  AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE chk_id    AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE cntx_id   AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE mark      AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE action    AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE shift_tbeg AS DATE NO-UNDO.
+  DEFINE PRIVATE VARIABLE shift_num  AS INTEGER NO-UNDO.
   
-  define private variable mMarkOrig     as character no-undo.
-  define private variable mCheckSts     as integer   no-undo.
-  define private variable mReqId        as character no-undo. 
-  define private variable mReqTimestamp as character no-undo.
+  DEFINE PRIVATE VARIABLE mMarkOrig     AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE mCheckSts     AS INTEGER   NO-UNDO.
+  DEFINE PRIVATE VARIABLE mReqId        AS CHARACTER NO-UNDO. 
+  DEFINE PRIVATE VARIABLE mReqTimestamp AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE mCheckGisMT    AS INTEGER NO-UNDO. /* 0 - проверки не было, 1 - проверка была, 2 - аварийная ситуация */
     
-  def stream out_s.
-  def stream out_data.
+  DEF STREAM out_s.
+  DEF STREAM out_data.
   
-  define temp-table ttmark-body no-undo    
-     xml-node-name "body"
-     field code            as int
-     field error-1         as char XML-NODE-NAME "error"
-     field requestid       as char
-     field status-1        as char XML-NODE-NAME "status"
-     field reqid           as char
-     field reqtimestamp    as int64
-     field timestamp       as char
+  DEFINE TEMP-TABLE ttmark-body NO-UNDO    
+     XML-NODE-NAME "body"
+     FIELD code            AS INT
+     FIELD error-1         AS CHAR XML-NODE-NAME "error"
+     FIELD requestid       AS CHAR
+     FIELD status-1        AS CHAR XML-NODE-NAME "status"
+     FIELD reqid           AS CHAR
+     FIELD reqtimestamp    AS INT64
+     FIELD timestamp       AS CHAR
      .
-  define temp-table ttmark-check no-undo    
-     xml-node-name "codes"
-     field cis             as char
-     field printView       as char
-     field gtin            as char
-     field verified        as logical
-     field found           as logical
-     field realizable      as logical
-     field utilised        as logical 
-     field isBlocked       as logical 
-     field productionDate  as char
-     field isOwner         as logical 
-     field errorCode       as int 
-     field isTracking      as logical 
-     field sold            as logical
-     field packageType     as char
-     field producerInn     as char
-     field grayZone        as logical
-     field mrp             as int
-     field expireDate      as datetime-tz
+  DEFINE TEMP-TABLE ttmark-check NO-UNDO    
+     XML-NODE-NAME "codes"
+     FIELD cis             AS CHAR
+     FIELD printView       AS CHAR
+     FIELD gtin            AS CHAR
+     FIELD verified        AS LOGICAL
+     FIELD found           AS LOGICAL
+     FIELD realizable      AS LOGICAL
+     FIELD utilised        AS LOGICAL 
+     FIELD isBlocked       AS LOGICAL 
+     FIELD productionDate  AS CHAR
+     FIELD isOwner         AS LOGICAL 
+     FIELD errorCode       AS INT 
+     FIELD isTracking      AS LOGICAL 
+     FIELD sold            AS LOGICAL
+     FIELD packageType     AS CHAR
+     FIELD producerInn     AS CHAR
+     FIELD grayZone        AS LOGICAL
+     FIELD mrp             AS INT
+     FIELD expireDate      AS DATETIME-TZ
      .
   /* таблица имен временных файлов, которые нужно почистить */
-  define temp-table tt-file-name no-undo
-     field tmpFileName as char
-     index tmpFileName tmpFileName.
+  DEFINE TEMP-TABLE tt-file-name NO-UNDO
+     FIELD tmpFileName AS CHAR
+     FIELD ofline AS LOG INIT NO
+     INDEX tmpFileName tmpFileName
+     INDEX ofline ofline.
      
-  define dataset gismt-mark-body  xml-node-name "bodys" for ttmark-body.
-  define dataset gismt-mark-codes xml-node-name "body"  for ttmark-check.
+  /* ответ от ЛМ ЧЗ */   
+  DEFINE TEMP-TABLE ttlocal-mark  NO-UNDO SERIALIZE-NAME  "bodys"    
+    FIELD id AS CHAR SERIALIZE-NAME "_id"
+    FIELD ts AS INT64
+    FIELD sc AS LOG
+    FIELD inst AS CHAR 
+    FIELD e AS LOG
+    FIELD c AS CHAR 
+    FIELD bs AS LOG
+    FIELD be AS LOG
+    FIELD bc AS LOG
+    FIELD reason AS CHAR 
+    FIELD errorCode AS INT64
+    .
+         
+  DEFINE DATASET gismt-mark-body  XML-NODE-NAME "bodys" FOR ttmark-body.
+  DEFINE DATASET gismt-mark-codes XML-NODE-NAME "body"  FOR ttmark-check.
+  DEFINE DATASET gismt-check-mark SERIALIZE-HIDDEN  FOR ttlocal-mark .
 
-  define public property SomeStr as longchar no-undo /* сюда писать если что-то отправить*/
-    get.
-    set.
+  DEFINE PUBLIC PROPERTY SomeStr AS LONGCHAR NO-UNDO /* сюда писать если что-то отправить*/
+    GET.
+    SET.
 
   {utl/gtin.i class}
   { utl/search.i  class }
   { ibs/th/skt/controlledclients/gismtprop.i def}
 
-  constructor public marking (  ):
-    super ().    
+  CONSTRUCTOR PUBLIC marking (  ):
+    SUPER ().    
     
     /* определяем настройки подключения к ГИС МТ */
-    define buffer buf_sys-ctrl for ub.sys-ctrl .
-    define variable vRetProp as character no-undo.
-    define variable vCdnAdr as character no-undo.
+    DEFINE BUFFER buf_sys-ctrl FOR ub.sys-ctrl .
+    DEFINE VARIABLE vRetProp AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vCdnAdr AS CHARACTER NO-UNDO.
     
-    find first buf_sys-ctrl no-lock no-error.
-    if available buf_sys-ctrl and buf_sys-ctrl.db-num <> 0 
-    then do:
-       dbgPrint("marking.log", substitute("База &1 номер: &2", "{&db}", buf_sys-ctrl.db-num)).
+    FIND FIRST buf_sys-ctrl NO-LOCK NO-ERROR.
+    IF AVAILABLE buf_sys-ctrl AND buf_sys-ctrl.db-num <> 0 
+    THEN DO:
+       dbgPrint("marking.log", SUBSTITUTE("База &1 номер: &2", "{&db}", buf_sys-ctrl.db-num)).
        vRetProp = get-gismt-prop ({&db},
-                                  buf_sys-ctrl.db-num) no-error.                            
-    end.
-    else do:
+                                  buf_sys-ctrl.db-num) NO-ERROR.                            
+    END.
+    ELSE DO:
        dbgPrint("marking.log", "Не определена БД").
-    end.
-    cashSts =  new cash().
-  end.
+    END.
+    cashSts =  NEW cash().
+  END.
 
-  method public void hndler (req as class ibs.th.skt.Commands.iRequest):
-    define variable vLC       as longchar  no-undo.
-    define variable ii        as integer   no-undo.
-    define variable n         as integer   no-undo.
-    define variable mark-short as character no-undo.
-    define variable par       as character no-undo.
-    define variable val       as character no-undo.
-    define variable km        as character no-undo.
+  METHOD PUBLIC VOID hndler (req AS CLASS ibs.th.skt.Commands.iRequest):
+    DEFINE VARIABLE vLC       AS LONGCHAR  NO-UNDO.
+    DEFINE VARIABLE ii        AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE n         AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE mark-short AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE par       AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE val       AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE km        AS CHARACTER NO-UNDO.
 
-    define buffer buf_marking for ub.marking.
-    define buffer buf_marking-l for ub.marking-lines.
+    DEFINE BUFFER buf_marking FOR ub.marking.
+    DEFINE BUFFER buf_marking-l FOR ub.marking-lines.
 
-    define variable newSts    as integer   no-undo.
-    define variable obj-code  as integer no-undo. 
-    define variable gdsCode   as integer no-undo. 
-    define variable canSaleReturnedGoods as logical no-undo init false.
+    DEFINE VARIABLE newSts    AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE obj-code  AS INTEGER NO-UNDO. 
+    DEFINE VARIABLE gdsCode   AS INTEGER NO-UNDO. 
+    DEFINE VARIABLE canSaleReturnedGoods AS LOGICAL NO-UNDO INIT FALSE.
     
-    define variable listActions           as character no-undo.
-    define variable listActionsByMark     as character no-undo.
-    define variable listActionsUnlock     as character no-undo.
-    define variable listStatusesForSale   as character no-undo.
-    define variable listStatusesForSaleWithReturn as character no-undo.
-    define variable listStatusesForReturn as character no-undo.    
-    define variable vAccMarkCheck as character no-undo. 
+    DEFINE VARIABLE listActions           AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE listActionsByMark     AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE listActionsUnlock     AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE listStatusesForSale   AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE listStatusesForSaleWithReturn AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE listStatusesForReturn AS CHARACTER NO-UNDO.    
+    DEFINE VARIABLE vAccMarkCheck AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vAccMarkCheckOff AS CHARACTER NO-UNDO.  
 
-    assign
+    ASSIGN
       mCheckSts = 1
       mReqId        = ""
       mReqTimeStamp = ""
-      answerFlag = false
+      answerFlag = FALSE
       cash       = ""      
       shift_id   = ""
       chk_id     = ""
@@ -173,16 +193,16 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
 
     fix-codepage(vLC) = "UTF-8".
 
-    LogWrite:LogStr = substitute("Авторизация маркированной продукции &1",
+    LogWrite:LogStr = SUBSTITUTE("Авторизация маркированной продукции &1",
       req:QueryPar).
 
-    assign
-      listActionsByMark = substitute("&1,&2", 
+    ASSIGN
+      listActionsByMark = SUBSTITUTE("&1,&2", 
         cashSts:SaleLock:NameProp, 
         cashSts:ReturnLock:NameProp 
       )
       listActionsUnlock = cashSts:Unlock:NameProp
-      listActions = substitute("&1,&2,&3,&4", 
+      listActions = SUBSTITUTE("&1,&2,&3,&4", 
         listActionsByMark, 
         listActionsUnlock,
         cashSts:UnlockAll:NameProp,
@@ -190,7 +210,7 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
       )
     .
 
-    n = num-entries (req:QueryPar, "&").
+    n = NUM-ENTRIES (req:QueryPar, "&").
 /*    if n ne 4 and n ne 3                                                         */
 /*      then                                                                       */
 /*    do:                                                                          */
@@ -198,451 +218,461 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
 /*      sendContent(vLC).                                                          */
 /*      return.                                                                    */
 /*    end.                                                                         */
-    do ii = 1 to n:
-      assign
-        par = entry (1, entry (ii, req:QueryPar, "&"), "=")
-        val = entry (2, entry (ii, req:QueryPar, "&"), "=")
+    DO ii = 1 TO n:
+      ASSIGN
+        par = ENTRY (1, ENTRY (ii, req:QueryPar, "&"), "=")
+        val = ENTRY (2, ENTRY (ii, req:QueryPar, "&"), "=")
     no-error.
-      if error-status:error
-        then 
-      do:
-        vLC = chr(123) + '"server_error":"Неверные параметры запроса."' + chr(125).
+      IF ERROR-STATUS:ERROR
+        THEN 
+      DO:
+        vLC = CHR(123) + '"server_error":"Неверные параметры запроса."' + chr(125).
         sendContent(vLC).
-        return.        
-      end.
-      case par:
-        when "cash" then 
-          do:
+        RETURN.        
+      END.
+      CASE par:
+        WHEN "cash" THEN 
+          DO:
             cash = val.
-          end.
-        when "shift_id" then 
-          do:
+          END.
+        WHEN "shift_id" THEN 
+          DO:
             shift_id = val.
-          end.
-        when "check" then 
-          do:
+          END.
+        WHEN "check" THEN 
+          DO:
             chk_id = val.
-          end.
-        when "mark" then 
-          do:
+          END.
+        WHEN "mark" THEN 
+          DO:
             mMarkOrig = val.
             mark = percentDecoding (val).
-          end.
-        when "context" then 
-          do:
+          END.
+        WHEN "context" THEN 
+          DO:
             cntx_id = val.
-          end.
-        when "set" then 
-          do:
-            if lookup (val,listActions) = 0
-              then 
-            do:
-              vLC = chr(123) + substitute('"server_error":"Неверный тип &1 параметра set."', val) + chr(125).
+          END.
+        WHEN "set" THEN 
+          DO:
+            IF LOOKUP (val,listActions) = 0
+              THEN 
+            DO:
+              vLC = CHR(123) + substitute('"server_error":"Неверный тип &1 параметра set."', val) + chr(125).
               sendContent(vLC).
-              return.
-            end. 
+              RETURN.
+            END. 
             action = val.
-          end.
-        when "shift_tbeg" then 
-          do:
-            shift_tbeg = date (integer (substring (val, 03, 2)), integer (substring (val, 01, 2)), integer (substring (val, 05, 4))) no-error.
-          end.
-        when "shift_num" then 
-          do:
-            shift_num = int (val) no-error.
-          end.
-      end case.
-    end.
-    if cash = "" or action = ""
-      then 
-    do:
-      vLC = chr(123) + substitute('"server_error":"Неверные параметры запроса."') + chr(125).
+          END.
+        WHEN "shift_tbeg" THEN 
+          DO:
+            shift_tbeg = DATE (INTEGER (SUBSTRING (val, 03, 2)), INTEGER (SUBSTRING (val, 01, 2)), INTEGER (SUBSTRING (val, 05, 4))) NO-ERROR.
+          END.
+        WHEN "shift_num" THEN 
+          DO:
+            shift_num = int (val) NO-ERROR.
+          END.
+      END CASE.
+    END.
+    IF cash = "" OR action = ""
+      THEN 
+    DO:
+      vLC = CHR(123) + substitute('"server_error":"Неверные параметры запроса."') + chr(125).
       sendContent(vLC).
-      return.
-    end.
+      RETURN.
+    END.
 
     /* получаем по номеру кассы номер магазина */
     /* TODO: обработать привязку к разным магазинам касс с одинаковым номером */
-    obj-code = getObject(integer(cash)).
-    if obj-code = ? then
-    do:
-      vLC = chr(123) + substitute('"server_error":"Не удалось определить магазин по кассе &1."', cash) + chr(125).
+    obj-code = getObject(INTEGER(cash)).
+    IF obj-code = ? THEN
+    DO:
+      vLC = CHR(123) + substitute('"server_error":"Не удалось определить магазин по кассе &1."', cash) + chr(125).
       sendContent(vLC).
-      return.
-    end.
+      RETURN.
+    END.
     EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO({&shop}, obj-code).
 
-    case true:
-      when can-do(listActionsByMark,action) or (can-do(listActionsUnlock,action) and mark <> "") then 
-      do:            /* действие по марке */
-        if mark = "" then do:
-          vLC = chr(123) + substitute('"server_error":"Неверные параметры запроса. Не заполнен mark."') + chr(125).
+    CASE TRUE:
+      WHEN CAN-DO(listActionsByMark,action) OR (CAN-DO(listActionsUnlock,action) AND mark <> "") THEN 
+      DO:            /* действие по марке */
+        IF mark = "" THEN DO:
+          vLC = CHR(123) + substitute('"server_error":"Неверные параметры запроса. Не заполнен mark."') + chr(125).
           sendContent(vLC).
-          return.
-        end.
+          RETURN.
+        END.
   
         mark-short = GetCodeIdent(mark).
-        if mark-short = "" or mark-short = ? then do:
-          vLC = chr(123) + substitute('"server_error":"Неверные параметры запроса. Некорректный код марки."') + chr(125).
+        IF mark-short = "" OR mark-short = ? THEN DO:
+          vLC = CHR(123) + substitute('"server_error":"Неверные параметры запроса. Некорректный код марки."') + chr(125).
           sendContent(vLC).
-          return.
-        end.
+          RETURN.
+        END.
         
-        if action = cashSts:SaleLock:NameProp then 
-        do:
-           vAccMarkCheck = ChekAccessMark({&shop},obj-code,mark,mark-short).
-           dbgPrint("marking.log", substitute("Проверка ГИС МТ: &1 Статус: &2 mReqId &3 mReqTimeStamp &4", 
+        IF action = cashSts:SaleLock:NameProp THEN 
+        DO:
+           mCheckGisMT    = 0. 
+           vAccMarkCheck = ChekAccessMark({&shop},obj-code,mark,mark-short).           
+           dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ: &1 Статус: &2 mReqId &3 mReqTimeStamp &4 mCheckGisMT &5", 
                                               vAccMarkCheck, 
                                               mCheckSts,
                                               mReqId,
-                                              mReqTimeStamp)).
-           if mCheckSts = 0 or 
+                                              mReqTimeStamp,
+                                              mCheckGisMT)).
+           IF mCheckSts = 0 OR 
               mCheckSts = 3 /* faund = false */
-           then do:
+           THEN DO:
               vAccMarkCheck = vAccMarkCheck + "Снимите с продажи и передайте товар управляющему/старшему смены".
               /* если марки нет в ГИС МТ, то не сохраняем ее, а сразу выходим */
-              if mCheckSts = 3 then do:
+              IF mCheckSts = 3 THEN DO:
                  vLC = getJson(0, vAccMarkCheck, mark).
                  sendContent(vLC).
-                 return.
-              end.   
-           end.
+                 RETURN.
+              END.   
+           END.
            /* Если прошло более 72ч с момента аварии ГИС МТ */
-           if mCheckSts = 4 then do:
+           IF mCheckSts = 4 THEN DO:
               vLC = getJson(0, vAccMarkCheck, mark).
               sendContent(vLC).
-              return.
-           end.     
-        end.
+              RETURN.
+           END.     
+           /* если марку не удалось проверить онлайн */
+           IF (mCheckSts = 2 AND mCheckGisMT <> 1) OR mCheckGisMT = 2 THEN DO:
+              vAccMarkCheckOff = ChekLocalMark(mark-short).
+              if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" then 
+              vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
+              else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
+              
+           END.                 
+        END.
   
-        find first buf_marking exclusive-lock where buf_marking.mark begins mark-short no-wait no-error.
-        if not available (buf_marking) then 
-        do:      /* марка не найдена в БД TH */
-          if locked buf_marking then do:
+        FIND FIRST buf_marking EXCLUSIVE-LOCK WHERE buf_marking.mark BEGINS mark-short NO-WAIT NO-ERROR.
+        IF NOT AVAILABLE (buf_marking) THEN 
+        DO:      /* марка не найдена в БД TH */
+          IF LOCKED buf_marking THEN DO:
              vLC = getJson(0, "С маркой " + mark-short + " уже работают. ", mark).
              sendContent(vLC).
-             return.
-          end.   
-          case action:
-            when cashSts:SaleLock:NameProp then
-            do:
+             RETURN.
+          END.   
+          CASE action:
+            WHEN cashSts:SaleLock:NameProp THEN
+            DO:
               createMark(mark-short, buffer buf_marking).
               /* если марка не прошла проверку в ГИС МТ, то ее создаем, но продавать нельзя */
-              if mCheckSts = 0 then do:
+              IF mCheckSts = 0 THEN DO:
                  vLC = getJson(0, vAccMarkCheck, mark).
                  sendContent(vLC).
-                 return.
-              end. 
-              if available buf_marking then 
-                answerFlag = true.
+                 RETURN.
+              END. 
+              IF AVAILABLE buf_marking THEN 
+                answerFlag = TRUE.
               vLC = setMarkStatus (
                 thMarkSts:SaleWaitLock:KeyIntDB, 
                 "cash:" +  cash + ":" + "context:" + cntx_id,
-                if mCheckSts = 2 then vAccMarkCheck else cashSts:SaleLock:Label_,
+                IF mCheckSts = 2 THEN vAccMarkCheck ELSE cashSts:SaleLock:Label_,
                 cashSts:NotAccessible:Label_,
                 buffer buf_marking).
-            end.
-            when cashSts:ReturnLock:NameProp then 
-            do:
+            END.
+            WHEN cashSts:ReturnLock:NameProp THEN 
+            DO:
               createMark(mark-short, buffer buf_marking).
-              if available buf_marking then 
-                answerFlag = true.
+              IF AVAILABLE buf_marking THEN 
+                answerFlag = TRUE.
               vLC = setMarkStatus (
                 thMarkSts:ReturnWaitLock:KeyIntDB, 
                 "cash:" +  cash + ":" + "context:" + cntx_id,
                 cashSts:ReturnLock:Label_,
                 cashSts:NotAccessibleRet:Label_,
                 buffer buf_marking).
-            end.
-            otherwise 
-            do:
+            END.
+            OTHERWISE 
+            DO:
               vLC = getJson(0, "Операция невозможна. Марка не найдена.", mark).
-            end.
-          end case.
-        end.
-        else 
-        do:      /* марка найдена */
-          if action = cashSts:SaleLock:NameProp and 
+            END.
+          END CASE.
+        END.
+        ELSE 
+        DO:      /* марка найдена */
+          IF action = cashSts:SaleLock:NameProp AND 
              mCheckSts = 0 
-          then do:
+          THEN DO:
                  vLC = getJson(0, vAccMarkCheck, mark).
                  sendContent(vLC).
-                 return.
-          end. 
+                 RETURN.
+          END. 
               
-          if (action = cashSts:SaleLock:NameProp or action = cashSts:ReturnLock:NameProp) 
-             and (buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB or buf_marking.sts = thMarkSts:ReturnWaitLock:KeyIntDB)
-             and buf_marking.loc-key begins "cash"
-          then do:
+          IF (action = cashSts:SaleLock:NameProp OR action = cashSts:ReturnLock:NameProp) 
+             AND (buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB OR buf_marking.sts = thMarkSts:ReturnWaitLock:KeyIntDB)
+             AND buf_marking.loc-key BEGINS "cash"
+          THEN DO:
             /* марка уже заблокирована для продажи или возврата */
-            vLC = getJson(0, substitute (
+            vLC = getJson(0, SUBSTITUTE (
               "Операция невозможна. Статус марки - &1 на кассе &2", 
               thMarkSts:GetLabel(buf_marking.sts), 
-              trim(entry(2, buf_marking.loc-key, ":"))), 
+              TRIM(ENTRY(2, buf_marking.loc-key, ":"))), 
               mark
             ).
             sendContent(vLC).
-            return.
-          end.
+            RETURN.
+          END.
 
           /* получаем тип марки и определяем значение параметра «Разрешена продажа возвращенных товаров» по типу */
           ChekTypeMarkByDm(mark).
-          if mTypeMark <> "" then
+          IF mTypeMark <> "" THEN
             canSaleReturnedGoods = EDOParSec:GetIsSaleReturnForType(mTypeMark).
   
-          assign
-            listStatusesForSale = substitute("&1,&2",thMarkSts:Checked_:KeyIntDB,thMarkSts:FreeZone:KeyIntDB)
-            listStatusesForSaleWithReturn = substitute("&1,&2",listStatusesForSale,thMarkSts:ReturnLock:KeyIntDB)
-            listStatusesForReturn = substitute("&1,&2",listStatusesForSale,thMarkSts:SaleLock:KeyIntDB)
+          ASSIGN
+            listStatusesForSale = SUBSTITUTE("&1,&2",thMarkSts:Checked_:KeyIntDB,thMarkSts:FreeZone:KeyIntDB)
+            listStatusesForSaleWithReturn = SUBSTITUTE("&1,&2",listStatusesForSale,thMarkSts:ReturnLock:KeyIntDB)
+            listStatusesForReturn = SUBSTITUTE("&1,&2",listStatusesForSale,thMarkSts:SaleLock:KeyIntDB)
           .
   
-          case action:
-            when cashSts:SaleLock:NameProp then 
-            do:
-              if can-do(
-                if canSaleReturnedGoods then listStatusesForSaleWithReturn else listStatusesForSale, 
-                string(buf_marking.sts) 
-              ) then 
-              do:
-                answerFlag = true.
-              end.
+          CASE action:
+            WHEN cashSts:SaleLock:NameProp THEN 
+            DO:
+              IF CAN-DO(
+                IF canSaleReturnedGoods THEN listStatusesForSaleWithReturn ELSE listStatusesForSale, 
+                STRING(buf_marking.sts) 
+              ) THEN 
+              DO:
+                answerFlag = TRUE.
+              END.
               vLC = setMarkStatus (
                 thMarkSts:SaleWaitLock:KeyIntDB, 
                 "cash:" +  cash + ":" + "context:" + cntx_id,
-                if mCheckSts = 2 then vAccMarkCheck else cashSts:SaleLock:Label_,
-                substitute ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_),
+                IF mCheckSts = 2 THEN vAccMarkCheck ELSE cashSts:SaleLock:Label_,
+                SUBSTITUTE ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_),
                 buffer buf_marking).
-            end.
-            when cashSts:ReturnLock:NameProp then 
-            do: 
-              if can-do(listStatusesForReturn, string(buf_marking.sts)) then 
-              do:
-                answerFlag = true.
-              end.
+            END.
+            WHEN cashSts:ReturnLock:NameProp THEN 
+            DO: 
+              IF CAN-DO(listStatusesForReturn, STRING(buf_marking.sts)) THEN 
+              DO:
+                answerFlag = TRUE.
+              END.
               vLC = setMarkStatus (
                 thMarkSts:ReturnWaitLock:KeyIntDB, 
                 "cash:" +  cash + ":" + "context:" + cntx_id,
                 cashSts:ReturnLock:Label_,
-                substitute ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_),
+                SUBSTITUTE ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_),
                 buffer buf_marking).
-            end.
-            when cashSts:Unlock:NameProp then 
-            do:
-              if buf_marking.loc-key = "" or buf_marking.loc-key begins "cash:" + cash
-              then do:
-                answerFlag = true.
+            END.
+            WHEN cashSts:Unlock:NameProp THEN 
+            DO:
+              IF buf_marking.loc-key = "" OR buf_marking.loc-key BEGINS "cash:" + cash
+              THEN DO:
+                answerFlag = TRUE.
                 vLC = setMarkStatus (
-                  if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:FreeZone:KeyIntDB else thMarkSts:SaleLock:KeyIntDB,
+                  IF buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB THEN thMarkSts:FreeZone:KeyIntDB ELSE thMarkSts:SaleLock:KeyIntDB,
                   "",
                   cashSts:Unlock:Label_,
-                  substitute ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_),
+                  SUBSTITUTE ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_),
                   buffer buf_marking).
-              end.
-              else do:
-                vLC = getJson(0, substitute ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_), mark).
-              end.
-            end.
-          end case.
-        end.             /* марка найдена */
-      end.
-      when can-do(listActionsUnlock,action) and mark = "" then
-      do:
-        answerFlag = true.
-        if cntx_id = "" then
+              END.
+              ELSE DO:
+                vLC = getJson(0, SUBSTITUTE ("Операция невозможна. Статус марки - &1.", thMarkSts:GetProp(buf_marking.sts):Label_), mark).
+              END.
+            END.
+          END CASE.
+        END.             /* марка найдена */
+      END.
+      WHEN CAN-DO(listActionsUnlock,action) AND mark = "" THEN
+      DO:
+        answerFlag = TRUE.
+        IF cntx_id = "" THEN
           vLC = unlockMarks("cash:" +  cash).
-        else
+        ELSE
           vLC = unlockMarks("cash:" +  cash + ":" + "context:" + cntx_id).
-      end.
-      when action = cashSts:Commit:NameProp then 
-      do:
-        answerFlag = true.
+      END.
+      WHEN action = cashSts:Commit:NameProp THEN 
+      DO:
+        answerFlag = TRUE.
         vLC = commitCheck().
-      end.
-      when action = cashSts:UnlockAll:NameProp then 
-      do:
-        answerFlag = true.
+      END.
+      WHEN action = cashSts:UnlockAll:NameProp THEN 
+      DO:
+        answerFlag = TRUE.
         vLC = unlockMarks("cash:" +  cash).
-      end.
-    end case.
+      END.
+    END CASE.
     sendContent(vLC).
-    return.
-  end method.
+    RETURN.
+  END METHOD.
 
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method public character percentDecoding(encode-str as char):
-    def var ii         as int.
-    def var decode-str as char.
-    def var entry-str  as char.
-    decode-str = entry (1, encode-str, "%").
-    do ii = 2 to num-entries (encode-str,"%"):
-      entry-str = entry (ii, encode-str, "%").
-      decode-str = decode-str + (if entry-str <> "" then string (hex-decode (substring (entry-str, 1, 2))) + substring (entry-str, 3, length (entry-str)) else "%").
-    end.      
-    return decode-str.
-  end method.
+  METHOD PUBLIC CHARACTER percentDecoding(encode-str AS CHAR):
+    DEF VAR ii         AS INT.
+    DEF VAR decode-str AS CHAR.
+    DEF VAR entry-str  AS CHAR.
+    decode-str = ENTRY (1, encode-str, "%").
+    DO ii = 2 TO NUM-ENTRIES (encode-str,"%"):
+      entry-str = ENTRY (ii, encode-str, "%").
+      decode-str = decode-str + (IF entry-str <> "" THEN STRING (HEX-DECODE (SUBSTRING (entry-str, 1, 2))) + substring (entry-str, 3, LENGTH (entry-str)) ELSE "%").
+    END.      
+    RETURN decode-str.
+  END METHOD.
 
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method private void sendContent(inLC as longchar):
-    define variable v-cont-length as integer no-undo.
+  METHOD PRIVATE VOID sendContent(inLC AS LONGCHAR):
+    DEFINE VARIABLE v-cont-length AS INTEGER NO-UNDO.
     inLC = inLC + {&CRLF}.
-    v-cont-length = length(inLC,"RAW":U).
-    SomeStr = substitute("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: text/html; charset=UTF-8&1Content-Length: &3&2&4",{&CRLF},{&HdEnd},string(v-cont-length),inLC).
-    return.
-  end method.
+    v-cont-length = LENGTH(inLC,"RAW":U).
+    SomeStr = SUBSTITUTE("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: text/html; charset=UTF-8&1Content-Length: &3&2&4",{&CRLF},{&HdEnd},STRING(v-cont-length),inLC).
+    RETURN.
+  END METHOD.
 
-  method private character getJson(stsInt as int, msg as char, mark as char):
-    def var json-str as char no-undo.
-    mark = replace (mark, '\', '\\').
-    mark = replace (mark, '"', '\"').
+  METHOD PRIVATE CHARACTER getJson(stsInt AS INT, msg AS CHAR, mark AS CHAR):
+    DEF VAR json-str AS CHAR NO-UNDO.
+    mark = REPLACE (mark, '\', '\\').
+    mark = REPLACE (mark, '"', '\"').
     
     /* Онлайн-проверка КМ не была выполнена в части срока годности */
-    if stsInt = 1 and mCheckSts = 2 
-    then stsInt = 2.
+    IF stsInt = 1 AND mCheckSts = 2 
+    THEN stsInt = 2.
       
-    json-str = chr(123) + substitute ('"status":&1,"comment":"&2","reqid":"&3","reqtimestamp":"&4"', stsInt, msg, mReqId, mReqTimestamp) + chr(125).
-    return json-str.
-  end.
+    json-str = CHR(123) + substitute ('"status":&1,"comment":"&2","reqid":"&3","reqtimestamp":"&4"', stsInt, msg, mReqId, mReqTimestamp) + chr(125).
+    RETURN json-str.
+  END.
 
-  method private character setMarkStatus (
-    state as integer, 
-    loc-key as character, 
-    msgOk   as character, 
-    msgError as character, 
-    buffer buf_marking for ub.marking
+  METHOD PRIVATE CHARACTER setMarkStatus (
+    state AS INTEGER, 
+    loc-key AS CHARACTER, 
+    msgOk   AS CHARACTER, 
+    msgError AS CHARACTER, 
+    buffer buf_marking FOR ub.marking
   ):
-    if answerFlag then 
-    do:
-      assign  
+    IF answerFlag THEN 
+    DO:
+      ASSIGN  
         buf_marking.loc-key = loc-key
         buf_marking.sts = state
-        buf_marking.last-change = now
+        buf_marking.last-change = NOW
       .
       ObjSrv:Lib:MarkingTree:UnGroupMark(buf_marking.mark).
       ObjSrv:Lib:MarkingTree:LockChkChildeMark(buf_marking.mark).
-      return getJson(1, msgOk , buf_marking.mark).
-    end.
-    return getJson(0, msgError, buf_marking.mark).
-  end method.
+      RETURN getJson(1, msgOk , buf_marking.mark).
+    END.
+    RETURN getJson(0, msgError, buf_marking.mark).
+  END METHOD.
 
-  method private void createMark (
-    mark as character, 
-    buffer buf_marking for ub.marking
+  METHOD PRIVATE VOID createMark (
+    mark AS CHARACTER, 
+    buffer buf_marking FOR ub.marking
   ):
-    create buf_marking.
-    assign 
+    CREATE buf_marking.
+    ASSIGN 
       buf_marking.mark    = mark
       buf_marking.sts     = thMarkSts:FreeZone:KeyIntDB
     .
-  end method.
+  END METHOD.
 
-  method private void setShift (
-    mark as character, 
-    shiftBeg as date,
-    shiftNum as integer
+  METHOD PRIVATE VOID setShift (
+    mark AS CHARACTER, 
+    shiftBeg AS DATE,
+    shiftNum AS INTEGER
   ):
-    define buffer buf_marking-attr for ub.marking-attr.
+    DEFINE BUFFER buf_marking-attr FOR ub.marking-attr.
 
-    if shiftBeg ne ?
-    then do:
-      find first buf_marking-attr where buf_marking-attr.mark = mark and buf_marking-attr.attr-code = "shift-date" no-error.
-      if not available buf_marking-attr
-      then do:
-        create buf_marking-attr.
+    IF shiftBeg NE ?
+    THEN DO:
+      FIND FIRST buf_marking-attr WHERE buf_marking-attr.mark = mark AND buf_marking-attr.attr-code = "shift-date" NO-ERROR.
+      IF NOT AVAILABLE buf_marking-attr
+      THEN DO:
+        CREATE buf_marking-attr.
         buf_marking-attr.mark = mark.
         buf_marking-attr.attr-code = "shift-date".
-      end.
-      buf_marking-attr.attr-value = string (shiftBeg).
-    end.
-    if shiftNum ne ?
-    then do:
-      find first buf_marking-attr where buf_marking-attr.mark = mark and buf_marking-attr.attr-code = "shift-num" no-error.
-      if not available buf_marking-attr
-      then do:
-        create buf_marking-attr.
+      END.
+      buf_marking-attr.attr-value = STRING (shiftBeg).
+    END.
+    IF shiftNum NE ?
+    THEN DO:
+      FIND FIRST buf_marking-attr WHERE buf_marking-attr.mark = mark AND buf_marking-attr.attr-code = "shift-num" NO-ERROR.
+      IF NOT AVAILABLE buf_marking-attr
+      THEN DO:
+        CREATE buf_marking-attr.
         buf_marking-attr.mark = mark.
         buf_marking-attr.attr-code = "shift-num".
-      end.
-      buf_marking-attr.attr-value = string (shiftNum).
-    end.
-  end method.
+      END.
+      buf_marking-attr.attr-value = STRING (shiftNum).
+    END.
+  END METHOD.
 
-  method private integer getObject (
-    cash as integer
+  METHOD PRIVATE INTEGER getObject (
+    cash AS INTEGER
   ):
-    define buffer buf_cash-desk for ub.cash-desk.
+    DEFINE BUFFER buf_cash-desk FOR ub.cash-desk.
 
-    find buf_cash-desk where buf_cash-desk.cash-num = cash no-lock no-error.
-    return if available buf_cash-desk then buf_cash-desk.obj-code else ?.
-  end method.
+    FIND buf_cash-desk WHERE buf_cash-desk.cash-num = cash NO-LOCK NO-ERROR.
+    RETURN IF AVAILABLE buf_cash-desk THEN buf_cash-desk.obj-code ELSE ?.
+  END METHOD.
  
-  method override public void Execute_(req as class IRequest, resp as class IResponse):
+  METHOD OVERRIDE PUBLIC VOID Execute_(req AS CLASS IRequest, resp AS CLASS IResponse):
       
-  end method.
+  END METHOD.
 
-  method private character unlockMarks (
-    loc-key as character
+  METHOD PRIVATE CHARACTER unlockMarks (
+    loc-key AS CHARACTER
   ):
-    define variable newSts    as integer   no-undo.
-    define buffer buf_marking for ub.marking.
-    define buffer buf_marking-l for ub.marking-lines.
+    DEFINE VARIABLE newSts    AS INTEGER   NO-UNDO.
+    DEFINE BUFFER buf_marking FOR ub.marking.
+    DEFINE BUFFER buf_marking-l FOR ub.marking-lines.
     
     /* сначала обрабатываем упаковки (блоки) */
-    repeat preselect each buf_marking exclusive-lock where 
-             buf_marking.loc-key begins loc-key
-             and lookup("chk_num",buf_marking.loc-key,":") = 0
+    REPEAT PRESELECT EACH buf_marking EXCLUSIVE-LOCK WHERE 
+             buf_marking.loc-key BEGINS loc-key
+             AND lookup("chk_num",buf_marking.loc-key,":") = 0
              :
-      find next buf_marking.
+      FIND NEXT buf_marking.
              
-      if ObjSrv:Lib:MarkingTree:LevelDown(buf_marking.mark)
-      then do:       
+      IF ObjSrv:Lib:MarkingTree:LevelDown(buf_marking.mark)
+      THEN DO:       
           setMarkStatus (
-            if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:FreeZone:KeyIntDB else thMarkSts:SaleLock:KeyIntDB,
+            IF buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB THEN thMarkSts:FreeZone:KeyIntDB ELSE thMarkSts:SaleLock:KeyIntDB,
             "",
             "",
             "",
             buffer buf_marking)
           .
           setShift(buf_marking.mark, shift_tbeg, shift_num).
-      end.
-    end.
+      END.
+    END.
     /* обрабатываем все что осталось */
-    repeat preselect each buf_marking exclusive-lock where 
-             buf_marking.loc-key begins loc-key
-             and lookup("chk_num",buf_marking.loc-key,":") = 0
+    REPEAT PRESELECT EACH buf_marking EXCLUSIVE-LOCK WHERE 
+             buf_marking.loc-key BEGINS loc-key
+             AND lookup("chk_num",buf_marking.loc-key,":") = 0
              :
-      find next buf_marking.
+      FIND NEXT buf_marking.
       setMarkStatus (
-        if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:FreeZone:KeyIntDB else thMarkSts:SaleLock:KeyIntDB,
+        IF buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB THEN thMarkSts:FreeZone:KeyIntDB ELSE thMarkSts:SaleLock:KeyIntDB,
         "",
         "",
         "",
         buffer buf_marking)
       .
       setShift(buf_marking.mark, shift_tbeg, shift_num).
-    end.
-    return getJson(1, cashSts:UnlockAll:Label_, mark).
-  end method.
+    END.
+    RETURN getJson(1, cashSts:UnlockAll:Label_, mark).
+  END METHOD.
 
-  method private character commitCheck ():
-    define buffer buf_marking for ub.marking.
-    define variable vCnt as int no-undo.
+  METHOD PRIVATE CHARACTER commitCheck ():
+    DEFINE BUFFER buf_marking FOR ub.marking.
+    DEFINE VARIABLE vCnt AS INT NO-UNDO.
     
     vCnt = 0. 
     /* сначала обрабатываем упаковки (блоки) */
-    repeat preselect each buf_marking exclusive-lock where buf_marking.loc-key = "cash:" +  cash + ":" + "context:" + cntx_id:
-      find next buf_marking.
-      if ObjSrv:Lib:MarkingTree:LevelDown(buf_marking.mark)
-      then do: 
+    REPEAT PRESELECT EACH buf_marking EXCLUSIVE-LOCK WHERE buf_marking.loc-key = "cash:" +  cash + ":" + "context:" + cntx_id:
+      FIND NEXT buf_marking.
+      IF ObjSrv:Lib:MarkingTree:LevelDown(buf_marking.mark)
+      THEN DO: 
          setMarkStatus (
-            if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:SaleLock:KeyIntDB else thMarkSts:ReturnLock:KeyIntDB, 
+            IF buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB THEN thMarkSts:SaleLock:KeyIntDB ELSE thMarkSts:ReturnLock:KeyIntDB, 
             "cash:" +  cash + ":" + "context:" + cntx_id + ":" + "chk_num:" + chk_id,
             "",
             "",
@@ -650,14 +680,14 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
          .
          setShift(buf_marking.mark, shift_tbeg, shift_num).
          vCnt = vCnt + 1.
-      end.
-    end.
+      END.
+    END.
     
     /* обрабатываем все что осталось */
-    repeat preselect each buf_marking exclusive-lock where buf_marking.loc-key = "cash:" +  cash + ":" + "context:" + cntx_id:
-      find next buf_marking.
+    REPEAT PRESELECT EACH buf_marking EXCLUSIVE-LOCK WHERE buf_marking.loc-key = "cash:" +  cash + ":" + "context:" + cntx_id:
+      FIND NEXT buf_marking.
       setMarkStatus (
-        if buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB then thMarkSts:SaleLock:KeyIntDB else thMarkSts:ReturnLock:KeyIntDB, 
+        IF buf_marking.sts = thMarkSts:SaleWaitLock:KeyIntDB THEN thMarkSts:SaleLock:KeyIntDB ELSE thMarkSts:ReturnLock:KeyIntDB, 
         "cash:" +  cash + ":" + "context:" + cntx_id + ":" + "chk_num:" + chk_id,
         "",
         "",
@@ -665,275 +695,285 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
       .
       setShift(buf_marking.mark, shift_tbeg, shift_num).
       vCnt = vCnt + 1.
-    end.
+    END.
     
-    return if vCnt = 0
-      then getJson(0, "По данной кассе не было маркированого товара", mark)
-      else getJson(1, cashSts:Commit:Label_ + " Зарезервировано кол-во " + string (vCnt), mark).
-  end method.
+    RETURN IF vCnt = 0
+      THEN getJson(0, "По данной кассе не было маркированого товара", mark)
+      ELSE getJson(1, cashSts:Commit:Label_ + " Зарезервировано кол-во " + string (vCnt), mark).
+  END METHOD.
      
   /* Фиксация времени начала сбоя ГИС МТ */
-  method private character FixErrGisMT ():
+  METHOD PRIVATE CHARACTER FixErrGisMT ():
      
-    define variable vErrSts as character no-undo.
-    define variable vTimeBegErr as datetime-tz no-undo.
-    define variable vTimeAvail  as integer     no-undo.
+    DEFINE VARIABLE vErrSts AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vTimeBegErr AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vTimeAvail  AS INTEGER     NO-UNDO.
     
-    define buffer buf_code for ub.code.
+    DEFINE BUFFER buf_code FOR ub.code.
     
-    assign
+    ASSIGN
        mCheckSts = 2  
        vErrSts = ""
        .
     fixerr:
-    do transaction on error undo, retry fixerr:        
+    DO TRANSACTION ON ERROR UNDO, RETRY fixerr:        
        /* Проверяем, зафиксирован ли сбой онлайн-проверки */
-       find first buf_code where buf_code.parent eq "GisMt"
-                             and buf_code.code   eq "GisMtErr"
-          exclusive-lock no-wait no-error.
-       if not available buf_code 
-       then do:
-          if locked buf_code then             
+       FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
+                             AND buf_code.code   EQ "GisMtErr"
+          EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
+       IF NOT AVAILABLE buf_code 
+       THEN DO:
+          IF LOCKED buf_code THEN             
                 vErrSts = vErrSts + "Время сбоя не зафиксировано. ".
-          else do:
+          ELSE DO:
              /* создаем верхний уровень, если его нет */
-             find first buf_code where buf_code.parent eq ""
-                               and buf_code.code   eq "GisMt"
-             no-lock no-error.
-             if not available buf_code then do:
-                create buf_code.
-                assign
+             FIND FIRST buf_code WHERE buf_code.parent EQ ""
+                               AND buf_code.code   EQ "GisMt"
+             NO-LOCK NO-ERROR.
+             IF NOT AVAILABLE buf_code THEN DO:
+                CREATE buf_code.
+                ASSIGN
                    buf_code.parent = ""
                    buf_code.code = "GisMt"
                    buf_code.codename = "Cбой онлайн-проверки КМ"
                    .
-             end.
+             END.
              /* создаем запись с фиксацией времени ошибки */
-             create buf_code.
-             assign
+             CREATE buf_code.
+             ASSIGN
                 buf_code.parent = "GisMt"
                 buf_code.code = "GisMtErr"
                 buf_code.codename = "Время сбоя онлайн-проверки КМ"
-                buf_code.codevalue = string(now)
+                buf_code.codevalue = STRING(NOW)
                 .
-          end.         
-       end.
-       else do:
+          END.         
+       END.
+       ELSE DO:
           /* если ошибка уже была, смотрим сколько прошло времени */
-          if buf_code.codevalue > "" then do:
-             vTimeBegErr = datetime-tz(buf_code.codevalue) no-error.
-             if gismt-MaxTime <> ? and
-                gismt-TimeFalStart <> ? and 
+          IF buf_code.codevalue > "" THEN DO:
+             vTimeBegErr = DATETIME-TZ(buf_code.codevalue) NO-ERROR.
+             IF gismt-MaxTime <> ? AND
+                gismt-TimeFalStart <> ? AND 
                 vTimeBegErr <> ?
-             then do:
+             THEN DO:
                 /* время максимального ожидания вышло */
-                if vTimeBegErr + gismt-MaxTime * 3600000 < now
-                then do:
-                   assign
+                IF vTimeBegErr + gismt-MaxTime * 3600000 < NOW
+                THEN DO:
+                   ASSIGN
                       mCheckSts = 4 
                       vErrSts = "С момента начала сбоя онлайн-проверки прошло более " 
                                 + string(gismt-MaxTime) 
                                 + " часов, реализация маркированных товаров невозможна. "
                       .
-                end.
+                END.
                 /* время максимального ожидания не вышло, но время когда надо начать предупреждать */
-                else if vTimeBegErr + gismt-TimeFalStart * 3600000 <= now
-                then do:
-                   assign
-                      vTimeAvail = Round((vTimeBegErr + gismt-MaxTime * 3600000 - now) / 3600000,0)
-                      vErrSts = "Сообщите управляющему/старшему смены, что до блокировки продаж маркированных товаров осталось: " 
+                ELSE IF vTimeBegErr + gismt-TimeFalStart * 3600000 <= NOW
+                THEN DO:
+                   ASSIGN
+                      vTimeAvail = ROUND((vTimeBegErr + gismt-MaxTime * 3600000 - NOW) / 3600000,0)
+                      vErrSts = "Сообщите управляющему, что до блокировки продаж маркированных товаров из-за недоступности Честного знака осталось: " 
                                 + string(vTimeAvail) + " ч. "
-                      .
-                end.   
-             end.    
-             else if vTimeBegErr = ? then buf_code.codevalue = string(now).   
-          end.
+                      .                      
+                END.   
+             END.    
+             ELSE IF vTimeBegErr = ? THEN buf_code.codevalue = STRING(NOW).   
+          END.
           /* новая фиксация ошибки */
-          else buf_code.codevalue = string(now).
-       end.
-    end.
-    if retry then do:
+          ELSE buf_code.codevalue = STRING(NOW).
+       END.
+    END.
+    IF RETRY THEN DO:
         dbgPrint("marking.log", "Ошибка фиксации времени сбоя ГИС МТ").        
-    end.
+    END.
         
-    return vErrSts.
+    RETURN vErrSts.
     
-  end method.   
+  END METHOD.   
   
   /* Фиксация времени начала сбоя ГИС МТ */
-  method private character CheckErrGisMT ():
+  METHOD PRIVATE CHARACTER CheckErrGisMT ():
      
-    define variable vErrSts as character no-undo.
-    define variable vTimeBegErr as datetime-tz no-undo.
-    define variable vTimeAvail  as integer     no-undo.
+    DEFINE VARIABLE vErrSts AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vTimeBegErr AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vTimeAvail  AS INTEGER     NO-UNDO.
     
-    define buffer buf_code for ub.code.
+    DEFINE BUFFER buf_code FOR ub.code.
     
-    assign
+    ASSIGN
        mCheckSts = 2  
        vErrSts = ""
        .    
            
     /* Проверяем, зафиксирован ли сбой онлайн-проверки */    
-    find first buf_code where buf_code.parent eq "GisMt"
-           and buf_code.code   eq "GisMtErr"
-       exclusive-lock no-wait no-error.
+    FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
+           AND buf_code.code   EQ "GisMtErr"
+       EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
     /* если ошибка уже была, смотрим сколько прошло времени */   
-    if available buf_code            
-       and buf_code.codevalue > "" 
-    then do:
-       vTimeBegErr = datetime-tz(buf_code.codevalue) no-error.
-       if gismt-MaxTime <> ? and
-          gismt-TimeFalStart <> ? and 
+    IF AVAILABLE buf_code            
+       AND buf_code.codevalue > "" 
+    THEN DO:
+       vTimeBegErr = DATETIME-TZ(buf_code.codevalue) NO-ERROR.
+       IF gismt-MaxTime <> ? AND
+          gismt-TimeFalStart <> ? AND 
           vTimeBegErr <> ?
-       then do:
+       THEN DO:
           /* время максимального ожидания вышло */
-          if vTimeBegErr + gismt-MaxTime * 3600000 < now
-          then do:
-              assign
+          IF vTimeBegErr + gismt-MaxTime * 3600000 < NOW
+          THEN DO:
+              ASSIGN
                  mCheckSts = 4 
                  vErrSts = "С момента начала сбоя онлайн-проверки прошло более " 
                     + string(gismt-MaxTime) 
                     + " часов, реализация маркированных товаров невозможна. "
                  .
-          end.
+          END.
           /* время максимального ожидания не вышло, но время когда надо начать предупреждать */
-          else if vTimeBegErr + gismt-TimeFalStart * 3600000 <= now
-          then do:
-             assign
-                vTimeAvail = Round((vTimeBegErr + gismt-MaxTime * 3600000 - now) / 3600000,0)
+          ELSE IF vTimeBegErr + gismt-TimeFalStart * 3600000 <= NOW
+          THEN DO:
+             ASSIGN
+                vTimeAvail = ROUND((vTimeBegErr + gismt-MaxTime * 3600000 - NOW) / 3600000,0)
                 vErrSts = "Сообщите управляющему/старшему смены, что до блокировки продаж маркированных товаров осталось: " 
                           + string(vTimeAvail) + " ч. "
              .
-          end.   
-       end.    
-       else if vTimeBegErr = ? then buf_code.codevalue = string(now).   
-    end.       
+          END.   
+       END.    
+       ELSE IF vTimeBegErr = ? THEN buf_code.codevalue = STRING(NOW).   
+    END.       
     
-    return vErrSts.
+    RETURN vErrSts.
     
-  end method.   
+  END METHOD.   
   
   /* Сброс ошибки недоступности ГИС МТ */
-  method private void SetNoErrGisMT ():
-     def buffer buf_code for ub.code.
+  METHOD PRIVATE VOID SetNoErrGisMT ():
+     DEF BUFFER buf_code FOR ub.code.
     
       setnoerr:   
-      do transaction on error undo, retry setnoerr: 
-         find first buf_code where buf_code.parent eq "GisMt"
-                               and buf_code.code   eq "GisMtErr"
-            exclusive-lock no-error.
-         if available buf_code 
-         then buf_code.codevalue = "".
-      end.     
-      if retry then do:
-         dbgPrint("marking.log", "Ошибка сброски времени сбоя ГИС МТ").
-      end.    
+      DO TRANSACTION ON ERROR UNDO, RETRY setnoerr: 
+         FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
+                               AND buf_code.code   EQ "GisMtErr"
+            EXCLUSIVE-LOCK NO-ERROR.
+         IF AVAILABLE buf_code 
+         THEN buf_code.codevalue = "".
+      END.     
+      IF RETRY THEN DO:
+         dbgPrint("marking.log", "Ошибка сброса времени сбоя ГИС МТ").
+      END.    
     
-  end method.
+  END METHOD.
   
   /* Получение настроек из типа маркировки */
-  method private logical GetMarkProp (
-     p-obj-type  as character, 
-     p-obj-code  as integer,
-     p-param-code as character,
-     p-type-mark as character
+  METHOD PRIVATE LOGICAL GetMarkProp (
+     p-obj-type  AS CHARACTER, 
+     p-obj-code  AS INTEGER,
+     p-param-code AS CHARACTER,
+     p-type-mark AS CHARACTER
      ):
-      define variable v-tth             as handle    no-undo .
-      define variable v-value-character as character no-undo.
-      define variable v-value-date      as date      no-undo.
-      define variable v-value-decimal   as decimal   no-undo.
-      define variable v-value-integer   as integer   no-undo.
-      define variable v-param-type      as character no-undo.
-      define variable v-param-logical   as logical   no-undo.
+      DEFINE VARIABLE v-tth             AS HANDLE    NO-UNDO .
+      DEFINE VARIABLE v-value-character AS CHARACTER NO-UNDO.
+      DEFINE VARIABLE v-value-date      AS DATE      NO-UNDO.
+      DEFINE VARIABLE v-value-decimal   AS DECIMAL   NO-UNDO.
+      DEFINE VARIABLE v-value-integer   AS INTEGER   NO-UNDO.
+      DEFINE VARIABLE v-param-type      AS CHARACTER NO-UNDO.
+      DEFINE VARIABLE v-param-logical   AS LOGICAL   NO-UNDO.
       
-      run adm/shattri.p (
-         input "get":U
-        ,input  p-obj-type
-        ,input  p-obj-code
-        ,input  {&attr-marking}
-        ,input  p-param-code
-        ,output v-value-character
-        ,output v-value-date
-        ,output v-value-decimal
-        ,output v-value-integer
-        ,output v-param-logical
-        ,output v-param-type
-        ,input-output table-handle v-tth
-        ) no-error .
+      RUN adm/shattri.p (
+         INPUT "get":U
+        ,INPUT  p-obj-type
+        ,INPUT  p-obj-code
+        ,INPUT  {&attr-marking}
+        ,INPUT  p-param-code
+        ,OUTPUT v-value-character
+        ,OUTPUT v-value-date
+        ,OUTPUT v-value-decimal
+        ,OUTPUT v-value-integer
+        ,OUTPUT v-param-logical
+        ,OUTPUT v-param-type
+        ,INPUT-OUTPUT table-handle v-tth
+        ) NO-ERROR .
         
-      dbgPrint("marking.log", substitute("Тип маркировки: p-param-code &1 v-value-character &2 тип маркировки &3", 
+      dbgPrint("marking.log", SUBSTITUTE("Тип маркировки: p-param-code &1 v-value-character &2 тип маркировки &3", 
                                          p-param-code, 
                                          v-value-character,
                                          p-type-mark)).
       
-      if lookup (p-type-mark,v-value-character) > 0
-      then return yes.
+      IF LOOKUP (p-type-mark,v-value-character) > 0
+      THEN RETURN YES.
         
-      return no.
-  end method.
+      RETURN NO.
+  END METHOD.
   
   /* Проверка марки в ГИС МТ */
-  method private integer GetGisMTCheck (
-     p-obj-type  as character, 
-     p-obj-code  as integer,
-     mark as character  
+  METHOD PRIVATE INTEGER GetGisMTCheck (
+     p-obj-type  AS CHARACTER, 
+     p-obj-code  AS INTEGER,
+     mark AS CHARACTER,
+     mark-short AS CHARACTER
   ):
-    define variable vInn           as character   no-undo.
-    define variable vErrSts        as character   no-undo.
-    define variable cmd            as character   no-undo.
-    define variable cmdlog         as character   no-undo.
-    define variable CmdParamProxy  as character   no-undo.
-    define variable vFileToken     as character   no-undo. 
-    define variable vFileBat       as character   no-undo.
-    define variable vFileResult    as character   no-undo.
-    define variable vFileResultCnv as character   no-undo.
-    define variable vFileResultErr as character   no-undo.   
-    define variable vFileresultXml as character   no-undo.
-    define variable vFileLog       as character   no-undo.
-    define variable vlongJson      as longchar    no-undo case-sensitive.
-    define variable vlongJsonError as longchar    no-undo case-sensitive.
-    define variable vMark          as character   no-undo case-sensitive.
-    define variable vDataMark      as character   no-undo.    
-    define variable vRetProp       as character   no-undo.
+    DEFINE VARIABLE vInn           AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vErrSts        AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE cmd            AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE cmdlog         AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE CmdParamProxy  AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vFileToken     AS CHARACTER   NO-UNDO. 
+    DEFINE VARIABLE vFileBat       AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vFileResult    AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vFileResultCnv AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vFileResultErr AS CHARACTER   NO-UNDO.   
+    DEFINE VARIABLE vFileresultXml AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vFileLog       AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vlongJson      AS LONGCHAR    NO-UNDO CASE-SENSITIVE.
+    DEFINE VARIABLE vlongJsonError AS LONGCHAR    NO-UNDO CASE-SENSITIVE.
+    DEFINE VARIABLE vMark          AS CHARACTER   NO-UNDO CASE-SENSITIVE.
+    DEFINE VARIABLE vDataMark      AS CHARACTER   NO-UNDO.    
+    DEFINE VARIABLE vRetProp       AS CHARACTER   NO-UNDO.
     
-    define variable v-value-character as character no-undo .
-    define variable v-value-date      as date      no-undo .
-    define variable v-value-decimal   as decimal   no-undo .
-    define variable v-value-integer   as integer   no-undo .
-    define variable v-value-logical   as logical   no-undo .
-    define variable v-param-type      as character no-undo .
-    define variable v-param-value     as character no-undo .
+    DEFINE VARIABLE v-value-character AS CHARACTER NO-UNDO .
+    DEFINE VARIABLE v-value-date      AS DATE      NO-UNDO .
+    DEFINE VARIABLE v-value-decimal   AS DECIMAL   NO-UNDO .
+    DEFINE VARIABLE v-value-integer   AS INTEGER   NO-UNDO .
+    DEFINE VARIABLE v-value-logical   AS LOGICAL   NO-UNDO .
+    DEFINE VARIABLE v-param-type      AS CHARACTER NO-UNDO .
+    DEFINE VARIABLE v-param-value     AS CHARACTER NO-UNDO .
    
-    define variable vRetOk   as logical     no-undo.
-    define variable vRetVal  as integer     no-undo.
-    define variable vCh      as character   no-undo.
-    define variable vBefCurl as datetime-tz no-undo. 
-    define variable vAftCurl as datetime-tz no-undo.
-    define variable vpid     as integer     no-undo.
-    define variable vTimePause as integer   no-undo.
-    define variable vGisAdress as character   no-undo.
-    define variable vGisAdrCDN as character   no-undo.
-    define variable vTimeStart as datetime-tz no-undo.
-    define variable vTimeNow   as datetime-tz no-undo.    
-    define variable vRetCdn    as logical     no-undo.
-    define variable vNumRep as int64 no-undo.
-    define variable vNumMax as int64 no-undo.
+    DEFINE VARIABLE vRetOk   AS LOGICAL     NO-UNDO.
+    DEFINE VARIABLE vRetVal  AS INTEGER     NO-UNDO.
+    DEFINE VARIABLE vCh      AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vBefCurl AS DATETIME-TZ NO-UNDO. 
+    DEFINE VARIABLE vAftCurl AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vpid     AS INTEGER     NO-UNDO.
+    DEFINE VARIABLE vTimePause AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE vGisAdress AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vGisAdrCDN AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vTimeStart AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vTimeNow   AS DATETIME-TZ NO-UNDO.    
+    DEFINE VARIABLE vRetCdn    AS LOGICAL     NO-UNDO.
+    DEFINE VARIABLE vNumRep AS INT64 NO-UNDO.
+    DEFINE VARIABLE vNumMax AS INT64 NO-UNDO.
+    
+    DEFINE VARIABLE vMarkShort    AS CHARACTER   NO-UNDO CASE-SENSITIVE.
+    DEFINE VARIABLE vFileBatOf    AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vFileResOf    AS CHARACTER   NO-UNDO.    
+    DEFINE VARIABLE vFileResOfErr AS CHARACTER   NO-UNDO. 
         
-    define buffer buf_firm for ub.firm .
-    define buffer buf_shop for ub.shop.
-    define buffer buf_sys-ctrl for ub.sys-ctrl .
+    DEFINE BUFFER buf_firm FOR ub.firm .
+    DEFINE BUFFER buf_shop FOR ub.shop.
+    DEFINE BUFFER buf_sys-ctrl FOR ub.sys-ctrl .
     
     /* заменяем 1D в 16-тиричной на \u001d */
-    assign       
+    ASSIGN       
        vMark = mark
-       vMark = replace(vMark, '\', '\\') .
-       vMark = replace(vMark, '/', '\/') .
-       vMark = replace(vMark, '"', '\"') .
-       vMark = replace(vMark,chr(29),"\u001d")
+       vMark = REPLACE(vMark, '\', '\\') .
+       vMark = REPLACE(vMark, '/', '\/') .
+       vMark = REPLACE(vMark, '"', '\"') .
+       vMark = REPLACE(vMark,CHR(29),"\u001d")
        .
+
+    EMPTY TEMP-TABLE ttmark-body.
+    EMPTY TEMP-TABLE ttmark-check.
+    EMPTY TEMP-TABLE ttlocal-mark.
       
-    dbgPrint("marking.log", substitute("Отправка запроса p-obj-type &1 p-obj-code &2 mark &3", 
+    dbgPrint("marking.log", SUBSTITUTE("Отправка запроса p-obj-type &1 p-obj-code &2 mark &3", 
                                        p-obj-type, 
                                        p-obj-code,
                                        vMark)).
@@ -948,456 +988,487 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
     end.   
     else dbgPrint("marking.log", substitute("Не найден магазин с кодом &1", p-obj-code)).
     dbgPrint("marking.log", substitute(" ИНН &1 ", vInn)).*/
-    dbgPrint("marking.log", substitute("Заново считывать настройки подключения к ГИС МТ &1 ", gismt-UpdateRequest)).                              
+    dbgPrint("marking.log", SUBSTITUTE("Заново считывать настройки подключения к ГИС МТ &1 ", gismt-UpdateRequest)).                              
     /* определяем настройки подключения к ГИС МТ */
-    if gismt-UpdateRequest then do:
-        find first buf_sys-ctrl no-lock no-error.
-        if available buf_sys-ctrl and buf_sys-ctrl.db-num <> 0 
-        then do:
-            dbgPrint("marking.log", substitute("Cчитываем настройки подключения к ГИС МТ для &1 &2", "{&db}",buf_sys-ctrl.db-num)).
+    IF gismt-UpdateRequest THEN DO:
+        FIND FIRST buf_sys-ctrl NO-LOCK NO-ERROR.
+        IF AVAILABLE buf_sys-ctrl AND buf_sys-ctrl.db-num <> 0 
+        THEN DO:
+            dbgPrint("marking.log", SUBSTITUTE("Cчитываем настройки подключения к ГИС МТ для &1 &2", "{&db}",buf_sys-ctrl.db-num)).
             vRetProp = get-gismt-prop ({&db},
-                                       buf_sys-ctrl.db-num) no-error.
-        end.                               
-    end.                           
+                                       buf_sys-ctrl.db-num) NO-ERROR.
+        END.                               
+    END.                           
     dbgPrint("marking.log", "gismt-info").
     
     /* если установлен параметр, обозначающий наличие аварии в ГИС МТ, выходим */
-    if gismt-CrashSituat then do:
+    IF gismt-CrashSituat THEN DO:
        dbgPrint("marking.log", "Установлена аварийная ситуация.").
-       return 1.
-    end.
+       /* Запускаем офлайн проверку */
+       vRetVal = GetResLocalMark(mark-short).
+       RETURN 1.
+    END.
     
-    vFileLog = "GisMtReq-" + replace(string(today),"/","-") +  ".log".
+    vFileLog = "GisMtReq-" + replace(STRING(TODAY),"/","-") +  ".log".
     vCh = "". /* что бы в новый лог писал с первой строки, а в имеющийся - со следующей */
-    if searchfile(vFileLog) <> ?
-    then do:
-       file-info:file-name = searchfile(vFileLog).
-       if file-info:file-size <> 0 then vCh = " ".
-    end.
+    IF searchfile(vFileLog) <> ?
+    THEN DO:
+       FILE-INFO:FILE-NAME = searchfile(vFileLog).
+       IF FILE-INFO:FILE-SIZE <> 0 THEN vCh = " ".
+    END.
     
     /* формируем лог файл */
     OUTPUT STREAM out_data TO value(vFileLog) APPEND.
     PUT STREAM out_data UNFORMATTED 
-      vCh skip now chr(9) mMarkOrig chr(9).
+      vCh SKIP NOW CHR(9) mMarkOrig CHR(9).
     OUTPUT STREAM out_data CLOSE.     
     
     /* формируем файл запроса к ГИС МТ с маркой и ИНН */
-    run gbl/_tmpfile.p ( "GisMT_data", ".txt", output vDataMark ) .
-    create tt-file-name.
-    assign tt-file-name.tmpFileName = vDataMark.
+    RUN gbl/_tmpfile.p ( "GisMT_data", ".txt", OUTPUT vDataMark ) .
+    CREATE tt-file-name.
+    ASSIGN tt-file-name.tmpFileName = vDataMark.
     
-    dbgPrint("marking.log", substitute("vDataMark &1 ", vDataMark)).
+    dbgPrint("marking.log", SUBSTITUTE("vDataMark &1 ", vDataMark)).
     
-    OUTPUT STREAM out_data TO value(vDataMark).
-    /*PUT STREAM out_data UNFORMATTED  
-      '~{"codes":["' vMark '"],"inn":"' vInn  '"~}' .
-    OUTPUT STREAM out_data CLOSE.*/
-    
+    OUTPUT STREAM out_data TO value(vDataMark).        
     PUT STREAM out_data UNFORMATTED  
       '~{"codes":["' vMark '"]~}' .
     OUTPUT STREAM out_data CLOSE.
      
-    if gismt-AdressPort <> "" and gismt-ProxyLogin <> "" and gismt-ProxyPswd <> "" 
-    then CmdParamProxy = substitute ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
-    else if gismt-AdressPort <> "" then CmdParamProxy = substitute ('-x &1',gismt-AdressPort).
-    else CmdParamProxy = "".      
+    IF gismt-AdressPort <> "" AND gismt-ProxyLogin <> "" AND gismt-ProxyPswd <> "" 
+    THEN CmdParamProxy = SUBSTITUTE ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
+    ELSE IF gismt-AdressPort <> "" THEN CmdParamProxy = SUBSTITUTE ('-x &1',gismt-AdressPort).
+    ELSE CmdParamProxy = "".      
         
-    if gismt-cdnTurnOn and gismt-cdnRepeat
-    then vNumMax = 2.    
-    else vNumMax = 1.
+    IF gismt-cdnTurnOn AND gismt-cdnRepeat
+    THEN vNumMax = 2.    
+    ELSE vNumMax = 1.
     
-    dbgPrint("marking.log", substitute(" Кол-во запросов по одной площадке &1 ", vNumMax)).
+    dbgPrint("marking.log", SUBSTITUTE(" Кол-во запросов по одной площадке &1 ", vNumMax)).
     
-    vTimeStart = now.
+    vTimeStart = NOW.
     
     /* перебираем площадки (если надо) */
     block_chgcdn:
-    do  while true:
+    DO  WHILE TRUE:
         /* определяем адрес площадки, к которой обращаться */
-       if gismt-cdnTurnOn then do:           
+       IF gismt-cdnTurnOn THEN DO:           
            vGisAdrCDN = GetCDNAdress().
-           if vGisAdrCDN = "" then do:
+           IF vGisAdrCDN = "" THEN DO:
                /* фиксируем, что больше площадок нет */
               dbgPrint("marking.log", "Нет доступных площадок").    
               OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
               PUT STREAM out_data UNFORMATTED  
-                 chr(9) "Нет доступных площадок для обращения в ГИС МТ" chr(9).
+                 CHR(9) "Нет доступных площадок для обращения в ГИС МТ" CHR(9).
               OUTPUT STREAM out_data CLOSE.
-              return 2.
-           end.   
+              RETURN 2.
+           END.   
            vGisAdress = vGisAdrCDN + "/api/v4/true-api/codes/check".
-       end.
-       else vGisAdress = gismt-GisAdress.
+       END.
+       ELSE vGisAdress = gismt-GisAdress.
        
        /* обращение несколько раз к одной и той же площадке (если надо) */
        block_repeat:
-       do vNumRep = 1 to vNumMax:
-           if vNumRep > 1 then do:
-               dbgPrint("marking.log", substitute("Повторный запрос на площадку &1 ", vGisAdress)).
-           end.
+       DO vNumRep = 1 TO vNumMax:
+           IF vNumRep > 1 THEN DO:
+               dbgPrint("marking.log", SUBSTITUTE("Повторный запрос на площадку &1 ", vGisAdress)).
+           END.
            /* вычисляем и запоминаем имена временных файлов 
            ** (на каждом шаге цикла и для каждой площадки новое имя) */    
-           run gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", output vFileResult ) .
-           create tt-file-name.
-           assign tt-file-name.tmpFileName = vFileResult.           
-           run gbl/_tmpfile.p ( "ChkGisMTResErr", ".txt", output vFileResultErr ) .
-           create tt-file-name.
-           assign tt-file-name.tmpFileName = vFileResultErr.
-           run gbl/_tmpfile.p ( "ChkGisMT", ".bat", output vFileBat ) .     
-           create tt-file-name.
-           assign tt-file-name.tmpFileName = vFileBat.
-            
-           dbgPrint("marking.log", substitute("vFileResult &1 ", vFileResult)).           
-           dbgPrint("marking.log", substitute("vFileResultErr &1 ", vFileResultErr)).
-           dbgPrint("marking.log", substitute("vFileBat &1 ", vFileBat)).
-    
+           RUN gbl/_tmpfile.p ( "ChkGisMTRes", ".txt", OUTPUT vFileResult ) .
+           CREATE tt-file-name.
+           ASSIGN tt-file-name.tmpFileName = vFileResult.           
+           RUN gbl/_tmpfile.p ( "ChkGisMTResErr", ".txt", OUTPUT vFileResultErr ) .
+           CREATE tt-file-name.
+           ASSIGN tt-file-name.tmpFileName = vFileResultErr.
+           RUN gbl/_tmpfile.p ( "ChkGisMT", ".bat", OUTPUT vFileBat ) .     
+           CREATE tt-file-name.
+           ASSIGN tt-file-name.tmpFileName = vFileBat.
+           
+           dbgPrint("marking.log", SUBSTITUTE("vFileResult &1 ", vFileResult)).           
+           dbgPrint("marking.log", SUBSTITUTE("vFileResultErr &1 ", vFileResultErr)).
+           dbgPrint("marking.log", SUBSTITUTE("vFileBat &1 ", vFileBat)).
+           
+           IF vNumRep = 1 THEN DO:               
+               vMarkShort = percentCoding(mark-short). 
+               dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)).               
+               RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .
+               CREATE tt-file-name.
+               ASSIGN tt-file-name.tmpFileName = vFileResOf
+                      tt-file-name.ofline = YES.           
+               RUN gbl/_tmpfile.p ( "ChkLMResErr", ".txt", OUTPUT vFileResOfErr ) .
+               CREATE tt-file-name.
+               ASSIGN tt-file-name.tmpFileName = vFileResOfErr.
+               RUN gbl/_tmpfile.p ( "ChkLM", ".bat", OUTPUT vFileBatOf ) .     
+               CREATE tt-file-name.
+               ASSIGN tt-file-name.tmpFileName = vFileBatOf.
+               
+               dbgPrint("marking.log", SUBSTITUTE("vFileResOf &1 ", vFileResOf)).           
+               dbgPrint("marking.log", SUBSTITUTE("vFileResOfErr &1 ", vFileResOfErr)).
+               dbgPrint("marking.log", SUBSTITUTE("vFileBatOf &1 ", vFileBatOf)).
+           END.    
+           ELSE ASSIGN        
+                  vFileResOf = "" 
+                  vFileResOfErr = ""   
+                  vFileBatOf = ""
+                  .           
+
            vRetVal = RunCurlGisMT(vGisAdress,     
                                   vDataMark,
                                   CmdParamProxy,
                                   vFileResult,
                                   vFileResultErr,
-                                  vFileBat). 
-           dbgPrint("marking.log", substitute("Файл ответа &1 результат &1 ", searchFile(vFileResult), vRetVal)).                                 
-           vTimeNow = now.             
+                                  vFileBat,
+                                  vMarkShort,
+                                  vFileResOf,
+                                  vFileResOfErr,
+                                  vFileBatOf). 
+                                  
+           dbgPrint("marking.log", SUBSTITUTE("Файл ответа &1 результат &1 ", searchFile(vFileResult), vRetVal)).                                 
+           vTimeNow = NOW.             
                      
            OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
            PUT STREAM out_data UNFORMATTED  
-              vGisAdress chr(9) vTimeNow chr(9).
+              vGisAdress CHR(9) vTimeNow CHR(9).
            OUTPUT STREAM out_data CLOSE.
            /* есть ли файл ответа проверяем независимо от результата в vRetVal */
-           if searchFile(vfileresult) = ?
-           then do :            
+           IF searchFile(vfileresult) = ?
+           THEN DO :            
                /* формируем лог файл */
                OUTPUT STREAM out_data TO value(vFileLog) APPEND.
                PUT STREAM out_data UNFORMATTED  
-                  "Отсутствует ответ ГИС МТ " chr(9).
+                  "Отсутствует ответ ГИС МТ " CHR(9).
                OUTPUT STREAM out_data CLOSE.               
-           end .
-           else do:
-               file-info:file-name = searchFile(vfileresult) .
-               if file-info:file-size = 0
-               then do :                  
+           END .
+           ELSE DO:
+               FILE-INFO:FILE-NAME = searchFile(vfileresult) .
+               IF FILE-INFO:FILE-SIZE = 0
+               THEN DO :                  
                    /* формируем лог файл */
                    OUTPUT STREAM out_data TO value(vFileLog) APPEND.
                    PUT STREAM out_data UNFORMATTED  
-                      "Отсутствует ответ ГИС МТ " chr(9).
+                      "Отсутствует ответ ГИС МТ " CHR(9).
                    OUTPUT STREAM out_data CLOSE.
-               end .
-               else do:
-                  dbgPrint("marking.log", substitute("Добавляем в лог ответ из файла &1 ", vFileResult)).
+               END .
+               ELSE DO:
+                  dbgPrint("marking.log", SUBSTITUTE("Добавляем в лог ответ из файла &1 ", vFileResult)).
                   vlongJson = "". 
-                  copy-lob from file vFileResult to vlongJson no-error. 
-                  if vlongJson = "" or 
-                     error-status:error or 
-                     error-status:get-message(1) <> "" then do:
-                     dbgPrint("marking.log", substitute("Возникла ошибка при чтении ответа для записи в лог: &1 ", error-status:get-message(1))). 
-                  end.  
-                  else do:   
+                  COPY-LOB FROM FILE vFileResult TO vlongJson NO-ERROR. 
+                  IF vlongJson = "" OR 
+                     ERROR-STATUS:ERROR OR 
+                     ERROR-STATUS:GET-MESSAGE(1) <> "" THEN DO:
+                     dbgPrint("marking.log", SUBSTITUTE("Возникла ошибка при чтении ответа для записи в лог: &1 ", ERROR-STATUS:GET-MESSAGE(1))). 
+                  END.  
+                  ELSE DO:   
                       /* если думали, что ответа нет, а он оказывается есть, то еще раз определяем, есть ли в ответе ошибки */
-                      if vRetVal = -1 then do:
+                      IF vRetVal = -1 THEN DO:
                          vRetVal = ChkCurlGisMT (vlongJson).
-                         dbgPrint("marking.log", substitute("Думали, что ответа нет, а файл есть, новый результат проверки: &1 ", vRetVal)). 
-                      end.
+                         dbgPrint("marking.log", SUBSTITUTE("Думали, что ответа нет, а файл есть, новый результат проверки: &1 ", vRetVal)). 
+                      END.
                       /* добавляем в лог ответ Гис МТ */
-                      copy-lob from vlongJson to file vFileLog append no-error.                   
-                      if error-status:error or 
-                         error-status:get-message(1) <> "" 
-                      then do:
-                          dbgPrint("marking.log", substitute("Возникла ошибка при добавлении ответа в лог: &1 ", error-status:get-message(1))).
-                      end.    
-                      else dbgPrint("marking.log", substitute("Ответ ГИС МТ успешно добавлен в файл &1 ", vFileLog)).                          
-                  end.
-               end.              
-           end.                     
+                      COPY-LOB FROM vlongJson TO FILE vFileLog APPEND NO-ERROR.                   
+                      IF ERROR-STATUS:ERROR OR 
+                         ERROR-STATUS:GET-MESSAGE(1) <> "" 
+                      THEN DO:
+                          dbgPrint("marking.log", SUBSTITUTE("Возникла ошибка при добавлении ответа в лог: &1 ", ERROR-STATUS:GET-MESSAGE(1))).
+                      END.    
+                      ELSE dbgPrint("marking.log", SUBSTITUTE("Ответ ГИС МТ успешно добавлен в файл &1 ", vFileLog)).                          
+                  END.
+               END.              
+           END.                     
            
-           dbgPrint("marking.log", substitute("Ответ по запросу vRetVal &1", vRetVal)).                      
+           dbgPrint("marking.log", SUBSTITUTE("Ответ по запросу vRetVal &1", vRetVal)).                      
                                  
            /* проверяем, когда не надо повторный запрос и смену площадки */              
-           if vRetVal = 0 or 
-              vRetVal = 203 or
+           IF vRetVal = 0 OR 
+              vRetVal = 203 OR
               vRetVal = 418
-           then leave block_chgcdn.
+           THEN LEAVE block_chgcdn.
            
-           if vRetVal = 401 then do: 
+           IF vRetVal = 401 THEN DO: 
                /* формируем лог файл */
                OUTPUT STREAM out_data TO value(vFileLog) APPEND.
                PUT STREAM out_data UNFORMATTED  
-                  chr(9) "Ошибка идентификации по API Key ".
+                  CHR(9) "Ошибка идентификации по API Key ".
                OUTPUT STREAM out_data CLOSE.
-               leave block_chgcdn. 
-           end.        
-           else if vRetVal > 400 and 
-              vRetVal < 500 and 
+               LEAVE block_chgcdn. 
+           END.        
+           ELSE IF vRetVal > 400 AND 
+              vRetVal < 500 AND 
               vRetVal <> 429
-           then do:
+           THEN DO:
               /* формируем лог файл */
               OUTPUT STREAM out_data TO value(vFileLog) APPEND.
               PUT STREAM out_data UNFORMATTED  
-                  chr(9) "Ошибка: некорректный запрос ".
+                  CHR(9) "Ошибка: некорректный запрос ".
               OUTPUT STREAM out_data CLOSE.  
-              leave block_chgcdn.
-           end.    
+              LEAVE block_chgcdn.
+           END.    
            
            /* при 5000 надо повторный запрос, но не надо смены площадки */  
-           if vRetVal = 5000 and vNumRep = vNumMax 
-           then do: 
+           IF vRetVal = 5000 AND vNumRep = vNumMax 
+           THEN DO: 
               OUTPUT STREAM out_data TO value(vFileLog) APPEND.
               PUT STREAM out_data UNFORMATTED  
-                  chr(9) "Ошибка недоступности трансграна ".
+                  CHR(9) "Ошибка недоступности трансграна ".
               OUTPUT STREAM out_data CLOSE.  
-              leave block_chgcdn.
-           end.    
+              LEAVE block_chgcdn.
+           END.    
                                            
            /* во всех остальных случаях, 
            ** после второго опроса площадки
            ** помечаем площадку плохой */
-           if vNumRep = vNumMax
-               and gismt-cdnTurnOn 
-           then do:
+           IF vNumRep = vNumMax
+               AND gismt-cdnTurnOn 
+           THEN DO:
               vRetCdn = SetCDNAdressErr(vGisAdrCDN).  
-           end.     
+           END.     
            
            /* проверяем, осталось ли время для повторного запроса 
            ** или смены площадки */  
-           if vNumRep <> vNumMax and 
-              gismt-cdnTurnOn and                
+           IF vNumRep <> vNumMax AND 
+              gismt-cdnTurnOn AND                
               gismt-cdnRepeat
-           then do:             
+           THEN DO:             
                /* если второй раз площадку не опрашиваем, то помечаем ее плохой */    
-               if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
-               then do:
-                  dbgPrint("marking.log", substitute("Время для повторного запроса не осталось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)).
+               IF vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
+               THEN DO:
+                  dbgPrint("marking.log", SUBSTITUTE("Время для повторного запроса не осталось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)).
                   vRetCdn = SetCDNAdressErr(vGisAdrCDN).
-                  leave block_chgcdn.
-               end.
-           end.                          
-       end.  
+                  LEAVE block_chgcdn.
+               END.
+           END.                          
+       END.  
        
        /* меняем площадку, только если включена настройка  работы по площадкам и смены площадки */
-       if gismt-cdnTurnOn and gismt-cdnChange 
-       then do:
+       IF gismt-cdnTurnOn AND gismt-cdnChange 
+       THEN DO:
            /* проверяем, осталось ли время для смены площадки */
-           vTimeNow = now.
-           if vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
-           then do:
-              dbgPrint("marking.log", substitute("Время подбора площадки закончилось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)). 
-              leave block_chgcdn.
-           end.
-       end.
-       else leave block_chgcdn.                      
-    end.                                              
+           vTimeNow = NOW.
+           IF vTimeStart + Int(gismt-WaitTime * 1000) < vTimeNow 
+           THEN DO:
+              dbgPrint("marking.log", SUBSTITUTE("Время подбора площадки закончилось: Начало &1 Время ожидания (с) &2 Сейчас &3  ", vTimeStart, gismt-WaitTime, vTimeNow)). 
+              LEAVE block_chgcdn.
+           END.
+       END.
+       ELSE LEAVE block_chgcdn.                      
+    END.                                              
     
-    if vRetVal <> 0 and 
-       vRetVal <> 203 and 
-       vRetVal <> 418 and
+    IF vRetVal <> 0 AND 
+       vRetVal <> 203 AND 
+       vRetVal <> 418 AND
        vRetVal <> 5000  
-    then do:
-       dbgPrint("marking.log", substitute("Получена ошибка с кодом &1 ", vRetVal)).          
-       return 2.
-    end.     
+    THEN DO:
+       dbgPrint("marking.log", SUBSTITUTE("Получена ошибка с кодом &1 ", vRetVal)).          
+       RETURN 2.
+    END.     
     
-    if vRetVal = 203 or 
-       vRetVal = 418 or
+    IF vRetVal = 203 OR 
+       vRetVal = 418 OR
        vRetVal = 5000
-    then do:
-        dbgPrint("marking.log", substitute("Получена ошибка с кодом &1 ", vRetVal)).          
-       return vRetVal.
-    end.  
+    THEN DO:
+        dbgPrint("marking.log", SUBSTITUTE("Получена ошибка с кодом &1 ", vRetVal)).          
+       RETURN vRetVal.
+    END.  
                            
-    if searchFile(vfileresult) = ?
-    then do :
+    IF searchFile(vfileresult) = ?
+    THEN DO :
        dbgPrint("marking.log", "Запрос не выполнен! Не могу найти файл ").       
-       return 2.
-    end .
-    file-info:file-name = searchFile(vfileresult) .
-    if file-info:file-size = 0
-    then do :
+       RETURN 2.
+    END .
+    FILE-INFO:FILE-NAME = searchFile(vfileresult) .
+    IF FILE-INFO:FILE-SIZE = 0
+    THEN DO :
        dbgPrint("marking.log", "Запрос не выполнен! Файл-ответ пустой (размер 0 байт). ").          
-       return 2.
-    end.
+       RETURN 2.
+    END.
     
-    copy-lob from file vFileResult to vlongJson no-error.
-    copy-lob from file vFileresultErr to vlongJsonError no-error.        
+    COPY-LOB FROM FILE vFileResult TO vlongJson NO-ERROR.
+    COPY-LOB FROM FILE vFileresultErr TO vlongJsonError NO-ERROR.        
          
     /* анализируем, есть ли ошибки в ответе */
-    if index(vlongJsonError,"curl:") > 0 or
-       vlongJson begins "<html>" 
-    then do:
+    IF INDEX(vlongJsonError,"curl:") > 0 OR
+       vlongJson BEGINS "<html>" 
+    THEN DO:
        dbgPrint("marking.log", "Ошибка ответа от сервиса ").
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         chr(9) "Отсутствует ответ ГИС МТ ".
+         CHR(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
-       return 2.
-    end.                        
+       RETURN 2.
+    END.                        
    
     /* заменяем спец.символы, которые не дадут сконвертировать в xml */
-    assign
-       vlongJson = replace(vlongJson, "&lt;", "###lo-then###") 
-       vlongJson = replace(vlongJson, "&Lt;", "###LO-then###") 
-       vlongJson = replace(vlongJson, "&lT;", "###lo-THEN###") 
-       vlongJson = replace(vlongJson, "&LT;", "###LO-THEN###") 
-       vlongJson = replace(vlongJson, "&gt;", "###gr-then###") 
-       vlongJson = replace(vlongJson, "&Gt;", "###GR-then###") 
-       vlongJson = replace(vlongJson, "&gT;", "###gr-THEN###") 
-       vlongJson = replace(vlongJson, "&GT;", "###GR-THEN###") 
-       vlongJson = replace(vlongJson, "&", "&amp;") 
-       vlongJson = replace(vlongJson, "<", "&lt;") 
-       vlongJson = replace(vlongJson, ">", "&gt;") 
-       vlongJson = replace(vlongJson, ':null', ':""') 
-       vlongJson = replace(vlongJson, (':' + CHR(91) + CHR(123) + CHR(125) + CHR(93)), ':""') 
-       vlongJson = replace(vlongJson, ':~{~}', ':""')
-       vlongJson = replace(vlongJson, '"1":', '"n1":')
-       vlongJson = replace(vlongJson, '"2":', '"n2":')
-       vlongJson = replace(vlongJson, '"3":', '"n3":')
-       vlongJson = replace(vlongJson, '"4":', '"n4":')
-       vlongJson = replace(vlongJson, '"5":', '"n5":')
-       vlongJson = replace(vlongJson, '"6":', '"n6":')
-       vlongJson = replace(vlongJson, '"7":', '"n7":')
-       vlongJson = replace(vlongJson, '"8":', '"n8":')
-       vlongJson = replace(vlongJson, '"9":', '"n9":')
-       vlongJson = replace(vlongJson, '"10":', '"n10":')
-       vlongJson = replace(vlongJson, '"11":', '"n11":')
-       vlongJson = replace(vlongJson, '"12":', '"n12":')
-       vlongJson = replace(vlongJson, '"13":', '"n13":')
-       vlongJson = replace(vlongJson, '"14":', '"n14":')
-       vlongJson = replace(vlongJson, '"15":', '"n15":')
-       vlongJson = replace(vlongJson, '"16":', '"n16":')
-       vlongJson = replace(vlongJson, '"17":', '"n17":')
-       vlongJson = replace(vlongJson, '"18":', '"n18":')
-       vlongJson = replace(vlongJson, '"19":', '"n19":')
-       vlongJson = replace(vlongJson, '"20":', '"n20":')
-       vlongJson = replace(vlongJson, '"21":', '"n21":')
+    ASSIGN
+       vlongJson = REPLACE(vlongJson, "&lt;", "###lo-then###") 
+       vlongJson = REPLACE(vlongJson, "&Lt;", "###LO-then###") 
+       vlongJson = REPLACE(vlongJson, "&lT;", "###lo-THEN###") 
+       vlongJson = REPLACE(vlongJson, "&LT;", "###LO-THEN###") 
+       vlongJson = REPLACE(vlongJson, "&gt;", "###gr-then###") 
+       vlongJson = REPLACE(vlongJson, "&Gt;", "###GR-then###") 
+       vlongJson = REPLACE(vlongJson, "&gT;", "###gr-THEN###") 
+       vlongJson = REPLACE(vlongJson, "&GT;", "###GR-THEN###") 
+       vlongJson = REPLACE(vlongJson, "&", "&amp;") 
+       vlongJson = REPLACE(vlongJson, "<", "&lt;") 
+       vlongJson = REPLACE(vlongJson, ">", "&gt;") 
+       vlongJson = REPLACE(vlongJson, ':null', ':""') 
+       vlongJson = REPLACE(vlongJson, (':' + CHR(91) + CHR(123) + CHR(125) + CHR(93)), ':""') 
+       vlongJson = REPLACE(vlongJson, ':~{~}', ':""')
+       vlongJson = REPLACE(vlongJson, '"1":', '"n1":')
+       vlongJson = REPLACE(vlongJson, '"2":', '"n2":')
+       vlongJson = REPLACE(vlongJson, '"3":', '"n3":')
+       vlongJson = REPLACE(vlongJson, '"4":', '"n4":')
+       vlongJson = REPLACE(vlongJson, '"5":', '"n5":')
+       vlongJson = REPLACE(vlongJson, '"6":', '"n6":')
+       vlongJson = REPLACE(vlongJson, '"7":', '"n7":')
+       vlongJson = REPLACE(vlongJson, '"8":', '"n8":')
+       vlongJson = REPLACE(vlongJson, '"9":', '"n9":')
+       vlongJson = REPLACE(vlongJson, '"10":', '"n10":')
+       vlongJson = REPLACE(vlongJson, '"11":', '"n11":')
+       vlongJson = REPLACE(vlongJson, '"12":', '"n12":')
+       vlongJson = REPLACE(vlongJson, '"13":', '"n13":')
+       vlongJson = REPLACE(vlongJson, '"14":', '"n14":')
+       vlongJson = REPLACE(vlongJson, '"15":', '"n15":')
+       vlongJson = REPLACE(vlongJson, '"16":', '"n16":')
+       vlongJson = REPLACE(vlongJson, '"17":', '"n17":')
+       vlongJson = REPLACE(vlongJson, '"18":', '"n18":')
+       vlongJson = REPLACE(vlongJson, '"19":', '"n19":')
+       vlongJson = REPLACE(vlongJson, '"20":', '"n20":')
+       vlongJson = REPLACE(vlongJson, '"21":', '"n21":')
        .
-    run gbl/_tmpfile.p ( "ChkGisMTResCnv", ".txt", output vFileResultCnv ) .
-    create tt-file-name.
-    assign tt-file-name.tmpFileName = vFileResultCnv.
-    dbgPrint("marking.log", substitute("vFileResultCnv &1 ", vFileResultCnv)).
+    RUN gbl/_tmpfile.p ( "ChkGisMTResCnv", ".txt", OUTPUT vFileResultCnv ) .
+    CREATE tt-file-name.
+    ASSIGN tt-file-name.tmpFileName = vFileResultCnv.
+    dbgPrint("marking.log", SUBSTITUTE("vFileResultCnv &1 ", vFileResultCnv)).
     
-    copy-lob from vlongJson to file vFileResultCnv no-error.
+    COPY-LOB FROM vlongJson TO FILE vFileResultCnv NO-ERROR.
     
-    if vlongJson = "" then do:
+    IF vlongJson = "" THEN DO:
        dbgPrint("marking.log", "Не получен ответ от сервиса ").
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         chr(9) "Отсутствует ответ ГИС МТ ".
+         CHR(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
-       return 2.
-    end.   
+       RETURN 2.
+    END.   
     
-    run gbl/_tmpfile.p ( "ChkGisMTResXml", ".xml", output vFileResultXml ) .
-    create tt-file-name.
-    assign tt-file-name.tmpFileName = vFileResultXml. 
-    dbgPrint("marking.log", substitute("vFileResultXml &1 ", vFileResultXml)).
+    RUN gbl/_tmpfile.p ( "ChkGisMTResXml", ".xml", OUTPUT vFileResultXml ) .
+    CREATE tt-file-name.
+    ASSIGN tt-file-name.tmpFileName = vFileResultXml. 
+    dbgPrint("marking.log", SUBSTITUTE("vFileResultXml &1 ", vFileResultXml)).
             
-    cmd = substitute ('&1 -file=&2 >&3',
-                      search("exe/json2xml.exe"),
+    cmd = SUBSTITUTE ('&1 -file=&2 >&3',
+                      SEARCH("exe/json2xml.exe"),
                       vFileResultCnv,
                       vfileresultxml).
                           
-    os-command silent value (cmd).  
+    OS-COMMAND SILENT VALUE (cmd).  
     
-    file-info:file-name = search(vfileresultxml) .
-    if file-info:file-size = 0
-    then do :
-       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>. " + error-status:get-message(1)).
+    FILE-INFO:FILE-NAME = SEARCH(vfileresultxml) .
+    IF FILE-INFO:FILE-SIZE = 0
+    THEN DO :
+       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>. " + ERROR-STATUS:GET-MESSAGE(1)).
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         chr(9) "Отсутствует ответ ГИС МТ ".
+         CHR(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
-       return 2.
-    end .
+       RETURN 2.
+    END .
     
-    copy-lob from file vfileresultxml to vlongJson no-error.
+    COPY-LOB FROM FILE vfileresultxml TO vlongJson NO-ERROR.
     vlongJson = "<bodys>" +  vlongJson + "</bodys>".
-    copy-lob from vlongJson to file vfileresultxml no-error.
-    vRetOk = dataset gismt-mark-body:read-xml("FILE":U, vfileresultxml, "EMPTY":U, ?, ?) no-error.
-    if not vRetOk or error-status:error then do:
-       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>. " + error-status:get-message(1)).
+    COPY-LOB FROM vlongJson TO FILE vfileresultxml NO-ERROR.
+    vRetOk = DATASET gismt-mark-body:READ-XML("FILE":U, vfileresultxml, "EMPTY":U, ?, ?) NO-ERROR.
+    IF NOT vRetOk OR ERROR-STATUS:ERROR THEN DO:
+       dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <body>. " + ERROR-STATUS:GET-MESSAGE(1)).
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         chr(9) "Отсутствует ответ ГИС МТ ".
+         CHR(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
-       return 2.
-    end.   
-    vRetOk = dataset gismt-mark-codes:read-xml("FILE":U, vfileresultxml, "EMPTY":U, ?, ?) no-error. 
-    if not vRetOk or error-status:error then do:
+       RETURN 2.
+    END.   
+    vRetOk = DATASET gismt-mark-codes:READ-XML("FILE":U, vfileresultxml, "EMPTY":U, ?, ?) NO-ERROR. 
+    IF NOT vRetOk OR ERROR-STATUS:ERROR THEN DO:
        dbgPrint("marking.log", "Запрос не выполнен! Ошибка при чтении XML <codes>.").
        /* формируем лог файл */
        OUTPUT STREAM out_data TO value(vFileLog) APPEND.
        PUT STREAM out_data UNFORMATTED  
-         chr(9) "Отсутствует ответ ГИС МТ ".
+         CHR(9) "Отсутствует ответ ГИС МТ ".
        OUTPUT STREAM out_data CLOSE.
-       return 2.
-    end.         
+       RETURN 2.
+    END.         
        
-    return 0.
+    RETURN 0.
     
-  end method.
+  END METHOD.
   
   
   /* Проверка марки в ГИС МТ */
-  method private character ChekAccessMark (
-    p-obj-type  as character, 
-    p-obj-code  as integer,
-    mark as character,
-    mark-short as character 
+  METHOD PRIVATE CHARACTER ChekAccessMark (
+    p-obj-type  AS CHARACTER, 
+    p-obj-code  AS INTEGER,
+    mark AS CHARACTER,
+    mark-short AS CHARACTER 
   ):
-    define variable vErrSts as character no-undo.
-    define variable vMark as character no-undo.
+    DEFINE VARIABLE vErrSts AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vMark AS CHARACTER NO-UNDO.
     
-    define variable vGetGisMt as int no-undo.
+    DEFINE VARIABLE vGetGisMt AS INT NO-UNDO.
         
-    define variable vMarkNotNeedCheck as logical   no-undo.
+    DEFINE VARIABLE vMarkNotNeedCheck AS LOGICAL   NO-UNDO.
     /* настройки по типам маркировки */
-    define variable vCheckBlock    as logical   no-undo.
-    define variable vCheckDate     as logical   no-undo.
-    define variable vCheckMRC      as logical   no-undo.
-    define variable vCheckOwner    as logical   no-undo.
-    define variable vCheckStatusKM as logical   no-undo.
-    define variable vCheckTracking as logical   no-undo.
-    define variable vCheck         as logical   no-undo.
+    DEFINE VARIABLE vCheckBlock    AS LOGICAL   NO-UNDO.
+    DEFINE VARIABLE vCheckDate     AS LOGICAL   NO-UNDO.
+    DEFINE VARIABLE vCheckMRC      AS LOGICAL   NO-UNDO.
+    DEFINE VARIABLE vCheckOwner    AS LOGICAL   NO-UNDO.
+    DEFINE VARIABLE vCheckStatusKM AS LOGICAL   NO-UNDO.
+    DEFINE VARIABLE vCheckTracking AS LOGICAL   NO-UNDO.
+    DEFINE VARIABLE vCheck         AS LOGICAL   NO-UNDO.
     
-    define variable vMRC as decimal no-undo.
-    define variable vMrp as decimal no-undo.
-    define variable vMRC_r as decimal no-undo.
-    define variable vMrp_r as decimal no-undo.
-    define variable vExpireDMY  as character  no-undo.
-    define variable vExpireTime as character  no-undo.
-    define variable vExpireDate as datetime-tz no-undo.
-    define variable vExpireTimeMes as character no-undo.
+    DEFINE VARIABLE vMRC AS DECIMAL NO-UNDO.
+    DEFINE VARIABLE vMrp AS DECIMAL NO-UNDO.
+    DEFINE VARIABLE vMRC_r AS DECIMAL NO-UNDO.
+    DEFINE VARIABLE vMrp_r AS DECIMAL NO-UNDO.
+    DEFINE VARIABLE vExpireDMY  AS CHARACTER  NO-UNDO.
+    DEFINE VARIABLE vExpireTime AS CHARACTER  NO-UNDO.
+    DEFINE VARIABLE vExpireDate AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vExpireTimeMes AS CHARACTER NO-UNDO.
         
-    define buffer buf_marking-attr for ub.marking-attr.
-    define buffer buf_code for ub.code.
+    DEFINE BUFFER buf_marking-attr FOR ub.marking-attr.
+    DEFINE BUFFER buf_code FOR ub.code.
     
-    if mark = "" or mark = "?" 
-       then return "".
+    DelTmpFile(YES).
+    DelTmpFile(NO).
+    
+    IF mark = "" OR mark = "?" 
+       THEN RETURN "".
        
-    assign
+    ASSIGN
        vErrSts = ""
        mCheckSts = 1
        mTypeMark = ""
+       mCheckGisMT = 0
        .
     
     /* определяем тип марки и МРЦ */
     ChekTypeMarkByDm(mark).
     
     /* если не определен тип марки, это не марка, не проверяем */    
-    if mTypeMark = "" then do:
+    IF mTypeMark = "" THEN DO:
         mCheckSts = 0.
-        return "Не опредлен тип маркировки товара. ".
-    end.    
+        RETURN "Не опредлен тип маркировки товара. ".
+    END.    
     
-    dbgPrint("marking.log", substitute("Проверка марки p-obj-type &1 p-obj-code &2 mark &3 mTypeMark &4 mark-short &5", 
+    dbgPrint("marking.log", SUBSTITUTE("Проверка марки p-obj-type &1 p-obj-code &2 mark &3 mTypeMark &4 mark-short &5", 
                                         p-obj-type,
                                         p-obj-code,
                                         mark,
                                         mTypeMark,
-                                        trim(mark-short,chr(29))
+                                        TRIM(mark-short,CHR(29))
                                         )).  
                                         
     /* Вычисляем, какие проверки нужны для этого типа марки */    
@@ -1426,11 +1497,11 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                                {&attr-marking_checkTracking},
                                mTypeMark).                           
        
-    if  vCheckBlock or vCheckDate or vCheckMRC or vCheckOwner or vCheckStatusKM
-       then vCheck = yes.
-    else vCheck = no.     
+    IF  vCheckBlock OR vCheckDate OR vCheckMRC OR vCheckOwner OR vCheckStatusKM
+       THEN vCheck = YES.
+    ELSE vCheck = NO.     
     
-    dbgPrint("marking.log", substitute("vCheckBlock &1 vCheckDate &2 vCheckMRC &3 vCheckOwner &4 vCheckStatusKM &5 vCheckTracking &6",
+    dbgPrint("marking.log", SUBSTITUTE("vCheckBlock &1 vCheckDate &2 vCheckMRC &3 vCheckOwner &4 vCheckStatusKM &5 vCheckTracking &6",
                                        vCheckBlock,
                                        vCheckDate,
                                        vCheckMRC,
@@ -1439,32 +1510,37 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
                                        vCheckTracking)).
                                        
     /* у типа маркировки не отмечен ни один параметр для проверки */
-    if not vCheck then return "".
+    IF NOT vCheck THEN RETURN "".
     
     /* Определяем, стоит ли игнорировать проверку онлайн по марке */
-    find first buf_marking-attr no-lock where 
+    FIND FIRST buf_marking-attr NO-LOCK WHERE 
                 buf_marking-attr.attr-code = "notOnlineCheck"
-            and buf_marking-attr.mark begins trim(mark-short,chr(29))
-        no-error.
-    if available buf_marking-attr 
-    then vMarkNotNeedCheck = logical(buf_marking-attr.attr-value) no-error.
-    else vMarkNotNeedCheck = no.
+            AND buf_marking-attr.mark BEGINS trim(mark-short,CHR(29))
+        NO-ERROR.
+    IF AVAILABLE buf_marking-attr 
+    THEN vMarkNotNeedCheck = LOGICAL(buf_marking-attr.attr-value) NO-ERROR.
+    ELSE vMarkNotNeedCheck = NO.
     
-    dbgPrint("marking.log", substitute("Игнорировать он-лайн проверку: &1",vMarkNotNeedCheck)). 
+    dbgPrint("marking.log", SUBSTITUTE("Игнорировать он-лайн проверку: &1",vMarkNotNeedCheck)). 
     
-    if vMarkNotNeedCheck then return "".
-    
+    IF vMarkNotNeedCheck THEN DO:
+       mCheckGisMT = 2. 
+       RETURN "".
+    END.
     /* вызываем проверку по марке */
-    vGetGisMt = GetGisMTCheck(p-obj-type,p-obj-code,mark).
+    vGetGisMt = GetGisMTCheck(p-obj-type,p-obj-code,mark,mark-short).
     
-    /* Чистим временные файлы */
-    DelTmpFile().
+    /* Чистим временные файлы */    
+    DelTmpFile(NO).
     
     /* установлен признак аварии в настройках */
-    if vGetGisMt = 1 then do:
-       mCheckSts = 2.
-       return "".
-    end.   
+    IF vGetGisMt = 1 THEN DO:
+       ASSIGN
+          mCheckSts = 2
+          mCheckGisMT = 2 /* При аварийной ситуации офлайн проверка не всегда приводит к блокировке */
+          .
+       RETURN "".
+    END.   
     /*
     /* Запускаем проверку, не надо ли обновить 
     ** площадки и их обновление */
@@ -1474,517 +1550,796 @@ class ibs.th.skt.ControlledClients.marking inherits ICommandProc:
        run utl/pub-runcdn.p (p-obj-type, string(p-obj-code)).              
       */     
     /* произошла аварийная ситуация - фиксируем */
-    if vGetGisMt <> 0 then do: 
-        if vGetGisMt = 2 then 
-        do:
+    IF vGetGisMt <> 0 THEN DO: 
+        IF vGetGisMt = 2 THEN 
+        DO:
            vErrSts = FixErrGisMT().           
-        end.
+        END.
         /* если авария самого трансграна 
         ** время аварии не сбрасываем и не выставляем */
-        else if vGetGisMt = 5000 
-        then do:
-            assign
+        ELSE IF vGetGisMt = 5000 
+        THEN DO:
+            ASSIGN
                mCheckSts = 2
                vErrSts = ""
                . 
-        end.    
+        END.    
         /* если авария в ГИС МТ, наше время аварии скидываем */
-        else if vGetGisMt = 203 or
+        ELSE IF vGetGisMt = 203 OR
                 vGetGisMt = 418
-        then do:
+        THEN DO:
             SetNoErrGisMT().
-            assign 
+            ASSIGN 
                 mCheckSts = 2
                 vErrSts = ""
+                mCheckGisMT = 2
                 .
-        end.
+                
+        END.
         
-        return vErrSts.
-    end.
-    else SetNoErrGisMT().                
-
+        RETURN vErrSts.
+    END.
+    ELSE SetNoErrGisMT().                
+    
+    mCheckGisMT = 1. /* Обращение к ГИС МТ прошло без ошибок */
+    
     dbgPrint("marking.log", "ttmark-body").
      
-    find first ttmark-body no-lock no-error.
-    if avail ttmark-body 
-    then do:
-        assign
+    FIND FIRST ttmark-body NO-LOCK NO-ERROR.
+    IF AVAIL ttmark-body 
+    THEN DO:
+        ASSIGN
            mReqId        = ttmark-body.reqid
-           mReqTimeStamp = string(ttmark-body.reqtimestamp)
+           mReqTimeStamp = STRING(ttmark-body.reqtimestamp)
            .
         /* по новому алгоритму сюда теоретически не должны попасть */   
-        if ttmark-body.code <> 0  
-        then do:
-           assign 
+        IF ttmark-body.code <> 0  
+        THEN DO:
+           ASSIGN 
               mCheckSts = 0
               vErrSts = "Онлайн-проверка завершилась с ошибкой. "
               .
-            return vErrSts.  
-        end.                       
-    end.
-    else do:
+            RETURN vErrSts.  
+        END.                       
+    END.
+    ELSE DO:
         /* Сюда можем попасть, если вылетели из проверки GetGisMTCheck по непредвиденной ошибке
         ** например - ошибка с файлом на экран */
         dbgPrint("marking.log", "Произошло аварийное завершение метода проверки марки в ГИС МТ - нет шапки ответа.").
-        assign 
+        ASSIGN 
            mCheckSts = 0
            vErrSts = "Онлайн-проверка завершилась с ошибкой. "
            .
-        return vErrSts.
-    end.    
+        RETURN vErrSts.
+    END.    
     
-    vMRC = getMRCByDM(mark) * 100 no-error.
-    if vMRC = ? then vMRC = 0.
-    dbgPrint("marking.log", substitute("МРЦ по марке: &1",vMRC)).
+    vMRC = getMRCByDM(mark) * 100 NO-ERROR.
+    IF vMRC = ? THEN vMRC = 0.
+    dbgPrint("marking.log", SUBSTITUTE("МРЦ по марке: &1",vMRC)).
     
     dbgPrint("marking.log", "ttmark-check").
      
-    find first ttmark-check no-lock no-error.
-    if avail ttmark-check 
-    then do:
-      if ttmark-check.errorCode = 0 or
+    FIND FIRST ttmark-check NO-LOCK NO-ERROR.
+    IF AVAIL ttmark-check 
+    THEN DO:
+      IF ttmark-check.errorCode = 0 OR
          ttmark-check.errorCode = 10 
-         then . 
-      else do:
-          assign 
+         THEN . 
+      ELSE DO:
+          ASSIGN 
             vErrSts = "Онлайн-проверка завершилась с ошибкой. "
             mCheckSts = 0.
-          return vErrSts.
-      end.      
+          RETURN vErrSts.
+      END.      
 
-      vMrp = int(ttmark-check.mrp) no-error.
+      vMrp = int(ttmark-check.mrp) NO-ERROR.
                  
-      if vCheck then do:
-         if ttmark-check.found = false 
-         then do: 
-            assign 
+      IF vCheck THEN DO:
+         IF ttmark-check.found = FALSE 
+         THEN DO: 
+            ASSIGN 
                 vErrSts = "Данная марка не зарегистрирована в Честном Знаке. "
                 mCheckSts = 3.
-            return vErrSts.
-         end.
+            RETURN vErrSts.
+         END.
          
-         if  vCheckDate = yes then do:            
-            if ttmark-check.expireDate <> ? 
-            then do:                
+         IF  vCheckDate = YES THEN DO:            
+            IF ttmark-check.expireDate <> ? 
+            THEN DO:                
                 /* убираем часовой пояс */
-                vExpireTimeMes = entry(1,string(ttmark-check.expireDate),"+").
-                vExpireDate = datetime-tz(vExpireTimeMes).                                
-                if vExpireDate < now + gismt-BanDate * 60 * 1000
-                then do:
-                  assign
+                vExpireTimeMes = ENTRY(1,STRING(ttmark-check.expireDate),"+").
+                vExpireDate = DATETIME-TZ(vExpireTimeMes).                                
+                IF vExpireDate < NOW + gismt-BanDate * 60 * 1000
+                THEN DO:
+                  ASSIGN
                      vErrSts = "Срок годности товара истек " + string(vExpireDate,"99/99/9999 HH:MM") + ". "
                      mCheckSts = 0.
-                end.   
-            end.
-            else assign 
+                END.   
+            END.
+            ELSE ASSIGN 
                    vErrSts = ""
                    mCheckSts = 2.
-         end.
-         if  vCheckBlock and ttmark-check.isBlocked = true
-         then assign
+         END.
+         IF  vCheckBlock AND ttmark-check.isBlocked = TRUE
+         THEN ASSIGN
                  vErrSts = vErrSts + "Реализация товара запрещена контролирующими органами. "
                  mCheckSts = 0.
          
-         if  vCheckStatusKM and 
-                 (ttmark-check.utilised = false or 
-                 (ttmark-check.realizable = false and ttmark-check.grayZone = false) or 
-                 ttmark-check.sold = true or 
-                 ttmark-check.verified = false)
-         then assign 
+         IF  vCheckStatusKM AND 
+                 (ttmark-check.utilised = FALSE OR 
+                 (ttmark-check.realizable = FALSE AND ttmark-check.grayZone = FALSE) OR 
+                 ttmark-check.sold = TRUE OR 
+                 ttmark-check.verified = FALSE)
+         THEN ASSIGN 
                  vErrSts = vErrSts + "Марка товара в статусе, запрещающем розничную реализацию. "
                  mCheckSts = 0.
                  
-         if vCheckMRC and 
-            vMrp <> 0 and 
+         IF vCheckMRC AND 
+            vMrp <> 0 AND 
             vMRC <> vMrp          
-         then 
-              assign 
-                 vMRC_r = if vMRC <> ? then Round((vMrc / 100), 2) else 0
-                 vMrp_r = Round((vMrp / 100), 2)
+         THEN 
+              ASSIGN 
+                 vMRC_r = IF vMRC <> ? THEN ROUND((vMrc / 100), 2) ELSE 0
+                 vMrp_r = ROUND((vMrp / 100), 2)
                  vErrSts = vErrSts + "МРЦ на упаковке " 
-                           + (if vMRC = ? then "не определена" else trim(string(vMrc_r,">>>>>>>>>>9.99"), " ") + "р.") 
+                           + (IF vMRC = ? THEN "не определена" ELSE TRIM(STRING(vMrc_r,">>>>>>>>>>9.99"), " ") + "р.") 
                            + " не совпадает с МРЦ в Честном Знаке - " 
-                           + trim(string(vMrp_r,">>>>>>>>>>9.99"), " ") + "р. "
+                           + trim(STRING(vMrp_r,">>>>>>>>>>9.99"), " ") + "р. "
                  mCheckSts = 0
                  .
-         if  vCheckOwner and 
-             ttmark-check.isOwner = false and 
-             ((vCheckTracking and ttmark-check.isTracking = true) or 
-              not vCheckTracking) and 
-             ttmark-check.grayZone = false
-         then assign
+         IF  vCheckOwner AND 
+             ttmark-check.isOwner = FALSE AND 
+             ((vCheckTracking AND ttmark-check.isTracking = TRUE) OR 
+              NOT vCheckTracking) AND 
+             ttmark-check.grayZone = FALSE
+         THEN ASSIGN
                  vErrSts = vErrSts + "Общество не является владельцем товара. "
                  mCheckSts = 0.
-      end.     
-    end.
-    else do:
+      END.     
+    END.
+    ELSE DO:
         /* Сюда можем попасть, если вылетели из проверки GetGisMTCheck по непредвиденной ошибке
         ** по непонятной причине */
         dbgPrint("marking.log", "Произошло аварийное завершение метода проверки марки в ГИС МТ - нет тела ответа.").
-        assign 
+        ASSIGN 
            mCheckSts = 0
            vErrSts = "Онлайн-проверка завершилась с ошибкой. "
            .
-        return vErrSts.
-    end.    
-    dbgPrint("marking.log", substitute("vErrSts &1 mCheckSts &2", vErrSts, mCheckSts)).
+        RETURN vErrSts.
+    END.    
+    dbgPrint("marking.log", SUBSTITUTE("vErrSts &1 mCheckSts &2", vErrSts, mCheckSts)).
     
-    return vErrSts.
+    RETURN vErrSts.
 
-  end method.
+  END METHOD.
   
-  method private void dbgPrint(
-     iLogName as character, 
-     iTxt as character
+  METHOD PRIVATE VOID dbgPrint(
+     iLogName AS CHARACTER, 
+     iTxt AS CHARACTER
     ):
-        def var vLogName as char no-undo.
+        DEF VAR vLogName AS CHAR NO-UNDO.
         
-    if session:debug-alert
-    then do:  
-       vLogName = entry(1,iLogName,".") + "-" + replace(string(today),"/","-") + "." + entry(2,iLogName,".").           
-       output stream out_s to value(vLogName) append.
-       case iTxt:
-          when "gismt-info" then do:
-             put stream out_s unformatted
-                   " AdressPort " gismt-AdressPort skip
-                   " DopParam " gismt-DopParam skip
-                   " GisAdress " gismt-GisAdress skip 
-                   " ProxyLogin " gismt-ProxyLogin skip  
-                   " ProxyPswd " gismt-ProxyPswd skip
-                   " MaxTime " gismt-MaxTime skip
-                   " RegKey " gismt-RegKey skip
-                   " TimeFalStart " gismt-TimeFalStart skip
-                   " WaitTime " gismt-WaitTime skip
-                   " CrashSituat " gismt-CrashSituat skip
-                   " BanDate " gismt-BanDate skip
-                   " cdnTurnOn " gismt-cdnTurnOn skip   
-                   " cdnAdress " gismt-cdnAdress skip
-                   " cdnRepeat " gismt-cdnRepeat skip
-                   " cdnChange " gismt-cdnChange skip
-                   " cdnTimeUpd " gismt-cdnTimeUpd skip  
-                   " UpdateRequest " gismt-UpdateRequest 
-                   skip.   
-          end.   
-          when "ttmark-body" then do:
-             for each ttmark-body:
-                put stream out_s unformatted  
-                    now " ttmark-body: " skip
-                    "ttmark-body.code " ttmark-body.code skip
-                    "ttmark-body.error " ttmark-body.error-1 skip
-                    "ttmark-body.requestid " ttmark-body.requestid skip
-                    "ttmark-body.status " ttmark-body.status-1 skip
-                    "ttmark-body.timestamp " ttmark-body.timestamp skip 
-                    "ttmark-body.reqid " ttmark-body.reqid skip
+    IF SESSION:DEBUG-ALERT
+    THEN DO:  
+       vLogName = ENTRY(1,iLogName,".") + "-" + replace(STRING(TODAY),"/","-") + "." + entry(2,iLogName,".").           
+       OUTPUT stream out_s to value(vLogName) append.
+       CASE iTxt:
+          WHEN "gismt-info" THEN DO:
+             PUT STREAM out_s UNFORMATTED
+                   " AdressPort " gismt-AdressPort SKIP
+                   " DopParam " gismt-DopParam SKIP
+                   " GisAdress " gismt-GisAdress SKIP 
+                   " ProxyLogin " gismt-ProxyLogin SKIP  
+                   " ProxyPswd " gismt-ProxyPswd SKIP
+                   " MaxTime " gismt-MaxTime SKIP
+                   " RegKey " gismt-RegKey SKIP
+                   " TimeFalStart " gismt-TimeFalStart SKIP
+                   " WaitTime " gismt-WaitTime SKIP
+                   " CrashSituat " gismt-CrashSituat SKIP
+                   " BanDate " gismt-BanDate SKIP
+                   " cdnTurnOn " gismt-cdnTurnOn SKIP   
+                   " cdnAdress " gismt-cdnAdress SKIP
+                   " cdnRepeat " gismt-cdnRepeat SKIP
+                   " cdnChange " gismt-cdnChange SKIP
+                   " cdnTimeUpd " gismt-cdnTimeUpd SKIP  
+                   " UpdateRequest " gismt-UpdateRequest                    
+                   " OflineAdress " gismt-OflineAdress SKIP  
+                   " OflineAutoriz " gismt-OflineAutoriz SKIP
+                   " OflineDate " gismt-OflineDate
+                   SKIP.   
+          END.   
+          WHEN "ttmark-body" THEN DO:
+             FOR EACH ttmark-body:
+                PUT STREAM out_s UNFORMATTED  
+                    NOW " ttmark-body: " SKIP
+                    "ttmark-body.code " ttmark-body.code SKIP
+                    "ttmark-body.error " ttmark-body.error-1 SKIP
+                    "ttmark-body.requestid " ttmark-body.requestid SKIP
+                    "ttmark-body.status " ttmark-body.status-1 SKIP
+                    "ttmark-body.timestamp " ttmark-body.timestamp SKIP 
+                    "ttmark-body.reqid " ttmark-body.reqid SKIP
                     "ttmark-body.reqtimestamp " ttmark-body.reqtimestamp
-                    skip .
-             end.       
-          end.
-          when "ttmark-check" then do: 
-             for each ttmark-check:
-                put stream out_s unformatted  
-                     now " ttmark-check: " skip
-                     "ttmark-check.cis: " ttmark-check.cis skip        
-                     "tttmark-check.printView: " ttmark-check.printView skip      
-                     "ttmark-check.gtin: " ttmark-check.gtin           skip
-                     "ttmark-check.verified: " ttmark-check.verified   skip    
-                     "ttmark-check.found: " ttmark-check.found         skip 
-                     "ttmark-check.realizable: " ttmark-check.realizable  skip   
-                     "ttmark-check.utilised: " ttmark-check.utilised   skip     
-                     "ttmark-check.isBlocked: " ttmark-check.isBlocked skip      
-                     "ttmark-check.productionDate: " ttmark-check.productionDate skip 
-                     "ttmark-check.isOwner: " ttmark-check.isOwner     skip    
-                     "ttmark-check.errorCode: " ttmark-check.errorCode skip      
-                     "ttmark-check.isTracking: " ttmark-check.isTracking   skip   
-                     "ttmark-check.sold: " ttmark-check.sold           skip
-                     "ttmark-check.packageType: " ttmark-check.packageType skip   
-                     "ttmark-check.producerInn: " ttmark-check.producerInn skip   
-                     "ttmark-check.grayZone: " ttmark-check.grayZone       skip
-                     "ttmark-check.mrp: " ttmark-check.mrp skip
+                    SKIP .
+             END.       
+          END.
+          WHEN "ttmark-check" THEN DO: 
+             FOR EACH ttmark-check:
+                PUT STREAM out_s UNFORMATTED  
+                     NOW " ttmark-check: " SKIP
+                     "ttmark-check.cis: " ttmark-check.cis SKIP        
+                     "tttmark-check.printView: " ttmark-check.printView SKIP      
+                     "ttmark-check.gtin: " ttmark-check.gtin           SKIP
+                     "ttmark-check.verified: " ttmark-check.verified   SKIP    
+                     "ttmark-check.found: " ttmark-check.found         SKIP 
+                     "ttmark-check.realizable: " ttmark-check.realizable  SKIP   
+                     "ttmark-check.utilised: " ttmark-check.utilised   SKIP     
+                     "ttmark-check.isBlocked: " ttmark-check.isBlocked SKIP      
+                     "ttmark-check.productionDate: " ttmark-check.productionDate SKIP 
+                     "ttmark-check.isOwner: " ttmark-check.isOwner     SKIP    
+                     "ttmark-check.errorCode: " ttmark-check.errorCode SKIP      
+                     "ttmark-check.isTracking: " ttmark-check.isTracking   SKIP   
+                     "ttmark-check.sold: " ttmark-check.sold           SKIP
+                     "ttmark-check.packageType: " ttmark-check.packageType SKIP   
+                     "ttmark-check.producerInn: " ttmark-check.producerInn SKIP   
+                     "ttmark-check.grayZone: " ttmark-check.grayZone       SKIP
+                     "ttmark-check.mrp: " ttmark-check.mrp SKIP
                      "ttmark-check.expireDate: " ttmark-check.expireDate          
-                     skip.
-             end.        
-          end.     
-          otherwise      
-             put stream out_s unformatted now " " iTxt skip.
-       end case.     
-       output stream out_s close.
-    end.
-    return.
-  end method.
+                     SKIP.
+             END.            
+          END.     
+          WHEN "ttlocal-mark" THEN DO:
+              FOR EACH ttlocal-mark:
+                  PUT STREAM out_s UNFORMATTED  
+                     NOW " ttlocal-mark: " SKIP
+                     "ttlocal-mark.id: " ttlocal-mark.id     SKIP
+                     "ttlocal-mark.ts: " ttlocal-mark.ts     SKIP
+                     "ttlocal-mark.inst: " ttlocal-mark.inst SKIP
+                     "ttlocal-mark.e: " ttlocal-mark.e       SKIP              
+                     "ttlocal-mark.c: " ttlocal-mark.c       SKIP
+                     "ttlocal-mark.bs: " ttlocal-mark.bs     SKIP 
+                     "ttlocal-mark.be: " ttlocal-mark.be     SKIP   
+                     "ttlocal-mark.bc: " ttlocal-mark.bc     SKIP
+                     "ttlocal-mark.reason: " ttlocal-mark.reason     SKIP
+                     "ttlocal-mark.errorCode: " ttlocal-mark.errorCode     SKIP
+                     .   
+              END.    
+          END.    
+          OTHERWISE      
+             PUT STREAM out_s UNFORMATTED NOW " " iTxt SKIP.
+       END CASE.     
+       OUTPUT stream out_s close.
+    END.
+    RETURN.
+  END METHOD.
   
-  method private character GetCDNAdress ():
-      def buffer buf_code for ub.code.
-      def var vAddr as char no-undo.
-      def var vTimeResp as int no-undo.
-      def var vTimeNow as datetime-tz no-undo.
+  METHOD PRIVATE CHARACTER GetCDNAdress ():
+      DEF BUFFER buf_code FOR ub.code.
+      DEF VAR vAddr AS CHAR NO-UNDO.
+      DEF VAR vTimeResp AS INT NO-UNDO.
+      DEF VAR vTimeNow AS DATETIME-TZ NO-UNDO.
       
-      assign
-         vTimeNow = now
+      ASSIGN
+         vTimeNow = NOW
          vTimeResp = 0
          .
-      for each buf_code no-lock where buf_code.parent = "CDN_GisMt":
-          if buf_code.code <> "CDN_Upd" then do:
-              dbgPrint("marking.log", substitute("Площадка &1 Время отклика &2 Время блокировки &3 Текущее время &4 ", 
+      FOR EACH buf_code NO-LOCK WHERE buf_code.parent = "CDN_GisMt":
+          IF buf_code.code <> "CDN_Upd" THEN DO:
+              dbgPrint("marking.log", SUBSTITUTE("Площадка &1 Время отклика &2 Время блокировки &3 Текущее время &4 ", 
                                                  buf_code.code,
                                                  buf_code.codeval,
                                                  buf_code.misc2,
                                                  vTimeNow)).
-              if buf_code.misc2 = "" or datetime-tz(buf_code.misc2) < vTimeNow 
-              then do:
-                  if vTimeResp = 0 or 
-                     vTimeResp = ? or 
+              IF buf_code.misc2 = "" OR datetime-tz(buf_code.misc2) < vTimeNow 
+              THEN DO:
+                  IF vTimeResp = 0 OR 
+                     vTimeResp = ? OR 
                      vTimeResp > int(buf_code.codeval) 
-                  then
-                     assign
+                  THEN
+                     ASSIGN
                         vAddr = buf_code.code 
                         vTimeResp = int(buf_code.codeval) no-error.               
-              end.
-          end.   
-          else dbgPrint("marking.log", substitute("Идет процесс обновления CDN площадок, время начала &1 ",buf_code.codeval)).                        
-      end.
-      if vAddr <> "" then    
-         dbgPrint("marking.log", substitute("Выбрали площадку &1 время отклика &2 ",vAddr,vTimeResp)).
-      else dbgPrint("marking.log", "Не удалось подобрать площадку.").    
-      return vAddr.
-  end method.    
+              END.
+          END.   
+          ELSE dbgPrint("marking.log", SUBSTITUTE("Идет процесс обновления CDN площадок, время начала &1 ",buf_code.codeval)).                        
+      END.
+      IF vAddr <> "" THEN    
+         dbgPrint("marking.log", SUBSTITUTE("Выбрали площадку &1 время отклика &2 ",vAddr,vTimeResp)).
+      ELSE dbgPrint("marking.log", "Не удалось подобрать площадку.").    
+      RETURN vAddr.
+  END METHOD.    
   
-  method private logical SetCDNAdressErr (
-      iCdnAdr as character):
+  METHOD PRIVATE LOGICAL SetCDNAdressErr (
+      iCdnAdr AS CHARACTER):
           
-      def buffer buf_code for ub.code.            
-      def var vTimeNow as datetime no-undo.
-      def var vOk as log no-undo.
+      DEF BUFFER buf_code FOR ub.code.            
+      DEF VAR vTimeNow AS DATETIME NO-UNDO.
+      DEF VAR vOk AS LOG NO-UNDO.
 
       setsdn:
-      do transaction on error undo, retry setsdn:      
-          vTimeNow = now.
-          find first buf_code where 
+      DO TRANSACTION ON ERROR UNDO, RETRY setsdn:      
+          vTimeNow = NOW.
+          FIND FIRST buf_code WHERE 
                      buf_code.parent = "CDN_GisMt" 
-                 and buf_code.code = iCdnAdr
-                 exclusive-lock no-wait no-error.
-          if avail buf_code then  do:
-             buf_code.misc2 = String(vTimeNow + 15000 * 60).         
-             release buf_code no-error.
-             if error-status:error then vOk = no.
-             else vOk = yes.
-          end.   
-          else vOk = no.
+                 AND buf_code.code = iCdnAdr
+                 EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
+          IF AVAIL buf_code THEN  DO:
+             buf_code.misc2 = STRING(vTimeNow + 15000 * 60).         
+             RELEASE buf_code NO-ERROR.
+             IF ERROR-STATUS:ERROR THEN vOk = NO.
+             ELSE vOk = YES.
+          END.   
+          ELSE vOk = NO.
           
-          dbgPrint("marking.log", substitute("Установка площадке &1 время разблокировки &2 успешно &3 &4",
-                                             iCdnAdr, (vTimeNow + 15000 * 60), vOk, error-status:get-message(1))).
-      end.
-      if retry then do:
-          dbgPrint("marking.log", substitute("Ошибка блокировки площадки &1", iCdnAdr)).
+          dbgPrint("marking.log", SUBSTITUTE("Установка площадке &1 время разблокировки &2 успешно &3 &4",
+                                             iCdnAdr, (vTimeNow + 15000 * 60), vOk, ERROR-STATUS:GET-MESSAGE(1))).
+      END.
+      IF RETRY THEN DO:
+          dbgPrint("marking.log", SUBSTITUTE("Ошибка блокировки площадки &1", iCdnAdr)).
       
-      end.    
-      return vOk.      
-  end method. 
+      END.    
+      RETURN vOk.      
+  END METHOD. 
   
-  method public logical CheckCdnNeedUpd ():
-      def buffer buf_code for ub.code.
-      def var vAddr as char no-undo.
-      def var vNeedUpd as log no-undo.
-      def var vAllBlock as log no-undo.
-      def var vTimeNow as datetime-tz no-undo.
-      def var vTimeUpd as datetime-tz no-undo.
-      def var vTimeUnbl as datetime-tz no-undo.
+  METHOD PUBLIC LOGICAL CheckCdnNeedUpd ():
+      DEF BUFFER buf_code FOR ub.code.
+      DEF VAR vAddr AS CHAR NO-UNDO.
+      DEF VAR vNeedUpd AS LOG NO-UNDO.
+      DEF VAR vAllBlock AS LOG NO-UNDO.
+      DEF VAR vTimeNow AS DATETIME-TZ NO-UNDO.
+      DEF VAR vTimeUpd AS DATETIME-TZ NO-UNDO.
+      DEF VAR vTimeUnbl AS DATETIME-TZ NO-UNDO.
       
-      assign
-         vTimeNow = now   
+      ASSIGN
+         vTimeNow = NOW   
          vTimeUpd = ?      
          .
          
       /* Проверяем все ли площадки заблокированы 
       ** и сколько прошло времени с последнего обновления */   
-      vAllBlock = yes.
+      vAllBlock = YES.
       block_code:
-      for each buf_code no-lock where buf_code.parent = "CDN_GisMt":
-          vTimeUpd = datetime-tz(buf_code.misc1) no-error.
-          if buf_code.misc2 <> "" then 
-             vTimeUnbl = datetime-tz(buf_code.misc2) no-error.
+      FOR EACH buf_code NO-LOCK WHERE buf_code.parent = "CDN_GisMt":
+          vTimeUpd = DATETIME-TZ(buf_code.misc1) NO-ERROR.
+          IF buf_code.misc2 <> "" THEN 
+             vTimeUnbl = DATETIME-TZ(buf_code.misc2) NO-ERROR.
           /* ищем незаблокированную площадку */   
-          if buf_code.misc2 = "" or 
-             (vTimeUnbl <> ? and
+          IF buf_code.misc2 = "" OR 
+             (vTimeUnbl <> ? AND
               vTimeUnbl < vTimeNow)
-          then do: 
-             vAllBlock = no.
-             leave block_code.
-          end.   
-      end.      
+          THEN DO: 
+             vAllBlock = NO.
+             LEAVE block_code.
+          END.   
+      END.      
       
-      if vAllBlock or
-         (vTimeUpd = ? or          
-         (vTimeUpd <> ? and
-          datetime-tz(vTimeUpd) < vTimeNow and
+      IF vAllBlock OR
+         (vTimeUpd = ? OR          
+         (vTimeUpd <> ? AND
+          datetime-tz(vTimeUpd) < vTimeNow AND
           (vTimeNow - datetime-tz(vTimeUpd)) >= gismt-cdnTimeUpd * 3600 * 1000))  
-      then do:
+      THEN DO:
          /* Проверяем, не идет ли уже обновление */
-         find first buf_code where 
+         FIND FIRST buf_code WHERE 
                   buf_code.parent = "CDN_GisMt" 
-              and buf_code.code = "CDN_Upd"              
-           no-lock no-error.
-         if not avail buf_code               
-         then do:
-            dbgPrint("marking.log", substitute("Обновляем список площадок, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
+              AND buf_code.code = "CDN_Upd"              
+           NO-LOCK NO-ERROR.
+         IF NOT AVAIL buf_code               
+         THEN DO:
+            dbgPrint("marking.log", SUBSTITUTE("Обновляем список площадок, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
                                               vAllBlock, vTimeUpd, gismt-cdnTimeUpd )). 
-            vNeedUpd = yes.
-         end.    
+            vNeedUpd = YES.
+         END.    
          /* если прошло 20 минут с момента обновления, то игнорим флаг (завис) */
-         else if datetime-tz(buf_code.codeval) < (now - 20 * 60000) then do:
-             dbgPrint("marking.log", substitute("Обновляем список площадок, флаг обновления был установлен &1",
+         ELSE IF DATETIME-TZ(buf_code.codeval) < (NOW - 20 * 60000) THEN DO:
+             dbgPrint("marking.log", SUBSTITUTE("Обновляем список площадок, флаг обновления был установлен &1",
                                                 buf_code.codeval )). 
-            vNeedUpd = yes.
-         end.    
-         else dbgPrint("marking.log", substitute("Площадки не обновляем, идет обновление &1 ",  buf_code.codeval)).
-      end.
-      else dbgPrint("marking.log", substitute("Площадки не обновляем, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
+            vNeedUpd = YES.
+         END.    
+         ELSE dbgPrint("marking.log", SUBSTITUTE("Площадки не обновляем, идет обновление &1 ",  buf_code.codeval)).
+      END.
+      ELSE dbgPrint("marking.log", SUBSTITUTE("Площадки не обновляем, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
                                               vAllBlock, vTimeUpd, gismt-cdnTimeUpd )).    
       
-      return vNeedUpd.
-  end method.
+      RETURN vNeedUpd.
+  END METHOD.
   
  /* Вызывает curl с переданным адресом и возвращает ответ:
  ** -1 - не получен ответ от curl
  ** 0 - нет ошибки
  ** xxx - код ошибки в ответе  */
-  method private integer RunCurlGisMT (
-     vGisAdress as character,     
-     vDataMark as character,
-     CmdParamProxy as character,
-     vFileResult as character,
-     vFileResultErr as character,
-     vFileBat as character
+  METHOD PRIVATE INTEGER RunCurlGisMT (
+     vGisAdress AS CHARACTER,     
+     vDataMark AS CHARACTER,
+     CmdParamProxy AS CHARACTER,
+     vFileResult AS CHARACTER,
+     vFileResultErr AS CHARACTER,
+     vFileBat AS CHARACTER,
+     vMarkShort AS CHARACTER,
+     vFileResOf AS CHARACTER,
+     vFileResOfErr AS CHARACTER,
+     vFileBatOf AS CHARACTER
      ):
          
-    define variable vBefCurl as datetime-tz no-undo. 
-    define variable vAftCurl as datetime-tz no-undo.
-    define variable vpid     as integer     no-undo.
-    define variable vTimePause as integer   no-undo.
-    define variable vRetVal as integer   no-undo.
-    define variable cmd as character   no-undo.
-    define variable vlongJson as longchar no-undo.
-    define variable vlongJson2 as longchar no-undo.
-    define variable vCh as character no-undo. 
-    define variable vNumCode as integer no-undo.
-    define variable vNumCode2 as integer no-undo.
+    DEFINE VARIABLE vBefCurl AS DATETIME-TZ NO-UNDO. 
+    DEFINE VARIABLE vAftCurl AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vpid     AS INTEGER     NO-UNDO.
+    DEFINE VARIABLE vTimePause AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE vRetVal AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE cmd AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vlongJson AS LONGCHAR NO-UNDO.
+    DEFINE VARIABLE vlongJson2 AS LONGCHAR NO-UNDO.
+    DEFINE VARIABLE vCh AS CHARACTER NO-UNDO. 
+    DEFINE VARIABLE vNumCode AS INTEGER NO-UNDO.
+    DEFINE VARIABLE vNumCode2 AS INTEGER NO-UNDO.
+    DEFINE VARIABLE vcmdof AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vpidof AS INTEGER     NO-UNDO.
         
     vRetVal = -1.
          
-    cmd = substitute ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
-                      search ("exe/curl.exe"), /*1*/
+    cmd = SUBSTITUTE ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
+                      SEARCH ("exe/curl.exe"), /*1*/
                       vFileResult,             /*2*/
-                      quoter(vGisAdress), /*3*/
+                      QUOTER(vGisAdress), /*3*/
                       searchfile(vDataMark),   /*4*/
-                      quoter("X-api-Key: " + gismt-RegKey), /*5*/
+                      QUOTER("X-api-Key: " + gismt-RegKey), /*5*/
                       CmdParamProxy,           /*6*/
                       vFileResultErr,          /*7*/
                       gismt-DopParam,          /*8*/
-                      trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/  
-                      
+                      TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/                        
     dbgPrint("marking.log", "cmd: " + cmd).
-    vBefCurl = now.
+    
+    vBefCurl = NOW.
     /*os-command silent value(cmd).*/    
     /* запуск curl в ассинхронном режиме */ 
-    vpid = runProcFile(cmd, vFileBat).    
+    vpid = runProcFile(cmd, vFileBat).
+    
+    /* запускаем проверку офлайн пока ждем окончания */
+    IF vFileBatOf <> "" THEN DO:     
+        vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
+                          SEARCH ("exe/curl.exe"), /*1*/                                                                  
+                          QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
+                          QUOTER(gismt-OflineAdress + "/cis/check?cis=" + vMarkShort), /*3*/
+                          vFileResOf,             /*4*/                      
+                          vFileResOfErr,          /*5*/                      
+                          TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
+        dbgPrint("marking.log", "vcmdof: " + vcmdof).                  
+        vpidof = runProcFile(vcmdof, vFileBatOf).
+        /*os-command silent value(vcmdof).*/                         
+    END.
+    
     /* ждем окончания работы */
     block_wait:
-    do while true:
+    DO WHILE TRUE:
         /* проверка, работает ли еще процесс */                
-        /*if IsProcessRunning(vpid) = 0 then do:*/
-        if searchFile(vfileresult) <> ? then do:
-            file-info:file-name = searchFile(vfileresult).
-            if file-info:file-size <> 0 then do:
-               copy-lob from file vFileResult to vlongJson no-error.
-               if (vlongJson begins "<html>" and 
+        IF searchFile(vfileresult) <> ? THEN DO:
+            FILE-INFO:FILE-NAME = searchFile(vfileresult).
+            IF FILE-INFO:FILE-SIZE <> 0 THEN DO:
+               COPY-LOB FROM FILE vFileResult TO vlongJson NO-ERROR.
+               IF (vlongJson BEGINS "<html>" AND 
                    r-index(vlongJson,"</html>") > 0)
-                  or
-                  (r-index(vlongJson,"reqTimestamp") > 0 and
-                   r-index(substring(vlongJson,r-index(vlongJson,"reqTimestamp")),"}") > 0) 
-                  or r-index(vlongJson,'"codes":[]}') > 0  
-               then do:
-                   dbgPrint("marking.log", substitute("Сформирован файл-ответ &1", vfileresult)).                   
-                   leave block_wait.
-               end.
-               /*else dbgPrint("marking.log", substitute("RunCurlGisMT файл-ответ не полный &1", vfileresult)).*/
-            end.  
-            /*else dbgPrint("marking.log", substitute("RunCurlGisMT Размер файл-ответ 0 &1", vfileresult)).*/ 
-        end.    
-        /*else dbgPrint("marking.log", substitute("RunCurlGisMT Не найден файл-ответ &1", vfileresult)).*/
-        /*end.*/
+                  OR
+                  (R-INDEX(vlongJson,"reqTimestamp") > 0 AND
+                   r-index(SUBSTRING(vlongJson,R-INDEX(vlongJson,"reqTimestamp")),"}") > 0) 
+                  OR r-index(vlongJson,'"codes":[]}') > 0  
+               THEN DO:
+                   dbgPrint("marking.log", SUBSTITUTE("Сформирован файл-ответ &1", vfileresult)).                   
+                   LEAVE block_wait.
+               END.               
+            END.               
+        END.    
+        
         /* время ожидания вышло */
-        if vBefCurl + Int(gismt-WaitTime * 1000) < now then do:         
+        IF vBefCurl + Int(gismt-WaitTime * 1000) < NOW THEN DO:         
            dbgPrint("marking.log", "Время ожидания работы curl истекло").
-           leave block_wait.
-        end.
+           LEAVE block_wait.
+        END.
         /* немного ждем */
-        vTimePause = now - (vBefCurl + Int(gismt-WaitTime * 1000)) + 10. 
-        if vTimePause < -10 then       
-           run gbl/pause.p(10).
-        else if vTimePause < 0 and vTimePause > -10
-        then       
-           run gbl/pause.p(0 - vTimePause).    
-    end.
+        vTimePause = NOW - (vBefCurl + Int(gismt-WaitTime * 1000)) + 10. 
+        IF vTimePause < -10 THEN       
+           RUN gbl/pause.p(10).
+        ELSE IF vTimePause < 0 AND vTimePause > -10
+        THEN       
+           RUN gbl/pause.p(0 - vTimePause).    
+    END.
     
-    vAftCurl = now. 
-    dbgPrint("marking.log", substitute("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
+    vAftCurl = NOW. 
+    dbgPrint("marking.log", SUBSTITUTE("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
     
     vRetVal = ChkCurlGisMT (vlongJson). 
   
-    return vRetVal.
+    RETURN vRetVal.
     
-  end method.    
+  END METHOD.    
   
-  method private integer ChkCurlGisMT (
-    ilongJson as longchar
+  METHOD PRIVATE INTEGER ChkCurlGisMT (
+    ilongJson AS LONGCHAR
     ):
          
-    define variable vRetVal as integer   no-undo.
-    define variable vlongJson2 as longchar no-undo.
-    define variable vCh as character no-undo. 
-    define variable vNumCode as integer no-undo.
-    define variable vNumCode2 as integer no-undo.
+    DEFINE VARIABLE vRetVal AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE vlongJson2 AS LONGCHAR NO-UNDO.
+    DEFINE VARIABLE vCh AS CHARACTER NO-UNDO. 
+    DEFINE VARIABLE vNumCode AS INTEGER NO-UNDO.
+    DEFINE VARIABLE vNumCode2 AS INTEGER NO-UNDO.
      
     vRetVal = -1.
      /* Проверяем наличие ошибки в ответе */
-    if ilongJson begins "<html>" and index(ilongJson,"<title>") > 0 then 
-       vRetVal =  int(substring(iLongJson, index(iLongJson,"<title>") + 7,3)) no-error.
-    else if index(ilongJson,'"code":') > 0 then do:  
-       vNumCode = index(iLongJson,'"code":') + 7. 
-       vlongJson2 = substring(iLongJson, vNumCode).
-       vNumCode2 = index(vLongJson2,",") - 1. 
-       vCh = String(substring(iLongJson, vNumCode, vNumCode2)).   
+    IF ilongJson BEGINS "<html>" AND index(ilongJson,"<title>") > 0 THEN 
+       vRetVal =  int(SUBSTRING(iLongJson, INDEX(iLongJson,"<title>") + 7,3)) NO-ERROR.
+    ELSE IF INDEX(ilongJson,'"code":') > 0 THEN DO:  
+       vNumCode = INDEX(iLongJson,'"code":') + 7. 
+       vlongJson2 = SUBSTRING(iLongJson, vNumCode).
+       vNumCode2 = INDEX(vLongJson2,",") - 1. 
+       vCh = STRING(SUBSTRING(iLongJson, vNumCode, vNumCode2)).   
        vRetVal  = int(vCh).
-    end.
+    END.
     
-    return vRetVal.
+    RETURN vRetVal.
     
-  end method.    
+  END METHOD.   
+    
   
-  method private void DelTmpFile():
-      for each tt-file-name:
-          if not session:debug-alert
-          then do:
+  /* Разбор ответа офлайн проверки марки в ЛМ ЧЗ */
+  METHOD PRIVATE CHARACTER ChekLocalMark (    
+    mark-short AS CHARACTER 
+  ):
+     DEFINE VARIABLE vFileResult  AS CHARACTER   NO-UNDO.
+     DEFINE VARIABLE vFileLog     AS CHARACTER   NO-UNDO.
+     DEFINE VARIABLE vlongJson    AS LONGCHAR NO-UNDO.
+     DEFINE VARIABLE vlongJsonS   AS LONGCHAR NO-UNDO.
+     DEFINE VARIABLE hDS          AS HANDLE NO-UNDO.
+     DEFINE VARIABLE vFileResJson AS CHARACTER   NO-UNDO.
+     DEFINE VARIABLE vRetOk       AS LOGICAL NO-UNDO.
+     DEFINE VARIABLE vErrSts      AS CHARACTER   NO-UNDO.
+     DEFINE VARIABLE vChkNotSell  AS LOG       NO-UNDO.
+     
+     vChkNotSell = NO.
+     vFileLog = "GisMtReq-" + replace(STRING(TODAY),"/","-") +  ".log".
+                  
+     FIND FIRST tt-file-name WHERE tt-file-name.ofline = YES NO-ERROR.
+     IF AVAIL tt-file-name
+        AND searchFile(tt-file-name.tmpFileName) <> ?   
+     THEN  DO:         
+        dbgPrint("marking.log", SUBSTITUTE("Файл офлайн-проверки &1 ", tt-file-name.tmpFileName)).
+        vFileResult = searchFile(tt-file-name.tmpFileName).
+        
+        COPY-LOB FROM FILE vFileResult TO vlongJsonS NO-ERROR.          
+               
+        vlongJson = '~{"bodys":[' + vlongJsonS + "]}" .
+        hDS = DATASET gismt-check-mark:HANDLE.
+                  
+        vRetOk  = hDS:read-json("longchar":U, vlongJson) NO-ERROR.      
+        
+        DATASET gismt-check-mark:WRITE-JSON("FILE":U, vFileResJson) NO-ERROR.
+        
+        dbgPrint("marking.log", "ttlocal-mark").                 
+           
+        FIND FIRST ttlocal-mark NO-ERROR.
+        IF AVAIL ttlocal-mark THEN DO:
+            ASSIGN
+               mReqId = STRING(ttlocal-mark.id)
+               mReqTimestamp = STRING(ttlocal-mark.ts)
+               . 
+           IF ttlocal-mark.errorCode > 0 THEN DO:                             
+              mCheckSts = 0.
+              dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка errorCode &1 reason &2", ttlocal-mark.errorCode, ttlocal-mark.reason)).
+              vErrSts = "Проверка в локальном модуле честный знак завершилась с ошибкой. Обратитесь в техническую поддержку. ".
+           END.
+           ELSE IF ttlocal-mark.bc OR 
+              ttlocal-mark.be OR 
+              ttlocal-mark.bs OR 
+              ttlocal-mark.e OR 
+              ttlocal-mark.sc 
+           THEN DO:
+               ASSIGN
+                  vChkNotSell = YES /* получили запрет продажи от ЛМ ЧЗ */
+                  mCheckSts = 0
+                  .
+               dbgPrint("marking.log", "КИ в ЛМ ЧЗ помечена как запрещенная к продаже.").
+               vErrSts = "Реализация товара запрещена регулирующими органами. Снимите с продажи и передайте товар управляющему/старшему смены. ".
+           END.     
+           ELSE DO:
+              mCheckSts = 2.
+              vErrSts = "". 
+           END.    
+        END.     
+        ELSE DO:
+            mCheckSts = 0.
+            dbgPrint("marking.log", "Ошибка проверки КИ в ЛМ ЧЗ.").
+            vErrSts = "Проверка в локальном модуле Честный знак завершилась с ошибкой. Обратитесь в техподдержку. ".
+        END.      
+        
+        OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
+        PUT STREAM out_data UNFORMATTED  
+             NOW CHR(9) .
+        OUTPUT STREAM out_data CLOSE.
+        /* добавляем в лог ответ ЛМ ЧЗ */
+        if vlongJsonS <> "" then
+        COPY-LOB FROM vlongJsonS TO FILE vFileLog APPEND NO-ERROR.  
+        else do:
+            OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
+            PUT STREAM out_data UNFORMATTED  
+                "Отсутствует ответ ЛМ ЧЗ".
+            OUTPUT STREAM out_data CLOSE.        
+        end.               
+     END.
+     /* нет файла офлайн проверки */ 
+     ELSE DO:
+        mCheckSts = 0.
+        dbgPrint("marking.log", "Отсутствует файл офлайн проверки в ЛМ ЧЗ.").
+        vErrSts = "Проверка в локальном модуле Честный знак завершилась с ошибкой. Обратитесь в техподдержку. ".
+        OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
+        PUT STREAM out_data UNFORMATTED  
+             NOW CHR(9) "Отсутствует ответ ЛМ ЧЗ".
+        OUTPUT STREAM out_data CLOSE.
+     END.
+     
+     /* если НП не наступил и нет запрета продажи марки от ЛМ ЧЗ, 
+     ** а с модулем что-то не так, то разрешаем продавать */
+     IF mCheckSts = 0 AND NOT vChkNotSell 
+     AND (TODAY < gismt-OflineDate 
+          OR mCheckGisMT = 2)
+     THEN  do:
+         ASSIGN
+            mCheckSts = 2
+            vErrSts = "".                     
+         dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать при отсутствии ответа от ЛМ ЧЗ. vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT)).   
+     end.
+     else do:
+         dbgPrint("marking.log", SUBSTITUTE("Не разрешаем продавать при отсутствии ответа от ЛМ ЧЗ. vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT)).
+     end.    
+     RETURN vErrSts.        
+  END.
+  
+    /* Запуск офлайн проверка марки в ЛМ ЧЗ */
+  METHOD PRIVATE INTEGER GetResLocalMark (    
+    mark-short AS CHARACTER 
+  ):
+    DEFINE VARIABLE vMarkShort AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vFileResOf AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vFileResOfErr AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vFileBatOf AS CHARACTER NO-UNDO.
+     
+         
+    DEFINE VARIABLE vBefCurl AS DATETIME-TZ NO-UNDO. 
+    DEFINE VARIABLE vAftCurl AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vpid     AS INTEGER     NO-UNDO.
+    DEFINE VARIABLE vTimePause AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE vRetVal AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE cmd AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vlongJson AS LONGCHAR NO-UNDO.
+    DEFINE VARIABLE vlongJson2 AS LONGCHAR NO-UNDO.
+    DEFINE VARIABLE vCh AS CHARACTER NO-UNDO. 
+    DEFINE VARIABLE vNumCode AS INTEGER NO-UNDO.
+    DEFINE VARIABLE vNumCode2 AS INTEGER NO-UNDO.
+    DEFINE VARIABLE vcmdof AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vpidof AS INTEGER     NO-UNDO.
+               
+    vMarkShort = percentCoding(mark-short). 
+    dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)).               
+    RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .
+    CREATE tt-file-name.
+    ASSIGN tt-file-name.tmpFileName = vFileResOf
+           tt-file-name.ofline = YES.           
+    RUN gbl/_tmpfile.p ( "ChkLMResErr", ".txt", OUTPUT vFileResOfErr ) .
+    CREATE tt-file-name.
+    ASSIGN tt-file-name.tmpFileName = vFileResOfErr.
+    RUN gbl/_tmpfile.p ( "ChkLM", ".bat", OUTPUT vFileBatOf ) .     
+    CREATE tt-file-name.
+    ASSIGN tt-file-name.tmpFileName = vFileBatOf.
+   
+    dbgPrint("marking.log", SUBSTITUTE("vFileResOf &1 ", vFileResOf)).           
+    dbgPrint("marking.log", SUBSTITUTE("vFileResOfErr &1 ", vFileResOfErr)).
+    dbgPrint("marking.log", SUBSTITUTE("vFileBatOf &1 ", vFileBatOf)).
+               
+    vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
+                          SEARCH ("exe/curl.exe"), /*1*/                                                                  
+                          QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
+                          QUOTER(gismt-OflineAdress + "/cis/check?cis=" + vMarkShort), /*3*/
+                          vFileResOf,             /*4*/                      
+                          vFileResOfErr,          /*5*/                      
+                          TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
+    dbgPrint("marking.log", "vcmdof: " + vcmdof).         
+    vBefCurl = NOW.         
+    vpidof = runProcFile(vcmdof, vFileBatOf).
+    
+    /* ждем окончания работы */
+    block_wait:
+    DO WHILE TRUE:
+        /* проверка, работает ли еще процесс */                
+        IF searchFile(vfileresOf) <> ? THEN DO:
+            FILE-INFO:FILE-NAME = searchFile(vfileresOf).
+            IF FILE-INFO:FILE-SIZE <> 0 THEN DO:
+               COPY-LOB FROM FILE vFileResOf TO vlongJson NO-ERROR.
+               IF (vlongJson BEGINS "<html>" AND 
+                   r-index(vlongJson,"</html>") > 0)
+                  OR
+                  (R-INDEX(vlongJson,"reqTimestamp") > 0 AND
+                   r-index(SUBSTRING(vlongJson,R-INDEX(vlongJson,"reqTimestamp")),"}") > 0) 
+                  OR r-index(vlongJson,'"codes":[]}') > 0  
+               THEN DO:
+                   dbgPrint("marking.log", SUBSTITUTE("Сформирован файл-ответ от ЛМ ЧЗ &1", vfileresOf)).                   
+                   LEAVE block_wait.
+               END.               
+            END.               
+        END.    
+        
+        /* время ожидания вышло */
+        IF vBefCurl + Int(gismt-WaitTime * 1000) < NOW THEN DO:         
+           dbgPrint("marking.log", "Время ожидания работы curl истекло").
+           LEAVE block_wait.
+        END.
+        /* немного ждем */
+        vTimePause = NOW - (vBefCurl + Int(gismt-WaitTime * 1000)) + 10. 
+        IF vTimePause < -10 THEN       
+           RUN gbl/pause.p(10).
+        ELSE IF vTimePause < 0 AND vTimePause > -10
+        THEN       
+           RUN gbl/pause.p(0 - vTimePause).    
+    END.
+    vAftCurl = NOW.
+    dbgPrint("marking.log", SUBSTITUTE("Время работы curl: Начало &1 Окончание &2 Всего (мс) &3  ", vBefCurl, vAftCurl, vAftCurl - vBefCurl)).
+    RETURN 1.
+ END.   
+  
+  METHOD PRIVATE VOID DelTmpFile(
+      iOfline AS LOGICAL
+      ):
+      FOR EACH tt-file-name WHERE tt-file-name.ofline = iOfline:          
+          IF NOT SESSION:DEBUG-ALERT
+          THEN DO:
              /*dbgPrint("marking.log", substitute("Удаляем временный файл &1  ", tt-file-name.tmpFileName)).*/ 
-             if searchFile(tt-file-name.tmpFileName) <> ? then do:
-                 os-delete silent value(tt-file-name.tmpFileName).             
+             IF searchFile(tt-file-name.tmpFileName) <> ? THEN DO:
+                 OS-DELETE silent value(tt-file-name.tmpFileName).             
                  /*if searchFile(tt-file-name.tmpFileName) <> ? then 
                  dbgPrint("marking.log", substitute("Ошибка удаления файла &1 ", tt-file-name.tmpFileName)).*/
-          end.
-             if searchFile(tt-file-name.tmpFileName) = ? then
-          delete tt-file-name.           
-      end. 
-          else delete tt-file-name.           
-      end. 
-  end method.    
+             END.
+             IF searchFile(tt-file-name.tmpFileName) = ? THEN
+             DELETE tt-file-name.           
+          END. 
+          ELSE DELETE tt-file-name.                    
+      END. 
+  END METHOD.
   
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  /* преобразует строку с заменой спецсимволов значениями hex  */
+  METHOD PUBLIC CHARACTER percentCoding(decode-str AS CHAR):
+    DEFINE VARIABLE ii AS INTEGER NO-UNDO.
+    DEFINE VARIABLE encode-str AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vsimb  AS CHARACTER NO-UNDO.            
+    DEFINE VARIABLE spec-str  AS CHARACTER INIT "~"!#$%&'()*+,-./:;<=>?@[\]^{}" NO-UNDO.    
+    DEFINE VARIABLE vInd AS INTEGER NO-UNDO.
+    
+    encode-str = "".
+    DO ii = 1 TO LENGTH (decode-str):
+      vsimb = SUBSTRING(decode-str,ii,1).    
+      vInd = INDEX(spec-str,vsimb).                   
+      encode-str = encode-str + (IF vInd = 0 THEN vsimb ELSE ("%%" + hexencode(vsimb))).       
+    END.      
+    RETURN encode-str.
+  END METHOD.
+      
+  /* возвращает значение HEX символа */
+  METHOD PUBLIC CHARACTER hexencode(decode-chr AS CHAR):
+    DEFINE VARIABLE vRaw       AS RAW NO-UNDO.
+    DEFINE VARIABLE encode-chr AS CHARACTER NO-UNDO.
+    
+    LENGTH(vRaw) = 1.
+    put-string(vRaw, 1, 1) = decode-chr.  
+    encode-chr  = HEX-ENCODE(vRaw).        
+    LENGTH(vRaw) = 0.
+    RETURN encode-chr.
+  END METHOD.       
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
 	------------------------------------------------------------------------------*/
-	destructor public marking ( ):
-      delete object cashSts.      
-	end destructor.
+	DESTRUCTOR PUBLIC marking ( ):
+      DELETE OBJECT cashSts.      
+	END DESTRUCTOR.
   
   
-end class.  
+END CLASS.  
 

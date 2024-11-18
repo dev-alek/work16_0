@@ -4059,10 +4059,11 @@ logical~
 &scop user-can-edit-attr-gisMT   true
 &scop output-display-attr-gisMT  true
 &scop other-attr-gisMT           'spr-ext=gbl\gis.w':U
-&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical':U
-&scop prop-label-list-attr-gisMT 'Адрес и порт проски-сервера,Дополнительные параметры запроса,Адрес ГИС МТ,Логин,Пароль,Макс.допуст. время разрешения продажи при сбое,ключ авторизации,Время с момента сбоя до начала уведомления персонала,Длительность ожидания ответа ГИС МТ,~
-Аварийная ситуация в ГИС МТ,Опережение срабатывания запрета по сроку годности в минутах,Работа с cdn-площадками,Адрес cdn,Повторный опрос площадки,Смена площадки,Период обновления списка CDN-площадок,Обновление параметров при запросе КМ'
-&scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest'
+&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical,character,character,character':U
+&scop prop-label-list-attr-gisMT 'Адрес и порт проски-сервера,Дополнительные параметры запроса,Адрес ГИС МТ,Логин,Пароль,Макс.допуст. время разрешения продажи при сбое,ключ авторизации,~
+Время с момента сбоя до начала уведомления персонала,Длительность ожидания ответа ГИС МТ,Аварийная ситуация в ГИС МТ,Опережение срабатывания запрета по сроку годности в минутах,~
+Работа с cdn-площадками,Адрес cdn,Повторный опрос площадки,Смена площадки,Период обновления списка CDN-площадок,Обновление параметров при запросе КМ,Адрес ЛМ ЧЗ,Логин в ЛМ ЧЗ,Пароль в ЛМ ЧЗ'
+&scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest,OflineAdress,OflineLogin,OflinePswd'
 &scop global-attr-gisMT true
 &scop host-attr-gisMT false
 &scop shop-attr-gisMT false

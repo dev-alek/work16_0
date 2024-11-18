@@ -368,6 +368,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   mWork = yes.
   subscribe "write-to-log" anywhere run-procedure "write-to-log-event".
   subscribe "runCDn" anywhere.
+  subscribe "runLmStatus" anywhere.
   
   define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
   CheckUpd = new ibs.th.adm.upd.CheckUpd ().
@@ -379,6 +380,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   mAsyncHelper:MyBachMode = yes.
   mAsyncHelper:maxproc    = 1.
   run runCDN.
+  run runLmStatus.
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
   do while mWork:
      /*  */
@@ -406,7 +408,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   delete object mAsyncHelper.
   unsubscribe "write-to-log".
-  unsubscribe "runCDN".  
+  unsubscribe "runCDN".
+  unsubscribe "runLmStatus".  
 END.
 delete object logWrite.
 /* _UIB-CODE-BLOCK-END */
@@ -870,6 +873,16 @@ end procedure.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _Procedure RunCdn C-Win
 procedure runCdn:
    run utl/runproc-cdn.p ("CDN",this-procedure).
+  
+end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _Procedure runLMStatus C-Win
+procedure runLMStatus:
+       
+   run utl/runproc-lmsts.p ("LM-STATUS",this-procedure).
   
 end procedure.
 

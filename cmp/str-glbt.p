@@ -575,7 +575,7 @@ attr-egais-host }
 /*Настройки для подключения к ГИС МТ и проверки КМ*/
 { cmp/cr-prep.i 1 attr-gisMT gisMT " " gisMT }
 { cmp/cr-prepc.i 1 prop-list-attr-gisMT
-"adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest"
+"adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest,OflineAdress,OflineLogin,OflinePswd"
 attr-gisMT }
 
 /*Электронный документооборот*/

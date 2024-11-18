@@ -1500,7 +1500,28 @@ end.
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
+      end.      
+      v-prop-code = "{&bef-attr-gisMT_OflineAdress}".
+&scop ptype character
+&scop prop-value 'http://127.0.0.1:5995/api/v1'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end. 
+      v-prop-code = "{&bef-attr-gisMT_OflineLogin}".
+&scop ptype character
+&scop prop-value 'lmchz'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
       end.
+      v-prop-code = "{&bef-attr-gisMT_OflinePswd}".
+&scop ptype character
+&scop prop-value 'QAZ@wsx3EDC$rfv%TGB6yhn&ujmikolp'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end. 
     end.    
     when {&attr-marking} then do:
       v-prop-code = "{&bef-attr-marking_marking-EDO}".

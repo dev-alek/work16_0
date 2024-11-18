@@ -67,14 +67,14 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 RECT-2 gisAdress ~
+&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 RECT-2 B-quit B-Help gisAdress ~
 cdnTurnOn cdnAdress registrationKey adressPort login password dopParam ~
-waitTime maxTime timeFalStart banDate cdnTimeUpdate cdnRepeat cdnChange ~
-crashSituat UpdateRequest 
+OflineAdress OflineLogin OflinePswd waitTime maxTime timeFalStart banDate ~
+cdnTimeUpdate cdnRepeat crashSituat cdnChange UpdateRequest 
 &Scoped-Define DISPLAYED-OBJECTS gisAdress cdnTurnOn cdnAdress ~
-registrationKey adressPort login password dopParam waitTime maxTime ~
-timeFalStart banDate cdnTimeUpdate cdnRepeat cdnChange crashSituat ~
-UpdateRequest 
+registrationKey adressPort login password dopParam OflineAdress OflineLogin ~
+OflinePswd waitTime maxTime timeFalStart banDate cdnTimeUpdate cdnRepeat ~
+crashSituat cdnChange UpdateRequest 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -124,7 +124,7 @@ DEFINE VARIABLE cdnTimeUpdate AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 24
 DEFINE VARIABLE dopParam AS CHARACTER FORMAT "X(256)":U 
      LABEL "Дополнительные параметры запроса" 
      VIEW-AS FILL-IN 
-     SIZE 49.2 BY 1 NO-UNDO.
+     SIZE 48 BY 1 NO-UNDO.
 
 DEFINE VARIABLE gisAdress AS CHARACTER FORMAT "X(256)":U 
      LABEL "Адрес ГИС МТ" 
@@ -141,10 +141,25 @@ DEFINE VARIABLE maxTime AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 72
      VIEW-AS FILL-IN 
      SIZE 6.6 BY 1 NO-UNDO.
 
+DEFINE VARIABLE OflineAdress AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Адрес ЛМ ЧЗ" 
+     VIEW-AS FILL-IN 
+     SIZE 67 BY 1 NO-UNDO.
+
+DEFINE VARIABLE OflineLogin AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Логин в ЛМ ЧЗ" 
+     VIEW-AS FILL-IN 
+     SIZE 15 BY 1 NO-UNDO.
+
+DEFINE VARIABLE OflinePswd AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Пароль" 
+     VIEW-AS FILL-IN 
+     SIZE 42 BY 1 NO-UNDO.
+
 DEFINE VARIABLE password AS CHARACTER FORMAT "X(256)":U 
      LABEL "Пароль" 
      VIEW-AS FILL-IN 
-     SIZE 27 BY 1 NO-UNDO.
+     SIZE 30 BY 1 NO-UNDO.
 
 DEFINE VARIABLE registrationKey AS CHARACTER FORMAT "X(256)":U 
      LABEL "Ключ авторизации" 
@@ -167,32 +182,32 @@ DEFINE RECTANGLE RECT-1
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 90 BY 3.24.
+     SIZE 90 BY 3.1.
 
 DEFINE VARIABLE cdnChange AS LOGICAL INITIAL no 
      LABEL "Смена площадки" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .81 NO-UNDO.
+     SIZE 33 BY .81 NO-UNDO.
 
 DEFINE VARIABLE cdnRepeat AS LOGICAL INITIAL no 
      LABEL "Повторный опрос площадки" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .81 NO-UNDO.
+     SIZE 34 BY .81 NO-UNDO.
 
 DEFINE VARIABLE cdnTurnOn AS LOGICAL INITIAL no 
      LABEL "Работа с cdn-площадками" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .81 NO-UNDO.
+     SIZE 32 BY .81 NO-UNDO.
 
 DEFINE VARIABLE crashSituat AS LOGICAL INITIAL no 
      LABEL "Аварийная ситуация в ГИС МТ" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .81 NO-UNDO.
+     SIZE 36 BY .81 NO-UNDO.
 
 DEFINE VARIABLE UpdateRequest AS LOGICAL INITIAL no 
      LABEL "Обновление параметров при запросе КМ" 
      VIEW-AS TOGGLE-BOX
-     SIZE 48 BY .81 NO-UNDO.
+     SIZE 47 BY .81 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -208,21 +223,24 @@ DEFINE FRAME Dialog-Frame
      adressPort AT ROW 8.52 COL 22 COLON-ALIGNED WIDGET-ID 144
      login AT ROW 9.71 COL 22 COLON-ALIGNED WIDGET-ID 146
      password AT ROW 9.71 COL 90 RIGHT-ALIGNED WIDGET-ID 148 PASSWORD-FIELD 
-     dopParam AT ROW 11.71 COL 3.2 WIDGET-ID 154
-     waitTime AT ROW 13.14 COL 91.6 RIGHT-ALIGNED WIDGET-ID 156
-     maxTime AT ROW 14.33 COL 91.6 RIGHT-ALIGNED WIDGET-ID 168
-     timeFalStart AT ROW 15.52 COL 91.6 RIGHT-ALIGNED WIDGET-ID 170
-     banDate AT ROW 16.71 COL 91.6 RIGHT-ALIGNED WIDGET-ID 172
-     cdnTimeUpdate AT ROW 17.91 COL 84 COLON-ALIGNED WIDGET-ID 168
-     cdnRepeat AT ROW 19.1 COL 24 WIDGET-ID 174
-     cdnChange AT ROW 20.05 COL 24 WIDGET-ID 174
-     crashSituat AT ROW 21 COL 24 WIDGET-ID 174
-     UpdateRequest AT ROW 21.95 COL 24 WIDGET-ID 176
+     dopParam AT ROW 11.48 COL 3.2 WIDGET-ID 154
+     OflineAdress AT ROW 12.67 COL 22 COLON-ALIGNED WIDGET-ID 180
+     OflineLogin AT ROW 13.86 COL 22 COLON-ALIGNED WIDGET-ID 182
+     OflinePswd AT ROW 13.86 COL 90 RIGHT-ALIGNED WIDGET-ID 184 PASSWORD-FIELD 
+     waitTime AT ROW 15.29 COL 90.6 RIGHT-ALIGNED WIDGET-ID 156
+     maxTime AT ROW 16.48 COL 90.6 RIGHT-ALIGNED WIDGET-ID 168
+     timeFalStart AT ROW 17.67 COL 90.6 RIGHT-ALIGNED WIDGET-ID 170
+     banDate AT ROW 18.86 COL 90.6 RIGHT-ALIGNED WIDGET-ID 172
+     cdnTimeUpdate AT ROW 20.05 COL 83 COLON-ALIGNED WIDGET-ID 168
+     cdnRepeat AT ROW 21.24 COL 7 WIDGET-ID 174
+     crashSituat AT ROW 21.24 COL 45 WIDGET-ID 174
+     cdnChange AT ROW 21.95 COL 7 WIDGET-ID 174
+     UpdateRequest AT ROW 21.95 COL 45 WIDGET-ID 176
      "Проски-сервер" VIEW-AS TEXT
           SIZE 17 BY .67 AT ROW 7.67 COL 41 WIDGET-ID 152
      RECT-1 AT ROW 2.91 COL 2 WIDGET-ID 116
      RECT-2 AT ROW 8.14 COL 3 WIDGET-ID 150
-     SPACE(1.39) SKIP(11.94)
+     SPACE(1.39) SKIP(12.08)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для подключения к ГИС МТ и проверки КМ"
@@ -254,6 +272,8 @@ ASSIGN
 /* SETTINGS FOR FILL-IN dopParam IN FRAME Dialog-Frame
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN maxTime IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN OflinePswd IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN password IN FRAME Dialog-Frame
    ALIGN-R                                                              */
@@ -369,13 +389,14 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY gisAdress cdnTurnOn cdnAdress registrationKey adressPort login 
-          password dopParam waitTime maxTime timeFalStart banDate cdnTimeUpdate 
-          cdnRepeat cdnChange crashSituat UpdateRequest 
+          password dopParam OflineAdress OflineLogin OflinePswd waitTime maxTime 
+          timeFalStart banDate cdnTimeUpdate cdnRepeat crashSituat cdnChange 
+          UpdateRequest 
       WITH FRAME Dialog-Frame.
-  ENABLE B-exit B-quit B-Help RECT-1 RECT-2 gisAdress cdnTurnOn cdnAdress 
-         registrationKey adressPort login password dopParam waitTime maxTime 
-         timeFalStart banDate cdnTimeUpdate cdnRepeat cdnChange crashSituat 
-         UpdateRequest 
+  ENABLE B-exit RECT-1 RECT-2 B-quit B-Help gisAdress cdnTurnOn cdnAdress 
+         registrationKey adressPort login password dopParam OflineAdress 
+         OflineLogin OflinePswd waitTime maxTime timeFalStart banDate 
+         cdnTimeUpdate cdnRepeat crashSituat cdnChange UpdateRequest 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -490,6 +511,18 @@ FOR EACH temp-thbj-attr
     IF temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} THEN DO:
        UpdateRequest = temp-thbj-attr.property-value-logical.
        display UpdateRequest with frame {&frame-name} .
+    END.    
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_OflineAdress} THEN DO:
+       OflineAdress = temp-thbj-attr.property-value-character.
+       display OflineAdress with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_OflineLogin} THEN DO:
+       OflineLogin = temp-thbj-attr.property-value-character.
+       display OflineLogin with frame {&frame-name} .
+    END.
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} THEN DO:
+       OflinePswd = temp-thbj-attr.property-value-character.
+       display OflinePswd with frame {&frame-name} .
     END.
 END.
 
@@ -559,7 +592,10 @@ ASSIGN FRAME {&FRAME-NAME}
     cdnRepeat
     cdnChange
     cdnTimeUpdate
-    UpdateRequest
+    UpdateRequest    
+    OflineAdress
+    OflineLogin
+    OflinePswd 
     .
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_adressPort} .
     temp-thbj-attr.property-value-character = adressPort.
@@ -610,7 +646,16 @@ ASSIGN FRAME {&FRAME-NAME}
     temp-thbj-attr.property-value-integer = cdnTimeUpdate.
     
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} .
-    temp-thbj-attr.property-value-logical = UpdateRequest.
+    temp-thbj-attr.property-value-logical = UpdateRequest.    
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflineAdress} .
+    temp-thbj-attr.property-value-character = OflineAdress.
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflineLogin} .
+    temp-thbj-attr.property-value-character = OflineLogin.
+    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} .
+    temp-thbj-attr.property-value-character = OflinePswd.
 
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (
