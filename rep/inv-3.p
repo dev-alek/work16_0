@@ -504,7 +504,6 @@ DEFINE FRAME sl-gold
       "Итого по странице : " skip
       "а) количество порядковых номеров " + string(PgNPP) + " (" + f-wp-qnty (decimal(PgNPP)) + ")" format {&format-inv} AT 18  skip
       "б) общее количество единиц фактически " + string(PgQnty) + " (" + f-wp-qnty (decimal(PgQnty)) + ")"  format {&format-inv} AT 18  SKIP
-      "в) на сумму фактически " + trim(string(PgSum, "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr + " (" + f-wp-sum (decimal(PgSum)) + ")"  format {&format-inv} AT 18 SKIP(1)
       "Вкладной лист к форме № ИНВ-3 №  " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") format "x(170)" AT 30 SKIP
     with FRAME BottomFrame width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
     VIEW stream Out-Stream FRAME BottomFrame .
@@ -519,7 +518,6 @@ DEFINE FRAME sl-gold
       "Итого по странице : " skip
       "а) количество порядковых номеров " + string(PgNPP) + " (" + f-wp-qnty (decimal(PgNPP)) + ")" format {&format-inv-gold} AT 18  skip
       "б) общее количество единиц фактически " + string(PgQnty) + " (" + f-wp-qnty (decimal(PgQnty)) + ")"  format {&format-inv-gold} AT 18  SKIP
-      "в) на сумму фактически " + trim(string(PgSum, "->,>>>,>>>,>>>,>>>,>>>,>>9.99")) + abbr +  " (" + f-wp-sum (decimal(Pgsum)) + ")"  format {&format-inv-gold} AT 18 SKIP(1)
       "Вкладной лист к форме № ИНВ-3 №  " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") format "x(170)" AT 30 SKIP
     with FRAME BottomFrame2 width {&DOS_CW_2} PAGE-BOTTOM NO-LABELS NO-BOX .
     VIEW stream Out-Stream FRAME BottomFrame2 .
@@ -1003,7 +1001,7 @@ on error undo, return error return-value  :
     if v-doc-date = ""
     then do:
       assign
-        v-doc-date = string(buf_trn-doc.doc-date,"99/99/9999")
+        v-doc-date = string(buf_trn-doc.doc-date,"99999999")
         v-frame-str = "в расход."
       .
     end.
@@ -1025,7 +1023,7 @@ on error undo, return error return-value  :
         space(5) string( "ненужное зачеркнуть " ) format "X(20)" AT 67
                        "дата" format "X(4)" AT 175 "| " AT 180 v-prikaz-date format "99/99/9999" "|" AT 198 skip
         space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 v-doc-date format "99/99/9999" "|" AT 198 skip
-        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180  string( tdoc-date, "99/99/9999")  "|" AT 198 skip
+        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180  tdoc-date format "99/99/9999" "|" AT 198 skip
         space(5) "Вид операции" format "X(12)" AT 167 "| " AT 180 " инвентаризация" format "X(16)" "|" AT 198 skip
         space(5) Line format  "X(19)" AT 180 skip(2)
         space(79) Line format "X(33)" skip
@@ -1168,7 +1166,47 @@ procedure PrintPodval :
           v-pos-player3
           p-type
           no-error
-      }            
+      }      
+      
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_agent}
+        , input v-fio-agent
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_agent}
+        , input v-pos-agent
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player1}
+        , input v-fio-player1
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player1}
+        , input v-pos-player1
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player2}
+        , input v-fio-player2
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player2}
+        , input v-pos-player2
+        ).      
+        
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_fio_player3}
+        , input v-fio-player3
+        ).      
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_pos_player3}
+        , input v-pos-player3
+        ).              
       PAGE stream Out-Stream.
       HIDE stream Out-Stream FRAME BottomFrame .
       HIDE stream Out-Stream FRAME BottomFrame2 .

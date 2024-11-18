@@ -1006,7 +1006,7 @@ on error undo, return error return-value  :
     if v-doc-date = ""
     then do:
       assign
-        v-doc-date = string(buf_trn-doc.doc-date,"99/99/9999")
+        v-doc-date = string(buf_trn-doc.doc-date,"99999999")
         v-frame-str = "в расход."
       .
     end.
@@ -1029,7 +1029,7 @@ on error undo, return error return-value  :
         space(5) string( "ненужное зачеркнуть " ) format "X(20)" AT 67
                        "дата" format "X(4)" AT 175 "| " AT 180 v-prikaz-date format "99/99/9999" "|" AT 198 skip
         space(5) "Дата начала инвентаризации" format "X(26)" AT 153 "| " AT 180 v-doc-date format "99/99/9999" "|" AT 198 skip
-        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180  string( tdoc-date, "99/99/9999")  "|" AT 198 skip
+        space(5) "Дата окончания инвентаризации" format "X(29)" AT 150 "| " AT 180  tdoc-date format "99/99/9999" "|" AT 198 skip
         space(5) "Вид операции" format "X(12)" AT 167 "| " AT 180 " инвентаризация" format "X(16)" "|" AT 198 skip
         space(5) Line format  "X(19)" AT 180 skip(2)
         space(79) Line format "X(33)" skip
