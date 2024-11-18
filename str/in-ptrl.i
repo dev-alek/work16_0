@@ -1940,6 +1940,49 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 undo block_tr, return error return-value .
               end.
               
+              run placelib_get-attr  (
+                 input {&place-com-tanks}
+                ,input t-doc.obj-code
+                ,input t-doc.obj-type
+                ,input p-pl-code
+                ,output v-value
+                ,output v-ok      )
+              no-error.
+              if v-ok
+              and v-value > ""
+              then do :
+                do ii = 1 to num-entries(v-value) :
+                  find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
+                                                 and buf_place.obj-code = t-doc.obj-code
+                                                 and buf_place.loc1     = entry(ii, v-value)
+                                                 and buf_place.status_  = ""
+                                                 no-error .
+                  if available buf_place
+                  then do :
+                    run return-rvs-qnty in this-procedure
+                      ( input t-doc.doc-code
+                       ,input buf_goods.gds-code
+                       ,input buf_place.pl-code
+                       ,output v-com-tank-rvs-qnty-before
+                       ,output v-com-tank-rvs-qnty-after
+                       ,output v-com-tank-rvs-cli-qnty-before
+                       ,output v-com-tank-rvs-cli-qnty-after
+                       ,output v-com-tank-delta-mass-qnty
+                       ,output v-trk-err
+                      ) no-error .
+                    if error-status :error then do:
+                      undo block_tr, return error return-value .
+                    end.
+                    assign
+                      v-rvs-qnty-before     = v-rvs-qnty-before     + v-com-tank-rvs-qnty-before
+                      v-rvs-qnty-after      = v-rvs-qnty-after      + v-com-tank-rvs-qnty-after
+                      v-rvs-cli-qnty-before = v-rvs-cli-qnty-before + v-com-tank-rvs-cli-qnty-before
+                      v-rvs-cli-qnty-after  = v-rvs-cli-qnty-after  + v-com-tank-rvs-cli-qnty-after
+                    .
+                  end.
+                end .
+              end .
+              
               if p-rvs-type = {&rvs-after-doc} then do:
                 if v-rvs-qnty-after = ?
                   or v-rvs-qnty-after = 0
@@ -2050,49 +2093,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   ) no-error .
                   if v-cardifLgas = ?
                     then v-cardifLgas = 0.
-                    
-                  run placelib_get-attr  (
-                     input {&place-com-tanks}
-                    ,input t-doc.obj-code
-                    ,input t-doc.obj-type
-                    ,input p-pl-code
-                    ,output v-value
-                    ,output v-ok      )
-                  no-error.
-                  if v-ok
-                  and v-value > ""
-                  then do :
-                    do ii = 1 to num-entries(v-value) :
-                      find first buf_place no-lock where buf_place.obj-type = t-doc.obj-type
-                                                     and buf_place.obj-code = t-doc.obj-code
-                                                     and buf_place.loc1     = entry(ii, v-value)
-                                                     and buf_place.status_  = ""
-                                                     no-error .
-                      if available buf_place
-                      then do :
-                        run return-rvs-qnty in this-procedure
-                          ( input t-doc.doc-code
-                           ,input buf_goods.gds-code
-                           ,input buf_place.pl-code
-                           ,output v-com-tank-rvs-qnty-before
-                           ,output v-com-tank-rvs-qnty-after
-                           ,output v-com-tank-rvs-cli-qnty-before
-                           ,output v-com-tank-rvs-cli-qnty-after
-                           ,output v-com-tank-delta-mass-qnty
-                           ,output v-trk-err
-                          ) no-error .
-                        if error-status :error then do:
-                          undo block_tr, return error return-value .
-                        end.
-                        assign
-                          v-rvs-qnty-before     = v-rvs-qnty-before     + v-com-tank-rvs-qnty-before
-                          v-rvs-qnty-after      = v-rvs-qnty-after      + v-com-tank-rvs-qnty-after
-                          v-rvs-cli-qnty-before = v-rvs-cli-qnty-before + v-com-tank-rvs-cli-qnty-before
-                          v-rvs-cli-qnty-after  = v-rvs-cli-qnty-after  + v-com-tank-rvs-cli-qnty-after
-                        .
-                      end.
-                    end .
-                  end .
                   
                   dM = buf_doc-line.cli-qnty - (v-rvs-cli-qnty-after - v-rvs-cli-qnty-before).
                   dmdop = SQRT ((v-rvs-cli-qnty-after *  v-cardifLgas) * (v-rvs-cli-qnty-after *  v-cardifLgas) + (v-rvs-cli-qnty-before *  v-cardifLgas) * (v-rvs-cli-qnty-before *  v-cardifLgas)) / 100.
@@ -2950,7 +2950,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             ,output v-value
             ,output v-ok      )
           no-error.
-          
           if  v-ok
           and v-value > ""
           then do :
