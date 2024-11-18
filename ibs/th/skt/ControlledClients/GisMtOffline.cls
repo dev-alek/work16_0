@@ -132,7 +132,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
               
        vTimeLag = 0.
        
-       RunChkStsAndInit(no, no).
+       RunChkStsAndInit(yes, no).
        
        find first ttstatus-body no-error.
        if avail ttstatus-body  
@@ -173,8 +173,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
      define variable hDS          as handle no-undo.
      define variable vRetOk       as logical no-undo.    
      define variable cmd          as character   no-undo.
-     define variable vFileResult  as character   no-undo.
-     define variable vFileResJson as character   no-undo.
+     define variable vFileResult  as character   no-undo.     
      define variable vFileResXml  as character   no-undo.
      define variable vFileErr     as character   no-undo.
      define variable vParam       as character no-undo.  
@@ -190,8 +189,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
      EmptyTempTable().
      
      run gbl/_tmpfile.p ( "StsOffGisMTRes", ".txt", output vFileResult ) .
-     run gbl/_tmpfile.p ( "StsOffGisMTErr", ".txt", output vFileErr ) .
-     run gbl/_tmpfile.p ( "StsOffGisMTResJson", ".json", output vFileResJson ) .
+     run gbl/_tmpfile.p ( "StsOffGisMTErr", ".txt", output vFileErr ) .     
      run gbl/_tmpfile.p ( "StsOffGisMTResXml", ".xml", output vFileResXml ) .     
 
      do transaction 
@@ -236,8 +234,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
      if not session:debug-alert
      then do:         
          os-delete silent value(vFileResult)     no-error.
-         os-delete silent value(vFileErr)        no-error.
-         os-delete silent value(vFileResJson)     no-error.
+         os-delete silent value(vFileErr)        no-error.         
          os-delete silent value(vFileResXml)     no-error.             
      end.
          
@@ -251,8 +248,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
         define variable vCdnAdr as character no-undo.
         define variable cmd as character   no-undo.
         define variable vFileResult    as character   no-undo.
-        define variable vFileErr as character   no-undo.   
-        define variable vFileResJson    as character   no-undo.
+        define variable vFileErr as character   no-undo.           
         define variable vTimeCur as datetime-tz no-undo.
         def var vReqTime as int64 no-undo.
         define variable vFlagOk as log no-undo.
@@ -292,8 +288,8 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
          if not session:debug-alert
          then do:         
              os-delete silent value(vFileResult)     no-error.
-             os-delete silent value(vFileErr)        no-error.
-             os-delete silent value(vFileResJson)     no-error.             
+             os-delete silent value(vFileErr)        no-error.             
+             os-delete silent value(vTokenFile)      no-error.             
          end.
    end method.   
    
