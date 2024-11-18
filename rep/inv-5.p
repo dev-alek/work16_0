@@ -939,7 +939,7 @@ do :
 
     '  <tr>' skip
     '    <td><br /></td>' skip
-    '    <td colspan="3">„лены комиссии:</td>' skip
+    '    <td colspan="3">—остав комиссии:</td>' skip
     '    <td colspan="2" class="page3nam" style="{&css_border_bottom}"><br />' + v-pos-player1 + '</td>' skip
     '    <td><br /></td>' skip
     '    <td colspan="4" class="page3nam" style="{&css_border_bottom}"><br /></td>' skip
