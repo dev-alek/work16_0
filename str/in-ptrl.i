@@ -2467,12 +2467,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             if v-calc-density = ?
             and not infoSectionsTotal:isFlagKPChg
             then do:
-              if v-need-message
-              then do :
-                message
-                  substitute( "Ќевозможно рассчитать фактическое кол-во." )
-                  view-as alert-box warning.
-              end .
+/*              if v-need-message                                            */
+/*              then do :                                                    */
+/*                message                                                    */
+/*                  substitute( "Ќевозможно рассчитать фактическое кол-во." )*/
+/*                  view-as alert-box warning.                               */
+/*              end .                                                        */
               return.
             end.
             
