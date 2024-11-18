@@ -171,6 +171,7 @@ define variable vRightChngQnty             as logical   no-undo .
 { gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 define variable v-pack-qnty as integer no-undo .
+define variable vScanMark   as character no-undo.
 
 define variable varvalue as character no-undo .
 define variable vartype  as character no-undo .
@@ -1282,7 +1283,6 @@ DO:
         
         
         node-type = {&g#term} .
-        
       end .
     end .
 
@@ -2935,6 +2935,9 @@ end.
       in frame {&frame-name}
     .
   end.
+  
+  if node-type begins "scan-marks" then
+    vScanMark = entry(2,node-type,{&delim-key}).
 
   if prt-mode = {&lookup} then do:
     if not is-petrolium then do:
@@ -4469,16 +4472,16 @@ define variable v-chg-qnty      as decimal   no-undo .
           )
     then do: /* НЕ топливо */
       if v-work-with-qnty = "doc":U then do:
-        if node-type begins 'scan-marks' then do:
-          { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" "is-marks" entry(2,node-type,{&delim-key})}
+        if vScanMark <> "" then do:
+          { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" "is-marks" vScanMark}
         end.
         else do:  
         { str/rsrv-out.i "doc" "input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty" }
       end.
       end.
       else do:
-        if node-type begins 'scan-marks' then do:
-          { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" "is-marks" entry(2,node-type,{&delim-key})}
+        if vScanMark <> "" then do:
+          { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" "is-marks" vScanMark}
         end.
       else do:
         { str/rsrv-out.i "fact" "input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty" }
@@ -4541,7 +4544,7 @@ define variable v-chg-qnty      as decimal   no-undo .
             , input-output ub.doc-line.price-base
             , input-output ub.doc-line.price-rubl
             , input        -1
-            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
+            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else vScanMark
             ) no-error .
           if error-status :error then do:
             undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .
@@ -4586,7 +4589,7 @@ define variable v-chg-qnty      as decimal   no-undo .
             , input-output ub.doc-line.price-base
             , input-output ub.doc-line.price-rubl
             , input        -1
-            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
+            , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else vScanMark
             ) no-error .
           if error-status :error then do:
             undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .
@@ -4851,7 +4854,7 @@ define variable v-chg-qnty      as decimal   no-undo .
           , input-output ub.doc-line.price-base
           , input-output ub.doc-line.price-rubl
           , input        -1
-          , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else ""
+          , input if node-type begins 'scan-mark' then entry(2,node-type,{&delim-key}) else vScanMark
           ) no-error .
         if error-status :error then do:
           undo, return error substitute( '&1&2&3', return-value, {&new-line}, error-status :get-message( 1 ) ) .

@@ -3915,7 +3915,7 @@ end.
       }
       if varvalue = "yes" then do:
         v-is-return = yes .
-        menu-item m_add-marks:sensitive in menu m-marks = no.
+/*        menu-item m_add-marks:sensitive in menu m-marks = no.*/
 /*        menu-item m_del-marks:sensitive in menu m-marks = no.*/
         disable b-bc with frame {&frame-name} .
         gds-dtl.doc-qnty:read-only in browse br-dtl = yes .
