@@ -874,7 +874,7 @@ PROCEDURE save_update :
                (mTypeMark <> "" and not EDOParSec:GetIsSaleReturnForType(mTypeMark)) then
             do: 
                 run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
-                                 thMarkSts:GetProp(marking.sts))
+                                 thMarkSts:GetLabel(marking.sts))
                                  ).
                 assign 
                   v-mark              = ""
@@ -895,7 +895,7 @@ PROCEDURE save_update :
             if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
             do:
               run dispmessage (substitute("Марка в статусе <&1> не может быт перемещена.",
-                               thMarkSts:GetProp(marking.sts))
+                               thMarkSts:GetLabel(marking.sts))
                               ).
               assign 
                 v-mark              = ""
@@ -961,7 +961,7 @@ PROCEDURE save_update :
                marking.sts <> thMarkSts:OutOfInventory:KeyIntDB then
             do:
               run dispmessage (
-                substitute("Марка в статусе <&1> не может быт списана.",thMarkSts:GetProp(marking.sts))
+                substitute("Марка в статусе <&1> не может быть списана.",thMarkSts:GetLabel(marking.sts))
                 ).
               assign 
                 v-mark              = ""
