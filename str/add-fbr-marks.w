@@ -601,7 +601,7 @@ PROCEDURE CrCheckMark :
     end .
     create buf_marking .
     assign
-      buf_marking.mark = v-mark
+      buf_marking.mark = v-mark-short
       buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
       buf_marking.box-qnty = v-GTIN-qnty
       buf_marking.obj-type = v-cntxt-obj-type

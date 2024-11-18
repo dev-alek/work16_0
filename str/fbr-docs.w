@@ -854,6 +854,8 @@ else do:
         define buffer buf_del_fbr-recipe-gds    for fbr-recipe-gds.
         define buffer buf_fbr-recipe            for fbr-recipe.
         define buffer buf_fbr-recipe-gds        for fbr-recipe-gds.
+        define buffer buf_goods                 for goods.
+        
         for each buf_fbr-recipe-gds no-lock
            where buf_fbr-recipe-gds.doc-code      = f-doc.doc-code
         :
@@ -873,27 +875,37 @@ else do:
         for each fbr-line no-lock
            where fbr-line.doc-code = f-doc.doc-code
         :
+            /* удаляем марки, привязанные к док-ту */
+            for first buf_goods no-lock where buf_goods.artic     = fbr-line.artic
+                                          and buf_goods.prod-type = fbr-line.prod-type
+                                          and buf_goods.prod-code = fbr-line.prod-code,
+            each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                             and buf_marking-lines.obj-code = f-doc.obj-code
+                                             and buf_marking-lines.obj-type = f-doc.obj-type
+                                             and buf_marking-lines.in-code  = "manufacturing"
+                                             and buf_marking-lines.out-code = f-doc.doc-code
+                                             and buf_marking-lines.part-code = fbr-line.recipe-code
+                                             and buf_marking-lines.prt-code = 0
+            :
+              /* меняем статус марки на Свободную Зону */
+              find first buf_marking exclusive-lock
+                   where buf_marking.mark = buf_marking-lines.mark 
+              no-error.
+              if available buf_marking
+              then
+              assign
+                buf_marking.sts = cStsMark:FreeZone:KeyIntDB when not fbr-line.is-comp
+                buf_marking.sts = cStsMark:UsedInProduction:KeyIntDB when fbr-line.is-comp
+              .
+              find first buf_del_marking-lines exclusive-lock
+                   where recid( buf_del_marking-lines ) = recid( buf_marking-lines )
+              .
+              delete buf_del_marking-lines.
+            end .  
             find first buf_del_fbr-line exclusive-lock
                  where recid( buf_del_fbr-line ) = recid( fbr-line )
             .
             delete buf_del_fbr-line.
-        end.
-        /* удаляем марки, привязанные к док-ту */
-        for each buf_marking-lines no-lock where 
-                 buf_marking-lines.out-code = f-doc.doc-code
-             and buf_marking-lines.obj-type = f-doc.obj-type
-             and buf_marking-lines.obj-code = f-doc.obj-code
-        :
-            /* меняем статус марки на Свободную Зону */
-            find first buf_marking exclusive-lock
-                 where buf_marking.mark = buf_marking-lines.mark 
-            no-error.
-            if avail buf_marking then
-              buf_marking.sts = cStsMark:FreeZone:KeyIntDB.
-            find first buf_del_marking-lines exclusive-lock
-                 where recid( buf_del_marking-lines ) = recid( buf_marking-lines )
-            .
-            delete buf_del_marking-lines.
         end.
         find first buf_del_fbr-doc exclusive-lock
              where recid( buf_del_fbr-doc ) = recid( f-doc )
