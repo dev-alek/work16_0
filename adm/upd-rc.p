@@ -370,6 +370,7 @@ on error undo, return error return-value
     end.
     
     run upload1C in this-procedure.
+	run nws/nws-init.p no-error.
     
     mRunFile = SearchFile ("!upd-rc-before.bat").
     if mRunFile ne ?
