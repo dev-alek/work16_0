@@ -3265,9 +3265,10 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionsTotal:GetDBAllAttr().
               do ii = 1 to infoSectionsTotal:SectionNum :
                 infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-                if not (infoSecObj:TankWeight > 0)
+                if not infoSecObj:KPnoMeas
+                and (not (infoSecObj:TankWeight > 0)
                 or infoSecObj:TankWeight = ?
-                or infoSecObj:TankDensity = ?
+                or infoSecObj:TankDensity = ?)
                 then do :
                   delete object infoSectionsTotal.
                   message
@@ -3327,47 +3328,22 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           v-kpsecs = trim(v-kpsecs, ", ") .
         end .
         
-        if v-kpsecs > ""
-        then do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_income_petrol-сommission':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            false
-            varlog
-            no-error
-          }
-          if varlog <> yes then do:
-            message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
-            return error return-value .
-          end.
-        end .
-        else do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-on-doc_cr-revision':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            true
-            varlog
-            no-error
-          }
-        end .
+        { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_rvs-on-doc_cr-revision':U
+          {&cntxt-object}
+          buf_trn-doc.host-code
+          buf_trn-doc.obj-type
+          buf_trn-doc.obj-code
+          0
+          0
+          0
+          true
+          varlog
+          no-error
+        }
         if varlog <> yes then do:
           return error return-value .
         end.
@@ -3429,68 +3405,28 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         
         if v-kpsecs > ""
         then do :
-          run gbl/d-askw.w (
-             input "Выбор способа выполнения комиссионного приёма"
-            ,input ("Для секций " + v-kpsecs + " требуется комиссионный прием. Каким способом будет выполняться комиссионный прием?")
-            ,input "|"
-            ,input "Замеры в АЦ|По сверкам|Отмена"
-            ,input "Выполнение комиссионного приёма стандартным способом по замерам в автоцистерне|Выполнение комиссионного приёма по данным сверок в резервуаре|Отказ от создания сверок"
-            ,input 1
-            ,input 3
-            ,output choice).
-          case choice :
-            when 1
-            then do :
-              kpsecs_ :
-              for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-                                                   and buf_doc-line-attr.attr-code = "n"
-              :
-                infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
-                infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
-                infoSectionsTotal:GetDBAllAttr().
-                do ii = 1 to infoSectionsTotal:SectionNum : 
-                  infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-                  if infoSecObj:isKP
+          kpsecs_ :
+          for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+                                               and buf_doc-line-attr.attr-code = "n"
+          :
+            infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
+            infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
+            infoSectionsTotal:GetDBAllAttr().
+            do ii = 1 to infoSectionsTotal:SectionNum : 
+              infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
+              if infoSecObj:isKP
+              then do :
+                for first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank
+                                         and not tt-place-sec.own-rvs :
+                  if num-entries(tt-place-sec.secs) >= 1
                   then do :
-                    infoSecObj:AccMeth = 0 .
+                    tt-place-sec.own-rvs = yes .
+                    v-need-rvs-sec = v-need-rvs-sec + tt-place-sec.secs + "," .
                   end .
                 end .
-                infoSectionsTotal:SaveDB() .
-                delete object infoSectionsTotal.
               end .
             end .
-            when 2
-            then do :
-              kpsecs_ :
-              for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-                                                   and buf_doc-line-attr.attr-code = "n"
-              :
-                infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
-                infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
-                infoSectionsTotal:GetDBAllAttr().
-                do ii = 1 to infoSectionsTotal:SectionNum : 
-                  infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
-                  if infoSecObj:isKP
-                  then do :
-                    for first tt-place-sec where tt-place-sec.loc1 = infoSecObj:ListTank
-                                             and not tt-place-sec.own-rvs :
-                      if num-entries(tt-place-sec.secs) > 1
-                      then do :
-                        tt-place-sec.own-rvs = yes .
-                        v-need-rvs-sec = v-need-rvs-sec + tt-place-sec.secs + "," .
-                      end .
-                    end .
-                    infoSecObj:AccMeth = 1 .
-                  end .
-                end .
-                infoSectionsTotal:SaveDB() .
-                delete object infoSectionsTotal.
-              end .
-            end .
-            when 3
-            then do :
-              return .
-            end .
+            delete object infoSectionsTotal.
           end .
         end .
         v-need-rvs-sec = trim(v-need-rvs-sec, ",") .
@@ -3987,7 +3923,6 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define buffer aft-rvs-doc for ub.rvs-doc.
         define buffer buf_doc-line-attr for ub.doc-line-attr .
         
-        define variable v-isKP           as logical   no-undo init no .
         define variable varlog           as logical   no-undo .
         define variable ii               as integer   no-undo .
         define variable infoSectionsTotal as class ibs.th.str.InfoSectionsTotal no-undo .
@@ -3997,63 +3932,22 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
           where buf_trn-doc.doc-code = p-doc-code
           .
           
-        kpsecs_ :
-        for each buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-                                             and buf_doc-line-attr.attr-code = "n"
-        :
-          infoSectionsTotal = new ibs.th.str.InfoSectionsTotal().
-          infoSectionsTotal:Initialization(buf_trn-doc.doc-code, buf_doc-line-attr.gds-code).
-          infoSectionsTotal:GetDBAllAttr().
-          do ii = 1 to infoSectionsTotal:SectionNum :
-            if infoSectionsTotal:GetInfoSectionProp(ii):isKP
-            then do :
-              v-isKP = yes .
-            end .
-          end .
-          delete object infoSectionsTotal.
-        end .
-        
-        if v-isKP
-        then do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_income_petrol-сommission':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            false
-            varlog
-            no-error
-          }
-          if varlog <> yes then do:
-            message "По накладной установлен флаг комиссионного приема. Работа со сверками запрещена!" view-as alert-box .
-            return error return-value .
-          end.
-        end .
-        else do :
-          { gbl/chk-actg.i
-            v-cntxt-db-num
-            v-cntxt-userid
-            {&action-head-code-main}
-            'actn_rvs-on-doc_deletion':U
-            {&cntxt-object}
-            buf_trn-doc.host-code
-            buf_trn-doc.obj-type
-            buf_trn-doc.obj-code
-            0
-            0
-            0
-            true
-            varlog
-            no-error
-          }
-        end .
+        { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_rvs-on-doc_deletion':U
+          {&cntxt-object}
+          buf_trn-doc.host-code
+          buf_trn-doc.obj-type
+          buf_trn-doc.obj-code
+          0
+          0
+          0
+          true
+          varlog
+          no-error
+        }
         if varlog <> yes then do:
           return error return-value .
         end.
@@ -4084,6 +3978,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               infoSectionObj:TankVolPomi = ? .
               infoSectionObj:TankWeight = ? .
               infoSectionObj:AccPomi = ? .
+            end .
+            if infoSectionObj:AccMeth = 1
+            then do :
+              infoSectionObj:TankVolPomiRvs = ? .
+              infoSectionObj:TankWeightRvs = ? .
             end .
             infoSectionObj:AccMeth = ? .
             infoSectionObj:DateStart = ? .

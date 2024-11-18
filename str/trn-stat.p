@@ -782,20 +782,47 @@ then do:
           infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii).
           if varstatus = {&fact}
           then do :
+            if infoSectionObj:IsKP
+            then do :
+              { gbl/chk-actg.i
+                v-curr-db-num
+                v-curr-userid
+                {&action-head-code-main}
+                'actn_income_petrol-сommission':U
+                {&cntxt-object}
+                bf_trn-doc.host-code
+                bf_trn-doc.obj-type
+                bf_trn-doc.obj-code
+                0
+                0
+                0
+                true
+                varlog
+              }
+              if not varlog
+              then do:
+                undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').
+              end.
+            end .
+          
             if infoSectionsTotal:IsSGDKK
             then do :
               
             end .
             else do :
-              v-dec = decimal(infoSectionObj:TankWeight) no-error .
-              if error-status:error
-              or v-dec = 0
+              if not infoSectionObj:KPnoMeas
               then do :
-                v-mess = "Не произведён расчёт измеренной массы НП (" + string(infoSectionsTotal:GdsCode) + ") в секции АЦ (" + infoSectionObj:SectionName + "). Закрытие документа невозможно".
-                delete object infoSectionsTotal .
-                undo, return error v-mess.
+                v-dec = decimal(infoSectionObj:TankWeight) no-error .
+                if error-status:error
+                or v-dec = 0
+                then do :
+                  v-mess = "Не произведён расчёт измеренной массы НП (" + string(infoSectionsTotal:GdsCode) + ") в секции АЦ (" + infoSectionObj:SectionName + "). Закрытие документа невозможно".
+                  delete object infoSectionsTotal .
+                  undo, return error v-mess.
+                end .
               end .
             end .
+            
           end .
           else do :
             if first-of(bf_doc-line-attr.gds-code)
@@ -820,11 +847,22 @@ then do:
                 end .
               end .
               else do :
-                if infoSectionObj:IsKP
+                if infoSectionObj:KPnoMeas
                 then do :
-                  infoSectionObj:IsKP = no .
-                  infoSectionObj:TankWeight = 0 .
-                  v-needsavesec = yes .
+                  v-kpsecs = v-kpsecs + infoSectionObj:SectionName + " (" + bf_goods.gds-name + "), " .
+                  if not infoSectionObj:IsKP
+                  then do :
+                    infoSectionObj:IsKP = yes .
+                    v-needsavesec = yes .
+                  end .
+                end .
+                else do :
+                  if infoSectionObj:IsKP
+                  then do :
+                    infoSectionObj:IsKP = no .
+                    infoSectionObj:TankWeight = 0 .
+                    v-needsavesec = yes .
+                  end .
                 end .
               end .
             end .
@@ -842,37 +880,35 @@ then do:
         
         delete object infoSectionsTotal.
         
-        if v-iskp
-        then do:
-          { gbl/chk-actg.i
-            v-curr-db-num
-            v-curr-userid
-            {&action-head-code-main}
-            'actn_income_petrol-сommission':U
-            {&cntxt-object}
-            bf_trn-doc.host-code
-            bf_trn-doc.obj-type
-            bf_trn-doc.obj-code
-            0
-            0
-            0
-            true
-            varlog
-          }
-          
-          if not varlog
-          then do:
-            undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').
-          end.
-          
-        end.
+/*        if v-iskp                                                                                                     */
+/*        then do:                                                                                                      */
+/*          { gbl/chk-actg.i                                                                                            */
+/*            v-curr-db-num                                                                                             */
+/*            v-curr-userid                                                                                             */
+/*            {&action-head-code-main}                                                                                  */
+/*            'actn_income_petrol-сommission':U                                                                         */
+/*            {&cntxt-object}                                                                                           */
+/*            bf_trn-doc.host-code                                                                                      */
+/*            bf_trn-doc.obj-type                                                                                       */
+/*            bf_trn-doc.obj-code                                                                                       */
+/*            0                                                                                                         */
+/*            0                                                                                                         */
+/*            0                                                                                                         */
+/*            true                                                                                                      */
+/*            varlog                                                                                                    */
+/*          }                                                                                                           */
+/*          if not varlog                                                                                               */
+/*          then do:                                                                                                    */
+/*            undo, return error substitute( 'По секциям включен комиссионный прием нефтепродукта. Отсутствует право.').*/
+/*          end.                                                                                                        */
+/*        end.                                                                                                          */
       end.
     
   end.
   v-kpsecs = trim(v-kpsecs, ", ") .
   if v-kpsecs > ""
   then do :
-    message "Для секций " v-kpsecs " установлен флаг «Тревожное событие СЭП». После перевода накладной в статус «накл+» продолжение ее обработки будет доступно только пользователю с правами комиссионной приемки." skip
+    message "Для секций " v-kpsecs " установлен признак «Комиссионный прием НП». После перевода накладной в статус «накл+» продолжение работы с секциями с комиссионным приемом НП будет доступно только пользователю с правами комиссионной приемки." skip
             "Вы уверены, что хотите закрыть накладную?"
     view-as alert-box question buttons yes-no update varlog .
     if not varlog

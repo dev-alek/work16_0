@@ -39,6 +39,7 @@ define input-output parameter p-list-tank as character no-undo.
 
 
 define buffer buf_pl-gds for ub.pl-gds.
+define buffer buf_place for ub.place.
 
 /* Local Variable Definitions ---                                       */
 
@@ -282,13 +283,20 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                 and buf_pl-gds.obj-code = p-obj-code
                                 and buf_pl-gds.gds-code = p-gds-code
                                 :
-    find first ub.place no-lock where ub.place.pl-code = buf_pl-gds.pl-code no-error.
-    create tt-pl.
-    assign
-      tt-pl.pl-code = ub.place.pl-code
-      tt-pl.pl-name = ub.place.pl-name
-      tt-pl.pl-coord = ub.place.loc1
-    .
+    find first buf_place no-lock where buf_place.obj-type = buf_pl-gds.obj-type
+                                   and buf_place.obj-code = buf_pl-gds.obj-code
+                                   and buf_place.pl-code  = buf_pl-gds.pl-code
+                                   and buf_place.status_  = ""
+                                   no-error.
+    if available buf_place
+    then do :
+      create tt-pl.
+      assign
+        tt-pl.pl-code  = buf_place.pl-code
+        tt-pl.pl-name  = buf_place.pl-name
+        tt-pl.pl-coord = buf_place.loc1
+      .
+    end .
   end.
 
   RUN enable_UI.

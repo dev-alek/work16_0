@@ -882,6 +882,12 @@ class ibs.th.str.InfoSectionsTotal:
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
         buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'tank-vol-pomi-real' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankVolPomiReal ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'tank-vol-pomi-rvs' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:TankVolPomiRvs ).
       create buf_doc-line-attr.
@@ -926,6 +932,12 @@ class ibs.th.str.InfoSectionsTotal:
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'acc-pomi' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AccPOMI).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'acc-pomi-real' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AccPomiReal).
       create buf_doc-line-attr.
       assign
         buf_doc-line-attr.doc-code = TrnDocNum
@@ -1047,6 +1059,12 @@ class ibs.th.str.InfoSectionsTotal:
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'aukkey' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:AukKey ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'KPnoMeas' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:KPnoMeas ).
       release buf_doc-line-attr.
       
     end.
@@ -1904,11 +1922,13 @@ class ibs.th.str.InfoSectionsTotal:
             else do :
               assign
                 InfoSectionCurr:cmom-nb = replace(v-proc, "ADMM.", "")
-                InfoSectionCurr:TankDensityPomi    = decimal(v-mm:Rcy) / 1000
-                InfoSectionCurr:TankVolPomi        = v-mm:Vcy * 1000
-                InfoSectionCurr:TankWeight     = v-mm:M
-/*              InfoSectionCurr:AccPomi = round (v-mm:DeltaOtn_M, 3) ZI-2815*/
-                InfoSectionCurr:AccPomi = 0.65
+                InfoSectionCurr:TankDensityPomi = decimal(v-mm:Rcy) / 1000
+                InfoSectionCurr:TankVolPomi     = v-mm:Vcy * 1000
+                InfoSectionCurr:TankWeight      = v-mm:M
+/*                InfoSectionCurr:AccPomi         = round (v-mm:DeltaOtn_M, 3) ZI-2815*/
+                InfoSectionCurr:AccPomi         = 0.65
+                InfoSectionCurr:AccPomiReal     = round(v-mm:DeltaOtn_M, 2)
+                InfoSectionCurr:TankVolPomiReal = v-mm:V * 1000
               .
 /*              display                  */
 /*                f-tank-density-pomi    */
@@ -1921,7 +1941,7 @@ class ibs.th.str.InfoSectionsTotal:
                 "v-mm:Rcy" InfoSectionCurr:TankDensityPomi       skip
                 "v-mm:Vcy" InfoSectionCurr:TankVolPomi           skip
                 "v-mm:Mcy" InfoSectionCurr:TankWeight            skip 
-                "v-mm:v-mm:DeltaOtn_M" InfoSectionCurr:AccPomi skip .
+                "v-mm:DeltaOtn_M" InfoSectionCurr:AccPomi skip .
               output stream outstream close.
               release object v-mm no-error.
               v-mm = ?.
@@ -3652,16 +3672,31 @@ class ibs.th.str.InfoSectionsTotal:
         end.  
         
         output stream outstream to value ("pomi.log") append.
-        put stream outstream unformatted
-          'V_total1                   = ' v-mm:V_total1                          skip 
-          'V_total2                   = ' v-mm:V_total2                          skip 
-          'V_water1                   = ' v-mm:V_water1                          skip 
-          'V_water2                   = ' v-mm:V_water2                          skip
-          'Delta_V1                   = ' v-mm:Delta_V1                          skip 
-          'Delta_V2                   = ' v-mm:Delta_V2                          skip 
-          'M                          = ' v-mm:M                                 skip 
-          'DeltaOtn_M                 = ' v-mm:DeltaOtn_M                        skip 
-        .
+        if not (string(v-mm:M) = ".0000000000")
+        then do :
+          put stream outstream unformatted
+            'V_total1                   = ' v-mm:V_total1                          SKIP 
+            'V_total2                   = ' v-mm:V_total2                          SKIP 
+            'V_water1                   = ' v-mm:V_water1                          SKIP 
+            'V_water2                   = ' v-mm:V_water2                          SKIP
+            'Delta_V1                   = ' v-mm:Delta_V1                          SKIP 
+            'Delta_V2                   = ' v-mm:Delta_V2                          SKIP 
+            'M                          = ' v-mm:M                                 SKIP 
+            'DeltaOtn_M                 = ' v-mm:DeltaOtn_M                        SKIP 
+          .
+        end .
+        else do :
+          put stream outstream unformatted
+            'V_total1                   = ' v-mm:V_total1                          SKIP 
+            'V_total2                   = ' v-mm:V_total2                          SKIP 
+            'V_water1                   = ' v-mm:V_water1                          SKIP 
+            'V_water2                   = ' v-mm:V_water2                          SKIP
+            'Delta_V1                   = ' v-mm:Delta_V1                          SKIP 
+            'Delta_V2                   = ' v-mm:Delta_V2                          SKIP 
+            'M                          = ' v-mm:M                                 SKIP 
+            'DeltaOtn_M                 = ' "?"                                    SKIP 
+          .
+        end .
         output stream outstream close.
         
         assign

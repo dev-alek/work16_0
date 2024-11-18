@@ -189,6 +189,10 @@ class ibs.th.str.InfoSection:
   define property TankVolPomi as decimal no-undo
     get.
     set.
+    
+  define property TankVolPomiReal as decimal no-undo
+    get.
+    set.
   
   define property TankVolPomiRvs as decimal no-undo
     get.
@@ -288,6 +292,10 @@ class ibs.th.str.InfoSection:
   define property AccPomi as decimal no-undo
     get.
     set.
+    
+  define property AccPomiReal as decimal no-undo
+    get.
+    set.
 
   define property AccShip as decimal no-undo
     get.
@@ -355,6 +363,10 @@ class ibs.th.str.InfoSection:
     set.
   
   define property AukKey as character no-undo
+    get.
+    set.
+  
+  define property KPnoMeas as logical no-undo
     get.
     set.
   
@@ -589,6 +601,11 @@ class ibs.th.str.InfoSection:
           assign
             TankVolPomi = decimal (inAttrValue) no-error.
         end.
+      when 'tank-vol-pomi-real' then 
+        do:
+          assign
+            TankVolPomiReal = decimal (inAttrValue) no-error.
+        end.
       when 'tank-vol-pomi-rvs' then 
         do:
           assign
@@ -717,6 +734,11 @@ class ibs.th.str.InfoSection:
           assign
             AccPomi = decimal (inAttrValue) no-error.
         end.
+      when 'acc-pomi-real' then 
+        do:
+          assign
+            AccPomiReal = decimal (inAttrValue) no-error.
+        end.
       when 'tp-norm-auto' then 
         do:
           assign
@@ -804,6 +826,14 @@ class ibs.th.str.InfoSection:
           assign
             AukKey = inAttrValue no-error.
         end.
+      when 'KPnoMeas' then 
+        do:
+          assign
+            KPnoMeas = logical (inAttrValue) no-error.
+          if error-status:error or inAttrValue = "" or KPnoMeas = ?
+            then KPnoMeas = no.
+        end.
+        
     end case.
 		
 

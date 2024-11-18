@@ -522,6 +522,36 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
               end.
             end .
           end .
+          
+          numsecs = "" .
+          do ii = 1 to infoSecsObj:SectionNum:
+            if infoSecsObj:GetInfoSectionProp(ii):KPnoMeas
+            then do :
+              numsecs = numsecs + infoSecsObj:GetInfoSectionProp(ii):SectionName + {&new-line} .
+            end .
+          end.
+          if numsecs > ""
+          then do :
+            message "Для секций " skip
+                    numsecs
+                    "установлены флаги «Переход к комиссионному приему НП без замеров секции АЦ». По обозначенным  секциям будет активирован  комиссионный прием. Продолжить?"
+            view-as alert-box question buttons yes-no update vlog .
+            if not vlog
+            then do :
+              e:Cancel = yes .
+              vClickSave = no .
+              infoSecsObj:WasSetting = no .
+            end .
+            else do :
+              do ii = 1 to infoSecsObj:SectionNum:
+                if infoSecsObj:GetInfoSectionProp(ii):KPnoMeas
+                then do :
+                  infoSecsObj:GetInfoSectionProp(ii):IsKP = yes .
+                end .
+              end.
+            end .
+          end .
+          
           if infoSecsObj:Mode = "ИЗМЕНЕНИЕ" then infoSecsObj:SaveDB() .
 		    end . /* if not infoSecsObj:FlagTrn (в накл-) */
 		  end .

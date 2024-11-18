@@ -817,6 +817,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               write-data-element ("auk", string(infoSecObj:aukKey)).
             end .
           end .  
+          else do :
+            write-data-element ("trans-comm", (if infoSecObj:KPnoMeas then string(1) else string(0))).
+          end .
           write-data-element ("tank-num", string (infoSecObj:ListTank)).
           /*сертификат соответствия*/
           write-data-element ("certif-fuel", string (infoSecObj:CertifFuel)).
