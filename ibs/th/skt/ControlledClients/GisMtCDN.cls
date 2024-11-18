@@ -325,8 +325,8 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
        def buffer buf_code for ub.code.       
        
        for each buf_code where 
-                  buf_code.parent = "CDN_GisMt" 
-              and buf_code.code = "CDN_Upd"                            
+                buf_code.parent = "CDN_GisMt" 
+            and buf_code.code = "CDN_Upd"                            
            exclusive-lock:       
           delete buf_code.           
        end.           
@@ -384,7 +384,8 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
    method public void DelOldCdn
         (iTimeStart as datetime-tz):
             
-        def buffer buf_code for ub.code. 
+        def buffer buf_code for ub.code.
+        def buffer chg_code for ub.code. 
         
         /* если обновляли площадки, то старые удаляем */
         if can-find(first buf_code no-lock where 
@@ -392,22 +393,28 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                  and buf_code.misc1 = String(iTimeStart)
                  ) then
         do:              
-            for each buf_code where 
-                         buf_code.parent = "CDN_GisMt"              
-                     exclusive-lock :
+            for each buf_code no-lock where 
+                     buf_code.parent = "CDN_GisMt"              
+               :
                if  buf_code.misc1 <> String(iTimeStart) 
                and buf_code.code <> "CDN_Upd" then
                do:
-                   delete buf_code. 
+                   find first chg_code where rowid(chg_code) = rowid(buf_code)
+                      exclusive-lock no-wait no-error.
+                   if avail chg_code then
+                      delete chg_code. 
                end.           
             end.
         end.  
         /* иначе сбрасываем блокировки */ 
         else do:
-            for each buf_code where 
-                         buf_code.parent = "CDN_GisMt"              
-                     exclusive-lock :
-               buf_code.misc2 = "".           
+            for each buf_code no-lock where 
+                     buf_code.parent = "CDN_GisMt"              
+               :
+               find first chg_code where rowid(chg_code) = rowid(buf_code)
+                  exclusive-lock no-wait no-error.
+               if avail chg_code then
+                  chg_code.misc2 = "".           
             end.           
         end.              
    end method.

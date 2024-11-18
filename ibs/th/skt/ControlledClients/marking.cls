@@ -719,41 +719,42 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     ASSIGN
        mCheckSts = 2  
        vErrSts = ""
-       .
+       .           
+      
     fixerr:
     DO TRANSACTION ON ERROR UNDO, RETRY fixerr:        
        /* Проверяем, зафиксирован ли сбой онлайн-проверки */
        FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
                              AND buf_code.code   EQ "GisMtErr"
-          EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
+          NO-LOCK NO-ERROR.
        IF NOT AVAILABLE buf_code 
        THEN DO:
-          IF LOCKED buf_code THEN             
-                vErrSts = vErrSts + "Время сбоя не зафиксировано. ".
-          ELSE DO:
-             /* создаем верхний уровень, если его нет */
-             FIND FIRST buf_code WHERE buf_code.parent EQ ""
-                               AND buf_code.code   EQ "GisMt"
-             NO-LOCK NO-ERROR.
-             IF NOT AVAILABLE buf_code THEN DO:
-                CREATE buf_code.
-                ASSIGN
-                   buf_code.parent = ""
-                   buf_code.code = "GisMt"
-                   buf_code.codename = "Cбой онлайн-проверки КМ"
-                   .
-             END.
-             /* создаем запись с фиксацией времени ошибки */
-             CREATE buf_code.
-             ASSIGN
-                buf_code.parent = "GisMt"
-                buf_code.code = "GisMtErr"
-                buf_code.codename = "Время сбоя онлайн-проверки КМ"
-                buf_code.codevalue = STRING(NOW)
-                .
-          END.         
+           dbgPrint("marking.log", "Создаем новый справочник для фиксации времени сбоя онлайн-проверки КМ").          
+          /* создаем верхний уровень, если его нет */
+          FIND FIRST buf_code WHERE buf_code.parent EQ ""
+                           AND buf_code.code   EQ "GisMt"
+          NO-LOCK NO-ERROR.
+          IF NOT AVAILABLE buf_code THEN DO:
+            CREATE buf_code.
+            ASSIGN
+               buf_code.parent = ""
+               buf_code.code = "GisMt"
+               buf_code.codename = "Cбой онлайн-проверки КМ"
+               .
+            RELEASE buf_code NO-ERROR.   
+          END.
+          /* создаем запись с фиксацией времени ошибки */
+          CREATE buf_code.
+          ASSIGN
+            buf_code.parent = "GisMt"
+            buf_code.code = "GisMtErr"
+            buf_code.codename = "Время сбоя онлайн-проверки КМ"
+            buf_code.codevalue = STRING(NOW)
+            .
+          RELEASE buf_code NO-ERROR.                      
        END.
        ELSE DO:
+          dbgPrint("marking.log", "Текущее временя сбоя ГИС МТ: " + buf_code.codevalue).            
           /* если ошибка уже была, смотрим сколько прошло времени */
           IF buf_code.codevalue > "" THEN DO:
              vTimeBegErr = DATETIME-TZ(buf_code.codevalue) NO-ERROR.
@@ -780,11 +781,28 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                 + string(vTimeAvail) + " ч. "
                       .                      
                 END.   
-             END.    
-             ELSE IF vTimeBegErr = ? THEN buf_code.codevalue = STRING(NOW).   
+             END.                    
+          END.          
+          IF (buf_code.codevalue > "" AND vTimeBegErr = ?) 
+           OR buf_code.codevalue = "" THEN 
+          DO:
+              /* новая фиксация ошибки */
+              FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
+                           AND buf_code.code   EQ "GisMtErr"
+              EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
+              IF AVAIL buf_code THEN 
+              DO: 
+                buf_code.codevalue = STRING(NOW).          
+                dbgPrint("marking.log", "Фиксация времени сбоя ГИС МТ: " + buf_code.codevalue).
+                RELEASE buf_code NO-ERROR.
+                IF ERROR-STATUS:ERROR THEN 
+                   dbgPrint("marking.log", "Ошибка фиксации времени сбоя ГИС МТ: " + ERROR-STATUS:GET-MESSAGE(1)).
+              END.
+              ELSE IF LOCKED buf_code THEN   
+              DO:                        
+                 dbgPrint("marking.log", "Ошибка фиксации времени сбоя ГИС МТ - запись заблокирована").
+              END.   
           END.
-          /* новая фиксация ошибки */
-          ELSE buf_code.codevalue = STRING(NOW).
        END.
     END.
     IF RETRY THEN DO:
@@ -794,7 +812,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     RETURN vErrSts.
     
   END METHOD.   
-  
+  /*
   /* Фиксация времени начала сбоя ГИС МТ */
   METHOD PRIVATE CHARACTER CheckErrGisMT ():
      
@@ -848,22 +866,35 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     RETURN vErrSts.
     
   END METHOD.   
+  */
   
   /* Сброс ошибки недоступности ГИС МТ */
   METHOD PRIVATE VOID SetNoErrGisMT ():
      DEF BUFFER buf_code FOR ub.code.
-    
-      setnoerr:   
-      DO TRANSACTION ON ERROR UNDO, RETRY setnoerr: 
-         FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
-                               AND buf_code.code   EQ "GisMtErr"
-            EXCLUSIVE-LOCK NO-ERROR.
-         IF AVAILABLE buf_code 
-         THEN buf_code.codevalue = "".
-      END.     
-      IF RETRY THEN DO:
-         dbgPrint("marking.log", "Ошибка сброса времени сбоя ГИС МТ").
-      END.    
+      
+      FIND FIRST buf_code WHERE 
+                 buf_code.parent EQ "GisMt"
+             AND buf_code.code   EQ "GisMtErr"
+         NO-LOCK NO-ERROR.
+      if avail buf_code and buf_code.codevalue <> "" then 
+      do:         
+          setnoerr:   
+          DO TRANSACTION ON ERROR UNDO, RETRY setnoerr: 
+             FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
+                                   AND buf_code.code   EQ "GisMtErr"
+                EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
+             IF AVAILABLE buf_code 
+             THEN DO:
+                buf_code.codevalue = "".
+                release buf_code no-error. 
+             END.   
+             ELSE IF LOCKED buf_code THEN  
+                dbgPrint("marking.log", "Запись в справочнике для сброса времени сбоя ГИС МТ заблокирована").
+          END.     
+          IF RETRY THEN DO:
+             dbgPrint("marking.log", "Ошибка сброса времени сбоя ГИС МТ").
+          END.    
+      end.
     
   END METHOD.
   
@@ -1886,14 +1917,18 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
              IF ERROR-STATUS:ERROR THEN vOk = NO.
              ELSE vOk = YES.
           END.   
+          ELSE IF LOCKED buf_code THEN 
+          DO:
+             vOk = NO.
+             dbgPrint("marking.log", SUBSTITUTE("Заблокирована запись установки блокировки площадки &1", iCdnAdr)).
+          END.     
           ELSE vOk = NO.
           
           dbgPrint("marking.log", SUBSTITUTE("Установка площадке &1 время разблокировки &2 успешно &3 &4",
                                              iCdnAdr, (vTimeNow + 15000 * 60), vOk, ERROR-STATUS:GET-MESSAGE(1))).
       END.
       IF RETRY THEN DO:
-          dbgPrint("marking.log", SUBSTITUTE("Ошибка блокировки площадки &1", iCdnAdr)).
-      
+          dbgPrint("marking.log", SUBSTITUTE("Ошибка блокировки площадки &1", iCdnAdr)).      
       END.    
       RETURN vOk.      
   END METHOD. 
