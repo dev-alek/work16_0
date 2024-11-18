@@ -87,6 +87,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    if not available marking
    then do:
       create marking.
+      marking.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts).
    end.
    else 
      
@@ -119,7 +120,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       marking.gds-ext-id   = objImp:GTIN
       marking.mark-parent  = repTegforDm(objImp:mark-parent) when objImp:mark-parent ne ? 
       marking.box-qnty     = objImp:qnty-box
-      marking.sts          = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
       marking.unit-ext     = objImp:unit-ext
    .
    if marking.gds-code eq 0
