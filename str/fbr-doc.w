@@ -3144,7 +3144,7 @@ PROCEDURE add-proc :
    /*------------------------------------------------------------------------------
      Purpose:     добавление строки по рецепту и без
    ------------------------------------------------------------------------------*/
-   do
+   do transaction
       on error undo, return error
       :
       define input parameter p-mode                   as character    no-undo.
@@ -3220,7 +3220,11 @@ PROCEDURE add-proc :
                         , input buf_goods.prod-type
                         , input buf_goods.prod-code
                         , input no  /* не раскручивать */
-                        ) .
+                        ) no-error.
+                     if error-status :error
+                     then do:
+                       undo, return error.
+                     end.
                   end.
                when "rcp-all"
                then 
@@ -3344,7 +3348,11 @@ PROCEDURE add-recipe :
          , input v-price-sale-obj-code
          , input no
          , input no
-         ).
+         ) no-error.
+      if error-status :error
+      then do:
+        undo, return error.
+      end.
       run writelog in this-procedure ( log-file-name, 2, "ƒобавление товаров завершено." ).
    end.
 END PROCEDURE. /* add-recipe */
