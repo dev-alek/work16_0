@@ -1,6 +1,6 @@
 define variable mForExtsys as character no-undo.
 define variable mHiddenMode as logical no-undo.
-define variable mForDb as character no-undo.
+define variable mForDb as longchar no-undo.
 define variable mForProc as character no-undo.
 
 define variable mSessionBegin as logical no-undo init yes.

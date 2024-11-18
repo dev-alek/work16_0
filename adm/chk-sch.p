@@ -18,7 +18,7 @@ Creation date: 03/22/03
 { adm/ttbatch.i }
  
 define input  parameter p-task-type   as character no-undo .
-define input  parameter p-for-db      as character no-undo .
+define input  parameter p-for-db      as longchar no-undo .
 define output parameter p-list-db     as character no-undo .
 define output parameter p-list-db-All as character no-undo .
 define output parameter p-list-key     as character no-undo .
