@@ -837,129 +837,236 @@ PROCEDURE save_update :
       and vcodident > ""
       no-lock no-error  .
 
-    if available marking
-    or v-is-return
-    then do:
-      if available marking
-         and v-is-return then 
+    if v-is-return then 
+    do:
+      if available marking then
       do:
-          if marking.unit-ext <> "UNIT"
-          and marking.unit-ext <> ?
-          and marking.unit-ext <> ""
-          then do :
-            run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
-            return.
-          end .
-          if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
+        if marking.unit-ext <> "UNIT"
+        and marking.unit-ext <> ?
+        and marking.unit-ext <> ""
+        then do :
+          run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
+          return.
+        end .
+        if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
+        do:
+          if marking.sts = thMarkSts:ReturnLock:KeyIntDB then
           do:
-            if marking.sts = thMarkSts:ReturnLock:KeyIntDB then
-            do:
-              ChekTypeMarkByDm(v-mark).
-            end.
-            if marking.sts <> thMarkSts:ReturnLock:KeyIntDB or
-               (mTypeMark <> "" and not EDOParSec:GetIsSaleReturnForType(mTypeMark)) then
-            do: 
-                run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
-                                 thMarkSts:GetLabel(marking.sts))
-                                 ).
-                return.
-            end.
-          end.  
-      end.
-
-      if avail marking then 
-      do:
-          case t_doc.ext-doc-type:
-          when {&TDEDT_Ras_Perem} then
-          do:
-            if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
-            do:
-              run dispmessage (substitute("Марка в статусе <&1> не может быть перемещена.",
-                               thMarkSts:GetLabel(marking.sts))
-                              ).
-              return.
-            end.  
+            ChekTypeMarkByDm(v-mark).
           end.
-          when {&TDEDT_Spi_Vnesh} then
-          do:
-            if marking.sts = thMarkSts:WrittenOff:KeyIntDB then 
-            do:
-              run dispmessage ("Товар списан ранее.").
+          if marking.sts <> thMarkSts:ReturnLock:KeyIntDB or
+             (mTypeMark <> "" and not EDOParSec:GetIsSaleReturnForType(mTypeMark)) then
+          do: 
+              run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
+                               thMarkSts:GetLabel(marking.sts))
+                               ).
               return.
-            end.  
-            if marking.sts = thMarkSts:DeliveryControl:KeyIntDB then 
-            do:
-              run dispmessage ("Товар еще не оприходован.").
-              return.
-            end.  
-            if marking.sts = thMarkSts:Ungrouped:KeyIntDB then 
-            do:
-              run dispmessage ("Упаковка разгруппирована. Необходимо сканировать индивидуальные товары.").
-              return.
-            end.  
-            if marking.sts = thMarkSts:UsedInProduction:KeyIntDB then 
-            do:
-              run dispmessage ("Товар использован для производства.~n" +
-                               " В списание необходимо добавить товар-ингредиент,~n" + 
-                               "для которого не требуется сканирование марок").
-              return.
-            end.  
-            if marking.sts = thMarkSts:Reserved:KeyIntDB then
-            do:
-              run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан." +
+          end.
+        end.
+      end.
+        
+      if available bf_parts
+      then do :
+        find first buf_goods no-lock where buf_goods.artic = bf_parts.artic
+                                       and buf_goods.prod-type = bf_parts.prod-type
+                                       and buf_goods.prod-code = bf_parts.prod-code
+                                       .
+        if available marking
+        then do :
+/*          if marking.gds-code <> buf_goods.gds-code                            */
+/*          and marking.gds-code > 0                                             */
+/*          then do :                                                            */
+/*            run dispmessage ("Просканированный КМ относится к другому товару").*/
+/*            return .                                                           */
+/*          end .                                                                */
+          find first buf_marking-lines no-lock where buf_marking-lines.gds-code  = buf_goods.gds-code
+                                                 and buf_marking-lines.obj-type  = bf_parts.obj-type
+                                                 and buf_marking-lines.obj-code  = bf_parts.obj-code
+                                                 and buf_marking-lines.in-code   = bf_parts.in-code
+                                                 and buf_marking-lines.out-code  = bf_parts.out-code
+                                                 and buf_marking-lines.part-code = bf_parts.part-code
+                                                 and buf_marking-lines.mark      = marking.mark
+                                                 no-error .
+          if not available buf_marking-lines
+          then do :
+            if t_doc.reason-code = 25 /* Корректировка поступления */
+            then do :
+/*              message "Просканированный КМ отсутствует в выбранной партии" view-as alert-box .*/
+              run dispmessage ("Просканированный КМ отсутствует в выбранной партии").
+              return .
+            end .
+            if t_doc.reason-code = 23 /* Обратная продажа */
+            then do :
+              message "КМ отсутствует в выбранной партии, продолжить оформление возврата упаковки?" view-as alert-box question buttons yes-no update v-ok .
+              if not v-ok
+              then do :
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return .
+              end .
+            end .
+          end .
+        end .
+        else do :
+/*          v-GTIN = getGtinByDM(p-mark) .                                            */
+/*          v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .                               */
+/*          if v-cis-gds-code = ?                                                     */
+/*          then do :                                                                 */
+/*            run dispmessage ("GTIN " + v-GTIN + " не привязан ни к какому товару!").*/
+/*            return .                                                                */
+/*          end .                                                                     */
+/*          if v-cis-gds-code <> buf_goods.gds-code                                   */
+/*          then do :                                                                 */
+/*            run dispmessage ("GTIN " + v-GTIN + " привязан к другому товару!").     */
+/*            return .                                                                */
+/*          end .                                                                     */
+          if num-entries(bf_parts.part-code, "_") = 2
+          then do :
+            if v-GTIN <> entry(1, bf_parts.part-code, "_")
+            then do :
+              if t_doc.reason-code = 25 /* Корректировка поступления */
+              then do :
+                run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
+                return .
+              end .
+              if t_doc.reason-code = 23 /* Обратная продажа */
+              then do :
+                message ("Упаковка с GTIN " + v-GTIN + " отсутствует в выбранной партии, продолжить оформление возврата упаковки?") view-as alert-box question buttons yes-no update v-ok .
+                if not v-ok
+                then do :
+                  assign 
+                    v-mark              = ""
+                    v-mark:screen-value = ""
+                    v-scan-str          = ""
+                    p-mark              = ""
+                  .
+                  return .
+                end .
+              end .
+            end .
+          end .
+          else do :
+            if t_doc.reason-code = 25 /* Корректировка поступления */
+            then do :
+              run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
+              return .
+            end .
+            if t_doc.reason-code = 23 /* Обратная продажа */
+            then do :
+              message ("Упаковка с GTIN " + v-GTIN + " отсутствует в выбранной партии, продолжить оформление возврата упаковки?") view-as alert-box question buttons yes-no update v-ok .
+              if not v-ok
+              then do :
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return .
+              end .
+            end .
+          end .
+        end .
+      end .  /* if available bf_parts */
+    end.
+
+    if available marking
+    then do:
+
+      case t_doc.ext-doc-type:
+      when {&TDEDT_Ras_Perem} then
+      do:
+        if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
+        do:
+          run dispmessage (substitute("Марка в статусе <&1> не может быть перемещена.",
+                           thMarkSts:GetLabel(marking.sts))
+                          ).
+          return.
+        end.  
+      end.
+      when {&TDEDT_Spi_Vnesh} then
+      do:
+        if marking.sts = thMarkSts:WrittenOff:KeyIntDB then 
+        do:
+          run dispmessage ("Товар списан ранее.").
+          return.
+        end.  
+        if marking.sts = thMarkSts:DeliveryControl:KeyIntDB then 
+        do:
+          run dispmessage ("Товар еще не оприходован.").
+          return.
+        end.  
+        if marking.sts = thMarkSts:Ungrouped:KeyIntDB then 
+        do:
+          run dispmessage ("Упаковка разгруппирована. Необходимо сканировать индивидуальные товары.").
+          return.
+        end.  
+        if marking.sts = thMarkSts:UsedInProduction:KeyIntDB then 
+        do:
+          run dispmessage ("Товар использован для производства.~n" +
+                           " В списание необходимо добавить товар-ингредиент,~n" + 
+                           "для которого не требуется сканирование марок").
+          return.
+        end.  
+        if marking.sts = thMarkSts:Reserved:KeyIntDB then
+        do:
+          run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан." +
+                           "Необходимо либо закрыть документ, либо удалить его.").
+          return.
+        end.
+        if marking.sts <> thMarkSts:OutZone:KeyIntDB and
+           marking.sts <> thMarkSts:Checked_:KeyIntDB and
+           marking.sts <> thMarkSts:SaleLock:KeyIntDB and
+           marking.sts <> thMarkSts:ReturnLock:KeyIntDB and
+           marking.sts <> thMarkSts:FreeZone:KeyIntDB and
+           marking.sts <> thMarkSts:Moved:KeyIntDB and
+           marking.sts <> thMarkSts:OutOfInventory:KeyIntDB then
+        do:
+          run dispmessage (
+            substitute("Марка в статусе <&1> не может быть списана.",thMarkSts:GetLabel(marking.sts))
+            ).
+          return.
+        end.
+        if marking.sts = thMarkSts:OutZone:KeyIntDB or
+           marking.sts = thMarkSts:SaleLock:KeyIntDB or
+           marking.sts = thMarkSts:SaleWaitLock:KeyIntDB or
+           marking.sts = thMarkSts:Moved:KeyIntDB or
+           marking.sts = thMarkSts:OutOfInventory:KeyIntDB then
+        do:
+          for each b_marking-lines no-lock where
+                   b_marking-lines.mark    =  marking.mark
+               and b_marking-lines.out-code <> t_doc.doc-code,
+              first b_trn-doc no-lock where
+                    b_trn-doc.doc-code     =  b_marking-lines.out-code
+                and b_trn-doc.ext-doc-type =  {&TDEDT_Spi_Vnesh}
+                and b_trn-doc.status_      <> {&fact}:
+              run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан.~n" +
                                "Необходимо либо закрыть документ, либо удалить его.").
               return.
-            end.
-            if marking.sts <> thMarkSts:OutZone:KeyIntDB and
-               marking.sts <> thMarkSts:Checked_:KeyIntDB and
-               marking.sts <> thMarkSts:SaleLock:KeyIntDB and
-               marking.sts <> thMarkSts:ReturnLock:KeyIntDB and
-               marking.sts <> thMarkSts:FreeZone:KeyIntDB and
-               marking.sts <> thMarkSts:Moved:KeyIntDB and
-               marking.sts <> thMarkSts:OutOfInventory:KeyIntDB then
-            do:
-              run dispmessage (
-                substitute("Марка в статусе <&1> не может быть списана.",thMarkSts:GetLabel(marking.sts))
-                ).
-              return.
-            end.
-            if marking.sts = thMarkSts:OutZone:KeyIntDB or
-               marking.sts = thMarkSts:SaleLock:KeyIntDB or
-               marking.sts = thMarkSts:SaleWaitLock:KeyIntDB or
-               marking.sts = thMarkSts:Moved:KeyIntDB or
-               marking.sts = thMarkSts:OutOfInventory:KeyIntDB then
-            do:
-              for each b_marking-lines no-lock where
-                       b_marking-lines.mark    =  marking.mark
-                   and b_marking-lines.out-code <> t_doc.doc-code,
-                  first b_trn-doc no-lock where
-                        b_trn-doc.doc-code     =  b_marking-lines.out-code
-                    and b_trn-doc.ext-doc-type =  {&TDEDT_Spi_Vnesh}
-                    and b_trn-doc.status_      <> {&fact}:
-                  run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан.~n" +
-                                   "Необходимо либо закрыть документ, либо удалить его.").
-                  return.
-              end.
-            end.    
           end.
-          end case.
-          
-          if bf_bar-code.cli-base-rate <> 1 then
-          do:     /* отсканирована упаковка */
-            for each buf_marking where
-                     buf_marking.mark-parent begins p-mark
-                no-lock:
-              v-GTIN-qnty = v-GTIN-qnty + 1.
-            end.  
-            if v-GTIN-qnty <> bf_bar-code.cli-base-rate then
-            do:
-              run dispmessage (
-                substitute("Групповая упаковка с &1 составом. Для добавления в документ сканируйте марки потребительских упаковок.",
-                           if v-GTIN-qnty = 0 then "неизвестным" else "неполным")
-                ).
-              return.
-            end.
-          end.
+        end.    
+      end.
+      end case.
+      
+      if bf_bar-code.cli-base-rate <> 1 then
+      do:     /* отсканирована упаковка */
+        for each buf_marking where
+                 buf_marking.mark-parent begins p-mark
+            no-lock:
+          v-GTIN-qnty = v-GTIN-qnty + 1.
+        end.  
+        if v-GTIN-qnty <> bf_bar-code.cli-base-rate then
+        do:
+          run dispmessage (
+            substitute("Групповая упаковка с &1 составом. Для добавления в документ сканируйте марки потребительских упаковок.",
+                       if v-GTIN-qnty = 0 then "неизвестным" else "неполным")
+            ).
+          return.
+        end.
       end.
 
 /*      RUN gds-attr-value (                                                                         */
@@ -1007,135 +1114,7 @@ PROCEDURE save_update :
 /*        end .                                                                                    */
 /*      end .                                                                                      */
       
-      if available bf_parts
-      then do :
-        find first buf_goods no-lock where buf_goods.artic = bf_parts.artic
-                                       and buf_goods.prod-type = bf_parts.prod-type
-                                       and buf_goods.prod-code = bf_parts.prod-code
-                                       .
-        if available marking
-        then do :
-/*          if marking.gds-code <> buf_goods.gds-code                            */
-/*          and marking.gds-code > 0                                             */
-/*          then do :                                                            */
-/*            run dispmessage ("Просканированный КМ относится к другому товару").*/
-/*            return .                                                           */
-/*          end .                                                                */
-          find first buf_marking-lines no-lock where buf_marking-lines.gds-code  = buf_goods.gds-code
-                                                 and buf_marking-lines.obj-type  = bf_parts.obj-type
-                                                 and buf_marking-lines.obj-code  = bf_parts.obj-code
-                                                 and buf_marking-lines.in-code   = bf_parts.in-code
-                                                 and buf_marking-lines.out-code  = bf_parts.out-code
-                                                 and buf_marking-lines.part-code = bf_parts.part-code
-                                                 and buf_marking-lines.mark      = marking.mark
-                                                 no-error .
-          if not available buf_marking-lines
-          then do :
-            if t_doc.reason-code = 25 /* Корректировка поступления */
-            then do :
-/*              message "Просканированный КМ отсутствует в выбранной партии" view-as alert-box .*/
-              run dispmessage ("Просканированный КМ отсутствует в выбранной партии").
-              return .
-            end .
-            if t_doc.reason-code = 23 /* Обратная продажа */
-            then do :
-              message "КМ отсутствует в выбранной партии, продолжить оформление возврата упаковки?" view-as alert-box question buttons yes-no update v-ok .
-              if not v-ok
-              then do :
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                  p-mark              = ""
-                .
-                return .
-              end .
-              else do :
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                .
-              end .
-            end .
-          end .
-        end .
-        else do :
-/*          v-GTIN = getGtinByDM(p-mark) .                                            */
-/*          v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .                               */
-/*          if v-cis-gds-code = ?                                                     */
-/*          then do :                                                                 */
-/*            run dispmessage ("GTIN " + v-GTIN + " не привязан ни к какому товару!").*/
-/*            return .                                                                */
-/*          end .                                                                     */
-/*          if v-cis-gds-code <> buf_goods.gds-code                                   */
-/*          then do :                                                                 */
-/*            run dispmessage ("GTIN " + v-GTIN + " привязан к другому товару!").     */
-/*            return .                                                                */
-/*          end .                                                                     */
-          if num-entries(bf_parts.part-code, "_") = 2
-          then do :
-            if v-GTIN <> entry(1, bf_parts.part-code, "_")
-            then do :
-              if t_doc.reason-code = 25 /* Корректировка поступления */
-              then do :
-                run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
-                return .
-              end .
-              if t_doc.reason-code = 23 /* Обратная продажа */
-              then do :
-                message ("Упаковка с GTIN " + v-GTIN + " отсутствует в выбранной партии, продолжить оформление возврата упаковки?") view-as alert-box question buttons yes-no update v-ok .
-                if not v-ok
-                then do :
-                  assign 
-                    v-mark              = ""
-                    v-mark:screen-value = ""
-                    v-scan-str          = ""
-                    p-mark              = ""
-                  .
-                  return .
-                end .
-                else do :
-                  assign 
-                    v-mark              = ""
-                    v-mark:screen-value = ""
-                    v-scan-str          = ""
-                  .
-                end .
-              end .
-            end .
-          end .
-          else do :
-            if t_doc.reason-code = 25 /* Корректировка поступления */
-            then do :
-              run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
-              return .
-            end .
-            if t_doc.reason-code = 23 /* Обратная продажа */
-            then do :
-              message ("Упаковка с GTIN " + v-GTIN + " отсутствует в выбранной партии, продолжить оформление возврата упаковки?") view-as alert-box question buttons yes-no update v-ok .
-              if not v-ok
-              then do :
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                  p-mark              = ""
-                .
-                return .
-              end .
-              else do :
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                .
-              end .
-            end .
-          end .
-        end .
-      end .
-    end.    /* if avail marking or v-is-return */  
+    end.    /* if avail marking */  
     else 
     do:
       if bf_bar-code.cli-base-rate <> 1 then
