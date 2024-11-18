@@ -127,7 +127,8 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
        output oTimeLag as character):
            
        define variable vStatus as character no-undo.
-       define variable vTimeLag as int64 no-undo.
+       define variable vTimeLag as int64   no-undo.
+       define variable vTimeDec as decimal no-undo.
               
        vTimeLag = 0.
        
@@ -140,16 +141,21 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
              vStatus = ttstatus-body.f_status
              oVersion = ttstatus-body.f_version
              .
-           vTimeLag  = Round(GetMaxTime() / 3600000, 0) no-error.
+           vTimeDec = GetMaxTime() / 3600000 no-error.
+           if vTimeDec <> 0 and vTimeDec <> ? then do:
+              vTimeLag  = Round(vTimeDec, 0).
+              if  vTimeLag < vTimeDec then vTimeLag = vTimeLag + 1.
+           end.
+           else vTimeLag = 0.
        end.              
        else
           assign 
              vStatus = "Нет связи с ЛМ ЧЗ"
              oVersion = "Не определена"
              .   
-       if vTimeLag <> 0 and vTimeLag <> ? 
+       if vTimeLag <> ? 
        then oTimeLag = string(vTimeLag).
-       else oTimeLag = "не определено".
+       else oTimeLag = "0".
        
        EmptyTempTable().
        

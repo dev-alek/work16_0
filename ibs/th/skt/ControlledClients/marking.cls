@@ -98,23 +98,28 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      INDEX ofline ofline.
      
   /* ответ от ЛМ ЧЗ */   
-  DEFINE TEMP-TABLE ttlocal-mark  NO-UNDO SERIALIZE-NAME  "bodys"    
-    FIELD id AS CHAR SERIALIZE-NAME "_id"
-    FIELD ts AS INT64
-    FIELD sc AS LOG
-    FIELD inst AS CHAR 
-    FIELD e AS LOG
-    FIELD c AS CHAR 
-    FIELD bs AS LOG
-    FIELD be AS LOG
-    FIELD bc AS LOG
-    FIELD reason AS CHAR 
-    FIELD errorCode AS INT64
-    .
+  DEFINE TEMP-TABLE ttlocal-mark  no-undo serialize-name  "bodys"    
+   FIELD reqId        AS CHAR
+   FIELD reqTimestamp AS INT64   
+   FIELD inst         AS CHAR
+   FIELD description  AS CHAR
+   FIELD code         AS INT64 
+   FIELD errorCode    AS INT64
+   FIELD reason       AS CHAR
+   .
+  DEFINE TEMP-TABLE ttlocal-mark-code  no-undo serialize-name  "codes"    
+   FIELD code-reqid   AS RECID
+   FIELD printView    AS CHAR 
+   FIELD isBlocked    AS LOG INIT NO
+   FIELD gtin         AS CHAR 
+   FIELD cis          AS CHAR
+   INDEX reqidpar code-reqid 
+   .  
          
   DEFINE DATASET gismt-mark-body  XML-NODE-NAME "bodys" FOR ttmark-body.
   DEFINE DATASET gismt-mark-codes XML-NODE-NAME "body"  FOR ttmark-check.
-  DEFINE DATASET gismt-check-mark SERIALIZE-HIDDEN  FOR ttlocal-mark .
+  DEFINE DATASET gismt-local-mark SERIALIZE-HIDDEN  for ttlocal-mark, ttlocal-mark-code 
+     PARENT-ID-RELATION FOR ttlocal-mark, ttlocal-mark-code PARENT-ID-FIELD code-reqid .
 
   DEFINE PUBLIC PROPERTY SomeStr AS LONGCHAR NO-UNDO /* сюда писать если что-то отправить*/
     GET.
@@ -972,6 +977,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     EMPTY TEMP-TABLE ttmark-body.
     EMPTY TEMP-TABLE ttmark-check.
     EMPTY TEMP-TABLE ttlocal-mark.
+    EMPTY TEMP-TABLE ttlocal-mark-code.
       
     dbgPrint("marking.log", SUBSTITUTE("Отправка запроса p-obj-type &1 p-obj-code &2 mark &3", 
                                        p-obj-type, 
@@ -1799,19 +1805,22 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
               FOR EACH ttlocal-mark:
                   PUT STREAM out_s UNFORMATTED  
                      NOW " ttlocal-mark: " SKIP
-                     "ttlocal-mark.id: " ttlocal-mark.id     SKIP
-                     "ttlocal-mark.ts: " ttlocal-mark.ts     SKIP
-                     "ttlocal-mark.sc: " ttlocal-mark.sc     SKIP
+                     "ttlocal-mark.reqId: " ttlocal-mark.reqId     SKIP
+                     "ttlocal-mark.reqTimestamp: " ttlocal-mark.reqTimestamp     SKIP                     
                      "ttlocal-mark.inst: " ttlocal-mark.inst SKIP
-                     "ttlocal-mark.e: " ttlocal-mark.e       SKIP              
-                     "ttlocal-mark.c: " ttlocal-mark.c       SKIP
-                     "ttlocal-mark.bs: " ttlocal-mark.bs     SKIP 
-                     "ttlocal-mark.be: " ttlocal-mark.be     SKIP   
-                     "ttlocal-mark.bc: " ttlocal-mark.bc     SKIP
-                     "ttlocal-mark.reason: " ttlocal-mark.reason     SKIP
-                     "ttlocal-mark.errorCode: " ttlocal-mark.errorCode     SKIP
-                     .   
+                     "ttlocal-mark.description: " ttlocal-mark.description       SKIP              
+                     "ttlocal-mark.code: " ttlocal-mark.code       SKIP                     
+                     .                        
               END.    
+              FOR EACH ttlocal-mark-code:
+                  PUT STREAM out_s UNFORMATTED  
+                     NOW " ttlocal-mark-code " SKIP
+                     "ttlocal-mark-code.printview: " ttlocal-mark-code.printView     SKIP
+                     "ttlocal-mark-code.isBlocked: " ttlocal-mark-code.isBlocked     SKIP                     
+                     "ttlocal-mark-code.gtin: " ttlocal-mark-code.gtin SKIP
+                     "ttlocal-mark-code.cis: " ttlocal-mark-code.cis       SKIP                                                        
+                     .                        
+              END.              
           END.    
           OTHERWISE      
              PUT STREAM out_s UNFORMATTED NOW " " iTxt SKIP.
@@ -2114,41 +2123,52 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         COPY-LOB FROM FILE vFileResult TO vlongJsonS NO-ERROR.          
                
         vlongJson = '~{"bodys":[' + vlongJsonS + "]}" .
-        hDS = DATASET gismt-check-mark:HANDLE.
+        hDS = DATASET gismt-local-mark:HANDLE.
                   
         vRetOk  = hDS:read-json("longchar":U, vlongJson) NO-ERROR.      
         
-        DATASET gismt-check-mark:WRITE-JSON("FILE":U, vFileResJson) NO-ERROR.
+        DATASET gismt-local-mark:WRITE-JSON("FILE":U, vFileResJson) NO-ERROR.
         
         dbgPrint("marking.log", "ttlocal-mark").                 
            
         FIND FIRST ttlocal-mark NO-ERROR.
         IF AVAIL ttlocal-mark THEN DO:
+            FIND FIRST ttlocal-mark-code NO-ERROR.                        
             ASSIGN
-               mReqId = STRING(ttlocal-mark.id)
-               mReqTimestamp = STRING(ttlocal-mark.ts)
+               mReqId = STRING(ttlocal-mark.ReqId)
+               mReqTimestamp = STRING(ttlocal-mark.ReqTimestamp)
                . 
            IF ttlocal-mark.errorCode > 0 THEN DO:                             
               mCheckSts = 0.
               dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка errorCode &1 reason &2", ttlocal-mark.errorCode, ttlocal-mark.reason)).
               vErrSts = "Проверка в локальном модуле честный знак завершилась с ошибкой. Обратитесь в техническую поддержку. ".
+           END.            
+           ELSE IF ttlocal-mark.code <> 0 THEN DO:                             
+              mCheckSts = 0.
+              dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка Code &1 Описание &2", ttlocal-mark.code, ttlocal-mark.description)).
+              vErrSts = "Проверка в локальном модуле честный знак завершилась с ошибкой. Обратитесь в техническую поддержку. ".
            END.
-           ELSE IF ttlocal-mark.bc OR 
-              ttlocal-mark.be OR 
-              ttlocal-mark.bs 
-           THEN DO:
-               ASSIGN
-                  vChkNotSell = YES /* получили запрет продажи от ЛМ ЧЗ */
-                  mCheckSts = 0
-                  .
-               dbgPrint("marking.log", "КИ в ЛМ ЧЗ помечена как запрещенная к продаже.").
-               vErrSts = "Реализация товара запрещена контролирующими органами. Снимите с продажи и передайте товар управляющему/старшему смены. ".
-           END.     
+           ELSE IF NOT AVAIL ttlocal-mark-code THEN DO:                             
+              mCheckSts = 0.
+              dbgPrint("marking.log", "Ошибка проверки КИ в ЛМ ЧЗ. Не удалось разобрать секцию codes").
+              vErrSts = "Проверка в локальном модуле честный знак завершилась с ошибкой. Обратитесь в техническую поддержку. ".
+           END.
            ELSE DO:
-              mCheckSts = 2.
-              vErrSts = "". 
-              dbgPrint("marking.log", "Проверка в ЛМ ЧЗ прошла успешно.").
-           END.    
+               IF ttlocal-mark-code.isBlocked THEN 
+               DO:
+                   ASSIGN
+                      vChkNotSell = YES /* получили запрет продажи от ЛМ ЧЗ */
+                      mCheckSts = 0
+                      .
+                   dbgPrint("marking.log", "КИ в ЛМ ЧЗ помечена как запрещенная к продаже.").
+                   vErrSts = "Реализация товара запрещена контролирующими органами. Снимите с продажи и передайте товар управляющему/старшему смены. ".
+               END.     
+               ELSE DO:
+                  mCheckSts = 2.
+                  vErrSts = "". 
+                  dbgPrint("marking.log", "Проверка в ЛМ ЧЗ прошла успешно.").
+               END.
+           END.       
         END.     
         ELSE DO:
             mCheckSts = 0.
