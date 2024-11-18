@@ -463,7 +463,7 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
      
     tabThis = tabControl:TabPages[tabControl:SelectedIndex].
     int (tabThis:Name) no-error.
-    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes, yes) 
+    if not error-status:error and not tankSectionControl[integer (tabThis:Name)]:CheckSec(yes, yes, no) 
     then do:
       tankSectionControl[integer (tabThis:Name)]:SetForcus ().
       tbcontrol = cast(sender, tabControl).
@@ -622,8 +622,11 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
 /*    end.                                                                                                                                          */
     
     do ii = 1 to infoSecsObj:SectionNum:
-      if not tankSectionControl[ii]:CheckSec(yes, if infoSecsObj:FlagTrn then no else yes)
-        then return.
+      if not tankSectionControl[ii]:CheckSec(yes, if infoSecsObj:FlagTrn then no else yes, yes)
+      then do :
+        tabControl:SelectTab(ii - 1) .
+        return.
+      end .
     end.
     
     do ii = 1 to infoSecsObj:SectionNum:

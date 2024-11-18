@@ -3989,6 +3989,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             infoSectionObj:TimeStart = ? .
             infoSectionObj:DateEnd = ? .
             infoSectionObj:TimeEnd = ? .
+            if not (infoSectionObj:KPnoMeas or infoSectionObj:alarm-SGDKK) then infoSectionObj:IsKP = no .
           end .
           infoSectionsTotal:SaveDB().
           delete object infoSectionsTotal.

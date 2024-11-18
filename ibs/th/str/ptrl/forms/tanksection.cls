@@ -276,7 +276,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     then do :
       if infoSecObj:AccMeth = 0
       then do :
-        message 'Расчёт не выполнен. Нажмите кнопку "Рассчитать по данным сверок" и повторите.' view-as alert-box .
+        message 'Расчёт не выполнен. Нажмите кнопку "Рассчитать по замерам в АЦ" и повторите.' view-as alert-box .
       end .
       return no-apply .
     end .
@@ -1244,7 +1244,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     define variable infoSecObj as class ibs.th.str.InfoSection no-undo .
     
     SetInfoSec ().
-    if not CheckSec(no, yes)
+    if not CheckSec(no, yes, no)
     then do:
       SetForcus().
       return.
@@ -4907,7 +4907,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end.
   end.
 
-  method public logical CheckSec (input p-save as logical, input p-ShowMsg as logical):
+  method public logical CheckSec (input p-save as logical, input p-ShowMsg as logical, input p-exit as logical):
     
     define variable v-dec as decimal no-undo.
     define variable v-str as character no-undo.
@@ -4925,17 +4925,22 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         then do :
           
           if p-save
+          and p-exit
           and infoSecsObj:GetInfoSectionProp(idSecTabPage):AccMeth = 1
           and infoSecsObj:IsActnComm
           then do :
-            v-dec = decimal (v-tank-weight-rvs) no-error.
-            if (error-status:error or v-dec = 0 or v-dec = ?)
-            then do:
-              if p-ShowMsg or infoSecsObj:SectionNum = 1
-              then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
-                       "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
-                       "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
-              return false.
+            find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = infoSecsObj:TrnDocNum no-error .
+            if available buf_rvs-doc
+            then do :
+              v-dec = decimal (v-tank-weight-rvs) no-error.
+              if (error-status:error or v-dec = 0 or v-dec = ?)
+              then do:
+                if p-ShowMsg or infoSecsObj:SectionNum = 1
+                then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                         "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
+                         "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
+                return false.
+              end .
             end .
           end .
           
@@ -5050,8 +5055,9 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             end .
             if length(trim(maskedTextBoxAukKey:text)) < 4
             and maskedTextBoxAukKey:Enabled
+            and p-exit
             then do :
-              if p-ShowMsg then ShowMsg( "Некорректная длина идентификатора доступа (ключа) верхнего уровня или одноразового кода для разблокировки API-адаптера. Проверьте введенное значение и скорректируйте." ).
+              ShowMsg( "Некорректная длина идентификатора доступа (ключа) верхнего уровня или одноразового кода для разблокировки API-адаптера. Проверьте введенное значение и скорректируйте." ).
               setFocusMaskTextDoc = maskedTextBoxAukKey.
               return false.
             end .
@@ -5070,6 +5076,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           end .
           
           if p-save
+          and p-exit
           then do :
             if infoSecsObj:IsKPrvs
             then do :
@@ -5078,7 +5085,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
                 v-dec = decimal (v-tank-weight-rvs) no-error.
                 if (error-status:error or v-dec = 0 or v-dec = ?)
                 then do:
-                  if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                  ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                            "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                            "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
                   return false.
@@ -5093,7 +5100,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
                 v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
                 if (error-status:error or v-dec = 0)
                 then do:
-                  if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                  ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                            "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                            "Введите данные и нажмите кнопку Рассчитать по замерам в АЦ." ).
                   return false.

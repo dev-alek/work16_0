@@ -1540,6 +1540,7 @@ do:
   define variable v-kpsecs-nomeas as character no-undo .
   
   define variable vAccMethChoosed as logical no-undo .
+  define variable v-need-measure as logical no-undo init no .
 
   assign
     v-new-fact-qnty     = tt-fr-doc-line.fact-qnty
@@ -1567,6 +1568,19 @@ do:
       if infoSecObj:KPnoMeas
       then do :
         assign v-kpsecs-nomeas = v-kpsecs-nomeas + infoSecObj:SectionName + " с " + buf_goods.gds-name + ", " .
+      end .
+      if infoSectionsTotal:IsSGDKK
+      then do :
+        v-need-measure = no .
+      end .
+      else do :
+        if not infoSecObj:KPnoMeas
+        and (not (infoSecObj:TankWeight > 0)
+        or infoSecObj:TankWeight = ?
+        or infoSecObj:TankDensity = ?)
+        then do :
+          v-need-measure = yes .
+        end .
       end .
     end .
     assign
@@ -1627,6 +1641,7 @@ do:
       
       find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = t-doc.doc-code no-error.
       if not available buf_rvs-doc
+      and not v-need-measure
       then do :
         run cr-rvs-doc in this-procedure:instantiating-procedure
           ( input parparentproc
@@ -3186,6 +3201,7 @@ do:
     define variable v-calc-density as decimal no-undo .
     define variable v-log as logical no-undo .
     define variable v-need-save as logical no-undo .
+    define buffer bf_rvs-doc for ub.rvs-doc .
     
     define variable infoSectionObj as class InfoSection no-undo.
     
@@ -3201,8 +3217,10 @@ do:
       do ii = 1 to infoSectionsTotal:SectionNum :
         infoSectionObj = infoSectionsTotal:GetInfoSectionProp(ii) .
         
-        if infoSectionObj:TankWeightRvs = ?
-        or infoSectionObj:TankWeightRvs <= 0
+        find first bf_rvs-doc no-lock where bf_rvs-doc.out-code = infoSectionsTotal:TrnDocNum no-error .
+        
+        if (infoSectionObj:TankWeightRvs = ? or infoSectionObj:TankWeightRvs <= 0)
+        and available bf_rvs-doc
         then do :
           run calc-pomi-rvs (input ii,
                              input t-doc.doc-code,
@@ -3311,6 +3329,7 @@ do:
         end .
         else do :
           if length(trim(infoSectionsTotal:GetInfoSectionProp(ii):AukKey)) < 4
+          and infoSectionsTotal:IsActnComm
           then do :
             message substitute( "Некорректная длина идентификатора доступа (ключа) верхнего уровня или одноразового кода для разблокировки API-адаптера. Проверьте введенное в секции &1 значение и скорректируйте." , infoSectionsTotal:GetInfoSectionProp(ii):SectionName)
             view-as alert-box .

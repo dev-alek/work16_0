@@ -598,7 +598,7 @@ class ibs.th.str.InfoSectionsTotal:
     
     release buf_doc-line-attr.
     for each ttObjInfoSecProp use-index pi:
-      delete object ttObjInfoSecProp.objInfoSecProp.
+      if ttObjInfoSecProp.objInfoSecProp <> ? then delete object ttObjInfoSecProp.objInfoSecProp.
       delete ttObjInfoSecProp.
     end.
     SectionNum = 0.
