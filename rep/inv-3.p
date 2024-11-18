@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ea50b6f7ec06, 1082, rls $
+$Author: EShklyar $
+$Date: Thu Oct 12 16:33:09 2017 +0300 $
+$Workfile: inv-3.p $
+$Archive: rep/inv-3.p $
 
 Инвентаризационная опись и сличительная ведомость
 
@@ -24,11 +24,11 @@ on error undo, return error
   define input parameter p-grp              as character no-undo. /* используется для печати только сумм по группам */
   define input parameter print-graft        as logical          no-undo.
 
-  define variable vss-revision    as character no-undo initial "$Revision$":U .
-  define variable vss-author      as character no-undo initial "$Author$":U .
-  define variable vss-date        as character no-undo initial "$Date$":U .
-  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-  define variable vss-archive     as character no-undo initial "$Archive$":U .
+  define variable vss-revision    as character no-undo initial "$Revision: ea50b6f7ec06, 1082, rls $":U .
+  define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+  define variable vss-date        as character no-undo initial "$Date: Thu Oct 12 16:33:09 2017 +0300 $":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile: inv-3.p $":U .
+  define variable vss-archive     as character no-undo initial "$Archive: rep/inv-3.p $":U .
   define variable vss-description as character no-undo initial "Формы по инвентаризации ".
 
   define variable g#report-num as integer   no-undo .
@@ -1185,18 +1185,18 @@ procedure PrintPodval :
               input {&inv3xl-f_itQntyFactStr}
             , input PropisQnty
         ).
-        run inv3xl-write-cell-data in this-procedure (
-              input {&inv3xl-f_itSumFactStr}
-            , input PropisSumall
-        ).
+/*        run inv3xl-write-cell-data in this-procedure (*/
+/*              input {&inv3xl-f_itSumFactStr}          */
+/*            , input PropisSumall                      */
+/*        ).                                            */
         run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-it_qntyFact}
             , input string( sum1-a-qnty )
         ).
-        run inv3xl-write-cell-data in this-procedure (
-              input {&inv3xl-it_sumFact}
-            , input string( sum1-a-stoim )
-        ).
+/*        run inv3xl-write-cell-data in this-procedure (*/
+/*              input {&inv3xl-it_sumFact}              */
+/*            , input string( sum1-a-stoim )            */
+/*        ).                                            */
         run inv3xl-write-cell-data in this-procedure (
               input {&inv3xl-it_qntyBuh}
             , input string( sum1-b-qnty )

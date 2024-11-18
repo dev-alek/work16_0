@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: torg-16.p $
+$Archive: rep/torg-16.p $
 
 Печатные формы. Торг-16 для списания.
 
@@ -26,11 +26,11 @@ on error undo, return error
 define input parameter p-mainmenu-handle    as handle           no-undo.
 define input parameter rec_id               as recid            no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: torg-16.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/torg-16.p $":U .
 define variable vss-description as character no-undo init "Печатные формы. Торг-16 для списания ".
 { cmp/vssrevis.i        }
 { cmp/str-glbl.i        }
@@ -47,9 +47,10 @@ define variable vss-description as character no-undo init "Печатные формы. Торг-
 
 define stream Out-stream.
 
-define buffer t-doc        for trn-doc.
-define buffer b-trn-doc    for trn-doc.
-define buffer OurObject    for clients.
+define buffer t-doc          for trn-doc.
+define buffer b-trn-doc      for trn-doc.
+define buffer OurObject      for clients.
+define buffer buf_trn-reason for ub.trn-reason .
 
 define shared variable PrintScale      as logical                   no-undo.
 define shared variable CostPrice       as logical                   no-undo.
@@ -327,6 +328,20 @@ for each doc-line no-lock
 where doc-line.doc-code = t-doc.doc-code
 break by doc-line.artic
 :
+  find first ub.goods no-lock where ub.goods.artic = doc-line.artic and
+    ub.goods.prod-code = doc-line.prod-code and
+    ub.goods.prod-type = doc-line.prod-type no-error .
+      
+  find first ub.doc-line-attr no-lock where ub.doc-line-attr.doc-code = t-doc.doc-code and
+    ub.doc-line-attr.gds-code = ub.goods.gds-code and
+    ub.doc-line-attr.attr-code = "reasonSpisan" no-error .
+  if available (ub.doc-line-attr) then 
+  do:
+    for first buf_trn-reason no-lock where buf_trn-reason.reason-code = integer(ub.doc-line-attr.attr-value):
+      v-reason = buf_trn-reason.reason-name .
+    end.
+    end.
+      else v-reason = "" .
     for each parts no-lock
     where parts.obj-type  = t-doc.obj-type
         and parts.obj-code  = t-doc.obj-code
@@ -335,17 +350,6 @@ break by doc-line.artic
         and parts.prod-code = doc-line.prod-code
         and parts.out-code  = t-doc.doc-code
     :
-        if substring(t-doc.PS, 1, 1) <> "@"
-        then do:
-            assign
-                v-reason = t-doc.PS
-            .
-        end.
-        else do:
-            assign
-                v-reason = ""
-            .
-        end.
         { str/in-vatp.i calc-parts parts. " " g }
         assign
             parts-cost = parts.fact-qnty * ( if PrintRubl then price-rubl-with-tax-loc else price-base-with-tax-loc )
@@ -859,7 +863,6 @@ else
     run rep/wp.p ( input p-mainmenu-handle, (accum total stoim), output s1, output s2 ) .
 run torg16xl-write-cell-data ( input {&torg16xl-f_sumstr}, s1  ) .
 put stream Out-stream
-    string( "Сумма списания: " + caps(s1) ) format "X(198)" skip
     string( "Все члены комиссии предупреждены об ответственности за подписание акта, " +
                "содержащего данные, несоответствующие действительности." ) format "X(198)" skip
     string( "Председатель комиссии " ) format "X(31)"
@@ -894,9 +897,7 @@ put stream Out-stream
         string( "должность" ) format "X(19)" string( " " ) format "X(1)"
         string( "подпись" ) format "X(19)" string( " " ) format "X(1)"
         string( "расшифровка подписи" ) format "X(29)" skip
-    string( "Решение руководителя " ) format "X(31)" skip
-    string( "Cтоимость списанного товара отнести на счет " + UndLine ) format "X(198)" skip
-    space(80) string( "указать источник (себестоимость, прибыль, материально ответственное лицо и т.д.)" ) format "X(83)" skip
+
 .
 run torg16xl-close.
 output stream Out-stream close.

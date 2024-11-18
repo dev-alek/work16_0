@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: inv3xl.i $
+$Archive: rep/inv3xl.i $
 
 Обработка данных для заполнения шаблона формы инв-3 в Excel
 
@@ -21,7 +21,7 @@ Required:
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
-initial "@(#)$Workfile$ $Revision$".
+initial "@(#)$Workfile: inv3xl.i $ $Revision: aea5316774be, 0, rls $".
 
 &global-define inv3xl-line-data-key "LD":U
 &global-define inv3xl-valutCode "valutCode":U
@@ -46,10 +46,8 @@ initial "@(#)$Workfile$ $Revision$".
 
 &global-define inv3xl-f_itNumStr      "f_itNumStr":U
 &global-define inv3xl-f_itQntyFactStr "f_itQntyFactStr":U
-&global-define inv3xl-f_itSumFactStr  "f_itSumFactStr":U
 
 &global-define inv3xl-it_qntyFact "it_qntyFact":U
-&global-define inv3xl-it_sumFact "it_sumFact":U
 &global-define inv3xl-it_qntyBuh "it_qntyBuh":U
 &global-define inv3xl-it_sumBuh "it_sumBuh":U
 
@@ -152,7 +150,7 @@ on error undo, return error
     ).
     run inv3xl-write-cell-data in this-procedure (
           input {&inv3xl-subtotalList}
-        , input "num,qntyFact,sumFact,qntyBuh,sumBuh":U
+        , input "num,qntyFact,qntyBuh":U
     ).
     run inv3xl-write-cell-data in this-procedure (
           input {&inv3xl-subtotalType}
@@ -164,7 +162,7 @@ on error undo, return error
     ).
     run inv3xl-write-cell-data in this-procedure (
         input {&inv3xl-subtotalPropisList}
-        , input "num,qntyFact,sumFact":U
+        , input "num,qntyFact":U
     ).
     run inv3xl-write-cell-data in this-procedure (
         input {&inv3xl-subtotalPropisAmount}
@@ -392,4 +390,4 @@ on error undo, return error
 end.
 end procedure. /* inv3xl-run-excel */
 
-/* $Workfile$ e n d */
+/* $Workfile: inv3xl.i $ e n d */

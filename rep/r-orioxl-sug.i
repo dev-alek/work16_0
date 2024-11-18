@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 096e36ceea80, 2676, rls $
+$Author: EShklyar $
+$Date: Вт ноя 17 10:53:21 2020 +0300 $
+$Workfile: r-orioxl-sug.i $
+$Archive: rep/r-orioxl-sug.i $
 
 Шапка и подвал для отчета инвентаризации СУГ
 
@@ -18,7 +18,7 @@ Creation date: 05/23/06
 &scoped-define vssseq {&sequence}
 
 define variable vss-include-info{&vssseq} as character no-undo format "x(65)":U
-  initial "@(#)$Workfile$ $Revision$":U .
+  initial "@(#)$Workfile: r-orioxl-sug.i $ $Revision: 096e36ceea80, 2676, rls $":U .
 
 { gbl/std-func.i {&f-l} }
 
@@ -699,4 +699,4 @@ procedure foot-inv :
     .        
 
 end procedure. /* foot-inv */
-/* $Workfile$   E n d */
+/* $Workfile: r-orioxl-sug.i $   E n d */

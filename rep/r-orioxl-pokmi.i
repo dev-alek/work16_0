@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b6b5ab1a3177, 3577, rls $
+$Author: VSpiridonov $
+$Date: 2023/12/14 13:36:12 $
+$Workfile: r-orioxl-pokmi.i $
+$Archive: rep/r-orioxl-pokmi.i $
 
 Шапка и подвал для отчета инвентаризации ПОкМИ
 
@@ -18,7 +18,7 @@ Creation date: 05/23/06
 &scoped-define vssseq {&sequence}
 
 define variable vss-include-info{&vssseq} as character no-undo format "x(65)":U
-  initial "@(#)$Workfile$ $Revision$":U .
+  initial "@(#)$Workfile: r-orioxl-pokmi.i $ $Revision: b6b5ab1a3177, 3577, rls $":U .
 
 { gbl/std-func.i {&f-l} }
 
@@ -692,7 +692,8 @@ procedure foot-inv :
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip    
+    '</TR>'skip   
+    '<tr><td text_wrap="true" colspan="86">* ** Указанное значение выводится для справки</td></tr>' skip 
     .  
                 
   put stream OutStr-html unformatted            
@@ -700,4 +701,4 @@ procedure foot-inv :
     .        
 
 end procedure. /* foot-inv */
-/* $Workfile$   E n d */
+/* $Workfile: r-orioxl-pokmi.i $   E n d */

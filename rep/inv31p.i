@@ -79,17 +79,18 @@ if temp-str.aa-qnty <> 0 then do:
     sym4     (if rep-tipe = "invent-gold" OR rep-tipe = "sl-gold" then temp-str.tb-code else temp-str.b-code)   @ temp-str.b-code
     sym5     temp-str.OKEI
     sym6     temp-str.unit-base
-    &if "{1}" = "invent"                  &then sym8 sym11   temp-str.price-befor temp-str.bb-price @ temp-str.Price-after  &endif
-    &if "{1}" = "invent-gold"             &then sym8 sym11   temp-str.price-befor temp-str.bb-price @ temp-str.Price-after  &endif
-    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif
-    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif
-    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif
-    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif
-    sym7     temp-str.b-qnty @ temp-str.a-qnty
-    sym9     temp-str.bb-stoim @ temp-str.a-stoim
-    sym10    temp-str.b-qnty
-    sym12    temp-str.b-stoim
-    sym13  with FRAME {1}.
+/*    &if "{1}" = "invent"                  &then sym8   temp-str.price-befor &endif*/
+/*    &if "{1}" = "invent-gold"             &then sym8 sym11   temp-str.price-befor temp-str.bb-price @ temp-str.Price-after  &endif*/
+/*    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                                          */
+/*    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                                          */
+/*    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                          */
+/*    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                          */
+    sym7     temp-str.price-befor
+    sym8     temp-str.b-qnty @ temp-str.a-qnty
+/*    sym9     temp-str.bb-stoim @ temp-str.a-stoim*/
+    sym9    temp-str.b-qnty
+/*    sym12    temp-str.b-stoim*/
+    sym10  with FRAME {1}.
   DOWN stream Out-Stream 1 with FRAME {1} .
 
   display stream Out-Stream
@@ -99,17 +100,18 @@ if temp-str.aa-qnty <> 0 then do:
     sym4     (if rep-tipe = "invent-gold" OR rep-tipe = "sl-gold" then temp-str.tb-code else temp-str.b-code)   @ temp-str.b-code
     sym5     temp-str.OKEI
     sym6     temp-str.unit-base
-    &if "{1}" = "invent"                  &then sym8 sym11   0.00 @ temp-str.price-befor temp-str.price @ temp-str.Price-after &endif
-    &if "{1}" = "invent-gold"             &then sym8 sym11   0.00 @ temp-str.price-befor temp-str.price @ temp-str.Price-after  &endif
-    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif
-    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif
-    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif
-    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif
-    sym7     temp-str.aa-qnty @ temp-str.a-qnty
-    sym9     temp-str.aa-stoim @ temp-str.a-stoim
-    sym10    0.00 @ temp-str.b-qnty
-    sym12    0.00 @ temp-str.b-stoim
-    sym13  with FRAME {1}.
+/*    &if "{1}" = "invent"                  &then sym8   0.00 @ temp-str.price-befor  &endif*/
+/*    &if "{1}" = "invent-gold"             &then sym8 sym11   0.00 @ temp-str.price-befor temp-str.price @ temp-str.Price-after  &endif*/
+/*    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                                              */
+/*    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                                              */
+/*    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                              */
+/*    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                              */
+    sym7     temp-str.price-befor
+    sym8     temp-str.aa-qnty @ temp-str.a-qnty
+/*    sym9     temp-str.aa-stoim @ temp-str.a-stoim*/
+    sym9    0.00 @ temp-str.b-qnty
+/*    sym12    0.00 @ temp-str.b-stoim*/
+    sym10  with FRAME {1}.
   DOWN stream Out-Stream 1 with FRAME {1} .
     if rep-tipe begins "invent"
     and p-grp = "no"
@@ -157,7 +159,7 @@ if temp-str.aa-qnty <> 0 then do:
     DO WHILE gds-str2 <> "" :
       assign gds-str = gds-str2.
       gds-str1 = breakstr(gds-str, {&gds-len}, input-output gds-str1, input-output gds-str2).
-      DISPLAY STREAM Out-Stream gds-str1 @ temp-str.gds-name sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym13  with frame {1} .
+      DISPLAY STREAM Out-Stream gds-str1 @ temp-str.gds-name sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym10  with frame {1} .
       DOWN STREAM Out-Stream 1 with FRAME {1} .
         if rep-tipe begins "invent"
         and p-grp = "no"
@@ -204,11 +206,11 @@ if temp-str.aa-qnty <> 0 then do:
           sym1     sym2     sym3     ('  /'+ buf_gds-prt.f-name)  @ temp-str.gds-name
           sym4     if rep-tipe = "sl-gold" then "" else string(b-code) @ temp-str.b-code
           sym5     sym6
-          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v  &endif
+/*          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v  &endif*/
           sym7     qnty @ temp-str.a-qnty
-          sym9
-          sym10    sum * qnty @ temp-str.a-stoim
-          sym12    sym13
+/*          sym9*/
+/*          sym9    sum * qnty @ temp-str.a-stoim*/
+          sym10
         with FRAME {1}.
         if rep-tipe begins "invent"
         and p-grp = "no"
@@ -235,11 +237,11 @@ if temp-str.aa-qnty <> 0 then do:
           sym1     sym2     sym3  ('  /'+ buf_gds-prt.f-name)  @ temp-str.gds-name
           sym4     if rep-tipe = "sl-gold" then "" else string(b-code) @ temp-str.b-code
           sym5     sym6
-          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v &endif
+/*          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v &endif*/
           sym7     qnty @ temp-str.b-qnty
-          sym9
-          sym10    sum * qnty @ temp-str.b-stoim
-          sym12     sym13
+/*          sym9*/
+/*          sym9    sum * qnty @ temp-str.b-stoim*/
+               sym10
         with FRAME {1}.
         if rep-tipe begins "invent"
         and p-grp = "no"
@@ -277,17 +279,18 @@ if p-grp = "no" then do:
     sym4     (if rep-tipe = "invent-gold" OR rep-tipe = "sl-gold" then temp-str.tb-code else temp-str.b-code)   @ temp-str.b-code
     sym5     temp-str.OKEI
     sym6     temp-str.unit-base
-    &if "{1}" = "invent"                  &then sym8 sym11   temp-str.price-befor temp-str.Price-after  &endif
-    &if "{1}" = "invent-gold"             &then sym8 sym11   temp-str.price-befor temp-str.Price-after  &endif
-    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif
-    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif
-    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif
-    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif
-    sym7     temp-str.a-qnty
-    sym9     temp-str.a-stoim
-    sym10    temp-str.b-qnty
-    sym12    temp-str.b-stoim
-    sym13  with FRAME {1}.
+/*    &if "{1}" = "invent"                  &then sym8    temp-str.price-befor   &endif*/
+/*    &if "{1}" = "invent-gold"             &then sym8 sym11   temp-str.price-befor temp-str.Price-after  &endif*/
+/*    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                      */
+/*    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                      */
+/*    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                      */
+/*    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                      */
+    sym7    temp-str.price-befor
+    sym8     temp-str.a-qnty
+/*    sym9     temp-str.a-stoim*/
+    sym9    temp-str.b-qnty
+/*    sym12    temp-str.b-stoim*/
+    sym10  with FRAME {1}.
   DOWN stream Out-Stream 1 with FRAME {1} .
     if rep-tipe begins "invent"
     and p-grp = "no"
@@ -316,7 +319,7 @@ if p-grp = "no" then do:
     DO WHILE gds-str2 <> "" :
       assign gds-str = gds-str2.
       gds-str1 = breakstr(gds-str, {&gds-len}, input-output gds-str1, input-output gds-str2).
-      DISPLAY STREAM Out-Stream gds-str1 @ temp-str.gds-name sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym13  with frame {1} .
+      DISPLAY STREAM Out-Stream gds-str1 @ temp-str.gds-name sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym10  with frame {1} .
       DOWN STREAM Out-Stream 1 with FRAME {1} .
         if rep-tipe begins "invent"
         and p-grp = "no"
@@ -363,11 +366,10 @@ if p-grp = "no" then do:
           sym1     sym2     sym3     ('  /'+ buf_gds-prt.f-name)  @ temp-str.gds-name
           sym4     if rep-tipe = "sl-gold" then "" else string(b-code) @ temp-str.b-code
           sym5     sym6
-          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v  &endif
+/*          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v  &endif*/
           sym7     qnty @ temp-str.a-qnty
-          sym9
-          sym10    sum * qnty @ temp-str.a-stoim
-          sym12    sym13
+/*          sym9    sum * qnty @ temp-str.a-stoim*/
+              sym10
         with FRAME {1}.
         if rep-tipe begins "invent"
         and p-grp = "no"
@@ -394,11 +396,11 @@ if p-grp = "no" then do:
           sym1     sym2     sym3  ('  /'+ buf_gds-prt.f-name)  @ temp-str.gds-name
           sym4     if rep-tipe = "sl-gold" then "" else string(b-code) @ temp-str.b-code
           sym5     sym6
-          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v &endif
+/*          &if "{1}" = "sl-gold" &then sym8 sym11 sym15 UBL-v &endif*/
           sym7     qnty @ temp-str.b-qnty
-          sym9
-          sym10    sum * qnty @ temp-str.b-stoim
-          sym12     sym13
+/*          sym9*/
+/*          sym9    sum * qnty @ temp-str.b-stoim*/
+               sym10
         with FRAME {1}.
         if rep-tipe begins "invent"
         and p-grp = "no"

@@ -5,11 +5,11 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aafc1433d2fb, 3161, rls $
+$Author: SSlivenko $
+$Date: 2022/12/27 12:54:22 $
+$Workfile: naklpa1.w $
+$Archive: gbl/naklpa1.w $
 
 Настроечные параметры для накладных
 
@@ -27,11 +27,11 @@ define input parameter p-mode        as character no-undo.
 define input parameter p-obj-type    like ub.clients.obj-type no-undo.
 define input parameter p-obj-code    like ub.shop.obj-code no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-Workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aafc1433d2fb, 3161, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:22 $":U .
+define variable vss-Workfile    as character no-undo init "$Workfile: naklpa1.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/naklpa1.w $":U .
 define variable vss-description as character no-undo init "Настроечные параметры для накладных" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -85,6 +85,8 @@ define variable v-list-attr-mandatory-gds-exp-wayb      as character no-undo.
 define variable v-list-reasons-for-return-full  as character no-undo .
 define variable v-list-reasons-for-return       as character no-undo .
 
+define variable v-list-reasons-write-off-full  as character no-undo .
+define variable v-list-reasons-write-off       as character no-undo .
 
 assign
 v-tth  = buffer thbjattr_thbj-attr:table-handle .
@@ -614,6 +616,11 @@ DEFINE BUTTON B-26
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON B-27 
+     IMAGE-UP FILE "cmp/btn-ref.bmp":U
+     LABEL "" 
+     SIZE 3 BY 1.
+     
 DEFINE BUTTON B-ex 
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
@@ -639,6 +646,11 @@ DEFINE BUTTON B-set_reasons-for-return
      LABEL "" 
      SIZE 2.63 BY 1.08.     
 
+DEFINE BUTTON B-set_reasons-write-off 
+     IMAGE-UP FILE "cmp/update.bmp":U
+     LABEL "" 
+     SIZE 2.63 BY 1.08.    
+     
 DEFINE BUTTON B-set_attr-PN 
      IMAGE-UP FILE "cmp/update.bmp":U
      LABEL "" 
@@ -660,6 +672,10 @@ DEFINE VARIABLE reasons-for-return AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 35.5 BY 1 NO-UNDO.     
 
+DEFINE VARIABLE reasons-write-off AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 35.5 BY 1 NO-UNDO.     
+     
 DEFINE VARIABLE attr-PN AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 35.5 BY 1 NO-UNDO.
@@ -685,6 +701,10 @@ DEFINE VARIABLE v-reasons-for-return AS CHARACTER FORMAT "X(256)":U
       VIEW-AS TEXT 
      SIZE 28 BY 1 NO-UNDO.
 
+DEFINE VARIABLE v-reasons-write-off AS CHARACTER FORMAT "X(256)":U 
+      VIEW-AS TEXT 
+     SIZE 28 BY 1 NO-UNDO.
+     
 DEFINE VARIABLE v-attr-PN AS CHARACTER FORMAT "X(256)":U 
       VIEW-AS TEXT 
      SIZE 28 BY 1 NO-UNDO.
@@ -749,6 +769,10 @@ DEFINE IMAGE I-reasons-for-return
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
 
+DEFINE IMAGE I-reasons-write-off
+     FILENAME "cmp/info.bmp":U
+     SIZE 3 BY 1.
+     
 DEFINE IMAGE I-attr-PN
      FILENAME "cmp/info.bmp":U
      SIZE 3 BY 1.
@@ -901,6 +925,9 @@ DEFINE FRAME page-2
      B-26 AT ROW 18.8 COL 2.88 WIDGET-ID 620
      B-set_reasons-for-return AT ROW 18.8 COL 35 WIDGET-ID 622
      reasons-for-return AT ROW 18.8 COL 38 NO-LABEL WIDGET-ID 632
+     B-27 AT ROW 19.85 COL 2.88 WIDGET-ID 620
+     B-set_reasons-write-off AT ROW 19.85 COL 35 WIDGET-ID 622
+     reasons-write-off AT ROW 19.85 COL 38 NO-LABEL WIDGET-ID 632
      B-21 AT ROW 17.79 COL 2.88 WIDGET-ID 496
      edit-fact-wayb AT ROW 17.79 COL 6 WIDGET-ID 498
      v-reasonm AT ROW 1.13 COL 8.75 NO-LABEL WIDGET-ID 242
@@ -945,6 +972,8 @@ DEFINE FRAME page-2
      I-attr-mandatory-gds-exp-wayb AT ROW 16.75 COL 5 WIDGET-ID 524
      v-reasons-for-return AT ROW 18.8 COL 4.5 COLON-ALIGNED NO-LABEL WIDGET-ID 626
      I-reasons-for-return AT ROW 18.8 COL 1 WIDGET-ID 624
+     v-reasons-write-off AT ROW 19.85 COL 4.5 COLON-ALIGNED NO-LABEL WIDGET-ID 626
+     I-reasons-write-off AT ROW 19.85 COL 1 WIDGET-ID 624
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.63 ROW 2.33
@@ -1207,6 +1236,9 @@ ASSIGN
        reasons-for-return:READ-ONLY IN FRAME page-2        = TRUE.       
 
 ASSIGN 
+       reasons-write-off:READ-ONLY IN FRAME page-2        = TRUE.       
+
+ASSIGN 
        attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
 
 ASSIGN 
@@ -1220,6 +1252,9 @@ ASSIGN
        
 ASSIGN 
        v-reasons-for-return:READ-ONLY IN FRAME page-2        = TRUE.
+
+ASSIGN 
+       v-reasons-write-off:READ-ONLY IN FRAME page-2        = TRUE.
 
 ASSIGN 
        v-attr-PN:READ-ONLY IN FRAME page-2        = TRUE.
@@ -1561,6 +1596,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME B-27
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-27 Dialog-Frame
+ON CHOOSE OF B-27 IN FRAME page-2
+DO:
+  run gbl/v-taobj.w
+      ({&attr-nakl_par},
+       "reasons-write-off"
+       ).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define FRAME-NAME page-1
 &Scoped-define SELF-NAME B-3
@@ -1740,6 +1787,39 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME B-set_reasons-write-off
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_reasons-write-off Dialog-Frame
+ON CHOOSE OF B-set_reasons-write-off IN FRAME page-2
+DO:
+  define variable varlog as logical no-undo .
+  { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_write-off_chgfact':U
+        {&cntxt-object}
+        v-cntxt-host-code-obj
+        v-cntxt-obj-type
+        v-cntxt-obj-code
+        0
+        0
+        0
+        true
+        varlog
+      }
+  if  varlog then do:   
+  run select-reasons-write-off
+    ( input v-list-reasons-write-off,
+      input v-list-reasons-write-off-full,
+      input-output reasons-write-off
+    )
+    .
+  assign reasons-write-off:screen-value = reasons-write-off.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME B-set_attr-PN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-set_attr-PN Dialog-Frame
@@ -1830,6 +1910,16 @@ END.
 &Scoped-define SELF-NAME I-reasons-for-return
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-reasons-for-return Dialog-Frame
 ON MOUSE-SELECT-CLICK OF I-reasons-for-return IN FRAME page-2
+DO:
+  MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME I-reasons-write-off
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL I-reasons-write-off Dialog-Frame
+ON MOUSE-SELECT-CLICK OF I-reasons-write-off IN FRAME page-2
 DO:
   MESSAGE {&SELF-NAME}:private-data  VIEW-AS ALERT-BOX INFORMATION.
 END.
@@ -2297,6 +2387,7 @@ define variable loc#log as logical   no-undo .
     RUN proc-init-EX.
     RUN proc-init-attr-PN.
     RUN proc-init-reasons-for-return.
+    RUN proc-init-reasons-write-off.
     run enable_UI.
     run init-proc.
     apply "choose" to button-1 .
@@ -2373,28 +2464,29 @@ PROCEDURE enable_UI :
   DISPLAY reasonm back-date not-ord neg-ask vat-goods inv-ship round-vat-sum 
           gtd-to-imp-prod exc-max-qnty attr-PN attr-mandatory-gds-in-wayb 
           attr-mandatory-gds-ret-wayb attr-mandatory-gds-exp-wayb reasons-for-return edit-fact-wayb 
-          v-reasonm v-reasonme reasonme v-back-date v-not-ord v-neg-ask 
+          v-reasonm v-reasonme reasonme v-back-date v-not-ord v-neg-ask reasons-write-off
           v-vat-goods v-inv-ship v-round-vat-sum v-gtd-to-imp-prod 
           v-exc-max-qnty v-attr-PN v-attr-mandatory-gds-in-wayb 
           v-attr-mandatory-gds-ret-wayb v-attr-mandatory-gds-exp-wayb 
-          v-edit-fact-wayb v-reasons-for-return
+          v-edit-fact-wayb v-reasons-for-return v-reasons-write-off
       WITH FRAME page-2.
   ENABLE I-reasonm I-back-date I-not-ord I-reasonme I-neg-ask I-vat-goods 
          I-inv-ship I-round-vat-sum I-gtd-to-imp-prod I-exc-max-qnty I-attr-PN 
-         I-edit-fact-wayb I-attr-mandatory-gds-in-wayb I-reasons-for-return
+         I-edit-fact-wayb I-attr-mandatory-gds-in-wayb I-reasons-for-return I-reasons-write-off
          I-attr-mandatory-gds-ret-wayb I-attr-mandatory-gds-exp-wayb B-11 
          reasonm B-14 B-ex back-date B-12 B-13 not-ord B-15 neg-ask B-16 
          vat-goods B-17 inv-ship B-18 round-vat-sum B-19 gtd-to-imp-prod B-20 
          exc-max-qnty B-22 B-set_attr-PN attr-PN B-23 
          B-set_attr-mandatory-gds-in-wayb attr-mandatory-gds-in-wayb B-24 
          B-set_attr-mandatory-gds-ret-wayb attr-mandatory-gds-ret-wayb B-25 
-         B-set_reasons-for-return reasons-for-return B-26
+         B-set_reasons-for-return reasons-for-return reasons-write-off B-27
+         B-set_reasons-write-off B-26
          B-set_attr-mandatory-gds-exp-wayb attr-mandatory-gds-exp-wayb B-21 
          edit-fact-wayb v-reasonm v-reasonme reasonme v-back-date v-not-ord 
          v-neg-ask v-vat-goods v-inv-ship v-round-vat-sum v-gtd-to-imp-prod 
          v-exc-max-qnty v-attr-PN v-attr-mandatory-gds-in-wayb 
          v-attr-mandatory-gds-ret-wayb v-attr-mandatory-gds-exp-wayb 
-         v-edit-fact-wayb v-reasons-for-return
+         v-edit-fact-wayb v-reasons-for-return v-reasons-write-off
       WITH FRAME page-2.
   {&OPEN-BROWSERS-IN-QUERY-page-2}
 END PROCEDURE.
@@ -2690,6 +2782,11 @@ FOR EACH thbjattr_thbj-attr
 {&telo1}
 
 &scop n-page 2
+&scop pole reasons-write-off
+&scop type character
+{&telo1}
+
+&scop n-page 2
 &scop pole edit-fact-wayb
 &scop type logical
 {&telo1}
@@ -2841,6 +2938,9 @@ I-~{&pole~}:private-data = REPLACE ( v-tooltip-code , "`" , "," ) .
 {&telo2}
 
 &scop pole reasons-for-return
+{&telo2}
+
+&scop pole reasons-write-off
 {&telo2}
 
 &scop pole edit-fact-wayb
@@ -2996,6 +3096,7 @@ define variable v-found as decimal   no-undo .
   hide attr-mandatory-gds-ret-wayb in frame page-2 .
   hide attr-mandatory-gds-exp-wayb in frame page-2 .
   hide reasons-for-return in frame page-2 .
+  hide reasons-write-off in frame page-2 .
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3032,6 +3133,31 @@ end.
 assign
   v-list-reasons-for-return     = trim(v-list-reasons-for-return, ",")
   v-list-reasons-for-return-full = trim(v-list-reasons-for-return-full, {&delim-flf})
+. 
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-init-reasons-write-off Dialog-Frame 
+PROCEDURE proc-init-reasons-write-off :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define buffer buf_trn-reason for ub.trn-reason .
+
+for each buf_trn-reason no-lock :
+  assign
+    v-list-reasons-write-off       = v-list-reasons-write-off + string(buf_trn-reason.reason-code) + ","
+    v-list-reasons-write-off-full  = v-list-reasons-write-off-full + buf_trn-reason.reason-name + {&delim-flf}
+  .  
+end.
+assign
+  v-list-reasons-write-off     = trim(v-list-reasons-write-off, ",")
+  v-list-reasons-write-off-full = trim(v-list-reasons-write-off-full, {&delim-flf})
 . 
 
 END PROCEDURE.
@@ -3451,6 +3577,76 @@ else v-mode = 1 .
           p-reasons-for-return = p-reasons-for-return + temp_twowin_itemsSelected_col.itmExtKey + "," .
         end.
         p-reasons-for-return = trim(p-reasons-for-return, ",") .
+    end.
+end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-reasons-write-off Dialog-Frame 
+PROCEDURE select-reasons-write-off :
+/*------------------------------------------------------------------------------
+  Purpose:
+  Parameters:  <none>
+  Notes:
+------------------------------------------------------------------------------*/
+define input  parameter p-list-reasons-write-off       as character no-undo.
+define input  parameter p-list-reasons-write-off-full  as character no-undo.
+define input-output parameter p-reasons-write-off      as character no-undo.
+
+define variable v-counter       as integer      no-undo.
+define variable v-label         as character    no-undo.
+define variable v-value         as character    no-undo.
+define variable v-list          as character    no-undo.
+define variable v-changed       as logical      no-undo.
+define variable v-accepted      as logical      no-undo.
+define variable V-EX            as logical      no-undo.
+define variable v-mode          as integer      no-undo.
+
+do
+with frame {&frame-name}
+on error undo, return error
+:
+if p-mode = {&lookup} then v-mode = 0 .
+else v-mode = 1 .
+    run twowin_clear in this-procedure.
+
+    do v-counter = 1 to num-entries( p-list-reasons-write-off-full, {&delim-flf})
+    on error undo, return error
+    :
+        assign
+            v-label = entry( v-counter, p-list-reasons-write-off-full, {&delim-flf} )
+            v-value = entry( v-counter, p-list-reasons-write-off )
+            v-ex = false
+        .
+           if  lookup (v-value , p-reasons-write-off ) > 0 then  v-ex = true .
+           else v-ex = false .
+        run twowin_add-item in this-procedure (
+              input v-value
+            , input v-label
+            , input substitute( "Причины: &1", v-VALUE)
+            , input  V-EX
+        ).
+    end.        /* do */
+    run gbl/twowin.w (
+          input ?
+        , input v-mode
+        , input "Выбор причины списания":U
+        , input "":U
+        , input "&Тест"
+        , input table temp_twowin_items
+        , output table temp_twowin_itemsSelected_col
+        , output v-changed
+        , output v-accepted
+    ).
+    if v-changed then do:
+        p-reasons-write-off = "" .
+        for each temp_twowin_itemsSelected_col :
+          p-reasons-write-off = p-reasons-write-off + temp_twowin_itemsSelected_col.itmExtKey + "," .
+        end.
+        p-reasons-write-off = trim(p-reasons-write-off, ",") .
     end.
 end.
 

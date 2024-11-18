@@ -3165,7 +3165,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop user-can-edit-attr-nakl_par   true
 &scop output-display-attr-nakl_par  true
 &scop other-attr-nakl_par           'spr-ext=gbl\naklpa1.w':U
-&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,character,character,character,logical,character':U
+&scop prop-type-list-attr-nakl_par  'date,logical,integer,integer,logical,logical,logical,logical,decimal,logical,logical,logical,logical,character,logical,logical,logical,logical,logical,logical,logical,character,character,character,character,logical,character,character':U
 &scop prop-label-list-attr-nakl_par 'Дата закрытия периода~
 ,Дата факт = Дате документа (для внешних ПН РН и МФ )~
 ,Тип заведения НДС по умолчанию~
@@ -3193,8 +3193,9 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 ,Расход внешний товары~
 ,Разрешено вводить фактическое количество в статусе Накл-~
 ,Основания для возврата~
+,Причины списания~
 '
-&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return'
+&scop prop-list-attr-nakl_par 'date-close-period,stfactdt,type-vat,type-slt,intprmvq,minusprt,avail-on-date,proxycrd,factorrt,inp_sum,reasonm,back-date,not-ord,reasonme,neg-ask,vat-goods,inv-ship,round-vat-sum,gtd-to-imp-prod,exc-max-qnty,mark-alchol,attr-PN,attr-mandatory-gds-in-wayb,attr-mandatory-gds-ret-wayb,attr-mandatory-gds-exp-wayb,edit-fact-wayb,reasons-for-return,reasons-write-off'
 &scop global-attr-nakl_par true
 &scop host-attr-nakl_par   true
 &scop shop-attr-nakl_par   true
@@ -3228,6 +3229,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip (attr-mandatory-gds-exp-wayb) Обязательные атрибуты накладной расход внешний товары
 &scop attr-nakl_par_edit-fact-wayb_tooltip (edit-fact-wayb) Разрешено вводить фактическое количество в статусе Накл-
 &scop attr-nakl_par_reasons-for-return_tooltip (reasons-for-return) Основания для внешнего расхода по которым будет определяться что делаем возврат поставщику
+&scop attr-nakl_par_reasons-write-off_tooltip (reasons-write-off) Причины списания
 &scop prop-tooltip-list-attr-nakl_par {&attr-nakl_par_date-close-period_tooltip},~
 {&attr-nakl_par_stfactdt_tooltip},~
 {&attr-nakl_par_type-vat_tooltip},~
@@ -3254,7 +3256,8 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 {&attr-nakl_par_attr-mandatory-gds-ret-wayb_tooltip},~
 {&attr-nakl_par_attr-mandatory-gds-exp-wayb_tooltip},~
 {&attr-nakl_par_edit-fact-wayb_tooltip},~
-{&attr-nakl_par_reasons-for-return_tooltip}
+{&attr-nakl_par_reasons-for-return_tooltip},~
+{&attr-nakl_par_reasons-write-off_tooltip}
 &scop level-way-attr-nakl_par "obj,host,global"
 &scop up-way-attr-nakl_par "nakl_par,nakl_par,nakl_par"
 
