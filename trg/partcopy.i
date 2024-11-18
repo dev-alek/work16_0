@@ -54,7 +54,6 @@ procedure partcopy :
   define variable v-mark-sts-list   as character no-undo .
   
   define variable oMarkSts as class ibs.th.str.marking.sts.mark .
-  define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo   no-undo.
   
   oMarkSts = objSrv:Env:Marking:Sts:Mark.
   
@@ -536,32 +535,9 @@ procedure partcopy :
                 .
               end .
 
-              EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code).
               for first buf_marking exclusive-lock where buf_marking.mark = p-mark :
-                if not (buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} and ( 
-                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB or
-                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB or
-                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB or
-                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB or
-                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB)) then
-                do:  /* если это не СПИСАНИЕ или при СПИСАНИИ статус марки не Возвращен на кассе, */ 
-                     /* Выбыл, Продан на кассе, Перемещен, Выбыл в инвентаризацию, то меняем      */
-                     /* меняем глобальный статус марки на ЗАРЕЗЕРВИРОВАН */
-                  buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
-                  validate buf_marking.
-                end.
-                if buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} and 
-                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
-                do:  /* если при СПИСАНИИ статус марки Возвращен на кассе, то проверяем        */
-                     /* разрешена ли продажа возвращенной марки, если ДА, то меняем глобальный */
-                     /* статус марки на ЗАРЕЗЕРВИРОВАН */
-                    ChekTypeMarkByDm(buf_marking.mark).
-                    if mTypeMark <> "" and EDOParSec:GetIsSaleReturnForType(mTypeMark) then 
-                    do:
-                      buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
-                      validate buf_marking.
-                    end.
-                end.
+                assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                validate buf_marking.
                 /* если марка в упаковке, то разгруппируем упаковку */
                 for first buf_marking-childs exclusive-lock where
                           buf_marking-childs.mark = buf_marking.mark-parent:

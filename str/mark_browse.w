@@ -61,6 +61,8 @@ define input parameter p-type as integer   no-undo . /*тип документа 0 - все док
 define input parameter p-parent_mark as character   no-undo . /*марка родитель*/
 /* Local Variable Definitions ---                                       */
 
+define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo   no-undo.
+
 define variable log-res     as log       no-undo.
 define variable rr          as recid     no-undo.
 define variable v_type      as char      no-undo.
@@ -218,7 +220,8 @@ FUNCTION GdsName RETURNS CHARACTER
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getStatusName d-mark 
 FUNCTION getStatusName RETURNS CHARACTER
-    ( input p-sts-glob as integer,
+    ( input p-mark     as character,
+      input p-sts-glob as integer,
       input p-sts-loc  as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
@@ -412,7 +415,7 @@ DEFINE BROWSE br-mark
   X_marking.mark COLUMN-LABEL "Марка/Штрих-код" FORMAT "x(56)":U width 33
   
   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  if not ismark(X_marking.mark) then "" else getStatusName(X_marking.sts,X_marking.sts-utd) @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
+  if not ismark(X_marking.mark) then "" else getStatusName(X_marking.mark,X_marking.sts,X_marking.sts-utd) @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
 /*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
 /*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
@@ -437,7 +440,7 @@ DEFINE BROWSE br-mark-item
   else "АОД" @ typem COLUMN-LABEL "Тип!кода" FORMAT "x(3)":U
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  getStatusName(X_marking-line.sts,X_marking-line.sts-utd) @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
+  getStatusName(X_marking.mark,X_marking-line.sts,X_marking-line.sts-utd) @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
 /*  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
 /*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
@@ -1642,6 +1645,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
     { gbl/getcntxt.i get }
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code).
     Marking = ObjSrv:Env:Marking:Sts:Mark .
     tree = ObjSrv:Lib:MarkingTree .
     run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
@@ -2110,15 +2114,30 @@ END FUNCTION.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getStatusName d-mark 
 FUNCTION getStatusName RETURNS CHARACTER
-    ( input p-sts-glob as integer,
+    ( input p-mark as character,
+      input p-sts-glob as integer,
       input p-sts-loc  as integer ):
     /*------------------------------------------------------------------------------
       Purpose:  
         Notes:  
     ------------------------------------------------------------------------------*/
+    define buffer c-marking for ub.c-marking.
+
     if num-entries(p-doc,{&delim-par}) > 1 and entry(2,p-doc,{&delim-par}) = {&TDEDT_Spi_Vnesh} then
     do:
-      return if p-sts-loc = p-sts-glob then StatusTHName(p-sts-glob) else substitute("&1_&2",StatusTHName(p-sts-loc),StatusTHName(p-sts-glob)).
+      find last c-marking no-lock where
+                c-marking.mark = p-mark
+           use-index pi-2 no-error.
+      ChekTypeMarkByDm(p-mark).
+      if not avail c-marking or
+         c-marking.sts = marking:Checked_:KeyIntDB or 
+         c-marking.sts = marking:FreeZone:KeyIntDB or
+         (c-marking.sts = marking:ReturnLock:KeyIntDB and 
+          mTypeMark <> "" and 
+          EDOParSec:GetIsSaleReturnForType(mTypeMark)) then 
+        return StatusTHName(p-sts-glob).
+      else
+        return substitute("&1_&2",StatusTHName(p-sts-loc),StatusTHName(c-marking.sts)).
     end.
     else 
       return if p-sts-loc = marking:Checked_:KeyIntDB then StatusTHName(p-sts-loc) else StatusTHName(p-sts-glob). 
