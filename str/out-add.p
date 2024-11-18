@@ -953,7 +953,7 @@ on error undo, return error return-value
             then do :
               v-stop = yes .
             end .
-            if (v-is-return or t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
+            if v-is-return
             and parvalue begins 'scan-marks'
             and not v-stop
             then do :
@@ -999,6 +999,7 @@ on error undo, return error return-value
                       bf_marking-lines.doc-level = 1
                       bf_marking-lines.mark = entry(2,parvalue,{&delim-key})
                     .
+                    validate bf_marking-lines .
                   end .
                 end .
               end .

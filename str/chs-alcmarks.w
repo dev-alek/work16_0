@@ -810,6 +810,20 @@ PROCEDURE save_update :
       run dispmessage ("Марка принадлежит другому товару.").
       return error.
     end.
+    find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
+                                    and bf_prod-bc.bc-on
+                                    no-error.
+    if not available bf_prod-bc
+    then do :
+      run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
+      return .
+    end .
+    find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
+    if not available bf_bar-code
+    then do :
+      run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
+      return .
+    end .
 
     if can-find(bf_marking-lines no-lock where bf_marking-lines.mark = p-mark
                                            and bf_marking-lines.out-code = t_doc.doc-code)
@@ -930,40 +944,22 @@ PROCEDURE save_update :
           end.
           end case.
           
-          if not v-is-return then
-          do:
-            find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
-                                            and bf_prod-bc.bc-on
-                                            no-error.
-            if not available bf_prod-bc
-            then do :
-              run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
-              return .
-            end .
-            find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
-            if not available bf_bar-code
-            then do :
-              run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
-              return .
-            end .
-            if bf_bar-code.cli-base-rate <> 1 then
-            do:     /* отсканирована упаковка */
-              for each buf_marking where
-                       buf_marking.mark-parent begins p-mark
-                  no-lock:
-                v-GTIN-qnty = v-GTIN-qnty + 1.
-              end.  
-/*run gbl/inidebug.p.*/
-              if v-GTIN-qnty <> bf_bar-code.cli-base-rate then
-              do:
-                run dispmessage (
-                  substitute("Групповая упаковка с &1 составом. Для добавления в документ сканируйте марки потребительских упаковок.",
-                             if v-GTIN-qnty = 0 then "неизвестным" else "неполным")
-                  ).
-                return.
-              end.
+          if bf_bar-code.cli-base-rate <> 1 then
+          do:     /* отсканирована упаковка */
+            for each buf_marking where
+                     buf_marking.mark-parent begins p-mark
+                no-lock:
+              v-GTIN-qnty = v-GTIN-qnty + 1.
+            end.  
+            if v-GTIN-qnty <> bf_bar-code.cli-base-rate then
+            do:
+              run dispmessage (
+                substitute("Групповая упаковка с &1 составом. Для добавления в документ сканируйте марки потребительских упаковок.",
+                           if v-GTIN-qnty = 0 then "неизвестным" else "неполным")
+                ).
+              return.
             end.
-          end. 
+          end.
       end.
 
 /*      RUN gds-attr-value (                                                                         */
@@ -1142,6 +1138,13 @@ PROCEDURE save_update :
     end.    /* if avail marking or v-is-return */  
     else 
     do:
+      if bf_bar-code.cli-base-rate <> 1 then
+      do:     /* отсканирована упаковка */
+          run dispmessage (
+            "Групповая упаковка с неизвестным составом. Для добавления в документ сканируйте марки потребительских упаковок."
+            ).
+          return.
+      end.
 
       vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, no, output vRunedOffLineCheck) no-error.
       if error-status:error then
@@ -1167,8 +1170,9 @@ PROCEDURE save_update :
       end.
       create ub.marking.
       assign
-        ub.marking.mark = vcodident
-        ub.marking.sts  = thMarkSts:FreeZone:KeyIntDB
+        ub.marking.mark     = vcodident
+        ub.marking.sts      = thMarkSts:FreeZone:KeyIntDB
+        ub.marking.box-qnty = 1
       .
       
 /*      RUN ProcAlcCode IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang) no-error.                                                                                                    */
