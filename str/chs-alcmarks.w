@@ -575,6 +575,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE dispmessage Dialog-Frame 
 PROCEDURE dispmessage :
+do with frame {&frame-name}:
   define input parameter p-str as character no-undo.
   
   if is-impfile
@@ -589,6 +590,13 @@ PROCEDURE dispmessage :
   do:
     message p-str view-as alert-box information title "Информация".
   end.
+  assign 
+    v-mark              = ""
+    v-mark:screen-value = ""
+    v-scan-str          = ""
+    p-mark              = ""
+  .
+end.
   
   
 END PROCEDURE.
@@ -773,12 +781,6 @@ PROCEDURE save_update :
      if length(v-mark) < 29
      then do:
         run dispmessage ("Данная последовательность не является маркой. Введите марку.").
-        assign 
-           v-mark              = ""
-           v-mark:screen-value = ""
-           v-scan-str          = ""
-           p-mark              = ""
-        .
         return error .
      end.
 
@@ -795,35 +797,17 @@ PROCEDURE save_update :
     if v-GTIN = "" then
     do:
       run dispmessage ("Марка не распознана.").
-      assign 
-        v-mark              = ""
-        v-mark:screen-value = ""
-        v-scan-str          = ""
-        p-mark              = ""
-      .
       return error.
     end.
     v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
     if v-cis-gds-code = 0 or v-cis-gds-code = ? then
     do:
       run dispmessage ("Не определен товар.").
-      assign 
-        v-mark              = ""
-        v-mark:screen-value = ""
-        v-scan-str          = ""
-        p-mark              = ""
-      .
       return error.
     end.
     if avail buf_goods and buf_goods.gds-code <> v-cis-gds-code then
     do:
       run dispmessage ("Марка принадлежит другому товару.").
-      assign 
-        v-mark              = ""
-        v-mark:screen-value = ""
-        v-scan-str          = ""
-        p-mark              = ""
-      .
       return error.
     end.
 
@@ -832,12 +816,6 @@ PROCEDURE save_update :
 /*      and v-is-return*/
     then do :
       run dispmessage ("КМ добавлен в документ ранее").
-      assign 
-        v-mark              = ""
-        v-mark:screen-value = ""
-        v-scan-str          = ""
-        p-mark              = ""
-      .
       return .
     end . 
 
@@ -856,12 +834,6 @@ PROCEDURE save_update :
           and marking.unit-ext <> ""
           then do :
             run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
-            assign 
-              v-mark              = ""
-              v-mark:screen-value = ""
-              v-scan-str          = ""
-              p-mark              = ""
-            .
             return.
           end .
           if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
@@ -876,12 +848,6 @@ PROCEDURE save_update :
                 run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
                                  thMarkSts:GetLabel(marking.sts))
                                  ).
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                  p-mark              = ""
-                .
                 return.
             end.
           end.  
@@ -894,15 +860,9 @@ PROCEDURE save_update :
           do:
             if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
             do:
-              run dispmessage (substitute("Марка в статусе <&1> не может быт перемещена.",
+              run dispmessage (substitute("Марка в статусе <&1> не может быть перемещена.",
                                thMarkSts:GetLabel(marking.sts))
                               ).
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return.
             end.  
           end.
@@ -911,47 +871,31 @@ PROCEDURE save_update :
             if marking.sts = thMarkSts:WrittenOff:KeyIntDB then 
             do:
               run dispmessage ("Товар списан ранее.").
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return.
             end.  
             if marking.sts = thMarkSts:DeliveryControl:KeyIntDB then 
             do:
               run dispmessage ("Товар еще не оприходован.").
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return.
             end.  
             if marking.sts = thMarkSts:Ungrouped:KeyIntDB then 
             do:
               run dispmessage ("Упаковка разгруппирована. Необходимо сканировать индивидуальные товары.").
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return.
             end.  
             if marking.sts = thMarkSts:UsedInProduction:KeyIntDB then 
             do:
-              run dispmessage ("Товар использован для производства.~n В списание необходимо добавить товар-ингредиент.").
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
+              run dispmessage ("Товар использован для производства.~n" +
+                               " В списание необходимо добавить товар-ингредиент,~n" + 
+                               "для которого не требуется сканирование марок").
               return.
             end.  
+            if marking.sts = thMarkSts:Reserved:KeyIntDB then
+            do:
+              run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан." +
+                               "Необходимо либо закрыть документ, либо удалить его.").
+              return.
+            end.
             if marking.sts <> thMarkSts:OutZone:KeyIntDB and
                marking.sts <> thMarkSts:Checked_:KeyIntDB and
                marking.sts <> thMarkSts:SaleLock:KeyIntDB and
@@ -963,16 +907,9 @@ PROCEDURE save_update :
               run dispmessage (
                 substitute("Марка в статусе <&1> не может быть списана.",thMarkSts:GetLabel(marking.sts))
                 ).
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return.
-            end.    
-            if marking.sts = thMarkSts:Reserved:KeyIntDB or
-               marking.sts = thMarkSts:OutZone:KeyIntDB or
+            end.
+            if marking.sts = thMarkSts:OutZone:KeyIntDB or
                marking.sts = thMarkSts:SaleLock:KeyIntDB or
                marking.sts = thMarkSts:SaleWaitLock:KeyIntDB or
                marking.sts = thMarkSts:Moved:KeyIntDB or
@@ -987,12 +924,6 @@ PROCEDURE save_update :
                     and b_trn-doc.status_      <> {&fact}:
                   run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан." +
                                    "Необходимо либо закрыть документ, либо удалить его.").
-                  assign 
-                    v-mark              = ""
-                    v-mark:screen-value = ""
-                    v-scan-str          = ""
-                    p-mark              = ""
-                  .
                   return.
               end.
             end.    
@@ -1007,24 +938,12 @@ PROCEDURE save_update :
             if not available bf_prod-bc
             then do :
               run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
-              assign
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return .
             end .
             find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
             if not available bf_bar-code
             then do :
               run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
-              assign
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return .
             end .
             if bf_bar-code.cli-base-rate <> 1 then
@@ -1041,12 +960,6 @@ PROCEDURE save_update :
                   substitute("Групповая упаковка с &1 составом. Для добавления в документ сканируйте марки потребительских упаковок.",
                              if v-GTIN-qnty = 0 then "неизвестным" else "неполным")
                   ).
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                  p-mark              = ""
-                .
                 return.
               end.
             end.
@@ -1072,12 +985,6 @@ PROCEDURE save_update :
 /*          then do : end .                                                                          */
 /*          else do :                                                                                */
 /*            run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").*/
-/*            assign                                                                                 */
-/*              v-mark              = ""                                                             */
-/*              v-mark:screen-value = ""                                                             */
-/*              v-scan-str          = ""                                                             */
-/*              p-mark              = ""                                                             */
-/*            .                                                                                      */
 /*            return error.                                                                          */
 /*          end .                                                                                    */
 /*        end .                                                                                      */
@@ -1089,35 +996,17 @@ PROCEDURE save_update :
 /*        if not available bf_prod-bc                                                              */
 /*        then do :                                                                                */
 /*          run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").                */
-/*          assign                                                                                 */
-/*            v-mark              = ""                                                             */
-/*            v-mark:screen-value = ""                                                             */
-/*            v-scan-str          = ""                                                             */
-/*            p-mark              = ""                                                             */
-/*          .                                                                                      */
 /*          return .                                                                               */
 /*        end .                                                                                    */
 /*        find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .   */
 /*        if not available bf_bar-code                                                             */
 /*        then do :                                                                                */
 /*          run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").  */
-/*          assign                                                                                 */
-/*            v-mark              = ""                                                             */
-/*            v-mark:screen-value = ""                                                             */
-/*            v-scan-str          = ""                                                             */
-/*            p-mark              = ""                                                             */
-/*          .                                                                                      */
 /*          return .                                                                               */
 /*        end .                                                                                    */
 /*        if bf_bar-code.cli-base-rate <> 1                                                        */
 /*        then do :                                                                                */
 /*          run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").*/
-/*          assign                                                                                 */
-/*            v-mark              = ""                                                             */
-/*            v-mark:screen-value = ""                                                             */
-/*            v-scan-str          = ""                                                             */
-/*            p-mark              = ""                                                             */
-/*          .                                                                                      */
 /*          return .                                                                               */
 /*        end .                                                                                    */
 /*      end .                                                                                      */
@@ -1134,12 +1023,6 @@ PROCEDURE save_update :
 /*          and marking.gds-code > 0                                             */
 /*          then do :                                                            */
 /*            run dispmessage ("Просканированный КМ относится к другому товару").*/
-/*            assign                                                             */
-/*              v-mark              = ""                                         */
-/*              v-mark:screen-value = ""                                         */
-/*              v-scan-str          = ""                                         */
-/*              p-mark              = ""                                         */
-/*            .                                                                  */
 /*            return .                                                           */
 /*          end .                                                                */
           find first buf_marking-lines no-lock where buf_marking-lines.gds-code  = buf_goods.gds-code
@@ -1156,12 +1039,6 @@ PROCEDURE save_update :
             then do :
 /*              message "Просканированный КМ отсутствует в выбранной партии" view-as alert-box .*/
               run dispmessage ("Просканированный КМ отсутствует в выбранной партии").
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return .
             end .
             if t_doc.reason-code = 23 /* Обратная продажа */
@@ -1193,23 +1070,11 @@ PROCEDURE save_update :
 /*          if v-cis-gds-code = ?                                                     */
 /*          then do :                                                                 */
 /*            run dispmessage ("GTIN " + v-GTIN + " не привязан ни к какому товару!").*/
-/*            assign                                                                  */
-/*              v-mark              = ""                                              */
-/*              v-mark:screen-value = ""                                              */
-/*              v-scan-str          = ""                                              */
-/*              p-mark              = ""                                              */
-/*            .                                                                       */
 /*            return .                                                                */
 /*          end .                                                                     */
 /*          if v-cis-gds-code <> buf_goods.gds-code                                   */
 /*          then do :                                                                 */
 /*            run dispmessage ("GTIN " + v-GTIN + " привязан к другому товару!").     */
-/*            assign                                                                  */
-/*              v-mark              = ""                                              */
-/*              v-mark:screen-value = ""                                              */
-/*              v-scan-str          = ""                                              */
-/*              p-mark              = ""                                              */
-/*            .                                                                       */
 /*            return .                                                                */
 /*          end .                                                                     */
           if num-entries(bf_parts.part-code, "_") = 2
@@ -1219,12 +1084,6 @@ PROCEDURE save_update :
               if t_doc.reason-code = 25 /* Корректировка поступления */
               then do :
                 run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                  p-mark              = ""
-                .
                 return .
               end .
               if t_doc.reason-code = 23 /* Обратная продажа */
@@ -1254,12 +1113,6 @@ PROCEDURE save_update :
             if t_doc.reason-code = 25 /* Корректировка поступления */
             then do :
               run dispmessage ("Возврат упаковки с GTIN " + v-GTIN + " по выбранной партии не возможен").
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
               return .
             end .
             if t_doc.reason-code = 23 /* Обратная продажа */
@@ -1296,12 +1149,6 @@ PROCEDURE save_update :
           run dispmessage (
             substitute("Марка не найдена в базе ТН и не может быть списана,~nт.к. возникла ошибка при проверке: &1.",error-status:get-message(1))
             ).
-          assign 
-            v-mark              = ""
-            v-mark:screen-value = ""
-            v-scan-str          = ""
-            p-mark              = ""
-          .
           return.
       end.
       if vStatusCheckMark = 2 then
@@ -1309,12 +1156,6 @@ PROCEDURE save_update :
           run dispmessage (
             "Проверка марки не выполнена, марка отсутствует в БД и не может быть добавлена в документ."
             ).
-          assign 
-            v-mark              = ""
-            v-mark:screen-value = ""
-            v-scan-str          = ""
-            p-mark              = ""
-          .
           return.
       end.
       if vStatusCheckMark = 0 then
@@ -1322,12 +1163,6 @@ PROCEDURE save_update :
           run dispmessage (
             "Проверка марки дала отрицательный результат, марка не может быть добавлена в документ."
             ).
-          assign 
-            v-mark              = ""
-            v-mark:screen-value = ""
-            v-scan-str          = ""
-            p-mark              = ""
-          .
           return.
       end.
       create ub.marking.
@@ -1342,10 +1177,6 @@ PROCEDURE save_update :
 /*      if v-error-lang then                                                                                                                                                                                                  */
 /*      do:                                                                                                                                                                                                                   */
 /*        run dispmessage ("Не корректно считана акцизная марка, перед считыванием переключите клавиатуру на английскую раскладку.").                                                                                         */
-/*        assign                                                                                                                                                                                                              */
-/*          v-mark              = ""                                                                                                                                                                                          */
-/*          v-mark:screen-value = ""                                                                                                                                                                                          */
-/*          .                                                                                                                                                                                                                 */
 /*      end.                                                                                                                                                                                                                  */
 /*      else                                                                                                                                                                                                                  */
 /*      do:                                                                                                                                                                                                                   */

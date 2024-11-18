@@ -933,7 +933,7 @@ function addGs2Mark return character
    define variable vIdx  as integer   no-undo.
    
    if substring(iMark,26,4) = "8005" then
-   do:
+   do:   /* табак блок */
      vIdx = index(iMark,"93",26).
      if vIdx > 1 then
        vDM = substitute("&1&4&2&4&3",
@@ -948,7 +948,7 @@ function addGs2Mark return character
                         chr(29)) no-error.
    end.
    else if substring(iMark,32,2) = "91" then
-   do:
+   do:  /* легпром, духи, обувь, шины, лекарства, велосипеды, кресла-коляски, консервы  */
      vIdx = index(iMark,"92",32).
      if vIdx > 1 then
        vDM = substitute("&1&4&2&4&3",
@@ -963,7 +963,7 @@ function addGs2Mark return character
                         chr(29)) no-error.
    end.
    else if substring(iMark,39,2) = "91" then
-   do:
+   do:  /* фото */
      vIdx = index(iMark,"92",38).
      if vIdx > 1 then
        vDM = substitute("&1&4&2&4&3",
@@ -978,7 +978,7 @@ function addGs2Mark return character
                         chr(29)) no-error.
    end.
    else if substring(iMark,25,2) = "93" then
-   do:
+   do:  /* молочная продукция */
      vIdx = index(iMark,"92",25).
      if vIdx > 1 then
        vDM = substitute("&1&4&2&4&3",
@@ -999,6 +999,13 @@ function addGs2Mark return character
                           substring(iMark,1,24),
                           substring(iMark,25),
                           chr(29)) no-error.
+   end.
+   else if substring(iMark,32,2) = "93" then
+   do:  /* упак. вода, БАД, пиво, антисептики */
+     vDM = substitute("&1&3&2",
+           substring(iMark,1,31),
+           substring(iMark,32),
+           chr(29)) no-error.
    end.
    
    return if vDM <> "" then vDm else iMark.

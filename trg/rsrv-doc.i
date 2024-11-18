@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: rsrv-doc.i $
+$Archive: trg/rsrv-doc.i $
 
 Процедура резервирования товара для документов
 
@@ -21,7 +21,7 @@ create: Перваков Михаил Сергеевич
 
 &scop f-l Base2Int64
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: rsrv-doc.i $ $Revision: f29df1d5f130, 3104, rls $".
 { gbl/std-func.i {&f-l} }
 { str/marks.i }
 { utl/gtin.i }
@@ -1375,6 +1375,8 @@ procedure rsrv-doc :
               and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB   
               and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
               and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB           
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB           
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB           
               then do :
                 put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
                         " . Марка " tt-tobacco-marks.mark " в статусе " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip .
@@ -2412,4 +2414,4 @@ PROCEDURE ProcAlcCode :
     
 END PROCEDURE.
 
-/* $Workfile$   E n d */
+/* $Workfile: rsrv-doc.i $   E n d */
