@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b8cfd3560a3b, 3573, rls $
+$Author: ARostovtsev $
+$Date: 2023/12/14 13:36:12 $
+$Workfile: putc-gds.i $
+$Archive: str/putc-gds.i $
 
 вывод в поток для разных типов касс - пересылка товаров
 
@@ -16,7 +16,7 @@ Creation date: 10/12/05
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: putc-gds.i $ $Revision: b8cfd3560a3b, 3573, rls $".
 
 PROCEDURE putc-gds.
 define parameter buffer buf_cash-desk for ub.cash-desk.
@@ -80,6 +80,12 @@ if buf_cash-desk.autonomy = integer({&cd-manager})
 then do:
    vcash-desk-stndart = no.
 end.
+  if can-find (buf_cash-desk-attr where  buf_cash-desk-attr.attr-code  = "device-kind":U
+    and buf_cash-desk-attr.attr-value-integer = 2 
+    and buf_cash-desk-attr.db-num = buf_cash-desk.db-num
+    and buf_cash-desk-attr.obj-code = buf_cash-desk.obj-code
+    and buf_cash-desk-attr.pos-type = buf_cash-desk.pos-type
+    and buf_cash-desk-attr.cash-num = buf_cash-desk.cash-num) then vcash-desk-stndart = no.
 
 define variable is-petrol   as logical   no-undo.
 define variable is-pieces   as logical   no-undo.
@@ -637,4 +643,4 @@ if cash-gds.b-str = ""
   END CASE .
 END PROCEDURE .
 
- /* $Workfile$ e n d */
+ /* $Workfile: putc-gds.i $ e n d */
