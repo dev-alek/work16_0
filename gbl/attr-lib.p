@@ -53,7 +53,6 @@ define variable vss-description as character no-undo initial "Библиотека  процед
 { gbl/thbj-def.i }
 { rep/frmlib.i }
 { gbl/key-rec.i}
-{ gbl/objsrv.i }
 
 if valid-handle (g#attr-lib)
 and g#attr-lib <> this-procedure :handle
@@ -17548,6 +17547,7 @@ procedure isExemplarGoods:
   define variable vAttrValue as character no-undo.
   define variable vAttrType  as character no-undo.
   define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo .
+  { gbl/objsrv.i }
   
   run gds-attr-value in this-procedure
       (input  p-gds-code
