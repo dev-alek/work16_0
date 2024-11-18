@@ -864,7 +864,14 @@ PROCEDURE save_update :
                                        and buf_goods.prod-type = bf_parts.prod-type
                                        and buf_goods.prod-code = bf_parts.prod-code
                                        .
+        RUN gds-attr-value (
+          INPUT buf_goods.gds-code,
+          INPUT {&attr-mark-type},
+          OUTPUT varvalue,
+          OUTPUT vartype
+        ).
         if available marking
+        and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(varvalue)
         then do :
 /*          if marking.gds-code <> buf_goods.gds-code                            */
 /*          and marking.gds-code > 0                                             */
