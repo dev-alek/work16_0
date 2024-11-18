@@ -1061,6 +1061,10 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
               PUT STREAM out_data UNFORMATTED  
                  CHR(9) "Нет доступных площадок для обращения в ГИС МТ" CHR(9).
               OUTPUT STREAM out_data CLOSE.
+              /* Запрашиваем офлайн проверку, если еще этого не делали */
+              IF vFileResult = "" THEN DO:
+                 vRetVal = GetResLocalMark(mark-short). 
+              END.    
               RETURN 2.
            END.   
            vGisAdress = vGisAdrCDN + "/api/v4/true-api/codes/check".
@@ -1793,6 +1797,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                      NOW " ttlocal-mark: " SKIP
                      "ttlocal-mark.id: " ttlocal-mark.id     SKIP
                      "ttlocal-mark.ts: " ttlocal-mark.ts     SKIP
+                     "ttlocal-mark.sc: " ttlocal-mark.sc     SKIP
                      "ttlocal-mark.inst: " ttlocal-mark.inst SKIP
                      "ttlocal-mark.e: " ttlocal-mark.e       SKIP              
                      "ttlocal-mark.c: " ttlocal-mark.c       SKIP
@@ -2126,20 +2131,19 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            END.
            ELSE IF ttlocal-mark.bc OR 
               ttlocal-mark.be OR 
-              ttlocal-mark.bs OR 
-              ttlocal-mark.e OR 
-              ttlocal-mark.sc 
+              ttlocal-mark.bs 
            THEN DO:
                ASSIGN
                   vChkNotSell = YES /* получили запрет продажи от ЛМ ЧЗ */
                   mCheckSts = 0
                   .
                dbgPrint("marking.log", "КИ в ЛМ ЧЗ помечена как запрещенная к продаже.").
-               vErrSts = "Реализация товара запрещена регулирующими органами. Снимите с продажи и передайте товар управляющему/старшему смены. ".
+               vErrSts = "Реализация товара запрещена контролирующими органами. Снимите с продажи и передайте товар управляющему/старшему смены. ".
            END.     
            ELSE DO:
               mCheckSts = 2.
               vErrSts = "". 
+              dbgPrint("marking.log", "Проверка в ЛМ ЧЗ прошла успешно.").
            END.    
         END.     
         ELSE DO:
@@ -2182,10 +2186,13 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
          ASSIGN
             mCheckSts = 2
             vErrSts = "".                     
-         dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать при отсутствии ответа от ЛМ ЧЗ. vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT)).   
+         dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать при отсутствии ответа от ЛМ ЧЗ. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts)).   
      end.
-     else do:
-         dbgPrint("marking.log", SUBSTITUTE("Не разрешаем продавать при отсутствии ответа от ЛМ ЧЗ. vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT)).
+     else do:         
+         IF mCheckSts = 0 then
+            dbgPrint("marking.log", SUBSTITUTE("Не разрешаем продавать. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts)).
+         else
+            dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts)).                
      end.    
      RETURN vErrSts.        
   END.

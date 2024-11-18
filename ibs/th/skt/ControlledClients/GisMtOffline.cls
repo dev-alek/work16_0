@@ -82,7 +82,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    index reqidpar s-reqid 
    . 
 
-  define dataset gismt-mark-body  xml-node-name "bodys" for ttstatus-body, ttstatus, ttcis
+  define dataset gismt-mark-body  xml-node-name "bodys" for ttstatus-body, ttstatus, ttcis, ttblocked_series, ttblocked_gtin, ttblocked_cis 
   data-relation gismt-mark-cis for ttstatus-body, ttstatus relation-fields (reqid,reqid) nested
  .
 
@@ -115,8 +115,41 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
      return "".
    end method.   
    
+   /* Запрос статуса ЛМ ЧЗ из сокета */  
+   method public void ChkStsOffline ():       
+       RunChkStsAndInit(yes, yes).
+       EmptyTempTable().
+   end method.
+   
+   /* Запрос статуса ЛМ ЧЗ из отчета */  
+   method public character GetChkStsOffline ():
+       define variable vStatus as character no-undo.
+       define variable vTimeLag as int64 no-undo.
+       
+       vTimeLag = 0.
+       
+       RunChkStsAndInit(no, no).
+       
+       find first ttstatus-body no-error.
+       if avail ttstatus-body  then do: 
+          vStatus = ttstatus-body.f_status.
+          vTimeLag  = Round(GetMaxTime() / 3600000, 0).
+       end.   
+       else vStatus = "Нет связи с ЛМ ЧЗ".   
+       if vTimeLag <> 0 then vStatus = vStatus + ";" + string(vTimeLag).
+       else vStatus = vStatus + ";" + "не определено".
+       
+       EmptyTempTable().
+       
+       return vStatus.
+   end method.
+       
    /* Запрос статуса ЛМ ЧЗ */  
-   method public void ChkStsOffline ():
+   method public void RunChkStsAndInit (
+     iStartInit as log, 
+     iWriteLog as log
+     ):
+                    
      define variable vTimeStart   as datetime-tz no-undo.       
      define variable vlongJson    as longchar no-undo.
      define variable hDS          as handle no-undo.
@@ -129,19 +162,14 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
      define variable vParam       as character no-undo.  
      define variable vReqSts      as logical no-undo.
                            
-     vParam = GetParam().
+     vParam = GetParam().          
      
      assign
         vlongJson = ""
         vTimeStart = now
         vReqSts = no
         .
-     
-     empty temp-table ttstatus-body.
-     empty temp-table ttstatus.
-     empty temp-table ttblocked_series.
-     empty temp-table ttblocked_gtin.
-     empty temp-table ttblocked_cis.
+     EmptyTempTable().
      
      run gbl/_tmpfile.p ( "StsOffGisMTRes", ".txt", output vFileResult ) .
      run gbl/_tmpfile.p ( "StsOffGisMTErr", ".txt", output vFileErr ) .
@@ -175,8 +203,10 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
                vRetOk = dataset gismt-mark-body:read-xml("FILE":U, vFileResXml, "EMPTY":U, ?, ?) no-error.
 
                find first ttstatus-body no-error.
-               if avail ttstatus-body  and ttstatus-body.f_status = "not_configured" then 
-               do:
+               if avail ttstatus-body  and 
+                  ttstatus-body.f_status = "not_configured" and
+                  iStartInit 
+               then do:
                   /* Запуск инициализации */                  
                   RunInitOffline() no-error.
                   vReqSts = yes.
@@ -184,7 +214,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
             end.    
          end. 
      end.     
-     WriteLogOffLine(vlongJson, vReqSts) no-error.
+     if iWriteLog then WriteLogOffLine(vlongJson, vReqSts) no-error.
      if not session:debug-alert
      then do:         
          os-delete silent value(vFileResult)     no-error.
@@ -259,10 +289,9 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
         define variable vFullCh as character no-undo.
         define variable vWork as character no-undo.
         define variable vNum as integer no-undo.
-        define variable vStrLong as longchar no-undo.
-        define variable vTimeUnBlock as datetime-tz no-undo. 
-        define variable vStatus as character no-undo.
-        define variable vTz as integer no-undo.
+        define variable vStrLong as longchar no-undo.        
+        define variable vStatus as character no-undo.        
+        define variable vTimeLag as int64 no-undo.
         
         vFileName = "GisMtOffLine-" + replace(string(today),"/","-") +  ".log".
         
@@ -280,21 +309,16 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
         find first ttstatus-body 
            no-lock no-error.
         if avail ttstatus-body then 
-        do:             
-           vTz = TIMEZONE (now).  
-           vTimeUnBlock = DateTime("01/01/1970") + ttstatus-body.lastSync +  vTz * 60000.               
+        do:   
+           vTimeLag = GetMaxTime().                                    
            vStatus =  substitute("Статус модуля ЛМ ЧЗ:&1&2&1Время синхронизации:&1&3",
                                  chr(9),
                                  ttstatus-body.f_status,
-                                 vTimeUnBlock).           
+                                 (if vTimeLag > 0 then string(now - vTimeLag) else " не определено")).           
         end.
-        else do:
-           assign            
-              vTimeUnBlock = ?.               
-              vStatus =  "Ошибка получения статуса ЛМ ЧЗ"
-              .
-           if iResultJson = "" then vStatus = vStatus + " - не получен ответ от ЛМ ЧЗ.".  
-        end.      
+        else vStatus =  "Ошибка получения статуса ЛМ ЧЗ".                     
+        
+        if iResultJson = "" then vStatus = "Не получен ответ от ЛМ ЧЗ.".   
            
         vCh = "". /* что бы в новый лог писал с первой строки, а в имеющийся - со следующей */
         if searchfile(vFileName) <> ?
@@ -319,7 +343,35 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
         end.    
                                                      
    end method.    
-      
+   
+   method  private int64 GetMaxTime():
+       define variable vTimeLag as int64 no-undo.
+       vTimeLag = 0.
+       find first ttblocked_series no-error.
+       if avail ttblocked_series 
+            and ttblocked_series.timeLag > vTimeLag
+            then vTimeLag = ttblocked_series.timeLag.            
+        
+       find first ttblocked_gtin no-error.
+       if avail ttblocked_gtin 
+            and ttblocked_gtin.timeLag > vTimeLag
+            then vTimeLag = ttblocked_gtin.timeLag.       
+
+       find first ttblocked_cis no-error.
+       if avail ttblocked_cis 
+            and ttblocked_cis.timeLag > vTimeLag
+            then vTimeLag = ttblocked_cis.timeLag.
+       
+       return vTimeLag.     
+   end method.   
+   
+   method  private void EmptyTempTable ():       
+      empty temp-table ttstatus-body.
+      empty temp-table ttstatus.
+      empty temp-table ttblocked_series.
+      empty temp-table ttblocked_gtin.
+      empty temp-table ttblocked_cis.      
+   end method.
      
    constructor public GisMtOffline (  ):
       super ().      
