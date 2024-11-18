@@ -18,6 +18,7 @@ define temp-table tt-fbr-line no-undo
   field gds-code as integer
   field gds-name as character
   field qnty as decimal
+  field ingr-qnty as decimal
   field recipe-code like ub.recipe.recipe-code
   field recipe-type like ub.recipe.recipe-type
   field ingr-gds-code as integer

@@ -3832,6 +3832,7 @@ vartechproliv = no
           define variable v-many-recipes-gds-list as character no-undo .
           define variable v-recipe-code like ub.recipe.recipe-code .
           define variable v-ingr-gds-code as integer no-undo .
+          define variable v-koef-qnty as decimal no-undo .
           
           EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code).
           
@@ -3874,6 +3875,7 @@ vartechproliv = no
                   v-num-recipes   = v-num-recipes + 1
                   v-recipe-code   = buf_recipe.recipe-code
                   v-ingr-gds-code = buf_recipe.gds-code
+                  v-koef-qnty     = buf_recipe-gds.qnty
                 .
               end .
               if v-num-recipes = 0
@@ -3889,7 +3891,7 @@ vartechproliv = no
                 assign
                   tt-fbr-line.gds-code = bf_goods.gds-code
                   tt-fbr-line.gds-name = bf_goods.gds-name
-                  tt-fbr-line.qnty     = bf_doc-line.fact-qnty
+                  tt-fbr-line.qnty     = bf_doc-line.fact-qnty * v-koef-qnty
                   tt-fbr-line.recipe-code = v-recipe-code
                   tt-fbr-line.recipe-type = {&alternative}
                   tt-fbr-line.ingr-gds-code = v-ingr-gds-code

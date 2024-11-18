@@ -147,7 +147,7 @@ DEFINE BROWSE br-fbr-line
     tt-fbr-line.num format ">>>>>9" label "Номер"
     tt-fbr-line.gds-code format ">>>>>>>>>>>>>>9" label "Код"
     tt-fbr-line.gds-name format "X(150)" width 40 label "Наименование"
-    tt-fbr-line.qnty format ">>>>>>>>>>>9" label "Количество"
+    tt-fbr-line.ingr-qnty format ">>>>>>>>>>>9" label "Количество"
     tt-fbr-line.unit format "X(17)" label "Единица измерения"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -441,6 +441,7 @@ PROCEDURE CrCheckMark :
   define variable v-old-sts as integer no-undo .
   define variable v-recipe-code like ub.recipe.recipe-code no-undo .
   define variable v-ingr-gds-code as integer no-undo .
+  define variable v-koef-qnty as decimal no-undo .
   
   define variable v-GisMTcheckStatus as integer no-undo .
   define variable v-is-off-line as logical no-undo .
@@ -516,6 +517,7 @@ PROCEDURE CrCheckMark :
       v-num-recipes   = v-num-recipes + 1
       v-recipe-code   = buf_recipe.recipe-code
       v-ingr-gds-code = buf_recipe.gds-code
+      v-koef-qnty     = buf_recipe-gds.qnty
     .
   end .
   
@@ -657,18 +659,22 @@ PROCEDURE CrCheckMark :
       tt-fbr-line.gds-code = buf_goods.gds-code
       tt-fbr-line.gds-name = buf_goods.gds-name
       tt-fbr-line.qnty = 0
+      tt-fbr-line.ingr-qnty = 0
       tt-fbr-line.recipe-code = v-recipe-code
       tt-fbr-line.recipe-type = {&alternative}
       tt-fbr-line.ingr-gds-code = v-ingr-gds-code
       tt-fbr-line.unit = buf_goods.unit-base
     .  
   end .
-  if (tt-fbr-line.qnty + v-GTIN-qnty) <= v-free-qnty
+  if (tt-fbr-line.ingr-qnty + v-GTIN-qnty) <= v-free-qnty
   then do :
-    assign tt-fbr-line.qnty = tt-fbr-line.qnty + v-GTIN-qnty .
+    assign
+      tt-fbr-line.qnty = tt-fbr-line.qnty + (v-GTIN-qnty * v-koef-qnty)
+      tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty + v-GTIN-qnty
+    .
   end .
   else do :
-    if tt-fbr-line.qnty = 0
+    if tt-fbr-line.ingr-qnty = 0
     then do :
       assign v-num-str = v-num-str - 1 .
       delete tt-fbr-line .
@@ -680,8 +686,8 @@ PROCEDURE CrCheckMark :
   find current buf_marking exclusive-lock no-error .
   if locked buf_marking
   then do :
-    assign tt-fbr-line.qnty = tt-fbr-line.qnty - v-GTIN-qnty .
-    if tt-fbr-line.qnty = 0
+    assign tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty - v-GTIN-qnty .
+    if tt-fbr-line.ingr-qnty = 0
     then do :
       assign v-num-str = v-num-str - 1 .
       delete tt-fbr-line .
