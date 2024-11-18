@@ -676,7 +676,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .
                 if infoSecObj:ListTank = buf_place.loc1
                 then do :
-                  if infoSecObj:AccMeth = 1
+                  if infoSecObj:IsKP
                   then do :
                     v-KPrvs-doc-pl = yes .
                   end .
@@ -686,7 +686,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               v-KPrvs-secs = trim(v-KPrvs-secs, ",") .
               
               if v-KPrvs-doc-pl
-              and num-entries(v-KPrvs-secs) > 1
+              and num-entries(v-KPrvs-secs) >= 1
               then do :
                 next tt-doc-pl_ .
               end .
@@ -914,12 +914,12 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 .
               end .
             end.
-            if infoSectionsTotal:IsKP
-            then do :
-              assign
-                v-act-name = 'actn_income_petrol-сommission':U /* Право на комиссионный приём */
-              .
-            end .
+/*            if infoSectionsTotal:IsKP                                                           */
+/*            then do :                                                                           */
+/*              assign                                                                            */
+/*                v-act-name = 'actn_income_petrol-сommission':U /* Право на комиссионный приём */*/
+/*              .                                                                                 */
+/*            end .                                                                               */
             case p-rvs-type :
               when {&rvs-before-doc} then do:
                 run check-before in this-procedure
