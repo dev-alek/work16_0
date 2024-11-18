@@ -232,6 +232,7 @@ fact-close:
                             and buf_goods.prod-type = buf_fbr-line.prod-type
                             and buf_goods.prod-code = buf_fbr-line.prod-code
   :
+    assign v-marks-qnty = 0 .
     RUN gds-attr-value (
                         INPUT buf_goods.gds-code,
                         INPUT {&attr-mark-type},

@@ -3835,11 +3835,13 @@ vartechproliv = no
           
           EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code).
           
+          doc-line_ :
           for each bf_doc-line no-lock where bf_doc-line.doc-code = bf_trn-doc.doc-code,
           first bf_goods no-lock where bf_goods.artic     = bf_doc-line.artic
                                    and bf_goods.prod-type = bf_doc-line.prod-type
                                    and bf_goods.prod-code = bf_doc-line.prod-code
           :
+            if bf_doc-line.fact-qnty <= 0 then next doc-line_ .
             { gbl/gdscdat.i
               bf_goods.gds-code
               "'production-only=request':u"
@@ -3908,6 +3910,7 @@ vartechproliv = no
                 :
                   for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
                     if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+                    and not(index(bf_trn-doc.doc-code, "=") > 0 and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
                     then
                       next mark-lines_
                     .
