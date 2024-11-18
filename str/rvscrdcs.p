@@ -2401,7 +2401,13 @@ do
   
   /* Выводим окно с атрибутами по инвентаизации */
   run init-attr-general in this-procedure .
-  run str/inv-attr.w (input ParParentproc, input "b-lkp,b-chg", input v-inv-code, input table tt-upd-attr) no-error.
+      find first buf_doc-line no-lock where buf_doc-line.doc-code = v-inv-code no-error .
+    if available buf_doc-line
+      then 
+    do :
+    run str/inv-attr.w (input ParParentproc, input "b-lkp,b-chg", input v-inv-code, input table tt-upd-attr) no-error.
+    end .
+  
   
   if v-infom-mess <> ""
     then 
