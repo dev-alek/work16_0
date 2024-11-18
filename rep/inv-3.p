@@ -965,6 +965,10 @@ on error undo, return error return-value  :
             input {&inv3xl-h_organization}
             , input v-organization
         ).
+       run inv3xl-write-cell-data in this-procedure (
+            input {&km7xl-h_OKPO}
+            , input t-okpo  
+        ).
         run inv3xl-write-cell-data in this-procedure (
             input {&inv3xl-h_object}
             , input v-object

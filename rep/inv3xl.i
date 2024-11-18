@@ -35,6 +35,7 @@ initial "@(#)$Workfile: inv3xl.i $ $Revision: aea5316774be, 0, rls $".
 &global-define inv3xl-subtotalPropisAmount "subtotalPropisAmount":U
 
 &global-define inv3xl-h_organization "h_organization":U
+&global-define km7xl-h_OKPO          "h_OKPO":U
 &global-define inv3xl-h_object "h_object":U
 &global-define inv3xl-h_docCode "h_docCode":U
 &global-define inv3xl-h_docDate "h_docDate":U
