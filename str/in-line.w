@@ -1553,6 +1553,7 @@ do:
   infoSectionsTotal:FlagTrn = t-doc.flag_.
   
   if infoSectionsTotal:IsKP
+  and parline-mode <> {&lookup}
   then do :
     vAccMethChoosed = yes .
     do ii = 1 to infoSectionsTotal:SectionNum : 

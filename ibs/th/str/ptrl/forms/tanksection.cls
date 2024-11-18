@@ -61,6 +61,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
   define private variable label41 as System.Windows.Forms.Label no-undo.
   define private variable label40 as System.Windows.Forms.Label no-undo.
   define private variable label49 as System.Windows.Forms.Label no-undo.
+  define private variable label51 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxAukKey as System.Windows.Forms.MaskedTextBox no-undo.
   define private variable label50 as System.Windows.Forms.Label no-undo.
   define private variable maskedTextBoxDocVolume as System.Windows.Forms.MaskedTextBox no-undo.
@@ -347,6 +348,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     end .
     infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .                   
     infoSecsObj:RNAlgo (integer(infoSecObj:SectionName), output v-new-sec-fact-qnty-kg).     
+    if infoSecObj:IsKP
+    then do :
+      label51:Visible = true .
+    end .   
     infoSecObj:FactQnty = v-new-sec-fact-qnty-kg / v-calc-density .
     infoSecObj:FactDensity = v-calc-density .
     infoSecsObj:SaveDB() .
@@ -1260,7 +1265,11 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       view-as alert-box error .
       return .
     end .
-    infoSecsObj:RNAlgo (integer(infoSecObj:SectionName), output v-new-sec-fact-qnty-kg).     
+    infoSecsObj:RNAlgo (integer(infoSecObj:SectionName), output v-new-sec-fact-qnty-kg).   
+    if infoSecObj:IsKP
+    then do :
+      label51:Visible = true .
+    end .      
     infoSecObj:FactQnty = v-new-sec-fact-qnty-kg / v-calc-density .
     infoSecObj:FactDensity = v-calc-density .
     infoSecsObj:SaveDB() .
@@ -1669,6 +1678,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       maskedTextBoxOnlyReadOnlyArr[ii]:Enabled = false.
       
     end.
+    
+    label51:Visible = false.
 
     if infoSecsObj:RdcDnstvalue = "not"
     then do:
@@ -1794,6 +1805,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       then do :
         bRvsBef:enabled = true .
         bRvsAft:enabled = true .
+        label51:Visible = true .
       end .
       
     end.
@@ -2083,6 +2095,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       
       if infoSecsObj:InfoSectionCurr:IsKP
       then do :
+        label51:Visible = true .
         if infoSecsObj:IsActnComm
         then do :
           find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = infoSecsObj:TrnDocNum no-error .
@@ -2240,6 +2253,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label9 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxNumPassport = new System.Windows.Forms.MaskedTextBox().
     this-object:groupBox1 = new System.Windows.Forms.GroupBox().
+    this-object:label51 = new System.Windows.Forms.Label().
     this-object:label49 = new System.Windows.Forms.Label().
     this-object:label48 = new System.Windows.Forms.Label().
     this-object:maskedTextBoxDocVolume = new System.Windows.Forms.MaskedTextBox().
@@ -2691,6 +2705,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     /* groupBox1 */
     /*  */
     this-object:groupBox1:AccessibleName = "".
+    this-object:groupBox1:Controls:Add(this-object:label51).
     this-object:groupBox1:Controls:Add(this-object:label49).
     this-object:groupBox1:Controls:Add(this-object:buttonPl).
     this-object:groupBox1:Controls:Add(this-object:label48).
@@ -2731,6 +2746,19 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:groupBox1:TabIndex = 0.
     this-object:groupBox1:TabStop = false.
     this-object:groupBox1:UseCompatibleTextRendering = true.
+    /*  */
+    /* label51 */
+    /*  */
+    this-object:label51:BackColor = System.Drawing.Color:Yellow.
+    this-object:label51:Font = new System.Drawing.Font("Times New Roman", Progress.Util.CastUtil:ToSingle(10), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+    this-object:label51:ForeColor = System.Drawing.Color:FromArgb(System.Convert:ToInt32(System.Convert:ToByte(192)), System.Convert:ToInt32(System.Convert:ToByte(0)), System.Convert:ToInt32(System.Convert:ToByte(0))).
+    this-object:label51:Location = new System.Drawing.Point(589, 162).
+    this-object:label51:Name = "label51".
+    this-object:label51:Size = new System.Drawing.Size(88, 13).
+    this-object:label51:TabIndex = 30.
+    this-object:label51:Text = "Ком. приём".
+    this-object:label51:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label51:UseCompatibleTextRendering = true.
     /*  */
     /* label49 */
     /*  */

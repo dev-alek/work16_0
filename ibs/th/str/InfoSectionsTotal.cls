@@ -1133,6 +1133,7 @@ class ibs.th.str.InfoSectionsTotal:
       then do:
         MP = MTTH - ME.
         InfoSectionCurr:AccAbsFact = dmd + dMed.
+        if InfoSectionCurr:TankWeight <= 0 or InfoSectionCurr:TankWeight = ? then ME = 0 .
         InfoSectionCurr:NaturalLoss = ME.
         InfoSectionCurr:RnAlgo = "условие 29".
         output stream log-algo to value ("log-algo-pomi.txt") append.
@@ -1281,6 +1282,7 @@ class ibs.th.str.InfoSectionsTotal:
           ME = MTTH - MKP - dmKPd .
           MP = MTTH - ME .
           InfoSectionCurr:AccAbsFact = dmKPd + dMed .
+          if InfoSectionCurr:TankWeight <= 0 or InfoSectionCurr:TankWeight = ? then ME = 0 .
           InfoSectionCurr:NaturalLoss = ME .
           InfoSectionCurr:RnAlgo = " нет условие 34, условие 40 и условие 41".
           output stream log-algo to value ("log-algo-pomi.txt") append.
@@ -1312,6 +1314,7 @@ class ibs.th.str.InfoSectionsTotal:
           H = MTTH - MKPK - ME .
           MP = MKPK .
           InfoSectionCurr:AccAbsFact = dmKPd + dMed.
+          if InfoSectionCurr:TankWeight <= 0 or InfoSectionCurr:TankWeight = ? then ME = 0 .
           InfoSectionCurr:NaturalLoss = ME.
           InfoSectionCurr:Deficit = H.
           InfoSectionCurr:RnAlgo = " нет условие 34, условие 40 и нет условие 41".
@@ -2025,6 +2028,7 @@ class ibs.th.str.InfoSectionsTotal:
       ME = dMEd.
     end.
     if ME < 0 then ME = 0 .
+    if InfoSectionCurr:TankWeight <= 0 or InfoSectionCurr:TankWeight = ? then ME = 0 .
     
     InfoSectionCurr:NaturalLoss = ME.
     
@@ -3734,8 +3738,8 @@ class ibs.th.str.InfoSectionsTotal:
         NPE = infoSectionTotal:NormalWastage
         dmd = MF * dF * 0.01
         dMP = MF - MTTH
-        dMEd = MTTH * NPE * 0.001.
-        ME = MTTH - MF - dmd.
+        dMEd = MTTH * NPE * 0.001
+        ME = MTTH - MF - dmd
       .
       
       if MTTH > MF
@@ -3744,8 +3748,10 @@ class ibs.th.str.InfoSectionsTotal:
         ME = dMEd.
       end.
       if ME < 0 then ME = 0 .
+      if InfoSectionCurr:TankWeight <= 0 or InfoSectionCurr:TankWeight = ? then ME = 0 .
       
-      infoSecObj:NaturalLoss = ME.
+/*      infoSecObj:NaturalLoss = ME.*/
+      infoSecObj:NaturalLoss = 0 .
       
     end . /* _trpomi */
  
