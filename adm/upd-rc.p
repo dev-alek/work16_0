@@ -315,11 +315,9 @@ on error undo, return error return-value
       then os-delete value ( mRunFile ).
 
     /* Распаковка bat файлов */
-    v-txt = substitute('&1 e &2 -o"&3" *.bat -r '
-                      , v-arc
-                      , p0-pathrc + "\" + UpgFile-tbl.NameUpgFile
+    v-txt = substitute('&1\exe\7z.exe x -y -o&1 &2 *.bat'
                       , v-PathRC
-                      , {&ampersand}
+                      , UpgFile-tbl.FullNameUpgFile
                       ) .
     os-command silent value ( v-txt ) .
     mIsError = os-error <> 0 
@@ -334,7 +332,7 @@ on error undo, return error return-value
                           else "успешно")
                       ).
     if mIsError then next UPDATE_CYCLE.
-            
+
     mRunFile = SearchFile ("!beforeTH.bat").
     if mRunFile ne ?
     then do:
@@ -397,13 +395,9 @@ on error undo, return error return-value
 
       v-txt = "".
       v-txt = /* v-arc */ v-PathRC + "-old\exe\7z.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
+  
+      os-command silent value ( v-txt ) .
     end.
-    else do:
-      v-txt = "".
-      v-txt = v-PathRC + "\exe\7z.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
-    end.
-
-    os-command silent value ( v-txt ) .
 
     v-delfile = search( "!delfile.bat" ).
     if v-delfile <> ? then do:
@@ -423,12 +417,6 @@ on error undo, return error return-value
 
 end.  /*  for each upgfile-tbl where  */
 
-/* Удаление апгрейдных файлов из каталога новостей, после того как все сделали */
-for each upgfile-tbl :
-    p0-pathrc = search( p0-source-dir + "/" + upgfile-tbl.nameupgfile ).
-    os-delete value ( p0-pathrc ) recursive.
-    delete upgfile-tbl.
-end.
 
 def var v-file-name as character no-undo.
 def var v-msg       as character no-undo.
@@ -448,6 +436,21 @@ then do:
                          else "успешно")
                      ).
 end.
+
+/* Удаление апгрейдных файлов из каталога новостей, после того как все сделали */
+for each upgfile-tbl :
+    p0-pathrc = search( p0-source-dir + "/" + upgfile-tbl.nameupgfile ).
+    os-delete value ( p0-pathrc ) recursive.
+    delete upgfile-tbl.
+end.
+
+/* копирование лога в каталог новостей*/
+os-command silent
+  value( "copy" )
+  value( mFileLog )
+  value( p0-source-dir + substring(mFileLog, r-index(mFileLog, "\")) )
+.
+
 add-log-file-name = ?.
 CheckUpd:workStart ().
 v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
