@@ -496,6 +496,15 @@ DEFINE FRAME sl-gold
 
   /*на каждой странице */
   if rep-tipe = "invent" THEN  DO:
+
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_num}
+        , input string( f-wp-qnty (decimal(PgNPP)) )
+        ). 
+      run inv3xl-write-cell-data in this-procedure (
+        input {&inv3xl-itp_s_qntyFact}
+        , input string( f-wp-qnty (decimal(PgQnty)) )
+        ).     
     FORM with frame invent .
     FORM HEADER
       LineBuf format {&format-inv} SKIP
@@ -958,7 +967,7 @@ on error undo, return error return-value  :
     if rep-tipe begins "invent"
     and p-grp = "no"
     then do:
-        run inv3xl-write-cell-data in this-procedure ( input {&inv3xl-h_BuhSum} , input v-buh-sum-str ).
+/*        run inv3xl-write-cell-data in this-procedure ( input {&inv3xl-h_BuhSum} , input v-buh-sum-str ).*/
         run inv3xl-write-cell-data in this-procedure (
             input {&inv3xl-h_organization}
             , input v-organization
@@ -1280,6 +1289,7 @@ procedure PrintPodval :
             , input string( v-fio-player3 )
         ).          
     end.
+            
       PUT  STREAM Out-Stream
               "Итого по описи :" Skip
                 "а) количество порядковых номеров: " + string( num-ln ) + " (" + PropisCount + ")"  format "x(179)"                         at 18 SKIP

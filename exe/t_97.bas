@@ -607,7 +607,7 @@ On Error GoTo errPrintPageSubTotal
                 End If
             End If
             If .Range("subtotalPropisMark").Cells(1, iCounter).Value = "X" Then
-                sLabel = "itp_s_" & Format(.Range("columnList").Cells(1, iCounter))
+                
                 Call CheckLabel( _
                       ByVal sLabel _
                     , bLabelExists _

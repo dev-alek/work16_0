@@ -52,6 +52,9 @@ initial "@(#)$Workfile: inv3xl.i $ $Revision: aea5316774be, 0, rls $".
 &global-define inv3xl-it_qntyFact "it_qntyFact":U
 &global-define inv3xl-it_qntyBuh "it_qntyBuh":U
 &global-define inv3xl-it_sumBuh "it_sumBuh":U
+&global-define inv3xl-itp_s_num "itp_s_num":U
+&global-define inv3xl-itp_s_qntyFact "itp_s_qntyFact":U
+
 
 &global-define inv3xl-itp_s_pos_agent "itp_s_pos_agent":U
 &global-define inv3xl-itp_s_fio_agent "itp_s_fio_agent":U
