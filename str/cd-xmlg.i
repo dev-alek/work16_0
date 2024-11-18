@@ -613,7 +613,9 @@ on error undo, return error
 :
 
   if v-is-spool-file = no then do:
-    
+  
+    IF INDEX(p-parameter,"OptVersion") > 0 THEN v-OptVer = 'OptVer'.
+
     assign
     v-file-type = cb-xmlparse-get-attr(
                               input this-procedure:handle
@@ -645,7 +647,7 @@ on error undo, return error
                              ,input p-spool-or-data
                              ,input p-parameter
                              ,input "from":U
-                             ,input no)
+                             ,input no) 
     v-OptVersion =  cb-xmlparse-get-attr(
                               input this-procedure:handle
                              ,input p-spool-or-data
@@ -749,15 +751,17 @@ on error undo, return error
               ,input no /*p-logical*/
               ) .
           end.    
-          
-          IF v-OptVersion  <> ? THEN v-OptVer = TRIM(v-OptVersion," "). 
-          IF v-OptVersion1 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion1," ")) .
-          IF v-OptVersion2 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion2," ")) .
-          IF v-OptVersion3 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion3," ")) .
-          IF v-OptVersion4 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion4," ")) .
-          v-OptVer = TRIM(v-OptVer,",").
-          IF v-OptVer = "" THEN v-OptVer = "?" .
-          run cd-attr-write in this-procedure (
+
+          IF v-OptVer = 'OptVer' THEN DO:
+            v-OptVer = "".
+            IF v-OptVersion  <> ? THEN v-OptVer = TRIM(v-OptVersion," "). 
+            IF v-OptVersion1 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion1," ")) .
+            IF v-OptVersion2 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion2," ")) .
+            IF v-OptVersion3 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion3," ")) .
+            IF v-OptVersion4 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion4," ")) .
+            v-OptVer = TRIM(v-OptVer,",").
+                IF v-OptVer = "" THEN v-OptVer = "?" . 
+                    run cd-attr-write in this-procedure (
                                                    input cash-desk.db-num
                                                   ,input cash-desk.obj-code
                                                   ,input cash-desk.pos-type
@@ -774,7 +778,9 @@ on error undo, return error
                                                   ,input no /*p-integer*/
                                                   ,input no /*p-logical*/
                                                   ) no-error.
-                                                  
+               v-OptVer = '' . 
+           END.
+
           if error-status:error then do :
               v-err-message = return-value . /* чтобы видеть текст сообщения в деббагере*/
               run write-log-and-file in p-log-handle (

@@ -392,7 +392,7 @@ DEFINE BROWSE BR-cash-desk
   (if X_cash-desk.remote = 1 then yes else no) COLUMN-LABEL "Удаленная!дистанционно" FORMAT "+/":U
   X_cash-desk.version COLUMN-LABEL "Версия!протокола" FORMAT "X(17)":U
   get-fo-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия кассовой программы" FORMAT "X(35)":U
-  get-OptVer(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия кассовой программы" FORMAT "X(35)":U
+  get-OptVer(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL 'Версия "ПО Коннектор" ' FORMAT "X(35)":U
   get-ffd-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия ФФД" FORMAT "X(15)":U
   get-kkt-schema(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Схема интеграции ККТ" FORMAT "X(20)":U
   string(get-GISMT_TIMEOUT(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num))  COLUMN-LABEL "Таймаут ответа! ГИСМТ" FORMAT "X(15)":U
@@ -1948,7 +1948,7 @@ PROCEDURE proc-b-print :
       '<td text_wrap="true" style="text-align: center;">' + string(v-fo-version) + '</td>' skip
       .  
     v-OptVer = get-OptVer( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
-    if v-OptVer = ? then v-OptVer = "" .
+    if (v-OptVer = ? or v-OptVer = '?') then v-OptVer = "" .
     put stream OutStr-html unformatted    
       '<td text_wrap="true" style="text-align: center;">' + v-OptVer + '</td>' skip
       .
