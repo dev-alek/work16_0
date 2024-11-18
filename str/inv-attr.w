@@ -361,6 +361,7 @@ ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
             + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
             + 'max-chars=70\':u
             + 'readonly=' + 'no':u + '\':u
+            , input tech
             , input-output tt-inv-attr.attr-value
             , input-output tt-inv-attr.second-value
             ) no-error.
