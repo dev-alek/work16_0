@@ -2496,7 +2496,7 @@ end procedure. /* close-doc */
 
 PROCEDURE cr-tt-upd :
 do on error undo, return error return-value :
-
+define variable v-other as character   no-undo.
 for each tt-upd-attr: delete tt-upd-attr. end.
 
 &scop create-record create tt-upd-attr. ~

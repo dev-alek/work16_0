@@ -46,7 +46,8 @@ initial "@(#)$Workfile: inv3xl.i $ $Revision: aea5316774be, 0, rls $".
 
 &global-define inv3xl-f_itNumStr      "f_itNumStr":U
 &global-define inv3xl-f_itQntyFactStr "f_itQntyFactStr":U
-
+&global-define inv3xl-f_itSumFactStr "f_itSumFactStr":U
+&global-define inv3xl-it_sumFact "it_sumFact":U
 &global-define inv3xl-it_qntyFact "it_qntyFact":U
 &global-define inv3xl-it_qntyBuh "it_qntyBuh":U
 &global-define inv3xl-it_sumBuh "it_sumBuh":U
