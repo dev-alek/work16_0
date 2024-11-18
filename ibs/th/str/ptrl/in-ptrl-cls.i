@@ -87,6 +87,8 @@
       define variable pl-rvd-dens as logical no-undo .
       define variable pl-rvd-lvl as logical no-undo .
       define variable pl-rvd-temp as logical no-undo .
+      
+      define variable waitForm as class ibs.th.str.ptrl.forms.waitform no-undo.
 
       infoSecObj = infoSecsObj:GetInfoSectionProp(idSecTabPage) .
       
@@ -510,17 +512,22 @@
             end.
           end.
 
+          waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос АСИ...") .
+          waitForm:Show() .
           { str/rvsplace.i
             buf_rvs-doc.obj-type
             buf_rvs-doc.obj-code
             yes
             varcur-rvs
             yes
+            yes
             tt-meas-file
             tt-meas
             no-error
           }
           if error-status :error then do:
+            waitForm:Close() .
+            delete object waitForm no-error .
             message
               "Ошибка при получении данных с приборов на резервуарах." skip( 0 )
               return-value skip
@@ -528,6 +535,8 @@
               view-as alert-box error .
             undo block_tr, return error .
           end.
+          waitForm:Close() .
+          delete object waitForm no-error .
           
           if v-com-vessel-rvs
           then do :
@@ -645,6 +654,8 @@
                 v-prt-end-real-time = buf_rvs-line.real-time .
               end.
               
+              waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос ТРК...") .
+              waitForm:Show() .
               if varcur-rvs = 1
               or ptoldfilvalue <> "yes":u
               then do :
@@ -657,6 +668,7 @@
                   tt-pump-nozzle
                   yes
                   ?
+                  yes
                   no-error
                 }
               end.
@@ -670,9 +682,13 @@
                   tt-pump-nozzle
                   no
                   ?
+                  yes
                   no-error
                 }
               end.
+              waitForm:Close() .
+              delete object waitForm no-error .
+              
               for each tt-pump-nozzle :
                 find first tt-pump-nozzle-file where
                            tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
@@ -829,6 +845,8 @@
               v-prt-end-real-time = buf_rvs-line.real-time .
             end.
             
+            waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос ТРК...") .
+            waitForm:Show() .
             if varcur-rvs = 1
             or ptoldfilvalue <> "yes":u
             then do :
@@ -841,6 +859,7 @@
                 tt-pump-nozzle
                 yes
                 ?
+                yes
                 no-error
               }
             end.
@@ -854,9 +873,13 @@
                 tt-pump-nozzle
                 no
                 ?
+                yes
                 no-error
               }
             end.
+            waitForm:Close() .
+            delete object waitForm no-error .
+              
             for each tt-pump-nozzle :
               find first tt-pump-nozzle-file where
                          tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
@@ -1021,6 +1044,8 @@
             
             if varcur-rvs <> 3
             then do :
+              waitForm = new ibs.th.str.ptrl.forms.waitform("~r~nОпрос ТРК...") .
+              waitForm:Show() .
               if varcur-rvs = 1
               or ptoldfilvalue <> "yes":u
               then do :
@@ -1033,6 +1058,7 @@
                   tt-pump-nozzle
                   yes
                   ?
+                  yes
                   no-error
                 }
               end.
@@ -1046,9 +1072,12 @@
                   tt-pump-nozzle
                   no
                   ?
+                  yes
                   no-error
                 }
               end.
+              waitForm:Close() .
+              delete object waitForm no-error .
               
               for each tt-pump-nozzle :
                 find first tt-pump-nozzle-file where

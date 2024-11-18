@@ -21,8 +21,9 @@ Creation date: 12/23/05
                       input              {3} ,       /* one-place    */
                       input              {4} ,       /* read-cur     */
                       input              {5} ,       /* p-message-on */
-                      input-output table {6} ,       /* tt-meas-file */
-                      input-output table {7} ) {8} . /* tt-meas      */
+                      input              {6} ,       /* p-no-waitfram*/
+                      input-output table {7} ,       /* tt-meas-file */
+                      input-output table {8} ) {9} . /* tt-meas      */
 
 /* $Workfile$   E n d */
 

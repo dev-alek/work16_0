@@ -468,6 +468,7 @@ procedure lib-rvs_rvs-pump : /* revision-pump */
       tt-pump-nozzle
       p-cur-pump
       no
+      no
       no-error
   }
   if error-status :error then do:
@@ -1381,6 +1382,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
   define input        parameter           p-one-place  as   logical             no-undo.
   define input        parameter           p-read-cur   as   integer             no-undo.
   define input        parameter           p-message-on as   logical             no-undo.
+  define input        parameter           p-no-waitfram as   logical             no-undo.
   define input-output parameter table for tt-meas-file.
   define input-output parameter table for tt-meas.
   define buffer bf_pl-level     for ub.pl-level.
@@ -1542,7 +1544,7 @@ procedure lib-rvs_rvsplace : /* revision-place */
       end.
       when 2 /* Агент */
       then do :
-        run str/getAsiDataAgent.p (input anl-loc, output table tt-place ) no-error.
+        run str/getAsiDataAgent.p (input anl-loc, input p-no-waitfram, output table tt-place ) no-error.
         if error-status:error
         then do :
           return error return-value + error-status:get-message (1).
@@ -6085,10 +6087,14 @@ procedure getpump:
    define input  parameter iobjtype    as character no-undo.
    define input  parameter iobjcode    as integer no-undo.
    define input  parameter imessageon  as logical no-undo.
+   define input  parameter inowaitfram as logical no-undo.
    define output parameter Opump       as longchar no-undo.
    define variable vadr as character no-undo.
    define variable vport as character no-undo.
    define variable vtext as character no-undo.
+   
+   define variable old-BM as logical no-undo .
+   old-BM = mBatchMode .
 /*   define variable v-value-character as character no-undo .
    define variable v-value-date as date no-undo .
    define variable v-value-decimal as decimal no-undo .
@@ -6184,6 +6190,10 @@ procedure getpump:
           ) no-error .            
 /*      if  log-manager:logfile-name ne ? then                                                       */
 /*        log-manager:write-message(substitute("mWaitFramView=&1.",string(mWaitFramView)) , "MYLOG").*/
+      if inowaitfram
+      then do :
+        mBatchMode = yes .
+      end .
       run ConectSocet (vadr,
                        vport,
                        ?,
@@ -6212,6 +6222,7 @@ procedure getpump:
           ) no-error .            
       
    end.
+   mBatchMode = old-BM .
    mFileLogSocet = "".
    if not vFlag
    then do:
@@ -6240,6 +6251,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
   define input-output parameter table for tt-pump-nozzle.
   define input        parameter           p-read-cur          as   logical             no-undo.
   define input        parameter           p-message-on        as   logical             no-undo.
+  define input        parameter           p-no-waitfram       as   logical             no-undo.
 
   define variable j_pump-code   like ub.pump-nozzle.pump-code   no-undo.
   define variable j_nozzle-code like ub.pump-nozzle.nozzle-code no-undo.
@@ -6346,7 +6358,7 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     .
     output to value(v_File-Err) .
     output close.
-    run getpump(v_File-Err ,p-obj-type, p-obj-code,p-message-on , output vPump) no-error.
+    run getpump(v_File-Err, p-obj-type, p-obj-code, p-message-on, p-no-waitfram, output vPump) no-error.
     if error-status:error
     then
        return error substitute ("&1 Повторите попытку или обратитесь в техническую поддержку.",return-value).

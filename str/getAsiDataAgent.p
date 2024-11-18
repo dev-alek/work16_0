@@ -24,6 +24,7 @@ define variable vss-description as character no-undo init "agent asi".
 
 {bge/place-def.i}
 define input parameter p-loclist as character no-undo .
+define input parameter p-no-waitfram as logical no-undo .
 define output parameter table for tt-place bind.
 
 { gbl/db-attr.i }
@@ -47,7 +48,8 @@ define variable v-attr-type as character no-undo .
 
 define variable v-asi-error-code as integer no-undo initial 0 .
 define variable v-asi-error-message as character no-undo .
-  
+
+define variable old-BM as logical no-undo .
 
 /* ***************************  Main Block  *************************** */
 
@@ -70,6 +72,11 @@ then do:
    output close .
 end.
 else do:
+   old-BM = mBatchMode .
+   if p-no-waitfram
+   then do :
+     mBatchMode = yes .
+   end .
    run ConectSocet (v-asi-ip,
                     v-asi-port,
                     ("getmeas/?loclist=" + p-loclist),
@@ -78,6 +85,7 @@ else do:
                     180,
                     no,
                     "Получение данных от АСИ. ").
+   mBatchMode = old-BM .
 end.
 empty temp-table tt-place .
 

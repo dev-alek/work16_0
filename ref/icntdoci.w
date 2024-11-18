@@ -1430,6 +1430,7 @@ tt-pump-nozzle-file
 tt-pump-nozzle
 varcur-pump
 yes
+no
 no-error
 }
 if error-status :error then do:
