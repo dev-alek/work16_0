@@ -494,9 +494,9 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         if available (ub.inv-doc-attr) then do:
           write-data-element ("chairmen1", ub.inv-doc-attr.attr-value).
         end.
-        else do:
-          write-data-element ("chairmen1", "").
-        end.   
+/*        else do:                               */
+/*          write-data-element ("chairmen1", "").*/
+/*        end.                                   */
         for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player1} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
           write-data-element ("chairmen2", ub.inv-doc-attr.attr-value).
@@ -517,9 +517,9 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         if available (ub.inv-doc-attr) then do:
           write-data-element ("jobtitle1", ub.inv-doc-attr.attr-value).
         end.
-        else do:
-          write-data-element ("jobtitle1", "").
-        end.        
+/*        else do:                               */
+/*          write-data-element ("jobtitle1", "").*/
+/*        end.                                   */
         for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player1} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
           write-data-element ("jobtitle2", ub.inv-doc-attr.attr-value).
