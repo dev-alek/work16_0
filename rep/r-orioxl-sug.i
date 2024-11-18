@@ -123,27 +123,27 @@ procedure shapka-inv :
     '<TR><TD colspan="86"></TD></TR>' skip
 
     '<TR>' skip
-    '<TD colspan="25" style="height: 14px; text-align: left;">Госкомнефтепродукт_________________________________</TD>' skip
-    '<TD colspan="61" style="text-align: right;">Форма № 32-НП</TD>' skip
+    '<TD colspan="25" style="height: 14px; text-align: left;">Наименование организации</TD>' skip
+    '<TD colspan="61" style="text-align: right;"></TD>' skip
     '</TR>'skip
-                                    
+
     '<TR>' skip
     '<TD colspan="25" style="height: 14px; border-bottom: 1px solid black; text-align: left;">' + v-host-name + '</TD>' skip
-    '<TD colspan="61" style="text-align: right;">Утверждена Госкомнефтепродуктом СССР</TD>' skip
+    '<TD colspan="61" style="text-align: right;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="25" style="border-top: 1px solid black; text-align: left; border-bottom: 1px solid black; text-align: left;"></TD>' skip
-    '<TD colspan="61" style="text-align: right;">15 августа 1985 г. № 06/21-8-446</TD>' skip
+    '<TD colspan="25" style="height: 14px; text-align: left;">' + bf_object.obj-name + '</TD>' skip
+    '<TD colspan="61" style="text-align: right;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="25" style="height: 14px; border-bottom: 1px solid black; text-align: left;">' + string( bf_object.obj-name) + '</TD>' skip
+    '<TD colspan="25" style="height: 14px"></TD>' skip
     '<TD colspan="61" style="text-align: right;"></TD>' skip
     '</TR>'skip
         
     '<TR>' skip
-    '<TD colspan="86" style="text-align: center;">ИНВЕНТАРИЗАЦИОННАЯ ОПИСЬ НЕФТИ И НЕФТЕПРОДУКТОВ, СУГ</TD>' skip
+    '<TD colspan="86" style="text-align: center;">ИНВЕНТАРИЗАЦИОННАЯ ОПИСЬ СУГ</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
@@ -156,481 +156,166 @@ procedure shapka-inv :
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="86" style="">Расписка.</TD>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
+    '</TR>'skip
+    
+    '<TR>' skip
+    '<TD colspan="86" style="text-align: center;">Расписка</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">К началу проведения инвентаризации все приходные и расходные документы и товарно-материальные ценности включены в отчеты (реестры), сданы в бухгалтерию и все ценности, поступившие на мою (нашу) ответственность, оприходованы, а выбывшие списаны в расход.</TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">Остатки на момент инвентаризации по данным моего (нашего) отчета составляют:</TD>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">СУГ, нефти и нефтепродуктов на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
+    '</TR>'skip
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">К началу проведения инвентаризации все приходные и расходные документы и товарно-</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
+    '<TD text_wrap="true" colspan="86" style="">материальные ценности включены в отчеты (реестры), сданы в бухгалтерию и все ценности,</TD>' skip
     '</TR>'skip
-        
+    
     '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">тары на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
+    '<TD text_wrap="true" colspan="86" style="">поступившие на мою (нашу) ответственность, оприходованы, а выбывшие списаны в расход.</TD>' skip
+    '</TR>'skip
+    
+    '<TR>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">наличных денег на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="86" style="">Материально ответственные (ое) лица (лицо):</TD>' skip
+    '</TR>'skip
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR style="height: 35px">' skip
-    '<TD text_wrap="true" colspan="21" style="">отоваренных и погашаенных: единых талонов на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip                                                         
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">талонов рыночного фонда на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip                                                        
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip          
+
+    '<TR>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
     .
-  put stream OutStr-html unformatted
-    '<TR style="height: 35px">' skip
-    '<TD text_wrap="true" colspan="21" style="">нереализованных (неиспользованных) талонов:</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">рыночного фонда на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR style="height: 35px">' skip
-    '<TD text_wrap="true" colspan="21" style="">единых (полученных для "сдачи") на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style="">Материально ответственные (ое) лица (лицо)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                        
-
-    '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                        
-
-    '<TR style="height:20px;">' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip            
-        
+    if v-prikaz-date <> "" then do:
+       put stream OutStr-html unformatted
+      '<TR>' skip
+      '<TD text_wrap="true" colspan="86" style="">На основании распоряжения от ' + string (day( date(v-prikaz-date) )) + " " + string(MonthNameRusCase( month( date(v-prikaz-date) ), 2 )) + " " + string(year( date(v-prikaz-date) )) + "г. " + if v-prikaz-num = "" then "№ __________" + '</TD>' else '№ ' + string(v-prikaz-num) + '</TD>' skip
+      '</TR>'skip
+      .
+    end.
+    else do:
+     put stream OutStr-html unformatted  
     '<TR>' skip
     '<TD text_wrap="true" colspan="86" style="">На основании распоряжения от "_____" _______________ 20____ г. № __________ </TD>' skip
     '</TR>'skip
-                                                            
+    .
+    end.
+     put stream OutStr-html unformatted                                                        
     '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">произведено снятие фактических остатков нефтепродуктов, денежных средств, талонов по состоянию на "_____" _______________ 20____ г.</TD>' skip
+    '<TD text_wrap="true" colspan="86" style="">произведено снятие фактических остатков СУГ</TD>' skip
     '</TR>'skip
 
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">по состоянию на "_____" _______________ 20____ г.</TD>' skip
+    '</TR>'skip
+    
+    '<TR>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
+    '</TR>'skip
+    .
+    if v-doc-date <> "" then do:
+     put stream OutStr-html unformatted
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: right;">Инвентаризация начата</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="54" style="">' + string (day( date(v-doc-date) )) + " " + string(MonthNameRusCase( month( date(v-doc-date) ), 2 )) + " " + string(year( date(v-doc-date) )) + "г. " 'в _____ час. _____ мин.</TD>' skip
+    '</TR>'skip
+    .
+    end.
+    else do:
+    put stream OutStr-html unformatted
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: right;">Инвентаризация начата</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="54" style="">"_____" ______________ 20 _____ г. в _____ час. _____ мин.</TD>' skip
     '</TR>'skip
-
+    .
+    end.
+    if bf_trn-doc.fact-date <> ? then do:
+    put stream OutStr-html unformatted
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: right;">окончена</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="54" style="">' + string (day( bf_trn-doc.fact-date )) + " " + string(MonthNameRusCase( month( bf_trn-doc.fact-date ), 2 )) + " " + string(year( bf_trn-doc.fact-date )) + "г. " 'в _____ час. _____ мин.</TD>' skip
+    '</TR>'skip
+    .
+    end.
+    else do:
+     put stream OutStr-html unformatted
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: right;">окончена</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="54" style="">"_____" ______________ 20 _____ г. в _____ час. _____ мин.</TD>' skip
     '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">При инвентаризации установлено следующее:</TD>' skip
-    '</TR>'skip
-        
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">СУГ, нефти и нефтепродуктов на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">тары на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">наличных денег на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR style="height: 35px">' skip
-    '<TD text_wrap="true" colspan="21" style="">отоваренных и погашаенных: единых талонов на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">талонов рыночного фонда на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR style="height: 35px">' skip
-    '<TD text_wrap="true" colspan="21" style="">нереализованных (неиспользованных) талонов:</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style="">рыночного фонда на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR style="height: 35px">' skip
-    '<TD text_wrap="true" colspan="21" style="">единых (полученных для "сдачи") на</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_rub}.</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style="">{&abbr_kop}.</TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="21" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="15" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="6" style=""></TD>' skip
     .
-                
+    end.
   put stream OutStr-html unformatted            
     '</thead>' skip
     .        
@@ -736,170 +421,98 @@ procedure foot-inv :
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="20" style="">Итого по описи:</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="">а) порядковый номер _______________________________</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style=""></TD>' skip
+    '<TD text_wrap="true" colspan="17" style="">Общие замечания</TD>' skip
+    '<TD text_wrap="true" colspan="69" style="border-bottom: 1px solid black;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="20" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style=""></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="20" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="">б) масса (кг) _____________________________________</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style=""></TD>' skip
-    '</TR>'skip
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="20" style=""></TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(прописью)</TD>' skip
-    '<TD text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="34" style=""></TD>' skip
-    '</TR>'skip
-
-      
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="">Председатель комиссии:</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                        
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="">Члены комиссии:</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                        
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip            
-        
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(должность)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip            
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">Все ценности, поименованные в настоящей инвентаризационной описи, комиссией проверены в натуре в моем (нашем) присутствии и </TD>' skip
-    '</TR>'skip
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">внесены в опись, в связи с чем претензий к инвентаризационной комиссии не имею (не имеем).</TD>' skip
+    '<TD text_wrap="true" colspan="86" style="height: 14px; border-bottom: 1px solid black;"></TD>' skip
     '</TR>'skip
     
-
     '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">Ценности, перечисленные в описи, находятся на моем (нашем) ответственном хранении</TD>' skip
+    '<TD text_wrap="true" colspan="86" style="height: 14px; border-bottom: 1px solid black;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style="">Материально ответственное лицо:</TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="50" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="4" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="86" style="height: 14px; border-bottom: 1px solid black;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="50" style="text-align: center;">(подпись)</TD>' skip
-    '<TD colspan="4" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                        
-                                                            
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="50" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="4" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="86" style="height: 14px; border-bottom: 1px solid black;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="50" style="text-align: center;">(подпись)</TD>' skip
-    '<TD colspan="4" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                        
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="50" style="border-bottom: 1px solid black;"></TD>' skip
-    '<TD colspan="4" text_wrap="true"></TD>' skip
-    '</TR>'skip
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
-    '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="50" style="text-align: center;">(подпись)</TD>' skip
-    '<TD colspan="4" text_wrap="true"></TD>' skip
-    '</TR>'skip                                                                
-
-    '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">Указанные в настоящей инвентаризационной описи данные и подсчеты проверил:</TD>' skip
+    '<TD text_wrap="true" colspan="86" style="height: 14px; border-bottom: 1px solid black;"></TD>' skip
     '</TR>'skip
                 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
+    .
+    if j_LineCount = 0 then do:
+    put stream OutStr-html unformatted
+    '<TD text_wrap="true" colspan="86" style="">Все ценности, поименованные в описи c №  ' + "0" + ' по № ' + string(j_LineCount) + ', комиссией проверены в натуре</TD>' skip
+    .
+    end.
+    else do:
+    put stream OutStr-html unformatted
+    '<TD text_wrap="true" colspan="86" style="">Все ценности, поименованные в описи c №  ' + "1" + ' по № ' + string(j_LineCount) + ', комиссией проверены в натуре</TD>' skip
+    .  
+    end.  
+     put stream OutStr-html unformatted    '</TR>'skip
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style=""> в моем (нашем) присутствии и внесены в опись, в связи с чем претензий к инвентаризационной</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style=""> комиссии не имею (не имеем). Ценности, перечисленные в описи, находятся на моем (нашем)</TD>' skip
+    '</TR>'skip
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">ответственном хранении</TD>' skip
+    '</TR>'skip
+    '<TR>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
+    '</TR>'skip    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">Материально ответственные(ое) лица(лицо):</TD>' skip
+    '</TR>'skip
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip                                                        
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
@@ -908,17 +521,177 @@ procedure foot-inv :
     '</TR>'skip
 
     '<TR>' skip
-    '<TD text_wrap="true" colspan="30" style=""></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(должность)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip                 
-        
+    '</TR>'skip                                                        
+
     '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">____ _______________ 20 _____ г.</TD>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
     '</TR>'skip
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="20" style="">Председатель комиссии:</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-agent + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-agent + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip                                                        
+
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="20" style="">Состав комиссии:</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-player1 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-player1 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip           
+    
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="20" style=""></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-player2 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-player2 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip           
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="20" style=""></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-pos-player3 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="border-bottom: 1px solid black;">' + v-fio-player3 + '</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="22" style="text-align: center;"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="13" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="24" style="text-align: center;">(расшифровка подписи)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip
+    
+    '<TR>' skip
+    '<TD colspan="86" style="height: 14px;"></TD>' skip
+    '</TR>'skip
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">Снятие остатков СУГ, указанных в описи, произведено при нашем личном участии.</TD>' skip
+    '</TR>'skip
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">Все взятые документы и деньги во время проверки возвращены нам полностью в надлежащем</TD>' skip
+    '</TR>'skip
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">порядке и претензий к комиссии (проверяющему) не имеем. Настоящую опись читали и</TD>' skip
+    '</TR>'skip
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">один экземпляр описи получили (объяснение предоставляется вместе с описью).</TD>' skip
+    '</TR>'skip                
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="height: 14px;"></TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="86" style="">Материально ответственные(ое) лица(лицо):</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip  
+    
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip                                                        
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip                                                        
+
+    '<TR style="height:20px;">' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="border-bottom: 1px solid black;"></TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
+    '<TD colspan="2" text_wrap="true"></TD>' skip
+    '</TR>'skip    
     .  
                 
   put stream OutStr-html unformatted            

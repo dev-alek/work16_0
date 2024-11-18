@@ -1507,6 +1507,157 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-is-not-close-fact-news true
 &glob sort-trdcattr-is-not-close-fact-news 100
 
+/* Приказ: Номер */
+&glob fillin_width-trdcattr-prikaz-number 70
+&glob fillin_height-trdcattr-prikaz-number 1
+&glob type-trdcattr-prikaz-number {&type-char}
+&glob format-trdcattr-prikaz-number "X(70)"
+&glob label-trdcattr-prikaz-number "Приказ: Номер"
+&glob tooltip-trdcattr-prikaz-number "Приказ: Номер"
+&glob user-can-edit-trdcattr-prikaz-number true
+&glob output-display-trdcattr-prikaz-number true
+&glob other-trdcattr-prikaz-number '':u
+&glob news-trdcattr-prikaz-number true
+&glob sort-trdcattr-prikaz-number 100
+
+/* Приказ: Дата */
+&glob fillin_width-trdcattr-prikaz-date 11
+&glob fillin_height-trdcattr-prikaz-date 1
+&glob type-trdcattr-prikaz-date {&type-date}
+&glob format-trdcattr-prikaz-date "99.99.9999"
+&glob label-trdcattr-prikaz-date "Приказ: Дата"
+&glob tooltip-trdcattr-prikaz-date "Приказ: Дата"
+&glob user-can-edit-trdcattr-prikaz-date true
+&glob output-display-trdcattr-prikaz-date true
+&glob other-trdcattr-prikaz-date '':u
+&glob news-trdcattr-prikaz-date true
+&glob sort-trdcattr-prikaz-date 102
+
+/* Инвентаризация: Дата фактического начала */
+&glob fillin_width-trdcattr-inv-date 11
+&glob fillin_height-trdcattr-inv-date 1
+&glob type-trdcattr-inv-date {&type-date}
+&glob format-trdcattr-inv-date "99.99.9999"
+&glob label-trdcattr-inv-date "Инвентаризация: Дата фактического начала"
+&glob tooltip-trdcattr-inv-date "Инвентаризация: Дата фактического начала"
+&glob user-can-edit-trdcattr-inv-date true
+&glob output-display-trdcattr-inv-date true
+&glob other-trdcattr-inv-date '':u
+&glob news-trdcattr-inv-date true
+&glob sort-trdcattr-inv-date 104
+
+/* ФИО председателя комиссии */
+&glob fillin_width-trdcattr-fio-agent 70
+&glob fillin_height-trdcattr-fio-agent 1
+&glob proc-trdcattr-fio-agent "''"
+&glob type-trdcattr-fio-agent {&type-char}
+&glob format-trdcattr-fio-agent "X(70)"
+&glob label-trdcattr-fio-agent "ФИО председателя комиссии"
+&glob tooltip-trdcattr-fio-agent "ФИО председателя комиссии"
+&glob user-can-edit-trdcattr-fio-agent true
+&glob output-display-trdcattr-fio-agent true
+&glob other-trdcattr-fio-agent 'nws':u
+&glob news-trdcattr-fio-agent true
+&glob sort-trdcattr-fio-agent 106
+
+/* Должность председателя комиссии */
+&glob fillin_width-trdcattr-pos-agent 70
+&glob fillin_height-trdcattr-pos-agent 1
+&glob proc-trdcattr-pos-agent "''"
+&glob type-trdcattr-pos-agent {&type-char}
+&glob format-trdcattr-pos-agent "X(70)"
+&glob label-trdcattr-pos-agent "Должность председателя комиссии"
+&glob tooltip-trdcattr-pos-agent "Должность председателя комиссии"
+&glob user-can-edit-trdcattr-pos-agent false
+&glob output-display-trdcattr-pos-agent false
+&glob other-trdcattr-pos-agent 'nws':u
+&glob news-trdcattr-pos-agent true
+&glob sort-trdcattr-pos-agent 108
+
+/* ФИО участника комиссии1 */
+&glob fillin_width-trdcattr-fio-player1 70
+&glob fillin_height-trdcattr-fio-player1 1
+&glob proc-trdcattr-fio-player1 "''"
+&glob type-trdcattr-fio-player1 {&type-char}
+&glob format-trdcattr-fio-player1 "X(70)"
+&glob label-trdcattr-fio-player1 "ФИО участника комиссии"
+&glob tooltip-trdcattr-fio-player1 "ФИО участника комиссии"
+&glob user-can-edit-trdcattr-fio-player1 true
+&glob output-display-trdcattr-fio-player1 true
+&glob other-trdcattr-fio-player1 'nws':u
+&glob news-trdcattr-fio-player1 true
+&glob sort-trdcattr-fio-player1 110
+
+/* Должность участника комиссии1 */
+&glob fillin_width-trdcattr-pos-player1 70
+&glob fillin_height-trdcattr-pos-player1 1
+&glob proc-trdcattr-pos-player1 "''"
+&glob type-trdcattr-pos-player1 {&type-char}
+&glob format-trdcattr-pos-player1 "X(70)"
+&glob label-trdcattr-pos-player1 "Должность участника комиссии"
+&glob tooltip-trdcattr-pos-player1 "Должность участника комиссии"
+&glob user-can-edit-trdcattr-pos-player1 false
+&glob output-display-trdcattr-pos-player1 false
+&glob other-trdcattr-pos-player1 'nws':u
+&glob news-trdcattr-pos-player1 true
+&glob sort-trdcattr-pos-player1 112
+
+/* ФИО участника комиссии2 */
+&glob fillin_width-trdcattr-fio-player2 70
+&glob fillin_height-trdcattr-fio-player2 1
+&glob proc-trdcattr-fio-player2 "''"
+&glob type-trdcattr-fio-player2 {&type-char}
+&glob format-trdcattr-fio-player2 "X(70)"
+&glob label-trdcattr-fio-player2 "ФИО участника комиссии"
+&glob tooltip-trdcattr-fio-player2 "ФИО участника комиссии"
+&glob user-can-edit-trdcattr-fio-player2 true
+&glob output-display-trdcattr-fio-player2 true
+&glob other-trdcattr-fio-player2 'nws':u
+&glob news-trdcattr-fio-player2 true
+&glob sort-trdcattr-fio-player2 114
+
+/* Должность участника комиссии2 */
+&glob fillin_width-trdcattr-pos-player2 70
+&glob fillin_height-trdcattr-pos-player2 1
+&glob proc-trdcattr-pos-player2 "''"
+&glob type-trdcattr-pos-player2 {&type-char}
+&glob format-trdcattr-pos-player2 "X(70)"
+&glob label-trdcattr-pos-player2 "Должность участника комиссии"
+&glob tooltip-trdcattr-pos-player2 "Должность участника комиссии"
+&glob user-can-edit-trdcattr-pos-player2 false
+&glob output-display-trdcattr-pos-player2 false
+&glob other-trdcattr-pos-player2 'nws':u
+&glob news-trdcattr-pos-player2 true
+&glob sort-trdcattr-pos-player2 116
+
+/* ФИО участника комиссии3 */
+&glob fillin_width-trdcattr-fio-player3 70
+&glob fillin_height-trdcattr-fio-player3 1
+&glob proc-trdcattr-fio-player3 "''"
+&glob type-trdcattr-fio-player3 {&type-char}
+&glob format-trdcattr-fio-player3 "X(70)"
+&glob label-trdcattr-fio-player3 "ФИО участника комиссии"
+&glob tooltip-trdcattr-fio-player3 "ФИО участника комиссии"
+&glob user-can-edit-trdcattr-fio-player3 true
+&glob output-display-trdcattr-fio-player3 true
+&glob other-trdcattr-fio-player3 'nws':u
+&glob news-trdcattr-fio-player3 true
+&glob sort-trdcattr-fio-player3 118
+
+/* Должность участника комиссии3 */
+&glob fillin_width-trdcattr-pos-player3 70
+&glob fillin_height-trdcattr-pos-player3 1
+&glob proc-trdcattr-pos-player3 "''"
+&glob type-trdcattr-pos-player3 {&type-char}
+&glob format-trdcattr-pos-player3 "X(70)"
+&glob label-trdcattr-pos-player3 "Должность участника комиссии"
+&glob tooltip-trdcattr-pos-player3 "Должность участника комиссии"
+&glob user-can-edit-trdcattr-pos-player3 false
+&glob output-display-trdcattr-pos-player3 false
+&glob other-trdcattr-pos-player3 'nws':u
+&glob news-trdcattr-pos-player3 true
+&glob sort-trdcattr-pos-player3 120
+
 &if "{1}" = "class" &then
 &else
 define new global shared variable g#trdcalib as handle no-undo.

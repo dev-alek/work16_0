@@ -21,7 +21,9 @@ create: Булгаков Андрей Николаевич
 /* ********************************************************************************************************************* *\
  *                                                                                                                       *
  * procedure trdcalib_tdat-val - trdcattr-value                                                                          *
- * procedure trdcalib_tdat-wrt - trdcattr-write                                                                          *
+ * procedure trdcalib_tdatinv-val - trdcattrinv-value                                                                          *
+ * procedure trdcalib_tdat-wrt - trdcattr-write
+ * procedure trdcalib_tdatinv-wrt - trdcattrinv-write                                                                       *
  * procedure trdcalib_tdat-xst - trdcattr-exist                                                                          *
  * procedure trdcalib_tdat-del - trdcattr-delete                                                                         *
  * procedure trdcalib_tdat-cod - trdcattr-code                                                                           *
@@ -125,6 +127,48 @@ procedure trdcalib_tdat-val :
   end. /* on error */
 end procedure. /* trdcalib_tdat-val */
 
+procedure trdcalib_tdatinv-val :
+  define  input parameter p-doc-code like ub.inv-doc-attr.doc-code   no-undo.
+  define  input parameter p-code     like ub.inv-doc-attr.attr-code  no-undo.
+  define output parameter p-value    like ub.inv-doc-attr.attr-value no-undo.
+  define output parameter p-type     as   character              no-undo.
+
+  define buffer buf_doc-attr for ub.inv-doc-attr.
+
+  define variable v-format         as character no-undo.
+  define variable v-fillin_width   as integer   no-undo.
+  define variable v-fillin_height  as integer   no-undo.
+  define variable v-label          as character no-undo.
+  define variable v-user-can-edit  as logical   no-undo.
+  define variable v-output-display as logical   no-undo.
+  define variable v-other          as character no-undo.
+  define variable v-proc-attr       as character no-undo .
+  define variable v-full-screen-val as character no-undo .
+  define variable v-sort as integer   no-undo .
+  do on error undo, return error return-value :
+    { str/tdatinv-cod.i p-code
+                 p-type
+                 v-format
+                 v-fillin_width
+                 v-fillin_height
+                 v-label
+                 v-user-can-edit
+                 v-output-display
+                 v-other
+                 v-proc-attr
+                 v-full-screen-val
+                 v-sort
+                 no-error }
+    if error-status :error then do: undo, return error return-value. end.
+
+    find first buf_doc-attr no-lock where
+               buf_doc-attr.doc-code  = p-doc-code and
+               buf_doc-attr.attr-code = p-code     no-error.
+    assign p-value = ( if available buf_doc-attr then buf_doc-attr.attr-value else
+                     ( if p-type = {&type-log} then "no":U else "":U ) ).
+  end. /* on error */
+end procedure. /* trdcalib_tdatinv-val */
+
 procedure trdcalib_tdat-wrt :
   define input parameter p-doc-code like ub.doc-attr.doc-code   no-undo.
   define input parameter p-code     like ub.doc-attr.attr-code  no-undo.
@@ -172,6 +216,54 @@ procedure trdcalib_tdat-wrt :
     assign buf_doc-attr.attr-value = p-value.
   end. /* on error */
 end procedure. /* trdcalib_tdat-wrt */
+
+procedure trdcalib_tdatinv-wrt :
+  define input parameter p-doc-code like ub.inv-doc-attr.doc-code   no-undo.
+  define input parameter p-code     like ub.inv-doc-attr.attr-code  no-undo.
+  define input parameter p-value    like ub.inv-doc-attr.attr-value no-undo.
+
+  define buffer buf_doc-attr for ub.inv-doc-attr.
+  define variable v-proc-attr       as character no-undo .
+  define variable v-full-screen-val as character no-undo .
+
+  define variable v-type           as character no-undo.
+  define variable v-format         as character no-undo.
+  define variable v-fillin_width   as integer   no-undo.
+  define variable v-fillin_height  as integer   no-undo.
+  define variable v-label          as character no-undo.
+  define variable v-user-can-edit  as logical   no-undo.
+  define variable v-output-display as logical   no-undo.
+  define variable v-other          as character no-undo.
+  define variable v-sort           as integer   no-undo .
+
+  do on error undo, return error return-value :
+    { str/tdat-cod.i p-code
+                 v-type
+                 v-format
+                 v-fillin_width
+                 v-fillin_height
+                 v-label
+                 v-user-can-edit
+                 v-output-display
+                 v-other
+                 v-proc-attr
+                 v-full-screen-val
+                 v-sort
+                 no-error }
+
+    if error-status :error then do: undo, return error return-value. end.
+
+    find first buf_doc-attr exclusive-lock where
+               buf_doc-attr.doc-code  = p-doc-code and
+               buf_doc-attr.attr-code = p-code     no-error.
+    if not available buf_doc-attr then do:
+      create buf_doc-attr.
+      assign buf_doc-attr.doc-code  = p-doc-code
+             buf_doc-attr.attr-code = p-code.
+    end.
+    assign buf_doc-attr.attr-value = p-value.
+  end. /* on error */
+end procedure. /* trdcalib_tdatinv-wrt */
 
 procedure trdcalib_tdat-xst :
   define  input parameter p-doc-code like ub.doc-attr.doc-code  no-undo.
@@ -516,6 +608,28 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code trdcattr-is-not-close-fact-news
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-prikaz-number
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-prikaz-date
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-inv-date
+      {&attr-temp-full-code}      
+      &scop attr-code trdcattr-fio-agent
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-pos-agent
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-fio-player1
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-pos-player1
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-fio-player2
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-pos-player2
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-fio-player3
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-pos-player3
+      {&attr-temp-full-code}        
       /* сюда добавлять новые параметры */
       otherwise do:
         undo, return error substitute( 'неизвестный атрибут документа "&1"', p-code ).
@@ -523,6 +637,52 @@ procedure trdcalib_tdat-cod :
     end case. /* p-code */
   end. /* on error */
 end procedure. /* trdcalib_tdat-cod */
+
+procedure trdcalib_tdatinv-cod :
+  define  input parameter p-code           as character no-undo. /* код атрибута    */
+  define output parameter p-type           as character no-undo. /* тип атрибута    */
+  define output parameter p-format         as character no-undo. /* формат атрибута */
+  define output parameter p-fillin_width   as integer   no-undo. /* ширина          */
+  define output parameter p-fillin_height  as integer   no-undo. /* высота          */
+  define output parameter p-label          as character no-undo. /* лабел атрибута */
+  define output parameter p-user-can-edit  as logical   no-undo. /* пользователь может изменять в броусе */
+  define output parameter p-output-display as logical   no-undo. /* виден в броусе */
+  define output parameter p-other          as character no-undo. /* еще чего - нибудь */
+  define output parameter p-proc-attr       as character no-undo. /* процедура корректировки */
+  define output parameter p-full-screen-val as character no-undo. /* screen-value */
+  define output parameter p-sort as integer   no-undo .
+
+  do on error undo, return error return-value :
+    case p-code :
+      &scop attr-code trdcattr-prikaz-number
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-prikaz-date
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-inv-date
+      {&attr-temp-full-code}      
+      &scop attr-code trdcattr-fio-agent
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-pos-agent
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-fio-player1
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-pos-player1
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-fio-player2
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-pos-player2
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-fio-player3
+      {&attr-temp-full-code}  
+      &scop attr-code trdcattr-pos-player3
+      {&attr-temp-full-code}        
+      /* сюда добавлять новые параметры */
+      otherwise do:
+        undo, return error substitute( 'неизвестный атрибут документа "&1"', p-code ).
+      end.
+    end case. /* p-code */
+  end. /* on error */
+end procedure. /* trdcalib_tdatinv-cod */
 
 /* Обработка v-other */
 procedure trdcalib_tdat-oth :
@@ -637,6 +797,96 @@ procedure trdcalib_tdat-oth :
     end. /* if lookup( "nws":U, v-other ) > 0 */
   end. /* on error */
 end procedure. /* trdcalib_tdat-oth */
+
+procedure trdcalib_tdatinv-oth :
+  define input parameter p-doc-code as character no-undo.
+  define input parameter p-code     as character no-undo. /* код атрибута */
+  define input parameter p-value    as character no-undo. /* значение атрибута */
+
+  define variable v-type           as character no-undo. /* тип атрибута    */
+  define variable v-format         as character no-undo. /* формат атрибута */
+  define variable v-fillin_width   as integer   no-undo. /* ширина          */
+  define variable v-fillin_height  as integer   no-undo. /* высота          */
+  define variable v-label          as character no-undo. /* лабел атрибута  */
+  define variable v-user-can-edit  as logical   no-undo. /* пользователь может изменять в броусе */
+  define variable v-output-display as logical   no-undo. /* виден в броусе  */
+  define variable v-other          as character no-undo. /* еще чего-нибудь */
+  define variable v-proc-attr       as character no-undo .
+  define variable v-full-screen-val as character no-undo .
+  define variable v-sort as integer   no-undo .
+
+  define buffer buf_doc-attr for ub.inv-doc-attr.
+  define buffer nakl_trn-doc for ub.trn-doc.
+  define buffer bf_trn-doc   for ub.trn-doc.
+
+  do on error undo, return error return-value :
+     { str/tdatinv-cod.i p-code
+                  v-type
+                  v-format
+                  v-fillin_width
+                  v-fillin_height
+                  v-label
+                  v-user-can-edit
+                  v-output-display
+                  v-other
+                  v-proc-attr
+                  v-full-screen-val
+                  v-sort
+                  no-error }
+
+    /* отправить по новостям самостоятельно без документа. */
+    if lookup( "nws":U, v-other ) > 0 then do:
+      find first bf_trn-doc no-lock where
+                 bf_trn-doc.doc-code = p-doc-code /* and
+                 bf_trn-doc.status_  = {&ready} */ no-error.
+      if available bf_trn-doc then do:
+        /* проверить активность стороны ??? */
+        find first buf_doc-attr no-lock where
+                   buf_doc-attr.doc-code  = p-doc-code and
+                   buf_doc-attr.attr-code = p-code     no-error.
+        run str/callnews.p ( input "doc-attr", input ( buffer buf_doc-attr :handle ) ) no-error.
+        if error-status :error then do:
+          message vss-workfile skip( 0 ) vss-date skip( 0 ) vss-revision skip( 1 ) vss-description skip( 1 )
+                  "Невозможно маршрутизировать doc-attr для отправки в новости" skip( 0 )
+                  "Документ:" '"' + bf_trn-doc.doc-code    + '"' skip( 0 )
+                  "Атрибут:"  '"' + buf_doc-attr.attr-code + '"' skip( 0 )
+                  error-status :get-message( 1 ) skip( 0 )
+                  error-status :get-message( 2 ) skip( 0 )
+                  error-status :get-message( 3 ) skip( 0 )
+                  "return-value = " return-value skip( 0 )
+          view-as alert-box error.
+          undo, return error return-value.
+        end. /* error */
+      end. /* if available bf_trn-doc */
+
+      define buffer bf_price-doc for ub.price-doc  .
+
+      find first bf_price-doc no-lock where
+                 bf_price-doc.doc-num = p-doc-code
+                 no-error.
+      if available bf_price-doc then do:
+        /* проверить активность стороны ??? */
+        find first buf_doc-attr no-lock where
+                   buf_doc-attr.doc-code  = p-doc-code and
+                   buf_doc-attr.attr-code = p-code     no-error.
+        run str/callnews.p ( input "doc-attr", input ( buffer buf_doc-attr :handle ) ) no-error.
+        if error-status :error then do:
+          message vss-workfile skip( 0 ) vss-date skip( 0 ) vss-revision skip( 1 ) vss-description skip( 1 )
+                  "Невозможно маршрутизировать doc-attr для отправки в новости" skip( 0 )
+                  "Переоценка:" '"' + bf_price-doc.doc-num    + '"' skip( 0 )
+                  "Атрибут:"  '"' + buf_doc-attr.attr-code + '"' skip( 0 )
+                  error-status :get-message( 1 ) skip( 0 )
+                  error-status :get-message( 2 ) skip( 0 )
+                  error-status :get-message( 3 ) skip( 0 )
+                  "return-value = " return-value skip( 0 )
+          view-as alert-box error.
+          undo, return error return-value.
+        end. /* error */
+      end. /* if available bf_price-doc */
+
+    end. /* if lookup( "nws":U, v-other ) > 0 */
+  end. /* on error */
+end procedure. /* trdcalib_tdatinv-oth */
 
 procedure trdcalib_tdatothn :
   define input parameter p-doc-code as character no-undo.

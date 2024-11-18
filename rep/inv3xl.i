@@ -38,6 +38,8 @@ initial "@(#)$Workfile$ $Revision$".
 &global-define inv3xl-h_object "h_object":U
 &global-define inv3xl-h_docCode "h_docCode":U
 &global-define inv3xl-h_docDate "h_docDate":U
+&global-define inv3xl-h_tbl_prikaz_num "h_tbl_prikaz_num":U 
+&global-define inv3xl-h_tbl_prikaz_date "h_tbl_prikaz_date":U
 &global-define inv3xl-h_tbl_startDate "h_tbl_startDate":U
 &global-define inv3xl-h_tbl_endDate "h_tbl_endDate":U
 &global-define inv3xl-h_BuhSum "h_BuhSum":U
@@ -50,6 +52,23 @@ initial "@(#)$Workfile$ $Revision$".
 &global-define inv3xl-it_sumFact "it_sumFact":U
 &global-define inv3xl-it_qntyBuh "it_qntyBuh":U
 &global-define inv3xl-it_sumBuh "it_sumBuh":U
+
+&global-define inv3xl-itp_s_pos_agent "itp_s_pos_agent":U
+&global-define inv3xl-itp_s_fio_agent "itp_s_fio_agent":U
+&global-define inv3xl-itp_s_pos_player1 "itp_s_pos_player1":U
+&global-define inv3xl-itp_s_fio_player1 "itp_s_fio_player1":U
+&global-define inv3xl-itp_s_pos_player2 "itp_s_pos_player2":U
+&global-define inv3xl-itp_s_fio_player2 "itp_s_fio_player2":U
+&global-define inv3xl-itp_s_pos_player3 "itp_s_pos_player3":U
+&global-define inv3xl-itp_s_fio_player3 "itp_s_fio_player3":U
+&global-define inv3xl-itp_s_pos_agent "itp_s_pos_agent":U
+&global-define inv3xl-itp_s_fio_agent "itp_s_fio_agent":U
+&global-define inv3xl-itp_s_pos_player1 "itp_s_pos_player1":U
+&global-define inv3xl-itp_s_fio_player1 "itp_s_fio_player1":U
+&global-define inv3xl-itp_s_pos_player2 "itp_s_pos_player2":U
+&global-define inv3xl-itp_s_fio_player2 "itp_s_fio_player2":U
+&global-define inv3xl-itp_s_pos_player3 "itp_s_pos_player3":U
+&global-define inv3xl-itp_s_fio_player3 "itp_s_fio_player3":U
 
 define stream excel-line.
 define stream excel-cell.

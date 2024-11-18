@@ -1497,6 +1497,40 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Признак, что документ созан по УТД и должен в новостях обрабатываться на закрытия без учета, что это новости */
 { cmp/cr-prep.i 1 trdcattr-is-not-close-fact-news "trdcattr-is-not-close-fact-news" " " "trdcattr-is-not-close-fact-news" }
 
+/* Номер приказа для документа инвентаризации */
+{ cmp/cr-prep.i 1 trdcattr-prikaz-number "trdcattr-prikaz-number" " " "trdcattr-prikaz-number" }
+
+/* Дата приказа для документа инвентаризации */
+{ cmp/cr-prep.i 1 trdcattr-prikaz-date "trdcattr-prikaz-date" " " "trdcattr-prikaz-date" }
+
+/* Инвентаризация: Дата фактического начала */
+{ cmp/cr-prep.i 1 trdcattr-inv-date "trdcattr-inv-date" " " "trdcattr-inv-date" }
+
+/* ФИО председателя комиссии */
+{ cmp/cr-prep.i 1 trdcattr-fio-agent "trdcattr-fio-agent" " " "trdcattr-fio-agent" }
+
+/* Должность председателя комиссии */
+{ cmp/cr-prep.i 1 trdcattr-pos-agent "trdcattr-pos-agent" " " "trdcattr-pos-agent" }
+
+/* ФИО участника комиссии */
+{ cmp/cr-prep.i 1 trdcattr-fio-player1 "trdcattr-fio-player1" " " "trdcattr-fio-player1" }
+
+/* Должность участника комиссии */
+{ cmp/cr-prep.i 1 trdcattr-pos-player1 "trdcattr-pos-player1" " " "trdcattr-pos-player1" }
+
+/* ФИО участника комиссии */
+{ cmp/cr-prep.i 1 trdcattr-fio-player2 "trdcattr-fio-player2" " " "trdcattr-fio-player2" }
+
+/* Должность участника комиссии */
+{ cmp/cr-prep.i 1 trdcattr-pos-player2 "trdcattr-pos-player2" " " "trdcattr-pos-player2" }
+
+/* ФИО участника комиссии */
+{ cmp/cr-prep.i 1 trdcattr-fio-player3 "trdcattr-fio-player3" " " "trdcattr-fio-player3" }
+
+/* Должность участника комиссии */
+{ cmp/cr-prep.i 1 trdcattr-pos-player3 "trdcattr-pos-player3" " " "trdcattr-pos-player3" }
+
+
 &glob trdcattr-list '~
 {&bef-trdcattr-hold-part-code}~
 ,{&bef-trdcattr-dov}~
@@ -1593,6 +1627,18 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-is-return}~
 ,{&bef-trdcattr-clear-ac}~
 ,{&bef-trdcattr-edo-return}~
+,{&bef-trdcattr-is-not-close-fact-news}~
+,{&bef-trdcattr-prikaz-number}~
+,{&bef-trdcattr-prikaz-date}~
+,{&bef-trdcattr-inv-date}~
+,{&bef-trdcattr-fio-agent}~
+,{&bef-trdcattr-pos-agent}~
+,{&bef-trdcattr-fio-player1}~
+,{&bef-trdcattr-pos-player1}~
+,{&bef-trdcattr-fio-player2}~
+,{&bef-trdcattr-pos-player2}~
+,{&bef-trdcattr-fio-player3}~
+,{&bef-trdcattr-pos-player3}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define trdcattr-list {&trdcattr-list}" ).
 

@@ -807,6 +807,66 @@ do:
                 buf-inv_trn-doc.status_ = {&permitted}
                 buf-inv_trn-doc.flag_   = yes
                 .
+                
+    /* Проверка на заполнение атрибутов */
+  define variable is-pos as logical no-undo .
+  define variable is-date as logical no-undo .
+  define variable is-fio as logical no-undo .
+  define variable is-check as logical no-undo .
+  define variable is-mes as character no-undo .
+
+  define buffer fio_inv-doc-attr for ub.inv-doc-attr .
+  define buffer prikaz_inv-doc-attr for ub.inv-doc-attr .
+  
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = v-inv-doc and
+    ub.inv-doc-attr.attr-code = "invTech" and
+    ub.inv-doc-attr.attr-value = string(true) no-error .
+    if not available (ub.inv-doc-attr) then do:
+      if not can-find (first prikaz_inv-doc-attr no-lock where prikaz_inv-doc-attr.doc-code = v-inv-doc and
+      prikaz_inv-doc-attr.attr-code = {&trdcattr-prikaz-date} and
+      prikaz_inv-doc-attr.attr-value <> "") then do:
+      is-date = true .
+      is-check = true .
+      end.
+      if not can-find (first fio_inv-doc-attr no-lock where fio_inv-doc-attr.doc-code = v-inv-doc and
+      (fio_inv-doc-attr.attr-code = {&trdcattr-fio-agent} or
+      fio_inv-doc-attr.attr-code = {&trdcattr-fio-player1} or
+      fio_inv-doc-attr.attr-code = {&trdcattr-fio-player2} or
+      fio_inv-doc-attr.attr-code = {&trdcattr-fio-player3}) and
+      fio_inv-doc-attr.attr-value <> "") then do:
+      is-fio = true .
+      is-check = true .
+      end.
+      if not can-find (first fio_inv-doc-attr no-lock where fio_inv-doc-attr.doc-code = v-inv-doc and
+      (fio_inv-doc-attr.attr-code = {&trdcattr-pos-agent} or
+      fio_inv-doc-attr.attr-code = {&trdcattr-pos-player1} or
+      fio_inv-doc-attr.attr-code = {&trdcattr-pos-player2} or
+      fio_inv-doc-attr.attr-code = {&trdcattr-pos-player3}) and
+      fio_inv-doc-attr.attr-value <> "")then do:
+      is-pos = true .
+      is-check = true .
+      end.
+      
+      if is-check then do:
+
+        is-mes = "Ошибка при закрытии документа инвентаризации." .
+
+      if is-date then do:
+        is-mes = is-mes + {&new-line} + "Не указана дата приказа." .
+      end.
+      if is-fio then do:
+        is-mes = is-mes + {&new-line} + "Не указана фамилия." .
+      end.
+      if is-pos then do:
+        is-mes = is-mes + {&new-line} + "Не указана должность." .
+      end.
+      message
+      is-mes
+      view-as alert-box .
+      undo tr, leave.
+      end.
+    end.                 
+                
             run str/trn-stat.p
                 ( input parparentproc
                 , input this-procedure

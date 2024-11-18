@@ -41,6 +41,7 @@ define variable vss-description as character no-undo initial "Инвентаризационная
 { str/placelib.i }
 { rep/c-temp-place.i }
 { rep/c-place-attr.i }
+{ str/trdcalib.i }
 
 define variable g#report-num  as integer no-undo .
 define variable g#quest-print as logical no-undo initial yes .
@@ -215,6 +216,97 @@ do
     t_inv-date = ( if bf_trn-doc.status_ = {&fact} then bf_trn-doc.fact-date else bf_trn-doc.doc-date )
     .
 
+  define variable v-prikaz-num  as character no-undo .
+  define variable v-prikaz-date as character no-undo .
+  define variable v-doc-date    as character no-undo .
+  define variable p-type        as character no-undo .      
+  define variable v-pos-agent   as character no-undo .
+  define variable v-fio-agent   as character no-undo .
+  define variable v-pos-player1 as character no-undo .
+  define variable v-fio-player1 as character no-undo .
+  define variable v-pos-player2 as character no-undo .
+  define variable v-fio-player2 as character no-undo .
+  define variable v-pos-player3 as character no-undo .
+  define variable v-fio-player3 as character no-undo .
+  
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-inv-date}
+          v-doc-date
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-prikaz-number}
+          v-prikaz-num
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-prikaz-date}
+          v-prikaz-date
+          p-type
+          no-error
+      }  
+
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-agent}
+          v-fio-agent
+          p-type
+          
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-agent}
+          v-pos-agent
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player1}
+          v-fio-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player1}
+          v-pos-player1
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player2}
+          v-fio-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player2}
+          v-pos-player2
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-fio-player3}
+          v-fio-player3
+          p-type
+          no-error
+      }
+  { str/tdatinv-val.i
+          bf_trn-doc.doc-code
+          {&trdcattr-pos-player3}
+          v-pos-player3
+          p-type
+          no-error
+      } 
   /*печать*/
   run get-report-num (output p-report-id).
     
