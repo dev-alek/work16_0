@@ -106,15 +106,6 @@ if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
       c-marking.mark = new-{&main-tbl}.mark.
    end.
 end .  
-if new-{&main-tbl}.mark-parent <> "" and 
-   can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(new-{&main-tbl}.sts)) then 
-do:   /* если марка продана или возвращена, то разгруппируем упаковку */
-  for first parentMarking where
-            parentMarking.mark = new-{&main-tbl}.mark-parent 
-      exclusive-lock:
-    parentMarking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
-  end.
-end.   
 end. 
   
 if new(new-{&main-tbl}) and new-{&main-tbl}.mark-parent <> "" then 
