@@ -74,7 +74,8 @@ if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB)
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB)
 then do:
   new-{&main-tbl}.sts = old-{&main-tbl}.sts.
   if old-{&main-tbl}.loc-key <> "" then

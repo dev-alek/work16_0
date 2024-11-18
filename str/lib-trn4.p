@@ -2824,14 +2824,21 @@ define variable v-codident as character no-undo.
           (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
            string(ObjSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB)).
       end.
-      if (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or v-is-return) and buf_trn-doc.status_ = {&fact} then 
-      do :    /* для док-та РАСХОДА ПЕРЕМЕЩЕНИЯ и ВОЗВРАТА при закрытии на ФАКТ меняем статус марок на ПЕРЕМЕЩЕН */
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та РАСХОДА ПЕРЕМЕЩЕНИЯ при закрытии на ФАКТ меняем статус марок на ПЕРЕМЕЩЕН */
         run change_mark_sts_trn-doc in this-procedure
           (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
            string(ObjSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB)).
       end.
+      if v-is-return and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та ВОЗВРАТА при закрытии на ФАКТ меняем статус марок на ВОЗВРАЩЕН ПОСТАВЩИКУ */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           string(ObjSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB)).
+      end.
       if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and v-ischg-ext-type and buf_trn-doc.status_ = {&fact} then 
-      do :    /* для док-та ПРИХОДА ПЕРЕМЕЩЕНИЯ  при закрытии на ФАКТ меняем статус марок на СПИСАН */
+      do :    /* для док-та ПРИХОДА ПЕРЕМЕЩЕНИЯ  при закрытии на ФАКТ меняем статус марок:  */
+              /* ПРОВЕРЕН --> СЗ; ОЖИДАЕТ ПРОВЕРКУ --> ОТСУТСТВУЕТ В ПОСТАВКЕ */
         run change_mark_sts_trn-doc in this-procedure
           (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
            substitute("&1:&2,&3:&4",

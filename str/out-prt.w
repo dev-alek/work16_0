@@ -3189,7 +3189,8 @@ end.
       do:
         run isExemplarGoods in this-procedure 
             (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
-        if vIsExemplarGoods then 
+        if vIsExemplarGoods and 
+           can-find(first buf_marking-lines where buf_marking-lines.out-code = ub.gds-dtl.doc-code) then 
           disable ub.gds-dtl.fact-qnty with frame {&frame-name}. 
       end. 
       if ptrlprop-expptrl = {&calc-petrol-weight}
