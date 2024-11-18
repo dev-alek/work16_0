@@ -3833,6 +3833,8 @@ vartechproliv = no
           define variable v-recipe-code like ub.recipe.recipe-code .
           define variable v-ingr-gds-code as integer no-undo .
           
+          EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code).
+          
           for each bf_doc-line no-lock where bf_doc-line.doc-code = bf_trn-doc.doc-code,
           first bf_goods no-lock where bf_goods.artic     = bf_doc-line.artic
                                    and bf_goods.prod-type = bf_doc-line.prod-type
