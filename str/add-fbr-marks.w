@@ -583,7 +583,8 @@ PROCEDURE CrCheckMark :
     and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
     then do :
       run waitfram-hide in this-procedure .
-      run dispmessage substitute("КМ в статусе &1, марка не может быть использована в производстве", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)).
+      message (substitute("КМ в статусе &1, марка не может быть использована в производстве", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)))
+      view-as alert-box .
       return.
     end .
   end .
