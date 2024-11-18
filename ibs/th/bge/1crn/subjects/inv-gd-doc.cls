@@ -483,11 +483,11 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-inv-date} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
         if available (ub.inv-doc-attr) then do:
-          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", ub.inv-doc-attr.attr-value).
-          else write-data-element ("invbegin", string(buf_trn-doc.doc-date)).
+          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", string(date(ub.inv-doc-attr.attr-value),"99.99.9999")).
+          else write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
         end.
         else do:
-          write-data-element ("invbegin", string(buf_trn-doc.doc-date)).
+          write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
         end. 
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-agent} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
@@ -593,11 +593,11 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-inv-date} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
         if available (ub.inv-doc-attr) then do:
-          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", ub.inv-doc-attr.attr-value).
-          else write-data-element ("invbegin", string(buf_trn-doc.doc-date)).
+          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", string(date(ub.inv-doc-attr.attr-value),"99.99.9999")).
+          else write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
         end.
         else do:
-          write-data-element ("invbegin", string(buf_trn-doc.doc-date)).
+          write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
         end. 
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-agent} and
         ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
