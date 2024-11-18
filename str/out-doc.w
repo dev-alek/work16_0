@@ -1728,6 +1728,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* ѕросмотр */
     define variable p-alcohol   as logical   no-undo .
     define variable v-type      as integer   no-undo .
     define variable v-fact-qnty as integer   no-undo .
+    define variable v-fact-part as integer   no-undo .
     
     define buffer buf_doc-line for ub.doc-line.
     define buffer buf_gds-dtl  for ub.gds-dtl.
@@ -1802,11 +1803,30 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* ѕросмотр */
 
           if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
           do:    /* дл€ приход перемещение вычислим отсканированные марки */
-             for each tt-marking-lines where
-                      tt-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB  
-                  and tt-marking-lines.doc-level = 1
-                 no-lock:
-               v-fact-qnty = v-fact-qnty + tt-marking-lines.box-qnty.
+             /* идем по парти€м и учтем прин€тые марки в факт */
+             for each buf_parts exclusive-lock where
+                      buf_parts.artic = ub.goods.artic
+                  and buf_parts.prod-type = ub.goods.prod-type
+                  and buf_parts.prod-code = ub.goods.prod-code
+                  and buf_parts.obj-type = t-doc.obj-type
+                  and buf_parts.obj-code = t-doc.obj-code
+                  and buf_parts.out-code = t-doc.doc-code
+                 : 
+               v-fact-part = 0.
+               for each tt-marking-lines where
+                        tt-marking-lines.doc-level = 1
+                    and tt-marking-lines.in-code = buf_parts.in-code
+                    and tt-marking-lines.out-code = buf_parts.out-code
+                    and tt-marking-lines.part-code = buf_parts.part-code
+                    and tt-marking-lines.prt-code = buf_parts.prt-code
+                    and (can-do(objSrv:Env:Marking:Sts:Mark:EqualChecked, string(tt-marking-lines.sts)) or
+                         tt-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB) 
+                   no-lock:
+                 v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
+               end.
+               if buf_parts.fact-qnty <> v-fact-part then
+                 buf_parts.fact-qnty = v-fact-part.
+               v-fact-qnty = v-fact-qnty + v-fact-part.
              end.
              if ub.gds-dtl.fact-qnty <> v-fact-qnty then
              do:
@@ -1816,15 +1836,6 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* ѕросмотр */
                  buf_doc-line.fact-qnty = v-fact-qnty
                  buf_gds-dtl.fact-qnty  = v-fact-qnty                
                . 
-               find first buf_parts exclusive-lock where
-                          buf_parts.artic = ub.goods.artic
-                      and buf_parts.prod-type = ub.goods.prod-type
-                      and buf_parts.prod-code = ub.goods.prod-code
-                      and buf_parts.obj-type = t-doc.obj-type
-                      and buf_parts.obj-code = t-doc.obj-code
-                      and buf_parts.out-code = t-doc.doc-code no-error.
-               if avail buf_parts then
-                 buf_parts.fact-qnty = v-fact-qnty.             
                br-dtl:refresh() in frame {&frame-name}.     
              end.
           end.

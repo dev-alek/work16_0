@@ -615,8 +615,10 @@ on error undo, return error return-value
                 ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
               end.
               else 
-              do:  /* если марка уже продана или возвращена на кассу, то считаем ее принятой и увелияивам кол-во принятых марок*/
+              do:  /* если марка уже продана или возвращена на кассу, то считаем ее принятой и увелияивам кол-во принятых марок */
                 buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty. 
+                   /* и увеличим кол-во-факт по партии с этой маркой*/
+                buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.
               end.
           end.
           if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then
@@ -801,7 +803,7 @@ on error undo, return error return-value
       buf_gds-dtl.ov             = yes
       buf_gds-dtl.fact-qnty      = buf_doc-line.fact-qnty
       buf_gds-dtl.doc-qnty       = buf_doc-line.doc-qnty
-      buf_parts.fact-qnty        = buf_gds-dtl.fact-qnty
+/*      buf_parts.fact-qnty        = buf_gds-dtl.fact-qnty*/
     .
     if TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
     then do :

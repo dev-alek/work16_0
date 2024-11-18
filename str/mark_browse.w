@@ -2260,7 +2260,7 @@ PROCEDURE scan-mark :
         v-mark = "" .
         return no-apply.
     end.  
-    
+
     if p-mode <> {&lookup} then 
     do:
         /*Режим Серая зона*/
@@ -2456,6 +2456,9 @@ PROCEDURE scan-mark :
                v-mark = "" .
                return no-apply.
             end.
+            br-mark:refresh().
+            reposition br-mark to recid recid_mark no-error .
+            br-mark-item:refresh () no-error .
         end.
         else /*не серая зона*/
         do:  
@@ -2881,9 +2884,9 @@ PROCEDURE scan-mark :
                 display F-text with frame {&frame-name}.
             end. 
         end.
-        v-mark:screen-value = "" .
-        v-mark = "" .
     end.    
+    v-mark:screen-value = "" .
+    v-mark = "" .
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3100,7 +3103,7 @@ PROCEDURE checkPriPerem :
                    and buf_marking-lines.obj-code  = X_marking.obj-code 
                    and buf_marking-lines.gds-code  = X_marking.gds-code 
                    and buf_marking-lines.out-code  = X_marking.out-code no-error .
-            find first X_marking-line exclusive-lock where X_marking-line.mark begins iMark no-error .
+            find first X_marking-line exclusive-lock where X_marking-line.mark begins buf_marking-child.mark no-error .
             assign
               X_marking-line.sts      = buf_marking.sts
               X_marking-line.sts-utd  = buf_marking.sts

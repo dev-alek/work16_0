@@ -3152,7 +3152,7 @@ end.
             case buf_marking.unit-ext : 
               when "LEVEL2"
               then do : 
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 500).
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty).
               end .
               when "LEVEL1"
               then do :
@@ -3162,7 +3162,7 @@ end.
                                                   and buf_marking-lines.out-code = ub.gds-dtl.doc-code :
                   assign v-pack-qnty = v-pack-qnty + 1 .                                  
                 end .
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 10 - v-pack-qnty).
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty - v-pack-qnty).
               end .
               otherwise do :
                 find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
@@ -3779,13 +3779,16 @@ PROCEDURE l-doc-qnty :
          and buf_marking-lines.obj-type = t-doc.obj-type
          and buf_marking-lines.obj-code = t-doc.obj-code
          and buf_marking-lines.gds-code = buf_goods.gds-code
+         and buf_marking-lines.doc-level = 1,
+        first buf_marking no-lock where
+              buf_marking.mark = buf_marking-lines.mark
     :
-      accum buf_marking-lines.mark (count).  
+      accum buf_marking.box-qnty (total).  
     end.
-    if (accum count buf_marking-lines.mark) > input frame {&frame-name} ub.gds-dtl.doc-qnty then 
+    if (accum total buf_marking.box-qnty) > input frame {&frame-name} ub.gds-dtl.doc-qnty then 
     do:
       message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
-      ub.gds-dtl.doc-qnty:screen-value = string(accum count buf_marking-lines.mark).
+      ub.gds-dtl.doc-qnty:screen-value = string(accum total buf_marking.box-qnty).
       apply "enrty" to ub.gds-dtl.doc-qnty in frame {&frame-name}.
       return error.  
     end.  
