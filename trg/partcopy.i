@@ -369,7 +369,6 @@ procedure partcopy :
                                      and buf_goods.prod-type = buf_orig_parts.prod-type
                                      and buf_goods.prod-code = buf_orig_parts.prod-code
                                      .
-      
       if available pri_trn-doc
       and pri_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh_Kass}
       then do :
@@ -506,8 +505,8 @@ procedure partcopy :
                                                            and orig_marking-lines.part-code  = buf_orig_parts.part-code
                                                            and orig_marking-lines.prt-code   = buf_orig_parts.prt-code
                                                            no-error .
-            if available orig_marking-lines
-            then do :
+/*            if available orig_marking-lines*/
+/*            then do :   переверка перенесена ниже, т.к. не менялся статус на Зарезервирован у новой марки                   */
               
               find first buf_marking-lines no-lock where  buf_marking-lines.mark       = p-mark
                                                       and buf_marking-lines.gds-code   = buf_goods.gds-code
@@ -586,6 +585,8 @@ procedure partcopy :
                         assign buf_marking-chk.sts = 0 . 
                       end .                                         
                     end .
+                    if available orig_marking-lines
+                    then do :
                     find first orig_marking-lines-childs exclusive-lock where orig_marking-lines-childs.mark       = buf_marking-childs.mark
                                                                           and orig_marking-lines-childs.gds-code   = buf_goods.gds-code
                                                                           and orig_marking-lines-childs.obj-type   = buf_orig_parts.obj-type
@@ -598,7 +599,8 @@ procedure partcopy :
                     if available orig_marking-lines-childs
                     then do :
                       delete orig_marking-lines-childs .
-                    end .                                                      
+                    end .
+                    end.                                                      
                   end .
                 end . /* if level1 */
                 
@@ -608,8 +610,9 @@ procedure partcopy :
 /*                  ObjSrv:Lib:MarkingTree:UnGroupMark(buf_marking.mark).*/
 /*                end.                                                   */
               end.
-              delete orig_marking-lines .
-            end . /* available orig_marking-lines */                                       
+              if available orig_marking-lines then 
+                delete orig_marking-lines .
+/*            end . /* available orig_marking-lines */*/
           end. /* p-out-code <> {&free-code} */
         end.
       end .
