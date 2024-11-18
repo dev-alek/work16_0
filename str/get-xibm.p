@@ -1678,7 +1678,7 @@ procedure proc-01-gds :
     define variable v-VAT-pc like ub.chk-gds.VAT-pc no-undo .
     define buffer buf_chk-gds for tt-chk-gds.
     define buffer buf_chk-gds-attr for tt-chk-gds-attr.
-    define buffer buf_bar-code for tt-bar-code . 
+    define buffer buf_bar-code for ub.bar-code . 
     
     define buffer buf_temp-temp for temp-temp.
     define buffer buf_chk-doc for tt-chk-doc.
