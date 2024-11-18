@@ -1325,7 +1325,8 @@ PROCEDURE save_update :
 /*      end.                                                                                                                                                                                                                  */
     end.
 
-    apply "CHOOSE" to b-exit in frame {&frame-name}.
+/*    apply "CHOOSE" to b-exit in frame {&frame-name}.*/
+    APPLY "END-ERROR":U. 
   end.
 
 end procedure.

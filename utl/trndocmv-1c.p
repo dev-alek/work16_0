@@ -519,7 +519,9 @@ on error undo, return error return-value
         buf_parts.pl-code   = 0
 
         buf_parts.qnty      = v-part-chg-qnty
-        buf_parts.fact-qnty = 0
+        buf_parts.fact-qnty = if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} 
+                              then v-part-chg-qnty 
+                              else 0
         buf_parts.cli-qnty  = 0
         buf_parts.part-code = TempDocPart.part-id
         
@@ -687,6 +689,11 @@ on error undo, return error return-value
                                    else chi_marking.sts.
           end.
         end.
+      end.
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then
+      do:
+        /* для док-та ВОЗВРАТ ВНУТР увеличим факт. кол-во по строке товара*/
+        buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + buf_parts.fact-qnty. 
       end.
     end.
 /*         
