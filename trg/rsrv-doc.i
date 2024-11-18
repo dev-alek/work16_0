@@ -1390,6 +1390,7 @@ procedure rsrv-doc :
               and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB           
               and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB           
               and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB           
+              and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB           
               then do :
                 put stream tobacco-rsrv unformatted "Артикул " buf_doc-line.artic " " buf_doc-line.prod-type string(buf_doc-line.prod-code)
                         " . Марка " tt-tobacco-marks.mark " в статусе " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip .
