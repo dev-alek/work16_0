@@ -2217,6 +2217,7 @@ define variable v-codident as character no-undo.
 
     if buf_trn-doc.doc-type = {&write-off} then
     do:   /* при списании по товару с экземплярным типом учета проверим соответствие списываемого кол-ва и просканировнных марок*/
+      v-message = "".
       for each buf_doc-line where
                buf_doc-line.doc-code = buf_trn-doc.doc-code no-lock,
           each buf_gds-dtl where
@@ -2231,6 +2232,7 @@ define variable v-codident as character no-undo.
         run isExemplarGoods in g#attr-lib 
           (buf_trn-doc.obj-type, buf_trn-doc.obj-code, buf_goods.gds-code, output v-is-exemplar-goods).
         if v-is-exemplar-goods then do:
+          v-scan-qnty = 0.
           for each buf_marking-lines no-lock where buf_marking-lines.obj-type = buf_trn-doc.obj-type
                                                and buf_marking-lines.obj-code = buf_trn-doc.obj-code
                                                and buf_marking-lines.gds-code = buf_goods.gds-code
@@ -2242,22 +2244,21 @@ define variable v-codident as character no-undo.
             
             v-scan-qnty = v-scan-qnty +  getQntyCodeByGtin(v-GTIN) .
           end .
-          v-message = "".
           if buf_gds-dtl.doc-qnty <> v-scan-qnty then
           do:
             v-message = substitute(
                 "&1~nПо товару &2 &3 списывается &4 просканировано &5", 
                 v-message, buf_goods.artic, buf_goods.gds-name, buf_gds-dtl.doc-qnty, v-scan-qnty).
           end.
-          if v-message <> "" then
-          do:
-            varlog = no.
-            message v-message skip
-              "Продолжить?"
-              view-as alert-box question buttons yes-no update varlog.
-            if not varlog then return error.
-          end.
         end.
+      end.
+      if v-message <> "" then
+      do:
+        varlog = no.
+        message v-message skip
+          "Продолжить?"
+          view-as alert-box question buttons yes-no update varlog.
+        if not varlog then return error.
       end.
     end.
 

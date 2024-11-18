@@ -1801,7 +1801,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
           input "" /*тип продукции*/
           )  .
 
-          if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
+          if pardoc-mode <> {&lookup} and t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
           do:    /* для приход перемещение вычислим отсканированные марки */
              /* идем по партиям и учтем принятые марки в факт */
              for each buf_parts exclusive-lock where
@@ -1820,7 +1820,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                     and tt-marking-lines.part-code = buf_parts.part-code
                     and tt-marking-lines.prt-code = buf_parts.prt-code
                :
-                   if tt-marking-lines.sts-utd = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then
+                   if tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB then
                       v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
                end.
                if buf_parts.fact-qnty <> v-fact-part then
@@ -1842,9 +1842,12 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                     and bf_doc-line.doc-code = t-doc.doc-code
                :
                  accum bf_doc-line.fact-qnty (total).  
-               end. 
-               t-doc.fact-qnty = accum total bf_doc-line.fact-qnty.
-               display t-doc.fact-qnty with frame {&frame-name}.  
+               end.
+               if t-doc.fact-qnty <> accum total bf_doc-line.fact-qnty then
+               do:
+                 t-doc.fact-qnty = accum total bf_doc-line.fact-qnty.
+                 display t-doc.fact-qnty with frame {&frame-name}.
+               end.  
              end.
           end.
       end.

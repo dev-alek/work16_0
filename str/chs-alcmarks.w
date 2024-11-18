@@ -1332,8 +1332,12 @@ PROCEDURE save_update :
 /*      end.                                                                                                                                                                                                                  */
     end.
 
-/*    apply "CHOOSE" to b-exit in frame {&frame-name}.*/
-    APPLY "END-ERROR":U. 
+    assign 
+      v-mark              = ""
+      v-mark:screen-value = ""
+      v-scan-str          = ""
+    .
+    apply "CHOOSE" to b-exit in frame {&frame-name}.
   end.
 
 end procedure.
