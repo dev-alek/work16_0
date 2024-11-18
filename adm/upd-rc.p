@@ -62,6 +62,7 @@ define variable p0-pathrc as character no-undo .
 define variable v-pathrc         as character no-undo .
 define variable v-filename         as character no-undo .
 define variable v-fullfilename     as character no-undo .
+define variable v-rc-filename     as character no-undo .
 define variable v-filetype         as character no-undo .
 define variable v-copy-err         as logical no-undo .
 
@@ -169,6 +170,7 @@ assign
                 year(today), 
                 string(month(today),"99"), 
                 string(day(today),"99"))
+  add-log-file-name = mFileLog
 .
 
 /* Выбираем из каталога с новостями файлы апгрейда r-кодов  */
@@ -181,39 +183,55 @@ on error undo, return error
 
   if v-filetype begins "f" and num-entries( v-filename, "." ) > 1
     and ( ( v-filename begins "rc_20")
-          or ( v-filename begins "update_20")
+          or ( v-filename begins "update_")
         )
   then do:
 /*      Вызов этой программы происходит в  s-g-pack.p  ,причем там тоже стоит проверка на имя файла,*/
 /*      если имена будем править здесь то надо поправить и там  */
     assign
       file-info:file-name = v-fullfilename
-      v-txt = substring (v-filename,  index(v-filename, "_") + 1, 8).
-      v-date = date( integer(substring(v-txt,5,2)), integer(substring(v-txt,7,2)), integer(substring(v-filename, index(v-filename, "_") + 1, 4)) ).
-      v-type = substring (v-filename,  index(v-filename, "_") + 10, 2).
+      v-txt = substring (v-filename,  index(v-filename, "_") + 1, 8)
+      v-type = substring (v-filename,  index(v-filename, "_") + 10, 2)
+      v-rc-filename       = p0-pathrc + "\" + v-filename
     .
-    find first upgfile-tbl no-lock
-      where upgfile-tbl.dateupg = v-date
-      no-error.
-    if not available upgfile-tbl then do:
-      /* Во временную таблицу запоминаем все файлы апгрейда  */
-      create upgfile-tbl.
-      assign
-        upgfile-tbl.dateupg         = v-date
-        upgfile-tbl.nameupgfile     = v-filename
-        upgfile-tbl.fullnameupgfile = p0-pathrc + "/" + v-filename
-        upgfile-tbl.type            = v-type
-      .
 
-      os-command silent
-        value( "copy" )
-        value( v-fullfilename )
-        value( p0-pathrc )
-      .
-      if os-error <> 0 or search(upgfile-tbl.fullnameupgfile) = ? then do:
-        return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, p0-pathrc) .
-      end.
+    os-command silent
+      value( "copy" )
+      value( v-fullfilename )
+      value( v-rc-filename )
+    .
+    if os-error <> 0 or search(v-rc-filename) = ? then do:
+      return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, p0-pathrc) .
     end.
+
+    v-date = date( integer(substring(v-txt,5,2)), integer(substring(v-txt,7,2)), integer(substring(v-filename, index(v-filename, "_") + 1, 4)) ) no-error.
+    if error-status:error or v-date < 01/01/2000 then
+    do:
+       run write-to-log (substitute(
+           "&1Имя файла &2 не соответствует шаблону update_20YYMMDD. Обновление не установлено.", 
+           {&PREFIX_LOG}, 
+           v-filename
+       )).
+    end.
+    else
+    do:
+       find first upgfile-tbl no-lock
+          where upgfile-tbl.dateupg = v-date
+          no-error.
+       if not available upgfile-tbl then do:
+          /* Во временную таблицу запоминаем все файлы апгрейда  */
+          create upgfile-tbl.
+          assign
+            upgfile-tbl.dateupg         = v-date
+            upgfile-tbl.nameupgfile     = v-filename
+            upgfile-tbl.fullnameupgfile = v-rc-filename
+            upgfile-tbl.type            = v-type
+          .
+       end.
+    end.
+    
+    /* Удаление апгрейдного файла из каталога новостей */
+    os-delete value ( v-fullfilename ) recursive.
   end.  /*   if v-filetype begins "f" and  */
   
   /* Для кассы */
@@ -282,11 +300,11 @@ on error undo, return error
       v-pathrc = search( p0-source-dir + "/" + v-filename ).
       os-delete value ( v-pathrc ) recursive.
       
-  end.    
+  end.
+  
 end.  /*  repeat  on error undo   */
 input stream flstream close.
 
-add-log-file-name = mFileLog.
 UPDATE_CYCLE:
 for each upgfile-tbl no-lock
 on error undo, return error return-value
@@ -437,13 +455,6 @@ then do:
                      ).
 end.
 
-/* Удаление апгрейдных файлов из каталога новостей, после того как все сделали */
-for each upgfile-tbl :
-    p0-pathrc = search( p0-source-dir + "/" + upgfile-tbl.nameupgfile ).
-    os-delete value ( p0-pathrc ) recursive.
-    delete upgfile-tbl.
-end.
-
 /* копирование лога в каталог новостей*/
 os-command silent
   value( "copy" )
@@ -453,8 +464,17 @@ os-command silent
 
 add-log-file-name = ?.
 CheckUpd:workStart ().
-v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
-run utl\proc-msg.p (v-msg) no-error.
+
+if can-find(first upgfile-tbl) then
+do:
+  v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
+  run utl\proc-msg.p (v-msg) no-error.
+end.
+
+/* Чистим временную таблицу */
+for each upgfile-tbl :
+    delete upgfile-tbl.
+end.
 
 run waitfram-hide in this-procedure .
 return "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова." .
