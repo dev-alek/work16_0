@@ -1596,8 +1596,8 @@ do:
         run gbl/d-askw.w (
            input "Выбор способа выполнения комиссионного приёма"
           ,input ("Для секций " + v-kpsecs + " требуется комиссионный прием. Каким способом будет выполняться комиссионный прием?")
-          ,input "|"
-          ,input "Замеры в АЦ|По сверкам|Отмена"
+          ,input "|^"
+          ,input "Замеры в АЦ" + (if v-kpsecs-nomeas > "" then "^disable" else "") + "|По сверкам|Отмена"
           ,input "Выполнение комиссионного приёма стандартным способом по замерам в автоцистерне|Выполнение комиссионного приёма по данным сверок в резервуаре|Отказ от выбора способа"
           ,input 1
           ,input 3
@@ -1605,12 +1605,12 @@ do:
         case choice :
           when 1
           then do :
-            if v-kpsecs-nomeas > ""
-            then do :
-              message "Для секций " + v-kpsecs-nomeas + " установлен флаг «Переход к комиссионному приему НП без замеров секции АЦ». Невозможно провести замеры в АЦ. Выберите способ «По сверкам»!"
-              view-as alert-box .
-              return no-apply .
-            end .
+/*            if v-kpsecs-nomeas > ""                                                                                                                                                                 */
+/*            then do :                                                                                                                                                                               */
+/*              message "Для секций " + v-kpsecs-nomeas + " установлен флаг «Переход к комиссионному приему НП без замеров секции АЦ». Невозможно провести замеры в АЦ. Выберите способ «По сверкам»!"*/
+/*              view-as alert-box .                                                                                                                                                                   */
+/*              return no-apply .                                                                                                                                                                     */
+/*            end .                                                                                                                                                                                   */
             kpsecs_ :
             do ii = 1 to infoSectionsTotal:SectionNum :
               infoSecObj = infoSectionsTotal:GetInfoSectionProp(ii) .

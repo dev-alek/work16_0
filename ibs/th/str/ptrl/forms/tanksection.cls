@@ -2764,10 +2764,10 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:label51:ForeColor = System.Drawing.Color:FromArgb(System.Convert:ToInt32(System.Convert:ToByte(192)), System.Convert:ToInt32(System.Convert:ToByte(0)), System.Convert:ToInt32(System.Convert:ToByte(0))).
     this-object:label51:Location = new System.Drawing.Point(589, 162).
     this-object:label51:Name = "label51".
-    this-object:label51:Size = new System.Drawing.Size(88, 13).
+    this-object:label51:Size = new System.Drawing.Size(94, 13).
     this-object:label51:TabIndex = 30.
-    this-object:label51:Text = "Ком. приём".
-    this-object:label51:TextAlign = System.Drawing.ContentAlignment:MiddleRight.
+    this-object:label51:Text = "Комис. приём".
+    this-object:label51:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
     this-object:label51:UseCompatibleTextRendering = true.
     /*  */
     /* label49 */
