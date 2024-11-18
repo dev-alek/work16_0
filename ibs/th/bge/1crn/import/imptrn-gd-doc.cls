@@ -23,9 +23,16 @@ using ibs.th.skt.Adapters.AdapterOra-i506-1c from propath.
 
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iimpsubject: 
+class ibs.th.bge.1crn.import.imptrn-gd-doc inherits ibs.th.gbl.sys.objth implements ibs.th.bge.1crn.import.iimpsubject: 
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Импорт trn-gd-doc" get.
   
   { cmp/str-glbl.i class }
+  { utl/gtin.i class}
   
   {ibs/th/skt/ControlledClients/TSDTT-1c.i}
   
@@ -49,6 +56,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     define variable mode      as character no-undo.
     define variable ii        as integer   no-undo.
     define variable jj        as integer   no-undo.
+    define variable mMRCCodeSave as logical   no-undo.
     define variable objTrnDoc  as class     trn-gd-doc-in   no-undo.
     define variable objGd      as class     trn-gd          no-undo.
     define variable objPrt     as class     trn-prt         no-undo.
@@ -61,6 +69,8 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     objTrnDoc = cast (subjectObj, trn-gd-doc-in).
     
     adapObj = new AdapterOra-i516-1c ().
+    mMRCCodeSave = mMRCCode.
+    mMRCCode  = yes.
     
     find first ub.sys-ctrl no-lock.
     find first buf_clients where buf_clients.db-num = ub.sys-ctrl.db-num.
@@ -192,7 +202,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
         then do :
           create TempDocMark.
           assign
-            TempDocMark.mark = replace (replace (objMark:mark-code, "(", "" ), ")", "")
+            TempDocMark.mark = GetCodeIdent(objMark:mark-code)
             TempDocMark.prt-id = objMark:prt-id
             TempDocMark.in-doc-id = objMark:in-doc-id
             TempDocMark.gtin = objMark:gtin
@@ -217,7 +227,8 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc implements ibs.th.bge.1crn.import.iim
     else do:
       result = true.
     end.
-		
+	
+	mMRCCode = mMRCCodeSave.	
     return result.
 
   end method.
