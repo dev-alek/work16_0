@@ -43,6 +43,7 @@ define variable vss-description as character no-undo init "Создание, заполнение 
 { gbl/waitfram.i }
 { gbl/getsect.i def }
 { ref/gds-attr.i }
+{ utl/gtin.i }
 
 define variable v-in-qnty           like ub.doc-line.doc-qnty      no-undo.    /* количество для резервирования */
 define variable v-in-doc-code       like ub.trn-doc.doc-code       no-undo.    /* номер ПН */
@@ -91,6 +92,8 @@ define buffer buf_doc-line              for ub.doc-line .
 define buffer buf_doc-line-attr         for ub.doc-line-attr .
 define buffer buf_parts                 for ub.parts .
 define buffer buf_sale-doc              for ub.sale-doc .
+define buffer buf_marking-lines         for ub.marking-lines .
+define buffer buf_marking               for ub.marking .
 
 define variable varvalue as character no-undo .
 define variable vartype  as character no-undo .
@@ -111,6 +114,8 @@ for buf_in_trn-doc
   , buf_doc-line
   , buf_doc-line-attr
   , buf_parts
+  , buf_marking-lines
+  , buf_marking
 on error undo, return error return-value
 :
     { gbl/working.i }
@@ -197,6 +202,47 @@ fact-close:
     end.
   end .
   
+  define variable v-marks-qnty as decimal no-undo .
+  define variable vGtin as character no-undo .
+  define variable vGtinQnty as decimal no-undo .
+  for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code,
+  first buf_goods no-lock where buf_goods.artic     = buf_fbr-line.artic
+                            and buf_goods.prod-type = buf_fbr-line.prod-type
+                            and buf_goods.prod-code = buf_fbr-line.prod-code
+  :
+    RUN gds-attr-value (
+                        INPUT buf_goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT varvalue,
+                        OUTPUT vartype
+                        ).
+    if varvalue > ""
+    and EDOParSec:GetIsEdoForType(varvalue)
+    then do:
+      for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                           and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
+                                           and buf_marking-lines.obj-code = buf_fbr-doc.obj-code
+                                           and buf_marking-lines.in-code  = "manufacturing"
+                                           and buf_marking-lines.out-code = buf_fbr-line.doc-code
+                                           and buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                                           and buf_marking-lines.prt-code = 0
+      :
+        vGtin = getGtinByDM(buf_marking-lines.mark) .
+        vGtinQnty = getQntyCodeByGtin(vGtin) .
+        if vGtinQnty = 1
+        then do :
+          v-marks-qnty = v-marks-qnty + vGtinQnty .
+        end .
+      end .
+      if v-marks-qnty <> buf_fbr-line.fact-qnty
+      then do :
+/*        message "В документе присутствуют товары с помарочной прослеживаемостью в Честном Знаке. Для закрытия производства добавьте марки"*/
+/*        view-as alert-box .                                                                                                               */
+        { gbl/stopwork.i }
+        undo, return error "В документе присутствуют товары с помарочной прослеживаемостью в Честном Знаке. Для закрытия производства добавьте марки".
+      end .
+    end .
+  end .
 /* Получим из секции Складские документы   нужные переменные */
 
         v-reasonm = no.
@@ -541,6 +587,25 @@ fact-close:
           end .
         end .
         
+        for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code,
+        first buf_goods no-lock where buf_goods.artic     = buf_fbr-line.artic
+                                  and buf_goods.prod-type = buf_fbr-line.prod-type
+                                  and buf_goods.prod-code = buf_fbr-line.prod-code,
+        each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code
+                                         and buf_marking-lines.obj-code = buf_fbr-doc.obj-code
+                                         and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
+                                         and buf_marking-lines.in-code  = "manufacturing"
+                                         and buf_marking-lines.out-code = buf_fbr-doc.doc-code
+                                         and buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                                         and buf_marking-lines.prt-code = 0
+        :
+          for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+            assign
+              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB when not buf_fbr-line.is-comp
+              buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB when buf_fbr-line.is-comp
+            .
+          end .
+        end .
         
         find first buf_out_trn-doc        /* НС - услуги */
             where buf_out_trn-doc.doc-code = v-in-doc-code

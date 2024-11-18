@@ -67,6 +67,9 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 { gbl/getsect.i  def }
 { gbl/key-rec.i }
 {str/utdreturn.i }
+{ str/fbrhist.i main }
+{ str/tt-fbr-line.i }
+{ str/temp_upd.i }
 define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
@@ -3730,13 +3733,13 @@ vartechproliv = no
         if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or
           bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
         then do:
-/*3----------------------*/
-      /* генерация открытой переоценки - вне транзакции */
-      if ( par-gen-mrgn-ie = {&typeprice_after-margin} and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} ) or
-         ( par-gen-mrgn-iv = {&typeprice_after-margin} and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} )
-      then do:
-        run str/in-pr.p ( parparentproc, recid (bf_trn-doc) , "after-margin" ) no-error .
-        if error-status :error
+    /*3----------------------*/
+          /* генерация открытой переоценки - вне транзакции */
+          if ( par-gen-mrgn-ie = {&typeprice_after-margin} and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} ) or
+             ( par-gen-mrgn-iv = {&typeprice_after-margin} and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} )
+          then do:
+            run str/in-pr.p ( parparentproc, recid (bf_trn-doc) , "after-margin" ) no-error .
+            if error-status :error
           /* генерация открытой переоценки - вне транзакции */
             then do:
               run waitfram-hide in this-procedure no-error.
@@ -3746,6 +3749,7 @@ vartechproliv = no
                                             bf_trn-doc.ext-doc-type) .
             end.
           end. /*after-margin*/
+          
         end.
         /*делаем корректировку отрицательных партий
           приход производство и возврат через кассу обрабатываются вне trn-stat.p*/
@@ -3812,6 +3816,146 @@ vartechproliv = no
               undo, return error substitute( "Ошибка при обработке заказа: &1.", return-value ).
             end.
         end.
+        
+        if bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
+        or bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+        then do:
+          /* генерация документа производства для товаров с атрибутом "только производство" */
+          define buffer buf_recipe-gds for ub.recipe-gds .
+          define buffer buf_recipe for ub.recipe .
+          define buffer buf_marking-lines for ub.marking-lines .
+          define buffer buf_marking for ub.marking .
+          
+          define variable v-production-only as logical no-undo .
+          define variable v-num-recipes as integer no-undo .
+          define variable v-0-recipes-gds-list as character no-undo .
+          define variable v-many-recipes-gds-list as character no-undo .
+          define variable v-recipe-code like ub.recipe.recipe-code .
+          define variable v-ingr-gds-code as integer no-undo .
+          
+          for each bf_doc-line no-lock where bf_doc-line.doc-code = bf_trn-doc.doc-code,
+          first bf_goods no-lock where bf_goods.artic     = bf_doc-line.artic
+                                   and bf_goods.prod-type = bf_doc-line.prod-type
+                                   and bf_goods.prod-code = bf_doc-line.prod-code
+          :
+            { gbl/gdscdat.i
+              bf_goods.gds-code
+              "'production-only=request':u"
+              v-production-only
+              no-error
+            }
+            if error-status :error
+            then do:
+              message
+                vss-workfile vss-revision vss-description skip
+                "Ошибка при определении атрибута товара" skip
+                "Код товара" bf_goods.gds-code skip
+                'production-only=request':u skip
+                error-status :get-message(1) skip
+                return-value skip
+                view-as alert-box error .
+              undo, return error .
+            end.
+            if v-production-only
+            then do :
+              assign v-num-recipes = 0 .
+              for each buf_recipe-gds no-lock where buf_recipe-gds.artic     = bf_goods.artic
+                                                and buf_recipe-gds.prod-type = bf_goods.prod-type
+                                                and buf_recipe-gds.prod-code = bf_goods.prod-code,
+              each buf_recipe no-lock where buf_recipe.recipe-code = buf_recipe-gds.recipe-code
+                                        and buf_recipe.recipe-type = {&alternative}
+                                        and buf_recipe.stts       <> 2
+              :
+                assign
+                  v-num-recipes   = v-num-recipes + 1
+                  v-recipe-code   = buf_recipe.recipe-code
+                  v-ingr-gds-code = buf_recipe.gds-code
+                .
+              end .
+              if v-num-recipes = 0
+              then do :
+                assign v-0-recipes-gds-list = v-0-recipes-gds-list + string(bf_goods.gds-code) + " " + bf_goods.gds-name + ", " .
+              end .
+              if v-num-recipes <> 1
+              then do :
+                assign v-many-recipes-gds-list = v-many-recipes-gds-list + string(bf_goods.gds-code) + " " + bf_goods.gds-name + ", " .
+              end .
+              else do : /* v-num-recipes = 1 */
+                create tt-fbr-line .
+                assign
+                  tt-fbr-line.gds-code = bf_goods.gds-code
+                  tt-fbr-line.gds-name = bf_goods.gds-name
+                  tt-fbr-line.qnty     = bf_doc-line.fact-qnty
+                  tt-fbr-line.recipe-code = v-recipe-code
+                  tt-fbr-line.recipe-type = {&alternative}
+                  tt-fbr-line.ingr-gds-code = v-ingr-gds-code
+                .  
+              end .
+              RUN gds-attr-value (
+                                  INPUT bf_goods.gds-code,
+                                  INPUT {&attr-mark-type},
+                                  OUTPUT varvalue,
+                                  OUTPUT vartype
+                                  ).
+              if varvalue > ""
+              and EDOParSec:GetIsEdoForType(varvalue)
+              then do:
+                mark-lines_ :
+                for each buf_marking-lines no-lock where buf_marking-lines.out-code   = bf_doc-line.doc-code
+                                                     and buf_marking-lines.gds-code   = bf_goods.gds-code
+                :
+                  for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
+                    if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+                    then
+                      next mark-lines_
+                    .
+                  end .
+                  create tt-marking-lines .
+                  assign
+                    tt-marking-lines.mark = buf_marking-lines.mark
+                    tt-marking-lines.gds-code = bf_goods.gds-code
+                    tt-marking-lines.gds-name = bf_goods.gds-name
+                    tt-marking-lines.obj-type = bf_trn-doc.obj-type
+                    tt-marking-lines.obj-code = bf_trn-doc.obj-code
+                    tt-marking-lines.doc-level = buf_marking-lines.doc-level
+                  .
+                  for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
+                    assign
+                      buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+                    .
+                  end .
+                end .
+              end . /* EDOParSec:GetIsEdoForType(varvalue) */
+            end . /* v-production-only */
+          end . /* for each doc-line */
+          assign
+            v-0-recipes-gds-list = trim(v-0-recipes-gds-list, ", ")
+            v-many-recipes-gds-list = trim(v-many-recipes-gds-list, ", ")
+          .
+          if v-0-recipes-gds-list > ""
+          then do :
+            message "Для товаров " + v-0-recipes-gds-list + " отсутствует рецепт альтернатива. Обратитесь в офис для создания рецепта, далее создайте документ производства вручную"
+            view-as alert-box .
+          end .
+          if v-many-recipes-gds-list > ""
+          then do :
+            message "Для товаров " + v-many-recipes-gds-list + " найдено более одного рецепта. Обратитесь в офис для корректировки рецептов, и создайте документ производства вручную"
+            view-as alert-box .
+          end .
+          find first tt-fbr-line no-error .
+          if available tt-fbr-line
+          then do :
+            run waitfram-show in this-procedure (input "Ждите... Идёт создание и закрытие документа производства").
+            
+            run str/cr-fbr-doc-mark.p ( input parparentproc
+                                      , input this-procedure
+                                      , input table tt-fbr-line by-reference
+                                      , input table tt-marking-lines by-reference
+                                      ) .
+            
+            run waitfram-hide in this-procedure .
+          end .
+        end .
 
       end. /*автоматическая переоценка после  закрытия на факт*/
 

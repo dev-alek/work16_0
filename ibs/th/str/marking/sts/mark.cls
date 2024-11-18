@@ -43,6 +43,9 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
   define public property  Ungrouped as class propmap no-undo get.  protected set.
   define public property  GrayZone as class propmap no-undo get.  protected set.
   
+  define public property  UsedInProduction as class propmap no-undo get.  protected set.
+  define public property  ReservedFromProduction as class propmap no-undo get.  protected set.
+  
   define public property  UnknowSts as class propmap no-undo get.  protected set.
   
   define public property  EqualChecked as character  no-undo get.  protected set.
@@ -72,9 +75,13 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
     FreeZone  = crProp(10,"FreeZone","Свободная зона").
     SaleLock   = crProp(11,"SaleLock","Продан на кассе").
     ReturnLock   = crProp(12,"ReturnLock","Возвращен на кассе").
+    Reserved   = crProp(13,"Reserved","Зарезервирован").
     SaleWaitLock   = crProp(14,"SaleWaitLock","Идет продажа").
     ReturnWaitLock   = crProp(15,"ReturnWaitLock","Блокировка идет возврат").
-    Reserved   = crProp(13,"Reserved","Зарезервирован").
+    
+    UsedInProduction = crProp(17,"UsedInProduction","Использован в производство").
+    ReservedFromProduction = crProp(18,"ReservedFromProduction","Зарезервирован из производства").
+    
     Ungrouped  = crProp(20,"Ungrouped","Разгруппирован").
     
     GrayZone  = crProp(21,"GrayZone","Серая зона").

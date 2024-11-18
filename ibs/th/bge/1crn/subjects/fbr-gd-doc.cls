@@ -18,12 +18,21 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.str.*.
+using ibs.th.gbl.storage.*.
 
 block-level on error undo, throw.
 
-class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
+class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implements iexpsubject:
+  define override public property vss-revision    as character no-undo init "$Revision:$":U get .
+  define override public property vss-author      as character no-undo init "$Author:$":U get.
+  define override public property vss-date        as character no-undo init "$Date:$":U get.
+  define override public property vss-workfile    as character no-undo init "$Workfile:$":U get.
+  define override public property vss-archive     as character no-undo init "$Archive:$":U get.
+  define override public property vss-description as character no-undo init "Выгрузка документов производства в 1С" get.
 
   { cmp/str-glbl.i class }
+  { gbl/attr-lib.i class}
+  { utl/gtin.i class }
   
   define temp-table buf_fbr-doc like ub.fbr-doc.
   
@@ -38,6 +47,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
   define buffer buf_parts for ub.parts.
   define buffer buf_recipe for ub.recipe.
   define buffer buf_fbr-recipe-gds for ub.fbr-recipe-gds.
+  define buffer buf_marking-lines for ub.marking-lines .
   
   define property Msg as character no-undo
     get:
@@ -174,6 +184,9 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
     define variable vGT as integer no-undo .
     define variable vGtin as character no-undo .
     define variable vQnty as integer no-undo .
+    
+    define variable v-value as character no-undo .
+    define variable v-type as character no-undo .
 
     sw:start-element ("dishs").    
     for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code
@@ -186,19 +199,50 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
       
       ii = ii + 1.
       
+      &scop proc-name gds-attr-value
+      {&run_proc_attr-lib}
+        ( input buf_gds.gds-code
+         ,input {&attr-mark-type} 
+         ,output v-value
+         ,output v-type
+        )        no-error .
+      if error-status :error
+      then do:
+        undo, return error return-value .
+      end.
+      
       find first tt-gds where tt-gds.gds-code = buf_gds.gds-code no-error.
 
-          sw:start-element ("dish").
-            write-data-element ("line-num", string-mth (ii)).
-            write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
-            write-data-element ("oper-type", (if buf_fbr-line.trn-type = {&write-off}
-              then "2" else "1") ).
-            write-data-element ("qnty", string-mth (round ((buf_fbr-line.fact-qnty) , 3))).
-            write-data-element ("u-price", string-mth (round ((buf_fbr-line.price-rubl) , 2))).
-            write-data-element ("p-price", string-mth (round ((buf_fbr-line.price-sale) , 2))).
-            write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
-            write-data-element ("rcp-code", buf_fbr-line.recipe-code).
-          sw:end-element ("dish").
+      sw:start-element ("dish").
+        write-data-element ("line-num", string-mth (ii)).
+        write-data-element ("gd-code", string-mth (buf_gds.gds-code)).
+        write-data-element ("oper-type", (if buf_fbr-line.trn-type = {&write-off}
+          then "2" else "1") ).
+        write-data-element ("qnty", string-mth (round ((buf_fbr-line.fact-qnty) , 3))).
+        write-data-element ("u-price", string-mth (round ((buf_fbr-line.price-rubl) , 2))).
+        write-data-element ("p-price", string-mth (round ((buf_fbr-line.price-sale) , 2))).
+        write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
+        write-data-element ("rcp-code", buf_fbr-line.recipe-code).
+        
+        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value)
+        then do :
+          sw:start-element ("marks").
+          for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_gds.gds-code
+                                               and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
+                                               and buf_marking-lines.obj-code = buf_fbr-doc.obj-code
+                                               and buf_marking-lines.in-code  = "manufacturing"
+                                               and buf_marking-lines.out-code = buf_fbr-line.doc-code
+                                               and buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                                               and buf_marking-lines.prt-code = 0
+          :
+            sw:start-element ("mark").
+            write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
+            sw:end-element ("mark").
+          end .
+          sw:end-element ("marks").
+        end . 
+        
+      sw:end-element ("dish").
 
     end.
     sw:end-element ("dishs").
@@ -234,6 +278,18 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
                                              and buf_doc-line-attr.gds-code = buf_gds.gds-code
                                              and buf_doc-line-attr.attr-code = "GTIN-qnty"
                                              no-error .
+      
+      &scop proc-name gds-attr-value
+      {&run_proc_attr-lib}
+        ( input buf_gds.gds-code
+         ,input {&attr-mark-type} 
+         ,output v-value
+         ,output v-type
+        )        no-error .
+      if error-status :error
+      then do:
+        undo, return error return-value .
+      end.
       
       define variable brutto as decimal no-undo.
       define variable netto as decimal no-undo.    
@@ -272,6 +328,23 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc implements iexpsubject:
           end .
           sw:end-element ("marks").
         end .
+        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value)
+        then do :
+          sw:start-element ("marks").
+          for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_gds.gds-code
+                                               and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
+                                               and buf_marking-lines.obj-code = buf_fbr-doc.obj-code
+                                               and buf_marking-lines.in-code  = "manufacturing"
+                                               and buf_marking-lines.out-code = buf_fbr-line.doc-code
+                                               and buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                                               and buf_marking-lines.prt-code = 0
+          :
+            sw:start-element ("mark").
+            write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
+            sw:end-element ("mark").
+          end .
+          sw:end-element ("marks").
+        end . 
       sw:end-element ("ingr").
           
     end.

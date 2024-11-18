@@ -45,6 +45,7 @@ define variable vss-description as character no-undo init "Копирование накладной
 { str/dtl-rest.i new }
 { str/dtlrestm.i " new shared " }
 { trg/partslib.i }
+{ str/temp_upd.i }
 { gbl/objsrv.i }
 { str/fbrcode.i  }
 { str/fbrlib.i   }

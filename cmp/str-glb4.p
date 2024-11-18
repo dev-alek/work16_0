@@ -535,6 +535,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Является скоропортящейся продукцией */
 { cmp/cr-prep.i 1 attr-perishable              perishable               " " perishable              }
 
+/* Только производство */
+{ cmp/cr-prep.i 1 attr-production-only         production-only          " " production-only         }
+
 /* состав сырья 15x80 */
 { cmp/cr-prep.i 1 attr-15x80              15x80         " " 15x80       }
 
@@ -624,6 +627,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-sum-grp-gl}~
 ,{&bef-attr-mercur_FGIS}~
 ,{&bef-attr-perishable}~
+,{&bef-attr-production-only}~
 ,{&bef-attr-15x80}~
 ,{&bef-attr-8x50}~
 ,{&bef-attr-6x50}~

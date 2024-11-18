@@ -6403,6 +6403,18 @@ end procedure.
 &scop manual-edit-attr-sum-grp-gl  1
 &scop batch-edit-attr-sum-grp-gl  1
 
+/* Только производство */
+&glob type-attr-production-only {&type-log}
+&glob format-attr-production-only  "+/-"
+&glob label-attr-production-only   "Только производство"
+&glob tooltip-attr-production-only   "Используется только для производства (альтернатива)"
+&glob user-can-edit-attr-production-only  true
+&glob output-display-attr-production-only  true
+&glob other-attr-production-only  ""
+&glob news-attr-production-only true
+&glob copy-attr-production-only  true
+&scop manual-edit-attr-production-only  1
+&scop batch-edit-attr-production-only  1
 
 /* Является подконтрольным ФГИС "Меркурий" */
 &glob type-attr-mercur_FGIS {&type-log}
@@ -6825,6 +6837,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-perishable
       {&attr-temp-full-code}
+      &scop attr-code attr-production-only
+      {&attr-temp-full-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-full-code}
       &scop attr-code attr-15x80
@@ -6936,6 +6950,8 @@ do
       &scop attr-code attr-mercur_FGIS
       {&attr-temp-code}
       &scop attr-code attr-perishable
+      {&attr-temp-code}
+      &scop attr-code attr-production-only
       {&attr-temp-code}
       &scop attr-code attr-sum-grp-gl
       {&attr-temp-code}
@@ -7301,6 +7317,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-perishable
       {&attr-news-code}
+      &scop attr-code attr-production-only
+      {&attr-news-code}
       &scop attr-code attr-15x80
       {&attr-news-code}
       &scop attr-code attr-8x50
@@ -7406,6 +7424,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-mercur_FGIS
       {&attr-copy-code}
       &scop attr-code attr-perishable
+      {&attr-copy-code}
+      &scop attr-code attr-production-only
       {&attr-copy-code}
       &scop attr-code attr-15x80
       {&attr-copy-code}
@@ -8165,6 +8185,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-perishable
       {&attr-manual-edit-code}
+      &scop attr-code attr-production-only
+      {&attr-manual-edit-code}
       &scop attr-code attr-mark
       {&attr-manual-edit-code}
       &scop attr-code attr-sum-grp-gl
@@ -8275,6 +8297,8 @@ do
       &scop attr-code attr-mercur_FGIS
       {&attr-batch-edit-code}
       &scop attr-code attr-perishable
+      {&attr-batch-edit-code}
+      &scop attr-code attr-production-only
       {&attr-batch-edit-code}
       &scop attr-code attr-calories
       {&attr-batch-edit-code}

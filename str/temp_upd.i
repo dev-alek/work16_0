@@ -72,7 +72,7 @@ define temp-table tt-utd-lines like ub.utd-lines
   index sts stts sts
   .
   
-define temp-table tt-marking-lines like ub.marking-lines
+define temp-table tt-marking-lines no-undo like ub.marking-lines
   field mark-parent like ub.marking.mark-parent
   field stts        as character
   field sts-utd     as integer
@@ -88,6 +88,7 @@ define temp-table tt-marking-lines like ub.marking-lines
   field GrayZone    as logical
   field isMark      as logical 
   field marking-string as character
+  field old-sts     as integer
   index pi  doc-level   sts
   index pi2 mark-parent sts
   index pi3 unit-ext

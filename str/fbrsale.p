@@ -46,6 +46,7 @@ define variable v-cntxt-userid as character no-undo .
 define variable v-cntxt-obj-type as character no-undo .
 define variable v-cntxt-obj-code as integer no-undo .
 define variable v-cntxt-host-code-obj  as integer no-undo .
+{ str/temp_upd.i }
 { str/fbrrest.i  }
 { str/fbrlib.i   }
 { str/fbrpln.i   }
