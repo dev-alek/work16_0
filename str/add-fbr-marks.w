@@ -106,8 +106,6 @@ define stream in-stream.
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
 /* ***********************  Control Definitions  ********************** */
 
 /* Define a dialog box                                                  */
@@ -129,11 +127,11 @@ DEFINE BUTTON B_mark
 
 DEFINE VARIABLE f-msg AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 84 BY 1 NO-UNDO.
+     SIZE 95 BY 1 NO-UNDO.
 
 DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 84 BY 1 NO-UNDO.
+     SIZE 95 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -148,11 +146,12 @@ DEFINE BROWSE br-fbr-line
   QUERY br-fbr-line DISPLAY
     tt-fbr-line.num format ">>>>>9" label "Номер"
     tt-fbr-line.gds-code format ">>>>>>>>>>>>>>9" label "Код"
-    tt-fbr-line.gds-name format "X(150)" width 46 label "Наименование"
+    tt-fbr-line.gds-name format "X(150)" width 40 label "Наименование"
     tt-fbr-line.qnty format ">>>>>>>>>>>9" label "Количество"
+    tt-fbr-line.unit format "X(17)" label "Единица измерения"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 84 BY 8.
+    WITH SEPARATORS SIZE 95 BY 8.
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
@@ -167,7 +166,7 @@ DEFINE FRAME Dialog-Frame
      SPACE(1.0) SKIP(1)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Ввод марок для производства"
+         TITLE "Резервирование марок для производства"
          DEFAULT-BUTTON b-exit CANCEL-BUTTON b-cancel.
 
 
@@ -269,7 +268,8 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B_mark Dialog-Frame
 ON CHOOSE OF B_mark IN FRAME Dialog-Frame /* Марки */
 DO:
-
+  
+  find first tt-marking-lines no-error .
   if available (tt-marking-lines) then
   do:
     run str/mark_browse.w (input parparentproc,
@@ -660,6 +660,7 @@ PROCEDURE CrCheckMark :
       tt-fbr-line.recipe-code = v-recipe-code
       tt-fbr-line.recipe-type = {&alternative}
       tt-fbr-line.ingr-gds-code = v-ingr-gds-code
+      tt-fbr-line.unit = buf_goods.unit-base
     .  
   end .
   if (tt-fbr-line.qnty + v-GTIN-qnty) <= v-free-qnty

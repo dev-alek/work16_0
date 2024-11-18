@@ -21,6 +21,7 @@ define temp-table tt-fbr-line no-undo
   field recipe-code like ub.recipe.recipe-code
   field recipe-type like ub.recipe.recipe-type
   field ingr-gds-code as integer
+  field unit as character
 .
 
 /* ********************  Preprocessor Definitions  ******************** */
