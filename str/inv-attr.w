@@ -34,7 +34,7 @@ define variable vss-description as character no-undo initial "Редактирование атр
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { str/trdcalib.i }
-{ cmp/showinf.i  }
+
 { str/attrlist.i }
 { str/funcgrzp.i }
 { gbl/getsect.i def }
@@ -61,17 +61,17 @@ define variable hBrowse            as handle    no-undo.
 define buffer buf_trn-doc for ub.trn-doc .
 
 define temp-table tt-inv-attr no-undo
- field attr-code     as character
- field attr-value    as character
- field second-code   as character
- field second-value  as character
- field label-attr    as character
- field user-can-edit as logical
- field sort_         as integer
+  field attr-code     as character
+  field attr-value    as character
+  field second-code   as character
+  field second-value  as character
+  field label-attr    as character
+  field user-can-edit as logical
+  field sort_         as integer
 
-index code is primary unique attr-code
-index by-sort                sort_
-.
+  index code is primary unique attr-code
+  index by-sort                sort_
+  .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -123,56 +123,56 @@ index by-sort                sort_
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-chg 
- LABEL "&Изменить" 
- SIZE 10 BY 1
- BGCOLOR 8 .
+  LABEL "&Изменить" 
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON b-exit AUTO-END-KEY 
- LABEL "&Выход" 
- SIZE 10 BY 1
- BGCOLOR 8 .
+  LABEL "&Выход" 
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE BUTTON b-lkp 
- LABEL "&Просмотр" 
- SIZE 10 BY 1
- BGCOLOR 8 .
+  LABEL "&Просмотр" 
+  SIZE 10 BY 1
+  BGCOLOR 8 .
 
 DEFINE VARIABLE tech AS LOGICAL INITIAL no 
- LABEL "Техническая операция" 
- VIEW-AS TOGGLE-BOX
- SIZE 24.5 BY .83 NO-UNDO.
+  LABEL "Техническая операция" 
+  VIEW-AS TOGGLE-BOX
+  SIZE 24.5 BY .83 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-          DEFINE QUERY b-doc-attr FOR 
-            tt-inv-attr SCROLLING.
+DEFINE QUERY b-doc-attr FOR 
+  tt-inv-attr SCROLLING.
 &ANALYZE-RESUME
 
-          /* Browse definitions                                                   */
-          DEFINE BROWSE b-doc-attr
+/* Browse definitions                                                   */
+DEFINE BROWSE b-doc-attr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS b-doc-attr Dialog-Frame _FREEFORM
-            QUERY b-doc-attr NO-LOCK DISPLAY
-            tt-inv-attr.label-attr COLUMN-LABEL "Код" FORMAT "X(45)"
-            tt-inv-attr.attr-value COLUMN-LABEL "Значение" FORMAT "X(30)"
-            tt-inv-attr.second-value COLUMN-LABEL "Должность" FORMAT "X(30)"
+  QUERY b-doc-attr NO-LOCK DISPLAY
+  tt-inv-attr.label-attr COLUMN-LABEL "Код" FORMAT "X(45)"
+  tt-inv-attr.attr-value COLUMN-LABEL "Значение" FORMAT "X(30)"
+  tt-inv-attr.second-value COLUMN-LABEL "Должность" FORMAT "X(30)"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 97.63 BY 19.29.
 
 
-          /* ************************  Frame Definitions  *********************** */
+/* ************************  Frame Definitions  *********************** */
 
-          DEFINE FRAME Dialog-Frame
-            b-exit AT ROW 1 COL 1
-            b-lkp AT ROW 1 COL 21
-            b-chg AT ROW 1 COL 31
-            tech AT ROW 1.08 COL 44 WIDGET-ID 2
-            b-doc-attr AT ROW 2.46 COL 1.75
-            SPACE(0.00) SKIP(0.07)
-            WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-            SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-            TITLE "Атрибуты инвентаризации"
-            DEFAULT-BUTTON b-exit.
+DEFINE FRAME Dialog-Frame
+  b-exit AT ROW 1 COL 1
+  b-lkp AT ROW 1 COL 21
+  b-chg AT ROW 1 COL 31
+  tech AT ROW 1.08 COL 44 WIDGET-ID 2
+  b-doc-attr AT ROW 2.46 COL 1.75
+  SPACE(0.00) SKIP(0.07)
+  WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+  SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+  TITLE "Атрибуты инвентаризации"
+  DEFAULT-BUTTON b-exit.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -189,17 +189,17 @@ DEFINE VARIABLE tech AS LOGICAL INITIAL no
 /* ***********  Runtime Attributes and AppBuilder Settings  *********** */
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
-          /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-             FRAME-NAME                                                           */
-          /* BROWSE-TAB b-doc-attr tech Dialog-Frame */
-          ASSIGN 
-            FRAME Dialog-Frame:SCROLLABLE = FALSE
-            FRAME Dialog-Frame:HIDDEN     = TRUE.
+/* SETTINGS FOR DIALOG-BOX Dialog-Frame
+   FRAME-NAME                                                           */
+/* BROWSE-TAB b-doc-attr tech Dialog-Frame */
+ASSIGN 
+  FRAME Dialog-Frame:SCROLLABLE = FALSE
+  FRAME Dialog-Frame:HIDDEN     = TRUE.
 
-          /* SETTINGS FOR BUTTON b-chg IN FRAME Dialog-Frame
-             NO-ENABLE                                                            */
-          ASSIGN 
-            b-doc-attr:COLUMN-RESIZABLE IN FRAME Dialog-Frame = TRUE.
+/* SETTINGS FOR BUTTON b-chg IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+ASSIGN 
+  b-doc-attr:COLUMN-RESIZABLE IN FRAME Dialog-Frame = TRUE.
 
 /* SETTINGS FOR BUTTON b-lkp IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
@@ -232,126 +232,177 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.doc-attr NO-LOCK
 
 &Scoped-define SELF-NAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
-          ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Атрибуты документа */
-            DO:
-              apply "chose":U to b-exit .
-              APPLY "END-ERROR":U TO SELF.
-            END.
+ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Атрибуты документа */
+  DO:
+    apply "chose":U to b-exit .
+    APPLY "END-ERROR":U TO SELF.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-exit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
+ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
+  DO:
+    /* Проверка на заполнение атрибутов */
+    define variable is-check as logical   no-undo .
+    define variable is-mes   as character no-undo .
+    define variable varlog   as logical   no-undo .
+    define buffer fio_inv-attr    for tt-inv-attr .
+    define buffer prikaz_inv-attr for tt-inv-attr .
+
+    if not tech then 
+    do:
+      if not can-find (first prikaz_inv-attr no-lock where 
+        prikaz_inv-attr.attr-code = {&trdcattr-prikaz-date} and
+        prikaz_inv-attr.attr-value <> "") then 
+      do:
+        is-check = true .
+      end.
+      if not can-find (first fio_inv-attr no-lock where 
+        (fio_inv-attr.attr-code = {&trdcattr-fio-agent} or
+        fio_inv-attr.attr-code = {&trdcattr-fio-player1} or
+        fio_inv-attr.attr-code = {&trdcattr-fio-player2} or
+        fio_inv-attr.attr-code = {&trdcattr-fio-player3}) and
+        fio_inv-attr.attr-value <> "") then 
+      do:
+        is-check = true .
+      end.
+      if not can-find (first fio_inv-attr no-lock where 
+        (fio_inv-attr.second-code = {&trdcattr-pos-agent} or
+        fio_inv-attr.second-code = {&trdcattr-pos-player1} or
+        fio_inv-attr.second-code = {&trdcattr-pos-player2} or
+        fio_inv-attr.second-code = {&trdcattr-pos-player3}) and
+        fio_inv-attr.second-value <> "")then 
+      do:
+        is-check = true .
+      end.
+      
+      if is-check then 
+      do:
+        message
+          "Не заполнены обязательные атрибуты накладной инвентаризации. Вы уверены, что хотите выйти, не заполнив обязательные атрибуты?"
+          view-as alert-box question buttons yes-no update varlog.
+          if not varlog then return no-apply.
+      end.
+    end.                 
+
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg Dialog-Frame
-          ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
-            DO:
-              define variable vartemp-char  as character no-undo.
-              define variable p-anyfromproc as character no-undo .
-              define variable p-start-h     as integer   no-undo.
-              define variable p-start-m     as integer   no-undo.
-              define variable p-end-h       as integer   no-undo.
-              define variable p-end-m       as integer   no-undo.
-              if available tt-inv-attr then 
-              do:
-                find first tt-upd-attr no-lock where tt-upd-attr.code = tt-inv-attr.attr-code no-error .
-                if available (tt-upd-attr) then 
-                do:
-                  if tt-inv-attr.second-code = "" then 
-                  do:
-                    run gbl/d-prompt.w (
-                      'title=':u + 'Изменение атрибутов инвентаризации' + '\':u
-                      + 'text1=':u + tt-upd-attr.label-attr + '\':u
-                      + 'format=' + tt-upd-attr.format-attr + '\':u
-                      + 'type=' + tt-upd-attr.type-attr + '\':u
-                      + 'fillin_row=2\':u
-                      + 'fillin_col=4\':u
-                      + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
-                      + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
-                      + 'max-chars=70\':u
-                      + 'readonly=' + 'no':u + '\':u
-                      , input-output tt-inv-attr.attr-value
-                      ) no-error.
-                    if error-status:error then 
-                    do:
-                      message "Ошибка при изменении атрибута." skip
-                        return-value skip
-                        error-status:get-message(1) view-as alert-box error.
-                      return no-apply.
-                    end.
-                    if return-value = 'false':u then 
-                    do:
-                      return no-apply.
-                    end.
+ON CHOOSE OF b-chg IN FRAME Dialog-Frame /* Изменить */
+  DO:
+    define variable vartemp-char  as character no-undo.
+    define variable p-anyfromproc as character no-undo .
+    define variable p-start-h     as integer   no-undo.
+    define variable p-start-m     as integer   no-undo.
+    define variable p-end-h       as integer   no-undo.
+    define variable p-end-m       as integer   no-undo.
+    if available tt-inv-attr then 
+    do:
+      find first tt-upd-attr no-lock where tt-upd-attr.code = tt-inv-attr.attr-code no-error .
+      if available (tt-upd-attr) then 
+      do:
+        if tt-inv-attr.second-code = "" then 
+        do:
+          run gbl/d-prompt.w (
+            'title=':u + 'Изменение атрибутов инвентаризации' + '\':u
+            + 'text1=':u + tt-upd-attr.label-attr + '\':u
+            + 'format=' + tt-upd-attr.format-attr + '\':u
+            + 'type=' + tt-upd-attr.type-attr + '\':u
+            + 'fillin_row=2\':u
+            + 'fillin_col=4\':u
+            + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
+            + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
+            + 'max-chars=70\':u
+            + 'readonly=' + 'no':u + '\':u
+            , input-output tt-inv-attr.attr-value
+            ) no-error.
+          if error-status:error then 
+          do:
+            message "Ошибка при изменении атрибута." skip
+              return-value skip
+              error-status:get-message(1) view-as alert-box error.
+            return no-apply.
+          end.
+          if return-value = 'false':u then 
+          do:
+            return no-apply.
+          end.
 
-                    { str/tdatinv-wrt.i
+          { str/tdatinv-wrt.i
          pardoc-code
          tt-inv-attr.attr-code
          tt-inv-attr.attr-value
          no-error
      }
-                    if error-status :error then 
-                    do:
-                      message "Ошибка при сохранении атрибута." view-as alert-box.
-                      undo, return no-apply.
-                    end.
-                  end.
-                  else 
-                  do:
-                    run ref/d-invAttr.w (
-                      'title=':u + 'Изменение атрибутов инвентаризации' + '\':u
-                      + 'text1=':u + tt-upd-attr.label-attr + '\':u
-                      + 'text2=':u + "Должность" + '\':u
-                      + 'format=' + tt-upd-attr.format-attr + '\':u
-                      + 'type=' + tt-upd-attr.type-attr + '\':u
-                      + 'fillin_row=2\':u
-                      + 'fillin_col=4\':u
-                      + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
-                      + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
-                      + 'max-chars=70\':u
-                      + 'readonly=' + 'no':u + '\':u
-                      , input-output tt-inv-attr.attr-value
-                      , input-output tt-inv-attr.second-value
-                      ) no-error.
-                    if error-status:error then 
-                    do:
-                      message "Ошибка при изменении атрибута." skip
-                        return-value skip
-                        error-status:get-message(1) view-as alert-box error.
-                      return no-apply.
-                    end.
-                    { str/tdatinv-wrt.i
+          if error-status :error then 
+          do:
+            message "Ошибка при сохранении атрибута." view-as alert-box.
+            undo, return no-apply.
+          end.
+        end.
+        else 
+        do:
+          run ref/d-invAttr.w (
+            'title=':u + 'Изменение атрибутов инвентаризации' + '\':u
+            + 'text1=':u + tt-upd-attr.label-attr + '\':u
+            + 'text2=':u + "Должность" + '\':u
+            + 'format=' + tt-upd-attr.format-attr + '\':u
+            + 'type=' + tt-upd-attr.type-attr + '\':u
+            + 'fillin_row=2\':u
+            + 'fillin_col=4\':u
+            + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
+            + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
+            + 'max-chars=70\':u
+            + 'readonly=' + 'no':u + '\':u
+            , input-output tt-inv-attr.attr-value
+            , input-output tt-inv-attr.second-value
+            ) no-error.
+          if error-status:error then 
+          do:
+            message "Ошибка при изменении атрибута." skip
+              return-value skip
+              error-status:get-message(1) view-as alert-box error.
+            return no-apply.
+          end.
+          { str/tdatinv-wrt.i
          pardoc-code
          tt-inv-attr.second-code
          tt-inv-attr.second-value
          no-error
      }
-                    if error-status :error then 
-                    do:
-                      message "Ошибка при сохранении атрибута." view-as alert-box.
-                      undo, return no-apply.
-                    end.
+          if error-status :error then 
+          do:
+            message "Ошибка при сохранении атрибута." view-as alert-box.
+            undo, return no-apply.
+          end.
                   { str/tdatinv-wrt.i
          pardoc-code
          tt-inv-attr.attr-code
          tt-inv-attr.attr-value
          no-error
      }
-                    if error-status :error then 
-                    do:
-                      message "Ошибка при сохранении атрибута." view-as alert-box.
-                      undo, return no-apply.
-                    end.
-                  end.
-                  assign
-                    varrec-id = recid(tt-inv-attr).
+          if error-status :error then 
+          do:
+            message "Ошибка при сохранении атрибута." view-as alert-box.
+            undo, return no-apply.
+          end.
+        end.
+        assign
+          varrec-id = recid(tt-inv-attr).
 /*       tt-inv-attr.attr-value = vartemp-char .*/
-                  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
-                  reposition {&browse-name} to recid varrec-id.
-                end.
+        {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+        reposition {&browse-name} to recid varrec-id.
+      end.
 
-              end.
-            END.
+    end.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -360,77 +411,77 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.doc-attr NO-LOCK
 &Scoped-define BROWSE-NAME b-doc-attr
 &Scoped-define SELF-NAME b-doc-attr
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-doc-attr Dialog-Frame
-          ON return OF b-doc-attr IN FRAME Dialog-Frame
-            DO:
-              if  b-chg:sensitive THEN apply "CHOOSE":U to b-chg.
-              else apply "choose":U to b-lkp.
-              return no-apply.
-            END.
+ON return OF b-doc-attr IN FRAME Dialog-Frame
+  DO:
+    if  b-chg:sensitive THEN apply "CHOOSE":U to b-chg.
+    else apply "choose":U to b-lkp.
+    return no-apply.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-doc-attr Dialog-Frame
-          ON ROW-DISPLAY OF b-doc-attr IN FRAME Dialog-Frame
-            DO:
-              run rowdisp .
-            END.
+ON ROW-DISPLAY OF b-doc-attr IN FRAME Dialog-Frame
+  DO:
+    run rowdisp .
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-lkp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lkp Dialog-Frame
-          ON CHOOSE OF b-lkp IN FRAME Dialog-Frame /* Просмотр */
-            DO:
+ON CHOOSE OF b-lkp IN FRAME Dialog-Frame /* Просмотр */
+  DO:
 
-              define variable vartemp-char as character no-undo.
-              if available tt-inv-attr then 
-              do:
-                find first tt-upd-attr no-lock where tt-upd-attr.code = tt-inv-attr.attr-code no-error .
-                if available (tt-upd-attr) then 
-                do:
-                  assign
-                    vartemp-char = tt-inv-attr.attr-value
-                    .
-                  if tt-inv-attr.second-code = "" then 
-                  do:  
-                    run gbl/d-prompt.w (
-                      'title=':u + 'Изменение атрибутов документа' + '\':u
-                      + 'text1=':u + tt-upd-attr.label-attr + '\':u
-                      + 'format=' + tt-upd-attr.format-attr + '\':u
-                      + 'type=' + tt-upd-attr.type-attr + '\':u
-                      + 'fillin_row=2\':u
-                      + 'fillin_col=4\':u
-                      + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
-                      + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
-                      + 'max-chars=70\':u
-                      + 'readonly=' + 'yes':u + '\':u
-                      , input-output vartemp-char
-                      ) no-error.
-                  end.
-                  else 
-                  do:
-                    run ref/d-invAttr.w (
-                      'title=':u + 'Изменение атрибутов инвентаризации' + '\':u
-                      + 'text1=':u + tt-upd-attr.label-attr + '\':u
-                      + 'text2=':u + "Должность" + '\':u
-                      + 'format=' + tt-upd-attr.format-attr + '\':u
-                      + 'type=' + tt-upd-attr.type-attr + '\':u
-                      + 'fillin_row=2\':u
-                      + 'fillin_col=4\':u
-                      + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
-                      + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
-                      + 'max-chars=70\':u
-                      + 'readonly=' + 'yes':u + '\':u
-                      , input-output tt-inv-attr.attr-value
-                      , input-output tt-inv-attr.second-value
-                      ) no-error.     
-                  end.
-                end.
-              end.
-            end.
+    define variable vartemp-char as character no-undo.
+    if available tt-inv-attr then 
+    do:
+      find first tt-upd-attr no-lock where tt-upd-attr.code = tt-inv-attr.attr-code no-error .
+      if available (tt-upd-attr) then 
+      do:
+        assign
+          vartemp-char = tt-inv-attr.attr-value
+          .
+        if tt-inv-attr.second-code = "" then 
+        do:  
+          run gbl/d-prompt.w (
+            'title=':u + 'Изменение атрибутов документа' + '\':u
+            + 'text1=':u + tt-upd-attr.label-attr + '\':u
+            + 'format=' + tt-upd-attr.format-attr + '\':u
+            + 'type=' + tt-upd-attr.type-attr + '\':u
+            + 'fillin_row=2\':u
+            + 'fillin_col=4\':u
+            + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
+            + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
+            + 'max-chars=70\':u
+            + 'readonly=' + 'yes':u + '\':u
+            , input-output vartemp-char
+            ) no-error.
+        end.
+        else 
+        do:
+          run ref/d-invAttr.w (
+            'title=':u + 'Изменение атрибутов инвентаризации' + '\':u
+            + 'text1=':u + tt-upd-attr.label-attr + '\':u
+            + 'text2=':u + "Должность" + '\':u
+            + 'format=' + tt-upd-attr.format-attr + '\':u
+            + 'type=' + tt-upd-attr.type-attr + '\':u
+            + 'fillin_row=2\':u
+            + 'fillin_col=4\':u
+            + 'fillin_width=':u  + string(tt-upd-attr.fillin_width) + '\':u
+            + 'fillin_height=':u + string(tt-upd-attr.fillin_height) + '\':u
+            + 'max-chars=70\':u
+            + 'readonly=' + 'yes':u + '\':u
+            , input-output tt-inv-attr.attr-value
+            , input-output tt-inv-attr.second-value
+            ) no-error.     
+        end.
+      end.
+    end.
+  end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -438,22 +489,22 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.doc-attr NO-LOCK
 
 &Scoped-define SELF-NAME tech
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tech Dialog-Frame
-          ON VALUE-CHANGED OF tech IN FRAME Dialog-Frame /* Техническая операция */
-            DO:
-              assign tech .
-              find first ub.inv-doc-attr exclusive-lock where ub.inv-doc-attr.doc-code = pardoc-code and
-                ub.inv-doc-attr.attr-code = "invTech" no-error .
-              if not available (ub.inv-doc-attr) then 
-              do:
-                create ub.inv-doc-attr .
-                assign
-                  ub.inv-doc-attr.doc-code  = pardoc-code
-                  ub.inv-doc-attr.attr-code = "invTech"
-                  .
-              end.
-              ub.inv-doc-attr.attr-value = string(tech) .
+ON VALUE-CHANGED OF tech IN FRAME Dialog-Frame /* Техническая операция */
+  DO:
+    assign tech .
+    find first ub.inv-doc-attr exclusive-lock where ub.inv-doc-attr.doc-code = pardoc-code and
+      ub.inv-doc-attr.attr-code = "invTech" no-error .
+    if not available (ub.inv-doc-attr) then 
+    do:
+      create ub.inv-doc-attr .
+      assign
+        ub.inv-doc-attr.doc-code  = pardoc-code
+        ub.inv-doc-attr.attr-code = "invTech"
+        .
+    end.
+    ub.inv-doc-attr.attr-value = string(tech) .
   
-            END.
+  END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -464,45 +515,45 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.doc-attr NO-LOCK
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
 
 
-          /* ***************************  Main Block  *************************** */
+/* ***************************  Main Block  *************************** */
 
-          /* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
-          IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
-            THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
+/* Parent the dialog-box to the ACTIVE-WINDOW, if there is no parent.   */
+IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
+  THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 
-          { gbl/hot-key.i b-lkp }
-          { gbl/hot-key.i b-chg }
+{ gbl/hot-key.i b-lkp }
+{ gbl/hot-key.i b-chg }
 
-          { gbl/brwrefre.i }
-          { gbl/brwrepos.i &line-num=4 }
+{ gbl/brwrefre.i }
+{ gbl/brwrepos.i &line-num=4 }
 
-          /* Now enable the interface and wait for the exit condition.            */
-          /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
-          MAIN-BLOCK:
-          DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
-            ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-/*              parbtn = "b-lkp,b-chg" .*/
-            if lookup ("b-lkp", parbtn) > 0 then 
-            do:
-              enable b-lkp with frame {&frame-name}.
-            end.
-            if lookup ("b-chg", parbtn) > 0 then 
-            do:
-              enable b-chg tech with frame {&frame-name}.
-            end.
+/* Now enable the interface and wait for the exit condition.            */
+/* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
+MAIN-BLOCK:
+DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
+  ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  /*              parbtn = "b-lkp,b-chg" .*/
+  if lookup ("b-lkp", parbtn) > 0 then 
+  do:
+    enable b-lkp with frame {&frame-name}.
+  end.
+  if lookup ("b-chg", parbtn) > 0 then 
+  do:
+    enable b-chg tech with frame {&frame-name}.
+  end.
 
-            run init-proc in this-procedure .
-            hbrowse = browse b-doc-attr:handle.
-            extent (bcol) = hbrowse:num-columns.
-            bcol[1] = hbrowse:first-column.
-            do ii = 1 to extent (bcol).  
-              bcol[ii] = hbrowse:get-browse-column (ii).
-            end.
-            RUN enable_UI.
-            apply 'entry':u to browse {&browse-name} .
-            wait-for go of frame {&frame-name}.
-          END.
-          RUN disable_UI.
+  run init-proc in this-procedure .
+  hbrowse = browse b-doc-attr:handle.
+  extent (bcol) = hbrowse:num-columns.
+  bcol[1] = hbrowse:first-column.
+  do ii = 1 to extent (bcol).  
+    bcol[ii] = hbrowse:get-browse-column (ii).
+  end.
+  RUN enable_UI.
+  apply 'entry':u to browse {&browse-name} .
+  wait-for go of frame {&frame-name}.
+END.
+RUN disable_UI.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
