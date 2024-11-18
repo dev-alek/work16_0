@@ -49,6 +49,7 @@ if new-{&main-tbl}.gds-code eq 0
 then 
    new-{&main-tbl}.gds-code = ?.
 
+/*run gbl/inidebug.p.*/
 if not new(new-{&main-tbl}) then do:
 if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
@@ -113,7 +114,7 @@ do:   /* при создании новой дочерней марки меняем статус марки как у родителя, е
   for first parentMarking where
             parentMarking.mark = new-{&main-tbl}.mark-parent 
       no-lock:
-    if can-do(objSrv:Env:Marking:Sts:Mark:EqualChecked,string(parentMarking.sts)) then
+    if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(parentMarking.sts)) then
      new-{&main-tbl}.sts = parentMarking.sts.
   end.
 end.

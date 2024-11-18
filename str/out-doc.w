@@ -1813,16 +1813,15 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                   and buf_parts.out-code = t-doc.doc-code
                  : 
                v-fact-part = 0.
-               for each tt-marking-lines where
+               for each tt-marking-lines no-lock where
                         tt-marking-lines.doc-level = 1
                     and tt-marking-lines.in-code = buf_parts.in-code
                     and tt-marking-lines.out-code = buf_parts.out-code
                     and tt-marking-lines.part-code = buf_parts.part-code
                     and tt-marking-lines.prt-code = buf_parts.prt-code
-                    and (can-do(objSrv:Env:Marking:Sts:Mark:EqualChecked, string(tt-marking-lines.sts)) or
-                         tt-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB) 
-                   no-lock:
-                 v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
+               :
+                   if tt-marking-lines.sts-utd = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then
+                      v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
                end.
                if buf_parts.fact-qnty <> v-fact-part then
                  buf_parts.fact-qnty = v-fact-part.
@@ -1836,7 +1835,16 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                  buf_doc-line.fact-qnty = v-fact-qnty
                  buf_gds-dtl.fact-qnty  = v-fact-qnty                
                . 
-               br-dtl:refresh() in frame {&frame-name}.     
+               br-dtl:refresh() in frame {&frame-name}.   
+               for each bf_doc-line no-lock where
+                        bf_doc-line.obj-type = t-doc.obj-type
+                    and bf_doc-line.obj-code = t-doc.obj-code
+                    and bf_doc-line.doc-code = t-doc.doc-code
+               :
+                 accum bf_doc-line.fact-qnty (total).  
+               end. 
+               t-doc.fact-qnty = accum total bf_doc-line.fact-qnty.
+               display t-doc.fact-qnty with frame {&frame-name}.  
              end.
           end.
       end.
@@ -4085,7 +4093,7 @@ end.
                                            , input {&trdcattr-othermoves}
                                            , input "yes":U
                                            , output vExist ) .
-  end.       
+  end.      
 if pardoc-mode = {&add-def} then do:
   wait-for go of frame {&frame-name} focus t-doc.cli-code.
 end.

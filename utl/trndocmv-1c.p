@@ -600,7 +600,7 @@ on error undo, return error return-value
         
         if TempDocMark.prt-id = ? then TempDocMark.prt-id = buf_parts.part-code .
         if TempDocMark.in-doc-id = ? then TempDocMark.in-doc-id = buf_parts.in-code .
-        
+
         find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
         if available (ub.marking)
         then do:
@@ -609,15 +609,46 @@ on error undo, return error return-value
           ub.marking-lines.doc-level = 1.
           if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
           do:
-              if ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB and
-                 ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
+              if not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) then
               do:
-                ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
+                if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                   ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB then
+                do:  /* если это упаковка и разгруппирована или Серая зона, то анализируем статус марок внутри упаковки */
+                  for each chi_marking no-lock where 
+                           chi_marking.mark-parent = ub.marking.mark
+                       and chi_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+                  :  /* считаем марки в Ожидает приемку */
+                      accum chi_marking.mark (count).
+                  end.
+                  if (accum count chi_marking.mark) >= ub.marking.box-qnty then
+                  do:  /* если все марки внутри упаковки Ожидает приемку, значит пришел полный состав и меняем статус упаковки */
+                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.  
+                  end.
+                  else
+                  do: /* иначе идем по маркам упаковки, если проданные и возвращенные марки оставляем, а остальные меняем на Проверен*/
+                    for each chi_marking exclusive-lock where 
+                             chi_marking.mark-parent = ub.marking.mark
+                    :
+                      if not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(chi_marking.sts)) then
+                      do:
+                        chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
+                      end.
+                    end.
+                    if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB then
+                    do:  /* меняем статус с Серая зона на Расгруппирован */
+                      ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+                    end.  
+                    buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty. 
+                    buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.
+                  end.
+                end.
+                else
+                  ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
               end.
               else 
-              do:  /* если марка уже продана или возвращена на кассу, то считаем ее принятой и увелияивам кол-во принятых марок */
+              do:  /* если марка уже продана или возвращена или в процессе продажи или возврата на кассу, то увеличиваем кол-во принятых марок */
                 buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty. 
-                   /* и увеличим кол-во-факт по партии с этой маркой*/
+                   /* и увеличим кол-во факт по партии с этой маркой*/
                 buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.
               end.
           end.
@@ -625,7 +656,11 @@ on error undo, return error return-value
           do:
             ub.marking.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB.
           end.
-          ub.marking-lines.sts = ub.marking.sts.
+          ub.marking-lines.sts = if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
+                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                                 then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                                 else ub.marking.sts.
           for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
             create ub.marking-lines.
             assign
@@ -639,10 +674,17 @@ on error undo, return error return-value
               ub.marking-lines.mark = chi_marking.mark
               ub.marking-lines.doc-level = 2
             .
-            chi_marking.sts = ub.marking.sts.
+            if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} then
+            do:  /* на всякий случай, чтобы не сломать док-ты не приход внутр */
+              chi_marking.sts = ub.marking.sts.
+            end.
             chi_marking.obj-type = ub.marking-lines.obj-type.
             chi_marking.obj-code = ub.marking-lines.obj-code.
-            ub.marking-lines.sts = ub.marking.sts.
+            ub.marking-lines.sts = if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(chi_marking.sts)) or
+                                      chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                                      chi_marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                                   then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                                   else chi_marking.sts.
           end.
         end.
       end.
