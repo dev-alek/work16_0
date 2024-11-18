@@ -750,14 +750,13 @@ on error undo, return error
               ) .
           end.    
           
-          IF v-OptVersion  <> ? THEN v-OptVer = TRIM(SUBSTRING(v-OptVersion,INDEX(v-OptVersion," "))). 
-          IF v-OptVersion1 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(SUBSTRING(v-OptVersion1,INDEX(v-OptVersion1," ")))) .
-          IF v-OptVersion2 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(SUBSTRING(v-OptVersion2,INDEX(v-OptVersion2," ")))) .
-          IF v-OptVersion3 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(SUBSTRING(v-OptVersion3,INDEX(v-OptVersion3," ")))) .
-          IF v-OptVersion4 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(SUBSTRING(v-OptVersion4,INDEX(v-OptVersion4," ")))) .
-          IF v-OptVer = "" THEN v-OptVer = "?" .
+          IF v-OptVersion  <> ? THEN v-OptVer = TRIM(v-OptVersion," "). 
+          IF v-OptVersion1 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion1," ")) .
+          IF v-OptVersion2 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion2," ")) .
+          IF v-OptVersion3 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion3," ")) .
+          IF v-OptVersion4 <> ? THEN v-OptVer = substitute("&1,&2",v-OptVer,TRIM(v-OptVersion4," ")) .
           v-OptVer = TRIM(v-OptVer,",").
-          
+          IF v-OptVer = "" THEN v-OptVer = "?" .
           run cd-attr-write in this-procedure (
                                                    input cash-desk.db-num
                                                   ,input cash-desk.obj-code
