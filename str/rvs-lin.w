@@ -1090,6 +1090,17 @@ DO:
       if integer(v-mi-dnst:screen-value) <> v-node-code
       then do :
         v-mi-tmp-dnst = 0 .
+        find first rvs-line-attr exclusive-lock
+             where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+               and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+               and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+               and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+               and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+               and rvs-line-attr.attr-code = "mi-tmp-dnst" no-error.
+        if available rvs-line-attr
+        then do :
+          rvs-line-attr.attr-value = string(v-mi-tmp-dnst) .
+        end.
       end .
     end .
     v-mi-dnst = v-node-code.
@@ -1166,6 +1177,17 @@ do:
     if string(v-mi-dnst) <> v-old-val
     then do :
       v-mi-tmp-dnst = 0 .
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "mi-tmp-dnst" no-error.
+      if available rvs-line-attr
+      then do :
+        rvs-line-attr.attr-value = string(v-mi-tmp-dnst) .
+      end.
       tt-rvs-line.izmer-density = 0 .
       tt-rvs-line.state-temperature = ? .
     end .
