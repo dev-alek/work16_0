@@ -77,6 +77,10 @@ define variable v-db-num            as integer      no-undo.
 define variable v-reasonm           as logical      no-undo .
 define variable v-reasonme as character no-undo .
 
+define variable v-curr-db-num like ub.db.db-num no-undo .
+define variable v-curr-userid as character no-undo .
+define variable l-ok as logical no-undo .
+
 define buffer buf_in_trn-doc            for ub.trn-doc.
 define buffer buf_out_trn-doc           for ub.trn-doc.
 define buffer buf_fbr-doc               for ub.fbr-doc.
@@ -164,6 +168,24 @@ fact-close:
       ""
       view-as alert-box error
     .
+    
+    if valid-handle(parparentproc)
+      and lookup( "get-db-num":U, parparentproc:internal-entries ) > 0
+      and lookup( "get-userid":U, parparentproc:internal-entries ) > 0
+    then do:
+      run get-db-num in parparentproc
+        ( output v-curr-db-num
+        ) .
+      run get-userid in parparentproc
+        ( output v-curr-userid
+        ) .
+    end.
+    else do:
+      assign
+        v-curr-db-num = ibs.th.gbl.gbl-var:g#db-num
+        v-curr-userid = ibs.th.gbl.gbl-var:g#userid
+      .
+    end.
 
     { gbl/hostcode.i buf_fbr-doc.obj-type buf_fbr-doc.obj-code v-host-code }
     EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code).
@@ -238,8 +260,38 @@ fact-close:
       then do :
 /*        message "В документе присутствуют товары с помарочной прослеживаемостью в Честном Знаке. Для закрытия производства добавьте марки"*/
 /*        view-as alert-box .                                                                                                               */
-        { gbl/stopwork.i }
-        undo, return error "В документе присутствуют товары с помарочной прослеживаемостью в Честном Знаке. Для закрытия производства добавьте марки".
+        { gbl/chk-actg.i
+          v-curr-db-num
+          v-curr-userid
+          {&action-head-code-main}
+          'actn_manufacturing_close-no-mark':U
+          {&cntxt-object}
+          buf_fbr-doc.host-code
+          buf_fbr-doc.obj-type
+          buf_fbr-doc.obj-code
+          0
+          0
+          0
+          false
+          l-ok
+        }
+        if l-ok = true
+        then do:
+          message ("По товару " + string(buf_goods.gds-code) + " " + buf_goods.gds-name +
+                   " расходуется в производство " + string(buf_fbr-line.fact-qnty) +
+                   ", просканировано " + string(v-marks-qnty) + "." + {&new-line} +
+                   "Продолжить закрытие документа?")
+          view-as alert-box buttons yes-no update l-ok .
+          if not l-ok
+          then do :
+            { gbl/stopwork.i }
+            undo, return error "Отказ от закрытия из-за нехватки марок" .
+          end .
+        end .
+        else do :
+          { gbl/stopwork.i }
+          undo, return error "В документе присутствуют товары с помарочной прослеживаемостью в Честном Знаке. Для закрытия производства добавьте марки".
+        end .
       end .
     end .
   end .
