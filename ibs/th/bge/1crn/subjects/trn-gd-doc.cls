@@ -1133,7 +1133,8 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               and buf_trn-doc.ext-doc-type <> {&TDEDT_Ras_Perem} and buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} 
               then next .
               
-              if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+              if buf_marking-lines.sts <> ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+              and buf_marking-lines.sts <> ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
               and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}
               then next .
               

@@ -1832,6 +1832,11 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
     define variable par-type    as character no-undo .
     define variable p-alcohol   as logical   no-undo .
     define variable v-type      as integer   no-undo .
+    define variable v-fact-qnty as integer   no-undo .
+    
+    define buffer buf_doc-line for ub.doc-line.
+    define buffer buf_gds-dtl  for ub.gds-dtl.
+    define buffer buf_parts    for ub.parts.
     
     if t-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} or t-doc.ext-doc-type = {&TDEDT_Ras_Perem} then v-type = 0. else v-type = 2 .        
     for each bf_doc-line no-lock where bf_doc-line.doc-code = t-doc.doc-code :
@@ -1859,7 +1864,8 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
         for each ub.marking-lines no-lock where
           ub.marking-lines.obj-type = t-doc.obj-type
           and ub.marking-lines.obj-code = t-doc.obj-code
-          and ub.marking-lines.out-code = t-doc.doc-code:
+          and ub.marking-lines.out-code = t-doc.doc-code
+          and ub.marking-lines.gds-code = ub.goods.gds-code:
           if v-is-return
           then do :
             create tt-marking-lines.
@@ -1893,11 +1899,40 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
       do:
         run str/mark_browse.w (input parparentproc,
           input-output table tt-marking-lines by-reference,
-          input {&lookup},
+          input if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then {&update} else {&lookup},
           input "Марки по: " + t-doc.ext-doc-type + " " + t-doc.doc-code,
           input v-type,
           input "" /*тип продукции*/
           )  .
+
+          if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
+          do:    /* для приход перемещение вычислим отсканированные марки */
+             for each tt-marking-lines where
+                      tt-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB  
+                  and tt-marking-lines.doc-level = 1
+                 no-lock:
+               v-fact-qnty = v-fact-qnty + tt-marking-lines.box-qnty.
+             end.
+             if ub.gds-dtl.fact-qnty <> v-fact-qnty then
+             do:
+               find first buf_doc-line where rowid(buf_doc-line) = rowid(ub.doc-line) exclusive-lock.
+               find first buf_gds-dtl where rowid(buf_gds-dtl) = rowid(ub.gds-dtl) exclusive-lock.
+               assign
+                 buf_doc-line.fact-qnty = v-fact-qnty
+                 buf_gds-dtl.fact-qnty  = v-fact-qnty                
+               . 
+               find first buf_parts exclusive-lock where
+                          buf_parts.artic = ub.goods.artic
+                      and buf_parts.prod-type = ub.goods.prod-type
+                      and buf_parts.prod-code = ub.goods.prod-code
+                      and buf_parts.obj-type = t-doc.obj-type
+                      and buf_parts.obj-code = t-doc.obj-code
+                      and buf_parts.out-code = t-doc.doc-code no-error.
+               if avail buf_parts then
+                 buf_parts.fact-qnty = v-fact-qnty.             
+               br-dtl:refresh() in frame {&frame-name}.     
+             end.
+          end.
       end.
       else 
       do:
@@ -3949,7 +3984,8 @@ else
 do:
   menu-item m_no-marks:sensitive in menu m-marks = no .
 end.
-      if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} then 
+      if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
+         t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
       do:
         menu-item m_add-marks:sensitive in menu m-marks = no.
 /*        menu-item m_del-marks:sensitive in menu m-marks = no.*/

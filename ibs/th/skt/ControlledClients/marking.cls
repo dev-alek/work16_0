@@ -2352,6 +2352,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   ):
     
     DEFINE VARIABLE vAccMarkCheck AS CHARACTER NO-UNDO. 
+    DEFINE VARIABLE vMarkGs       AS CHARACTER NO-UNDO. 
     DEFINE BUFFER buf_marking FOR ub.marking.
     
     oRunedOffLine = false.
@@ -2363,7 +2364,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     END.   
       
     mCheckGisMT    = 0. 
-    vAccMarkCheck = ChekAccessMark({&shop},iObjCode,iMark,iMarkShort).           
+    vMarkGs = addGs2Mark(iMark).
+    dbgPrint("marking.log", SUBSTITUTE("Отправка марки в ГИС МТ: &1 -> &2.", 
+                                       iMark,
+                                       replace(vMarkGs,chr(29),"<gs>"))).
+    vAccMarkCheck = ChekAccessMark({&shop},iObjCode,vMarkGs,iMarkShort).           
     dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ: &1 Статус: &2 mReqId &3 mReqTimeStamp &4 mCheckGisMT &5", 
                                        vAccMarkCheck, 
                                        mCheckSts,

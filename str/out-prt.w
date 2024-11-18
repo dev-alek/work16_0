@@ -3071,8 +3071,8 @@ end.
             end.
           end.
         end.
-
-        if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
+        if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or 
+           t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
         do:
             run isExemplarGoods in this-procedure 
               (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
@@ -3082,7 +3082,7 @@ end.
                  can-find(first buf_marking-lines no-lock where 
                                   buf_marking-lines.out-code = ub.gds-dtl.doc-code
                               and buf_marking-lines.gds-code = buf_goods.gds-code) then
-              do:  /* дл€ ѕ≈–≈ћ≈ў≈Ќ»я проверим есть ли марки по товару, и если есть, то кол-во редактировать нельз€ */
+              do:  /* дл€ ѕ≈–≈ћ≈ў≈Ќ»я –ј—’ќƒ проверим есть ли марки по товару, и если есть, то кол-во редактировать нельз€ */
                 vRightChngQnty = false.  
               end.
               else
@@ -3182,6 +3182,13 @@ end.
       end. /* q-ty, l */
     end. /* qnty */
     else do: /* fact */
+      if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
+      do:
+        run isExemplarGoods in this-procedure 
+            (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+        if vIsExemplarGoods then 
+          disable ub.gds-dtl.fact-qnty with frame {&frame-name}. 
+      end. 
       if ptrlprop-expptrl = {&calc-petrol-weight}
         and v-fact-qnty-kg :sensitive in frame {&FRAME-NAME}
       then do:

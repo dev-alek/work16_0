@@ -532,6 +532,7 @@ procedure partcopy :
                   buf_marking-lines.prt-code   = buf_parts.prt-code
                 .
               end .
+
               for first buf_marking exclusive-lock where buf_marking.mark = p-mark :
                 if buf_trn-doc.doc-type <> {&write-off} or 
                    buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB or
@@ -540,6 +541,11 @@ procedure partcopy :
                 do:
                   assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
                   validate buf_marking.
+                  /* если марка в упаковке, то разгруппируем упаковку */
+                  for first buf_marking-childs exclusive-lock where
+                            buf_marking-childs.mark = buf_marking.mark-parent:
+                    buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .            
+                  end.
                 end.
                 for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking.mark :
                   for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code
@@ -576,7 +582,7 @@ procedure partcopy :
                         buf_marking-lines-childs.doc-level  = buf_marking-lines.doc-level + 1
                       .
                     end . 
-                    assign buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                    assign buf_marking-childs.sts = buf_marking.sts .
                     for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking-childs.mark :
                       for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code
                                                       and buf_chk-doc.out-code = buf_parts.out-code

@@ -364,7 +364,7 @@ on error undo, return error return-value
       buf_doc-line.prod-type      = ub.goods.prod-type
       buf_doc-line.prod-code      = ub.goods.prod-code
 
-      buf_doc-line.fact-qnty      = v-doc-line-chg-qnty
+      buf_doc-line.fact-qnty      = 0
       buf_doc-line.price-rubl     = TempDocLine.price-rubl / (if TempDocLine.koef > 0 then TempDocLine.koef else 1)
       buf_doc-line.price-base     = buf_doc-line.price-rubl
       buf_doc-line.price-cli      = TempDocLine.price-rubl
@@ -519,7 +519,7 @@ on error undo, return error return-value
         buf_parts.pl-code   = 0
 
         buf_parts.qnty      = v-part-chg-qnty
-        buf_parts.fact-qnty = buf_parts.qnty
+        buf_parts.fact-qnty = 0
         buf_parts.cli-qnty  = 0
         buf_parts.part-code = TempDocPart.part-id
         
@@ -592,8 +592,8 @@ on error undo, return error return-value
           ub.marking-lines.prt-code  = buf_parts.prt-code
           ub.marking-lines.gds-code = TempDocLine.gds-code
           ub.marking-lines.mark = TempDocMark.mark
+          ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
         .
-        ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
         assign
           buf_parts.PS =  TempDocMark.upd_id when TempDocMark.upd_id <> ""
         .
@@ -604,10 +604,19 @@ on error undo, return error return-value
         find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
         if available (ub.marking)
         then do:
-          ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
           ub.marking.obj-type = ub.marking-lines.obj-type.
           ub.marking.obj-code = ub.marking-lines.obj-code.
           ub.marking-lines.doc-level = 1.
+          if ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB and
+             ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
+          do:
+            ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
+          end.
+          else 
+          do:  /* если марка уже продана или возвращена на кассу, то считаем ее принятой и увелияивам кол-во принятых арок*/
+            buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty. 
+          end.
+          ub.marking-lines.sts = ub.marking.sts.
           for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
             create ub.marking-lines.
             assign
@@ -621,10 +630,10 @@ on error undo, return error return-value
               ub.marking-lines.mark = chi_marking.mark
               ub.marking-lines.doc-level = 2
             .
-            chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB.
+            chi_marking.sts = ub.marking.sts.
             chi_marking.obj-type = ub.marking-lines.obj-type.
             chi_marking.obj-code = ub.marking-lines.obj-code.
-            ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
+            ub.marking-lines.sts = ub.marking.sts.
           end.
         end.
       end.
@@ -722,9 +731,9 @@ on error undo, return error return-value
     on error undo, return error
     :
       assign
-        v-total-parts-qnty = v-total-parts-qnty + parts.fact-qnty
-        v-total-price-base = v-total-price-base + parts.fact-qnty * parts.price-base
-        v-total-price-rubl = v-total-price-rubl + parts.fact-qnty * parts.price-rubl
+        v-total-parts-qnty = v-total-parts-qnty + parts.qnty
+        v-total-price-base = v-total-price-base + parts.qnty * parts.price-base
+        v-total-price-rubl = v-total-price-rubl + parts.qnty * parts.price-rubl
       .
     end.
 
@@ -785,6 +794,7 @@ on error undo, return error return-value
       buf_gds-dtl.ov             = yes
       buf_gds-dtl.fact-qnty      = buf_doc-line.fact-qnty
       buf_gds-dtl.doc-qnty       = buf_doc-line.doc-qnty
+      buf_parts.fact-qnty        = buf_gds-dtl.fact-qnty
     .
     if TempTrnDoc.ext-doc-type = {&TDEDT_Vozvrat_Perem}
     then do :

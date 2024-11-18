@@ -2822,14 +2822,24 @@ define variable v-codident as character no-undo.
       do :    /* для док-та СПИСАНИЯ при закрытии на ФАКТ меняем статус марок на СПИСАН */
         run change_mark_sts_trn-doc in this-procedure
           (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
-           ObjSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB).
+           string(ObjSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB)).
       end.
-      
       if (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or v-is-return) and buf_trn-doc.status_ = {&fact} then 
-      do :    /* для док-та ПЕРЕМЕЩЕНИЯ и ВОЗВРАТА при закрытии на ФАКТ меняем статус марок на ПЕРЕМЕЩЕН */
+      do :    /* для док-та РАСХОДА ПЕРЕМЕЩЕНИЯ и ВОЗВРАТА при закрытии на ФАКТ меняем статус марок на ПЕРЕМЕЩЕН */
         run change_mark_sts_trn-doc in this-procedure
           (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
-           ObjSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB).
+           string(ObjSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB)).
+      end.
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and v-ischg-ext-type and buf_trn-doc.status_ = {&fact} then 
+      do :    /* для док-та ПРИХОДА ПЕРЕМЕЩЕНИЯ  при закрытии на ФАКТ меняем статус марок на СПИСАН */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           substitute("&1:&2,&3:&4",
+                      ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB,
+                      ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB,
+                      ObjSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB,
+                      ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB)
+          ).
       end.
     if v-ischg-ext-type
     then do:
@@ -3487,19 +3497,29 @@ procedure change_mark_sts_trn-doc:
     define input parameter iDocCode like ub.trn-doc.doc-code no-undo.
     define input parameter iObjType like ub.trn-doc.obj-type no-undo.
     define input parameter iObjCode like ub.trn-doc.obj-code no-undo.
-    define input parameter iNewSts  as   integer             no-undo.
+    define input parameter iStatus  as   character           no-undo.
+    /* Формат iStatus                                                           */
+    /* Одно значение (например: 10), то статус всех марок "тупо" меняем на него */
+    /* Если "*:11", статус всех марок меняем на 11                              */
+    /* Если "7:10,3:6", 7 меняем на 10, 3 на 6, остальные не изменяются         */
+    /* Если "7:10,3:6,*:11", 7 меняем на 10, 3 на 6, остальные на 11            */
+    
+    define variable vCount   as integer   no-undo.   
+    define variable vElem    as character no-undo.   
     
     define buffer buf_doc-line      for ub.doc-line.
     define buffer buf_goods         for ub.goods.
     define buffer buf_marking-lines for ub.marking-lines.
     define buffer buf_marking       for ub.marking.
     
+    if num-entries(iStatus,":") = 1 then iStatus = substitute("*:&1",iStatus). 
+    
     for each buf_doc-line no-lock where buf_doc-line.doc-code = iDocCode:
       find first buf_goods no-lock where 
                  buf_goods.artic     = buf_doc-line.artic 
              and buf_goods.prod-type = buf_doc-line.prod-type 
              and buf_goods.prod-code = buf_doc-line.prod-code.
-      for each buf_marking-lines where
+      for each buf_marking-lines exclusive-lock where
                buf_marking-lines.gds-code = buf_goods.gds-code
            and buf_marking-lines.out-code = iDocCode
            and buf_marking-lines.obj-type = iObjType
@@ -3507,8 +3527,16 @@ procedure change_mark_sts_trn-doc:
       :
         for each buf_marking exclusive-lock where 
                  buf_marking.mark = buf_marking-lines.mark:
-          buf_marking.sts = iNewSts.
-          validate buf_marking.
+          CHNG:
+          do vCount = 1 to num-entries(iStatus):
+              vElem = entry(vCount,iStatus).
+              if can-do(entry(1,vElem,":"),string(buf_marking.sts)) then
+              do:
+                  buf_marking.sts = integer(entry(2,vElem,":")).
+                  buf_marking-lines.sts = buf_marking.sts. 
+                  validate buf_marking.
+              end.
+          end.
         end.
       end.
     end.
