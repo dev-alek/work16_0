@@ -3769,6 +3769,25 @@ PROCEDURE l-doc-qnty :
   Parameters:  <none>
   Notes:
 -------------------------------------------------------------*/
+  if vIsExemplarGoods then
+  do:  /* для поэкземплярного учета проверим: введенное кол-во не должно быть < просканированных марок */
+    for each buf_marking-lines no-lock where
+             buf_marking-lines.out-code = t-doc.doc-code
+         and buf_marking-lines.obj-type = t-doc.obj-type
+         and buf_marking-lines.obj-code = t-doc.obj-code
+         and buf_marking-lines.gds-code = buf_goods.gds-code
+    :
+      accum buf_marking-lines.mark (count).  
+    end.
+    if (accum count buf_marking-lines.mark) > input frame {&frame-name} ub.gds-dtl.doc-qnty then 
+    do:
+      message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
+      ub.gds-dtl.doc-qnty:screen-value = string(accum count buf_marking-lines.mark).
+      apply "enrty" to ub.gds-dtl.doc-qnty in frame {&frame-name}.
+      return error.  
+    end.  
+  end.
+
   { str/set-pr.i recid(ub.gds-dtl) yes "input frame {&frame-name} ub.gds-dtl.doc-qnty" no-error }
   if error-status :error then
     message

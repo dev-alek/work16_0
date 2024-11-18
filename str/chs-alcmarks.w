@@ -922,7 +922,7 @@ PROCEDURE save_update :
                         b_trn-doc.doc-code     =  b_marking-lines.out-code
                     and b_trn-doc.ext-doc-type =  {&TDEDT_Spi_Vnesh}
                     and b_trn-doc.status_      <> {&fact}:
-                  run dispmessage ("“овар добавлен в незакрытый документ и не может быть списан." +
+                  run dispmessage ("“овар добавлен в незакрытый документ и не может быть списан.~n" +
                                    "Ќеобходимо либо закрыть документ, либо удалить его.").
                   return.
               end.

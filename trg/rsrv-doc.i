@@ -1,10 +1,10 @@
 /*
 
-$Revision: f29df1d5f130, 3104, rls $
-$Author: DRuban $
-$Date: Вт авг 09 09:15:01 2022 +0300 $
-$Workfile: rsrv-doc.i $
-$Archive: trg/rsrv-doc.i $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Процедура резервирования товара для документов
 
@@ -21,7 +21,7 @@ create: Перваков Михаил Сергеевич
 
 &scop f-l Base2Int64
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: rsrv-doc.i $ $Revision: f29df1d5f130, 3104, rls $".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 { gbl/std-func.i {&f-l} }
 { str/marks.i }
 { utl/gtin.i }
@@ -146,7 +146,8 @@ procedure rsrv-doc :
   define variable varcur-slt-pc  like ub.price-list.slt-pc     no-undo .
   define variable varprice-rubl  as decimal no-undo .
   define variable varprice-base  as decimal no-undo .
-  
+  define variable vIsExemplarGoods as logical no-undo init false.
+    
   define variable v-exch-rate  like ub.curr-accnt.exch-rate no-undo .
   define variable v-exch-scale like ub.curr-accnt.exch-scale no-undo .
 
@@ -180,6 +181,18 @@ procedure rsrv-doc :
         view-as alert-box error .
       undo, return error return-value .
     end.
+
+    find first buf_goods no-lock where 
+               buf_goods.artic     = buf_doc-line.artic
+           and buf_goods.prod-type = buf_doc-line.prod-type
+           and buf_goods.prod-code = buf_doc-line.prod-code
+         no-error.
+    if avail buf_goods then
+    do:  /* определим, что товар с поэкземплярным учетом  */
+      run isExemplarGoods in this-procedure 
+          (buf_trn-doc.obj-type, buf_trn-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+    end.
+
 /*    run gbl/inidebug.p .*/
     
 /*    delete object v-tth no-error.                         */
@@ -1416,32 +1429,30 @@ procedure rsrv-doc :
             
             if v-fifo = true
             then do:
-              find first buf_parts
-                where buf_parts.obj-type  = buf_doc-line.obj-type
-                  and buf_parts.obj-code  = buf_doc-line.obj-code
-                  and buf_parts.artic     = buf_doc-line.artic
-                  and buf_parts.prod-type = buf_doc-line.prod-type
-                  and buf_parts.prod-code = buf_doc-line.prod-code
-                  and buf_parts.out-code  = v-rsrv-code
-                  and buf_parts.status_   = no
-                  and buf_parts.fact-qnty > 0
-                use-index FIFO
-                no-error.
+              release buf_parts.
+              if vIsExemplarGoods then
+                { trg/fndpartfifo.i
+                  "first"
+                  "and not can-find(first buf_marking-lines where 
+                                          buf_marking-lines.out-code = buf_parts.out-code 
+                                      and buf_marking-lines.part-code = buf_parts.part-code )"}
+                if not avail buf_parts then
+                   { trg/fndpartfifo.i "first" }
             end.
             else if not v-alc-rsrv and not v-mark-tobacco
             then do:
               if p-mark = "" and not (v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}) or (v-izlcstpr and p-action = {&rsrv-dtl_action_reserv-sozdanie}) then
-              find last buf_parts
-                where buf_parts.obj-type  = buf_doc-line.obj-type
-                  and buf_parts.obj-code  = buf_doc-line.obj-code
-                  and buf_parts.artic     = buf_doc-line.artic
-                  and buf_parts.prod-type = buf_doc-line.prod-type
-                  and buf_parts.prod-code = buf_doc-line.prod-code
-                  and buf_parts.out-code  = v-rsrv-code
-                  and buf_parts.status_   = no
-                  and buf_parts.fact-qnty > 0
-                use-index FIFO
-                no-error.
+              do:
+                release buf_parts.
+                if vIsExemplarGoods then
+                  { trg/fndpartfifo.i
+                    "last"
+                    "and not can-find(first buf_marking-lines where
+                                            buf_marking-lines.out-code = buf_parts.out-code 
+                                        and buf_marking-lines.part-code = buf_parts.part-code )"}
+                  if not avail buf_parts then
+                     { trg/fndpartfifo.i "last" }
+              end.
             end.
           end.
           else do:
@@ -2024,7 +2035,6 @@ procedure rsrv-doc :
           view-as alert-box error .
         undo, return error return-value .
       end.
-
       if v-process-part = true
       then do:
         /*  
@@ -2414,4 +2424,4 @@ PROCEDURE ProcAlcCode :
     
 END PROCEDURE.
 
-/* $Workfile: rsrv-doc.i $   E n d */
+/* $Workfile$   E n d */
