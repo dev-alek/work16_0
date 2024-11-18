@@ -22,7 +22,8 @@ def var v-full-proc-name as character no-undo.
 
 if search ("exe/msg.exe") <> ? then do:
 	  v-full-proc-name = search ("exe/msg.exe").
-	  os-command no-wait value (search ("exe/msg.exe") + " * " +  p-msg).
+/*	  os-command no-wait value (search ("exe/msg.exe") + " * " +  p-msg). */
+	  os-command no-wait value (search ("exe/msg.exe") + " *  /TIME:0" +  p-msg).
 end.
 
 else do:
