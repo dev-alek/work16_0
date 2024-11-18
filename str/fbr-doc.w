@@ -118,6 +118,8 @@ define variable v-base                     as logical   init no no-undo.
 
 define variable bcol as handle extent no-undo.
 define variable hBrowse as handle no-undo.
+define variable bcol_comp as handle extent no-undo.
+define variable hBrowse_comp as handle no-undo.
 define variable ii as integer no-undo.
 
 define new shared buffer flt-gds      for ub.goods.                                /* для режима ТОВАР */
@@ -253,6 +255,12 @@ FUNCTION get-unit-base RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD need-marks D-FBR-DOC 
+FUNCTION need-marks RETURNS logical
+   (  buffer local-fbr-line for ub.fbr-line )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -1410,6 +1418,8 @@ ON RETURN OF br-comp IN FRAME D-FBR-DOC
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-comp D-FBR-DOC
 ON ROW-DISPLAY OF br-comp IN FRAME D-FBR-DOC
    DO:
+      define buffer local_ingr_fbr-line for ub.fbr-line .
+      
       if buf_comp_fbr-line.is-waste = yes
          then 
       do:
@@ -1433,6 +1443,20 @@ ON ROW-DISPLAY OF br-comp IN FRAME D-FBR-DOC
             buf_comp_fbr-line.rsrv-qnty             :bgcolor in browse br-comp = gray_color
             .
       end.
+      
+      for first local_ingr_fbr-line no-lock where local_ingr_fbr-line.doc-code = f-doc.doc-code
+                                              and local_ingr_fbr-line.is-comp = no
+                                              and local_ingr_fbr-line.recipe-code = buf_comp_fbr-line.recipe-code
+      :
+        if need-marks(buffer local_ingr_fbr-line)
+        then do ii = 1 to extent (bcol_comp):  
+          if valid-handle (bcol_comp[ii]) 
+          then do:
+            assign
+              bcol_comp[ii]:bgcolor = RED_COLOR.
+          end.
+        end.
+      end .
    END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2853,6 +2877,13 @@ extent (bcol) = hbrowse:num-columns.
 bcol[1] = hbrowse:first-column.
 do ii = 1 to extent (bcol).  
   bcol[ii] = hbrowse:get-browse-column (ii).
+end.
+
+hbrowse_comp = browse br-comp:handle.
+extent (bcol_comp) = hbrowse_comp:num-columns.
+bcol_comp[1] = hbrowse_comp:first-column.
+do ii = 1 to extent (bcol_comp).  
+  bcol_comp[ii] = hbrowse_comp:get-browse-column (ii).
 end.
 
 /* зацикливание формы */
