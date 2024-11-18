@@ -2144,9 +2144,13 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      DEFINE VARIABLE vRetOk       AS LOGICAL NO-UNDO.
      DEFINE VARIABLE vErrSts      AS CHARACTER   NO-UNDO.
      DEFINE VARIABLE vChkNotSell  AS LOG       NO-UNDO.
+     DEFINE VARIABLE vErrTxt      AS CHARACTER NO-UNDO.
      
-     vChkNotSell = NO.
-     vFileLog = "GisMtReq-" + replace(STRING(TODAY),"/","-") +  ".log".
+     ASSIGN
+        vChkNotSell = NO
+        vFileLog = "GisMtReq-" + replace(STRING(TODAY),"/","-") +  ".log"
+        vErrTxt = "Ошибка при проверке товара в локальном модуле Честный знак. Товар не добавлен в чек. Сообщите управляющему/старшему смены. "
+        . 
                   
      FIND FIRST tt-file-name WHERE tt-file-name.ofline = YES NO-ERROR.
      IF AVAIL tt-file-name
@@ -2176,17 +2180,17 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            IF ttlocal-mark.errorCode > 0 THEN DO:                             
               mCheckSts = 0.
               dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка errorCode &1 reason &2", ttlocal-mark.errorCode, ttlocal-mark.reason)).
-              vErrSts = "Проверка в локальном модуле честный знак завершилась с ошибкой. Обратитесь в техническую поддержку. ".
+              vErrSts = vErrTxt.
            END.            
            ELSE IF ttlocal-mark.code <> 0 THEN DO:                             
               mCheckSts = 0.
               dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка Code &1 Описание &2", ttlocal-mark.code, ttlocal-mark.description)).
-              vErrSts = "Проверка в локальном модуле честный знак завершилась с ошибкой. Обратитесь в техническую поддержку. ".
+              vErrSts = vErrTxt.
            END.
            ELSE IF NOT AVAIL ttlocal-mark-code THEN DO:                             
               mCheckSts = 0.
               dbgPrint("marking.log", "Ошибка проверки КИ в ЛМ ЧЗ. Не удалось разобрать секцию codes").
-              vErrSts = "Проверка в локальном модуле честный знак завершилась с ошибкой. Обратитесь в техническую поддержку. ".
+              vErrSts = vErrTxt.
            END.
            ELSE DO:
                IF ttlocal-mark-code.isBlocked THEN 
@@ -2208,7 +2212,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         ELSE DO:
             mCheckSts = 0.
             dbgPrint("marking.log", "Ошибка проверки КИ в ЛМ ЧЗ.").
-            vErrSts = "Проверка в локальном модуле Честный знак завершилась с ошибкой. Обратитесь в техподдержку. ".
+            vErrSts = vErrTxt.
         END.      
         
         OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
@@ -2229,7 +2233,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      ELSE DO:
         mCheckSts = 0.
         dbgPrint("marking.log", "Отсутствует файл офлайн проверки в ЛМ ЧЗ.").
-        vErrSts = "Проверка в локальном модуле Честный знак завершилась с ошибкой. Обратитесь в техподдержку. ".
+        vErrSts = vErrTxt.
         OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
         PUT STREAM out_data UNFORMATTED  
              NOW CHR(9) "Отсутствует ответ ЛМ ЧЗ".
