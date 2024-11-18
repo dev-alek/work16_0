@@ -1000,15 +1000,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         END.                               
     END.                           
     dbgPrint("marking.log", "gismt-info").
-    
-    /* если установлен параметр, обозначающий наличие аварии в ГИС МТ, выходим */
-    IF gismt-CrashSituat THEN DO:
-       dbgPrint("marking.log", "Установлена аварийная ситуация.").
-       /* Запускаем офлайн проверку */
-       vRetVal = GetResLocalMark(mark-short).
-       RETURN 1.
-    END.
-    
+           
     vFileLog = "GisMtReq-" + replace(STRING(TODAY),"/","-") +  ".log".
     vCh = "". /* что бы в новый лог писал с первой строки, а в имеющийся - со следующей */
     IF searchfile(vFileLog) <> ?
@@ -1022,6 +1014,18 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     PUT STREAM out_data UNFORMATTED 
       vCh SKIP NOW CHR(9) mMarkOrig CHR(9).
     OUTPUT STREAM out_data CLOSE.     
+    
+    /* если установлен параметр, обозначающий наличие аварии в ГИС МТ, выходим */
+    IF gismt-CrashSituat THEN DO:
+       dbgPrint("marking.log", "Установлена аварийная ситуация.").
+       OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
+       PUT STREAM out_data UNFORMATTED  
+          "Установлена аварийная ситуация в ГИС МТ" CHR(9).
+       OUTPUT STREAM out_data CLOSE.
+       /* Запускаем офлайн проверку */
+       vRetVal = GetResLocalMark(mark-short).
+       RETURN 1.
+    END.
     
     /* формируем файл запроса к ГИС МТ с маркой и ИНН */
     RUN gbl/_tmpfile.p ( "GisMT_data", ".txt", OUTPUT vDataMark ) .

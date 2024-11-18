@@ -60,25 +60,25 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    define temp-table ttblocked_series no-undo    
    xml-node-name "blocked_series"
    field s-reqid        as recid serialize-hidden           
-   field timeLag as int64 
-   field serverDocCount as int64
-   field localDocCount as int64
+   field timeLag as char 
+   field serverDocCount as char
+   field localDocCount as char
    index reqidpar s-reqid 
    .   
    define temp-table ttblocked_gtin no-undo    
    xml-node-name "blocked_gtin"
    field s-reqid        as recid serialize-hidden           
-   field timeLag as int64 
-   field serverDocCount as int64
-   field localDocCount as int64
+   field timeLag as char 
+   field serverDocCount as char
+   field localDocCount as char
    index reqidpar s-reqid 
    .   
    define temp-table ttblocked_cis no-undo    
    xml-node-name "blocked_cis"
    field s-reqid        as recid serialize-hidden           
-   field timeLag as int64 
-   field serverDocCount as int64
-   field localDocCount as int64
+   field timeLag as char 
+   field serverDocCount as char
+   field localDocCount as char
    index reqidpar s-reqid 
    . 
 
@@ -122,22 +122,34 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    end method.
    
    /* Запрос статуса ЛМ ЧЗ из отчета */  
-   method public character GetChkStsOffline ():
+   method public character GetChkStsOffline (
+       output oVersion as character,
+       output oTimeLag as character):
+           
        define variable vStatus as character no-undo.
        define variable vTimeLag as int64 no-undo.
-       
+              
        vTimeLag = 0.
        
        RunChkStsAndInit(no, no).
        
        find first ttstatus-body no-error.
-       if avail ttstatus-body  then do: 
-          vStatus = ttstatus-body.f_status.
-          vTimeLag  = Round(GetMaxTime() / 3600000, 0).
-       end.   
-       else vStatus = "Нет связи с ЛМ ЧЗ".   
-       if vTimeLag <> 0 then vStatus = vStatus + ";" + string(vTimeLag).
-       else vStatus = vStatus + ";" + "не определено".
+       if avail ttstatus-body  
+       then do:
+           assign
+             vStatus = ttstatus-body.f_status
+             oVersion = ttstatus-body.f_version
+             .
+           vTimeLag  = Round(GetMaxTime() / 3600000, 0) no-error.
+       end.              
+       else
+          assign 
+             vStatus = "Нет связи с ЛМ ЧЗ"
+             oVersion = "Не определена"
+             .   
+       if vTimeLag <> 0 and vTimeLag <> ? 
+       then oTimeLag = string(vTimeLag).
+       else oTimeLag = "не определено".
        
        EmptyTempTable().
        
@@ -346,22 +358,36 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    
    method  private int64 GetMaxTime():
        define variable vTimeLag as int64 no-undo.
+       define variable vTimeTT as int64 no-undo.
+       
        vTimeLag = 0.
        find first ttblocked_series no-error.
-       if avail ttblocked_series 
-            and ttblocked_series.timeLag > vTimeLag
-            then vTimeLag = ttblocked_series.timeLag.            
-        
+       if avail ttblocked_series
+            and ttblocked_series.timeLag <> "unknown" 
+       then do: 
+          vTimeTT = Int64(ttblocked_series.timeLag) no-error.
+          if not error-status:error and
+             vTimeTT > vTimeLag
+          then vTimeLag = vTimeTT.            
+       end. 
        find first ttblocked_gtin no-error.
        if avail ttblocked_gtin 
-            and ttblocked_gtin.timeLag > vTimeLag
-            then vTimeLag = ttblocked_gtin.timeLag.       
-
+            and ttblocked_gtin.timeLag <> "unknown"
+       then do: 
+          vTimeTT = Int64(ttblocked_gtin.timeLag) no-error.
+          if not error-status:error and
+             vTimeTT > vTimeLag     
+          then vTimeLag = vTimeTT.       
+       end.       
        find first ttblocked_cis no-error.
        if avail ttblocked_cis 
-            and ttblocked_cis.timeLag > vTimeLag
-            then vTimeLag = ttblocked_cis.timeLag.
-       
+            and ttblocked_cis.timeLag <> "unknown"
+       then do: 
+          vTimeTT = Int64(ttblocked_cis.timeLag) no-error.
+          if not error-status:error and
+             vTimeTT > vTimeLag     
+          then vTimeLag = vTimeTT.       
+       end.
        return vTimeLag.     
    end method.   
    
