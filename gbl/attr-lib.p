@@ -8924,6 +8924,7 @@ true~
 ,false~
 ,false~
 ,false~
+,false~
 ,false'
 &scop output-display-list-cda-IBM-XML_operative '~
 true~
@@ -8937,13 +8938,15 @@ true~
 ,true~
 ,true~
 ,true~
+,true~
 ,true'
 &scop other-cda-IBM-XML_operative 'spr=cd-attr-last-check-params,,'
-&scop prop-type-list-cda-IBM-XML_operative 'character,character,integer,character,character,character,character,character,character,character,character,character'
-&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)|9|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)'
+&scop prop-type-list-cda-IBM-XML_operative 'character,character,character,integer,character,character,character,character,character,character,character,character,character'
+&scop prop-format-list-cda-IBM-XML_operative 'X(19)|X(255)|X(255)|9|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)|X(9)'
 &scop prop-label-list-cda-IBM-XML_operative '~
 Параметры последнего принятого чека/док-та~
 ,Версия кассовой программы~
+,Версия ПО «Коннектор»~
 ,Признак исполнения кассы~
 ,ФФД версия~
 ,ККТ версия~
@@ -8954,10 +8957,11 @@ true~
 ,Таймаут ожидания~
 ,Таймаут ожидания проверки ГИСМТ~
 ,Таймаут  открытия соединения ГИСМТ'
-&scop manual-edit-cda-IBM-XML_operative  '1,0,0,0,0,0,0,0,0,0,0,0'
-&scop batch-edit-cda-IBM-XML_operative  '0,0,0,0,0,0,0,0,0,0,0,0'
+&scop manual-edit-cda-IBM-XML_operative  '1,0,0,0,0,0,0,0,0,0,0,0,0'
+&scop batch-edit-cda-IBM-XML_operative   '0,0,0,0,0,0,0,0,0,0,0,0,0'
 &scop news-cda-IBM-XML_operative '~
 false~
+,true~
 ,true~
 ,true~
 ,true~
@@ -8981,9 +8985,11 @@ false~
 ,false~
 ,false~
 ,false~
+,false~
 ,false'
 &scop from-ubd-cda-IBM-XML_operative '~
 true~
+,true~
 ,true~
 ,true~
 ,true~
@@ -9007,9 +9013,11 @@ false~
 ,true~
 ,true~
 ,true~
+,true~
 ,true'
 &scop send-param-cda-IBM-XML_operative  '~
 false~
+,false~
 ,false~
 ,false~
 ,false~
@@ -9067,38 +9075,46 @@ true~
 &scop user-can-edit-list-cda-AUTOTANK_operative '~
 true~
 ,false~
+,false~
 ,false'
 &scop output-display-list-cda-AUTOTANK_operative '~
 true~
 ,true~
+,true~
 ,true'
 &scop other-cda-AUTOTANK_operative 'spr=cd-attr-last-check-params,'
-&scop prop-type-list-cda-AUTOTANK_operative 'character,character,integer'
-&scop prop-format-list-cda-AUTOTANK_operative 'X(19)|X(255)|9'
+&scop prop-type-list-cda-AUTOTANK_operative 'character,character,character,integer'
+&scop prop-format-list-cda-AUTOTANK_operative 'X(19)|X(255)|X(255)|X(9)'
 &scop prop-label-list-cda-AUTOTANK_operative '~
 Параметры последнего принятого чека/док-та~
 ,Версия кассовой программы~
+,Версия ПО «Коннектор»~
 ,Признак исполнения кассы'
-&scop manual-edit-cda-AUTOTANK_operative  '1,0,0'
-&scop batch-edit-cda-AUTOTANK_operative  '0,0,0'
+&scop manual-edit-cda-AUTOTANK_operative  '1,0,0,0,'
+&scop batch-edit-cda-AUTOTANK_operative  '0,0,0,0'
 &scop news-cda-AUTOTANK_operative '~
 false~
+,true~
 ,true~
 ,true'
 &scop from-gbd-cda-AUTOTANK_operative '~
 false~
 ,false~
+,false~
 ,false'
 &scop from-ubd-cda-AUTOTANK_operative '~
 true~
+,true~
 ,true~
 ,true'
 &scop hist-cda-AUTOTANK_operative '~
 false~
 ,true~
+,true~
 ,true'
 &scop send-param-cda-AUTOTANK_operative  '~
 false~
+,false~
 ,false~
 ,false'
 /**/

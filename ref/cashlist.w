@@ -128,6 +128,7 @@ mdevice = new ibs.th.str.cash.CashDevice().
 /* Definitions for BROWSE BR-cash-desk                                  */
 &Scoped-define FIELDS-IN-QUERY-BR-cash-desk mark-string( recid(X_cash-desk), v-rid-list ) X_cash-desk.cash-on X_cash-desk.obj-code X_cash-desk.db-num X_cash-desk.cash-num {&cd-type-name} cash-desk-auto(X_cash-desk.autonomy) if X_cash-desk.pos-type = {&cd-type-ibm-xml} or X_cash-desk.pos-type = {&cd-type-autotank} then (if num-entries(X_cash-desk.addr-path, {&delim-par}) > 1 then (entry(1, X_cash-desk.addr-path, {&delim-par}) + ":\\":U + entry(2, X_cash-desk.addr-path, {&delim-par})) else X_cash-desk.addr-path) else X_cash-desk.addr-path X_cash-desk.cash-os string(if X_cash-desk.is-del then {&deleted-status} else {&current-status}) (if X_cash-desk.remote = 1 then yes else no) X_cash-desk.version get-ffd-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) get-kkt-schema(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) ~
 get-fo-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)~
+get-OptVer(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)~
 get-GISMT_TIMEOUT(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)~
 get-GISMT_FAST(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)~
 get-date(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) + " " + get-time(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)
@@ -182,6 +183,19 @@ FUNCTION get-fo-version RETURNS CHARACTER
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-OptVer Dialog-Frame
+FUNCTION get-OptVER RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+  ,INPUT p-obj-code AS INTEGER
+  ,INPUT p-pos-type AS CHARACTER
+  ,INPUT p-cash-num AS INTEGER)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD get-ffd-version Dialog-Frame
 FUNCTION get-ffd-version RETURNS CHARACTER
@@ -378,6 +392,7 @@ DEFINE BROWSE BR-cash-desk
   (if X_cash-desk.remote = 1 then yes else no) COLUMN-LABEL "Удаленная!дистанционно" FORMAT "+/":U
   X_cash-desk.version COLUMN-LABEL "Версия!протокола" FORMAT "X(17)":U
   get-fo-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия кассовой программы" FORMAT "X(35)":U
+  get-OptVer(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия кассовой программы" FORMAT "X(35)":U
   get-ffd-version(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Версия ФФД" FORMAT "X(15)":U
   get-kkt-schema(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num)  COLUMN-LABEL "Схема интеграции ККТ" FORMAT "X(20)":U
   string(get-GISMT_TIMEOUT(X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num))  COLUMN-LABEL "Таймаут ответа! ГИСМТ" FORMAT "X(15)":U
@@ -1766,6 +1781,7 @@ PROCEDURE proc-b-print :
   define variable ii              as integer   no-undo.
   define variable StartRecid      as integer   no-undo.
   define variable v-fo-version    as CHARACTER no-undo.
+  define variable v-OptVer        as CHARACTER no-undo.
   define variable v-ffd-version   as CHARACTER no-undo.
   define variable v-GISMT_TIMEOUT as CHARACTER no-undo.
   define variable v-GISMT_FAST    as CHARACTER no-undo.
@@ -1843,6 +1859,7 @@ PROCEDURE proc-b-print :
     '<th rowspan="2" text_wrap="true" style="text-align: center;">Удаленная дистанционно</th>' skip
     '<th rowspan="2" text_wrap="true" style="text-align: center;">Версия протокола</th>' skip
     '<th rowspan="2" text_wrap="true" style="text-align: center;">Версия кассовой программы</th>' skip
+    '<th rowspan="2" text_wrap="true" style="text-align: center;">Версия ПО «Коннектор»</th>' skip
     '<th rowspan="2" text_wrap="true" style="text-align: center;">Схема интеграции ККТ</th>' skip
     '<th rowspan="2" text_wrap="true" style="text-align: center;">Версия ФФД</th>' skip
     '<th rowspan="2" text_wrap="true" style="text-align: center;">Таймаут ответа ГИСМТ</th>' skip
@@ -1874,6 +1891,7 @@ PROCEDURE proc-b-print :
     '<td style="text-align: center;">16</td>' skip
     '<td style="text-align: center;">17</td>' skip
     '<td style="text-align: center;">18</td>' skip
+    '<td style="text-align: center;">19</td>' skip
     '</tr>' skip
     .     
 
@@ -1923,10 +1941,16 @@ PROCEDURE proc-b-print :
       /*         '<td text_wrap="true" rowspan="2" style="text-align: right;">' + string(X_cash-desk.registration-code) + '</td>' skip*/
       /*         '<td text_wrap="true" rowspan="2" style="text-align: right;">' + string(X_cash-desk.serial-code) + '</td>' skip      */
       .
+    
     v-fo-version = get-fo-version( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
     if v-fo-version = ? then v-fo-version = "" .
     put stream OutStr-html unformatted    
       '<td text_wrap="true" style="text-align: center;">' + string(v-fo-version) + '</td>' skip
+      .  
+    v-OptVer = get-OptVer( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
+    if v-OptVer = ? then v-OptVer = "" .
+    put stream OutStr-html unformatted    
+      '<td text_wrap="true" style="text-align: center;">' + v-OptVer + '</td>' skip
       .
     v-kkt-schema = get-kkt-schema( X_cash-desk.db-num, X_cash-desk.obj-code, X_cash-desk.pos-type, X_cash-desk.cash-num) .
     if v-kkt-schema = ? then v-kkt-schema = " - " .
@@ -2184,6 +2208,46 @@ FUNCTION get-fo-version RETURNS CHARACTER
     ,output v-logical
     ,output v-dop) no-error.
   RETURN v-fo-version.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION get-OptVer Dialog-Frame
+FUNCTION get-OptVer RETURNS CHARACTER
+  ( INPUT p-db-num AS INTEGER
+  ,INPUT p-obj-code AS INTEGER
+  ,INPUT p-pos-type AS CHARACTER
+  ,INPUT p-cash-num AS INTEGER) :
+  DEFINE VARIABLE v-dop        AS CHARACTER NO-UNDO.
+  DEFINE VARIABLE v-OptVer     AS CHARACTER NO-UNDO.
+  define variable v-date       as date      no-undo .
+  define variable v-decimal    as decimal   no-undo .
+  define variable v-integer    as integer   no-undo .
+  define variable v-logical    as logical   no-undo .
+
+/*  message p-db-num p-obj-code p-pos-type p-cash-num view-as alert-box. */
+
+  run cd-attr-value in this-procedure (
+    input   p-db-num
+    ,input  p-obj-code
+    ,input  p-pos-type
+    ,input  p-cash-num
+    ,input  (if p-pos-type = {&cd-type-IBM-XML}
+    then {&cda-IBM-XML_operative}
+    else {&cda-AUTOTANK_operative})
+    ,input  (if p-pos-type = {&cd-type-IBM-XML}
+    then {&cda-IBM-XML_operative_OptVer}
+    else {&cda-AUTOTANK_operative_OptVer})
+    ,output v-OptVer
+    ,output v-date
+    ,output v-decimal
+    ,output v-integer
+    ,output v-logical
+    ,output v-dop) no-error.
+  RETURN v-OptVer.   /* Function return value. */
 
 END FUNCTION.
 
