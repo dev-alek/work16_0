@@ -263,7 +263,7 @@ procedure shapka-inv :
     else do:
      put stream OutStr-html unformatted  
     '<TR>' skip
-    '<TD text_wrap="true" colspan="86" style="">На основании распоряжения от "_____" _______________ 20____ г. № __________ </TD>' skip
+    '<TD text_wrap="true" colspan="86" style="">На основании распоряжения от "_____" _______________ 20____ г.' + if v-prikaz-num = "" then "№ __________" + '</TD>' else '№ ' + string(v-prikaz-num) + '</TD>' skip
     '</TR>'skip
     .
     end.
