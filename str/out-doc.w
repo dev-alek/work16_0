@@ -1820,7 +1820,8 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                     and tt-marking-lines.part-code = buf_parts.part-code
                     and tt-marking-lines.prt-code = buf_parts.prt-code
                :
-                   if tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB then
+                   if tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB and
+                      tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB then
                       v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
                end.
                if buf_parts.fact-qnty <> v-fact-part then

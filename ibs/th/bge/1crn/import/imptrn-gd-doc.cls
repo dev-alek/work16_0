@@ -194,7 +194,6 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc inherits ibs.th.gbl.sys.objth impleme
         .
         release TempDocLine.
       end.
-      
       if valid-object (objMarks)
       then do jj = 1 to objMarks:Get(jj):
         objMark = cast (objMarks:SubjectObjCurr, trn-mark).
@@ -202,7 +201,7 @@ class ibs.th.bge.1crn.import.imptrn-gd-doc inherits ibs.th.gbl.sys.objth impleme
         then do :
           create TempDocMark.
           assign
-            TempDocMark.mark = GetCodeIdent(objMark:mark-code)
+          TempDocMark.mark = GetCodeIdent(repTegforDm(objMark:mark-code))
             TempDocMark.prt-id = objMark:prt-id
             TempDocMark.in-doc-id = objMark:in-doc-id
             TempDocMark.gtin = objMark:gtin
