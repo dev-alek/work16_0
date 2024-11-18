@@ -528,6 +528,54 @@ end.
                                                     
        end.                                
   end.   
+  
+  
+  
+  if p-GdsObj:gds-type = {&gds-goods} then do:   /* атрибут товар, если до него был атрибут блюдо */ 
+       for each buf-clients no-lock where buf-clients.db-num = g#db-num
+                                  and buf-clients.obj-type = {&shop}
+                                  and buf-clients.stts = 0 :
+
+           find first  fbr-gds-obj where fbr-gds-obj.gds-code =  v-nbc 
+                                        and fbr-gds-obj.obj-type = buf-clients.obj-type 
+                                        and fbr-gds-obj.obj-code = buf-clients.obj-code 
+										and fbr-gds-obj.is-menu = yes
+                                        no-lock no-error. 
+										
+				if available fbr-gds-obj then do: 
+				   par-recid-fbr =  recid(fbr-gds-obj) .   
+				   
+				   find first  recipe-gds where recipe-gds.gds-code =  v-nbc no-lock no-error. 
+				   find first  doc-fbr-gds where recipe-gds.gds-code =  v-nbc no-lock no-error.  
+				    if ( not available recipe-gds and  not available doc-fbr-gds ) 
+                          then do:
+						  run ref/fgdsobj1.p (
+                          input-output par-recid-fbr
+                        , input {&update}
+                        , input no /*p-silent*/
+                        , input v-nbc
+                        , input buf-clients.obj-type 
+                        , input buf-clients.obj-code
+                        , input fbr-gds-obj.fbr-grp-code 
+                        , input buf-clients.obj-type
+                        , input buf-clients.obj-code
+                        , input fbr-gds-obj.is-cd 
+                        , input FALSE
+                        , input fbr-gds-obj.is-modificator
+                        , input fbr-gds-obj.is-null-price
+                        , input fbr-gds-obj.is-season
+                        , input fbr-gds-obj.is-semi-finished
+                        ) no-error.
+					end.
+                    else do:
+                    v-err-mess = substitute("ќшибка при изменении атрибута товара &1. ѕо товару с атрибутом 'блюдо' есть рецепты и документы " , v-nbc).
+                    return error v-err-mess .					
+                    end. 					
+
+				END.
+/*           par-recid-fbr    =  if available fbr-gds-obj then recid(fbr-gds-obj) else ?.    */
+       end.                                
+  end.   
 
   /* ----- баркоды товара ----- */
   v-barcode-list = "" .
