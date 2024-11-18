@@ -53,8 +53,8 @@ if v-infodb-date <> ?
   and v-infodb-date >= today
 then do:
   return .
-end.
-
+end.  
+ 
 run waitfram-show in this-procedure ("Сбор информации о БД").
 
 do transaction
@@ -122,7 +122,7 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
             percenttom = ?
           .
         end.
-
+        
         find first ub.db-info exclusive-lock
           where ub.db-info.db-num     = buf_sys-ctrl.db-num                 /* Номер БД  */
             and ub.db-info.date-info  = v-today                             /* Дата      */
@@ -141,11 +141,13 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
              ub.db-info.volume-name = ub._filelist._filelist-name           /* Имя тома области    */
            .
         end.
+        
         assign
           ub.db-info.time-info               = v-time                      /* Время                              */
           ub.db-info.volume-size             = ub._FileList._FileList-Size /* Размер тома области                */
           ub.db-info.volume-hiwater          = sizetom                     /* Заполненность тома области         */
           ub.db-info.volume-percent-hiwater  = percenttom                  /* Процент заполненности тома области */
+          ub.db-info.volume-name = ub._filelist._filelist-name           /* Имя тома области    */
         .
 
     end. /* for each _areaextent */
