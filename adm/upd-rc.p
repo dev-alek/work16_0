@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2d3eafa142ca, 3655, rls $
+$Author: EShklyar $
+$Date: 2024/01/31 10:15:43 $
+$Workfile: upd-rc.p $
+$Archive: adm/upd-rc.p $
 
 Обновление r-кодов, обновления должны лежать передаваемом в каталоге
 
@@ -36,9 +36,9 @@ define variable CheckUpd      as class ibs.th.adm.upd.CheckUpd no-undo.
 
 procedure write-log:
    define input  parameter iTabPosition as integer   no-undo.
-    define input parameter i-message    as character no-undo.
+   define input parameter i-message    as character no-undo.
     
-    run write-to-log in this-procedure( i-message).
+   run write-to-log in this-procedure( i-message).
 end.
 
 procedure write-log-and-file:
@@ -47,14 +47,15 @@ procedure write-log-and-file:
    define input parameter ilog-level    as integer   no-undo.
    define input parameter i-message     as character no-undo.
     
-    run write-to-log in this-procedure( i-message).
+   run write-to-log in this-procedure( i-message).
 end.
 
 procedure writelog :
-define input parameter p-file-name AS CHAR     NO-UNDO.
-define input parameter p-log-level AS INTEGER  NO-UNDO.
-define input parameter p-log-string  AS CHAR     NO-UNDO.
-    run write-to-log in this-procedure( p-log-string).
+   define input parameter p-file-name AS CHAR     NO-UNDO.
+   define input parameter p-log-level AS INTEGER  NO-UNDO.
+   define input parameter p-log-string  AS CHAR     NO-UNDO.
+   
+   run write-to-log in this-procedure( p-log-string).
 end procedure. /* writelog */
 
 define variable p0-pathrc as character no-undo .
@@ -66,6 +67,7 @@ define variable v-copy-err         as logical no-undo .
 
 define variable v-delfile as char no-undo.
 define variable v-date   as date no-undo .
+define variable v-type   as character no-undo .
 define variable v-txt   as char no-undo .
 define variable v-arc   as char no-undo .
 define variable oldg#news as logical no-undo .
@@ -77,13 +79,9 @@ define temp-table upgfile-tbl no-undo
   field nameupgfile  as char
   field fullnameupgfile  as char
   field dateupg as date
+  field type as character
   index dupg is unique primary dateupg
 .
-
-for each upgfile-tbl
-:
-  delete upgfile-tbl.
-end.
 
 define variable v-version           as character no-undo .
 define variable v-locale            as character no-undo .
@@ -95,8 +93,10 @@ define variable v-comment           as character no-undo .
 define variable v-file-date         as date      no-undo .
 define variable v-file-time         as integer   no-undo .
 define variable v-releace           as integer   no-undo.
-define variable v-patch             as integer  no-undo.
+define variable v-patch             as integer   no-undo.
 define variable v-branch            as integer   no-undo.
+define variable mFileLog            as character no-undo.
+define variable mIsError            as logical   no-undo.
 
 define variable v-program-tag     as character no-undo .
 
@@ -106,6 +106,9 @@ define new shared variable oxml-heap-dir as character no-undo .
 { gbl/getcntxa.i }
 define variable parparentproc as handle no-undo.
 parparentproc = this-procedure.
+/*&scoped-define PREFIX_LOG substitute("&1 &2 БД&3",string(today,"99.99.9999"), string(time,"HH:MM:SS"), g#db-num)*/
+&scoped-define PREFIX_LOG substitute("БД&1 ", g#db-num) 
+
 /* Дата компиляции */
 
 run gbl/vertag.p (
@@ -122,21 +125,10 @@ run gbl/vertag.p (
     , output v-patch
     , output v-branch
 ) .
+if v-compile-date = ? then v-compile-date = 01/01/1970.
+
 define variable mRunFile as character no-undo.
-mRunFile = SearchFile ("!upd-rc-before.bat").
 
-if mRunFile ne ?
-then do:
-   run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
-   os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
-end.
-
-mRunFile = SearchFile ("beforeTH.bat").
-if mRunFile ne ?
-then do:
-   run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
-   os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
-end.
 CheckUpd = new ibs.th.adm.upd.CheckUpd ().
 CheckUpd:workStop ().
 run waitfram-show in this-procedure ( input "Идет обновление программ ТН. Ждите..." ).
@@ -154,11 +146,15 @@ if p0-pathrc = ? then do:
   end.
 end.
 
-
 /* Есть ли архиватор  */
+assign
+  v-arc = search( "exe/7za.exe":U )
+.
+if v-arc = ? then do:
 assign
   v-arc = search( "exe/7z.exe":U )
 .
+end.
 if v-arc = ? then do:
   return error "Не найдена программа 7z.exe, раскрыть обновления невозможно" .
 end.
@@ -167,8 +163,13 @@ assign
   v-pathrc = substring(p0-pathrc, 1, r-index(p0-pathrc, "\") - 1 )
   v-pathrc = substring(v-pathrc, 1, r-index(v-pathrc, "\") - 1 )
   p0-pathrc = substring(v-pathrc, 1, r-index(v-pathrc, "\") - 1 )
+  mFileLog  = substitute(
+                "&1update&2&3&4_th.log", 
+                ibs.th.gbl.gbl-inipar:logDir, 
+                year(today), 
+                string(month(today),"99"), 
+                string(day(today),"99"))
 .
-
 
 /* Выбираем из каталога с новостями файлы апгрейда r-кодов  */
 input stream flstream from os-dir ( p0-source-dir ) .
@@ -187,8 +188,9 @@ on error undo, return error
 /*      если имена будем править здесь то надо поправить и там  */
     assign
       file-info:file-name = v-fullfilename
-      v-txt = substring (v-filename,  index(v-filename, "_") + 6, 5).
-      v-date = date( integer(substring(v-txt,1,2)), integer(substring(v-txt,4,2)), integer(substring(v-filename, index(v-filename, "_") + 1, 4)) )
+      v-txt = substring (v-filename,  index(v-filename, "_") + 1, 8).
+      v-date = date( integer(substring(v-txt,5,2)), integer(substring(v-txt,7,2)), integer(substring(v-filename, index(v-filename, "_") + 1, 4)) ).
+      v-type = substring (v-filename,  index(v-filename, "_") + 10, 2).
     .
     find first upgfile-tbl no-lock
       where upgfile-tbl.dateupg = v-date
@@ -200,6 +202,7 @@ on error undo, return error
         upgfile-tbl.dateupg         = v-date
         upgfile-tbl.nameupgfile     = v-filename
         upgfile-tbl.fullnameupgfile = p0-pathrc + "/" + v-filename
+        upgfile-tbl.type            = v-type
       .
 
       os-command silent
@@ -207,8 +210,8 @@ on error undo, return error
         value( v-fullfilename )
         value( p0-pathrc )
       .
-      if os-error <> 0 then do:
-        return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, v-pathrc) .
+      if os-error <> 0 or search(upgfile-tbl.fullnameupgfile) = ? then do:
+        return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, p0-pathrc) .
       end.
     end.
   end.  /*   if v-filetype begins "f" and  */
@@ -223,7 +226,7 @@ on error undo, return error
         value( v-fullfilename )
         value( p0-pathrc )
       .
-      if os-error <> 0 then do:
+      if os-error <> 0  or search(p0-pathrc + "/" + v-filename) = ? then do:
         return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, p0-pathrc) .
       end.
       
@@ -283,99 +286,91 @@ on error undo, return error
 end.  /*  repeat  on error undo   */
 input stream flstream close.
 
-/*    выгрузка в 1С-Erp*/
-oldg#news = g#news .
-oldg#esys = g#esys .
-
-   g#news = false .
-   g#esys = true .
-   define variable vLogFile as character no-undo.
-   vLogFile = log-file-name.
-   run bge/oxml-ini.p no-error.
-   if error-status :error
-   then do:
-      run write-to-log (  vss-workfile + {&new-line}
-                        + "Ошибка инициализации переменных для системы OpenXML" + {&new-line}
-                        + return-value
-                                ).
-   end.
-   log-file-name = vLogFile.
-   define variable m-db-num as int no-undo.
-   define variable m-extsys as character no-undo.
-   find first sys-ctrl no-error.
-   m-db-num = sys-ctrl.db-num.
-   run bge/oxmlinx.p (
-          input parparentproc
-        , input this-procedure
-        , input this-procedure
-        , input substitute("&1,&2,&3,&4"
-                          , "take+analys"
-                          , m-db-num
-                          , m-extsys
-                          , 0)   /*Т.к. внешние системы заводятся сейчас только в ГБД, то номер БД у них всегде 0. Если ситуация изменится, то надо будет переделать насттройку сессий оxml тоже*/
-    ) no-error.
-    if error-status :error
-    then do:
-        run write-to-log in this-procedure ( substitute( "&2&1Ошибка загрузки OpenXML&1&3&1&4"
-                                        , {&new-line}
-                                        , vss-workfile
-                                        , return-value
-                                        , error-status :get-message( error-status :num-messages )
-                                    )
-                        ) .
-    end.
-    run write-to-log ( substitute( "Подготовка новых пакетов." ) ).
-
-    define variable m-err-code as character no-undo.
-    define variable m-message as character no-undo.
-    run bge/cnewxpck.p (
-                      input  m-extsys
-                    , output m-err-code
-    ) no-error .
-    if error-status:error
-    then do:
-      run write-to-log( substitute( "&1. ERROR!!! Ошибка при подготовке пакетов OpenXML &2&3&4"
-                                    ,vss-workfile
-                                    ,error-status:get-message(error-status:num-messages)
-                                    ,{&new-line}
-                                    ,return-value
-                                  )
-                      ) .
-    end.
-    else do:
-      assign
-        m-message = return-value
-      .
-      if m-message <> "":U then do:
-        run write-to-log ( substitute( "&1", m-message ) ).
-      end.
-      run write-to-log ( substitute( "Завершена подготовка новых пакетов." ) ).
-    end.
-    
-    run bge/oxmloutx.p (
-            input parparentproc
-          , input this-procedure
-          , input this-procedure
-          , input substitute("all,&1", m-db-num )
-      ) no-error.
-    if error-status :error
-    then do:
-       run write-to-log in this-procedure ( substitute( "&2&1Ошибка выгрузки OpenXML&1&3&1&4"
-                                          , {&new-line}
-                                          , vss-workfile
-                                          , return-value
-                                          , error-status :get-message( error-status :num-messages )
-                                      )
-                          ) .
-    end.
-   g#news = oldg#news.
-   g#esys = oldg#esys.
-
+add-log-file-name = mFileLog.
+UPDATE_CYCLE:
 for each upgfile-tbl no-lock
-  where upgfile-tbl.dateupg > v-compile-date
 on error undo, return error return-value
 :
+    
+    run write-to-log (substitute("&1начало процесса обновления &2", {&PREFIX_LOG}, UpgFile-tbl.NameUpgFile)).
+    mIsError = upgfile-tbl.dateupg <= v-compile-date.
+    run write-to-log (substitute(
+                        "&1Сравнение даты обновления – &2", 
+                        {&PREFIX_LOG}, 
+                        if mIsError 
+                          then "ошибка, дата обновления равна или меньше текущей версии r-кодов" 
+                          else "успешно")
+                      ).
+    if mIsError then next UPDATE_CYCLE.
 
+    /* Удаление старых bat-файлов */
+    mRunFile = SearchFile ("!beforeTH.bat").
+    if SearchFile (mRunFile) <> ?
+      then os-delete value ( mRunFile ).
+    mRunFile = SearchFile ("!upd-rc-before.bat").
+    if SearchFile (mRunFile) <> ?
+      then os-delete value ( mRunFile ).
+    mRunFile = SearchFile ("!upd-rc-after.bat").
+    if SearchFile (mRunFile) <> ?
+      then os-delete value ( mRunFile ).
+
+    /* Распаковка bat файлов */
+    v-txt = substitute('&1 e &2 -o"&3" *.bat -r '
+                      , v-arc
+                      , p0-pathrc + "\" + UpgFile-tbl.NameUpgFile
+                      , v-PathRC
+                      , {&ampersand}
+                      ) .
+    os-command silent value ( v-txt ) .
+    mIsError = os-error <> 0 
+             or SearchFile ("!beforeTH.bat") = ? 
+             or SearchFile ("!upd-rc-before.bat") = ? 
+             or SearchFile ("!upd-rc-after.bat") = ?.
+    run write-to-log (substitute(
+                        "&1Копирование bat-файлов – &2", 
+                        {&PREFIX_LOG}, 
+                        if mIsError 
+                          then "ошибка" 
+                          else "успешно")
+                      ).
+    if mIsError then next UPDATE_CYCLE.
+            
+    mRunFile = SearchFile ("!beforeTH.bat").
+    if mRunFile ne ?
+    then do:
+       run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
+       os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
+       mIsError = os-error <> 0 .
+       os-delete value ( mRunFile ).
+       run write-to-log (substitute(
+                           "&1Запуск !beforeTH.bat – &2", 
+                           {&PREFIX_LOG}, 
+                           if mIsError 
+                             then "ошибка" 
+                             else "успешно")
+                         ).
+       if mIsError then next UPDATE_CYCLE.
+    end.
+    
+    run upload1C in this-procedure.
+    
+    mRunFile = SearchFile ("!upd-rc-before.bat").
+    if mRunFile ne ?
+    then do:
+       run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
+       os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
+       mIsError = os-error <> 0.
+       os-delete value ( mRunFile ).
+       run write-to-log (substitute(
+                           "&1Запуск !upd-rc-before.bat – &2", 
+                           {&PREFIX_LOG}, 
+                           if mIsError 
+                             then "ошибка" 
+                             else "успешно")
+                         ).
+       if mIsError then next UPDATE_CYCLE.
+    end.
+                                      
     if v-filename begins "rc_20" then do:
       assign
         file-info:file-name = v-pathrc + "-old"
@@ -389,7 +384,6 @@ on error undo, return error return-value
               end.
           end.
       end.
-
 
       os-rename  value ( v-pathrc ) value ( v-pathrc + "-old" ). /* переименовываем rc в rc-old */
       if os-error <> 0 then do:
@@ -435,6 +429,7 @@ for each upgfile-tbl :
     os-delete value ( p0-pathrc ) recursive.
     delete upgfile-tbl.
 end.
+
 def var v-file-name as character no-undo.
 def var v-msg       as character no-undo.
 mRunFile = SearchFile ("!upd-rc-after.bat").
@@ -443,10 +438,108 @@ if mRunFile ne ?
 then do:
    run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
    os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
+   mIsError = os-error <> 0.
+   os-delete value ( mRunFile ).
+   run write-to-log (substitute(
+                       "&1Запуск !upd-rc-after.bat – &2", 
+                       {&PREFIX_LOG}, 
+                       if mIsError 
+                         then "ошибка" 
+                         else "успешно")
+                     ).
 end.
+add-log-file-name = ?.
 CheckUpd:workStart ().
 v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
 run utl\proc-msg.p (v-msg) no-error.
 
 run waitfram-hide in this-procedure .
 return "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова." .
+
+/*    выгрузка в 1С-Erp*/
+procedure upload1C:
+    oldg#news = g#news .
+    oldg#esys = g#esys .
+
+   g#news = false .
+   g#esys = true .
+   run bge/oxml-ini.p no-error.
+   run write-to-log (substitute(
+                        "&1инициализация переменных для системы OpenXML - &2",
+                        {&PREFIX_LOG},
+                        if error-status:error
+                          then substitute("ошибка&1&2&3&4", 
+                                          if return-value <> "" then {&new-line} else "", 
+                                          return-value,
+                                          if error-status :get-message( error-status :num-messages ) <> "" then {&new-line} else "", 
+                                          error-status :get-message( error-status :num-messages ))
+                          else "успешно")
+                    ).
+
+   define variable m-db-num as int no-undo.
+   define variable m-extsys as character no-undo.
+   find first sys-ctrl no-error.
+   m-db-num = sys-ctrl.db-num.
+   run bge/oxmlinx.p (
+          input parparentproc
+        , input this-procedure
+        , input this-procedure
+        , input substitute("&1,&2,&3,&4"
+                          , "take+analys"
+                          , m-db-num
+                          , m-extsys
+                          , 0)   /*Т.к. внешние системы заводятся сейчас только в ГБД, то номер БД у них всегде 0. Если ситуация изменится, то надо будет переделать насттройку сессий оxml тоже*/
+    ) no-error.
+    run write-to-log (substitute(
+                        "&1загрузка OpenXML – &2", 
+                        {&PREFIX_LOG}, 
+                        if error-status :error 
+                          then substitute("ошибка&1&2&3&4", 
+                                          if return-value <> "" then {&new-line} else "", 
+                                          return-value,
+                                          if error-status :get-message( error-status :num-messages ) <> "" then {&new-line} else "", 
+                                          error-status :get-message( error-status :num-messages ))
+                          else "успешно")
+                      ).
+
+    define variable m-err-code as character no-undo.
+    define variable m-message as character no-undo.
+    run bge/cnewxpck.p (
+                      input  m-extsys
+                    , output m-err-code
+    ) no-error .
+    run write-to-log (substitute(
+                        "&1подготовка новых пакетов – &2", 
+                        {&PREFIX_LOG}, 
+                        if error-status :error 
+                          then substitute("ошибка&1&2&3&4", 
+                                          if return-value <> "" then {&new-line} else "", 
+                                          return-value,
+                                          if error-status :get-message( error-status :num-messages ) <> "" then {&new-line} else "", 
+                                          error-status :get-message( error-status :num-messages ))
+                          else substitute("успешно&1&2",
+                                          if return-value <> "" then {&new-line} else "",
+                                          return-value))
+                      ).
+
+    run bge/oxmloutx.p (
+            input parparentproc
+          , input this-procedure
+          , input this-procedure
+          , input substitute("all,&1", m-db-num )
+      ) no-error.
+    run write-to-log (substitute(
+                        "&1выгрузка OpenXML – &2", 
+                        {&PREFIX_LOG}, 
+                        if error-status :error 
+                          then substitute("ошибка&1&2&3&4", 
+                                          if return-value <> "" then {&new-line} else "", 
+                                          return-value,
+                                          if error-status :get-message( error-status :num-messages ) <> "" then {&new-line} else "", 
+                                          error-status :get-message( error-status :num-messages ))
+                          else "успешно")
+                      ).
+   g#news = oldg#news.
+   g#esys = oldg#esys.
+
+end procedure.
