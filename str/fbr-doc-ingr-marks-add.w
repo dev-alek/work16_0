@@ -494,7 +494,7 @@ PROCEDURE CrCheckMark :
   end .
   
   run waitfram-show in this-procedure (input "Идет проверка марки, пожалуйста, подождите..." ).
-/*  
+ 
   v-GisMTcheckStatus = marking:checkScanMark(v-cntxt-obj-code
                                             , v-mark
                                             , v-mark-short
@@ -526,7 +526,7 @@ PROCEDURE CrCheckMark :
     view-as alert-box .
     return.
   end . 
- */  
+
   if available buf_marking
   then do :
     if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
