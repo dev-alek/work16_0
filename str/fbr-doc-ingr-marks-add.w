@@ -499,6 +499,7 @@ PROCEDURE CrCheckMark :
   v-GisMTcheckStatus = marking:checkScanMark(v-cntxt-obj-code
                                             , v-mark
                                             , v-mark-short
+                                            , available buf_marking
                                             , output v-is-off-line)
                                             no-error.
   if not v-is-off-line
@@ -508,7 +509,7 @@ PROCEDURE CrCheckMark :
     message ("Онлайн-проверка вернула отрицательный результат, марка не может быть добавлена в производство")
     view-as alert-box .
     return.
-  end .
+  end .  
   
   if v-is-off-line 
   and v-GisMTcheckStatus = 0
@@ -518,7 +519,7 @@ PROCEDURE CrCheckMark :
     view-as alert-box .
     return.
   end . 
-  
+  /*
   if v-is-off-line 
   and v-GisMTcheckStatus = 2
   then do :
@@ -526,7 +527,17 @@ PROCEDURE CrCheckMark :
     message ("Онлайн и офлайн – проверки не выполнены, товар не может быть добавлен в производство")
     view-as alert-box .
     return.
+  end .*/
+    
+  if v-GisMTcheckStatus = 2
+  then do :
+    run waitfram-hide in this-procedure .
+    message ("Онлайн проверка не выполнена, товар не может быть добавлен в производство")
+    view-as alert-box .
+    return.
   end . 
+  
+  
 
   if available buf_marking
   then do :

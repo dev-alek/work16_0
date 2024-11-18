@@ -2373,10 +2373,14 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     vMsg format "x(72)" no-label skip
     with view-as dialog-box side-labels three-d
   .
+  
+  /* Проверка марки при списании / производстве
+  ** возвращает: 0 - проверка отрицательная , 1 - проверка положительная, 2 - нет ответа от ГИС МТ (и офлайн не запускали)*/
   METHOD PUBLIC INTEGER checkScanMark (
     iObjCode AS INTEGER, 
     iMark AS CHARACTER, 
     iMarkShort AS CHARACTER,
+    iRunOffLine AS LOGICAL,
     OUTPUT oRunedOffLine AS LOGICAL
   ):
     
@@ -2394,9 +2398,9 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     END.   
       
     assign
-      mCheckGisMT    = 0 
-      vMarkGs = addGs2Mark(iMark)
-      mMarkOrig = vMarkGs    /* заполним переменную для лога */
+      mCheckGisMT = 0 
+      vMarkGs     = addGs2Mark(iMark)
+      mMarkOrig   = vMarkGs    /* заполним переменную для лога */
     .
     dbgPrint("marking.log", SUBSTITUTE("Отправка марки в ГИС МТ: &1 -> &2.", 
                                        iMark,
@@ -2413,17 +2417,46 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                        mReqTimeStamp,
                                        mCheckGisMT)).
     /* если марки нет в ГИС МТ (found = false), то  сразу выходим */
-    IF mCheckSts = 3 THEN
-       RETURN 0.
+    IF mCheckSts = 3 THEN mCheckSts = 0.          
 
-    /* Если прошло более 72ч с момента аварии ГИС МТ */
-    IF mCheckSts = 4 THEN
-       RETURN 0.
+    /* Если прошло более 72ч с момента отсутствия ответа ГИС МТ  - для этих проверок не контролируем */
+    IF mCheckSts = 4 THEN mCheckSts = 2.                      
+    
+    /* если не проверяем офлайн, то запрещаем продавать при отсутствии ответа, и разрешаем при аварии */
+    IF NOT iRunOffLine AND mCheckSts = 2 THEN DO:                
+        
+        CASE mCheckGisMT:
+           /* ответа от ЛМ ЧЗ не получено */
+           WHEN 0 THEN 
+           DO:
+              mCheckSts = 2.
+           END.
+           /* проверка онлайн прошла, только срок годности не проверили */
+           WHEN 1 THEN 
+           DO:
+              mCheckSts = 1.
+           END.
+           /* при аварии разрешаем продавать */
+           WHEN 2 THEN 
+           DO:
+              mCheckSts = 1.
+           END.          
+        END CASE.          
+    END.       
        
-    /* если марку не удалось проверить онлайн */
-    IF (mCheckSts = 2 AND mCheckGisMT <> 1) OR mCheckGisMT = 2 THEN DO:
-       oRunedOffLine = true.
-       vAccMarkCheck = vAccMarkCheck + ChekLocalMark(iMarkShort).
+    /* если надо проверять офлайн  */
+    IF iRunOffLine THEN DO:
+       /* проверка онлайн прошла, только срок годности не проверили */ 
+       IF mCheckGisMT = 1 AND mCheckSts = 2  THEN mCheckSts = 1.
+       
+       /* если аварийная ситуация, или не было ответа от ГИС МТ */ 
+       IF (mCheckSts = 2 AND mCheckGisMT = 0) OR mCheckGisMT = 2
+       THEN DO: 
+           oRunedOffLine = true.
+           gismt-OflineDate = today + 2.
+           vAccMarkCheck = ChekLocalMark(iMarkShort).
+           IF mCheckSts = 2 THEN mCheckSts = 1.
+       END.
     END.                 
     
     RETURN mCheckSts.

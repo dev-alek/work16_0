@@ -1143,7 +1143,7 @@ PROCEDURE save_update :
     else 
     do:
 
-      vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, output vRunedOffLineCheck) no-error.
+      vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, no, output vRunedOffLineCheck) no-error.
       if error-status:error then
       do:
           run dispmessage (
