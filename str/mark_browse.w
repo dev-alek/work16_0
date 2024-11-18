@@ -3053,6 +3053,20 @@ PROCEDURE checkPriPerem :
     find first X_marking exclusive-lock where X_marking.mark begins iMark no-error .
     if available (X_marking) then
     do: 
+        if X_marking.sts-utd = Marking:Checked_:KeyIntDB then
+        do:
+            if x_marking.unit-ext <> "UNIT" then 
+            do:
+                oMsg = "               Упаковка уже проверена полностью".
+                return.              
+            end.
+            else 
+            do:  
+                oMsg = "            Марка уже проверена, просканируйте следующую".
+                display F-text with frame {&frame-name}.
+                return.
+            end.  
+        end.  
         find first buf_marking exclusive-lock where
                    buf_marking.mark begins iMark
              no-error.
