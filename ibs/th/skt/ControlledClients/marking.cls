@@ -2393,8 +2393,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         RETURN 2.
     END.   
       
-    mCheckGisMT    = 0. 
-    vMarkGs = addGs2Mark(iMark).
+    assign
+      mCheckGisMT    = 0 
+      vMarkGs = addGs2Mark(iMark)
+      mMarkOrig = vMarkGs    /* заполним переменную для лога */
+    .
     dbgPrint("marking.log", SUBSTITUTE("Отправка марки в ГИС МТ: &1 -> &2.", 
                                        iMark,
                                        replace(vMarkGs,chr(29),"<gs>"))).
