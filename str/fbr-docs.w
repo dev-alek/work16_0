@@ -99,6 +99,8 @@ define variable g#log           as logical      no-undo.
 define variable v-host-code     as integer      no-undo.
 define variable v-host-name     as character    no-undo.
 
+define variable cStsMark  as class ibs.th.str.marking.sts.mark no-undo.
+
 /* ***********************  Control Definitions  ********************** */
 
 DEFINE BUTTON b-add
@@ -746,6 +748,9 @@ END.
 
 ON CHOOSE OF b-del IN FRAME {&frame-name} /* Удал */ DO:
 define variable del-rec as recid no-undo.
+define buffer buf_marking-lines     for ub.marking-lines.
+define buffer buf_del_marking-lines for ub.marking-lines.
+define buffer buf_marking           for ub.marking.
 { gbl/stdbtn.i }
 {&net-proc}
 
@@ -872,6 +877,23 @@ else do:
                  where recid( buf_del_fbr-line ) = recid( fbr-line )
             .
             delete buf_del_fbr-line.
+        end.
+        /* удаляем марки, привязанные к док-ту */
+        for each buf_marking-lines no-lock where 
+                 buf_marking-lines.out-code = f-doc.doc-code
+             and buf_marking-lines.obj-type = f-doc.obj-type
+             and buf_marking-lines.obj-code = f-doc.obj-code
+        :
+            /* меняем статус марки на Свободную Зону */
+            find first buf_marking exclusive-lock
+                 where buf_marking.mark = buf_marking-lines.mark 
+            no-error.
+            if avail buf_marking then
+              buf_marking.sts = cStsMark:FreeZone:KeyIntDB.
+            find first buf_del_marking-lines exclusive-lock
+                 where recid( buf_del_marking-lines ) = recid( buf_marking-lines )
+            .
+            delete buf_del_marking-lines.
         end.
         find first buf_del_fbr-doc exclusive-lock
              where recid( buf_del_fbr-doc ) = recid( f-doc )
@@ -1309,6 +1331,8 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 { gbl/app_help.i &browse-name="br-docs" }
 { gbl/setfltnm.i }
 { gbl/brwrefre.i "if available f-doc then doc-rec = recid(f-doc). run UI-on in this-procedure ( input yes ) ." }
+
+cStsMark = ObjSrv:Env:Marking:Sts:Mark.
 
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
