@@ -688,7 +688,7 @@ procedure foot-inv :
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(должность)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="20" style="text-align: center;">(прописью)</TD>' skip
+    '<TD text_wrap="true" colspan="20" style="text-align: center;">(подпись)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамилия имя отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
