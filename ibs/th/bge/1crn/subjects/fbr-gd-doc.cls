@@ -31,6 +31,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
   define override public property vss-description as character no-undo init "Выгрузка документов производства в 1С" get.
 
   { cmp/str-glbl.i class }
+  { cmp/library.i  class }
   { gbl/attr-lib.i class}
   { utl/gtin.i class }
   
@@ -87,7 +88,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
   define variable v-is-pieces      as logical   no-undo.
   define variable isDel            as logical   no-undo.
   define variable v-bufhnd         as handle    no-undo.
-
+  define variable v-user-name      as character no-undo.
 
   method public void CrContentToSW (insw as handle):
     
@@ -297,6 +298,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
         brutto = buf_fbr-line.fact-qnty
         netto = (buf_fbr-line.fact-qnty / buf_fbr-recipe-gds.recipe-brutto-qnty) * buf_fbr-recipe-gds.recipe-qnty
       .   
+      
       sw:start-element ("ingr").
         write-data-element ("dish-code", string-mth (buf_recipe.gds-code)).
         write-data-element ("rcp-code", buf_recipe.recipe-code).
@@ -355,12 +357,17 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
   
   method private void StartDocFbr ():
       sw:start-element ("trn-gd-doc") .
+    { gbl/usrfulnm.i
+      buf_fbr-doc.creid
+      v-user-name }
+      
         write-data-element ("doc-code", buf_fbr-doc.doc-code).
         write-data-element ("doc-num", buf_fbr-doc.doc-code).
         write-data-element ("del-f", string (isDel, "1/0") ).
         write-data-element ("doc-date", if buf_fbr-doc.doc-date = ? then "" else substitute("&1T&2",iso-date(date(buf_fbr-doc.doc-date)), string(buf_fbr-doc.sys-time))).
         write-data-element ("fact-date", if buf_fbr-doc.fact-date = ? then "" else iso-date (date (buf_fbr-doc.fact-date))).
         write-data-element ("doc-type", v-doc-type-ERPRN).
+        write-data-element ("operator", v-user-name ).        
         write-data-element ("shift-date", if buf_fbr-doc.shift-date = ? then "" else iso-date (date (buf_fbr-doc.shift-date))).
         write-data-element ("shift-num", if buf_fbr-doc.shift-num = ? then "0" else string-mth (buf_fbr-doc.shift-num)).
 
