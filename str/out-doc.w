@@ -1337,67 +1337,9 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     find first marking where marking.mark begins mark
       no-lock no-error  .
 
-    if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then 
+    if available marking then
     do:
-      v-gds-code = marking.gds-code .
-
-      find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-      if not available (buf_goods) then 
-      do:
-        v-message = "Марка отсутствует в документе" .
-      end.
-      
-        find first buf_marking-lines exclusive-lock where buf_marking-lines.out-code = t-doc.doc-code
-                                                      and buf_marking-lines.obj-code = t-doc.obj-code 
-                                                      and buf_marking-lines.obj-type = t-doc.obj-type 
-          and buf_marking-lines.mark begins mark no-error .
-        if available (buf_marking-lines) then 
-        do:
-          if buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then do:
-                    v-message = "Марка уже просканирована" .
-          end.  
-          if buf_marking-lines.doc-level > 1 then 
-          do:
-            message "Разгруппировать упаковки?"
-              view-as alert-box question buttons yes-no update ungroup.
-            if ungroup then 
-            do:
-              if tree:UnGroupDoc(buf_marking-lines.mark, buf_marking-lines.in-code, buf_marking-lines.out-code, buf_marking-lines.obj-code, buf_marking-lines.obj-type) then 
-              do:
-                v-message = "Упаковка с маркой " + buf_marking-lines.mark + " разгруппирована." .
-              end.
-            /*              end.*/
-            end.  
-          end.   
-          if tree:LevelDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code) then 
-          do:
-            tree:StatusDownDoc(buf_marking-lines.mark, buf_marking-lines.obj-code, buf_marking-lines.obj-type, buf_marking-lines.in-code, buf_marking-lines.out-code, ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB) .
-          end.
-          buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB .
-        end.
-        else 
-        do:
-          v-message = "Марка " + mark + " отсутствует в документе" . 
-        end.  
-      end.
-
-    else 
-    do:
-/*      if     available marking                                          */
-/*        and marking.sts ne objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB*/
-/*        then                                                            */
-/*      do:                                                               */
-/*        v-message = "Марка не в свободной зоне." .                      */
-/*      end.                                                              */
-/*      else                                                              */
-      if available marking then
-      do:
-        v-gds-code = marking.gds-code.
-        find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-        if not available (buf_goods) then
-        do:
-          v-message = "Марка отсутствует в документе" .
-        end.
+        find first buf_goods no-lock where recid(buf_goods) = recid(ub.goods) no-error .
         find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code
           and buf_doc-line.artic = buf_goods.artic and buf_doc-line.prod-code = buf_goods.prod-code
           and buf_doc-line.prod-type = buf_goods.prod-type no-error .
@@ -1495,54 +1437,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
           end .
 
         end. 
-      end.
     end.
-    if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} and pardoc-mode <> {&lookup} then 
-    do:
-      
-    ii = 0 .
-
-        for each buf_doc-line exclusive-lock where buf_doc-line.doc-code = t-doc.doc-code,
-          first buf_gds-dtl exclusive-lock where buf_gds-dtl.doc-code = buf_doc-line.doc-code and 
-                                                 buf_gds-dtl.artic = buf_doc-line.artic and
-                                                 buf_gds-dtl.prod-code = buf_doc-line.prod-code and 
-                                                 buf_gds-dtl.prod-type = buf_doc-line.prod-type:
-          jj = 0 .        
-          
-          find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
-                                             buf_goods.prod-code = buf_doc-line.prod-code and
-                                             buf_goods.prod-type = buf_doc-line.prod-type no-error .
-          
-          for each buf_marking-lines exclusive-lock where buf_marking-lines.obj-code = buf_doc-line.obj-code and 
-                                                          buf_marking-lines.obj-type = buf_doc-line.obj-type and 
-                                                          buf_marking-lines.out-code = buf_doc-line.doc-code and 
-                                                          buf_marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and
-                                                          buf_marking-lines.gds-code = buf_goods.gds-code,
-            first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark and 
-                                            buf_marking.obj-code = buf_marking-lines.obj-code and
-                                            buf_marking.obj-type = buf_marking-lines.obj-type and buf_marking.unit-ext = "UNIT": 
-              jj = jj + 1 .
-          buf_doc-line.fact-qnty = jj .
-          buf_gds-dtl.fact-qnty = buf_doc-line.fact-qnty .
-          for first buf_parts exclusive-lock where buf_parts.out-code = buf_marking-lines.out-code and 
-                                                   buf_parts.artic = buf_doc-line.artic and
-                                                   buf_parts.prod-code = buf_doc-line.prod-code and 
-                                                   buf_parts.prod-type = buf_doc-line.prod-type and 
-                                                   buf_parts.obj-code = buf_marking-lines.obj-code and
-                                                   buf_parts.obj-type = buf_marking-lines.obj-type and
-                                                   buf_parts.part-code = buf_marking-lines.part-code and 
-                                                   buf_parts.in-code = buf_marking-lines.in-code and
-                                                   buf_parts.prt-code = buf_marking-lines.prt-code:
-            buf_parts.fact-qnty = buf_doc-line.fact-qnty .
-          end. 
-          ii = ii + 1 . 
-          end.
-        
-        t-doc.fact-qnty = ii .         
-                                    
-        end.
-
-  end.  
 
     run ui-on in this-procedure ( input "line" ).
 
@@ -1900,7 +1795,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
         run str/mark_browse.w (input parparentproc,
           input-output table tt-marking-lines by-reference,
           input if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then {&update} else {&lookup},
-          input "Марки по: " + t-doc.ext-doc-type + " " + t-doc.doc-code,
+          input "Марки по: " + t-doc.doc-code + {&delim-par} + t-doc.ext-doc-type,
           input v-type,
           input "" /*тип продукции*/
           )  .

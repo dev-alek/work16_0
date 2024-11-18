@@ -22,6 +22,7 @@ p-free-output-copy  false  копирование партии в документ, в свободную, расходную
                            закрытие документа до статуса {&fact}
 */
 { str/marks.i }
+{ utl/gtin.i }
 { gbl/objsrv.i }
   
 &scoped-define vssseq {&sequence}
@@ -53,6 +54,7 @@ procedure partcopy :
   define variable v-mark-sts-list   as character no-undo .
   
   define variable oMarkSts as class ibs.th.str.marking.sts.mark .
+  define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo   no-undo.
   
   oMarkSts = objSrv:Env:Marking:Sts:Mark.
   
@@ -530,22 +532,40 @@ procedure partcopy :
                   buf_marking-lines.out-code   = buf_parts.out-code
                   buf_marking-lines.part-code  = buf_parts.part-code
                   buf_marking-lines.prt-code   = buf_parts.prt-code
+                  buf_marking-lines.sts        = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
                 .
               end .
 
+              EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code).
               for first buf_marking exclusive-lock where buf_marking.mark = p-mark :
-                if buf_trn-doc.doc-type <> {&write-off} or 
-                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB or
-                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or
-                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
-                do:
-                  assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                if not (buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} and ( 
+                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB or
+                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB or
+                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB or
+                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB or
+                        buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB)) then
+                do:  /* если это не СПИСАНИЕ или при СПИСАНИИ статус марки не Возвращен на кассе, */ 
+                     /* Выбыл, Продан на кассе, Перемещен, Выбыл в инвентаризацию, то меняем      */
+                     /* меняем глобальный статус марки на ЗАРЕЗЕРВИРОВАН */
+                  buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
                   validate buf_marking.
-                  /* если марка в упаковке, то разгруппируем упаковку */
-                  for first buf_marking-childs exclusive-lock where
-                            buf_marking-childs.mark = buf_marking.mark-parent:
-                    buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .            
-                  end.
+                end.
+                if buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} and 
+                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
+                do:  /* если при СПИСАНИИ статус марки Возвращен на кассе, то проверяем        */
+                     /* разрешена ли продажа возвращенной марки, если ДА, то меняем глобальный */
+                     /* статус марки на ЗАРЕЗЕРВИРОВАН */
+                    ChekTypeMarkByDm(buf_marking.mark).
+                    if mTypeMark <> "" and EDOParSec:GetIsSaleReturnForType(mTypeMark) then 
+                    do:
+                      buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                      validate buf_marking.
+                    end.
+                end.
+                /* если марка в упаковке, то разгруппируем упаковку */
+                for first buf_marking-childs exclusive-lock where
+                          buf_marking-childs.mark = buf_marking.mark-parent:
+                  buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .            
                 end.
                 for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking.mark :
                   for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code

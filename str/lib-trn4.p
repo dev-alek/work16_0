@@ -2841,6 +2841,12 @@ define variable v-codident as character no-undo.
                       ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB)
           ).
       end.
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} and buf_trn-doc.status_ = {&fact} then 
+      do :    /* дл€ док-та ¬ќ«¬–ј“ ѕ≈–≈ћ≈ў≈Ќ»я при закрытии на ‘ј “ мен€ем статус марок на C—¬ќЅќƒЌјя «ќЌј */
+        run change_mark_sts_trn-doc in this-procedure
+          (buf_trn-doc.doc-code, buf_trn-doc.obj-type, buf_trn-doc.obj-code, 
+           string(ObjSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB)).
+      end.
     if v-ischg-ext-type
     then do:
       buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}.

@@ -804,7 +804,8 @@ procedure partrsrv :
                   free_marking-lines.prt-code   = ub.marking-lines.prt-code
                 .
               end .
-              assign ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+              if ub.marking.sts = ub.marking-lines.sts then
+                ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
             end .
           end .
           delete ub.marking-lines.

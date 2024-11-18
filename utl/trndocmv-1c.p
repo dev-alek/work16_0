@@ -607,14 +607,21 @@ on error undo, return error return-value
           ub.marking.obj-type = ub.marking-lines.obj-type.
           ub.marking.obj-code = ub.marking-lines.obj-code.
           ub.marking-lines.doc-level = 1.
-          if ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB and
-             ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
+          if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
           do:
-            ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
+              if ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB and
+                 ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
+              do:
+                ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
+              end.
+              else 
+              do:  /* если марка уже продана или возвращена на кассу, то считаем ее принятой и увелияивам кол-во принятых марок*/
+                buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty. 
+              end.
           end.
-          else 
-          do:  /* если марка уже продана или возвращена на кассу, то считаем ее принятой и увелияивам кол-во принятых арок*/
-            buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty. 
+          if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then
+          do:
+            ub.marking.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB.
           end.
           ub.marking-lines.sts = ub.marking.sts.
           for each chi_marking where chi_marking.mark-parent = ub.marking.mark:

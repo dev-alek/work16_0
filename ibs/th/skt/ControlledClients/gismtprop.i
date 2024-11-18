@@ -27,6 +27,7 @@ Creation date: 25/10/2023
  define variable gismt-RegKey       as character no-undo.
  define variable gismt-TimeFalStart as integer   no-undo.
  define variable gismt-WaitTime     as decimal   no-undo. 
+ define variable gismt-WaitTimePlus as decimal   no-undo.   
  define variable gismt-CrashSituat  as logical   no-undo.
  define variable gismt-BanDate      as integer   no-undo.
  define variable gismt-cdnTurnOn    as logical   no-undo.

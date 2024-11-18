@@ -756,6 +756,8 @@ PROCEDURE save_update :
   define variable vRunedOffLineCheck as logical no-undo.
   define buffer buf_marking-lines for ub.marking-lines.
   define buffer buf_marking       for ub.marking.
+  define buffer b_marking-lines   for ub.marking-lines.
+  define buffer b_trn-doc         for ub.trn-doc.
    
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
@@ -939,17 +941,6 @@ PROCEDURE save_update :
               .
               return.
             end.  
-            if marking.sts = thMarkSts:Reserved:KeyIntDB then 
-            do:
-              run dispmessage ("“овар добавлен в незакрытый документ и не может быть списан.").
-              assign 
-                v-mark              = ""
-                v-mark:screen-value = ""
-                v-scan-str          = ""
-                p-mark              = ""
-              .
-              return.
-            end.  
             if marking.sts = thMarkSts:UsedInProduction:KeyIntDB then 
             do:
               run dispmessage ("“овар использован дл€ производства.~n ¬ списание необходимо добавить товар-ингредиент.").
@@ -961,25 +952,10 @@ PROCEDURE save_update :
               .
               return.
             end.  
-            if marking.sts = thMarkSts:ReturnLock:KeyIntDB then 
-            do:
-              ChekTypeMarkByDm(v-mark).
-              if mTypeMark <> "" and not EDOParSec:GetIsSaleReturnForType(mTypeMark) then 
-              do:
-                run dispmessage ("“овар возвращен на кассу.~n —писание запрещено.").
-                assign 
-                  v-mark              = ""
-                  v-mark:screen-value = ""
-                  v-scan-str          = ""
-                  p-mark              = ""
-                .
-                return.
-              end.
-            end. 
             if marking.sts <> thMarkSts:OutZone:KeyIntDB and
                marking.sts <> thMarkSts:Checked_:KeyIntDB and
                marking.sts <> thMarkSts:SaleLock:KeyIntDB and
-               marking.sts <> thMarkSts:SaleWaitLock:KeyIntDB and
+               marking.sts <> thMarkSts:ReturnLock:KeyIntDB and
                marking.sts <> thMarkSts:FreeZone:KeyIntDB and
                marking.sts <> thMarkSts:Moved:KeyIntDB and
                marking.sts <> thMarkSts:OutOfInventory:KeyIntDB then
@@ -994,6 +970,31 @@ PROCEDURE save_update :
                 p-mark              = ""
               .
               return.
+            end.    
+            if marking.sts = thMarkSts:Reserved:KeyIntDB or
+               marking.sts = thMarkSts:OutZone:KeyIntDB or
+               marking.sts = thMarkSts:SaleLock:KeyIntDB or
+               marking.sts = thMarkSts:SaleWaitLock:KeyIntDB or
+               marking.sts = thMarkSts:Moved:KeyIntDB or
+               marking.sts = thMarkSts:OutOfInventory:KeyIntDB then
+            do:
+              for each b_marking-lines no-lock where
+                       b_marking-lines.mark    =  marking.mark
+                   and b_marking-lines.out-code <> t_doc.doc-code,
+                  first b_trn-doc no-lock where
+                        b_trn-doc.doc-code     =  b_marking-lines.out-code
+                    and b_trn-doc.ext-doc-type =  {&TDEDT_Spi_Vnesh}
+                    and b_trn-doc.status_      <> {&fact}:
+                  run dispmessage ("“овар добавлен в незакрытый документ и не может быть списан." +
+                                   "Ќеобходимо либо закрыть документ, либо удалить его.").
+                  assign 
+                    v-mark              = ""
+                    v-mark:screen-value = ""
+                    v-scan-str          = ""
+                    p-mark              = ""
+                  .
+                  return.
+              end.
             end.    
           end.
           end case.
@@ -1316,7 +1317,7 @@ PROCEDURE save_update :
           .
           return.
       end.
-      if vStatusCheckMark = 2 then
+      if vStatusCheckMark = 0 then
       do:
           run dispmessage (
             "ѕроверка марки дала отрицательный результат, марка не может быть добавлена в документ."

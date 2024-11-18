@@ -216,9 +216,10 @@ FUNCTION GdsName RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusName d-mark 
-FUNCTION StatusName RETURNS CHARACTER
-    ( input p-sts as integer )  FORWARD.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getStatusName d-mark 
+FUNCTION getStatusName RETURNS CHARACTER
+    ( input p-sts-glob as integer,
+      input p-sts-loc  as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -411,7 +412,7 @@ DEFINE BROWSE br-mark
   X_marking.mark COLUMN-LABEL "Марка/Штрих-код" FORMAT "x(56)":U width 33
   
   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  if not ismark(X_marking.mark) then "" else if X_marking.stts-utd = marking:Checked_:Label_ then X_marking.stts-utd else X_marking.stts @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
+  if not ismark(X_marking.mark) then "" else getStatusName(X_marking.sts,X_marking.sts-utd) @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20 
 /*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
 /*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
@@ -436,7 +437,7 @@ DEFINE BROWSE br-mark-item
   else "АОД" @ typem COLUMN-LABEL "Тип!кода" FORMAT "x(3)":U
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  if X_marking-line.stts-utd = marking:Checked_:Label_ then X_marking-line.stts-utd else X_marking-line.stts @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
+  getStatusName(X_marking-line.sts,X_marking-line.sts-utd) @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20
 /*  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
 /*  X_marking-line.out-code COLUMN-LABEL "РН" FORMAT "X(15)":U*/
@@ -1750,7 +1751,7 @@ PROCEDURE enable_UI :
                                        These statements here are based on the "Other
                                        Settings" section of the widget Property Sheets.
                            -------------------------------------------------------------------- */
-    frame {&frame-name}:title = p-doc + " " + p-mode.
+    frame {&frame-name}:title = entry(1,p-doc,{&delim-par}) + " " + p-mode.
     ENABLE
         b-exit
         b-hist
@@ -2107,15 +2108,20 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION StatusName d-mark 
-FUNCTION StatusName RETURNS CHARACTER
-    ( input p-sts as integer ) :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getStatusName d-mark 
+FUNCTION getStatusName RETURNS CHARACTER
+    ( input p-sts-glob as integer,
+      input p-sts-loc  as integer ):
     /*------------------------------------------------------------------------------
       Purpose:  
         Notes:  
     ------------------------------------------------------------------------------*/
-    define variable v-status as character no-undo .
-    RETURN v-status.   /* Function return value. */
+    if num-entries(p-doc,{&delim-par}) > 1 and entry(2,p-doc,{&delim-par}) = {&TDEDT_Spi_Vnesh} then
+    do:
+      return if p-sts-loc = p-sts-glob then StatusTHName(p-sts-glob) else substitute("&1_&2",StatusTHName(p-sts-loc),StatusTHName(p-sts-glob)).
+    end.
+    else 
+      return if p-sts-loc = marking:Checked_:KeyIntDB then StatusTHName(p-sts-loc) else StatusTHName(p-sts-glob). 
 
 END FUNCTION.
 

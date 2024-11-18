@@ -979,7 +979,7 @@ function addGs2Mark return character
    end.
    else if substring(iMark,25,2) = "93" then
    do:
-     vIdx = index(iMark,"92",24).
+     vIdx = index(iMark,"92",25).
      if vIdx > 1 then
        vDM = substitute("&1&4&2&4&3",
                         substring(iMark,1,24),
@@ -987,10 +987,18 @@ function addGs2Mark return character
                         substring(iMark,vIdx),
                         chr(29)) no-error.
      else 
-       vDM = substitute("&1&3&2",
+       vIdx = index(iMark,"3103",25).
+       if vIdx > 0 then
+       vDM = substitute("&1&4&2&4&3",
                         substring(iMark,1,24),
-                        substring(iMark,25),
+                        substring(iMark,25,vIdx - 24 - 1),
+                        substring(iMark,vIdx),
                         chr(29)) no-error.
+       else
+         vDM = substitute("&1&3&2",
+                          substring(iMark,1,24),
+                          substring(iMark,25),
+                          chr(29)) no-error.
    end.
    
    return if vDM <> "" then vDm else iMark.

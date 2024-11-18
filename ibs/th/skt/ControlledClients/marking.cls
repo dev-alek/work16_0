@@ -23,7 +23,6 @@ USING ibs.th.gbl.sys.objsrv.
 USING ibs.th.gbl.sys.objth.
 /*using ibs.th.skt.ControlledClients.GisMtCDN.*/
 
-
 CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc: 
   DEFINE OVERRIDE PUBLIC PROPERTY vss-revision    AS CHARACTER NO-UNDO INIT "$Revision:$":U GET .
   DEFINE OVERRIDE PUBLIC PROPERTY vss-author      AS CHARACTER NO-UNDO INIT "$Author:$":U GET.
@@ -185,6 +184,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       action     = ""
       shift_tbeg = ?
       shift_num  = 0 
+      gismt-WaitTimePlus = 0
     .
     
     
@@ -1994,7 +1994,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                       CmdParamProxy,           /*6*/
                       vFileResultErr,          /*7*/
                       gismt-DopParam,          /*8*/
-                      TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*9*/                        
+                      TRIM(REPLACE(STRING(gismt-WaitTime + gismt-WaitTimePlus, "zzzz9.99999"),".",","),"")).         /*9*/                        
     dbgPrint("marking.log", "cmd: " + cmd).
     
     vBefCurl = NOW.
@@ -2038,12 +2038,12 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         END.    
         
         /* время ожидания вышло */
-        IF vBefCurl + Int(gismt-WaitTime * 1000) < NOW THEN DO:         
+        IF vBefCurl + Int((gismt-WaitTime + gismt-WaitTimePlus) * 1000) < NOW THEN DO:         
            dbgPrint("marking.log", "Время ожидания работы curl истекло").
            LEAVE block_wait.
         END.
         /* немного ждем */
-        vTimePause = NOW - (vBefCurl + Int(gismt-WaitTime * 1000)) + 10. 
+        vTimePause = NOW - (vBefCurl + Int((gismt-WaitTime + gismt-WaitTimePlus) * 1000)) + 10. 
         IF vTimePause < -10 THEN       
            RUN gbl/pause.p(10).
         ELSE IF vTimePause < 0 AND vTimePause > -10
@@ -2348,6 +2348,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
    Purpose:  Выполняет проверку отсканированной марки при добавлении в документ
    Notes:
   ------------------------------------------------------------------------------*/
+  define variable vMsg as character no-undo. 
+  define frame fMsg
+    vMsg format "x(72)" no-label skip
+    with view-as dialog-box side-labels three-d
+  .
   METHOD PUBLIC INTEGER checkScanMark (
     iObjCode AS INTEGER, 
     iMark AS CHARACTER, 
@@ -2359,6 +2364,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE vMarkGs       AS CHARACTER NO-UNDO. 
     DEFINE BUFFER buf_marking FOR ub.marking.
     
+    gismt-WaitTimePlus = 3.     /* Увеличим время ожидания ответа на 3 сек. */
     oRunedOffLine = false.
     IF iMarkShort = ? THEN
     DO:
@@ -2372,7 +2378,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     dbgPrint("marking.log", SUBSTITUTE("Отправка марки в ГИС МТ: &1 -> &2.", 
                                        iMark,
                                        replace(vMarkGs,chr(29),"<gs>"))).
-    vAccMarkCheck = ChekAccessMark({&shop},iObjCode,vMarkGs,iMarkShort).           
+    vMsg = "Идет проверка марки, пожалуйста, подождите.".
+    frame fMsg:visible = true.
+    display vMsg with frame fMsg.
+    vAccMarkCheck = ChekAccessMark({&shop},iObjCode,vMarkGs,iMarkShort).
+    hide frame fMsg.           
     dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ: &1 Статус: &2 mReqId &3 mReqTimeStamp &4 mCheckGisMT &5", 
                                        vAccMarkCheck, 
                                        mCheckSts,
