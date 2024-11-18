@@ -1808,6 +1808,16 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         label51:Visible = true .
       end .
       
+      if infoSecsObj:InfoSectionCurr:AccMeth = 1
+      then do :
+        buttonCalcResultAC:enabled = false .
+      end .
+      
+      if infoSecsObj:InfoSectionCurr:TankWeightRvs = ?
+      then do :
+        buttonCalcResultRvs:enabled = false .
+      end .
+      
     end.
     
     if not infoSecsObj:FlagTrn and not infoSecsObj:Sts = "‘¿ “"
