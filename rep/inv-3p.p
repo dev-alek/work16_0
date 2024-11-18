@@ -58,7 +58,7 @@ on error undo, return error
   define variable g#quest-print as logical   no-undo .
   run get-quest-print in parParentProc ( output g#quest-print ).
 
-  &glob format-inv      "X(173)"
+  &glob format-inv      "X(185)"
   &glob format-sl       "X(162)"
   &glob format-sl-gold  "X(196)"
   &glob format-inv-gold "X(194)"
@@ -1252,39 +1252,82 @@ procedure PrintPodval :
               input {&inv3xl-it_sumBuh}
             , input string( sum1-b-stoim )
         ).
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_agent}
+            , input string( v-pos-agent )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_agent}
+            , input string( v-fio-agent )
+        ).   
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player1}
+            , input string( v-pos-player1 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player1}
+            , input string( v-fio-player1 )
+        ).                      
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player2}
+            , input string( v-pos-player2 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player2}
+            , input string( v-fio-player2 )
+        ).  
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_pos_player3}
+            , input string( v-pos-player3 )
+        ).    
+        run inv3xl-write-cell-data in this-procedure (
+              input {&inv3xl-itp_s_fio_player3}
+            , input string( v-fio-player3 )
+        ).          
     end.
       PUT  STREAM Out-Stream
               "Итого по описи :" Skip
                 "а) количество порядковых номеров: " + string( num-ln ) + " (" + PropisCount + ")"  format "x(179)"                         at 18 SKIP
                 "б) общее количество единиц фактически: " + string( sum1-a-qnty ) + " (" + PropisQnty + ")"  format "x(179)"  at 18 SKIP
               "   Все цены, подсчеты итогов по строкам, страницам и в целом по инвентаризационной описи товарно-материальных ценностей проверены." SKIP
-              "Председатель комиссии: " format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              " " format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+
+              "Председатель комиссии:: " format "X(25)" AT 10 SKIP
+              string(v-pos-agent) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-agent) format "X(50)" AT 70 SKIP
+              LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
+              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+                           
               "Члены комиссии: " format "X(25)" AT 10 SKIP
+              string(v-pos-player1) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player1) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+              string(v-pos-player2) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player2) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
+              string(v-pos-player3) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player3) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № ___________ по № _________" SKIP
+              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 skip .
+   
+      if PgNPP = 0 then 
+      do:
+        PUT  STREAM Out-Stream
+          "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № 0 по № " + string(PgNPP) format "x(179)"  skip .
+      end.
+      else 
+      do:
+        PUT  STREAM Out-Stream
+          "   Все товарно-материальные ценности, поименованные  в  настоящей  инвентаризационной  описи  с № 1 по № " + string(PgNPP) format "x(179)" skip .
+      end.  
+
+              PUT  STREAM Out-Stream
               "комиссией проверены в натуре в моем (нашем) личном присутствии  и внесены в опись, в связи с чем претензий к инвентаризационной " SKIP
               "комиссии не имею (не имеем). Товарно-материальные ценности, перечисленные в описи, находятся на моем (нашем) ответственном хранении." SKIP(1)
               "   Лицо(а), ответственное(ые) за сохранность товарно-материальных ценностей : " SKIP(1)
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              string(v-pos-player2) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player2) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              string(v-pos-player3) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player3) format "X(50)" AT 70 SKIP
               LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
               "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              string(v-pos-player2) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player2) format "X(50)" AT 70 SKIP
-              LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP
-              string(v-pos-player3) format "X(25)" AT 10 "" format "X(25)" AT 40 string(v-fio-player3) format "X(50)" AT 70 SKIP
-              LineBuf format "X(25)" AT 10 LineBuf format "X(25)" AT 40 LineBuf format "X(50)" AT 70 SKIP
-              "должность" format "X(25)" AT 10 "подпись" format "X(25)" AT 40 "расшифровка подписи" format "X(50)" AT 70 SKIP(1)
               "<<       >> _________________        г. "   SKIP(1)
               "Указанные в настоящей описи данные и расчеты проверил"
                   LineBuf format "X(25)" AT 10 LineBuf format "X(25)"   AT 40 LineBuf format "X(50)"               AT 70 SKIP

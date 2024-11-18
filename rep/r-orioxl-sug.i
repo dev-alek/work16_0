@@ -691,7 +691,8 @@ procedure foot-inv :
     '<TD colspan="2" text_wrap="true"></TD>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: center;">(фамили€ им€ отчество)</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '</TR>'skip    
+    '</TR>'skip   
+    '<tr><td text_wrap="true" colspan="86">* ** ”казанное значение выводитс€ дл€ справки</td></tr>' skip  
     .  
                 
   put stream OutStr-html unformatted            

@@ -481,6 +481,7 @@ OPEN QUERY {&SELF-NAME} FOR EACH ub.doc-attr NO-LOCK
           MAIN-BLOCK:
           DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+/*              parbtn = "b-lkp,b-chg" .*/
             if lookup ("b-lkp", parbtn) > 0 then 
             do:
               enable b-lkp with frame {&frame-name}.

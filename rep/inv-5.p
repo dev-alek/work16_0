@@ -994,7 +994,9 @@ do :
     '    <td><br /></td>' skip
     '  </tr>' skip    
   .
-  if Lines_Counter > 0 then put stream OutStr-html unformatted
+ 
+  if Lines_Counter > 0 then do:
+    put stream OutStr-html unformatted
     '  <tr style="height: 40px;">' skip
     '    <td><br /></td>' skip
     '    <td text_wrap="true" colspan="20">'
@@ -1003,6 +1005,18 @@ do :
         '</td>' skip
     '  </tr>' skip
   .
+  end .
+  else do:
+    put stream OutStr-html unformatted
+    '  <tr style="height: 40px;">' skip
+    '    <td><br /></td>' skip
+    '    <td text_wrap="true" colspan="20">'
+    substitute("Все ценности, поименованные в настоящей инвентаризационной описи с № 0 по № &1, комиссией проверены в натуре в моем (нашем) присутствии и внесены в опись, в связи с чем претензий к инвентаризационной комиссии не имею (не имеем)."
+              , Lines_Counter)
+        '</td>' skip
+    '  </tr>' skip
+  .    
+  end.
   put stream OutStr-html unformatted
     '  <tr>' skip
     '    <td colspan="21">Ценности, перечисленные в описи, находятся на комиссию.</td>' skip
