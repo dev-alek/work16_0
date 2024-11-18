@@ -187,7 +187,8 @@ ON choose OF Btn_OK IN FRAME Dialog-Frame
   DO:
     if not pTech then 
     do:
-      if FiLL-IN-Character = "" or FILL-IN-Character-2 = "" then 
+      if (FiLL-IN-Character = "" and FiLL-IN-Character-2 <> "") or
+      (FILL-IN-Character-2 = "" and FiLL-IN-Character <> "") then 
       do:
         message "Не все поля заполнены." 
           view-as alert-box.

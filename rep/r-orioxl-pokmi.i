@@ -290,11 +290,11 @@ procedure shapka-inv :
     .
     end.
     else do:
-    put stream OutStr-html unformatted
+     put stream OutStr-html unformatted
     '<TR>' skip
     '<TD text_wrap="true" colspan="30" style="text-align: right;">Инвентаризация начата</TD>' skip
     '<TD colspan="2" text_wrap="true"></TD>' skip
-    '<TD text_wrap="true" colspan="54" style="">"_____" ______________ 20 _____ г. в _____ час. _____ мин.</TD>' skip
+    '<TD text_wrap="true" colspan="54" style="">' + string (day( date(bf_trn-doc.doc-date) )) + " " + string(MonthNameRusCase( month( date(bf_trn-doc.doc-date) ), 2 )) + " " + string(year( date(bf_trn-doc.doc-date) )) + "г. " 'в _____ час. _____ мин.</TD>' skip
     '</TR>'skip
     .
     end.

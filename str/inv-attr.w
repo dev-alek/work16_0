@@ -250,8 +250,10 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
     define variable is-mes   as character no-undo .
     define variable varlog   as logical   no-undo .
     define buffer fio_inv-attr    for tt-inv-attr .
+    define buffer pos_inv-attr    for tt-inv-attr .
     define buffer prikaz_inv-attr for tt-inv-attr .
-
+    
+    if lookup ("b-chg", parbtn) = 0 then return .
     if not tech then 
     do:
       if not can-find (first prikaz_inv-attr no-lock where 
@@ -278,14 +280,83 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
       do:
         is-check = true .
       end.
+      if is-check then is-mes = "Не заполнены обязательные атрибуты накладной инвентаризации." + {&new-line}.
+      /* Проверка на заполнение по парам ФИО и должность */
       
-      if is-check then 
+        find first fio_inv-attr no-lock where 
+        fio_inv-attr.attr-code = {&trdcattr-fio-agent} and 
+        fio_inv-attr.attr-value <> "" no-error .
+        if not available (fio_inv-attr) then do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-agent} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if available (pos_inv-attr) then is-mes = is-mes + "Не заполнена ФИО председателя комиссии." + {&new-line}.          
+        end. 
+        else do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-agent} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if not available (pos_inv-attr) then is-mes = is-mes + "Не заполнена должность председателя комиссии." + {&new-line}.                
+        end. 
+        
+        find first fio_inv-attr no-lock where 
+        fio_inv-attr.attr-code = {&trdcattr-fio-player1} and 
+        fio_inv-attr.attr-value <> "" no-error .
+        if not available (fio_inv-attr) then do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-player1} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if available (pos_inv-attr) then is-mes = is-mes + "Не заполнена ФИО первого участника комиссии." + {&new-line}.          
+        end. 
+        else do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-player1} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if not available (pos_inv-attr) then is-mes = is-mes + "Не заполнена должность первого участника комиссии." + {&new-line}.                
+        end.           
+
+        find first fio_inv-attr no-lock where 
+        fio_inv-attr.attr-code = {&trdcattr-fio-player2} and 
+        fio_inv-attr.attr-value <> "" no-error .
+        if not available (fio_inv-attr) then do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-player2} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if available (pos_inv-attr) then is-mes = is-mes + "Не заполнена ФИО второго участника комиссии." + {&new-line}.          
+        end. 
+        else do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-player2} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if not available (pos_inv-attr) then is-mes = is-mes + "Не заполнена должность второго участника комиссии." + {&new-line}.                
+        end.   
+
+        find first fio_inv-attr no-lock where 
+        fio_inv-attr.attr-code = {&trdcattr-fio-player3} and 
+        fio_inv-attr.attr-value <> "" no-error .
+        if not available (fio_inv-attr) then do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-player3} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if available (pos_inv-attr) then is-mes = is-mes + "Не заполнена ФИО третьего участника комиссии." + {&new-line}.          
+        end. 
+        else do:
+        find first pos_inv-attr no-lock where 
+        pos_inv-attr.second-code = {&trdcattr-pos-player3} and 
+        pos_inv-attr.second-value <> "" no-error . 
+        if not available (pos_inv-attr) then is-mes = is-mes + "Не заполнена должность третьего участника комиссии." + {&new-line}.                
+        end.   
+        
+        if is-mes <> "" then is-mes = is-mes + "Вы уверены, что хотите выйти, не заполнив обязательные атрибуты?" .
+                  
+      if is-mes <> "" then 
       do:
         message
-          "Не заполнены обязательные атрибуты накладной инвентаризации. Вы уверены, что хотите выйти, не заполнив обязательные атрибуты?"
+          is-mes
           view-as alert-box question buttons yes-no update varlog.
           if not varlog then return no-apply.
       end.
+      
     end.                 
 
   END.

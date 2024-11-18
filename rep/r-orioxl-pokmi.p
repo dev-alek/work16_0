@@ -235,7 +235,7 @@ do
           v-doc-date
           p-type
           no-error
-      }
+      }    
   { str/tdatinv-val.i
           bf_trn-doc.doc-code
           {&trdcattr-prikaz-number}

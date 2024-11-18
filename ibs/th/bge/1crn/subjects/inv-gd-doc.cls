@@ -462,82 +462,96 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         write-data-element ("fact-date", if buf_trn-doc.fact-date = ? then "" else iso-date (datetime (buf_trn-doc.fact-date, buf_trn-doc.fact-time * 1000))).
         write-data-element ("shift-date", if buf_trn-doc.shift-date = ? then "" else iso-date (date (buf_trn-doc.shift-date))).
         write-data-element ("shift-num", if buf_trn-doc.shift-num = ? then "0" else string-mth (buf_trn-doc.shift-num)).
-          sw:start-element ("atr") .
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "invTech" and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          if ub.inv-doc-attr.attr-value = string(true) then write-data-element ("techop", "1").
-          else write-data-element ("techop", "0").
-        end.
-        else do:
-          write-data-element ("techop", "0").
-        end.
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-number} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code:
-          write-data-element ("ordernum", ub.inv-doc-attr.attr-value).
-        end.
-
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-date} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code:
-          write-data-element ("orderdate", if ub.inv-doc-attr.attr-value = "" then "0" else iso-date (date (ub.inv-doc-attr.attr-value))).
-        end.      
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-inv-date} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", iso-date (date (ub.inv-doc-attr.attr-value))).
-          else write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
-        end.
-        else do:
-          write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
-        end. 
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-agent} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          write-data-element ("chairmen1", ub.inv-doc-attr.attr-value).
-        end.
-/*        else do:                               */
-/*          write-data-element ("chairmen1", "").*/
-/*        end.                                   */
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player1} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("chairmen2", ub.inv-doc-attr.attr-value).
-        end.
-
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player2} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("chairmen3", ub.inv-doc-attr.attr-value).
-        end.
+    sw:start-element ("atr") .
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "invTech" and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
+    if available (ub.inv-doc-attr) then 
+    do:
+      if ub.inv-doc-attr.attr-value = string(true) then write-data-element ("techop", "1").
+      else write-data-element ("techop", "0").
+    end.
+    else 
+    do:
+      write-data-element ("techop", "0").
+    end.
         
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player3} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("chairmen4", ub.inv-doc-attr.attr-value).
-        end.
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-number} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("ordernum", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-date} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("orderdate", iso-date (date (ub.inv-doc-attr.attr-value))).
+    end.      
+        
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-inv-date} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
+    if available (ub.inv-doc-attr) then 
+    do:
+      if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", iso-date (date (ub.inv-doc-attr.attr-value))).
+      else write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
+    end.
+    else 
+    do:
+      write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
+    end. 
+        
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-agent} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen1", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player1} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen2", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player2} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen3", ub.inv-doc-attr.attr-value).
+    end.
+        
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player3} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen4", ub.inv-doc-attr.attr-value).
+    end.
                  
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-agent} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          write-data-element ("jobtitle1", ub.inv-doc-attr.attr-value).
-        end.
-/*        else do:                               */
-/*          write-data-element ("jobtitle1", "").*/
-/*        end.                                   */
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player1} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("jobtitle2", ub.inv-doc-attr.attr-value).
-        end.        
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player2} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("jobtitle3", ub.inv-doc-attr.attr-value).
-        end.     
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player3} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("jobtitle4", ub.inv-doc-attr.attr-value).
-        end.  
-        find first ub.user-account no-lock where ub.user-account.user-id = buf_trn-doc.user-name no-error .  
-        if available (ub.user-account) then 
-          write-data-element ("invclose", string(ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name) ).              
-        else write-data-element ("invclose", "").        
-        sw:end-element ("atr") .   
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-agent} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle1", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player1} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle2", ub.inv-doc-attr.attr-value).
+    end.  
+              
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player2} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle3", ub.inv-doc-attr.attr-value).
+    end.    
+         
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player3} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle4", ub.inv-doc-attr.attr-value).
+    end.  
+        
+    find first ub.user-account no-lock where ub.user-account.user-id = buf_trn-doc.user-name no-error .  
+    if available (ub.user-account) then 
+      write-data-element ("invclose", string(ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name) ).              
+    else write-data-element ("invclose", "").        
+    sw:end-element ("atr") .    
   end.
 
   method private void EndDocInv ():
@@ -573,81 +587,96 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
           write-data-element ("othermoves", "0") .
         end .
            
-        sw:start-element ("atr") .
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "invTech" and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          if ub.inv-doc-attr.attr-value = string(true) then write-data-element ("techop", "1").
-          else write-data-element ("techop", "0").
-        end.
-        else do:
-          write-data-element ("techop", "0").
-        end.
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-number} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code:
-          write-data-element ("ordernum", ub.inv-doc-attr.attr-value).
-        end.
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-date} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code:
-          write-data-element ("orderdate", ub.inv-doc-attr.attr-value).
-        end.      
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-inv-date} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", string(date(ub.inv-doc-attr.attr-value),"99.99.9999")).
-          else write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
-        end.
-        else do:
-          write-data-element ("invbegin", string(buf_trn-doc.doc-date,"99.99.9999")).
-        end. 
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-agent} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          write-data-element ("chairmen1", ub.inv-doc-attr.attr-value).
-        end.
-        else do:
-          write-data-element ("chairmen1", "").
-        end.   
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player1} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("chairmen2", ub.inv-doc-attr.attr-value).
-        end.
-
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player2} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("chairmen3", ub.inv-doc-attr.attr-value).
-        end.
+    sw:start-element ("atr") .
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "invTech" and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
+    if available (ub.inv-doc-attr) then 
+    do:
+      if ub.inv-doc-attr.attr-value = string(true) then write-data-element ("techop", "1").
+      else write-data-element ("techop", "0").
+    end.
+    else 
+    do:
+      write-data-element ("techop", "0").
+    end.
         
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player3} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("chairmen4", ub.inv-doc-attr.attr-value).
-        end.
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-number} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("ordernum", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-prikaz-date} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("orderdate", iso-date (date (ub.inv-doc-attr.attr-value))).
+    end.      
+        
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-inv-date} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
+    if available (ub.inv-doc-attr) then 
+    do:
+      if ub.inv-doc-attr.attr-value <> "" then write-data-element ("invbegin", iso-date (date (ub.inv-doc-attr.attr-value))).
+      else write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
+    end.
+    else 
+    do:
+      write-data-element ("invbegin", if buf_trn-doc.doc-date = ? then "" else iso-date (date (buf_trn-doc.doc-date))).
+    end. 
+        
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-agent} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen1", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player1} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen2", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player2} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen3", ub.inv-doc-attr.attr-value).
+    end.
+        
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-fio-player3} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("chairmen4", ub.inv-doc-attr.attr-value).
+    end.
                  
-        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-agent} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code no-error .
-        if available (ub.inv-doc-attr) then do:
-          write-data-element ("jobtitle1", ub.inv-doc-attr.attr-value).
-        end.
-        else do:
-          write-data-element ("jobtitle1", "").
-        end.        
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player1} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("jobtitle2", ub.inv-doc-attr.attr-value).
-        end.        
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player2} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("jobtitle3", ub.inv-doc-attr.attr-value).
-        end.     
-        for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player3} and
-        ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code :
-          write-data-element ("jobtitle4", ub.inv-doc-attr.attr-value).
-        end.  
-        find first ub.user-account no-lock where ub.user-account.user-id = buf_trn-doc.user-name no-error .  
-        if available (ub.user-account) then 
-          write-data-element ("invclose", string(ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name) ).              
-        else write-data-element ("invclose", "").        
-        sw:end-element ("atr") .                  
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-agent} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle1", ub.inv-doc-attr.attr-value).
+    end.
+
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player1} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle2", ub.inv-doc-attr.attr-value).
+    end.  
+              
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player2} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle3", ub.inv-doc-attr.attr-value).
+    end.    
+         
+    for first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = {&trdcattr-pos-player3} and
+      ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+      ub.inv-doc-attr.attr-value <> "":
+      write-data-element ("jobtitle4", ub.inv-doc-attr.attr-value).
+    end.  
+        
+    find first ub.user-account no-lock where ub.user-account.user-id = buf_trn-doc.user-name no-error .  
+    if available (ub.user-account) then 
+      write-data-element ("invclose", string(ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name) ).              
+    else write-data-element ("invclose", "").        
+    sw:end-element ("atr") .            
                                   
   end.
 
