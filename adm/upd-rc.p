@@ -97,6 +97,7 @@ define variable v-releace           as integer   no-undo.
 define variable v-patch             as integer   no-undo.
 define variable v-branch            as integer   no-undo.
 define variable mFileLog            as character no-undo.
+define variable mDirLog             as character no-undo.
 define variable mIsError            as logical   no-undo.
 
 define variable v-program-tag     as character no-undo .
@@ -456,10 +457,15 @@ then do:
 end.
 
 /* копирование лога в каталог новостей*/
+assign
+  mDirLog = substring(p0-source-dir, r-index(p0-source-dir, "\") + 1).
+  mDirLog = substitute("&1-&2",entry(2,mDirLog,"-"),entry(1,mDirLog,"-")).
+  mDirLog = substring(p0-source-dir, 1, r-index(p0-source-dir, "\")) + mDirLog
+.
 os-command silent
   value( "copy" )
   value( mFileLog )
-  value( p0-source-dir + substring(mFileLog, r-index(mFileLog, "\")) )
+  value( mDirLog + substring(mFileLog, r-index(mFileLog, "\")) )
 .
 
 add-log-file-name = ?.
