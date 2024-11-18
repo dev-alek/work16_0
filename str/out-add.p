@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 91c8196f6fee, 3209, rls $
+$Author: SSlivenko $
+$Date: 2022/12/27 12:54:28 $
+$Workfile: out-add.p $
+$Archive: str/out-add.p $
 
 Добавление строк в РН, СН, ВН при заданном товаре
 Узел для развязки ветвей создания и изменения компонентов документов а-ля расходная накладна
@@ -31,11 +31,11 @@ define input parameter pargds-rec    as recid     no-undo .
 define input parameter work-mode     as character no-undo format "x(30)":U .
 define input parameter parvalue      as character no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 91c8196f6fee, 3209, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/12/27 12:54:28 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: out-add.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/out-add.p $":U .
 define variable vss-description as character no-undo initial "Добавление строк в РН, СН, ВН при заданном товаре":U .
 
 { cmp/vssrevis.i "substitute('&1|&2':u,work-mode,parvalue)" }
@@ -953,7 +953,7 @@ on error undo, return error return-value
             then do :
               v-stop = yes .
             end .
-            if v-is-return
+            if (v-is-return or t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
             and parvalue begins 'scan-marks'
             and not v-stop
             then do :
@@ -983,7 +983,7 @@ on error undo, return error return-value
                                                         and bf_marking-lines.in-code  = bf_parts.in-code
                                                         and bf_marking-lines.out-code = bf_parts.out-code
                                                         and bf_marking-lines.part-code = bf_parts.part-code
-                                                        and bf_marking-lines.mark = entry(2,parvalue,{&delim-key})
+                                                        and bf_marking-lines.mark begins entry(2,parvalue,{&delim-key})
                                                         no-error .
                   if not available bf_marking-lines
                   then do :

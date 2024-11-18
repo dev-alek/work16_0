@@ -2339,6 +2339,54 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     LENGTH(vRaw) = 0.
     RETURN encode-chr.
   END METHOD.       
+
+  /*------------------------------------------------------------------------------
+   Purpose:  Выполняет проверку отсканированной марки при добавлении в документ
+   Notes:
+  ------------------------------------------------------------------------------*/
+  METHOD PUBLIC INTEGER checkScanMark (
+    iObjCode AS INTEGER, 
+    iMark AS CHARACTER, 
+    iMarkShort AS CHARACTER,
+    OUTPUT oRunedOffLine AS LOGICAL
+  ):
+    
+    DEFINE VARIABLE vAccMarkCheck AS CHARACTER NO-UNDO. 
+    DEFINE BUFFER buf_marking FOR ub.marking.
+    
+    oRunedOffLine = false.
+    IF iMarkShort = ? THEN
+    DO:
+      iMarkShort = GetCodeIdent(iMark).
+      IF iMarkShort = "" OR iMarkShort = ? THEN 
+        RETURN 2.
+    END.   
+      
+    mCheckGisMT    = 0. 
+    vAccMarkCheck = ChekAccessMark({&shop},iObjCode,iMark,iMarkShort).           
+    dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ: &1 Статус: &2 mReqId &3 mReqTimeStamp &4 mCheckGisMT &5", 
+                                       vAccMarkCheck, 
+                                       mCheckSts,
+                                       mReqId,
+                                       mReqTimeStamp,
+                                       mCheckGisMT)).
+    /* если марки нет в ГИС МТ (found = false), то  сразу выходим */
+    IF mCheckSts = 3 THEN
+       RETURN 0.
+
+    /* Если прошло более 72ч с момента аварии ГИС МТ */
+    IF mCheckSts = 4 THEN
+       RETURN 0.
+       
+    /* если марку не удалось проверить онлайн */
+    IF (mCheckSts = 2 AND mCheckGisMT <> 1) OR mCheckGisMT = 2 THEN DO:
+       oRunedOffLine = true.
+       vAccMarkCheck = vAccMarkCheck + ChekLocalMark(iMarkShort).
+    END.                 
+    
+    RETURN mCheckSts.
+  END METHOD.
+      
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:

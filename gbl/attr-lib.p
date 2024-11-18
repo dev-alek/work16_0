@@ -53,6 +53,7 @@ define variable vss-description as character no-undo initial "Библиотека  процед
 { gbl/thbj-def.i }
 { rep/frmlib.i }
 { gbl/key-rec.i}
+{ gbl/objsrv.i }
 
 if valid-handle (g#attr-lib)
 and g#attr-lib <> this-procedure :handle
@@ -17535,5 +17536,32 @@ procedure attr-read :
    finally:
       delete object vBhTbl no-error.
    end.
+end procedure.
+
+/* Возвращает является ли товар с экземплярным учетом */
+procedure isExemplarGoods:
+  define input  parameter p-obj-type like ub.clients-attr.obj-type   no-undo .
+  define input  parameter p-obj-code like ub.clients-attr.obj-code   no-undo .
+  define input  parameter p-gds-code as   integer                    no-undo .
+  define output parameter o-result   as   logical                    no-undo.
+  
+  define variable vAttrValue as character no-undo.
+  define variable vAttrType  as character no-undo.
+  define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo .
+  
+  run gds-attr-value in this-procedure
+      (input  p-gds-code
+      ,input  {&attr-mark-type}
+      ,output vAttrValue
+      ,output vAttrType
+      ) .
+
+  if vAttrValue <> "" then
+  do:
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(p-obj-type, p-obj-code).
+    o-result = EDOParSec:GetIsEDOForType(vAttrValue).
+  end.
+  else 
+    o-result = false.
 end procedure.
 

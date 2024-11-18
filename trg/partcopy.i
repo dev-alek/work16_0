@@ -533,7 +533,14 @@ procedure partcopy :
                 .
               end .
               for first buf_marking exclusive-lock where buf_marking.mark = p-mark :
-                assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                if buf_trn-doc.doc-type <> {&write-off} or 
+                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB or
+                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB or
+                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB then
+                do:
+                  assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB .
+                  validate buf_marking.
+                end.
                 for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking.mark :
                   for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code
                                                   and buf_chk-doc.out-code = buf_parts.out-code
@@ -2389,7 +2396,7 @@ procedure partcopy-update-parts-delete :
                   free_marking-lines.prt-code   = buf_parts.prt-code      
                 .
               end .
-              if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} and
+              if avail buf_trn-doc and buf_trn-doc.doc-type <> {&inventory} and buf_trn-doc.doc-type <> {&write-off} and
                  not (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv})
                 then assign buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_Kass}

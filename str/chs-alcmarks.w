@@ -36,6 +36,7 @@ define variable vss-description as character no-undo init "Сканирование акцизных
 define input  parameter parparentproc         as  handle              no-undo .
 define input  parameter p-doc-code            as  character           no-undo .
 define input  parameter p-mode                as character            no-undo .
+define input  parameter p-gds-code            as integer              no-undo .
 define input  parameter p-message             as character            no-undo .
 define output parameter p-mark                as character            no-undo .
 { cmp/vssrevis.i }
@@ -56,12 +57,15 @@ define output parameter p-mark                as character            no-undo .
 { utl/gtin.i }
 { rep/gn-extp.i }
 { ref/gds-attr.i    }
+/*{ str/fbrlib.i }*/
 define temp-table tt-mark no-undo
   field alcmark as character.
 
 /* Parameters Definitions ---                                           */
 
-
+define variable thMarkSts  as class ibs.th.str.marking.sts.mark no-undo.
+define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo   no-undo.
+define variable Marking    as class ibs.th.skt.ControlledClients.marking.
 
 define variable extGdsObj       as class     extgds.
 define variable iLang           as integer   no-undo.
@@ -87,9 +91,7 @@ define buffer bf_parts     for ub.parts .
 define buffer out_parts    for ub.parts .
 define buffer bf_gen-attr  for ub.gen-attr .
 define buffer bf_marking-lines for ub.marking-lines .
-define buffer buf_marking-lines for ub.marking-lines .
 define buffer buf_goods    for ub.goods .
-define buffer bf_gds-obj  for ub.gds-obj .
 define buffer bf_prod-bc  for ub.prod-bc .
 define buffer bf_bar-code for ub.bar-code .
 
@@ -150,7 +152,7 @@ DEFINE BUTTON b-imp
 
 DEFINE VARIABLE F-text AS CHARACTER FORMAT "X(256)":U 
   VIEW-AS FILL-IN 
-  SIZE 80 BY 1.25
+  SIZE 83 BY 1.25
   FGCOLOR 12 NO-UNDO.
 
 DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(256)":U 
@@ -166,8 +168,8 @@ DEFINE FRAME Dialog-Frame
   b-exit AT ROW 1 COL 1
   b-imp AT ROW 1 COL 32.5 WIDGET-ID 2
   v-mark AT ROW 2.71 COL 7.5 COLON-ALIGNED
-  F-text AT ROW 4.25 COL 5.5 NO-LABEL WIDGET-ID 224
-  SPACE(0.37) SKIP(0.66)
+  F-text AT ROW 4.24 COL 4 NO-LABEL WIDGET-ID 224
+  SPACE(2.59) SKIP(0.70)
   WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
   SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
   TITLE "Сканирование марок"
@@ -382,7 +384,12 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  
+  thMarkSts = ObjSrv:Env:Marking:Sts:Mark.
+      
   find first t_doc no-lock where t_doc.doc-code = p-doc-code no-error .
+  EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(t_doc.obj-type, t_doc.obj-code).
+  Marking = new ibs.th.skt.ControlledClients.marking().
   
   { str/tdat-val.i
     t_doc.doc-code
@@ -419,34 +426,36 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         v-free-part-qnty = v-free-part-qnty - out_parts.fact-qnty .
       end .
       if v-free-part-qnty < 0 then v-free-part-qnty = 0 .
-      
-      v-scan-qnty = 0 .
-      for each buf_marking-lines no-lock where buf_marking-lines.obj-type = bf_parts.obj-type
-                                           and buf_marking-lines.obj-code = bf_parts.obj-code
-                                           and buf_marking-lines.gds-code = buf_goods.gds-code
-                                           and buf_marking-lines.out-code = t_doc.doc-code
-                                           and buf_marking-lines.doc-level = 1
-      :
-        v-scan-qnty = v-scan-qnty + 1 .
-      end .
-      
-      v-free-qnty = 0 .
-      find first bf_gds-obj no-lock where bf_gds-obj.obj-type  = t_doc.obj-type
-                                      and bf_gds-obj.obj-code  = t_doc.obj-code
-                                      and bf_gds-obj.artic     = buf_goods.artic
-                                      and bf_gds-obj.prod-type = buf_goods.prod-type
-                                      and bf_gds-obj.prod-code = buf_goods.prod-code
-                                      no-error .
-      if available bf_gds-obj
-      then do :
-        v-free-qnty = bf_gds-obj.free-qnty .
-      end .
+
+      run calcMarks in this-procedure
+        (bf_parts.obj-type, bf_parts.obj-code, buffer buf_goods, output v-free-qnty, output v-scan-qnty).
                                      
       p-message = "Доступно по партии: " + string(v-free-part-qnty) +
              "     Книжный остаток: " + string(v-free-qnty) +
              "     Просканировано: " + string(v-scan-qnty) .
     end .
   end.
+  
+  if p-gds-code <> ? then
+  do:
+    find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error.
+    
+    if avail buf_goods then
+    do:  
+      run calcMarks in this-procedure
+        (t_doc.obj-type, t_doc.obj-code, buffer buf_goods, output v-free-qnty, output v-scan-qnty).
+
+      p-message = "Книжный остаток: " + string(v-free-qnty) +
+             "     Просканировано: " + string(v-scan-qnty) .
+    end.
+  end.
+  
+  if v-scan-qnty >= v-free-qnty then
+  do:
+    message "Количество просканированных марок достигло книжного остатка." view-as alert-box.
+    return.
+  end.
+  
   
   F-text = p-message .  
   Tree = ObjSrv:Lib:MarkingTree .     
@@ -499,6 +508,50 @@ PROCEDURE ActivateKeyboardLayout external "user32" :
   define input parameter P1 as long.
   define input parameter P2 as long.
 end procedure.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE calcMarks Dialog-Frame 
+PROCEDURE calcMarks :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+  define input  parameter p-obj-type as  character no-undo. 
+  define input  parameter p-obj-code as  integer   no-undo. 
+  define parameter buffer b_goods    for ub.goods. 
+  define output parameter o-free-qnty as  integer   no-undo. 
+  define output parameter o-scan-qnty as  integer   no-undo. 
+  
+  define variable vGTIN     as character no-undo .
+  define variable vCodIdent as character no-undo.
+  define buffer bf_gds-obj  for ub.gds-obj .
+  define buffer buf_marking-lines for ub.marking-lines .
+
+  find first bf_gds-obj no-lock where bf_gds-obj.obj-type  = p-obj-type
+                                  and bf_gds-obj.obj-code  = p-obj-code
+                                  and bf_gds-obj.artic     = b_goods.artic
+                                  and bf_gds-obj.prod-type = b_goods.prod-type
+                                  and bf_gds-obj.prod-code = b_goods.prod-code
+                                  no-error .
+  if available bf_gds-obj then
+    o-free-qnty = bf_gds-obj.free-qnty .
+
+  for each buf_marking-lines no-lock where buf_marking-lines.obj-type = t_doc.obj-type
+                                       and buf_marking-lines.obj-code = t_doc.obj-code
+                                       and buf_marking-lines.gds-code = b_goods.gds-code
+                                       and buf_marking-lines.out-code = t_doc.doc-code
+                                       and buf_marking-lines.doc-level = 1
+  :
+    vCodIdent = GetCodeIdent(buf_marking-lines.mark).
+    vGTIN = getGtinByDM(if vCodIdent <> ? and vCodIdent <> "" then vCodIdent else buf_marking-lines.mark) .
+    
+    o-scan-qnty = o-scan-qnty +  getQntyCodeByGtin(vGTIN) .
+  end .
+
+END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -690,12 +743,19 @@ PROCEDURE save_update :
   define buffer buf_doc-line for ub.doc-line .
   define buffer buf_parts    for ub.parts .
   define buffer out_parts    for ub.parts .
-  define buffer buf_goods    for ub.goods .
+/*  define buffer buf_goods    for ub.goods .*/
+  define buffer buf_goods-alt for ub.goods .
   define buffer buf_gds-prt  for ub.gds-prt .
   define buffer cpl_gds-dtl  for ub.gds-dtl .
   define variable v-GTIN as character no-undo .
+  define variable v-GTIN-qnty as integer no-undo .
   define variable v-cis-gds-code as integer no-undo .
+  define variable v-alt-gds-code as integer no-undo .
+  define variable vcodident      as character no-undo.
+  define variable vStatusCheckMark as integer no-undo.
+  define variable vRunedOffLineCheck as logical no-undo.
   define buffer buf_marking-lines for ub.marking-lines.
+  define buffer buf_marking       for ub.marking.
    
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
@@ -705,7 +765,7 @@ PROCEDURE save_update :
 
   assign 
     v-mark = v-mark:screen-value in frame {&frame-name} .
-  
+
   if v-mark <> "" then 
   do:
      if length(v-mark) < 29
@@ -719,59 +779,80 @@ PROCEDURE save_update :
         .
         return error .
      end.
-    define variable vcodident as character no-undo.
+
     vcodident = GetCodeIdent(v-mark).
+    p-mark = vcodident .
+      
+    if v-is-return
+    and (vcodident = ? or vcodident = "")
+    then do :
+      p-mark = v-mark .
+    end .
+    
+    v-GTIN = getGtinByDM(p-mark) .
+    if v-GTIN = "" then
+    do:
+      run dispmessage ("Марка не распознана.").
+      assign 
+        v-mark              = ""
+        v-mark:screen-value = ""
+        v-scan-str          = ""
+        p-mark              = ""
+      .
+      return error.
+    end.
+    v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
+    if v-cis-gds-code = 0 or v-cis-gds-code = ? then
+    do:
+      run dispmessage ("Не определен товар.").
+      assign 
+        v-mark              = ""
+        v-mark:screen-value = ""
+        v-scan-str          = ""
+        p-mark              = ""
+      .
+      return error.
+    end.
+    if avail buf_goods and buf_goods.gds-code <> v-cis-gds-code then
+    do:
+      run dispmessage ("Марка принадлежит другому товару.").
+      assign 
+        v-mark              = ""
+        v-mark:screen-value = ""
+        v-scan-str          = ""
+        p-mark              = ""
+      .
+      return error.
+    end.
+
+    if can-find(bf_marking-lines no-lock where bf_marking-lines.mark = p-mark
+                                           and bf_marking-lines.out-code = t_doc.doc-code)
+/*      and v-is-return*/
+    then do :
+      run dispmessage ("КМ добавлен в документ ранее").
+      assign 
+        v-mark              = ""
+        v-mark:screen-value = ""
+        v-scan-str          = ""
+        p-mark              = ""
+      .
+      return .
+    end . 
+
     find first marking where marking.mark begins vcodident
       and vcodident > ""
       no-lock no-error  .
+
     if available marking
     or v-is-return
     then do:
       if available marking
-      and v-is-return
-      and marking.unit-ext <> "UNIT"
-      and marking.unit-ext <> ?
-      and marking.unit-ext <> ""
-      then do :
-        run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
-        assign 
-          v-mark              = ""
-          v-mark:screen-value = ""
-          v-scan-str          = ""
-          p-mark              = ""
-        .
-        return.
-      end .
-      
-      p-mark = vcodident .
-      
-      if v-is-return
-      and (vcodident = ? or vcodident = "")
-      then do :
-        p-mark = v-mark .
-      end .
-      
-      v-GTIN = getGtinByDM(p-mark) .
-      v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
-      
-      RUN gds-attr-value (
-      INPUT v-cis-gds-code,
-      INPUT {&attr-mark-type},
-      OUTPUT varvalue,
-      OUTPUT vartype
-      ).
-      
-      if varvalue = "tabak"
-      then do :
-        v-level = ? .
-        v-level = getlevelByCodId(p-mark) no-error .
-        if v-level <> ?
-        and v-level <> 1
-        then do :
-          if available marking
-          and marking.unit-ext = "UNIT" 
-          then do : end .
-          else do :
+         and v-is-return then 
+      do:
+          if marking.unit-ext <> "UNIT"
+          and marking.unit-ext <> ?
+          and marking.unit-ext <> ""
+          then do :
             run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
             assign 
               v-mark              = ""
@@ -779,64 +860,266 @@ PROCEDURE save_update :
               v-scan-str          = ""
               p-mark              = ""
             .
-            return error.
+            return.
           end .
-        end .
-      end .
-      else do :
-        v-GTIN = getGtinByDM(p-mark) .
-        find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
-                                        and bf_prod-bc.bc-on
-                                        no-error.
-        if not available bf_prod-bc
-        then do :
-          run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
-          assign 
-            v-mark              = ""
-            v-mark:screen-value = ""
-            v-scan-str          = ""
-            p-mark              = ""
-          .
-          return .
-        end .        
-        find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
-        if not available bf_bar-code
-        then do :
-          run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
-          assign 
-            v-mark              = ""
-            v-mark:screen-value = ""
-            v-scan-str          = ""
-            p-mark              = ""
-          .
-          return .
-        end .
-        if bf_bar-code.cli-base-rate <> 1
-        then do :                       
-          run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").
-          assign 
-            v-mark              = ""
-            v-mark:screen-value = ""
-            v-scan-str          = ""
-            p-mark              = ""
-          .
-          return .
-        end .
-      end .
-      
-      if can-find(bf_marking-lines no-lock where bf_marking-lines.mark = p-mark
-                                             and bf_marking-lines.out-code = t_doc.doc-code)
-      and v-is-return
-      then do :
-        run dispmessage ("КМ добавлен в документ ранее").
-        assign 
-          v-mark              = ""
-          v-mark:screen-value = ""
-          v-scan-str          = ""
-          p-mark              = ""
-        .
-        return .
-      end . 
+          if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
+          do:
+            if marking.sts = thMarkSts:ReturnLock:KeyIntDB then
+            do:
+              ChekTypeMarkByDm(v-mark).
+            end.
+            if marking.sts <> thMarkSts:ReturnLock:KeyIntDB or
+               (mTypeMark <> "" and not EDOParSec:GetIsSaleReturnForType(mTypeMark)) then
+            do: 
+                run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
+                                 thMarkSts:GetProp(marking.sts))
+                                 ).
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return.
+            end.
+          end.  
+      end.
+
+      if avail marking then 
+      do:
+          case t_doc.ext-doc-type:
+          when {&TDEDT_Ras_Perem} then
+          do:
+            if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
+            do:
+              run dispmessage (substitute("Марка в статусе <&1> не может быт перемещена.",
+                               thMarkSts:GetProp(marking.sts))
+                              ).
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return.
+            end.  
+          end.
+          when {&TDEDT_Spi_Vnesh} then
+          do:
+            if marking.sts = thMarkSts:WrittenOff:KeyIntDB then 
+            do:
+              run dispmessage ("Товар списан ранее.").
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return.
+            end.  
+            if marking.sts = thMarkSts:DeliveryControl:KeyIntDB then 
+            do:
+              run dispmessage ("Товар еще не оприходован.").
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return.
+            end.  
+            if marking.sts = thMarkSts:Ungrouped:KeyIntDB then 
+            do:
+              run dispmessage ("Упаковка разгруппирована. Необходимо сканировать индивидуальные товары.").
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return.
+            end.  
+            if marking.sts = thMarkSts:Reserved:KeyIntDB then 
+            do:
+              run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан.").
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return.
+            end.  
+            if marking.sts = thMarkSts:UsedInProduction:KeyIntDB then 
+            do:
+              run dispmessage ("Товар использован для производства.~n В списание необходимо добавить товар-ингредиент.").
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return.
+            end.  
+            if marking.sts = thMarkSts:ReturnLock:KeyIntDB then 
+            do:
+              ChekTypeMarkByDm(v-mark).
+              if mTypeMark <> "" and not EDOParSec:GetIsSaleReturnForType(mTypeMark) then 
+              do:
+                run dispmessage ("Товар возвращен на кассу.~n Списание запрещено.").
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return.
+              end.
+            end. 
+            if marking.sts <> thMarkSts:OutZone:KeyIntDB and
+               marking.sts <> thMarkSts:Checked_:KeyIntDB and
+               marking.sts <> thMarkSts:SaleLock:KeyIntDB and
+               marking.sts <> thMarkSts:SaleWaitLock:KeyIntDB and
+               marking.sts <> thMarkSts:FreeZone:KeyIntDB and
+               marking.sts <> thMarkSts:Moved:KeyIntDB and
+               marking.sts <> thMarkSts:OutOfInventory:KeyIntDB then
+            do:
+              run dispmessage (
+                substitute("Марка в статусе <&1> не может быт списана.",thMarkSts:GetProp(marking.sts))
+                ).
+              assign 
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return.
+            end.    
+          end.
+          end case.
+          
+          if not v-is-return then
+          do:
+            find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
+                                            and bf_prod-bc.bc-on
+                                            no-error.
+            if not available bf_prod-bc
+            then do :
+              run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
+              assign
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return .
+            end .
+            find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
+            if not available bf_bar-code
+            then do :
+              run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
+              assign
+                v-mark              = ""
+                v-mark:screen-value = ""
+                v-scan-str          = ""
+                p-mark              = ""
+              .
+              return .
+            end .
+            if bf_bar-code.cli-base-rate <> 1 then
+            do:     /* отсканирована упаковка */
+              for each buf_marking where
+                       buf_marking.mark-parent begins p-mark
+                  no-lock:
+                v-GTIN-qnty = v-GTIN-qnty + 1.
+              end.  
+/*run gbl/inidebug.p.*/
+              if v-GTIN-qnty <> bf_bar-code.cli-base-rate then
+              do:
+                run dispmessage (
+                  substitute("Групповая упаковка с &1 составом. Для добавления в документ сканируйте марки потребительских упаковок.",
+                             if v-GTIN-qnty = 0 then "неизвестным" else "неполным")
+                  ).
+                assign 
+                  v-mark              = ""
+                  v-mark:screen-value = ""
+                  v-scan-str          = ""
+                  p-mark              = ""
+                .
+                return.
+              end.
+            end.
+          end. 
+      end.
+
+/*      RUN gds-attr-value (                                                                         */
+/*      INPUT v-cis-gds-code,                                                                        */
+/*      INPUT {&attr-mark-type},                                                                     */
+/*      OUTPUT varvalue,                                                                             */
+/*      OUTPUT vartype                                                                               */
+/*      ).                                                                                           */
+/*                                                                                                   */
+/*      if varvalue = "tabak"                                                                        */
+/*      then do :                                                                                    */
+/*        v-level = ? .                                                                              */
+/*        v-level = getlevelByCodId(p-mark) no-error .                                               */
+/*        if v-level <> ?                                                                            */
+/*        and v-level <> 1                                                                           */
+/*        then do :                                                                                  */
+/*          if available marking                                                                     */
+/*          and marking.unit-ext = "UNIT"                                                            */
+/*          then do : end .                                                                          */
+/*          else do :                                                                                */
+/*            run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").*/
+/*            assign                                                                                 */
+/*              v-mark              = ""                                                             */
+/*              v-mark:screen-value = ""                                                             */
+/*              v-scan-str          = ""                                                             */
+/*              p-mark              = ""                                                             */
+/*            .                                                                                      */
+/*            return error.                                                                          */
+/*          end .                                                                                    */
+/*        end .                                                                                      */
+/*      end .                                                                                        */
+/*      else do :                                                                                    */
+/*        find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN                            */
+/*                                        and bf_prod-bc.bc-on                                     */
+/*                                        no-error.                                                */
+/*        if not available bf_prod-bc                                                              */
+/*        then do :                                                                                */
+/*          run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").                */
+/*          assign                                                                                 */
+/*            v-mark              = ""                                                             */
+/*            v-mark:screen-value = ""                                                             */
+/*            v-scan-str          = ""                                                             */
+/*            p-mark              = ""                                                             */
+/*          .                                                                                      */
+/*          return .                                                                               */
+/*        end .                                                                                    */
+/*        find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .   */
+/*        if not available bf_bar-code                                                             */
+/*        then do :                                                                                */
+/*          run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").  */
+/*          assign                                                                                 */
+/*            v-mark              = ""                                                             */
+/*            v-mark:screen-value = ""                                                             */
+/*            v-scan-str          = ""                                                             */
+/*            p-mark              = ""                                                             */
+/*          .                                                                                      */
+/*          return .                                                                               */
+/*        end .                                                                                    */
+/*        if bf_bar-code.cli-base-rate <> 1                                                        */
+/*        then do :                                                                                */
+/*          run dispmessage ("Некорректный тип упаковки. Сканируйте КМ потребительской упаковки.").*/
+/*          assign                                                                                 */
+/*            v-mark              = ""                                                             */
+/*            v-mark:screen-value = ""                                                             */
+/*            v-scan-str          = ""                                                             */
+/*            p-mark              = ""                                                             */
+/*          .                                                                                      */
+/*          return .                                                                               */
+/*        end .                                                                                    */
+/*      end .                                                                                      */
       
       if available bf_parts
       then do :
@@ -846,18 +1129,18 @@ PROCEDURE save_update :
                                        .
         if available marking
         then do :
-          if marking.gds-code <> buf_goods.gds-code
-          and marking.gds-code > 0
-          then do :
-            run dispmessage ("Просканированный КМ относится к другому товару").
-            assign 
-              v-mark              = ""
-              v-mark:screen-value = ""
-              v-scan-str          = ""
-              p-mark              = ""
-            .
-            return .
-          end .
+/*          if marking.gds-code <> buf_goods.gds-code                            */
+/*          and marking.gds-code > 0                                             */
+/*          then do :                                                            */
+/*            run dispmessage ("Просканированный КМ относится к другому товару").*/
+/*            assign                                                             */
+/*              v-mark              = ""                                         */
+/*              v-mark:screen-value = ""                                         */
+/*              v-scan-str          = ""                                         */
+/*              p-mark              = ""                                         */
+/*            .                                                                  */
+/*            return .                                                           */
+/*          end .                                                                */
           find first buf_marking-lines no-lock where buf_marking-lines.gds-code  = buf_goods.gds-code
                                                  and buf_marking-lines.obj-type  = bf_parts.obj-type
                                                  and buf_marking-lines.obj-code  = bf_parts.obj-code
@@ -904,30 +1187,30 @@ PROCEDURE save_update :
           end .
         end .
         else do :
-          v-GTIN = getGtinByDM(p-mark) .
-          v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
-          if v-cis-gds-code = ?
-          then do :
-            run dispmessage ("GTIN " + v-GTIN + " не привязан ни к какому товару!").
-            assign 
-              v-mark              = ""
-              v-mark:screen-value = ""
-              v-scan-str          = ""
-              p-mark              = ""
-            .
-            return .
-          end .
-          if v-cis-gds-code <> buf_goods.gds-code
-          then do :
-            run dispmessage ("GTIN " + v-GTIN + " привязан к другому товару!").
-            assign 
-              v-mark              = ""
-              v-mark:screen-value = ""
-              v-scan-str          = ""
-              p-mark              = ""
-            .
-            return .
-          end .
+/*          v-GTIN = getGtinByDM(p-mark) .                                            */
+/*          v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .                               */
+/*          if v-cis-gds-code = ?                                                     */
+/*          then do :                                                                 */
+/*            run dispmessage ("GTIN " + v-GTIN + " не привязан ни к какому товару!").*/
+/*            assign                                                                  */
+/*              v-mark              = ""                                              */
+/*              v-mark:screen-value = ""                                              */
+/*              v-scan-str          = ""                                              */
+/*              p-mark              = ""                                              */
+/*            .                                                                       */
+/*            return .                                                                */
+/*          end .                                                                     */
+/*          if v-cis-gds-code <> buf_goods.gds-code                                   */
+/*          then do :                                                                 */
+/*            run dispmessage ("GTIN " + v-GTIN + " привязан к другому товару!").     */
+/*            assign                                                                  */
+/*              v-mark              = ""                                              */
+/*              v-mark:screen-value = ""                                              */
+/*              v-scan-str          = ""                                              */
+/*              p-mark              = ""                                              */
+/*            .                                                                       */
+/*            return .                                                                */
+/*          end .                                                                     */
           if num-entries(bf_parts.part-code, "_") = 2
           then do :
             if v-GTIN <> entry(1, bf_parts.part-code, "_")
@@ -1002,190 +1285,234 @@ PROCEDURE save_update :
           end .
         end .
       end .
-        
-                                            
-      apply "CHOOSE" to b-exit in frame {&frame-name}.
-
-    end.  
+    end.    /* if avail marking or v-is-return */  
     else 
     do:
-      
-      RUN ProcAlcCode IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang) no-error.
- 
 
-      if v-error-lang then 
+      vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, output vRunedOffLineCheck) no-error.
+      if error-status:error then
       do:
-        run dispmessage ("Не корректно считана акцизная марка, перед считыванием переключите клавиатуру на английскую раскладку.").
-        assign 
-          v-mark              = ""
-          v-mark:screen-value = ""
+          run dispmessage (
+            substitute("Марка не найдена в базе ТН и не может быть списана,~nт.к. возникла ошибка при проверке: &1.",error-status:get-message(1))
+            ).
+          assign 
+            v-mark              = ""
+            v-mark:screen-value = ""
+            v-scan-str          = ""
+            p-mark              = ""
           .
+          return.
       end.
-      else 
+      if vStatusCheckMark = 2 then
       do:
-        if l-error then 
-        do:
-          run dispmessage (substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)).
-          v-alc-code = "".
-        end.
-        else 
-        do:
-          /*Ищем товар по алкокоду*/
-          if     not v-alc-code = "" 
-            then 
-          do:
-            extGdsObj = new ExtGds (true).
-            extGdsObj:OpenQueryExtGds(0, v-alc-code).
-          end.
-          if valid-object (extGdsObj) 
-            and extGdsObj:NumBundles = 0 then 
-          do: 
-            run dispmessage (substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)).
-          end.
-          else 
-          do:        
-            /*Проверяем есть ли марка в базе*/
-            find first buf_gen-attr no-lock where buf_gen-attr.attr-code = v-mark and buf_gen-attr.table-name = {&excise-mark} no-error .
-            if not available (buf_gen-attr) 
-              then 
-            do:
-              run dispmessage ("Марка: " + v-mark + " не зарегистрирована в системе.").
-            end.  
-            else 
-            do:
-              def var v-reserv as logical no-undo init false.
-              find first buf_gen-attr no-lock where
-                buf_gen-attr.table-name = {&excise-mark} 
-                and buf_gen-attr.attr-code = v-mark
-                and not entry(8,buf_gen-attr.p-key,{&delim-key}) = {&free-code} 
-                and entry(8,buf_gen-attr.p-key,{&delim-key}) <> entry(7,buf_gen-attr.p-key,{&delim-key}) no-error . 
-              if available (buf_gen-attr) then 
-              do:
-                run dispmessage ( string ("Марка: " + v-mark + {&new-line} +
-                  "уже зарезервирована в системе" + {&new-line} +
-                  "документ: " + entry (8,buf_gen-attr.p-key,{&delim-key}))).
-                v-reserv = true.
-              end.     /*if can-find (buf_gen-attr no-lock where buf_gen-attr.attr-code = v-mark and buf_gen-attr.table-name = {&excise-mark} */         
-   
-              /*Проверяем, есть ли марка в свободной зоне*/
-              find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}
-                and buf_gen-attr.attr-code = v-mark
-                and num-entries (buf_gen-attr.p-key, {&delim-key}) >= 8  
-                and buf_gen-attr.p-key begins "parts"
-                and entry(8,buf_gen-attr.p-key,{&delim-key}) = {&free-code} no-error .
-              if not available (buf_gen-attr) or v-reserv then 
-              do:
-                if not v-reserv
-                  then
-                  run dispmessage ( string ("Марка: " + v-mark + {&new-line} +
-                    "отсутсвует в свободной зоне."
-                    )).
-              end. /*if not available (buf_gen-attr) then */
-              else 
-              do: 
-                if v-alc-code = ""
-                  then 
-                do:
-                  find first buf_parts no-lock where
-                    buf_parts.obj-type = entry(2,buf_gen-attr.p-key,{&delim-key})
-                    and buf_parts.obj-code = integer (entry(3,buf_gen-attr.p-key,{&delim-key}))
-                    and buf_parts.artic = entry(4,buf_gen-attr.p-key,{&delim-key})
-                    and buf_parts.prod-type = entry(5,buf_gen-attr.p-key,{&delim-key})
-                    and buf_parts.prod-code = integer (entry(6,buf_gen-attr.p-key,{&delim-key}))
-                    and buf_parts.in-code = entry(7,buf_gen-attr.p-key,{&delim-key})
-                    and buf_parts.out-code = entry(8,buf_gen-attr.p-key,{&delim-key})
-                    and buf_parts.part-code = entry(9,buf_gen-attr.p-key,{&delim-key})
-                    .
-                       
-                  if available (buf_parts) and num-entries (buf_parts.alc-ref-ab-path ) = 4
-                    then 
-                  do:
-                    assign
-                      v-alc-code = entry (3, buf_parts.alc-ref-ab-path)
-                      .
-                  end. 
-                       
-                  find first buf_goods no-lock where
-                    buf_goods.artic = buf_parts.artic
-                    and buf_goods.prod-type = buf_parts.prod-type
-                    and buf_goods.prod-code = buf_parts.prod-code.
-                  if available (buf_goods)
-                    then 
-                  do:
-                    v-gds-code = buf_goods.gds-code.
-                  end.
-                end.
-                else 
-                do:
-                  /*резервируем в партию*/
-
-                  v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode.
-                end.
-                find first bf_trn-doc no-lock where bf_trn-doc.doc-code = entry (7, buf_gen-attr.p-key, {&delim-key}) no-error.
-                if not available (bf_trn-doc) and not (t_doc.obj-type = bf_trn-doc.obj-type and t_doc.obj-code = bf_trn-doc.obj-code)
-                  then 
-                do:
-                  run dispmessage (substitute ("Марка: " + v-mark + " не зарегистрирована в системе по поставщику &1.", (t_doc.obj-type + string (t_doc.obj-code)))).
-                  return.
-                end.
-              end.
-              find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-              if not available (buf_goods) then 
-              do:
-                run dispmessage ("Нет товара с кодом: " + string(v-gds-code)).
-              end.
-              else 
-              do:  
-                gds-rec = recid(buf_goods) .
-                        
-                find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = p-doc-code
-                  and buf_doc-line.artic = buf_goods.artic and buf_doc-line.prod-code = buf_goods.prod-code
-                  and buf_doc-line.prod-type = buf_goods.prod-type no-error .
-                if not available (buf_doc-line) then 
-                do:
-                  run str/out-add.p (parparentproc,
-                    recid(t_doc),
-                    ?,
-                    ?,
-                    recid(buf_goods),
-                    {&add-def},
-                    'scan-marks' + {&delim-key} + v-mark) no-error.
-          
-                /*          /*Добавляем товар в накладную*/                                                                                                                                                               */
-
-                end.
-                else 
-                do:
-                  
-                  /*Увеличеваем кол-во товара в накладной*/
-                  find first cpl_gds-dtl exclusive-lock where cpl_gds-dtl.doc-code = buf_doc-line.doc-code
-                    and cpl_gds-dtl.artic = buf_doc-line.artic and buf_doc-line.prod-code = cpl_gds-dtl.prod-code
-                    and buf_doc-line.prod-type = cpl_gds-dtl.prod-type no-error.
-                         
-                  run str/out-add.p
-                    ( input parparentproc
-                    ,input recid(t_doc)
-                    ,input recid(buf_doc-line)
-                    ,input recid(cpl_gds-dtl)
-                    ,input recid (buf_goods)
-                    ,input {&update}
-                    ,input 'scan-marks' + {&delim-key} + v-mark)
-                    no-error.
-                  
-                end. 
-              end.
-            end. /*if available (buf_goods) then do*/
-
-                    
-          end.  
-        end.
-        apply "entry" to v-mark in FRAME {&FRAME-NAME}.
-        assign 
-          v-mark              = ""
-          v-mark:screen-value = ""            
-          .            
+          run dispmessage (
+            "Проверка марки не выполнена, марка отсутствует в БД и не может быть добавлена в документ."
+            ).
+          assign 
+            v-mark              = ""
+            v-mark:screen-value = ""
+            v-scan-str          = ""
+            p-mark              = ""
+          .
+          return.
       end.
+      if vStatusCheckMark = 2 then
+      do:
+          run dispmessage (
+            "Проверка марки дала отрицательный результат, марка не может быть добавлена в документ."
+            ).
+          assign 
+            v-mark              = ""
+            v-mark:screen-value = ""
+            v-scan-str          = ""
+            p-mark              = ""
+          .
+          return.
+      end.
+      create ub.marking.
+      assign
+        ub.marking.mark = vcodident
+        ub.marking.sts  = thMarkSts:FreeZone:KeyIntDB
+      .
+      
+/*      RUN ProcAlcCode IN THIS-PROCEDURE (input v-mark, output v-alc-code, output l-error, output v-error-lang) no-error.                                                                                                    */
+/*                                                                                                                                                                                                                            */
+/*                                                                                                                                                                                                                            */
+/*      if v-error-lang then                                                                                                                                                                                                  */
+/*      do:                                                                                                                                                                                                                   */
+/*        run dispmessage ("Не корректно считана акцизная марка, перед считыванием переключите клавиатуру на английскую раскладку.").                                                                                         */
+/*        assign                                                                                                                                                                                                              */
+/*          v-mark              = ""                                                                                                                                                                                          */
+/*          v-mark:screen-value = ""                                                                                                                                                                                          */
+/*          .                                                                                                                                                                                                                 */
+/*      end.                                                                                                                                                                                                                  */
+/*      else                                                                                                                                                                                                                  */
+/*      do:                                                                                                                                                                                                                   */
+/*        if l-error then                                                                                                                                                                                                     */
+/*        do:                                                                                                                                                                                                                 */
+/*          run dispmessage (substitute ("Алког. код не преобразовывается в десятичную систему из акцизной марки: &1", v-mark)).                                                                                              */
+/*          v-alc-code = "".                                                                                                                                                                                                  */
+/*        end.                                                                                                                                                                                                                */
+/*        else                                                                                                                                                                                                                */
+/*        do:                                                                                                                                                                                                                 */
+/*          /*Ищем товар по алкокоду*/                                                                                                                                                                                        */
+/*          if     not v-alc-code = ""                                                                                                                                                                                        */
+/*            then                                                                                                                                                                                                            */
+/*          do:                                                                                                                                                                                                               */
+/*            extGdsObj = new ExtGds (true).                                                                                                                                                                                  */
+/*            extGdsObj:OpenQueryExtGds(0, v-alc-code).                                                                                                                                                                       */
+/*          end.                                                                                                                                                                                                              */
+/*          if valid-object (extGdsObj)                                                                                                                                                                                       */
+/*            and extGdsObj:NumBundles = 0 then                                                                                                                                                                               */
+/*          do:                                                                                                                                                                                                               */
+/*            run dispmessage (substitute ("Для алког. кода &1 не найден товар (не установлено соответствие)", v-alc-code)).                                                                                                  */
+/*          end.                                                                                                                                                                                                              */
+/*          else                                                                                                                                                                                                              */
+/*          do:                                                                                                                                                                                                               */
+/*            /*Проверяем есть ли марка в базе*/                                                                                                                                                                              */
+/*            find first buf_gen-attr no-lock where buf_gen-attr.attr-code = v-mark and buf_gen-attr.table-name = {&excise-mark} no-error .                                                                                   */
+/*            if not available (buf_gen-attr)                                                                                                                                                                                 */
+/*              then                                                                                                                                                                                                          */
+/*            do:                                                                                                                                                                                                             */
+/*              run dispmessage ("Марка: " + v-mark + " не зарегистрирована в системе.").                                                                                                                                     */
+/*            end.                                                                                                                                                                                                            */
+/*            else                                                                                                                                                                                                            */
+/*            do:                                                                                                                                                                                                             */
+/*              def var v-reserv as logical no-undo init false.                                                                                                                                                               */
+/*              find first buf_gen-attr no-lock where                                                                                                                                                                         */
+/*                buf_gen-attr.table-name = {&excise-mark}                                                                                                                                                                    */
+/*                and buf_gen-attr.attr-code = v-mark                                                                                                                                                                         */
+/*                and not entry(8,buf_gen-attr.p-key,{&delim-key}) = {&free-code}                                                                                                                                             */
+/*                and entry(8,buf_gen-attr.p-key,{&delim-key}) <> entry(7,buf_gen-attr.p-key,{&delim-key}) no-error .                                                                                                         */
+/*              if available (buf_gen-attr) then                                                                                                                                                                              */
+/*              do:                                                                                                                                                                                                           */
+/*                run dispmessage ( string ("Марка: " + v-mark + {&new-line} +                                                                                                                                                */
+/*                  "уже зарезервирована в системе" + {&new-line} +                                                                                                                                                           */
+/*                  "документ: " + entry (8,buf_gen-attr.p-key,{&delim-key}))).                                                                                                                                               */
+/*                v-reserv = true.                                                                                                                                                                                            */
+/*              end.     /*if can-find (buf_gen-attr no-lock where buf_gen-attr.attr-code = v-mark and buf_gen-attr.table-name = {&excise-mark} */                                                                            */
+/*                                                                                                                                                                                                                            */
+/*              /*Проверяем, есть ли марка в свободной зоне*/                                                                                                                                                                 */
+/*              find first buf_gen-attr no-lock where buf_gen-attr.table-name = {&excise-mark}                                                                                                                                */
+/*                and buf_gen-attr.attr-code = v-mark                                                                                                                                                                         */
+/*                and num-entries (buf_gen-attr.p-key, {&delim-key}) >= 8                                                                                                                                                     */
+/*                and buf_gen-attr.p-key begins "parts"                                                                                                                                                                       */
+/*                and entry(8,buf_gen-attr.p-key,{&delim-key}) = {&free-code} no-error .                                                                                                                                      */
+/*              if not available (buf_gen-attr) or v-reserv then                                                                                                                                                              */
+/*              do:                                                                                                                                                                                                           */
+/*                if not v-reserv                                                                                                                                                                                             */
+/*                  then                                                                                                                                                                                                      */
+/*                  run dispmessage ( string ("Марка: " + v-mark + {&new-line} +                                                                                                                                              */
+/*                    "отсутсвует в свободной зоне."                                                                                                                                                                          */
+/*                    )).                                                                                                                                                                                                     */
+/*              end. /*if not available (buf_gen-attr) then */                                                                                                                                                                */
+/*              else                                                                                                                                                                                                          */
+/*              do:                                                                                                                                                                                                           */
+/*                if v-alc-code = ""                                                                                                                                                                                          */
+/*                  then                                                                                                                                                                                                      */
+/*                do:                                                                                                                                                                                                         */
+/*                  find first buf_parts no-lock where                                                                                                                                                                        */
+/*                    buf_parts.obj-type = entry(2,buf_gen-attr.p-key,{&delim-key})                                                                                                                                           */
+/*                    and buf_parts.obj-code = integer (entry(3,buf_gen-attr.p-key,{&delim-key}))                                                                                                                             */
+/*                    and buf_parts.artic = entry(4,buf_gen-attr.p-key,{&delim-key})                                                                                                                                          */
+/*                    and buf_parts.prod-type = entry(5,buf_gen-attr.p-key,{&delim-key})                                                                                                                                      */
+/*                    and buf_parts.prod-code = integer (entry(6,buf_gen-attr.p-key,{&delim-key}))                                                                                                                            */
+/*                    and buf_parts.in-code = entry(7,buf_gen-attr.p-key,{&delim-key})                                                                                                                                        */
+/*                    and buf_parts.out-code = entry(8,buf_gen-attr.p-key,{&delim-key})                                                                                                                                       */
+/*                    and buf_parts.part-code = entry(9,buf_gen-attr.p-key,{&delim-key})                                                                                                                                      */
+/*                    .                                                                                                                                                                                                       */
+/*                                                                                                                                                                                                                            */
+/*                  if available (buf_parts) and num-entries (buf_parts.alc-ref-ab-path ) = 4                                                                                                                                 */
+/*                    then                                                                                                                                                                                                    */
+/*                  do:                                                                                                                                                                                                       */
+/*                    assign                                                                                                                                                                                                  */
+/*                      v-alc-code = entry (3, buf_parts.alc-ref-ab-path)                                                                                                                                                     */
+/*                      .                                                                                                                                                                                                     */
+/*                  end.                                                                                                                                                                                                      */
+/*                                                                                                                                                                                                                            */
+/*                  find first buf_goods no-lock where                                                                                                                                                                        */
+/*                    buf_goods.artic = buf_parts.artic                                                                                                                                                                       */
+/*                    and buf_goods.prod-type = buf_parts.prod-type                                                                                                                                                           */
+/*                    and buf_goods.prod-code = buf_parts.prod-code.                                                                                                                                                          */
+/*                  if available (buf_goods)                                                                                                                                                                                  */
+/*                    then                                                                                                                                                                                                    */
+/*                  do:                                                                                                                                                                                                       */
+/*                    v-gds-code = buf_goods.gds-code.                                                                                                                                                                        */
+/*                  end.                                                                                                                                                                                                      */
+/*                end.                                                                                                                                                                                                        */
+/*                else                                                                                                                                                                                                        */
+/*                do:                                                                                                                                                                                                         */
+/*                  /*резервируем в партию*/                                                                                                                                                                                  */
+/*                                                                                                                                                                                                                            */
+/*                  v-gds-code = extGdsObj:GetExtGdsValue(1):GdsCode.                                                                                                                                                         */
+/*                end.                                                                                                                                                                                                        */
+/*                find first bf_trn-doc no-lock where bf_trn-doc.doc-code = entry (7, buf_gen-attr.p-key, {&delim-key}) no-error.                                                                                             */
+/*                if not available (bf_trn-doc) and not (t_doc.obj-type = bf_trn-doc.obj-type and t_doc.obj-code = bf_trn-doc.obj-code)                                                                                       */
+/*                  then                                                                                                                                                                                                      */
+/*                do:                                                                                                                                                                                                         */
+/*                  run dispmessage (substitute ("Марка: " + v-mark + " не зарегистрирована в системе по поставщику &1.", (t_doc.obj-type + string (t_doc.obj-code)))).                                                       */
+/*                  return.                                                                                                                                                                                                   */
+/*                end.                                                                                                                                                                                                        */
+/*              end.                                                                                                                                                                                                          */
+/*              find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .                                                                                                                                 */
+/*              if not available (buf_goods) then                                                                                                                                                                             */
+/*              do:                                                                                                                                                                                                           */
+/*                run dispmessage ("Нет товара с кодом: " + string(v-gds-code)).                                                                                                                                              */
+/*              end.                                                                                                                                                                                                          */
+/*              else                                                                                                                                                                                                          */
+/*              do:                                                                                                                                                                                                           */
+/*                gds-rec = recid(buf_goods) .                                                                                                                                                                                */
+/*                                                                                                                                                                                                                            */
+/*                find first buf_doc-line exclusive-lock where buf_doc-line.doc-code = p-doc-code                                                                                                                             */
+/*                  and buf_doc-line.artic = buf_goods.artic and buf_doc-line.prod-code = buf_goods.prod-code                                                                                                                 */
+/*                  and buf_doc-line.prod-type = buf_goods.prod-type no-error .                                                                                                                                               */
+/*                if not available (buf_doc-line) then                                                                                                                                                                        */
+/*                do:                                                                                                                                                                                                         */
+/*                  run str/out-add.p (parparentproc,                                                                                                                                                                         */
+/*                    recid(t_doc),                                                                                                                                                                                           */
+/*                    ?,                                                                                                                                                                                                      */
+/*                    ?,                                                                                                                                                                                                      */
+/*                    recid(buf_goods),                                                                                                                                                                                       */
+/*                    {&add-def},                                                                                                                                                                                             */
+/*                    'scan-marks' + {&delim-key} + v-mark) no-error.                                                                                                                                                         */
+/*                                                                                                                                                                                                                            */
+/*                /*          /*Добавляем товар в накладную*/                                                                                                                                                               */*/
+/*                                                                                                                                                                                                                            */
+/*                end.                                                                                                                                                                                                        */
+/*                else                                                                                                                                                                                                        */
+/*                do:                                                                                                                                                                                                         */
+/*                                                                                                                                                                                                                            */
+/*                  /*Увеличеваем кол-во товара в накладной*/                                                                                                                                                                 */
+/*                  find first cpl_gds-dtl exclusive-lock where cpl_gds-dtl.doc-code = buf_doc-line.doc-code                                                                                                                  */
+/*                    and cpl_gds-dtl.artic = buf_doc-line.artic and buf_doc-line.prod-code = cpl_gds-dtl.prod-code                                                                                                           */
+/*                    and buf_doc-line.prod-type = cpl_gds-dtl.prod-type no-error.                                                                                                                                            */
+/*                                                                                                                                                                                                                            */
+/*                  run str/out-add.p                                                                                                                                                                                         */
+/*                    ( input parparentproc                                                                                                                                                                                   */
+/*                    ,input recid(t_doc)                                                                                                                                                                                     */
+/*                    ,input recid(buf_doc-line)                                                                                                                                                                              */
+/*                    ,input recid(cpl_gds-dtl)                                                                                                                                                                               */
+/*                    ,input recid (buf_goods)                                                                                                                                                                                */
+/*                    ,input {&update}                                                                                                                                                                                        */
+/*                    ,input 'scan-marks' + {&delim-key} + v-mark)                                                                                                                                                            */
+/*                    no-error.                                                                                                                                                                                               */
+/*                                                                                                                                                                                                                            */
+/*                end.                                                                                                                                                                                                        */
+/*              end.                                                                                                                                                                                                          */
+/*            end. /*if available (buf_goods) then do*/                                                                                                                                                                       */
+/*                                                                                                                                                                                                                            */
+/*                                                                                                                                                                                                                            */
+/*          end.                                                                                                                                                                                                              */
+/*        end.                                                                                                                                                                                                                */
+/*        apply "entry" to v-mark in FRAME {&FRAME-NAME}.                                                                                                                                                                     */
+/*        assign                                                                                                                                                                                                              */
+/*          v-mark              = ""                                                                                                                                                                                          */
+/*          v-mark:screen-value = ""                                                                                                                                                                                          */
+/*          .                                                                                                                                                                                                                 */
+/*      end.                                                                                                                                                                                                                  */
     end.
+
+    apply "CHOOSE" to b-exit in frame {&frame-name}.
   end.
 
 end procedure.

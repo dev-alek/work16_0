@@ -700,5 +700,28 @@ procedure gds-attr_check-can-set-dt-seasons :
 
 end procedure.
 
+procedure isExemplarGoods :
+
+  define input  parameter p-obj-type like ub.clients-attr.obj-type   no-undo .
+  define input  parameter p-obj-code like ub.clients-attr.obj-code   no-undo .
+  define input  parameter p-gds-code as   integer                    no-undo .
+  define output parameter o-result   as   logical                    no-undo.
+
+  do
+  on error undo, return error
+  :
+    &scop proc-name isExemplarGoods
+    {&run_proc_attr-lib}
+      (input  p-obj-type
+      ,input  p-obj-code
+      ,input p-gds-code
+      ,output o-result
+      ) no-error .
+    if error-status :error
+    then do:
+      undo, return error return-value .
+    end.
+  end.
+end procedure.
 
 /* $Workfile$ e n d */

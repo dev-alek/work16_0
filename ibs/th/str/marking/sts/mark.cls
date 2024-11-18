@@ -45,6 +45,9 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
   
   define public property  UsedInProduction as class propmap no-undo get.  protected set.
   define public property  ReservedFromProduction as class propmap no-undo get.  protected set.
+  define public property  WrittenOff  as class propmap no-undo get.  protected set.
+  define public property  Moved  as class propmap no-undo get.  protected set.
+  define public property  OutOfInventory  as class propmap no-undo get.  protected set.
   
   define public property  UnknowSts as class propmap no-undo get.  protected set.
   
@@ -54,7 +57,6 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
   define public property  ErrorOver as class propmap no-undo get.  protected set.
   define public property  Moved as class propmap no-undo get.  protected set.
   define public property  Implemented as class propmap no-undo get.  protected set.
-  define public property  WrittenOff  as class propmap no-undo get.  protected set.
   define public property  Sale  as class propmap no-undo get.  protected set.
   define public property  Return_  as class propmap no-undo get.  protected set.
   define public property  Returned  as class propmap no-undo get.  protected set.
@@ -78,13 +80,16 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
     Reserved   = crProp(13,"Reserved","Зарезервирован").
     SaleWaitLock   = crProp(14,"SaleWaitLock","Идет продажа").
     ReturnWaitLock   = crProp(15,"ReturnWaitLock","Блокировка идет возврат").
-    
+
+    WrittenOff   = crProp(16,"WrittenOff ","Списан").
     UsedInProduction = crProp(17,"UsedInProduction","Использован в производство").
     ReservedFromProduction = crProp(18,"ReservedFromProduction","Зарезервирован из производства").
-    
+    Moved = crProp(19,"Moved","Перемещен").
+   
     Ungrouped  = crProp(20,"Ungrouped","Разгруппирован").
     
     GrayZone  = crProp(21,"GrayZone","Серая зона").
+    OutOfInventory  = crProp(22,"OutOfInventory","Выбыл в инвентаризацию").
     
     
     UnknowSts  = crProp(0,"UnknowSts","Неизвестный статус маркированного товара.").
