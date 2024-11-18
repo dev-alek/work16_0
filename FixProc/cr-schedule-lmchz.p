@@ -53,10 +53,11 @@ procedure CopySchedule:
     define buffer buf_db       for ub.db .
     define buffer buf_sys-ctrl for ub.sys-ctrl .
     
-    def var vProcName  as char no-undo.
-    def var vTaskNum   as int  no-undo.
-    def var vDbNum     as int  no-undo.
-    def var vDbNumFrom as int  no-undo.
+    def var vProcName    as char no-undo.
+    def var vTaskNum     as int  no-undo.
+    def var vTaskNumFrom as int  no-undo.
+    def var vDbNum       as int  no-undo.
+    def var vDbNumFrom   as int  no-undo.
 
     assign
         vDbNum = int(iDbNum)
@@ -80,35 +81,51 @@ procedure CopySchedule:
     end.
         
     Run GetBufSch (vDbNum, output vTaskNum).
-    if vTaskNum <> 0 then
-    /* ничего не делаем, уже есть задание для этой базы */ 
-    do:
-       /* (" Уже есть задание для этой базы "  + string(vDbNum) + " " + string(vTaskNum)).*/
-       run write-to-log in p-log-handle (
-              substitute("Для БД &1 уже есть задание rep-lmchz: &2"
-                         , vDbNum
-                         , vTaskNum )). 
-       return .        
-    end. 
        
     /* ищем произвольное задание на исходной базе (на ТСД) */    
-    Run GetBufSch (vDbNumFrom, output vTaskNum).
+    Run GetBufSch (vDbNumFrom, output vTaskNumFrom).
         
     /* создаем задание для этой базы */
-    if vTaskNum <> 0  
+    if vTaskNumFrom <> 0  
     then do
     on error undo, return error return-value:
         for first  buf_schedule no-lock
              where buf_schedule.cre-db-num = vDbNumFrom
                and buf_schedule.task-type  = {&btpr-type-autofree}
-               and buf_schedule.task-num = vTaskNum :
-                                    
-            create copy_schedule.
-            assign
-              copy_schedule.cre-db-num = vDbNum 
-              copy_schedule.db-num-char = string(vDbNum)
-              .
-            copy_schedule.task-num = next-value( s-task-num, {&db-name_schema} ).
+               and buf_schedule.task-num = vTaskNumFrom :
+                   
+            /* уже есть задание для этой базы */                        
+            if vTaskNum <> 0 then             
+            do:
+               find first copy_schedule exclusive-lock
+                     where copy_schedule.cre-db-num = vDbNum
+                       and copy_schedule.task-type  = {&btpr-type-autofree}
+                       and copy_schedule.task-num = vTaskNum
+                       no-error.                        
+               if not avail copy_schedule then do:        
+                   run write-to-log in p-log-handle (
+                          substitute("Для БД &1 задание rep-lmchz: &2 не удалось обновить - заблокировано другим пользователем."
+                                     , vDbNum
+                                     , vTaskNum )). 
+                   return.                  
+               end.   
+               for each buf_schedule-attr exclusive-lock     
+                  where buf_schedule-attr.cre-db-num = copy_schedule.cre-db-num
+                    and buf_schedule-attr.task-type  = copy_schedule.task-type
+                    and buf_schedule-attr.task-num   = copy_schedule.task-num:
+                    delete buf_schedule-attr.
+               end.                     
+                       
+            end.                        
+            else do:
+                create copy_schedule.                
+                assign
+                  copy_schedule.cre-db-num = vDbNum 
+                  copy_schedule.db-num-char = string(vDbNum)
+                  .
+                copy_schedule.task-num = next-value( s-task-num, {&db-name_schema} ).  
+            end.  
+            
             buffer-copy buf_schedule except cre-db-num db-num-char task-num to copy_schedule.        
         
             for each buf_schedule-attr no-lock     
@@ -122,10 +139,17 @@ procedure CopySchedule:
                    copy_schedule-attr.task-num = copy_schedule.task-num .
                 buffer-copy buf_schedule-attr except cre-db-num task-num to copy_schedule-attr.
             end.
-            run write-to-log in p-log-handle (
-                 substitute("Для БД &1 создано задание rep-lmchz: &2",
-                             vDbNum,
-                             copy_schedule.task-num)).
+            if vTaskNum <> 0 
+            then
+                run write-to-log in p-log-handle (
+                     substitute("Для БД &1 обновлено задание rep-lmchz: &2",
+                                 vDbNum,
+                                 copy_schedule.task-num)).
+            else 
+                run write-to-log in p-log-handle (
+                     substitute("Для БД &1 создано задание rep-lmchz: &2",
+                                 vDbNum,
+                                 copy_schedule.task-num)).
         end.    
     end.
     else do:

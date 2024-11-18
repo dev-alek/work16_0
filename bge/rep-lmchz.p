@@ -67,6 +67,7 @@ DEFINE TEMP-TABLE ttreport-header NO-UNDO
    FIELD f_status AS CHAR XML-NODE-NAME "status"
    FIELD f_version    AS CHAR XML-NODE-NAME "version"
    FIELD timeLag AS CHAR
+   FIELD onlineTime AS CHAR
    INDEX reqidpar reqid 
    .
    
@@ -169,10 +170,34 @@ PROCEDURE CalcStatus:
     DEFINE VARIABLE vStatus   AS CHARACTER NO-UNDO.
     DEFINE VARIABLE v-version AS CHARACTER NO-UNDO.
     DEFINE VARIABLE vTimeLag  AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vOnlineTimeD AS DECIMAL NO-UNDO.
+    DEFINE VARIABLE vOnlineTime AS INT64    NO-UNDO.
+    DEFINE VARIABLE vTimeBegErr AS DATETIME-TZ NO-UNDO.
+    
+    DEFINE BUFFER buf_code FOR ub.code.
 
     thGisMtOff =  NEW GisMtOffline() NO-ERROR.           
     vStatus = thGisMtOff:GetChkStsOffline(OUTPUT v-version, OUTPUT vTimeLag) NO-ERROR.
-    RUN Put2Xml (iDirName, vStatus, v-version, vTimeLag) NO-ERROR.  
+    
+    /* Проверяем, зафиксирован ли сбой онлайн-проверки */    
+    FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
+           AND buf_code.code   EQ "GisMtErr"
+       NO-LOCK NO-WAIT NO-ERROR.
+    /* если ошибка уже была, смотрим сколько прошло времени */   
+    IF AVAILABLE buf_code            
+       AND buf_code.codevalue > "" 
+    THEN DO:
+       vTimeBegErr = DATETIME-TZ(buf_code.codevalue) NO-ERROR.
+       IF vTimeBegErr <> ? THEN DO:
+          vOnlineTimeD = (NOW - vTimeBegErr) / 3600000.
+          vOnlineTime = ROUND(vOnlineTimeD,0).
+          if vOnlineTime < vOnlineTimeD then vOnlineTime = vOnlineTime + 1.
+       END.   
+       ELSE vOnlineTime = 0.    
+    END.
+    ELSE vOnlineTime = 0.
+       
+    RUN Put2Xml (iDirName, vStatus, v-version, vTimeLag, STRING(vOnlineTime)) NO-ERROR.  
       
 END PROCEDURE.
 
@@ -181,6 +206,7 @@ PROCEDURE Put2Xml:
     DEFINE INPUT PARAMETER iStatus AS CHARACTER NO-UNDO.
     DEFINE INPUT PARAMETER iVersion AS CHARACTER NO-UNDO.
     DEFINE INPUT PARAMETER iTimeLag AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER iOnlineTime AS CHARACTER NO-UNDO.
     
     DEFINE VARIABLE vFileResult AS CHARACTER NO-UNDO.
     DEFINE VARIABLE vFileName AS CHARACTER NO-UNDO.
@@ -235,6 +261,7 @@ PROCEDURE Put2Xml:
        ttreplicationStatus.f_status = iStatus 
        ttreplicationStatus.f_version = iVersion
        ttreplicationStatus.timeLag = iTimeLag
+       ttreplicationStatus.OnlineTime = iOnlineTime
        .
     vRetOk = DATASET gismt-report-body:WRITE-XML("FILE":U, vfileresult, TRUE, "windows-1251", ?, FALSE, TRUE ,FALSE,TRUE ) no-error.
     
