@@ -4963,8 +4963,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
               v-dec = decimal (v-tank-weight-rvs) no-error.
               if (error-status:error or v-dec = 0 or v-dec = ?)
               then do:
-                if p-ShowMsg or infoSecsObj:SectionNum = 1
-                then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+/*                if p-ShowMsg or infoSecsObj:SectionNum = 1 then*/
+                ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                          "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                          "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
                 return false.
@@ -4978,7 +4978,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           then do :
             if trim (maskedTextBoxABTArir:Text) = ""
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "отклонение от тарировочной пл." ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "отклонение от тарировочной пл." ).
               setFocusMaskTextDoc = maskedTextBoxABTArir.
               return false.
             end.
@@ -4989,13 +4990,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxTankDens:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "плотность топлива" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "плотность топлива" ).
               setFocusMaskTextDoc = maskedTextBoxTankDens.
               return false.
             end.
             if not valid-density(v-dec)
             then do :
-              if p-ShowMsg then ShowMsg( "Неверно введена плотность топлива" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( "Неверно введена плотность топлива" ).
               setFocusMaskTextDoc = maskedTextBoxTankDens.
               return false.
             end .
@@ -5006,7 +5009,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxTankTemp:Text) no-error.
             if (error-status:error or trim (maskedTextBoxTankTemp:Text) = "")
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "температура замера объема" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "температура замера объема" ).
               setFocusMaskTextDoc = maskedTextBoxTankTemp.
               return false.
             end.
@@ -5017,7 +5021,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxDensTemp:Text) no-error.
             if (error-status:error or trim (maskedTextBoxDensTemp:Text) = "")
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "температура замера плотности" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "температура замера плотности" ).
               setFocusMaskTextDoc = maskedTextBoxDensTemp.
               return false.
             end.
@@ -5028,7 +5033,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxPlaceSi:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "средство измерения плотности" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "средство измерения плотности" ).
               setFocusMaskTextDoc = maskedTextBoxPlaceSi.
               return false.
             end.
@@ -5039,7 +5045,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxPlaceSiTemp:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( v-str + "средство измерения температуры" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( v-str + "средство измерения температуры" ).
               setFocusMaskTextDoc = maskedTextBoxPlaceSiTemp.
               return false.
             end.
@@ -5050,7 +5057,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             v-dec = decimal (maskedTextBoxTankWeight:Text) no-error.
             if (error-status:error or v-dec = 0)
             then do:
-              if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                        "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                        "Введите данные и нажмите кнопку Рассчитать по замерам в АЦ." ).
               return false.
@@ -5061,7 +5069,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
               v-dec = decimal (v-tank-weight-rvs) no-error.
               if (error-status:error or v-dec = 0 or v-dec = ?)
               then do:
-                if p-ShowMsg then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
+                if p-ShowMsg or infoSecsObj:SectionNum = 1
+                then ShowMsg( "Сохранение параметров секции невозможно." + {&new-line} +
                          "Не выполнен расчет массы принимаемого НП."  + {&new-line} + 
                          "Введите данные и нажмите кнопку Рассчитать по данным сверок." ).
                 return false.
@@ -5077,7 +5086,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
             and infoSecsObj:isKP
             and trim(maskedTextBoxAukKey:text) > ""
             then do :
-              if p-ShowMsg then ShowMsg( "По накладной установлен флаг комиссионного приема. Недостаточно прав для ввода идентификатора доступа (ключа) верхнего уровня или одноразового кода!" ).
+              if p-ShowMsg or infoSecsObj:SectionNum = 1
+              then ShowMsg( "По накладной установлен флаг комиссионного приема. Недостаточно прав для ввода идентификатора доступа (ключа) верхнего уровня или одноразового кода!" ).
               setFocusMaskTextDoc = maskedTextBoxAukKey.
               return false.
             end .
@@ -5147,7 +5157,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           v-dec = decimal (maskedTextBoxCarVol:Text) no-error.
           if (error-status:error or v-dec = 0)
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "объем по свидетельству о поверке" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "объем по свидетельству о поверке" ).
             setFocusMaskTextDoc = maskedTextBoxCarVol.
             return false.
           end.
@@ -5157,7 +5168,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         then do :
           if trim (maskedTextBoxABTArir:Text) = ""
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "отклонение от тарировочной пл." ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "отклонение от тарировочной пл." ).
             setFocusMaskTextDoc = maskedTextBoxABTArir.
             return false.
           end.
@@ -5168,13 +5180,15 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           v-dec = decimal (maskedTextBoxTankDens:Text) no-error.
           if (error-status:error or v-dec = 0)
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "плотность топлива" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "плотность топлива" ).
             setFocusMaskTextDoc = maskedTextBoxTankDens.
             return false.
           end.
           if not valid-density(v-dec)
           then do :
-            if p-ShowMsg then ShowMsg( "Неверно введена плотность топлива" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( "Неверно введена плотность топлива" ).
             setFocusMaskTextDoc = maskedTextBoxTankDens.
             return false.
           end .
@@ -5185,7 +5199,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           v-dec = decimal (maskedTextBoxDensTemp:Text) no-error.
           if (error-status:error or trim (maskedTextBoxDensTemp:Text) = "")
           then do:
-            if p-ShowMsg then ShowMsg( v-str + "температура замера плотности" ).
+            if p-ShowMsg or infoSecsObj:SectionNum = 1
+            then ShowMsg( v-str + "температура замера плотности" ).
             setFocusMaskTextDoc = maskedTextBoxDensTemp.
             return false.
           end.

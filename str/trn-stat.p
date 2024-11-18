@@ -857,12 +857,12 @@ then do:
                   end .
                 end .
                 else do :
-                  if infoSectionObj:IsKP
-                  then do :
+/*                  if infoSectionObj:IsKP*/
+/*                  then do :             */
                     infoSectionObj:IsKP = no .
                     infoSectionObj:TankWeight = 0 .
                     v-needsavesec = yes .
-                  end .
+/*                  end .*/
                 end .
               end .
             end .

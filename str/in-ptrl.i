@@ -2161,6 +2161,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
         define variable v-log               as   logical                  no-undo .
         define variable v-st-doc            as   logical                  no-undo .
         define variable v-setting           as   logical                  no-undo .
+        define variable v-need-message      as   logical                  no-undo init yes .
 
         block_tr:
         do transaction
@@ -2325,6 +2326,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   then do :
                     assign v-calc-density = infoSectionObj:TankWeightRvs / infoSectionObj:TankVolPomiRvs .
                   end .
+                  if (v-calc-density = ? or v-calc-density <= 0 or v-calc-density > 1)
+                  and infoSectionObj:KPnoMeas
+                  then do :
+                    assign v-need-message = no .
+                  end .
                   p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
                   if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
                   then do:
@@ -2369,6 +2375,11 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     if infoSectionObj:AccMeth = 1
                     then do :
                       assign v-calc-density = infoSectionObj:TankWeightRvs / infoSectionObj:TankVolPomiRvs .
+                    end .
+                    if (v-calc-density = ? or v-calc-density <= 0 or v-calc-density > 1)
+                    and infoSectionObj:Alarm-SGDKK
+                    then do :
+                      assign v-need-message = no .
                     end .
                     p-infoSectionsTotal:RNAlgo (integer(infoSectionObj:SectionName), output v-new-sec-fact-qnty-kg).
                     if v-new-sec-fact-qnty-kg <> infoSectionObj:DocQnty * infoSectionObj:DocDensity
@@ -2453,12 +2464,16 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             end.
             
             
-            if v-calc-density = ? and not infoSectionsTotal:isFlagKPChg
+            if v-calc-density = ?
+            and not infoSectionsTotal:isFlagKPChg
             then do:
-              message
-                substitute( "Ќевозможно рассчитать фактическое кол-во." )
-                view-as alert-box warning.
-                return.
+              if v-need-message
+              then do :
+                message
+                  substitute( "Ќевозможно рассчитать фактическое кол-во." )
+                  view-as alert-box warning.
+              end .
+              return.
             end.
             
             if (p-new-fact-qnty <> v-new-fact-qnty

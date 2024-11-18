@@ -659,7 +659,14 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
     end.
     
     tabsel = tabControl:SelectedTab.
-    v-idSel = integer (tabsel:Name).
+    
+    if tabsel:Name = "tabPageSum"
+    then do :
+      v-idSel = infoSecsObj:SectionNum .
+    end .
+    else do :
+      v-idSel = integer (tabsel:Name).
+    end .
     
 /*    this-object:tabControl:Controls:Remove(tabPageSum).*/
 
