@@ -3626,6 +3626,10 @@ if ptrlprop-calc-free-vol then do:
     if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1
     then
       next sect_ .
+    if v-sec-num <> ""
+    and v-sec-num <> infoSectionsTotal:InfoSectionCurr:SectionName
+    then
+      next sect_ .
     
     if infoSectionsTotal:InfoSectionCurr:DocVolume > 0
     then do :
@@ -3646,31 +3650,32 @@ if ptrlprop-calc-free-vol then do:
           and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
           and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
           and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
-          and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-        if available buf_doc-pl-attr then
-        do :
-          buf_doc-pl-attr.attr-value = string(no)  .
-        end.
-        else
-        do :
-          create buf_doc-pl-attr.
-          assign
-            buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
-            buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
-            buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
-            buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
-            buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
-            buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-            buf_doc-pl-attr.attr-value = string(no)
-            .
-        end.
-      end .
-      else 
+          and buf_doc-pl-attr.attr-code = "free-vol-exceed"
+      no-error.
+      if available buf_doc-pl-attr then
       do :
-        run ref/message_volue.w(input string(round(v-doc-volume, 0)),
-          input buf_place.loc1,
-          input string(round(v-free-vol, 0)),
-          input true) no-error .
+        buf_doc-pl-attr.attr-value = string(no)  .
+      end.
+      else
+      do :
+        create buf_doc-pl-attr.
+        assign
+          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+          buf_doc-pl-attr.attr-value = string(no)
+          .
+      end.
+    end .
+    else 
+    do :
+      run ref/message_volue.w(input string(round(v-doc-volume, 0)),
+        input buf_place.loc1,
+        input string(round(v-free-vol, 0)),
+        input true) no-error .
 /*        message "Внимание! Объем нефтепродукта по ТТН " string(round(v-doc-volume, 0))                                                                 */
 /*          "л превышает допустимое значение для слива в резервуар " buf_place.loc1 " - "                                                                */
 /*          string(round(v-free-vol, 0)) "л." skip                                                                                                       */
@@ -3678,33 +3683,33 @@ if ptrlprop-calc-free-vol then do:
 /*          " и при необходимости проинформируйте ответственное лицо ОГ в соответствии со схемой оповещения. Если данные корректны, прием запрещен!" skip*/
 /*          "ВНИМАНИЕ!!! Прием невозможен, недостаточно свободного объема резервуара!!!"                                                                 */
 /*          view-as alert-box .                                                                                                                          */
-        find first buf_doc-pl-attr exclusive-lock
-          where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
-          and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
-          and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
-          and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
-          and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
-          and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
-        if available buf_doc-pl-attr then
-        do :
-          buf_doc-pl-attr.attr-value = string(yes)  .
-        end.
-        else
-        do :
-          create buf_doc-pl-attr.
-          assign
-            buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
-            buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
-            buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
-            buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
-            buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
-            buf_doc-pl-attr.attr-code  = "free-vol-exceed"
-            buf_doc-pl-attr.attr-value = string(yes)
-            .
-        end.       
-      end .
-    end .                            
-  end .
+      find first buf_doc-pl-attr exclusive-lock
+        where buf_doc-pl-attr.obj-code  = tt-rvs-line.obj-code
+        and buf_doc-pl-attr.obj-type  = tt-rvs-line.obj-type
+        and buf_doc-pl-attr.gds-code  = tt-rvs-line.gds-code
+        and buf_doc-pl-attr.pl-code   = tt-rvs-line.pl-code
+        and buf_doc-pl-attr.out-code  = buf_rvs-doc.out-code
+        and buf_doc-pl-attr.attr-code = "free-vol-exceed" no-error.
+      if available buf_doc-pl-attr then
+      do :
+        buf_doc-pl-attr.attr-value = string(yes)  .
+      end.
+      else
+      do :
+        create buf_doc-pl-attr.
+        assign
+          buf_doc-pl-attr.obj-code   = tt-rvs-line.obj-code
+          buf_doc-pl-attr.obj-type   = tt-rvs-line.obj-type
+          buf_doc-pl-attr.gds-code   = tt-rvs-line.gds-code
+          buf_doc-pl-attr.pl-code    = tt-rvs-line.pl-code
+          buf_doc-pl-attr.out-code   = buf_rvs-doc.out-code
+          buf_doc-pl-attr.attr-code  = "free-vol-exceed"
+          buf_doc-pl-attr.attr-value = string(yes)
+          .
+      end.       
+    end .
+  end .                            
+end .
 end.
   if buf_rvs-doc.rvs-type = {&rvs-after-doc} then 
   do:

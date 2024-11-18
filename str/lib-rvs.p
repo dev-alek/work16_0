@@ -5109,6 +5109,7 @@ END.
     { gbl/ptrlprop.i run p-obj-type p-obj-code }
     
     define variable v-calc-free-vol as logical no-undo init no .
+    define variable v-sec-num as character no-undo init "" .
     
     if (is-sug(bf_rvs-line.gds-code) and ptrlprop-calc-free-vol-sug)
     or (not is-sug(bf_rvs-line.gds-code) and ptrlprop-calc-free-vol)
@@ -5181,11 +5182,18 @@ END.
         end .                           
         else do :
           infoSectionsTotal = new ibs.th.str.InfoSectionsTotal(buf_trn-doc.doc-code, bf_rvs-line.gds-code, {&lookup}).
-          
+          if num-entries(bf_rvs-line.rvs-code, "-") = 3
+          then do :
+            v-sec-num = entry(2, bf_rvs-line.rvs-code, "-") .
+          end .
           sect_ :
           do iisec = 1 to infoSectionsTotal:SectionNum :
             infoSectionsTotal:GetInfoSectionProp (iisec).
             if infoSectionsTotal:InfoSectionCurr:ListTank <> buf_place.loc1
+            then
+              next sect_ .
+            if v-sec-num <> ""
+            and v-sec-num <> infoSectionsTotal:InfoSectionCurr:SectionName
             then
               next sect_ .
             
