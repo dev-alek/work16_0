@@ -5415,7 +5415,7 @@ PROCEDURE save_mark :
                                  find first buf_marking where buf_marking.mark eq bf_utd-marking-lines.mark no-lock no-error.
                            
                               if     available buf_marking
-                                 and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+/*                                 and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB*/
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
 /*                                 and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB */
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
