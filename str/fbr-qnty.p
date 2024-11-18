@@ -576,9 +576,10 @@ on error undo calc-ingr, return error
                                 ).
                             end.
                             else do:                   /* образовавшиеся излишки кидаем на составной - а куда еще ? */
-                                if buf_ingr_units.unit-name = "шт" and buf_units.unit-name = "мл" then
+                                if buf_ingr_units.unit-name = "шт" and (buf_units.unit-name = "мл" or buf_units.unit-name = "л") then
                                   /* BTS-802 исправляем аккуратно, чтобы другое не сломать */
                                   /* если преобразуем из штук в мл, то так, иначе как было */
+                                  /* BTS-973 добавляем еще из штук в л                     */
                                   assign 
                                     buf_ingr_fbr-line.fact-qnty = buf_ingr_fbr-line.fact-qnty + v-comp-shortage
                                     buf_fbr-line.fact-qnty      = buf_fbr-line.fact-qnty

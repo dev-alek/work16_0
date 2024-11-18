@@ -2050,7 +2050,7 @@ on error undo, return error
             :
               for first buf_marking exclusive-lock where buf_marking.mark begins buf_marking-lines.mark :
                 assign
-                  buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB when not buf_fbr-line.is-comp
+/*  BTS-977                buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB when not buf_fbr-line.is-comp*/
                   buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB when buf_fbr-line.is-comp
                 .
               end .

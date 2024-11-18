@@ -2123,7 +2123,8 @@ FUNCTION getStatusName RETURNS CHARACTER
     ------------------------------------------------------------------------------*/
     define buffer c-marking for ub.c-marking.
 
-    if num-entries(p-doc,{&delim-par}) > 1 and entry(2,p-doc,{&delim-par}) = {&TDEDT_Spi_Vnesh} then
+    if p-sts-loc = marking:Reserved:KeyIntDB and 
+       num-entries(p-doc,{&delim-par}) > 1 and entry(2,p-doc,{&delim-par}) = {&TDEDT_Spi_Vnesh} then
     do:
       find last c-marking no-lock where
                 c-marking.mark = p-mark

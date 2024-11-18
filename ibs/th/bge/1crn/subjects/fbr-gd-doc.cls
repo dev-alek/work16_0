@@ -225,7 +225,16 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
         write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
         write-data-element ("rcp-code", buf_fbr-line.recipe-code).
         
-        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value)
+        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value) and
+           can-find(first buf_marking-lines where 
+                          buf_marking-lines.gds-code = buf_gds.gds-code
+                      and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
+                      and buf_marking-lines.obj-code = buf_fbr-doc.obj-code
+                      and buf_marking-lines.in-code  = "manufacturing"
+                      and buf_marking-lines.out-code = buf_fbr-line.doc-code
+                      and buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                      and buf_marking-lines.prt-code = 0
+                      and buf_marking-lines.doc-level = 1)
         then do :
           sw:start-element ("marks").
           for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_gds.gds-code
@@ -331,7 +340,16 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
           end .
           sw:end-element ("marks").
         end .
-        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value)
+        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value) and
+           can-find(first buf_marking-lines where 
+                          buf_marking-lines.gds-code = buf_gds.gds-code
+                      and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
+                      and buf_marking-lines.obj-code = buf_fbr-doc.obj-code
+                      and buf_marking-lines.in-code  = "manufacturing"
+                      and buf_marking-lines.out-code = buf_fbr-line.doc-code
+                      and buf_marking-lines.part-code = buf_fbr-line.recipe-code
+                      and buf_marking-lines.prt-code = 0
+                      and buf_marking-lines.doc-level = 1)
         then do :
           sw:start-element ("marks").
           for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_gds.gds-code

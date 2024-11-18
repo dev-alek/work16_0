@@ -82,7 +82,7 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
     SaleWaitLock   = crProp(14,"SaleWaitLock","Идет продажа").
     ReturnWaitLock   = crProp(15,"ReturnWaitLock","Блокировка идет возврат").
 
-    WrittenOff   = crProp(16,"WrittenOff ","Списан").
+    WrittenOff   = crProp(16,"WrittenOff","Списан").
     UsedInProduction = crProp(17,"ProductionUse","Использован в производство").
     ReservedFromProduction = crProp(18,"ReservedFromProduction","Зарезервирован из производства").
     Moved = crProp(19,"Moved","Перемещен").
