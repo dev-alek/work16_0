@@ -2359,7 +2359,7 @@ define variable v-codident as character no-undo.
               end.
           end.
 
-      if buf_trn-doc.internal and buf_trn-doc.doc-type = {&income} then do:
+      if buf_trn-doc.doc-type = {&income} and v-ischg-ext-type then do:
           for each ub.doc-line where ub.doc-line.doc-code = buf_trn-doc.doc-code no-lock:
               { str/is-petrl.i
                 ub.doc-line.artic
