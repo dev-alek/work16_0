@@ -2702,8 +2702,8 @@ DO:
     end .
   
     if available dens_sr-izmerenia then do:
-            v-izm-temps-tab = string(dens_sr-izmerenia.sr-type-izm) + ";" .
-      for each tt-temps-tab no-lock by tt-temps-tab.ii :
+      v-izm-temps-tab = string(dens_sr-izmerenia.sr-type-izm) + ";" .
+      for each tt-temps-tab no-lock by tt-temps-tab.ii descending :
         v-izm-temps-tab = v-izm-temps-tab + string(tt-temps-tab.temperature) + "," .
       end .
       v-izm-temps-tab = trim(v-izm-temps-tab, ",") .
