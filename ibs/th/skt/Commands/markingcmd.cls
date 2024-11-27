@@ -41,6 +41,7 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
     Notes:
    ------------------------------------------------------------------------------*/
    define private variable marking     as class  marking no-undo.
+   define temp-table tt-code no-undo like ub.code.
       
    constructor public markingcmd (  ):
       super ().
@@ -51,19 +52,46 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
   define private variable hndlSocket as handle no-undo.
 
   method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
+    def buffer buf_code for ub.code.
+    
+    empty temp-table tt-code.
     
     do transaction:
        hndlsocket = req:HndlSocket.
        marking:hndler(req).
        if not writeSock(marking:SomeStr)
-       then
-          undo, return.
-       /* обновляем, если надо, CDN площадки */             
-       else if marking:CheckCdnNeedUpd() then 
-       do:           
-          run utl/pub-runcdn.p .
-       end.    
-       
+       then do:  
+         find first buf_code where 
+                     buf_code.parent eq "GisMt"
+                 and buf_code.code   eq "GisMtErr"
+         no-lock no-error.
+         if avail buf_code then do:
+             create tt-code.
+             buffer-copy buf_code to tt-code.
+         end.
+         for each buf_code no-lock where 
+                  buf_code.parent = "CDN_GisMt":
+             create tt-code.
+             buffer-copy buf_code to tt-code.         
+         end.                                    
+         undo.
+       end.                     
+    end.
+    do transaction:
+        for each tt-code:
+           find first buf_code where 
+                      buf_code.parent = tt-code.parent 
+                  and buf_code.code   = tt-code.code
+              exclusive-lock no-wait no-error.
+           if avail buf_code then do:
+               buffer-copy tt-code to buf_code no-error.
+           end.    
+        end.    
+    end.
+    /* обновляем, если надо, CDN площадки */             
+    if marking:CheckCdnNeedUpd() then 
+    do:           
+      run utl/pub-runcdn.p .
     end.
 
   end method.
