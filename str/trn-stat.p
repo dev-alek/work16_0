@@ -3882,6 +3882,7 @@ vartechproliv = no
               then do :
                 assign v-0-recipes-gds-list = v-0-recipes-gds-list + string(bf_goods.gds-code) + " " + bf_goods.gds-name + ", " .
               end .
+              else
               if v-num-recipes <> 1
               then do :
                 assign v-many-recipes-gds-list = v-many-recipes-gds-list + string(bf_goods.gds-code) + " " + bf_goods.gds-name + ", " .

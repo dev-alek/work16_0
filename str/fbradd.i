@@ -363,6 +363,15 @@ define input parameter p-have-store             as logical          no-undo.  /*
             then do:
                 if v-yesno = yes
                 then do:
+                    for each tt-marking-lines where tt-marking-lines.gds-code = buf_start_temp_goods-qnty.gds-code
+                    :
+                      for first buf_marking exclusive-lock where buf_marking.mark begins tt-marking-lines.mark :
+                        assign
+                          buf_marking.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB
+                        .
+                      end .
+                      delete tt-marking-lines .
+                    end .
                     delete buf_start_temp_goods-qnty.
                     find first buf_start_temp_goods-qnty
                             where buf_start_temp_goods-qnty.calculated = no

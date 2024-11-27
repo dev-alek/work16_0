@@ -331,7 +331,13 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     then do :
       v-scan-qnty = v-scan-qnty + v-GTIN-qnty .
     end .
-  end .                             
+  end . 
+  
+  if v-doc-qnty = v-scan-qnty
+  then do :
+    message "Сканирование КМ не требуется" view-as alert-box .
+    return .
+  end .                            
   
   run LoadKeyboardLayoutA (input v-scan-str, input 0, output iLang).
   run adm/shattri.p (
