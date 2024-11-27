@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0913db48c0a8, 1234, rls $
+$Author: SSlivenko $
+$Date: Mon Feb 26 19:29:32 2018 +0300 $
+$Workfile: s-g-pack.p $
+$Archive: nws/s-g-pack.p $
 
 отправка и прием пакета новостей (файла)
 
@@ -22,11 +22,11 @@ define input parameter p0-source-dir as character no-undo .
 define input parameter p0-target-dir as character no-undo .
 define input parameter p0-temp-dir   as character no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 0913db48c0a8, 1234, rls $":U .
+def var vss-author      as character no-undo init "$Author: SSlivenko $":U .
+def var vss-date        as character no-undo init "$Date: Mon Feb 26 19:29:32 2018 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: s-g-pack.p $":U .
+def var vss-archive     as character no-undo init "$Archive: nws/s-g-pack.p $":U .
 def var vss-description as character no-undo init "отправка и прием пакета новостей (файла)".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -130,6 +130,7 @@ procedure file-s-g :
     define variable v-file-source-arj  as character no-undo .
     define variable v-file-temp        as character no-undo .
     define variable v-file-target      as character no-undo .
+    define variable v-file-hash        as character no-undo .
 
     define variable v-file-name-no-ext as character no-undo .
     define variable v-ext-name         as character no-undo .
@@ -171,6 +172,9 @@ procedure file-s-g :
     then do:
       return error substitute( "&1. Исходный файл &2 не найден.", vss-workfile, v-file-source ).
     end.
+
+    run gbl/md5.p(v-file-source, output v-file-hash).
+    run write-to-log( substitute("Файл: &1; Контрольная сумма: &2.", v-file-source,  v-file-hash) ) .
 
     if p-action = "put":U then do:
       if p-arch-type <> "":U then do:
@@ -481,4 +485,4 @@ procedure ren-file :
     end.
   end.
 end procedure. /* ren-file */
-/* $Workfile$ end */
+/* $Workfile: s-g-pack.p $ end */

@@ -48,6 +48,7 @@ define temp-table tt_pck-sent      no-undo like ub.pck-sent .
 
 define variable v-sub-rec-cnt as integer   no-undo.
 define variable v-rec-cnt     as integer   no-undo.
+define variable v-file-hash   as character no-undo .
 
 define frame imp-pck
   p-db-src        label "БД" skip
@@ -128,6 +129,9 @@ on stop   undo, return error substitute("&1. stop main_block")
   assign
     v-err-msg = "":U .
   .
+
+  run gbl/md5.p(p-file-pck-name, output v-file-hash).
+  run write-to-log( substitute("Файл: &1; Контрольная сумма: &2.", p-file-pck-name,  v-file-hash) ) .
 
   input stream imp-stream from value( p-file-pck-name ).
 
