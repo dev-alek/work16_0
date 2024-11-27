@@ -209,7 +209,7 @@ DEFINE FRAME DEFAULT-FRAME
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-IF SESSION:DISPLAY-TYPE = "GUI":U THEN
+IF SESSION:DISPLAY-TYPE = "GUI":U  and not session:batch-mode THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "Сокет-сервер"
@@ -257,6 +257,8 @@ THEN C-Win:HIDDEN = yes.
 /* ************************  Control Triggers  ************************ */
 
 &Scoped-define SELF-NAME C-Win
+if valid-handle({&self-name}) then
+do:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL C-Win C-Win
 ON END-ERROR OF C-Win /* Сокет-сервер */
 OR ENDKEY OF {&WINDOW-NAME} ANYWHERE DO:
@@ -281,7 +283,7 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
+end.
 
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit C-Win
@@ -323,8 +325,11 @@ END.
 /* ***************************  Main Block  *************************** */
 { gbl/app_help.i }
 /* Set CURRENT-WINDOW: this will parent dialog-boxes and frames.        */
+if valid-handle({&WINDOW-NAME}) then
+do:
 ASSIGN CURRENT-WINDOW                = {&WINDOW-NAME}
        THIS-PROCEDURE:CURRENT-WINDOW = {&WINDOW-NAME}.
+end.
 
 /* The CLOSE event can be used from inside or outside the procedure to  */
 /* terminate it.                                                        */
@@ -340,7 +345,8 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
    if not p-hide then do:
-      C-Win:HIDDEN = no.
+      if valid-handle({&WINDOW-NAME}) then
+        C-Win:HIDDEN = no.
       RUN enable_UI.
   end.
   define variable sktserv  as class SktServer no-undo.
@@ -384,7 +390,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
   do while mWork:
      /*  */
-     
+
      if valid-object(sktserv)
      then
         if sktserv:checkEnd()
@@ -399,8 +405,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               RUN proc-stop-srv.
               mWork = no.
            end.
-           else
-              wait-for connect of hServerSocket or choose of Btn-st or close of this-procedure pause 60.
+           else do:
+                if valid-handle({&WINDOW-NAME}) then
+                  wait-for connect of hServerSocket or choose of Btn-st or close of this-procedure pause 60.
+                else
+                  wait-for connect of hServerSocket or close of this-procedure pause 60.
+           end.
         end.
      else
        wait-for choose of Btn-st or close of this-procedure.

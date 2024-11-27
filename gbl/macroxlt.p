@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bbf1530230d5, 2753, rls $
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
+$Workfile: macroxlt.p $
+$Archive: gbl/macroxlt.p $
 
 Программа формирования файла Excel из шаблона.
 
@@ -22,12 +22,13 @@ Output:
 { gbl/paramls.i  }
 define input-output parameter table for temp-param .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: bbf1530230d5, 2753, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Сб фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: macroxlt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/macroxlt.p $":U .
 define variable vss-description as character no-undo init "Программа формирования файла Excel из шаблона.".
+define variable mTextError      as character no-undo.
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 
@@ -130,11 +131,15 @@ on error undo, return error
     .
     create "Excel.Application" chExcelApp no-error .
     if error-status :error then do:
-        message
-        "Ошибка при запуске Excel" skip
-        error-status :get-message(1) skip
-        view-as alert-box error .
-        undo, return error .
+        mTextError = substitute("&1~n&2"
+            ,"Ошибка при запуске Excel"
+            ,error-status :get-message(1)
+          ).
+        if not session:batch-mode then
+          message
+            mTextError
+            view-as alert-box error.
+        undo, return error mTextError.
     end.
 /*    assign*/
 /*        chExcelApp :Visible = lookup(v-excel-visible-char, "true,yes":U) > 0*/
@@ -153,13 +158,15 @@ on error undo, return error
         v-version-dec = decimal(v-version)
       no-error .
       if error-status:error then do:
-        message
-        "Не удалось определить версию Excel"
-        view-as alert-box error .
+        mTextError = "Не удалось определить версию Excel". 
+        if not session:batch-mode then
+            message
+            mTextError
+            view-as alert-box error .
         release object chCodeModule no-error .
         release object chWorkBook   no-error .
         release object chExcelApp   no-error .
-        undo, return error .
+        undo, return error mTextError.
       end.
       if v-version-dec > 9 then do:
         run gbl/getregvl.p
@@ -170,29 +177,34 @@ on error undo, return error
                         , output v-found-reg-entry
                         , OUTPUT v-trusted) no-error .
         if error-status:error then do:
-          message
-          "Не удалось определить политику безопасности для данной версии Excel"
-          view-as alert-box error .
+          mTextError = "Не удалось определить политику безопасности для данной версии Excel".
+          if not session:batch-mode then
+              message 
+              mTextError
+              view-as alert-box error .
           release object chCodeModule no-error .
           release object chWorkBook   no-error .
           release object chExcelApp   no-error .
-          undo, return error .
+          undo, return error mTextError.
         end.
         if not v-found-reg-entry
         or trim(v-trusted) = "0":U then do:
-          message
-          "На Вашей машине запрещен программный доступ к VisualBasicProject" skip
-          "В связи с этим вывод в EXCEL невозможен" skip
-          "возможное решение проблемы:" skip
-          "открыть в EXCEL диалог <Сервис\Макрос\Безопасность> (<Tools\Macro\Security>)" skip
-          "выбрать закладку <Надежные источники> (<Trusted Sources>)  и включить галочку" skip
-          "<Доверять доступ Visual Basic Project> (<Trust access to Visual Basic Project>)" skip
-          "Затем закрыть Excel"
-          view-as alert-box ERROR.
+            mTextError = substitute("&1~n&2~n&3~n&4~n&5~n&6~n&7"
+              ,"На Вашей машине запрещен программный доступ к VisualBasicProject"
+              ,"В связи с этим вывод в EXCEL невозможен"
+              ,"возможное решение проблемы:"
+              ,"открыть в EXCEL диалог <Сервис\Макрос\Безопасность> (<Tools\Macro\Security>)"
+              ,"выбрать закладку <Надежные источники> (<Trusted Sources>)  и включить галочку"
+              ,"<Доверять доступ Visual Basic Project> (<Trust access to Visual Basic Project>)"
+              ,"Затем закрыть Excel").
+          if not session:batch-mode then
+              message
+              mTextError
+              view-as alert-box ERROR.
           release object chCodeModule no-error .
           release object chWorkBook   no-error .
           release object chExcelApp   no-error .
-          undo, return error .
+          undo, return error mTextError.
         end.
       end.
 
@@ -213,13 +225,16 @@ on error undo, return error
     .
     if v-vb-file-name = ?
     then do:
-        message
-                 vss-workfile vss-revision vss-description
-            skip "Не найден шаблон Excel."
-            skip(1)
-            skip "Необходим шаблон:" v-temp-string
-        view-as alert-box error.
-        undo, return error .
+        mTextError = substitute("&1~n~n&2&3"
+          ,"Не найден шаблон Excel."
+          ,"Необходим шаблон:"
+          ,v-temp-string
+        ). 
+        if not session:batch-mode then
+            message
+                vss-workfile vss-revision vss-description skip 
+            view-as alert-box error.
+        undo, return error mTextError.
     end.
 /*    assign*/
 /*        chExcelApp :Visible = lookup(v-excel-visible-char, "true,yes") > 0*/
@@ -240,14 +255,19 @@ on error undo, return error
     .
     if v-vb-file-name = ?
     then do:
-        message
-                 vss-workfile vss-revision vss-description
-            skip "Не найдена программа обработки шаблона Excel."
-            skip(1)
-            skip "Шаблон:" v-template-file-name
-            skip "Необходима программа:" v-temp-string
-        view-as alert-box error.
-        undo, return error .
+        mTextError = substitute("&1~n~n&2&3~n&4&5"
+          ,"Не найдена программа обработки шаблона Excel."
+          ,"Шаблон:"
+          ,v-template-file-name
+          ,"Необходима программа:",
+          v-temp-string
+        ). 
+        if not session:batch-mode then
+            message
+                vss-workfile vss-revision vss-description skip
+                mTextError
+            view-as alert-box error.
+        undo, return error mTextError.
     end.
     run load-basic in this-procedure (
           input v-vb-file-name
@@ -378,10 +398,11 @@ on error undo, return error
         release object chWorkBook   no-error .
         release object chExcelApp   no-error .
 
-        message
-            "Ошибка при сохранении файла"
-            skip "Сохраните Excel файл вручную"
-        view-as alert-box information .
+        if not session:batch-mode then
+            message
+                "Ошибка при сохранении файла"
+                skip "Сохраните Excel файл вручную"
+            view-as alert-box information .
     end.
     else do:
         assign

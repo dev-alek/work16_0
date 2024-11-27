@@ -186,7 +186,7 @@ DEFINE FRAME f-amain
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-IF SESSION:DISPLAY-TYPE = "GUI":U THEN
+IF SESSION:DISPLAY-TYPE = "GUI":U and not session:batch-mode THEN
   CREATE WINDOW automain ASSIGN
          HIDDEN             = YES
          TITLE              = ""
@@ -245,7 +245,7 @@ ASSIGN
 ASSIGN
        f-msg:READ-ONLY IN FRAME f-amain        = TRUE.
 
-IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(automain)
+IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE({&window-name})
 THEN automain:HIDDEN = yes.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -266,6 +266,8 @@ THEN automain:HIDDEN = yes.
 
 /* ************************  Control Triggers  ************************ */
 
+if VALID-HANDLE({&window-name}) then
+do:
 &Scoped-define SELF-NAME automain
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL automain automain
 ON END-ERROR OF automain
@@ -289,6 +291,7 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+end.
 
 
 &Scoped-define SELF-NAME b-exit
@@ -613,6 +616,7 @@ END.
 { gbl/app_help.i }
 
 /* Set CURRENT-WINDOW: this will parent dialog-boxes and frames.        */
+if valid-handle({&window-name}) then
 ASSIGN CURRENT-WINDOW                = {&WINDOW-NAME}
        THIS-PROCEDURE:CURRENT-WINDOW = {&WINDOW-NAME}.
 
@@ -710,15 +714,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       auto-log-msg-h = auto-log:handle
       auto-window-h = this-procedure:handle
       hand-log-msg-h = ?
-      {&window-name}:title = substitute( "PID: &1 &2", g#auto-pid, {&window-name}:title )
     .
+    
+    if valid-handle({&window-name}) then
+      {&window-name}:title = substitute( "PID: &1 &2", g#auto-pid, {&window-name}:title ).
+    
     case i-auto-type :
       when {&btpr-type-autonws}
       then do:
-        assign
-          {&window-name}:title = {&window-name}:title + "Система передачи новостей."
-          g#auto = FALSE
-        .
+        if valid-handle({&window-name}) then
+          {&window-name}:title = {&window-name}:title + "Система передачи новостей.".
+        g#auto = FALSE.
         run write-to-log ( "Запущена система передачи новостей" ) no-error.
         if error-status:error
         then do:
@@ -756,6 +762,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autoarh}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Система автоматического расчета архивов."
         .
@@ -763,6 +770,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autoexp}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Система автоматического экспорта."
         .
@@ -786,9 +794,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autooxml}
       then do:
-        assign
-          {&window-name}:title = {&window-name}:title + "Система OpenXML."
-          g#auto = FALSE
+        if valid-handle({&window-name}) then
+          {&window-name}:title = {&window-name}:title + "Система OpenXML.".
+        g#auto = FALSE.
 
         .
         run write-to-log ( "Запущена система OpenXML" ).
@@ -851,6 +859,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autogetcd}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Система автоматического приема информации с касс."
         .
@@ -858,6 +867,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autosuz}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Система автоматического запуска отчетов."
         .
@@ -865,6 +875,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autosale}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Система автоматической работы с документами продажи."
         .
@@ -872,6 +883,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autocbnk}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Система автоматического эксп/имп в КЛИЕНТ-БАНК."
         .
@@ -879,6 +891,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-autofree}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Система автоматического выполнения произвольных заданий."
         .
@@ -886,6 +899,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-sktsrv}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Сокет-Сервер"
         .
@@ -893,6 +907,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-mercury}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "ФГИС Меркурий"
         .
@@ -901,6 +916,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       when {&btpr-type-is_motp}
    or when {&btpr-type-is_diadoc}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + vTitle
         .
@@ -908,6 +924,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-hddtest}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Мониторинг HDD"
         .
@@ -915,6 +932,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       end.
       when {&btpr-type-is_PM}
       then do:
+        if valid-handle({&window-name}) then
         assign
           {&window-name}:title = {&window-name}:title + "Выгрузка в ИС Президентский Мониторинг"
         .
@@ -926,6 +944,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         .
       end.
     end case.
+    if valid-handle({&window-name}) then
     assign
       mtitle = {&window-name}:title
     .
@@ -997,12 +1016,13 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          if error-status :error 
          then do:
             run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
+            if valid-handle({&window-name}) then
             assign
                {&window-name}:title = mtitle
             .
          end.
          else do:
-            run checkConect (input  {&window-name}:title, 
+            run checkConect (input  if valid-handle({&window-name}) then {&window-name}:title else i-auto-type, 
                              input  i-auto-type,
                              output mDbNum, 
                              output mDbInfo) no-error.
@@ -1053,9 +1073,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               leave main-cycl .
            end.
    
-           assign
-              {&window-name}:title = mtitle + {&space-char} + mdbinfo
-           .
+           
+           if valid-handle({&window-name}) then
+             {&window-name}:title = mtitle + {&space-char} + mdbinfo.
+           
            if mstart
            then
               assign
@@ -1181,13 +1202,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         .
       end.
       else do:
-        wait-for
-          go of frame {&frame-name}
-          or close of this-procedure
-          pause 1
-        .
+        if not session:batch-mode then
+          wait-for
+            go of frame {&frame-name}
+            or close of this-procedure
+            pause 1
+          .
+        else
+          pause 1.        
       end.
-      run ReedFileContext.
+      if not session:batch-mode then
+        run ReedFileContext.
       if mHiddenMode = false
         and frame {&frame-name}:visible = false
       then do:
@@ -1304,7 +1329,7 @@ PROCEDURE disable_UI :
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
   /* Delete the WINDOW we created */
-  IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(automain)
+  IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE({&window-name})
   THEN DELETE WIDGET automain.
   IF THIS-PROCEDURE:PERSISTENT THEN DELETE PROCEDURE THIS-PROCEDURE.
 END PROCEDURE.
@@ -1341,7 +1366,8 @@ PROCEDURE hide-message :
 assign
     f-msg = "":U
   .
-  hide f-msg in frame {&frame-name}.
+  if not session:batch-mode then
+    hide f-msg in frame {&frame-name}.
   return .
 
 END PROCEDURE.
@@ -1358,6 +1384,8 @@ PROCEDURE myenable :
 ------------------------------------------------------------------------------*/
   define input  parameter pe-auto-type as character no-undo .
 
+  IF VALID-HANDLE({&window-name}) THEN
+  DO:
   assign
     automain:HIDDEN = false
   .
@@ -1379,6 +1407,7 @@ PROCEDURE myenable :
   then do:
     enable b-hand with frame {&frame-name}.
   end. */
+  END.
 
 END PROCEDURE.
 
@@ -1394,6 +1423,7 @@ PROCEDURE myhide :
 ------------------------------------------------------------------------------*/
   disable all with frame {&frame-name} .
   hide all no-pause in window {&window-name} .
+  if VALID-HANDLE({&window-name}) then
   assign
     automain:HIDDEN = true
   .
@@ -1409,12 +1439,15 @@ define input  parameter p-msg as character no-undo .
   assign
     f-msg = p-msg
   .
+  if not session:batch-mode then
+  do:
   enable f-msg with frame {&frame-name}.
   if mHiddenMode = false then
   display
     f-msg
     with frame {&frame-name}
     .
+  end.
   return .
 
 END PROCEDURE.

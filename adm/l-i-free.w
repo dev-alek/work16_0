@@ -4,11 +4,11 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS w-login 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 138b369dad6e, 2892, rls $
+$Author: DRuban $
+$Date: Ïí íîÿ 22 19:49:12 2021 +0300 $
+$Workfile: l-i-free.w $
+$Archive: adm/l-i-free.w $
 
 Îêíî âõîäà â ÑÂÏÇ
 
@@ -21,11 +21,11 @@ Creation date: 11/14/05
 
 /* ***************************  Definitions  ************************** */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 138b369dad6e, 2892, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Ïí íîÿ 22 19:49:12 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: l-i-free.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/l-i-free.w $":U .
 define variable vss-description as character no-undo init "Îêíî âõîäà â ÑÂÏÇ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -121,7 +121,7 @@ DEFINE FRAME FRAME-A
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-IF SESSION:DISPLAY-TYPE = "GUI":U THEN
+IF SESSION:DISPLAY-TYPE = "GUI":U and not session:batch-mode THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
          TITLE              = "TH ÑÂÏÇ"
@@ -204,6 +204,8 @@ on "ENTRY" of b-ok do:
   if lastkey = keycode ("RETURN") then apply "CHOOSE" to b-ok in frame {&frame-name}.
 end.
 
+if valid-handle({&window-name}) then
+do:
 on window-close of {&window-name} do:
   apply "end-error" to frame {&frame-name}.
 end.
@@ -211,6 +213,7 @@ end.
 ASSIGN CURRENT-WINDOW             = {&WINDOW-NAME}
     SESSION:SYSTEM-ALERT-BOXES = (CURRENT-WINDOW:MESSAGE-AREA = NO).
     session:three-d = yes.
+end.
 PAUSE 0 BEFORE-HIDE.
 
 if session:date-format <> "dmy":U

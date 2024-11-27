@@ -67,7 +67,7 @@ class ibs.th.adm.upd.CheckUpd:
       then
          run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
          
-      if IQS and not isRcode and isNeedUpd
+      if not session:batch-mode and IQS and not isRcode and isNeedUpd
       then
          message "Необходимо обновить базу с версии " CurrDBShm  " до " TargetDBShm " до запуска процесса. Остновить выполнение?" view-as alert-box question 
              buttons yes-no title "[ ВНИМАНИЕ! ]" update isNeedUpd.

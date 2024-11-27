@@ -609,7 +609,9 @@ procedure local-imp-pck :
               delete buf_route.
             end.
 
-            hide frame del-route .
+            if mFrameView
+            then  
+               hide frame del-route .
 
             transaction_block_pck-rcvd:
             do transaction

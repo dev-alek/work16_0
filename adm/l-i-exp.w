@@ -124,7 +124,7 @@ DEFINE FRAME FRAME-A
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-IF SESSION:DISPLAY-TYPE = "GUI":U THEN
+IF SESSION:DISPLAY-TYPE = "GUI":U and not session:batch-mode THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
          TITLE              = "TH САЭ"
@@ -207,6 +207,8 @@ on "ENTRY" of b-ok do:
   if lastkey = keycode ("RETURN") then apply "CHOOSE" to b-ok in frame {&frame-name}.
 end.
 
+if valid-handle({&window-name}) then
+do:
 on window-close of {&window-name} do:
   apply "end-error" to frame {&frame-name}.
 end.
@@ -214,6 +216,7 @@ end.
 ASSIGN CURRENT-WINDOW             = {&WINDOW-NAME}
     SESSION:SYSTEM-ALERT-BOXES = (CURRENT-WINDOW:MESSAGE-AREA = NO).
     session:three-d = yes.
+end.
 PAUSE 0 BEFORE-HIDE.
 
 if session:date-format <> "dmy":U

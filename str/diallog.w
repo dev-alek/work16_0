@@ -223,6 +223,7 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
    FRAME-NAME                                                           */
+if not session:batch-mode then 
 ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
@@ -352,10 +353,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
        RUN create-window IN THIS-PROCEDURE.
      END.
      else do:
-        
-           RUN enable_UI.
+       if mFrameView then 
+         RUN enable_UI.
      end.
   end.
+  if mFrameView then 
   assign
   frame {&frame-name}:title = p-title
   b-exit :sensitive   = no
@@ -415,11 +417,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
  then do:
    p-auto-go = yes.
  end.
- if not p-auto-go
+ if mFrameView and (not p-auto-go
  or (auto-go-option = 1
         and
         (v-error or return-value = "error":U)
-       )
+       ))
  then do:
     assign
     b-exit :sensitive       = yes
@@ -430,7 +432,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   end.
   else if     p-auto-go eq ?
-          and v-view-log 
+          and v-view-log
+          and mFrameView 
   then do:
      assign
         b-exit :sensitive       = yes
@@ -591,6 +594,7 @@ PROCEDURE disable_UI :
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
   /* Hide all frames. */
+  if mFrameView then
   HIDE FRAME Dialog-Frame.
 END PROCEDURE.
 
@@ -729,6 +733,7 @@ PROCEDURE hide-counter :
 do
 on error undo, return error
 :
+    if mFrameView then
     assign
         fi-log :visible in frame {&frame-name} = false
     .
@@ -817,6 +822,7 @@ PROCEDURE show-counter :
 do
 on error undo, return error
 :
+    if mFrameView then
     assign
         fi-log :visible in frame {&frame-name} = true
     .
@@ -840,6 +846,7 @@ on error undo, return error
 :
 define input parameter p-counter-string     as character    no-undo.
 
+    if mFrameView then
     assign
         fi-log :screen-value in frame {&frame-name} = p-counter-string
     .
