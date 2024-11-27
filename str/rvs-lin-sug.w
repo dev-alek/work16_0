@@ -1002,7 +1002,7 @@ do:
   apply "leave" to v-mi-lvl IN FRAME Dialog-Frame .
 end .  
 
-on del of v-mi-lvl in frame Dialog-Frame
+on del, backspace, "?" of v-mi-lvl in frame Dialog-Frame
 do :
   v-mi-lvl = ? .
   v-mi-lvl:screen-value = "?" .
@@ -1150,7 +1150,7 @@ do:
   apply "leave" to v-mi-dnst IN FRAME Dialog-Frame .
 end .
 
-on del of v-mi-dnst in frame Dialog-Frame
+on del, backspace, "?" of v-mi-dnst in frame Dialog-Frame
 do :
   v-mi-dnst = ? .
   v-mi-dnst:screen-value = "?" .
@@ -1357,7 +1357,7 @@ do:
   apply "leave" to v-mi-tmp IN FRAME Dialog-Frame .
 end .
 
-on del of v-mi-tmp in frame Dialog-Frame
+on del, backspace, "?" of v-mi-tmp in frame Dialog-Frame
 do :
   v-mi-tmp = ? .
   v-mi-tmp:screen-value = "?" .
