@@ -109,6 +109,7 @@ on error undo, return error
     v-global-recover = TRUE
   .
 
+/*run gbl/inidebug.p.*/
   if v-answer-code >= 0
     and ( v-curr-db = 0
           or v-curr-db = v-db-init
@@ -120,7 +121,18 @@ on error undo, return error
         and buf_db-rec-attr.uniq-key-rec       = v-uniq-key-rec
         and buf_db-rec-attr.attr-code          = v-action
         and buf_db-rec-attr.attr-value-decimal = v-db-init
-    .
+    no-error.
+    if not avail buf_db-rec-attr then
+    do:
+      run write-to-log( substitute( 'Для БД &1 не найдена запись об операции "&2(&3)" над записью &4'
+                                    ,p-source-db
+                                    ,v-action
+                                    ,v-operation
+                                    ,v-uniq-key-rec
+                                  )
+                      ).
+      return.
+    end.
     if v-answer-code = 0 then do:
       run write-to-log( substitute( 'Получен ответ из БД &1 об успешном выполнении шага "&2" операции "&3" над записью &4'
                                     ,p-source-db
@@ -138,6 +150,7 @@ on error undo, return error
         assign
           v-num-entries = num-entries( v-send-db-list, {&comma-char} )
         .
+        ALL_DB_REC:    
         do v-ind = 1 to v-num-entries
         on error undo, return error
         :
@@ -169,22 +182,23 @@ on error undo, return error
             no-error
           .
           if not available buf-all_db-rec-attr then do:
-/*            run write-to-log                                                                        */
-/*              ( substitute( 'Отсутствует запись о проведении операции "&1" над записью &2 для БД &3'*/
-/*                            ,v-action                                                               */
-/*                            ,v-uniq-key-rec                                                         */
-/*                            ,v-db-num                                                               */
-/*                          )                                                                         */
-/*              ).                                                                                    */
-/*            return error .                                                                          */
-            create buf-all_db-rec-attr.
-            assign
-              buf-all_db-rec-attr.db-num             = v-db-num
-              buf-all_db-rec-attr.uniq-key-rec       = v-uniq-key-rec
-              buf-all_db-rec-attr.attr-code          = v-action
-              buf-all_db-rec-attr.attr-value-decimal = v-db-init
-              buf-all_db-rec-attr.attr-type          = "commit"
-            .
+/*            create buf-all_db-rec-attr.                              */
+/*            assign                                                   */
+/*              buf-all_db-rec-attr.db-num             = v-db-num      */
+/*              buf-all_db-rec-attr.uniq-key-rec       = v-uniq-key-rec*/
+/*              buf-all_db-rec-attr.attr-code          = v-action      */
+/*              buf-all_db-rec-attr.attr-value-decimal = v-db-init     */
+/*              buf-all_db-rec-attr.attr-type          = v-operation   */
+/*            .                                                        */
+/*            run write-to-log                                                                                 */
+/*              ( substitute( 'Для "&4" отсутствует запись о проведении операции "&1" над записью &2 для БД &3'*/
+/*                            ,v-action                                                                        */
+/*                            ,v-uniq-key-rec                                                                  */
+/*                            ,v-db-num                                                                        */
+/*                            ,v-operation                                                                     */
+/*                          )                                                                                  */
+/*              ).                                                                                             */
+             next ALL_DB_REC.
           end.
           if buf-all_db-rec-attr.attr-type <> v-operation
             or ( buf-all_db-rec-attr.attr-type = v-operation
