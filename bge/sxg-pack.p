@@ -359,6 +359,7 @@ procedure file-s-g private :
     define variable v-arch             as logical   no-undo .
     define variable v-arh-name         as character no-undo .
     define variable v-arh-type         as character no-undo .
+    define variable v-file-hash        as character no-undo .
 
 /*    define variable v-file-source      as character no-undo .*/
     define variable v-file-source-arj  as character no-undo .
@@ -488,6 +489,8 @@ procedure file-s-g private :
     end.
   end .
   
+    run gbl/md5.p(p-fullfile-name, output v-file-hash).
+    run write-to-log in p-parent-handle ( substitute("Файл: &1; Контрольная сумма: &2.", p-fullfile-name,  v-file-hash) ) .
     
     case p-action :
       when "fput" or

@@ -74,6 +74,7 @@ define variable v-list-file-name    as character    no-undo.
 define variable v-source-dir        as character no-undo .
 define variable v-target-dir        as character no-undo .
 define variable v-temp-dir          as character no-undo .
+define variable v-file-hash         as character no-undo .
 define variable v-today             as date         no-undo.
 define variable v-time              as integer      no-undo.
 define variable v-parameter-list    as character    no-undo.
@@ -485,7 +486,7 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 undo _ext-system, next _ext-system.
               end.
             end.
-            
+
             if lookup( v-action, "analys,take+analys":U ) <> 0 then do:
               run write-log in p-log-handle (input 2 ,  substitute ("Разбор пакетов данных из &1", v-target-dir)  ) .
               rcvd-pack:
@@ -569,6 +570,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                               , v-full-path
                                )
                                                 ) .
+                  run gbl/md5.p(v-full-path, output v-file-hash).
+                  run write-to-log( substitute("Файл: &1; Контрольная сумма: &2.", v-full-path,  v-file-hash) ) .
+
                   // 26/IX-2018 - загрузить данные в mem-ptr и отдать их на вход в x-document вместо файла
                   set-size(v-pack-data) = 0 .
                   COPY-LOB FROM FILE v-full-path TO OBJECT v-pack-data NO-CONVERT NO-ERROR .
@@ -850,6 +854,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                 end.
                 else                                  
 */
+                run gbl/md5.p(v-full-path, output v-file-hash).
+                run write-to-log( substitute("Файл: &1; Контрольная сумма: &2.", v-full-path,  v-file-hash) ) .
+
                 do :
                   /* 24/VIII-2018  файл с данными и файл с подписью могут придти в произвольном порядке;
                                    на то время, пока в bge/espcknum.p вставлен костыль, файлы с подписью

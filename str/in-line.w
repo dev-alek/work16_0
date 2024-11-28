@@ -7253,6 +7253,8 @@ procedure display-measure :
     define buffer aft2_rvs-line for ub.rvs-line .
     define buffer buf_rvs-line-pump for ub.rvs-line-pump .
     define buffer bf2_place    for ub.place .
+    define buffer buf_c-place-attr for ub.c-place-attr .
+    define buffer buf2_c-place-attr for ub.c-place-attr .
     
     define variable v-old-qnty as decimal no-undo .
     define variable v-old-cli-qnty as decimal no-undo .
@@ -7318,19 +7320,69 @@ procedure display-measure :
             end. /* for each bf_rvs-line-pump */
           end .
           
-          find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
-                                             and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
-                                             and bf_place-attr.pl-code   = tt-doc-pl.pl-code
-                                             and bf_place-attr.attr-code = "place-com-tanks"
-                                             no-error .
-          if available bf_place-attr
-          and trim(bf_place-attr.attr-value) > ""
-          then do : /* place-com-tanks */
-            do jj = 1 to num-entries(bf_place-attr.attr-value) :
+          if t-doc.status_ = {&fact}
+          then do :
+            find last buf_c-place-attr no-lock where buf_c-place-attr.obj-type  = tt-doc-pl.obj-type
+                                                 and buf_c-place-attr.obj-code  = tt-doc-pl.obj-code
+                                                 and buf_c-place-attr.pl-code   = tt-doc-pl.pl-code
+                                                 and buf_c-place-attr.attr-code = {&place-com-tanks}
+                                                 and (buf_c-place-attr.corr-date < t-doc.fact-date
+                                                   or buf_c-place-attr.corr-date = t-doc.fact-date and buf_c-place-attr.corr-time < t-doc.fact-time)
+                                                 no-error .
+          end .
+          else do :
+            find last buf_c-place-attr no-lock where buf_c-place-attr.obj-type  = tt-doc-pl.obj-type
+                                                 and buf_c-place-attr.obj-code  = tt-doc-pl.obj-code
+                                                 and buf_c-place-attr.pl-code   = tt-doc-pl.pl-code
+                                                 and buf_c-place-attr.attr-code = {&place-com-tanks}
+                                                 and (buf_c-place-attr.corr-date < t-doc.sys-date
+                                                   or buf_c-place-attr.corr-date = t-doc.sys-date and buf_c-place-attr.corr-time < t-doc.sys-time-int)
+                                                 no-error .
+          end .
+          if available buf_c-place-attr
+          then do :
+            find first buf2_c-place-attr no-lock where buf2_c-place-attr.obj-type = buf_c-place-attr.obj-type
+                                                   and buf2_c-place-attr.obj-code = buf_c-place-attr.obj-code
+                                                   and buf2_c-place-attr.pl-code  = buf_c-place-attr.pl-code
+                                                   and buf2_c-place-attr.attr-code = buf_c-place-attr.attr-code
+                                                   and buf2_c-place-attr.chip-num > buf_c-place-attr.chip-num
+                                                   no-error .
+            if available buf2_c-place-attr
+            then do :
+              if buf2_c-place-attr.attr-value > ""
+              then do :
+                assign
+                  v-ok = yes
+                  varvalue = buf2_c-place-attr.attr-value
+                .
+              end .
+            end .
+            else do :
+              run placelib_get-attr  ( input {&place-com-tanks}
+                ,input tt-doc-pl.obj-code
+                ,input tt-doc-pl.obj-type
+                ,input tt-doc-pl.pl-code
+                ,output varvalue
+                ,output v-ok      ) no-error.
+            end .
+          end .
+          else do :
+            run placelib_get-attr  ( input {&place-com-tanks}
+              ,input tt-doc-pl.obj-code
+              ,input tt-doc-pl.obj-type
+              ,input tt-doc-pl.pl-code
+              ,output varvalue
+              ,output v-ok      ) no-error.
+          end .
+          
+          if v-ok
+          and varvalue > ""
+          then do :
+            do jj = 1 to num-entries(varvalue) :
               find first bf2_place no-lock where bf2_place.obj-type = tt-doc-pl.obj-type
                                              and bf2_place.obj-code = tt-doc-pl.obj-code
-                                             and bf2_place.loc1     = entry(jj, bf_place-attr.attr-value)
-                                             and bf2_place.status_  = ""
+                                             and bf2_place.loc1     = entry(jj, varvalue)
+/*                                             and bf2_place.status_  = ""*/
                                              no-error .
               if available bf2_place
               then do :
@@ -7359,7 +7411,7 @@ procedure display-measure :
                     buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
                     assign
                       tt-rvs-line-pump-delta.rvs-code = "before-doc"
-                      tt-rvs-line-pump-delta.density = (bef_rvs-line.state-density / 2)
+                      tt-rvs-line-pump-delta.density = (bef2_rvs-line.state-density / 2)
                     .
                     if tt-rvs-line-pump-delta.state-el-cnt = ?
                     or tt-rvs-line-pump-delta.state-el-cnt <= 0
@@ -7428,18 +7480,68 @@ procedure display-measure :
             end . /* for each bf_rvs-line-pump */
           end .
           
-          find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
-                                             and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
-                                             and bf_place-attr.pl-code   = tt-doc-pl.pl-code
-                                             and bf_place-attr.attr-code = "place-com-tanks"
-                                             no-error .
-          if available bf_place-attr
-          and trim(bf_place-attr.attr-value) > ""
-          then do : /* place-com-tanks */
-            do jj = 1 to num-entries(bf_place-attr.attr-value) :
+          if t-doc.status_ = {&fact}
+          then do :
+            find last buf_c-place-attr no-lock where buf_c-place-attr.obj-type  = tt-doc-pl.obj-type
+                                                 and buf_c-place-attr.obj-code  = tt-doc-pl.obj-code
+                                                 and buf_c-place-attr.pl-code   = tt-doc-pl.pl-code
+                                                 and buf_c-place-attr.attr-code = {&place-com-tanks}
+                                                 and (buf_c-place-attr.corr-date < t-doc.fact-date
+                                                   or buf_c-place-attr.corr-date = t-doc.fact-date and buf_c-place-attr.corr-time < t-doc.fact-time)
+                                                 no-error .
+          end .
+          else do :
+            find last buf_c-place-attr no-lock where buf_c-place-attr.obj-type  = tt-doc-pl.obj-type
+                                                 and buf_c-place-attr.obj-code  = tt-doc-pl.obj-code
+                                                 and buf_c-place-attr.pl-code   = tt-doc-pl.pl-code
+                                                 and buf_c-place-attr.attr-code = {&place-com-tanks}
+                                                 and (buf_c-place-attr.corr-date < t-doc.sys-date
+                                                   or buf_c-place-attr.corr-date = t-doc.sys-date and buf_c-place-attr.corr-time < t-doc.sys-time-int)
+                                                 no-error .
+          end .
+          if available buf_c-place-attr
+          then do :
+            find first buf2_c-place-attr no-lock where buf2_c-place-attr.obj-type = buf_c-place-attr.obj-type
+                                                   and buf2_c-place-attr.obj-code = buf_c-place-attr.obj-code
+                                                   and buf2_c-place-attr.pl-code  = buf_c-place-attr.pl-code
+                                                   and buf2_c-place-attr.attr-code = buf_c-place-attr.attr-code
+                                                   and buf2_c-place-attr.chip-num > buf_c-place-attr.chip-num
+                                                   no-error .
+            if available buf2_c-place-attr
+            then do :
+              if buf2_c-place-attr.attr-value > ""
+              then do :
+                assign
+                  v-ok = yes
+                  varvalue = buf2_c-place-attr.attr-value
+                .
+              end .
+            end .
+            else do :
+              run placelib_get-attr  ( input {&place-com-tanks}
+                ,input tt-doc-pl.obj-code
+                ,input tt-doc-pl.obj-type
+                ,input tt-doc-pl.pl-code
+                ,output varvalue
+                ,output v-ok      ) no-error.
+            end .
+          end .
+          else do :
+            run placelib_get-attr  ( input {&place-com-tanks}
+              ,input tt-doc-pl.obj-code
+              ,input tt-doc-pl.obj-type
+              ,input tt-doc-pl.pl-code
+              ,output varvalue
+              ,output v-ok      ) no-error.
+          end .
+          
+          if v-ok
+          and varvalue > ""
+          then do :
+            do jj = 1 to num-entries(varvalue) :
               find first bf2_place no-lock where bf2_place.obj-type = tt-doc-pl.obj-type
                                              and bf2_place.obj-code = tt-doc-pl.obj-code
-                                             and bf2_place.loc1     = entry(jj, bf_place-attr.attr-value)
+                                             and bf2_place.loc1     = entry(jj, varvalue)
                                              and bf2_place.status_  = ""
                                              no-error .
               if available bf2_place
@@ -7491,7 +7593,7 @@ procedure display-measure :
                       end .
                       else do :
                         tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
-                        tt-rvs-line-pump-delta.density = tt-rvs-line-pump-delta.density + (aft_rvs-line.state-density / 2) .
+                        tt-rvs-line-pump-delta.density = tt-rvs-line-pump-delta.density + (aft2_rvs-line.state-density / 2) .
                       end .
                     end .
                   end . /* for each bf_rvs-line-pump */
@@ -7600,18 +7702,68 @@ procedure display-measure :
             end .
           end . /* for each bf_rvs-line-pump */
           
-          find first bf_place-attr no-lock where bf_place-attr.obj-type  = tt-doc-pl.obj-type 
-                                             and bf_place-attr.obj-code  = tt-doc-pl.obj-code 
-                                             and bf_place-attr.pl-code   = tt-doc-pl.pl-code
-                                             and bf_place-attr.attr-code = "place-com-tanks"
-                                             no-error .
-          if available bf_place-attr
-          and trim(bf_place-attr.attr-value) > ""
+          if t-doc.status_ = {&fact}
+          then do :
+            find last buf_c-place-attr no-lock where buf_c-place-attr.obj-type  = tt-doc-pl.obj-type
+                                                 and buf_c-place-attr.obj-code  = tt-doc-pl.obj-code
+                                                 and buf_c-place-attr.pl-code   = tt-doc-pl.pl-code
+                                                 and buf_c-place-attr.attr-code = {&place-com-tanks}
+                                                 and (buf_c-place-attr.corr-date < t-doc.fact-date
+                                                   or buf_c-place-attr.corr-date = t-doc.fact-date and buf_c-place-attr.corr-time < t-doc.fact-time)
+                                                 no-error .
+          end .
+          else do :
+            find last buf_c-place-attr no-lock where buf_c-place-attr.obj-type  = tt-doc-pl.obj-type
+                                                 and buf_c-place-attr.obj-code  = tt-doc-pl.obj-code
+                                                 and buf_c-place-attr.pl-code   = tt-doc-pl.pl-code
+                                                 and buf_c-place-attr.attr-code = {&place-com-tanks}
+                                                 and (buf_c-place-attr.corr-date < t-doc.sys-date
+                                                   or buf_c-place-attr.corr-date = t-doc.sys-date and buf_c-place-attr.corr-time < t-doc.sys-time-int)
+                                                 no-error .
+          end .
+          if available buf_c-place-attr
+          then do :
+            find first buf2_c-place-attr no-lock where buf2_c-place-attr.obj-type = buf_c-place-attr.obj-type
+                                                   and buf2_c-place-attr.obj-code = buf_c-place-attr.obj-code
+                                                   and buf2_c-place-attr.pl-code  = buf_c-place-attr.pl-code
+                                                   and buf2_c-place-attr.attr-code = buf_c-place-attr.attr-code
+                                                   and buf2_c-place-attr.chip-num > buf_c-place-attr.chip-num
+                                                   no-error .
+            if available buf2_c-place-attr
+            then do :
+              if buf2_c-place-attr.attr-value > ""
+              then do :
+                assign
+                  v-ok = yes
+                  varvalue = buf2_c-place-attr.attr-value
+                .
+              end .
+            end .
+            else do :
+              run placelib_get-attr  ( input {&place-com-tanks}
+                ,input tt-doc-pl.obj-code
+                ,input tt-doc-pl.obj-type
+                ,input tt-doc-pl.pl-code
+                ,output varvalue
+                ,output v-ok      ) no-error.
+            end .
+          end .
+          else do :
+            run placelib_get-attr  ( input {&place-com-tanks}
+              ,input tt-doc-pl.obj-code
+              ,input tt-doc-pl.obj-type
+              ,input tt-doc-pl.pl-code
+              ,output varvalue
+              ,output v-ok      ) no-error.
+          end .
+          
+          if v-ok
+          and varvalue > ""
           then do : /* place-com-tanks */
-            do jj = 1 to num-entries(bf_place-attr.attr-value) :
+            do jj = 1 to num-entries(varvalue) :
               find first bf2_place no-lock where bf2_place.obj-type = tt-doc-pl.obj-type
                                              and bf2_place.obj-code = tt-doc-pl.obj-code
-                                             and bf2_place.loc1     = entry(jj, bf_place-attr.attr-value)
+                                             and bf2_place.loc1     = entry(jj, varvalue)
                                              and bf2_place.status_  = ""
                                              no-error .
               if available bf2_place

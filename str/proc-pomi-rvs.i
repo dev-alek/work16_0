@@ -1487,6 +1487,7 @@ procedure calc-pomi-rvs :
     infoSecObj:TankVolPomiRvs = p-tank-vol-pomi-rvs .
     infoSecObj:AvgTempRvs = v-avg-temp .
     
+    /* 
     def var dMP  as decimal no-undo.
     def var MF   as decimal no-undo.
     def var dMF  as decimal no-undo.
@@ -1517,7 +1518,7 @@ procedure calc-pomi-rvs :
     if ME < 0 then ME = 0 .
     
     infoSecObj:NaturalLoss = ME.
-    
+    */
   end . /* _trpomi */
   
 end procedure .

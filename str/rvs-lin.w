@@ -970,7 +970,7 @@ do:
   apply "leave" to v-mi-lvl IN FRAME Dialog-Frame .
 end .  
 
-on del of v-mi-lvl in frame Dialog-Frame
+on del, backspace, "?" of v-mi-lvl in frame Dialog-Frame
 do :
   v-mi-lvl = ? .
   v-mi-lvl:screen-value = "?" .
@@ -1128,7 +1128,7 @@ do:
   apply "leave" to v-mi-dnst IN FRAME Dialog-Frame .
 end .
 
-on del of v-mi-dnst in frame Dialog-Frame
+on del, backspace, "?" of v-mi-dnst in frame Dialog-Frame
 do :
   v-mi-dnst = ? .
   v-mi-dnst:screen-value = "?" .
@@ -1356,7 +1356,7 @@ do:
   apply "leave" to v-mi-tmp IN FRAME Dialog-Frame .
 end .
 
-on del of v-mi-tmp in frame Dialog-Frame
+on del, backspace, "?" of v-mi-tmp in frame Dialog-Frame
 do :
   v-mi-tmp = ? .
   v-mi-tmp:screen-value = "?" .
@@ -2692,6 +2692,42 @@ DO:
       rvs-line-attr.attr-value = string(no) .
     end .
     
+    v-izm-temps-tab = string(temp_sr-izmerenia.sr-type-izm) + ";" .
+    if temp_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
+    then do :
+      for each tt-temps-tab no-lock by tt-temps-tab.ii descending :
+        v-izm-temps-tab = v-izm-temps-tab + string(tt-temps-tab.temperature) + "," .
+      end .
+    end .
+    else do :
+      for each tt-temps-tab no-lock by tt-temps-tab.ii :
+        v-izm-temps-tab = v-izm-temps-tab + string(tt-temps-tab.temperature) + "," .
+      end .
+    end .
+    v-izm-temps-tab = trim(v-izm-temps-tab, ",") .
+    find first rvs-line-attr exclusive-lock
+         where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+           and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+           and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+           and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+           and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+           and rvs-line-attr.attr-code = "izm-temps-tab" no-error.
+    if not available rvs-line-attr then do :
+      create rvs-line-attr.
+      assign
+        rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+        rvs-line-attr.attr-code = "izm-temps-tab"
+        rvs-line-attr.attr-value = v-izm-temps-tab
+      .
+    end.
+    else do :
+      rvs-line-attr.attr-value = v-izm-temps-tab .
+    end.
+    
     if pl-rvd-dens
     or v-revision-mode
     then do :
@@ -2701,36 +2737,8 @@ DO:
       find first dens_sr-izmerenia no-lock where dens_sr-izmerenia.node-code = place-si no-error.
     end .
   
-    if available dens_sr-izmerenia then do:
-            v-izm-temps-tab = string(dens_sr-izmerenia.sr-type-izm) + ";" .
-      for each tt-temps-tab no-lock by tt-temps-tab.ii :
-        v-izm-temps-tab = v-izm-temps-tab + string(tt-temps-tab.temperature) + "," .
-      end .
-      v-izm-temps-tab = trim(v-izm-temps-tab, ",") .
-      find first rvs-line-attr exclusive-lock
-           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
-             and rvs-line-attr.attr-code = "izm-temps-tab" no-error.
-      if not available rvs-line-attr then do :
-        create rvs-line-attr.
-        assign
-          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
-          rvs-line-attr.attr-code = "izm-temps-tab"
-          rvs-line-attr.attr-value = v-izm-temps-tab
-        .
-      end.
-      else do :
-        rvs-line-attr.attr-value = v-izm-temps-tab .
-      end.
-      
-    if dens_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
+    if available dens_sr-izmerenia 
+    and dens_sr-izmerenia.sr-type-izm = 0 /* 0 - Автоматизированное СИ */
     then do :
 /*      tt-rvs-line.state-temperature = v-out-temp .                   */
 /*      display tt-rvs-line.state-temperature with frame Dialog-Frame .*/
@@ -2763,7 +2771,6 @@ DO:
         rvs-line-attr.attr-value = v-izm-temps .
       end.
     end .
-    end.
   end .                              
 END.
 

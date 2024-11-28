@@ -4,11 +4,11 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS w-login 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 138b369dad6e, 2892, rls $
+$Author: DRuban $
+$Date: Пн ноя 22 19:49:12 2021 +0300 $
+$Workfile: l-i-arc.w $
+$Archive: adm/l-i-arc.w $
 
 Окно входа в Систему Автоматического Расчета Архивов (САРА)
 
@@ -24,11 +24,11 @@ Creation date: 07/23/08
 
 /* ***************************  Definitions  ************************** */
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 138b369dad6e, 2892, rls $":U .
+def var vss-author      as character no-undo init "$Author: DRuban $":U .
+def var vss-date        as character no-undo init "$Date: Пн ноя 22 19:49:12 2021 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: l-i-arc.w $":U .
+def var vss-archive     as character no-undo init "$Archive: adm/l-i-arc.w $":U .
 def var vss-description as character no-undo init "Окно входа в СAPA".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -123,7 +123,7 @@ DEFINE FRAME FRAME-A
 /* *************************  Create Window  ************************** */
 
 &ANALYZE-SUSPEND _CREATE-WINDOW
-IF SESSION:DISPLAY-TYPE = "GUI":U THEN
+IF SESSION:DISPLAY-TYPE = "GUI":U and not session:batch-mode THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
          TITLE              = "TH САРА"
@@ -146,7 +146,6 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
 ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
 /* END WINDOW DEFINITION                                                */
 &ANALYZE-RESUME
-
 
 
 /* ***********  Runtime Attributes and AppBuilder Settings  *********** */
@@ -213,6 +212,8 @@ on "ENTRY" of b-ok do:
   if lastkey = keycode ("RETURN") then apply "CHOOSE" to b-ok in frame {&frame-name}.
 end.
 
+if valid-handle({&window-name}) then
+do:
 on window-close of {&window-name} do:
   apply "end-error" to frame {&frame-name}.
 end.
@@ -220,6 +221,7 @@ end.
 ASSIGN CURRENT-WINDOW             = {&WINDOW-NAME}
     SESSION:SYSTEM-ALERT-BOXES = (CURRENT-WINDOW:MESSAGE-AREA = NO).
     session:three-d = yes.
+end.
 PAUSE 0 BEFORE-HIDE.
 
 if session:date-format <> "dmy":U

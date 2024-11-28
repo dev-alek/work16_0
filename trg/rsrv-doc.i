@@ -126,6 +126,8 @@ procedure rsrv-doc :
   define variable v-tobacco-mark-list as character  no-undo .
   define variable v-mark-tobacco      as logical    no-undo .
   define variable v-box-qnty          as integer    no-undo .
+  define variable v-GTIN              as character  no-undo .
+  define variable v-GTIN-qnty         as integer    no-undo .
   
   { gbl/objsrv.i }
    define buffer buf_marking         for ub.marking .
@@ -1194,10 +1196,10 @@ procedure rsrv-doc :
     
     output stream alc-rsrv to value ("alc-rsrv.log") .
     
-/*run gbl/inidebug.p .*/
     rsrv_cycle:
     do while p-chg-qnty <> 0
     :
+/*run gbl/inidebug.p .*/
       assign
         v-iteration-chg-qnty = 0
       .
@@ -1355,7 +1357,7 @@ procedure rsrv-doc :
               then v-fifo = false .
               else v-fifo = true .  
             end.
-            
+
             if v-mark-tobacco
             then do :
               find first tt-tobacco-marks use-index un no-error .
@@ -1369,7 +1371,9 @@ procedure rsrv-doc :
               if tt-tobacco-marks.unit = "LEVEL1"
               then do :
                 assign
-                  v-iteration-chg-qnty = v-chg-qnty-sign * 10
+                  v-GTIN = getGtinByDM(tt-tobacco-marks.mark)
+                  v-GTIN-qnty = getQntyCodeByGtin(v-GTIN)
+                  v-iteration-chg-qnty = v-chg-qnty-sign * v-GTIN-qnty
                 .
               end .
               find first buf_marking no-lock where buf_marking.mark begins tt-tobacco-marks.mark no-error .

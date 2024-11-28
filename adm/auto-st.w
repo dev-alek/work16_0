@@ -79,6 +79,13 @@ define variable v-varstr   as character no-undo .
 define variable v-varfile  as character no-undo .
 
 define variable v-task-name as character no-undo .
+define variable vDopParamSession as character no-undo .
+
+get-key-value section "THAutoSessions"
+                key "DopParamSession"
+              value vDopParamSession.
+if vDopParamSession = ? then
+  vDopParamSession = "".
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -552,6 +559,14 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_b-start-view auto-st
 ON CHOOSE OF MENU-ITEM m_b-start-view /* Сессия видна */
 DO:
+  if index(vDopParamSession,"-b") <> 0 then
+  do:
+    message "Запуск в режиме ~"Сессия видна~" не допустим с параметром -b" skip
+            "в настройках ini-файла в параметра DopParamSession секции [THAutoSessions]."
+            view-as alert-box.
+    return no-apply.  
+  end.
+  
   assign
     v-start-mode = "":U
   .
@@ -729,6 +744,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   else do:
     do v-ind = 1 to v-num-sessions
     :
+      v-msg = "".
       get-key-value
         section "THAutoSessions"
         key substitute( "AutoSession&1", v-ind )
@@ -780,6 +796,23 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           assign
             v-add-mode = left-trim( v-new-add-mode, "+":U )
           .
+        end.
+
+        if index(vDopParamSession,"-b") <> 0 and 
+           lookup( "H":U, v-add-mode, "+":U ) = 0 then
+        do: /* если в настройках ini-файла в параметре DopParamSession секции [THAutoSessions] стоит -b, то не запускаем */
+          v-msg = "Автопроцесс с ключом -b в параметре DopParamSession может быть запущен только в скрытом режиме".
+          if p-no-message = false then do:
+            message
+              v-msg
+              view-as alert-box error .
+          end.
+          else do:
+            run write-to-log in this-procedure
+              ( input v-msg
+              ) .
+          end.
+          next.
         end.
 
         find first X_auto-session
@@ -1172,6 +1205,7 @@ define buffer buf_auto-session for tt_auto-session .
       v-restart   = false
       file-info:file-name = substitute( "./ATH&1.pid", buf_auto-session.session-pid )
     .
+      
     if file-info:full-pathname <> ?
       and ( ( file-info:file-create-date = today
               and file-info:file-create-time < time + 60
@@ -1261,17 +1295,15 @@ define input  parameter p-sess-name as character no-undo .
   do
   on error undo, return error return-value
   :
-    define variable vDopParamSession     as character no-undo .
-    get-key-value section "THAutoSessions"
-                    key "DopParamSession"
-                  value vDopParamSession.
     define variable vDopParamSessionRandom     as int no-undo .
+    define variable vDopParam                  as character no-undo .
+    
     if vDopParamSession eq ?
     then
-       vDopParamSession = "".
+       vDopParam = "".
     else do:
        vDopParamSessionRandom = random(1,9999999).
-       vDopParamSession = substitute (vDopParamSession,vDopParamSessionRandom).
+       vDopParam = substitute (vDopParamSession,vDopParamSessionRandom).
     end.
     define variable v-command-line     as character no-undo .
     define variable v-command-line-log as character no-undo .
@@ -1284,7 +1316,7 @@ define input  parameter p-sess-name as character no-undo .
                                    , g#auto-user-login
                                    , g#auto-user-password
                                    , replace( p-mode, ",":U, {&delim-par} )
-                                   , vDopParamSession 
+                                   , vDopParam 
                                  )
       v-command-line-log = substitute( '&1 -ininame &2 -basekey "INI" -p &3 -param "U:&4,P:&5,M:&6" &7'
                                    , v-exefile
@@ -1293,7 +1325,7 @@ define input  parameter p-sess-name as character no-undo .
                                    , g#auto-user-login
                                    , "***"
                                    , replace( p-mode, ",":U, {&delim-par} )
-                                   , vDopParamSession
+                                   , vDopParam
                                  )
     .
     run gbl/run-gpid.p

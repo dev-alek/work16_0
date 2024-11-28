@@ -48,6 +48,7 @@ define temp-table tt_pck-sent      no-undo like ub.pck-sent .
 
 define variable v-sub-rec-cnt as integer   no-undo.
 define variable v-rec-cnt     as integer   no-undo.
+define variable v-file-hash   as character no-undo .
 
 define frame imp-pck
   p-db-src        label "БД" skip
@@ -58,15 +59,14 @@ define frame imp-pck
   with view-as dialog-box side-labels 1 columns three-d title "** Разбор пакета"
 .
   define variable mFrameView      as logical   no-undo init yes.
-  define variable mFramHandle as handle no-undo.      
-  mFramHandle = frame imp-pck:handle.
-
+  {gbl/batchmode.i imp-pck}
+  
   if  log-manager:logfile-name ne ?
   then DO:
       log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameNWSError"). 
-      log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameNWSError"). 
+      log-manager:write-message("visible-frame-mod=" + string(mFramBachModHandle:visible), "frameNWSError"). 
   end.
-  mFrameView = writelogvalue ne "AsyncProc" and not session:batch-mode and mFramHandle:visible.
+  mFrameView = not mBatchMode.
   
 if transaction then do:
   message
@@ -128,6 +128,9 @@ on stop   undo, return error substitute("&1. stop main_block")
   assign
     v-err-msg = "":U .
   .
+
+  run gbl/md5.p(p-file-pck-name, output v-file-hash).
+  run write-to-log( substitute("Файл: &1; Контрольная сумма: &2.", p-file-pck-name,  v-file-hash) ) .
 
   input stream imp-stream from value( p-file-pck-name ).
 
@@ -605,7 +608,9 @@ procedure local-imp-pck :
               delete buf_route.
             end.
 
-            hide frame del-route .
+            if mFrameView
+            then  
+               hide frame del-route .
 
             transaction_block_pck-rcvd:
             do transaction

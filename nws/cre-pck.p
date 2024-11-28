@@ -85,7 +85,8 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
       log-manager:write-message("Batch-mod=" + string(session:batch-mode) , "frameNWSError"). 
       log-manager:write-message("visible-frame-mod=" + string(mFramHandle:visible), "frameNWSError"). 
   end.
-  mFrameView = writelogvalue ne "AsyncProc" and not session:batch-mode and mFramHandle:visible.
+  {gbl/batchmode.i inf}
+  mFrameView = not mBatchMode.
   if transaction then do:
     message
       vss-workfile vss-revision vss-description skip

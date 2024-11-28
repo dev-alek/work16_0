@@ -2042,6 +2042,16 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME tt-chk-doc.chk-num
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-chk-doc.chk-num Dialog-Frame
+ON value-changed OF tt-chk-doc.chk-num IN FRAME Dialog-Frame /* Ќомер чека */
+DO:
+  assign
+  tt-chk-doc.chk-num.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME tt-chk-doc.chk-date
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tt-chk-doc.chk-date Dialog-Frame
@@ -3455,6 +3465,12 @@ define buffer loc_chk-pay for ub.chk-pay.
 define buffer loc_chk-gds-pay for ub.chk-gds-pay.
 define buffer buf-tt-chk-gds for ub.chk-gds.
 define buffer BUF-tt-CHK-DISCNT for tt-CHK-DISCNT.
+/*проверка на наличие номера чека*/
+if tt-chk-doc.chk-num < 0 or tt-chk-doc.chk-num = ? then do:
+  message "«аполните номер чека по кассе"
+  view-as alert-box.
+  return error .
+end.
 assign
 prev-code = tt-chk-doc.doc-code.
 if par-mode = {&add-def} then do:

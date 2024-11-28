@@ -126,8 +126,11 @@ assign v-account = 100.
   then DO:
       log-manager:write-message("ON mFrameView=" + string(mFrameView), "frameRepError"). 
   end.
-  VIEW FRAME InfoFrame.
-  mFrameView = true.
+  if not session:batch-mode then
+  do:
+    VIEW FRAME InfoFrame.
+    mFrameView = true.
+  end.
 &IF "{3}" <> ""  &then
         Assign  RecordsDone: label = {3} .
 &endif
