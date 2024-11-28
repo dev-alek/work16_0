@@ -320,7 +320,11 @@ on error undo, return error return-value
                           then "ошибка, дата обновления равна или меньше текущей версии r-кодов" 
                           else "успешно")
                       ).
-    if mIsError then next UPDATE_CYCLE.
+    if mIsError then
+    do: 
+      delete upgfile-tbl.
+      next UPDATE_CYCLE.
+    end.
 
     /* Удаление старых bat-файлов */
     mRunFile = SearchFile ("!beforeTH.bat").
@@ -484,7 +488,9 @@ for each upgfile-tbl :
 end.
 
 run waitfram-hide in this-procedure .
-return "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова." .
+return if can-find(first upgfile-tbl) then 
+         "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова." 
+       else "Новых обновлений нет.".
 
 /*    выгрузка в 1С-Erp*/
 procedure upload1C:
