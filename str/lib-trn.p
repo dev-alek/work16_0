@@ -6875,6 +6875,7 @@ define variable v-density        like ub.doc-line.fact-density no-undo.
 define variable v-gds-mark       as   logical              no-undo.
 define variable v-gds-attr-value as   character            no-undo.
 define variable v-gds-attr-type  as   character            no-undo.
+define variable vIsExemplarGoods  as   logical              no-undo. 
 
 { gbl/getcntxt.i def }
 
@@ -7044,6 +7045,25 @@ for each tt-doc-line where tt-doc-line.doc-code = pardoc-code by tt-doc-line.lin
   find crt_goods where crt_goods.artic     = tt-doc-line.artic
                    and crt_goods.prod-type = tt-doc-line.prod-type
                    and crt_goods.prod-code = tt-doc-line.prod-code no-lock.
+  
+  if crt_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} then 
+  do:
+      run isExemplarGoods in this-procedure 
+          (tt-doc-line.obj-type, tt-doc-line.obj-code, crt_goods.gds-code, output vIsExemplarGoods).
+      if vIsExemplarGoods then
+      do:
+        message substitute("Товар &1 &2 &3 &4 подлежит обязательной маркировке. Для возврата используйте документ Расход внешний.~nТовар в документ добавлен не будет."
+               , crt_goods.artic
+               , crt_goods.prod-type
+               , crt_goods.prod-code
+               , crt_goods.gds-name
+               )
+        view-as alert-box .
+        varcheck-qnty = varcheck-qnty + tt-doc-line.fact-qnty.
+        next r-l.
+      end.
+  end.
+  
   { str/crdoclno.i
     crt_trn-doc.doc-code
     crt_trn-doc.obj-type
