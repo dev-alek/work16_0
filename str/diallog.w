@@ -336,7 +336,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define variable mFramHandle as handle no-undo.      
   mFramHandle = frame {&frame-name}:handle.
 
-  mFrameView = not session:batch-mode and mFramHandle:visible.
+  mFrameView = not session:batch-mode or mFramHandle:visible.
   publish "IsAsyncProc" (output mSilent).
   if  log-manager:logfile-name ne ?
   then DO:
