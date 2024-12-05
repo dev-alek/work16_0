@@ -84,7 +84,7 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
 
     WrittenOff   = crProp(16,"WrittenOff","Списан").
     UsedInProduction = crProp(17,"ProductionUse","Использован в производство").
-    ReservedFromProduction = crProp(18,"ReservedFromProduction","Зарезервирован_Использован в производство").
+    ReservedFromProduction = crProp(18,"ReservedFromProduction","Зарезервирован для возврата в оборот").
     Moved = crProp(19,"Moved","Перемещен").
    
     Ungrouped  = crProp(20,"Ungrouped","Разгруппирован").
