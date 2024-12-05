@@ -17547,7 +17547,8 @@ procedure isExemplarGoods:
   define variable vAttrValue as character no-undo.
   define variable vAttrType  as character no-undo.
   define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo .
-  { gbl/objsrv.i }
+  def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
   
   run gds-attr-value in this-procedure
       (input  p-gds-code
@@ -17565,3 +17566,31 @@ procedure isExemplarGoods:
     o-result = false.
 end procedure.
 
+
+/* Возвращает является ли товар с объемно-артикульным учетом */
+procedure isVolumArticGoods:
+  define input  parameter p-obj-type like ub.clients-attr.obj-type   no-undo .
+  define input  parameter p-obj-code like ub.clients-attr.obj-code   no-undo .
+  define input  parameter p-gds-code as   integer                    no-undo .
+  define output parameter o-result   as   logical                    no-undo.
+
+  define variable vAttrValue as character no-undo.
+  define variable vAttrType  as character no-undo.
+  define variable EDOParSec  as class ibs.th.gbl.env.prmtrs.edo .
+  def var objSrv as class ibs.th.gbl.sys.objsrv no-undo.
+  run gbl/getobjsrvhndl.p (input-output ObjSrv).
+
+  run gds-attr-value in this-procedure
+      (input  p-gds-code
+      ,input  {&attr-mark-type}
+      ,output vAttrValue
+      ,output vAttrType
+      ) .
+  if vAttrValue <> "" then
+  do:
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(p-obj-type, p-obj-code).
+    o-result = EDOParSec:GetIsArticForType(vAttrValue).
+  end.
+  else
+    o-result = false.
+end procedure.

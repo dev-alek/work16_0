@@ -6876,6 +6876,7 @@ define variable v-gds-mark       as   logical              no-undo.
 define variable v-gds-attr-value as   character            no-undo.
 define variable v-gds-attr-type  as   character            no-undo.
 define variable vIsExemplarGoods  as   logical              no-undo. 
+define variable vIsVolumArticGoods as   logical              no-undo. 
 
 { gbl/getcntxt.i def }
 
@@ -7050,7 +7051,9 @@ for each tt-doc-line where tt-doc-line.doc-code = pardoc-code by tt-doc-line.lin
   do:
       run isExemplarGoods in this-procedure 
           (tt-doc-line.obj-type, tt-doc-line.obj-code, crt_goods.gds-code, output vIsExemplarGoods).
-      if vIsExemplarGoods then
+      run isVolumArticGoods in this-procedure 
+          (tt-doc-line.obj-type, tt-doc-line.obj-code, crt_goods.gds-code, output vIsVolumArticGoods).
+      if vIsExemplarGoods or vIsVolumArticGoods then
       do:
         message substitute("Товар &1 &2 &3 &4 подлежит обязательной маркировке. Для возврата используйте документ Расход внешний.~nТовар в документ добавлен не будет."
                , crt_goods.artic
