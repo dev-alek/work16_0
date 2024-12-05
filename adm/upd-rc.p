@@ -476,11 +476,12 @@ os-command silent
 add-log-file-name = ?.
 CheckUpd:workStart ().
 
-if can-find(first upgfile-tbl) then
-do:
-  v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".
-  run utl\proc-msg.p (v-msg) no-error.
-end.
+/* BTS-1070                                                                                                                           */
+/*if can-find(first upgfile-tbl) then                                                                                         */
+/*do:                                                                                                                         */
+/*  v-msg = "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова.".*/
+/*  run utl\proc-msg.p (v-msg) no-error.                                                                                      */
+/*end.                                                                                                                        */
 
 /* Чистим временную таблицу */
 for each upgfile-tbl :
