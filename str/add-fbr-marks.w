@@ -530,7 +530,7 @@ PROCEDURE CrCheckMark :
   
   if v-num-recipes <> 1
   then do :
-    message substitute("Для товара &1 &2 найдено более одного рецепта. Обратитесь в офис для корректировки рецептов", buf_goods.gds-code, buf_goods.gds-name)
+    message substitute("Для товара &1 &2 найдено более одного рецепта «Альтернатива», поэтому автоматический выбор рецепта невозможен, товар не добавлен. Создайте документ производства с этим товаром вручную. Обратитесь в офис для корректировки рецептов", buf_goods.gds-code, buf_goods.gds-name)
     view-as alert-box .
     return.
   end .
@@ -585,7 +585,7 @@ PROCEDURE CrCheckMark :
     and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
     then do :
       run waitfram-hide in this-procedure .
-      message (substitute("КМ в статусе &1, марка не может быть использована в производстве", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)))
+      message (substitute("КМ в статусе <&1>, марка не может быть использована в производство", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)))
       view-as alert-box .
       return.
     end .

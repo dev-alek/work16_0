@@ -439,7 +439,7 @@ PROCEDURE CrCheckMark :
   then do :
     if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB
     then do :
-      message  substitute("КМ в статусе &1, марка не может быть использована в производстве", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts))
+      message  substitute("КМ в статусе <&1>, марка не может быть использована в производство", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts))
       view-as alert-box .
       return.
     end .
@@ -460,7 +460,7 @@ PROCEDURE CrCheckMark :
   
   if integer(v-GTIN-qnty) <> 1 /* групповая упаковка */
   then do :
-    message "Марка групповой упаковки не может быть использована в производстве. Сканируйте потребительские упаковки"
+    message "Просканирована групповая упаковка, возврат в оборот групповых упаковок невозможен. Необходимо сканировать потребительские упаковки"
     view-as alert-box .
     return.
   end .

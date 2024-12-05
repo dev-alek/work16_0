@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 4428eb1bbf45, 349, rls $
+$Author: SShalanin $
+$Date: Thu Dec 17 17:50:10 2015 +0300 $
+$Workfile: calcarh.p $
+$Archive: trg/calcarh.p $
 
 –асчет складского архива по товарам
 
@@ -27,11 +27,11 @@ define input  parameter p-check-act         as logical   no-undo .
 define input  parameter p-check-act-db-num  as integer   no-undo .
 define input  parameter p-check-act-user-id as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 4428eb1bbf45, 349, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 17 17:50:10 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: calcarh.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: trg/calcarh.p $":U .
 define variable vss-description as character no-undo init "–асчет складского архива по товарам".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4',p-obj-type,p-obj-code,p-message-on,p-check-doc,p-last-fact-date)" }
 { cmp/trg-def.i  }
@@ -54,7 +54,8 @@ on error undo, return error return-value
     with view-as dialog-box side-labels three-d
     title "–асчет складского архива по товарам"
     .
-  view frame a .
+  if not session:batch-mode then
+    view frame a .
 
   define buffer calc-arh-lock_batchprocess for ub.batchprocess .
 
@@ -152,6 +153,7 @@ on error undo, return error return-value
     v-arh-detail-date = date(v-attr-value)
   .
 
+  if not session:batch-mode then
   display
     p-obj-type p-obj-code
     with frame a.
@@ -826,6 +828,7 @@ end procedure. /* cb-doclslib-log */
 procedure show-action :
 
   define input parameter p-message  as character no-undo .
+  if session:batch-mode then return.
 
   do
   on error undo, return error return-value

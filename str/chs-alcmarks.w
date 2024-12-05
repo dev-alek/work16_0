@@ -766,6 +766,7 @@ PROCEDURE save_update :
   define buffer buf_marking       for ub.marking.
   define buffer b_marking-lines   for ub.marking-lines.
   define buffer b_trn-doc         for ub.trn-doc.
+  define buffer buf_mark_goods    for ub.goods.
    
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
@@ -807,7 +808,9 @@ PROCEDURE save_update :
     end.
     if avail buf_goods and buf_goods.gds-code <> v-cis-gds-code then
     do:
-      run dispmessage ("Марка принадлежит другому товару.").
+      find first buf_mark_goods where
+                 buf_mark_goods.gds-code = v-cis-gds-code no-lock no-error.
+      run dispmessage (substitute("Просканированная марка принадлежит другому товару, необходимо сканировать товар &1 &2.", buf_mark_goods.gds-code, buf_mark_goods.gds-name)).
       return error.
     end.
     find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
@@ -851,7 +854,7 @@ PROCEDURE save_update :
         if marking.sts <> thMarkSts:FreeZone:KeyIntDB and
            marking.sts <> thMarkSts:ReturnLock:KeyIntDB then 
         do:
-          run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщку.",
+          run dispmessage (substitute("Марка в статусе <&1> не может быть возвращена поставщику.",
                            thMarkSts:GetLabel(marking.sts))
                            ).
           return.
@@ -1019,8 +1022,7 @@ PROCEDURE save_update :
         end.  
         if marking.sts = thMarkSts:Reserved:KeyIntDB then
         do:
-          run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан." +
-                           "Необходимо либо закрыть документ, либо удалить его.").
+          run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",marking.sts)).
           return.
         end.
         if marking.sts = thMarkSts:Moved:KeyIntDB then
@@ -1054,8 +1056,7 @@ PROCEDURE save_update :
                     b_trn-doc.doc-code     =  b_marking-lines.out-code
                 and b_trn-doc.ext-doc-type =  {&TDEDT_Spi_Vnesh}
                 and b_trn-doc.status_      <> {&fact}:
-              run dispmessage ("Товар добавлен в незакрытый документ и не может быть списан.~n" +
-                               "Необходимо либо закрыть документ, либо удалить его.").
+              run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",marking.sts)).
               return.
           end.
         end.    
