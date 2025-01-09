@@ -1450,6 +1450,11 @@ case entry(lookup(buf_thbj-attr.prop-code,v-prop-list) , v-prop-type-list):
     p-value = "!!!ÎØÈÁÊÀ-ÍÅÈÇÂÅÑÒÍÛÉ ÒÈÏ ÇÍÀ×ÅÍÈß".
   END.
   END CASE.
+  if buf_thbj-attr.upper-prop-code = "gisMT" and
+    (buf_thbj-attr.prop-code = "proxyPswd" or 
+     buf_thbj-attr.prop-code = "OflinePswd") and 
+     p-value > ""
+  then p-value = fill("*",length(p-value)).
   RETURN entry(lookup(buf_thbj-attr.prop-code,v-prop-list),  v-prop-label-list).
 END.
 ELSE DO:
