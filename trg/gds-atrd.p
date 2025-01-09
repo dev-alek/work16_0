@@ -247,9 +247,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        do jj = 1 to num-entries(v-other, {&slash-char}):
          if entry(jj, v-other, {&slash-char}) = "" then NEXT _do.
          assign
-         v-dop1 = entry(1, entry(jj, v-other, {&slash-char}), '=':U)
-         v-dop2 = entry(2, entry(jj, v-other, {&slash-char}), '=':U)
-         .
+         v-dop1 = entry(1, entry(jj, v-other, {&slash-char}), '=':U) no-error .
+         v-dop2 = entry(2, entry(jj, v-other, {&slash-char}), '=':U) no-error .
          if v-dop1 = "cd":U then do:
            run trg/nu_gds.p (
                           input  ub.goods-attr.gds-code
