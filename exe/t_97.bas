@@ -27,7 +27,7 @@ Dim g_sSubtotalPropisList As String
 Dim g_iSubtotalPropisAmount As Integer
 
 Dim g_dCurrentPageDataHeight  As Double
-Dim jj as integer 
+Dim jj as String 
 Dim ii as integer 
 
 Sub startFormFromTemplate( _
@@ -190,7 +190,7 @@ On Error GoTo errStartFromTemplate
                 NewSheet.PageSetup.PrintGridlines = .PrintGridlines
                 NewSheet.PageSetup.PrintComments = .PrintComments
                 NewSheet.PageSetup.PaperSize = .PaperSize
-                NewSheet.PageSetup.PrintQuality = .PrintQuality
+'                NewSheet.PageSetup.PrintQuality = .PrintQuality
             End With
             If iSheetNumber = 1 Then
                 Call clearGlobalVariables
@@ -467,11 +467,14 @@ With ActiveWorkbook.Worksheets("Template")
 
             For iCounter = 1 To g_iColumnAmount
                 sValue = CStr(.Range("tempRow").Cells(1, iCounter + 1).Value)
-                    if iCounter = 1 Then
-                    if jj <> Range("tempRow").Cells(1, iCounter + 1).Value Then
+                    If iCounter = 1 Then
+                        If jj <> CStr(.Range("tempRow").Cells(1, iCounter + 1).Value) Then
+                        
                     ii = ii + 1
-                    jj = Range("tempRow").Cells(1, iCounter + 1).Value
-                    End If
+                    
+                    jj = CStr(.Range("tempRow").Cells(1, iCounter + 1).Value)
+                    
+                        End If
                     End If
 
                 If sValue = "" Then
@@ -617,7 +620,6 @@ On Error GoTo errPrintPageSubTotal
             End If
             If .Range("subtotalPropisMark").Cells(1, iCounter).Value = "X" Then
                 sLabel = "itp_s_" & Format(.Range("columnList").Cells(1, iCounter))
-
                 Call CheckLabel( _
                       ByVal sLabel _
                     , bLabelExists _
