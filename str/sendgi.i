@@ -162,8 +162,9 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
           assign
           v-view-log = yes
           .
-           if g#news or g#esys or g#auto then return "NEXT".
-           return error prichina.
+          return "NEXT".
+           /*if g#news or g#esys or g#auto then 
+           return error prichina.*/
         end.
       end.
       
