@@ -984,6 +984,11 @@ PROCEDURE save_update :
 
     if available marking
     then do:
+      if marking.sts = thMarkSts:Reserved:KeyIntDB then
+      do:
+        run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",thMarkSts:GetLabel(marking.sts))).
+        return.
+      end.
 
       case t_doc.ext-doc-type:
       when {&TDEDT_Ras_Perem} then
@@ -1020,11 +1025,6 @@ PROCEDURE save_update :
                            "для которого не требуется сканирование марок").
           return.
         end.  
-        if marking.sts = thMarkSts:Reserved:KeyIntDB then
-        do:
-          run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",marking.sts)).
-          return.
-        end.
         if marking.sts = thMarkSts:Moved:KeyIntDB then
         do:
           run dispmessage ("Товар перемещен на другой АЗК.").
@@ -1056,7 +1056,7 @@ PROCEDURE save_update :
                     b_trn-doc.doc-code     =  b_marking-lines.out-code
                 and b_trn-doc.ext-doc-type =  {&TDEDT_Spi_Vnesh}
                 and b_trn-doc.status_      <> {&fact}:
-              run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",marking.sts)).
+              run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",thMarkSts:GetLabel(marking.sts))).
               return.
           end.
         end.    
