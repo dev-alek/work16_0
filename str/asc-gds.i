@@ -268,7 +268,6 @@ cash-gds.producer = for-producer
 cash-gds.producer-int = for-producer-int
 cash-gds.alpha1     = loc-goods.alpha1.
 
-
   run gds-attr-value in this-procedure  ( input cash-gds.gds-code
                                          ,input {&attr-office-type}
                                          ,output v-oss
@@ -279,15 +278,19 @@ cash-gds.office-type = v-oss.
                                          ,input {&attr-type-method-calc}
                                          ,output v-oss
                                          ,output v-type) no-error.
+                         
 if v-oss <> "" then
   assign
     cash-gds.CalculationMethod = int(entry(1,v-oss,","))
     cash-gds.CalculationMethodRestr = if num-entries(v-oss,",") > 1 then int(entry(2,v-oss,",")) else 0
   .
-
-
+else 
+  assign
+    cash-gds.CalculationMethod = 0
+    cash-gds.CalculationMethodRestr = 0
+  .
+  
 assign
-
 cash-gds.fact-qnty = for-fact-qnty
 cash-gds.okei = loc-bc-units-okei
 cash-gds.kat-discnt-method = kat-discnt-method_
