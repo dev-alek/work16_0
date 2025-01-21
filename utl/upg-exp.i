@@ -35,6 +35,7 @@ procedure upg-exp :
     assign
       v-num-fields = p-tbl-handle:num-fields
     .
+         
     put stream ddl unformatted substitute( '"<num-fields>" "&1" ':U, v-num-fields ).
     do v-ind = 1 to v-num-fields
     on error undo, return error substitute( "&1 (nws-exp). &2", vss-include-info{&vssseq}, error-status :get-message ( 1 ) )
@@ -58,6 +59,13 @@ procedure upg-exp :
           assign
           v-str = substitute("'&1'", v-str).
         end.
+        if        p-tbl-handle:table            eq "tt_thbj-attr"
+             and  p-tbl-handle::upper-prop-code eq "gismt"
+             and  v-fh:name                     eq "property-value-character"
+             and (    p-tbl-handle::prop-code eq "oflinepswd"
+                   or p-tbl-handle::prop-code eq "proxypswd")
+          then 
+             v-str = fill("*",length(v-str)).
       end.
 
       /* replace( replace( v-fh:buffer-value, '"':U, '""':U ), '~~':U, '~~~~':U ) */

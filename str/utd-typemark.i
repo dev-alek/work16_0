@@ -91,6 +91,25 @@ function CheckMarkUtdLine return logical
                     ).
                vMarking = EDOParSec:GetIsEDOForType(v-par-val).  
                vArtic = not vMarking and EDOParSec:GetIsArticForType(v-par-val).
+               if vMarking
+               then do:
+                  block-marking:
+                  for each   utd-marking-lines where utd-marking-lines.db-num   eq idb-num
+                                                 and utd-marking-lines.doc-id   eq idoc-id
+                                                 and utd-marking-lines.LineNum  eq iLineNum
+                                                 and length(utd-marking-lines.mark) > 13
+                  no-lock:
+                     if isOAD(utd-marking-lines.mark)
+                     then do:
+                        assign
+                           vArtic   = yes
+                           vMarking = no
+                        .
+                        leave block-marking.
+                     end.
+                  end.
+                  
+               end.
                if vArtic
                then do:
                   block-artic:

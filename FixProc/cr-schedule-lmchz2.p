@@ -31,8 +31,9 @@ define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Создание автоматического задания".
 { cmp/vssrevis.i }
-{ cmp/str-glbl.i }  
+{ cmp/trg-def.i }
 
+define variable save_g#news like g#news no-undo.
 define variable vPar1 as character no-undo.
 define variable vPar2 as character no-undo.
 if num-entries(p-param-run,{&delim-par}) <> 3 then return.
@@ -40,7 +41,21 @@ assign
    vPar1 =  entry(1,p-param-run,{&delim-par})
    vPar2 = entry(2,p-param-run,{&delim-par})
    .   
+   
+assign
+  save_g#news = g#news
+  g#news = no
+. 
+
+run write-to-log in p-log-handle (
+     substitute("Версия утилиты &1: &2"
+                 , program-name(1)
+                 , "2.0" )).
+
+
 RUN CopySchedule in this-procedure (vPar1, vPar2) no-error.
+
+g#news = save_g#news.
 
 procedure CopySchedule:
     define input param iDbNum     as character no-undo.
@@ -138,7 +153,9 @@ procedure CopySchedule:
                    copy_schedule-attr.cre-db-num = vDbNum
                    copy_schedule-attr.task-num = copy_schedule.task-num .
                 buffer-copy buf_schedule-attr except cre-db-num task-num to copy_schedule-attr.
+                validate copy_schedule-attr no-error.
             end.
+            validate copy_schedule no-error.
             if vTaskNum <> 0 
             then
                 run write-to-log in p-log-handle (

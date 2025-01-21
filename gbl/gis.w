@@ -226,7 +226,7 @@ DEFINE FRAME Dialog-Frame
      dopParam AT ROW 11.48 COL 3.2 WIDGET-ID 154
      OflineAdress AT ROW 12.67 COL 22 COLON-ALIGNED WIDGET-ID 180
      OflineLogin AT ROW 13.86 COL 22 COLON-ALIGNED WIDGET-ID 182
-     OflinePswd AT ROW 13.86 COL 90 RIGHT-ALIGNED WIDGET-ID 184 PASSWORD-FIELD 
+     OflinePswd AT ROW 13.86 COL 90 RIGHT-ALIGNED WIDGET-ID 184 
      waitTime AT ROW 15.29 COL 90.6 RIGHT-ALIGNED WIDGET-ID 156
      maxTime AT ROW 16.48 COL 90.6 RIGHT-ALIGNED WIDGET-ID 168
      timeFalStart AT ROW 17.67 COL 90.6 RIGHT-ALIGNED WIDGET-ID 170
@@ -326,6 +326,15 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME OflinePswd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL OflinePswd Dialog-Frame
+ON ENTRY OF OflinePswd IN FRAME Dialog-Frame /* Штрих-код */
+DO:
+   self:SET-SELECTION(1,length (OflinePswd:screen-value) + 1).
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &UNDEFINE SELF-NAME
 
@@ -389,7 +398,7 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY gisAdress cdnTurnOn cdnAdress registrationKey adressPort login 
-          password dopParam OflineAdress OflineLogin OflinePswd waitTime maxTime 
+          password dopParam OflineAdress OflineLogin  waitTime maxTime 
           timeFalStart banDate cdnTimeUpdate cdnRepeat crashSituat cdnChange 
           UpdateRequest 
       WITH FRAME Dialog-Frame.
@@ -521,7 +530,7 @@ FOR EACH temp-thbj-attr
        display OflineLogin with frame {&frame-name} .
     END.
     IF temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} THEN DO:
-       OflinePswd = temp-thbj-attr.property-value-character.
+       OflinePswd = fill("*",length (temp-thbj-attr.property-value-character)).
        display OflinePswd with frame {&frame-name} .
     END.
 END.
@@ -655,7 +664,10 @@ ASSIGN FRAME {&FRAME-NAME}
     temp-thbj-attr.property-value-character = OflineLogin.
     
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} .
-    temp-thbj-attr.property-value-character = OflinePswd.
+    if OflinePswd eq "" or (replace(OflinePswd,"*","") ne "" and OflinePswd ne ?)
+    then
+       temp-thbj-attr.property-value-character = OflinePswd.
+    
 
     do transaction:
         RUN thbjattr_set-section IN THIS-PROCEDURE (
