@@ -968,39 +968,38 @@ on error undo, return error return-value
               or EDOParSec:GetIsArticForType(varvalue)
               or EDOParSec:GetIsMarkingForType(varvalue)
               then do :
-                find last bf_parts no-lock where bf_parts.obj-type  = t-doc.obj-type
+                EACH_PARTS:
+                for each bf_parts no-lock where bf_parts.obj-type  = t-doc.obj-type
                                              and bf_parts.obj-code  = t-doc.obj-code
                                              and bf_parts.artic     = p-goods.artic
                                              and bf_parts.prod-type = p-goods.prod-type
                                              and bf_parts.prod-code = p-goods.prod-code
                                              and bf_parts.out-code  = t-doc.doc-code
-                                             no-error .
-                if available bf_parts
-                then do :                            
-                  find first bf_marking-lines no-lock where bf_marking-lines.obj-type = bf_parts.obj-type
-                                                        and bf_marking-lines.obj-code = bf_parts.obj-code
-                                                        and bf_marking-lines.gds-code = p-goods.gds-code
-                                                        and bf_marking-lines.in-code  = bf_parts.in-code
-                                                        and bf_marking-lines.out-code = bf_parts.out-code
-                                                        and bf_marking-lines.part-code = bf_parts.part-code
-                                                        and bf_marking-lines.mark begins entry(2,parvalue,{&delim-key})
-                                                        no-error .
-                  if not available bf_marking-lines
-                  then do :
-                    create bf_marking-lines .
-                    assign
-                      bf_marking-lines.obj-type = t-doc.obj-type            
-                      bf_marking-lines.obj-code = t-doc.obj-code  
-                      bf_marking-lines.gds-code = p-goods.gds-code    
-                      bf_marking-lines.in-code  = bf_parts.in-code     
-                      bf_marking-lines.out-code = t-doc.doc-code   
-                      bf_marking-lines.part-code = bf_parts.part-code    
-                      bf_marking-lines.prt-code = bf_parts.prt-code
-                      bf_marking-lines.doc-level = 1
-                      bf_marking-lines.mark = entry(2,parvalue,{&delim-key})
-                    .
-                    validate bf_marking-lines .
-                  end .
+                  , first bf_marking-lines no-lock where bf_marking-lines.obj-type = bf_parts.obj-type
+                                                          and bf_marking-lines.obj-code = bf_parts.obj-code
+                                                          and bf_marking-lines.gds-code = p-goods.gds-code
+                                                          and bf_marking-lines.in-code  = bf_parts.in-code
+                                                          and bf_marking-lines.out-code = bf_parts.out-code
+                                                          and bf_marking-lines.part-code = bf_parts.part-code
+                                                          and bf_marking-lines.mark begins entry(2,parvalue,{&delim-key})
+                  :
+                  leave EACH_PARTS.
+                end .
+                if not available bf_marking-lines
+                then do :
+                  create bf_marking-lines .
+                  assign
+                    bf_marking-lines.obj-type = t-doc.obj-type            
+                    bf_marking-lines.obj-code = t-doc.obj-code  
+                    bf_marking-lines.gds-code = p-goods.gds-code    
+                    bf_marking-lines.in-code  = bf_parts.in-code     
+                    bf_marking-lines.out-code = t-doc.doc-code   
+                    bf_marking-lines.part-code = bf_parts.part-code    
+                    bf_marking-lines.prt-code = bf_parts.prt-code
+                    bf_marking-lines.doc-level = 1
+                    bf_marking-lines.mark = entry(2,parvalue,{&delim-key})
+                  .
+                  validate bf_marking-lines .
                 end .
               end .
             end .

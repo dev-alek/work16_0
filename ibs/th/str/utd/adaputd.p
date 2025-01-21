@@ -42,6 +42,7 @@ def var vss-description as character no-undo init "Создание накладных по УПД".
 { str/utd-err.i}
 { gbl/attr-lib.i}
 { utl/gtin.i }
+{ str/utd-typemark.i}
 /*define shared variable g#auto-user-id as character no-undo .*/
 
 
@@ -284,6 +285,7 @@ do:
     end .
     
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
+    or logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "ArticUtdLine", "no"))
     then do:
       
       assign

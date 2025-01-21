@@ -106,6 +106,7 @@ define variable trn-type as integer no-undo init 0.
 {ibs/th/bge/egais/ab-egais.i 1 new shared}
 { str/marks.i         }
 { gbl/objsrv.i }
+{ utl/gtin.i }
 
 
 &global-define store-type v-cntxt-obj-type
@@ -1890,7 +1891,8 @@ DO:
 
           end.
           else do:
-            message "ћарка отсутсвует в справочнике марок - " + tt-marking-lines.mark view-as alert-box error.
+            if isMark(tt-marking-lines.mark) then
+              message "ћарка отсутсвует в справочнике марок - " + tt-marking-lines.mark view-as alert-box error.
           end.
         end.
       end. 
