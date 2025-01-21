@@ -21,6 +21,11 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 define variable v-thbj-attr-uniq-key-rec as character no-undo .
 define buffer current_c-thbj-attr for ub.c-thbj-attr.
+function  getPSwd returns character (istr as char ):
+   
+   return fill("*",length(istr)).
+   
+end.
 
 procedure thbj-attr-self-proc :
 define input parameter p-action as integer no-undo .
@@ -91,8 +96,13 @@ on error undo, return error
 
     case v-type:
       when {&abl-datatype-character} then do:
-        assign
-        v-label-param = "property-value-character" + {&delim-par} + "Значение(строк.)" + {&delim-par} + "" + {&delim-flf} +
+         if     current_c-thbj-attr.upper-prop-code eq "gismt"
+            and (current_c-thbj-attr.prop-code eq "oflinepswd"
+                 or current_c-thbj-attr.prop-code eq "proxypswd")
+         then v-label-param = "property-value-character" + {&delim-par} + "Значение(строк.)" + {&delim-par} + "getpswd" + {&delim-flf} +
+                      v-label-param.
+         else assign
+             v-label-param = "property-value-character" + {&delim-par} + "Значение(строк.)" + {&delim-par} + "" + {&delim-flf} +
                       v-label-param.
         v-fields-name-list = "property-value-character," + {&fields-name-list}.
       end.

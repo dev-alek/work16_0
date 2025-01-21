@@ -372,10 +372,15 @@ for each buf_thbj-attr no-lock where
           x_thbj-attr.ind1 = "0" + string( buf_thbj-attr.obj-code,":999999999") + "   " + string( 0 ,"999999999" ).
        end.
        case buf_thbj-attr.prop-value-type :
-       when {&ABL-datatype-character} then
-            assign
-             x_thbj-attr.d1 = buf_thbj-attr.property-value-character
-            .
+       when {&ABL-datatype-character} then do:
+            if      buf_thbj-attr.upper-prop-code eq "gismt"
+            and (   buf_thbj-attr.prop-code eq "oflinepswd"
+                 or buf_thbj-attr.prop-code eq "proxypswd")
+            then
+               x_thbj-attr.d1 = fill("*",length (buf_thbj-attr.property-value-character)).
+             else
+                x_thbj-attr.d1 = buf_thbj-attr.property-value-character.
+       end.
        when {&ABL-datatype-integer} then
             assign
              x_thbj-attr.d1 = string(buf_thbj-attr.property-value-integer)
