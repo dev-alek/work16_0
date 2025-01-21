@@ -520,9 +520,10 @@ FOR EACH temp-thbj-attr
        OflineLogin = temp-thbj-attr.property-value-character.
        display OflineLogin with frame {&frame-name} .
     END.
-/*    IF temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} THEN DO:      */
-/*       message temp-thbj-attr.property-value-character view-as alert-box.*/
-/*    END.                                                                 */
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} THEN DO:
+       OflinePswd = fill("*",length (temp-thbj-attr.property-value-character)).
+       display OflinePswd with frame {&frame-name} .
+    END.
 END.
 
    if cdnTurnOn then do:
@@ -654,9 +655,7 @@ ASSIGN FRAME {&FRAME-NAME}
     temp-thbj-attr.property-value-character = OflineLogin.
     
     find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} .
-    if OflinePswd eq "-empty-"
-    then temp-thbj-attr.property-value-character = "".
-    else if OflinePswd ne "" and OflinePswd ne ?
+    if OflinePswd eq "" or (replace(OflinePswd,"*","") ne "" and OflinePswd ne ?)
     then
        temp-thbj-attr.property-value-character = OflinePswd.
     
