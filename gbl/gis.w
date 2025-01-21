@@ -326,6 +326,15 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME OflinePswd
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL OflinePswd Dialog-Frame
+ON ENTRY OF OflinePswd IN FRAME Dialog-Frame /* Штрих-код */
+DO:
+   self:SET-SELECTION(1,length (OflinePswd:screen-value) + 1).
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &UNDEFINE SELF-NAME
 
