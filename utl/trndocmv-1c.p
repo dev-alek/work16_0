@@ -637,7 +637,7 @@ on error undo, return error return-value
                       end.
                     end.
                     if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB then
-                    do:  /* меняем статус с Серая зона на Расгруппирован */
+                    do:  /* меняем статус с Серая зона на Разгруппирован */
                       ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
                     end.  
                     buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty. 
@@ -645,7 +645,14 @@ on error undo, return error return-value
                   end.
                 end.
                 else
+                do:
+                  for each chi_marking exclusive-lock where 
+                           chi_marking.mark-parent = ub.marking.mark
+                  :  
+                      chi_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
+                  end.
                   ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
+                end.
               end.
               else 
               do:  /* если марка уже продана или возвращена или в процессе продажи или возврата на кассу, то увеличиваем кол-во принятых марок */
