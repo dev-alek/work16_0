@@ -35,6 +35,8 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    field lastSync as int64
    field inst as char 
    field reqid        as recid serialize-hidden
+   field errorcode as char
+   field reason as char  
    index reqidpar reqid 
    .
    
@@ -135,8 +137,16 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
        RunChkStsAndInit(yes, no).
        
        find first ttstatus-body no-error.
-       if avail ttstatus-body  
+       if avail ttstatus-body and         
+          ttstatus-body.errorcode > ""       
        then do:
+           assign
+             vStatus = ttstatus-body.reason 
+             oVersion = "Не определена"
+             .
+       end.
+       else if avail ttstatus-body
+       then do:               
            assign
              vStatus = ttstatus-body.f_status
              oVersion = ttstatus-body.f_version
@@ -205,8 +215,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
          os-command silent value(cmd).                 
                            
          if searchFile(vfileresult) <> ? then do:
-            file-info:file-name = searchFile(vfileresult).
-            
+            file-info:file-name = searchFile(vfileresult).            
             if file-info:file-size <> 0 then do:
                copy-lob from file vFileResult to vlongJson no-error.          
                vlongJson = '~{"bodys":[' + vlongJson + "]}" .
@@ -216,8 +225,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
                                       vFileResXml).                          
                os-command silent value (cmd).  
                copy-lob from file vFileResXml to vlongJson no-error.    
-               vRetOk = dataset gismt-mark-body:read-xml("FILE":U, vFileResXml, "EMPTY":U, ?, ?) no-error.
-
+               vRetOk = dataset gismt-mark-body:read-xml("FILE":U, vFileResXml, "EMPTY":U, ?, ?) no-error.               
                find first ttstatus-body no-error.
                if avail ttstatus-body  and 
                   ttstatus-body.f_status = "not_configured" and
@@ -228,7 +236,8 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
                   vReqSts = yes.
                end.    
             end.    
-         end. 
+         end.
+          
      end.     
      if iWriteLog then WriteLogOffLine(vlongJson, vReqSts) no-error.
      if not session:debug-alert
