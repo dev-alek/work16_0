@@ -1770,7 +1770,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
             tt-marking-lines.unit = "шт" .
           end .
           else do :
-            find first ub.marking no-lock where ub.marking.mark = ub.marking-lines.mark and ub.marking.sts <> ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB no-error.
+            find first ub.marking no-lock where ub.marking.mark begins ub.marking-lines.mark and ub.marking.sts <> ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB no-error.
             if available (ub.marking)
               then 
             do:

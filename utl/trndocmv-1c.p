@@ -603,7 +603,7 @@ on error undo, return error return-value
         if TempDocMark.prt-id = ? then TempDocMark.prt-id = buf_parts.part-code .
         if TempDocMark.in-doc-id = ? then TempDocMark.in-doc-id = buf_parts.in-code .
 
-        find first ub.marking where ub.marking.mark = ub.marking-lines.mark no-error.
+        find first ub.marking where ub.marking.mark begins ub.marking-lines.mark no-error.
         if available (ub.marking)
         then do:
           ub.marking.obj-type = ub.marking-lines.obj-type.
