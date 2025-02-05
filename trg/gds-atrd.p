@@ -271,7 +271,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
               'no' + {&delim-par}  +
               'no' + {&delim-par}
               )
-           , no /*p-auto-go*/
+           , yes /*p-auto-go*/
            , 'Прервать':U
            , 'Отправка информации на кассу') no-error .
     end. /*if send-ref*/
