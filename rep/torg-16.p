@@ -863,6 +863,7 @@ else
     run rep/wp.p ( input p-mainmenu-handle, (accum total stoim), output s1, output s2 ) .
 run torg16xl-write-cell-data ( input {&torg16xl-f_sumstr}, s1  ) .
 put stream Out-stream
+    string( "Сумма списания: " + caps(s1) ) format "X(198)" skip
     string( "Все члены комиссии предупреждены об ответственности за подписание акта, " +
                "содержащего данные, несоответствующие действительности." ) format "X(198)" skip
     string( "Председатель комиссии " ) format "X(31)"
@@ -897,7 +898,9 @@ put stream Out-stream
         string( "должность" ) format "X(19)" string( " " ) format "X(1)"
         string( "подпись" ) format "X(19)" string( " " ) format "X(1)"
         string( "расшифровка подписи" ) format "X(29)" skip
-
+    string( "Решение руководителя " ) format "X(31)" skip
+    string( "Cтоимость списанного товара отнести на счет " + UndLine ) format "X(198)" skip
+    space(80) string( "указать источник (себестоимость, прибыль, материально ответственное лицо и т.д.)" ) format "X(83)" skip
 .
 run torg16xl-close.
 output stream Out-stream close.
