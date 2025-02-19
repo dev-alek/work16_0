@@ -122,7 +122,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
        RunChkStsAndInit(yes, yes).
        EmptyTempTable().
    end method.
-   
+      
    /* Запрос статуса ЛМ ЧЗ из отчета */  
    method public character GetChkStsOffline (
        output oVersion as character,
@@ -262,6 +262,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
         def var vReqTime as int64 no-undo.
         define variable vFlagOk as log no-undo.
         define variable vTokenFile as char no-undo.
+        define variable vFileCmd as char no-undo.
             
         assign
            vlongJson = ""
@@ -271,6 +272,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
         run gbl/_tmpfile.p ( "InitOfflineGisMTRes", ".txt", output vFileResult ) .
         run gbl/_tmpfile.p ( "InitOfflineGisMTErr", ".txt", output vFileErr ) .
         run gbl/_tmpfile.p ( "InitOfflineToken", ".txt", output vTokenFile ) .
+        if session:debug-alert then run gbl/_tmpfile.p ( "InitOfflineCmd", ".txt", output vFileCmd ) .
         
         OUTPUT STREAM out_data TO value(vTokenFile).        
         PUT STREAM out_data UNFORMATTED  
@@ -286,9 +288,17 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
                           trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),""),         /*6*/
                           searchfile(vTokenFile)
                           ). /*7*/                        
-                                                                              
-         os-command silent value(cmd).                                    
-                        
+                                                                                                                                   
+         if session:debug-alert then 
+         do:
+             OUTPUT STREAM out_data TO value(vFileCmd).        
+             PUT STREAM out_data UNFORMATTED  
+              cmd .
+             OUTPUT STREAM out_data CLOSE.
+         end.
+         
+         os-command silent value(cmd). 
+                       
          if searchFile(vfileresult) <> ? then do:
             file-info:file-name = searchFile(vfileresult).
             if file-info:file-size = 0 then vFlagOk = yes.
@@ -298,7 +308,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
          then do:         
              os-delete silent value(vFileResult)     no-error.
              os-delete silent value(vFileErr)        no-error.             
-             os-delete silent value(vTokenFile)      no-error.             
+             os-delete silent value(vTokenFile)      no-error.                         
          end.
    end method.   
    
@@ -401,6 +411,17 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
        end.
        return vTimeLag.     
    end method.   
+   
+   /* Принудительная инициализация */  
+   method public void ProcInit ():            
+     define variable vParam       as character no-undo.  
+     define variable vReqSts      as logical no-undo.
+     /* считывание настроек БД */                      
+     vParam = GetParam().                    
+     /* Запуск инициализации */                  
+     RunInitOffline() no-error.         
+       
+   end method.
    
    method  private void EmptyTempTable ():       
       empty temp-table ttstatus-body.
