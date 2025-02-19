@@ -3170,7 +3170,7 @@ end.
                                                        no-error .
                 if not available buf_marking-lines
                 then do :                                       
-                  ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+                  ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty).
                 end .
               end .
             end case .
