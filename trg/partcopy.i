@@ -437,7 +437,8 @@ procedure partcopy :
                         validate buf_marking-chk.
                       end .                                         
                     end .
-                    if buf_marking.unit-ext = "LEVEL1"
+                    if buf_marking.unit-ext = "LEVEL1" or 
+                       (buf_marking.unit-ext = ? and buf_marking.box-qnty > 1)
                     then do :
                       for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark :
                         find first buf_marking-lines-childs no-lock where buf_marking-lines-childs.mark       = buf_marking-childs.mark
@@ -561,7 +562,8 @@ procedure partcopy :
                     end.
                   end .                                         
                 end .
-                if buf_marking.unit-ext = "LEVEL1"
+                if buf_marking.unit-ext = "LEVEL1" or 
+                   (buf_marking.unit-ext = ? and buf_marking.box-qnty > 1)
                 then do :
                   for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark :
                     find first buf_marking-lines-childs no-lock where buf_marking-lines-childs.mark       = buf_marking-childs.mark

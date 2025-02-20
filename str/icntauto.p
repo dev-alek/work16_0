@@ -47,6 +47,7 @@ define buffer prev_rvs-line-pump  for ub.rvs-line-pump.
 define buffer prev_icnt-line      for ub.icnt-line.
 define buffer buf_icnt-doc        for ub.icnt-doc.
 define buffer buf_rvs-line        for ub.rvs-line.
+define buffer bf_pl-gds-pump      for ub.pl-gds-pump.
 
 define variable v-log           as logical    no-undo .
 define variable v-today         as date       no-undo .
@@ -173,18 +174,31 @@ on endkey undo _main-block, return error substitute( "&1. endkey", vss-workfile 
         tt-icnt-line.state-mh-cnt = cur_rvs-line-pump.state-mh-cnt
       .
     end.
+    
+    
       /* если электронный счетчик на текущую сверку меньше, чем показания на предыдущую сверку, то изменяем счетчик */
     if available prev_rvs-line-pump
-      and cur_rvs-line-pump.state-el-cnt < prev_rvs-line-pump.state-el-cnt
+    and cur_rvs-line-pump.state-el-cnt < prev_rvs-line-pump.state-el-cnt
     then do:
+      find first bf_pl-gds-pump no-lock where bf_pl-gds-pump.obj-type = cur_rvs-line-pump.obj-type
+                                          and bf_pl-gds-pump.obj-code = cur_rvs-line-pump.obj-code
+                                          and bf_pl-gds-pump.gds-code = cur_rvs-line-pump.gds-code
+                                          and bf_pl-gds-pump.pl-code  = cur_rvs-line-pump.pl-code
+                                          and bf_pl-gds-pump.pump-code = cur_rvs-line-pump.pump-code
+                                          no-error.
+      if available bf_pl-gds-pump
+      and bf_pl-gds-pump.status_ = {&blocked-status}
+      then do : end .
+      else
       assign
         tt-icnt-line.state-mh-cnt = tt-icnt-line.state-mh-cnt + get-overflow( prev_rvs-line-pump.state-el-cnt )
-
+      .
+      assign
         cur_rvs-line-pump.state-mh-cnt  = tt-icnt-line.state-mh-cnt
         cur_rvs-line-pump.state-mh-qnty = cur_rvs-line-pump.state-mh-cnt - prev_rvs-line-pump.state-mh-cnt
         cur_rvs-line-pump.meas-mh-cnt   = cur_rvs-line-pump.state-mh-cnt
         cur_rvs-line-pump.meas-mh-qnty  = cur_rvs-line-pump.state-mh-qnty
-        .
+      .
 
       end.
     end.

@@ -397,9 +397,9 @@ procedure data-print :
          tt-petrol.volue    = bf_rvs-line.state-measure-qnty * 0.001 /*Переводим из л в м3 */
          tt-petrol.density  = bf_rvs-line.state-density * 1000 /*Переводим из г/см3 в кг/м3 */
          tt-petrol.temp     = bf_rvs-line.state-temperature
-         tt-petrol.qnty     = round(bf_rvs-line.state-measure-cli-qnty,0)
+         tt-petrol.qnty     = round(bf_rvs-line.state-measure-cli-qnty,3)
          tt-petrol.volue-pl = bf_rvs-line.add-qnty * 0.001
-         tt-petrol.qnty1    = round((tt-petrol.volue-pl * tt-petrol.density),0)
+         tt-petrol.qnty1    = round((tt-petrol.volue-pl * tt-petrol.density),3)
          tt-petrol.pl-type  = "трубопровод"
          .
     find first c-rvs-doc no-lock where c-rvs-doc.rvs-code = bf_rvs-doc.rvs-code and c-rvs-doc.obj-code = bf_rvs-doc.obj-code and

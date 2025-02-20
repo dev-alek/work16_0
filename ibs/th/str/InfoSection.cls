@@ -850,6 +850,7 @@ class ibs.th.str.InfoSection:
     if inABTarir = 0
       then v-mouth = 0.
     else do:
+      FillTTSection(Diameter) .
       find first tt-section where decimal (tt-section.dif) > decimal (inABTarir) / 10 no-error.
       if error-status:error
       then do:
