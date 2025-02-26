@@ -81,12 +81,12 @@ if temp-str.aa-qnty <> 0 then do:
     sym6     temp-str.unit-base
 /*    &if "{1}" = "invent"                  &then sym8   temp-str.price-befor &endif*/
 /*    &if "{1}" = "invent-gold"             &then sym8 sym11   temp-str.price-befor temp-str.bb-price @ temp-str.Price-after  &endif*/
-/*    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                                          */
-/*    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                                          */
+    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                                          
+    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                                          
 /*    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                          */
-/*    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                          */
-    sym7     temp-str.price-befor
-    sym8     temp-str.b-qnty @ temp-str.a-qnty
+    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                          
+    &if "{1}" <> "sl" &then sym7     temp-str.price-befor &endif
+    &if "{1}" <> "sl" &then sym8     temp-str.b-qnty @ temp-str.a-qnty &endif
 /*    sym9     temp-str.bb-stoim @ temp-str.a-stoim*/
     sym9    temp-str.b-qnty
 /*    sym12    temp-str.b-stoim*/
@@ -102,12 +102,12 @@ if temp-str.aa-qnty <> 0 then do:
     sym6     temp-str.unit-base
 /*    &if "{1}" = "invent"                  &then sym8   0.00 @ temp-str.price-befor  &endif*/
 /*    &if "{1}" = "invent-gold"             &then sym8 sym11   0.00 @ temp-str.price-befor temp-str.price @ temp-str.Price-after  &endif*/
-/*    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                                              */
-/*    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                                              */
+    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                                              
+    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                                              
 /*    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                              */
-/*    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                              */
-    sym7     temp-str.price-befor
-    sym8     temp-str.aa-qnty @ temp-str.a-qnty
+    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                                              
+    &if "{1}" <> "sl" &then sym7     temp-str.price-befor &endif
+    &if "{1}" <> "sl" &then sym8     temp-str.aa-qnty @ temp-str.a-qnty &endif
 /*    sym9     temp-str.aa-stoim @ temp-str.a-stoim*/
     sym9    0.00 @ temp-str.b-qnty
 /*    sym12    0.00 @ temp-str.b-stoim*/
@@ -281,15 +281,15 @@ if p-grp = "no" then do:
     sym6     temp-str.unit-base
 /*    &if "{1}" = "invent"                  &then sym8    temp-str.price-befor   &endif*/
 /*    &if "{1}" = "invent-gold"             &then sym8 sym11   temp-str.price-befor temp-str.Price-after  &endif*/
-/*    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                      */
-/*    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                      */
+    &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                      
+    &if "{1}" = "sl-gold"                 &then sym8 sym11  sym15 UBL-v           &endif                      
 /*    &if "{1}" = "invent-gold"             &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                      */
-/*    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                      */
-    sym7    temp-str.price-befor
-    sym8     temp-str.a-qnty
-/*    sym9     temp-str.a-stoim*/
+    &if "{1}" = "sl-gold"                 &then temp-str.a-qnty1 temp-str.b-qnty1 &endif                      
+    &if "{1}" <> "sl" &then sym7    temp-str.price-befor &endif
+    &if "{1}" <> "sl" &then sym8    temp-str.a-qnty &endif
+    sym9     temp-str.a-stoim
     sym9    temp-str.b-qnty
-/*    sym12    temp-str.b-stoim*/
+    sym12    temp-str.b-stoim
     sym10  with FRAME {1}.
   DOWN stream Out-Stream 1 with FRAME {1} .
     if rep-tipe begins "invent"

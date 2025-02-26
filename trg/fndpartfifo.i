@@ -6,7 +6,7 @@ find {1} buf_parts
     and buf_parts.prod-code = buf_doc-line.prod-code
     and buf_parts.out-code  = v-rsrv-code
     and buf_parts.status_   = no
-    and buf_parts.fact-qnty > 0
+    and buf_parts.fact-qnty >= p-chg-qnty
     {2}
   use-index FIFO
   no-error.

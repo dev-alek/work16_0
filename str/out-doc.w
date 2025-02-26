@@ -1774,17 +1774,24 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
             if available (ub.marking)
               then 
             do:
-              create tt-marking-lines.
-              buffer-copy ub.marking-lines to tt-marking-lines.
-              tt-marking-lines.sts = ub.marking.sts.
-              tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
-              tt-marking-lines.sts-utd = ub.marking-lines.sts.
-              tt-marking-lines.stts-utd = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking-lines.sts).
-              tt-marking-lines.box-qnty = ub.marking.box-qnty .
-              tt-marking-lines.unit = ub.marking.unit .
-              tt-marking-lines.unit-ext = ub.marking.unit-ext .
-              tt-marking-lines.doc-level = ub.marking-lines.doc-level.
-              tt-marking-lines.mark-parent = ub.marking.mark-parent.
+              find first tt-marking-lines no-lock where
+                         tt-marking-lines.mark = ub.marking-lines.mark
+                   no-error.
+              if not avail tt-marking-lines or
+                 ub.marking.unit-ext <> "unit" then
+              do:   
+                  create tt-marking-lines.
+                  buffer-copy ub.marking-lines to tt-marking-lines.
+                  tt-marking-lines.sts = ub.marking.sts.
+                  tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
+                  tt-marking-lines.sts-utd = ub.marking-lines.sts.
+                  tt-marking-lines.stts-utd = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking-lines.sts).
+                  tt-marking-lines.box-qnty = ub.marking.box-qnty .
+                  tt-marking-lines.unit = ub.marking.unit .
+                  tt-marking-lines.unit-ext = ub.marking.unit-ext .
+                  tt-marking-lines.doc-level = ub.marking-lines.doc-level.
+                  tt-marking-lines.mark-parent = ub.marking.mark-parent.
+              end.
             end.
           end .
 

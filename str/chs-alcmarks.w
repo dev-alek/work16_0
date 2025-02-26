@@ -525,10 +525,8 @@ PROCEDURE calcMarks :
   define output parameter o-free-qnty as  integer   no-undo. 
   define output parameter o-scan-qnty as  integer   no-undo. 
   
-  define variable vGTIN     as character no-undo .
-  define variable vCodIdent as character no-undo.
   define buffer bf_gds-obj  for ub.gds-obj .
-  define buffer buf_marking-lines for ub.marking-lines .
+  define buffer buf_parts         for ub.parts .
 
   find first bf_gds-obj no-lock where bf_gds-obj.obj-type  = p-obj-type
                                   and bf_gds-obj.obj-code  = p-obj-code
@@ -539,16 +537,13 @@ PROCEDURE calcMarks :
   if available bf_gds-obj then
     o-free-qnty = bf_gds-obj.free-qnty .
 
-  for each buf_marking-lines no-lock where buf_marking-lines.obj-type = t_doc.obj-type
-                                       and buf_marking-lines.obj-code = t_doc.obj-code
-                                       and buf_marking-lines.gds-code = b_goods.gds-code
-                                       and buf_marking-lines.out-code = t_doc.doc-code
-                                       and buf_marking-lines.doc-level = 1
+  for each buf_parts no-lock where buf_parts.out-code  = t_doc.doc-code
+                               and buf_parts.obj-type  = t_doc.obj-type
+                               and buf_parts.obj-code  = t_doc.obj-code
+                               and buf_parts.artic     = b_goods.artic
+      
   :
-    vCodIdent = GetCodeIdent(buf_marking-lines.mark).
-    vGTIN = getGtinByDM(if vCodIdent <> ? and vCodIdent <> "" then vCodIdent else buf_marking-lines.mark) .
-    
-    o-scan-qnty = o-scan-qnty +  getQntyCodeByGtin(vGTIN) .
+    o-scan-qnty = o-scan-qnty +  buf_parts.qnty .
   end .
 
 END PROCEDURE.
@@ -835,6 +830,13 @@ PROCEDURE save_update :
       run dispmessage (" ћ добавлен в документ ранее").
       return .
     end . 
+
+    if bf_bar-code.cli-base-rate <> 1 and can-do({&expense_write-off}, t_doc.doc-type) and
+       v-free-qnty < bf_bar-code.cli-base-rate then
+    do: /* отсканирована упаковка и док-т расхода или списани€ и кол-во в упаковке < книжного остатка*/
+        run dispmessage ("ћарка групповой упаковки не может быть добавлена в документ, т.к. будет превышено количество товара по документу.~n—канируйте потребительские упаковки").
+        return.
+    end.
 
     find first marking where marking.mark begins vcodident
       and vcodident > ""
