@@ -243,7 +243,7 @@ on error undo, return error
   define variable sym8  as character initial ":"   no-undo.
   define variable sym9  as character initial ":"   no-undo.
   define variable sym10 as character initial ":"   no-undo.
-/*  define variable sym11 as character initial ":"   no-undo.*/
+  define variable sym11 as character initial ":"   no-undo.
   define variable sym12 as character initial ":"   no-undo.
   define variable sym13 as character initial ":"   no-undo.
   define variable sym14 as character initial ":"   no-undo.
@@ -333,75 +333,75 @@ on error undo, return error
 /*        UndLine format {&format-inv-gold} AT 1                                                                                    */
 /*        with width {&DOS_CW_2} down stream-io use-text NO-BOX.                                                                    */
 /*                                                                                                                                  */
-/*DEFINE FRAME sl                                                                                                                   */
-/*        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)                                                                     */
-/*        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)                                                       */
-/*        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)                                                 */
-/*        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)                                  */
-/*        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.b-code COLUMN-LABEL "Код товара! ! ! ! ":C13 format "X(13)" space(0)                                             */
-/*        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)                                               */
-/*        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)                                                              */
-/*        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)                                        */
-/*        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.a-qnty COLUMN-LABEL "Излишек!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)                               */
-/*        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)                                 */
-/*        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*        temp-str.b-qnty COLUMN-LABEL "Недостача!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)                             */
-/*        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)                               */
-/*        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*        temp-str.UBL COLUMN-LABEL "Списано!в пределах!норм!естественной!убыли":C13 format "->>>>>>>>>.<<" space(0)                */
-/*        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*       HEADER                                                                                                                     */
-/*        cur-time-print() AT 5 format "X(35)"                                                                                      */
-/*        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"   */
-/*        string( pp ) AT 130 format "X(29)"                                                                                        */
-/*        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP                              */
-/*        UndLine format {&format-sl} AT 1                                                                                          */
-/*        with width {&DOS_CW_2} down stream-io use-text NO-BOX.                                                                    */
-/*                                                                                                                                  */
-/*DEFINE FRAME sl-gold                                                                                                              */
-/*        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)                                                                     */
-/*        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)                                                       */
-/*        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)                                                 */
-/*        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)                                  */
-/*        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.b-code COLUMN-LABEL "Проба! ! ! ! " format "X(3)" space(0)                                                       */
-/*        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)                                               */
-/*        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)                                                              */
-/*        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)                                        */
-/*        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.a-qnty COLUMN-LABEL "Изл!-------------!Количество !осн.ед.изм ! " format "->>>>>>>9.<<<" space(0)                */
-/*        sym8 column-label "и!-!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.a-qnty1 COLUMN-LABEL "шек          !-------------!Количество ! ! " format "->>>>>>>9.<<<" space(0)               */
-/*        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                      */
-/*        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C16 format "->>>,>>>,>>9.99" space(0)                                 */
-/*        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*        temp-str.b-qnty COLUMN-LABEL "         Недос!--------------!Количество!осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)  */
-/*        sym11 column-label "т!-!:!:!:" format "X(1)" space(0)                                                                     */
-/*        temp-str.b-qnty1 COLUMN-LABEL "ача         !------------!Количество! ! ":C12 format "->>>>>>>9.<<<" space(0)              */
-/*        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)                               */
-/*        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*        temp-str.UBL COLUMN-LABEL   "Списано   !норм ес! !------------!осн.ед.изм":R12 format "->>>>>>>>>.<<" space(0)            */
-/*        sym15 column-label         "в!т! !-!:" format "X(1)" space(0)                                                             */
-/*        UBL-v COLUMN-LABEL "   пределах!ественной!убыли!------------! ":L12 format "->>>>>>>>>.<<" space(0)                       */
-/*        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)                                                                     */
-/*       HEADER                                                                                                                     */
-/*        cur-time-print() AT 5 format "X(35)"                                                                                      */
-/*        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"   */
-/*        string( pp ) AT 130 format "X(29)"                                                                                        */
-/*        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP                              */
-/*        UndLine format {&format-sl-gold} AT 1                                                                                     */
-/*        with width {&DOS_CW_2} down stream-io use-text NO-BOX.                                                                    */
+DEFINE FRAME sl
+        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)
+        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)
+        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)
+        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)
+        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.b-code COLUMN-LABEL "Код товара! ! ! ! ":C13 format "X(13)" space(0)
+        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)
+        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)
+        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)
+        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.a-qnty COLUMN-LABEL "Излишек!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)
+        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)
+        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.b-qnty COLUMN-LABEL "Недостача!Количество! ! ! ":C12 format "->>>>>>>9.<<<" space(0)
+        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)
+        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.UBL COLUMN-LABEL "Списано!в пределах!норм!естественной!убыли":C13 format "->>>>>>>>>.<<" space(0)
+        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)
+       HEADER
+        cur-time-print() AT 5 format "X(35)"
+        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"
+        string( pp ) AT 130 format "X(29)"
+        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP
+        UndLine format {&format-sl} AT 1
+        with width {&DOS_CW_2} down stream-io use-text NO-BOX.
+
+DEFINE FRAME sl-gold
+        sym1 column-label ":!:!:!:!:"  format "X(1)" space(0)
+        Lines_Counter COLUMN-LABEL "N!п/п! ! ! ":C5 format ">>>>9" space(0)
+        sym2 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.artic COLUMN-LABEL "Артикул! ! ! ! ":C17 format "X(17)" space(0)
+        sym3 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.gds-name COLUMN-LABEL "Наименование товара! ! ! ! ":C40 format "X(40)" space(0)
+        Sym4 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.b-code COLUMN-LABEL "Проба! ! ! ! " format "X(3)" space(0)
+        sym5 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.OKEI COLUMN-LABEL "Ед.!----!Код ! по !ОКЕИ" format ">>>>" space(0)
+        sym6 column-label         " !-!:!:!:" format "X(1)" space(0)
+        temp-str.unit-base COLUMN-LABEL  "изм.!----!Наим!енов!ание" format "X(4)" space(0)
+        sym7 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.a-qnty COLUMN-LABEL "Изл!-------------!Количество !осн.ед.изм ! " format "->>>>>>>9.<<<" space(0)
+        sym8 column-label "и!-!:!:!:" format "X(1)" space(0)
+        temp-str.a-qnty1 COLUMN-LABEL "шек          !-------------!Количество ! ! " format "->>>>>>>9.<<<" space(0)
+        sym9 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.a-stoim COLUMN-LABEL "Излишек!Сумма! ! ! ":C16 format "->>>,>>>,>>9.99" space(0)
+        sym10 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.b-qnty COLUMN-LABEL "         Недос!--------------!Количество!осн.ед.изм! ":C14 format "->>>>>>>9.<<<" space(0)
+        sym11 column-label "т!-!:!:!:" format "X(1)" space(0)
+        temp-str.b-qnty1 COLUMN-LABEL "ача         !------------!Количество! ! ":C12 format "->>>>>>>9.<<<" space(0)
+        sym12 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.b-stoim COLUMN-LABEL "Недостача!Сумма! ! ! ":C15 format "->>>,>>>,>>9.99" space(0)
+        sym14 column-label ":!:!:!:!:" format "X(1)" space(0)
+        temp-str.UBL COLUMN-LABEL   "Списано   !норм ес! !------------!осн.ед.изм":R12 format "->>>>>>>>>.<<" space(0)
+        sym15 column-label         "в!т! !-!:" format "X(1)" space(0)
+        UBL-v COLUMN-LABEL "   пределах!ественной!убыли!------------! ":L12 format "->>>>>>>>>.<<" space(0)
+        sym13 column-label ":!:!:!:!:" format "X(1)" space(0)
+       HEADER
+        cur-time-print() AT 5 format "X(35)"
+        string( "Сличительная ведомость N " + tdoc-code + "  от  " + string ( tdoc-date , "99/99/9999" ) ) AT 47 format "X(63)"
+        string( pp ) AT 130 format "X(29)"
+        string( "Лист " + string( PAGE-NUMBER(Out-Stream) - 1, ">>>>9") ) AT 160 format "X(13)" SKIP
+        UndLine format {&format-sl-gold} AT 1
+        with width {&DOS_CW_2} down stream-io use-text NO-BOX.
 
   FIND buf_trn-doc WHERE recid(buf_trn-doc) = rec_id NO-LOCK .
   assign
@@ -648,6 +648,7 @@ end procedure. /* print-prod */
 
 procedure print-line :
   do on error undo, return error return-value :
+
     case rep-tipe :
       when "invent"      THEN DO:  { rep/inv31.i invent      {&format-inv}      }  End.
       when "invent-gold" THEN DO:  { rep/inv31.i invent-gold {&format-inv-gold} }  End.
