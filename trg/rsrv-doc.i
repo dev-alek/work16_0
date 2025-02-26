@@ -794,7 +794,6 @@ procedure rsrv-doc :
       end.
     end.
 
-
     assign
       p-chg-qnty      = p-chg-qnty      - abs(v-real-chg-qnty) * v-chg-qnty-sign
       p-real-chg-qnty = p-real-chg-qnty + abs(v-real-chg-qnty) * v-chg-qnty-sign
@@ -1780,6 +1779,12 @@ procedure rsrv-doc :
 
           if not available buf_parts
           then do:
+            if vIsExemplarGoods then
+            do:  /* если помарочный учет и партия не найдена */
+              message "Просканирована групповая упаковка, не найдено партий для списания.~nНеобходимо сканировать потребительские упаковки"
+                view-as alert-box. 
+              leave rsrv_cycle .  
+            end.
             assign
               v-rsrv-index = v-rsrv-index + 1
             .
