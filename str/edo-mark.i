@@ -140,8 +140,9 @@ function addMarkforUtd returns recid
            marking.unit       = getLevelUTDByCodId(marking.mark)
          .
 /*         marking.unit-ext = utd-lines.UnitCode .*/
-         if       marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB
-            or (     iUtdType eq "UniversalTransferDocument"
+         /* BTS-1134: не понятно, зачем статус марки с "Ошибка" меняется на ? */
+         if       /*marking.sts = objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB
+            or*/ (     iUtdType eq "UniversalTransferDocument"
                   and marking.sts = objSrv:Env:marking:Sts:Mark:NotAvailable:KeyIntDB)
          then
             marking.sts = ?.                  
