@@ -836,6 +836,13 @@ PROCEDURE save_update :
       return .
     end . 
 
+    if bf_bar-code.cli-base-rate <> 1 and can-do({&expense_write-off}, t_doc.doc-type) and
+       v-free-qnty < bf_bar-code.cli-base-rate then
+    do: /* отсканирована упаковка и док-т расхода или списани€ и кол-во в упаковке < книжного остатка*/
+        run dispmessage ("ћарка групповой упаковки не может быть добавлена в документ, т.к. будет превышено количество товара по документу.~n—канируйте потребительские упаковки").
+        return.
+    end.
+
     find first marking where marking.mark begins vcodident
       and vcodident > ""
       no-lock no-error  .
