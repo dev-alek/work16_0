@@ -120,6 +120,7 @@ define variable vss-description as character no-undo initial "Задание док. и фак
 { gbl/getsect.i  def }
 { gbl/key-rec.i  }
 { cmp/ini-lib.i  }
+{ utl/gtin.i }
 
 /* Local Variable Definition -- For  r s r v - o u t . i */
 define variable chg-qnty     like ub.gds-dtl.doc-qnty no-undo initial ?.
@@ -2348,6 +2349,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define buffer buf_doc-pl   for ub.doc-pl.
   define buffer buf_currency for ub.currency  .
   define buffer buf_doc-pl-attr for ub.doc-pl-attr .
+
+  define variable vGtin     as character no-undo.
+  define variable vGtinQnty as integer no-undo.
   
   if num-entries(prt-mode, {&delim-par}) = 2
   then do :
@@ -3113,7 +3117,7 @@ end.
                 disable ub.gds-dtl.doc-qnty with frame {&frame-name}.
             end.
         end.
-                
+
         if node-type begins "scan-marks" then do:
           
           find first buf_marking no-lock where buf_marking.mark begins entry(2,node-type,{&delim-key}) no-error .
@@ -3149,10 +3153,18 @@ end.
               message "Марка " buf_marking.mark " не в свободной зоне!" view-as alert-box .
               undo, return error .
             end . 
+            
+            
+            if buf_marking.box-qnty = 0 then
+            do:
+              vGtin     = getGtinByDM(buf_marking.mark) .
+              vGtinQnty = getQntyCodeByGtin(vGtin).
+            end.
+
             case buf_marking.unit-ext : 
               when "LEVEL2"
               then do : 
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty).
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + if buf_marking.box-qnty <> 0 then buf_marking.box-qnty else vGtinQnty).
               end .
               when "LEVEL1"
               then do :
@@ -3169,8 +3181,8 @@ end.
                                                        and buf_marking-lines.out-code = ub.gds-dtl.doc-code
                                                        no-error .
                 if not available buf_marking-lines
-                then do :                                       
-                  ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty).
+                then do :
+                  ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + if buf_marking.box-qnty <> 0 then buf_marking.box-qnty else vGtinQnty).
                 end .
               end .
             end case .
