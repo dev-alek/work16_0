@@ -926,22 +926,22 @@ PROCEDURE init-temp :
       f-obj-type = buf_marking.obj-type .
       f-loc-key = buf_marking.loc-key .
      for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "MRC"
-                                          and buf_marking-attr.mark begins buf_marking.mark:
+                                          and buf_marking-attr.mark begins v-marking:
         mrc = buf_marking-attr.attr-value .                                              
      end.                                                
      for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "emissionDate"
-                                          and buf_marking-attr.mark begins buf_marking.mark:
+                                          and buf_marking-attr.mark begins v-marking:
         emission_Date = buf_marking-attr.attr-value .                                              
      end.                                  
      for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "producedDate"
-                                          and buf_marking-attr.mark begins buf_marking.mark:
+                                          and buf_marking-attr.mark begins v-marking:
         produced_Date = buf_marking-attr.attr-value .                                              
      end.                                       
      for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"
-                                          and buf_marking-attr.mark begins buf_marking.mark:
+                                          and buf_marking-attr.mark begins v-marking:
         online-check = logical(buf_marking-attr.attr-value).                                              
      end.                                       
-      for each buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark:
+      for each buf_marking-lines no-lock where buf_marking-lines.mark begins v-marking:
         /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
         create X_marking-line .
         buffer-copy buf_marking-lines to X_marking-line .
@@ -955,7 +955,7 @@ PROCEDURE init-temp :
         end.
         
       end.  
-      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark = buf_marking.mark:
+      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark begins v-marking:
         for first buf_utd no-lock where buf_utd.doc-id = buf_utd-marking-lines.doc-id and buf_utd.db-num = buf_utd-marking-lines.db-num:  
         create X_marking-line .
         assign
