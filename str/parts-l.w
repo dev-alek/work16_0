@@ -76,6 +76,7 @@ define variable vss-description as character no-undo init "ѕросмотр/–едактирован
 { gbl/clntattr.i }
 { ref/gds-attr.i }
 { str/temp_upd.i }
+{ utl/gtin.i }
 /* параметры резервировани€, передаютс€ в закодированном значении через p-r-parts */
 define variable v-need-reserv          as logical   no-undo .
 define variable v-need-check-diff-qnty as logical   no-undo .
@@ -1755,6 +1756,8 @@ DO:
   { gbl/stdbtn.i }
 
 define variable p-mode as char no-undo.
+define variable vGtin       as character no-undo.
+define variable vGtinQnty   as integer   no-undo.
 
 p-mode = {&lookup}.
 
@@ -1781,6 +1784,14 @@ if available (buf_goods) then do:
       find first buf_marking no-lock where buf_marking.mark = buf_marking-lines.mark no-error .
       if available buf_marking
       then do :
+        if buf_marking.box-qnty = 0 then
+        do:
+          vGtin     = getGtinByDM(buf_marking.mark) .
+          vGtinQnty = getQntyCodeByGtin(vGtin).
+        end.
+        else
+          vGtinQnty = buf_marking.box-qnty.
+      
         create tt-marking-lines .
         assign
           tt-marking-lines.stts        = StatusTHName(buf_marking.sts)
@@ -1791,7 +1802,7 @@ if available (buf_goods) then do:
           tt-marking-lines.sts         = buf_marking.sts 
           tt-marking-lines.unit        = buf_marking.unit
           tt-marking-lines.unit-ext    = buf_marking.unit-ext
-          tt-marking-lines.box-qnty    = buf_marking.box-qnty
+          tt-marking-lines.box-qnty    = vGtinQnty
           tt-marking-lines.doc-level   = buf_marking-lines.doc-level
           tt-marking-lines.in-code     = parts.in-code
           tt-marking-lines.out-code    = parts.out-code

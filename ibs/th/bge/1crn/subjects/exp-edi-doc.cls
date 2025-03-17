@@ -54,7 +54,7 @@ class ibs.th.bge.1crn.subjects.exp-edi-doc inherits send1cerpsub:
       if not valid-handle (oldbh)
       then
          return error "Не передан старый буфер".
-      if oldbh:table ne "utd"
+      if oldbh:table ne "utd" AND oldbh:table ne "tt-utd"
       then 
          return error "Старый буфер не utd: " + oldbh:table.
       return.

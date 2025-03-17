@@ -99,6 +99,7 @@ DEFINE VARIABLE v-time as integer no-undo .
 define variable v-taxvalue as decimal no-undo .
 define variable v-bc-mode as character no-undo .
 define variable ii as integer no-undo .
+
 define variable par-recid-fbr as recid no-undo .
 define buffer buf-clients for clients.
 
@@ -533,6 +534,12 @@ end.
 
 
   /* ----- баркоды товара ----- */
+
+  DEFINE TEMP-TABLE ttKF NO-UNDO
+  FIELD bar_code  AS INTEGER
+  FIELD unit_code AS CHARACTER
+  FIELD coef      AS INTEGER.
+
   v-barcode-list = "" .
   v-barcodes = p-GdsObj:barcode .
   if valid-object (v-barcodes)
@@ -543,10 +550,15 @@ end.
            ub.goods.gds-code = base-bar-code.gds-code.
       find ub.gds-prt no-lock where
            ub.gds-prt.node-code = base-bar-code.node-code.
+
       ii_ :
+
       do ii = 1 to v-barcodes:iCounter:
+
         v-barcodes:Get(ii) .
         v-barcode = cast (v-barcodes:SubjectObjCurr, goods_barcode).
+
+
          if length (v-barcode:bcode) <= 2
          then do :
               next ii_ .
@@ -557,8 +569,11 @@ end.
         v-barcode-list = v-barcode-list + v-barcode:bcode + "," .
         v-bc-mode = "".
         find first ub.prod-bc exclusive-lock where ub.prod-bc.b-str = v-barcode:bcode no-error.
+
         if not available ub.prod-bc
         then do :
+
+      
             v-bc-mode = {&add-def} .
         end.
         else do :
@@ -569,16 +584,26 @@ end.
                 ("Ошибка при определении баркода для собственного кода " +
                  v-barcode:bcode + " . Товар " + p-GdsObj:code_) .
             end.
+
             else do :               
                /* проверяем совпадение кода товара и ед.изм. */
               if ub.bar-code.gds-code = v-gds-code
               and ub.bar-code.unit-cli = v-barcode:unit-code
               then do :                 
+
+              CREATE ttKF.
+              ASSIGN 
+              ttKF.bar_code   = ub.bar-code.b-code
+              ttKF.unit_code  = v-barcode:unit-code
+              ttKF.coef       = v-barcode:coeff
+              .
+
                   ub.prod-bc.bc-on = true .
                   ub.prod-bc.bc-on-type = (if p-GdsObj:gds-type = "н" then {&loc-pt-code} else if v-barcode:barcode-type = 1 then {&gtin} else "").
                   v-b-str = v-barcode:bcode .
                   def var vmaken as logical no-undo.
                   vmaken = if v-barcode:barcode-type = 2 then yes else no.
+
                   find first prod-bc-attr where prod-bc-attr.b-str     eq v-b-str
                                             and prod-bc-attr.b-code    eq bar-code.b-code
                                            and prod-bc-attr.attr-code eq {&mark}
@@ -615,9 +640,12 @@ end.
                   next ii_ .
               end. 
               else do :                 
+
 /*                  undo, return error                                                      */
 /*                  ("Уже есть собственный код " + v-barcode:bcode +                        */
 /*                   " и он пренадлежит другому товару - " + string(ub.bar-code.gds-code)) .*/
+
+
                 delete ub.prod-bc no-error .
                 if error-status:error
                 then do :
@@ -635,9 +663,11 @@ end.
             find first ub.bar-code where ub.bar-code.gds-code = v-gds-code
                                      and ub.bar-code.unit-cli = v-barcode:unit-code 
                                      no-error.
+
             if not available ub.bar-code 
             then do :                                        
                 run ref/barcode1.p (
+
                                      input v-bc-mode 
                                     ,input yes /*p-silent*/
                                     ,input ""
@@ -760,6 +790,9 @@ end.
         end.
       end.
   end.
+
+
+
   
   for each buf_bar-code no-lock where buf_bar-code.gds-code = v-gds-code,
     each buf_prod-bc exclusive-lock where buf_prod-bc.b-code = buf_bar-code.b-code :
@@ -769,6 +802,66 @@ end.
        buf_prod-bc.bc-on = false .  
      end.
   end.
+
+/* BTS-1372 
+Для каждого собственного кода (ЕИ которого есть в пакете), проверить, что в пакете у всех 
+записей (бар-кодов) с ЕИ, привязанной к этому собственному коду, указан одинаковый коэффициент.
+Если да, то необходимо изменить коэффициент данного собственного кода на указанный в 
+пакете (секция barcodes тег coeff). 
+*/
+
+   DEFINE VARIABLE current-coef AS INTEGER   NO-UNDO.
+   DEFINE VARIABLE unit-list    AS CHARACTER NO-UNDO.
+   DEFINE TEMP-TABLE ttToDel
+   FIELD unit_code AS CHARACTER.
+   FOR EACH ttKF NO-LOCK
+       BREAK BY ttKF.unit_code:
+       IF FIRST-OF(ttKF.unit_code) THEN DO:
+           ASSIGN current-coef = ttKF.coef.
+       END.
+       IF ttKF.coef <> current-coef THEN DO:
+            CREATE ttToDel.
+            ttToDel.unit_code = ttKF.unit_code .
+           LEAVE.
+       END.
+   END.
+    unit-list = "" .
+    FOR EACH ttToDel:
+    FOR EACH ttKF WHERE ttToDel.unit_code = ttKF.unit_code:
+        unit-list = unit-list + ttToDel.unit_code + " = " + string(ttKF.coef) + " " .
+        DELETE ttKF.
+    END.
+    END.
+
+/*    if unit-list <> "" then do:
+    message "Ошибка" unit-list  view-as alert-box.
+    end. */
+
+/*    if unit-list <> "" then do:
+          v-err-mess = substitute("Ошибка изменения коэфф у ед.изм. &1", unit-list).
+          undo, return error v-err-mess .     
+    end. */ 
+    run str/imp2cdgeth.p(output mImp2CdH).
+    FOR EACH ttKF:
+    FIND FIRST ub.bar-code exclusive-lock WHERE ub.bar-code.b-code = ttKF.bar_code no-error.
+        if available (ub.bar-code) then do:  
+            find first ub.goods no-lock where ub.bar-code.gds-code = ub.goods.gds-code 
+                 and ub.bar-code.unit-cli <> goods.unit-base no-error.
+               if available ub.goods 
+               then  do:  
+                  ub.bar-code.cli-base-rate = ttKF.coef .
+                  run fill-g-list in mImp2CdH  ( input ub.goods.gds-code, input ?, input ?).
+               END. 
+        END.
+    END.
+
+
+
+
+   EMPTY TEMP-TABLE ttKF.
+   EMPTY TEMP-TABLE ttToDel.
+
+
   /* ----- end_of баркоды товара ----- */
   
   /* ----- дополнительные единицы измерения товара ----- */

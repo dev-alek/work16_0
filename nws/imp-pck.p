@@ -78,6 +78,7 @@ if transaction then do:
 /*  return error substitute( "&1. Вызов данной процедуры невозможен при наличии транзакции", vss-workfile ).*/
 end.
 
+run str/imp2cdseth.p(this-procedure).
 
 main_block:
 do

@@ -1729,6 +1729,8 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
     define variable v-type      as integer   no-undo .
     define variable v-fact-qnty as integer   no-undo .
     define variable v-fact-part as integer   no-undo .
+    define variable vGtin       as character no-undo.
+    define variable vGtinQnty   as integer   no-undo.
     
     define buffer buf_doc-line for ub.doc-line.
     define buffer buf_gds-dtl  for ub.gds-dtl.
@@ -1780,13 +1782,22 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
               if not avail tt-marking-lines or
                  ub.marking.unit-ext <> "unit" then
               do:   
+                  if ub.marking.box-qnty = 0 then
+                  do:
+                    vGtin     = getGtinByDM(ub.marking.mark) .
+                    vGtinQnty = getQntyCodeByGtin(vGtin).
+                  end.
+                  else
+                    vGtinQnty = ub.marking.box-qnty.
+                  
                   create tt-marking-lines.
+
                   buffer-copy ub.marking-lines to tt-marking-lines.
                   tt-marking-lines.sts = ub.marking.sts.
                   tt-marking-lines.stts = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts).
                   tt-marking-lines.sts-utd = ub.marking-lines.sts.
                   tt-marking-lines.stts-utd = objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking-lines.sts).
-                  tt-marking-lines.box-qnty = ub.marking.box-qnty .
+                  tt-marking-lines.box-qnty = vGtinQnty .
                   tt-marking-lines.unit = ub.marking.unit .
                   tt-marking-lines.unit-ext = ub.marking.unit-ext .
                   tt-marking-lines.doc-level = ub.marking-lines.doc-level.

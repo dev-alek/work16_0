@@ -3539,8 +3539,8 @@ procedure change_mark_sts_trn-doc:
            and buf_marking-lines.obj-type = iObjType
            and buf_marking-lines.obj-code = iObjCode
       :
-        for each buf_marking exclusive-lock where 
-                 buf_marking.mark = buf_marking-lines.mark:
+        for first buf_marking exclusive-lock where 
+                 buf_marking.mark begins buf_marking-lines.mark:
           CHNG:
           do vCount = 1 to num-entries(iStatus):
               vElem = entry(vCount,iStatus).
@@ -3549,6 +3549,7 @@ procedure change_mark_sts_trn-doc:
                   buf_marking.sts = integer(entry(2,vElem,":")).
                   buf_marking-lines.sts = buf_marking.sts. 
                   validate buf_marking.
+                  leave CHNG.
               end.
           end.
         end.
