@@ -1793,7 +1793,7 @@ procedure rsrv-doc :
 
           if not available buf_parts
           then do:
-            if vIsExemplarGoods then
+            if vIsExemplarGoods and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}) then
             do:  /* если помарочный учет и партия не найдена */
               message "Просканирована групповая упаковка, не найдено партий для списания.~nНеобходимо сканировать потребительские упаковки"
                 view-as alert-box. 
