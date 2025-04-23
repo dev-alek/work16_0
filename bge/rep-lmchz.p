@@ -63,11 +63,15 @@ DEFINE TEMP-TABLE ttreport-header NO-UNDO
   
  DEFINE TEMP-TABLE ttreplicationStatus NO-UNDO    
    XML-NODE-NAME "replicationStatus"
-   FIELD reqid        AS RECID SERIALIZE-HIDDEN           
-   FIELD f_status AS CHAR XML-NODE-NAME "status"
-   FIELD f_version    AS CHAR XML-NODE-NAME "version"
-   FIELD timeLag AS CHAR
-   FIELD onlineTime AS CHAR
+   FIELD reqid      AS RECID     SERIALIZE-HIDDEN           
+   FIELD f_status   AS CHARACTER XML-NODE-NAME "status"
+   FIELD f_version  AS CHARACTER XML-NODE-NAME "version"   
+   FIELD lastUpdate AS CHARACTER 
+   FIELD lastSync   AS CHARACTER 
+   FIELD inst       AS CHARACTER 
+   FIELD vers       AS CHARACTER XML-NODE-NAME "dbVersion"
+   FIELD timeLag    AS CHARACTER
+   FIELD onlineTime AS CHARACTER
    INDEX reqidpar reqid 
    .
    
@@ -173,11 +177,20 @@ PROCEDURE CalcStatus:
     DEFINE VARIABLE vOnlineTimeD AS DECIMAL NO-UNDO.
     DEFINE VARIABLE vOnlineTime AS INT64    NO-UNDO.
     DEFINE VARIABLE vTimeBegErr AS DATETIME-TZ NO-UNDO.
+    DEFINE VARIABLE vlastUpdate AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vLastSync   AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vInst       AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vdbVersion  AS CHARACTER NO-UNDO.
     
     DEFINE BUFFER buf_code FOR ub.code.
 
     thGisMtOff =  NEW GisMtOffline() NO-ERROR.           
-    vStatus = thGisMtOff:GetChkStsOffline(OUTPUT v-version, OUTPUT vTimeLag) NO-ERROR.
+    vStatus = thGisMtOff:GetChkStsOffline(OUTPUT v-version, 
+                                          OUTPUT vTimeLag, 
+                                          OUTPUT vlastUpdate, 
+                                          OUTPUT vLastSync, 
+                                          OUTPUT vInst, 
+                                          OUTPUT vdbVersion) NO-ERROR.
     
     /* Проверяем, зафиксирован ли сбой онлайн-проверки */    
     FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
@@ -197,7 +210,15 @@ PROCEDURE CalcStatus:
     END.
     ELSE vOnlineTime = 0.
        
-    RUN Put2Xml (iDirName, vStatus, v-version, vTimeLag, STRING(vOnlineTime)) NO-ERROR.  
+    RUN Put2Xml (iDirName, 
+                 vStatus, 
+                 v-version, 
+                 vTimeLag, 
+                 STRING(vOnlineTime),
+                 vlastUpdate, 
+                 vLastSync, 
+                 vInst, 
+                 vdbVersion) NO-ERROR.  
       
 END PROCEDURE.
 
@@ -207,6 +228,10 @@ PROCEDURE Put2Xml:
     DEFINE INPUT PARAMETER iVersion AS CHARACTER NO-UNDO.
     DEFINE INPUT PARAMETER iTimeLag AS CHARACTER NO-UNDO.
     DEFINE INPUT PARAMETER iOnlineTime AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER vlastUpdate AS CHARACTER NO-UNDO. 
+    DEFINE INPUT PARAMETER vLastSync AS CHARACTER NO-UNDO. 
+    DEFINE INPUT PARAMETER vInst AS CHARACTER NO-UNDO. 
+    DEFINE INPUT PARAMETER vdbVersion AS CHARACTER NO-UNDO.
     
     DEFINE VARIABLE vFileResult AS CHARACTER NO-UNDO.
     DEFINE VARIABLE vFileName AS CHARACTER NO-UNDO.
@@ -257,11 +282,15 @@ PROCEDURE Put2Xml:
         
     CREATE ttreplicationStatus.
     ASSIGN 
-       ttreplicationStatus.reqid = 1
-       ttreplicationStatus.f_status = iStatus 
-       ttreplicationStatus.f_version = iVersion
-       ttreplicationStatus.timeLag = iTimeLag
-       ttreplicationStatus.OnlineTime = iOnlineTime
+       ttreplicationStatus.reqid      = 1
+       ttreplicationStatus.f_status   = iStatus 
+       ttreplicationStatus.f_version  = iVersion
+       ttreplicationStatus.timeLag    = iTimeLag
+       ttreplicationStatus.onlineTime = iOnlineTime
+       ttreplicationStatus.lastUpdate = vlastUpdate    
+       ttreplicationStatus.lastSync   = vLastSync
+       ttreplicationStatus.inst       = vInst                
+       ttreplicationStatus.vers       = vdbVersion      
        .
     vRetOk = DATASET gismt-report-body:WRITE-XML("FILE":U, vfileresult, TRUE, "windows-1251", ?, FALSE, TRUE ,FALSE,TRUE ) no-error.
     
