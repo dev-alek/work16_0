@@ -375,16 +375,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       when objImp:debit <> ? 
       tt-cashbook.RuleOsnRko        = objImp:Rule-Osn-Rko        
       when objImp:Rule-Osn-Rko <> ?
-      tt-cashbook.cli-type          = {&cmp}                     
-      when objImp:code-payer <> ?
-      tt-cashbook.cli-code          = objImp:code-payer          
-      when objImp:code-payer-nonop-inc <> ?
-      tt-cashbook.Vnecli-type       = {&cmp}
-      tt-cashbook.Vnecli-code       = objImp:code-payer-nonop-inc     
-      tt-cashbook.Avanscli-type       = {&cmp}
-      when objImp:code-payer-prepayment <> ?
-      tt-cashbook.Avanscli-code       = integer(objImp:code-payer-prepayment)  
-      when objImp:code-payer-prepayment <> ?
+      tt-cashbook.cli-type          = {&cmp}       
+            when objImp:code-payer-prepayment <> ?
       tt-cashbook.RulePril          = string(objImp:rule-att)    
       when objImp:rule-att <> ?
       tt-cashbook.FlagSepCash       = (objImp:ind-kass-pko = 1)  
@@ -425,10 +417,22 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       when objImp:Corr-inkass  <> ?
       tt-cashbook.BasisIncas        = objImp:rule-osn-incass     
       when objImp:rule-osn-incass  <> ?
-      tt-cashbook.Status_           = objImp:del-l
+      tt-cashbook.Status_           = objImp:del-l 
       /* tt-cashbook.Status_      = 0:"“екущий", 1:"”даленный"
          - при создании заполн€етс€ значением по умолчанию, при обновлении остаЄтс€ в прежнем значении */
-      .
+      .      
+            
+      if objImp:code-payer <> ? then
+      tt-cashbook.cli-code          = objImp:code-payer   .       
+
+      if objImp:code-payer-nonop-inc <> ? then
+      assign
+      tt-cashbook.Vnecli-type       = {&cmp}
+      tt-cashbook.Vnecli-code       = objImp:code-payer-nonop-inc     
+      tt-cashbook.Avanscli-type       = {&cmp} .
+      if objImp:code-payer-prepayment <> ? then
+      tt-cashbook.Avanscli-code       = integer(objImp:code-payer-prepayment)  .
+
     assign
       tt-cashbook.rule-osn-transf = objImp:rule-reason         
       when objImp:rule-reason <> ?  and tt-cashbook.id ne 0

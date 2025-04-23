@@ -27,16 +27,18 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
   
   define temp-table ttstatus-body  no-undo /*serialize-name  "bodys" */
   xml-node-name "body"
-   field f_version    as char XML-NODE-NAME "version"
-   field f_status     as char XML-NODE-NAME "status"
+   field f_version        as character XML-NODE-NAME "version"
+   field f_status         as character XML-NODE-NAME "status"
    field requiresDownload as log 
-   field operationMode as char
-   field name as char 
-   field lastSync as int64
-   field inst as char 
-   field reqid        as recid serialize-hidden
-   field errorcode as char
-   field reason as char  
+   field operationMode    as character
+   field name             as character
+   field lastSync         as character
+   field inst             as character   
+   field errorcode        as character
+   field reason           as character  
+   field lastUpdate       as character 
+   field vers             as character XML-NODE-NAME "dbVersion"
+   field reqid            as recid     serialize-hidden
    index reqidpar reqid 
    .
    
@@ -126,11 +128,19 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    /* Запрос статуса ЛМ ЧЗ из отчета */  
    method public character GetChkStsOffline (
        output oVersion as character,
-       output oTimeLag as character):
+       output oTimeLag as character,
+       output olastUpdate as character, 
+       output oLastSync as character, 
+       output oInst as character, 
+       output odbVersion as character
+       ):
            
        define variable vStatus as character no-undo.
        define variable vTimeLag as int64   no-undo.
        define variable vTimeDec as decimal no-undo.
+       define variable vSync as int64 no-undo.
+       define variable vTimeSync as datetime-tz no-undo. 
+       define variable vTz as integer no-undo.
               
        vTimeLag = 0.
        
@@ -141,32 +151,55 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
           ttstatus-body.errorcode > ""       
        then do:
            assign
-             vStatus = ttstatus-body.reason 
-             oVersion = "Не определена"
+             vStatus     = ttstatus-body.reason 
+             oVersion    = "Не определена"
+             oInst       = "Не определена"  
+             odbVersion  = "Не определена"
+             olastUpdate = "0"
+             oLastSync   = "0"
              .
        end.
        else if avail ttstatus-body
        then do:               
            assign
-             vStatus = ttstatus-body.f_status
-             oVersion = ttstatus-body.f_version
+             vStatus     = ttstatus-body.f_status
+             oVersion    = ttstatus-body.f_version             
+             oInst       = ttstatus-body.inst  
+             odbVersion  = ttstatus-body.vers
+             olastUpdate = ttstatus-body.lastUpdate
+             oLastSync   = ttstatus-body.lastSync
              .
-           vTimeDec = GetMaxTime() / 3600000 no-error.
-           if vTimeDec <> 0 and vTimeDec <> ? then do:
-              vTimeLag  = Round(vTimeDec, 0).
-              if  vTimeLag < vTimeDec then vTimeLag = vTimeLag + 1.
+           vSync = int64(ttstatus-body.lastSync) no-error. 
+           if not error-status:error 
+              and vSync <> 0 
+           then do: 
+               vTz = TIMEZONE (now).   
+               vTimeSync = DateTime("01/01/1970") + vSync + vTz * 60000.                
+               vTimeDec = (now - vTimeSync) / 3600000 no-error.
+               if vTimeDec <> 0 and vTimeDec <> ? then do:
+                  vTimeLag  = Round(vTimeDec, 0).
+                  if  vTimeLag < vTimeDec then vTimeLag = vTimeLag + 1.
+               end.
            end.
-           else vTimeLag = 0.
        end.              
        else
           assign 
-             vStatus = "Нет связи с ЛМ ЧЗ"
-             oVersion = "Не определена"
+             vStatus     = "Нет связи с ЛМ ЧЗ"
+             oVersion    = "Не определена"
+             oInst       = "Не определена"  
+             odbVersion  = "Не определена"
+             olastUpdate = "0"
+             oLastSync   = "0"
              .   
+             
        if vTimeLag <> ? 
        then oTimeLag = string(vTimeLag).
        else oTimeLag = "0".
-       
+       if oInst = "" then 
+          oInst = "Не определена".
+       if odbVersion = "" then    
+          odbVersion  = "Не определена".
+
        EmptyTempTable().
        
        return vStatus.
@@ -180,12 +213,14 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
                     
      define variable vTimeStart   as datetime-tz no-undo.       
      define variable vlongJson    as longchar no-undo.
+     define variable vlongJsonCh  as longchar no-undo.
      define variable hDS          as handle no-undo.
      define variable vRetOk       as logical no-undo.    
      define variable cmd          as character   no-undo.
      define variable vFileResult  as character   no-undo.     
      define variable vFileResXml  as character   no-undo.
      define variable vFileErr     as character   no-undo.
+     define variable vFileCmd     as character   no-undo.
      define variable vParam       as character no-undo.  
      define variable vReqSts      as logical no-undo.
                            
@@ -201,6 +236,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
      run gbl/_tmpfile.p ( "StsOffGisMTRes", ".txt", output vFileResult ) .
      run gbl/_tmpfile.p ( "StsOffGisMTErr", ".txt", output vFileErr ) .     
      run gbl/_tmpfile.p ( "StsOffGisMTResXml", ".xml", output vFileResXml ) .     
+     if session:debug-alert then run gbl/_tmpfile.p ( "StsOfflineCmd", ".txt", output vFileCmd ) .
 
      do transaction 
      on error undo, return error:                                                              
@@ -211,6 +247,13 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
                           vFileResult,             /*4*/                      
                           vFileErr,          /*5*/                      
                           trim(replace(string(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
+         if session:debug-alert then 
+         do:
+             OUTPUT STREAM out_data TO value(vFileCmd).        
+             PUT STREAM out_data UNFORMATTED  
+              cmd .
+             OUTPUT STREAM out_data CLOSE.
+         end.
                           
          os-command silent value(cmd).                 
                            
@@ -218,7 +261,9 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
             file-info:file-name = searchFile(vfileresult).            
             if file-info:file-size <> 0 then do:
                copy-lob from file vFileResult to vlongJson no-error.          
-               vlongJson = '~{"bodys":[' + vlongJson + "]}" .
+               /*vlongJson = '~{"bodys":[' + vlongJson + "]}" .*/
+               vlongJsonCh = REPLACE(vlongJson, 'null', '"unknown"').
+               copy-lob from vlongJsonCh to file vFileResult no-error.
                cmd = substitute ('&1 -file=&2 >&3',
                                       search("exe/json2xml.exe"),
                                       vFileResult,
