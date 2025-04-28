@@ -1071,6 +1071,17 @@ ON CHOOSE OF b-date IN FRAME Dialog-Frame /* b-date */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-date
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Date-order Dialog-Frame
+ON LEAVE OF Date-order IN FRAME Dialog-Frame /* Date-order */
+  DO:
+    apply "TAB":U to self .
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Date-order
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Date-order Dialog-Frame
 ON RETURN OF Date-order IN FRAME Dialog-Frame
