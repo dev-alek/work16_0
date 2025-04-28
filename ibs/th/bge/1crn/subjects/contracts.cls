@@ -148,8 +148,8 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
       when number = ?
       v-str = v-str + ",date" 
       when date_ = ?
-      v-str = v-str + ",code-SCVD" 
-      when code-SCVD = ?
+      /* v-str = v-str + ",code-SCVD" 
+      when code-SCVD = ?  */
       v-str = v-str + ",edi" 
       when edi_ = ?
       .
