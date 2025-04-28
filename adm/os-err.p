@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: os-err.p $
+$Archive: adm/os-err.p $
 
 Преобразование кодов ошибок ОС в текст
 
@@ -16,11 +17,11 @@ Creation date: 03/22/97
 */
 define output parameter errText as character no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: os-err.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/os-err.p $":U .
 define variable vss-description as character no-undo init "Преобразование кодов ошибок ОС в текст".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -60,4 +61,4 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   return.
 end.
 
-/* $Workfile$ e n d */
+/* $Workfile: os-err.p $ e n d */

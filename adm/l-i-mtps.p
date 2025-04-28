@@ -1,14 +1,15 @@
+block-level on error undo, throw.
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME w-login
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS w-login
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 21e3183bea69, 738, rls $
+$Author: SShalanin $
+$Date: Mon Aug 01 17:35:56 2016 +0300 $
+$Workfile: l-i-mtps.p $
+$Archive: adm/l-i-mtps.p $
 
 Окно входа в систему обмена информации с радиотерминалом
 
@@ -24,11 +25,11 @@ create: Перваков Михаил Сергеевич
 
 /* ***************************  Definitions  ************************** */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 21e3183bea69, 738, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Aug 01 17:35:56 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: l-i-mtps.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/l-i-mtps.p $":U .
 define variable vss-description as character no-undo init "Окно входа в систему".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

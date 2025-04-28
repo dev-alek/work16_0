@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 446b147e8750, 2875, rls $
+$Author: SSlivenko $
+$Date: ѕн но€ 22 19:49:10 2021 +0300 $
+$Workfile: schedul3.p $
+$Archive: adm/schedul3.p $
 
 ”даление строки расписани
 
@@ -20,11 +21,11 @@ define input parameter p-rec as recid no-undo .
 define input parameter p-silent as logical no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 446b147e8750, 2875, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн но€ 22 19:49:10 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: schedul3.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/schedul3.p $":U .
 define variable vss-description as character no-undo init "”даление строки расписани ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

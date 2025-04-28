@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ordpocls.p $
+$Archive: cus/ordpocls.p $
 
 Переход по графу статусов заказы покупателей
 
@@ -19,11 +20,11 @@ define input  parameter parParentProc  as widget-handle no-undo.
 define input  parameter p-rec as recid no-undo .
 define input  parameter p-ask as logical no-undo .   /* задавать вопросы или молча=false */
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+define variable vss-author      as character no-undo init "$Author: expertek $":u .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: ordpocls.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: cus/ordpocls.p $":u .
 define variable vss-description as character no-undo init  "Переход по графу статусов заказы покупателей" .
 { cmp/vssrevis.i }
 { cmp/df-sub.i   }

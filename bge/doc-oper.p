@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a61e6bb0c7e0, 2871, rls $
+$Author: SSlivenko $
+$Date: ѕн но€ 22 19:49:10 2021 +0300 $
+$Workfile: doc-oper.p $
+$Archive: bge/doc-oper.p $
 
 Ёкспорт документов по архивам
 
@@ -61,11 +62,11 @@ define input parameter p-parent-handle   as handle                  no-undo.
 define input parameter hEDT              as handle                  no-undo.
 define input parameter hCNT              as handle                  no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a61e6bb0c7e0, 2871, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн но€ 22 19:49:10 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: doc-oper.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/doc-oper.p $":U .
 define variable vss-description as character no-undo init "Ёкспорт документов по архивам".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

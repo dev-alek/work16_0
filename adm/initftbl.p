@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d58b016346f1, 2327, rls $
+$Author: druban $
+$Date: Ср июн 10 21:13:32 2020 +0300 $
+$Workfile: initftbl.p $
+$Archive: adm/initftbl.p $
 
 Начальная инициализация справочников
 
@@ -20,11 +21,11 @@ define input parameter p-r-b      as character no-undo . /* валюта прайс-листа *
 define input parameter p-sys-key  as character no-undo . /* системный ключ */
 define input parameter p-extra-to as integer   no-undo . /* раскрутка под: 0=ниподкого, 1="1С", 2= */ 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d58b016346f1, 2327, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:32 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: initftbl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/initftbl.p $":U .
 define variable vss-description as character no-undo init "Начальная инициализация справочников".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

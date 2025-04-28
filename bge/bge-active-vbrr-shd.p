@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 /* ***************************  Definitions  ************************** */
 /*
 
-$Revision$
-$Author$ Shalanin Sergey   $  
-$Date$ 
-$Workfile$ active-vbrr.p $
-$Archive$ bge/bge-active-vbrr-shd.p $
+$Revision: da70ce2a1328, 1072, rls $
+$Author: SMMolotkov $ Shalanin Sergey   $  
+$Date: Fri Oct 06 18:35:13 2017 +0300 $ 
+$Workfile: bge-active-vbrr-shd.p $ active-vbrr.p $
+$Archive: bge/bge-active-vbrr-shd.p $ bge/bge-active-vbrr-shd.p $
 
 Процедура запуска автоматической выгрузки информации по пополнениям и активации для сверки с ВБРР
 
@@ -17,10 +18,10 @@ Creation date:  22/04/2016
 */
 
 define variable vss-revision    as character no-undo init "$Revision: $":U.
-define variable vss-author      as character no-undo init "$Author$":U.
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U.
 define variable vss-date        as character no-undo init "$Date: $":U.
-define variable vss-workfile    as character no-undo init "$Workfile$":U.
-define variable vss-archive     as character no-undo init "$Archive$":U.
+define variable vss-workfile    as character no-undo init "$Workfile: bge-active-vbrr-shd.p $":U.
+define variable vss-archive     as character no-undo init "$Archive: bge/bge-active-vbrr-shd.p $":U.
 define variable vss-description as character no-undo init "Процедура запуска автоматической выгрузки информации по пополнениям и активации для сверки с ВБРР".
 
 {cmp/vssrevis.i}

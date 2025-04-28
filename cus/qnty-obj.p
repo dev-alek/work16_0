@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2a79bf27b012, 291, rls $
+$Author: ASMorozov $
+$Date: Tue Dec 01 19:11:26 2015 +0300 $
+$Workfile: qnty-obj.p $
+$Archive: cus/qnty-obj.p $
 
 Предпологанмое значение заказа - interface по объектам  .
 
@@ -67,11 +68,11 @@ define input  parameter g#type        as character no-undo .
 define input  parameter p-tog-det-prizn as logical no-undo .     /* детализировать по признакам */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 2a79bf27b012, 291, rls $":u .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":u .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:26 2015 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: qnty-obj.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: cus/qnty-obj.p $":u .
 define variable vss-description as character no-undo init "Предпологаемое значение заказа" .
 { cmp/vssrevis.i   }
 { cmp/trg-def.i    }

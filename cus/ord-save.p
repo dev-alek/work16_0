@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e470dcf1e011, 295, rls $
+$Author: SSlivenko $
+$Date: Tue Dec 01 19:11:38 2015 +0300 $
+$Workfile: ord-save.p $
+$Archive: cus/ord-save.p $
 
 ЗАКАЗЫ  Сохранение данных введенных на экране в базу
 
@@ -36,11 +37,11 @@ define input parameter is-edoc-nn-doc         as logical   no-undo .
 define input parameter is-edi-doc             as logical   no-undo .
 define input parameter p-dm-edi               as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e470dcf1e011, 295, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:38 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ord-save.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/ord-save.p $":U .
 define variable vss-description as character no-undo init "Сохранение данных введенных на экране в базу  ЗАКАЗЫ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i      }

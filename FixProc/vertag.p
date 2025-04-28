@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 define variable v-enc-file as character no-undo.
 define variable v-ver-file as character no-undo.
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: e79ab6f734c2, 3528, rls $":U .
+def var vss-author      as character no-undo init "$Author: DRuban $":U .
+def var vss-date        as character no-undo init "$Date: 2023/11/14 16:31:52 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: vertag.p $":U .
+def var vss-archive     as character no-undo init "$Archive: FixProc/vertag.p $":U .
 def var vss-description as character no-undo init "удаление всех записей BatchProcess с типом {&btpr-type-autoupg}".
 
 {cmp\str-glbl.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1eba0946c2d7, 3078, rls $
+$Author: DRuban $
+$Date: Яђ рту 05 19:16:25 2022 +0300 $
+$Workfile: onlinbkp.p $
+$Archive: adm/onlinbkp.p $
 
 Online backup
 
@@ -18,11 +19,11 @@ Creation date: 03/22/04
 define output parameter p-message as character no-undo .
 
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
+def var vss-author      as character no-undo init "$Author: DRuban $":U .
+def var vss-date        as character no-undo init "$Date: Яђ рту 05 19:16:25 2022 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: onlinbkp.p $":U .
+def var vss-archive     as character no-undo init "$Archive: adm/onlinbkp.p $":U .
 def var vss-description as character no-undo init "Online backup".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -279,4 +280,4 @@ on error undo, return error return-value
   hide frame inf.
 end.
 
-/* $Workfile$ end */
+/* $Workfile: onlinbkp.p $ end */

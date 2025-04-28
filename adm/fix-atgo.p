@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c76f4a5df326, 143, rls $
+$Author: ASMorozov $
+$Date: Mon Feb 16 20:48:31 2015 +0400 $
+$Workfile: fix-atgo.p $
+$Archive: adm/fix-atgo.p $
 
 Утилита проверки/инициализации атрибутов товара на объекте
 
@@ -18,11 +19,11 @@ Creation date: 02/11/10
 define input parameter p-forced as logical no-undo .
 define input parameter p-read-only as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c76f4a5df326, 143, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Feb 16 20:48:31 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fix-atgo.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/fix-atgo.p $":U .
 define variable vss-description as character no-undo init "Утилита проверки/инициализации параметров при запуске ТН".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

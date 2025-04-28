@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8c1a0fd433e1, 1120, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: imp-kan3.p $
+$Archive: cus/imp-kan3.p $
 
 Импорт  в документ ДНЦ для КАН
 
@@ -19,11 +20,11 @@ Creation date: 05/20/09
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter file-name     as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8c1a0fd433e1, 1120, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-kan3.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/imp-kan3.p $":U .
 define variable vss-description as character no-undo init "Импорт  в документ ДНЦ для КАН".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2d6430604525, 1301, rls $
+$Author: EShklyar $
+$Date: Tue Apr 10 12:04:11 2018 +0300 $
+$Workfile: catgood.p $
+$Archive: bge/catgood.p $
 
 Экспорт справочника товаров
 
@@ -20,11 +21,11 @@ Input:
     temp_bgelib_goods - список кодов товаров для режима "list"
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2d6430604525, 1301, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
 define variable vss-date        as character no-undo init "$date: 12.08.03 16:43 $":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-workfile    as character no-undo init "$Workfile: catgood.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/catgood.p $":U .
 define variable vss-description as character no-undo init "Экспорт справочника товаров".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

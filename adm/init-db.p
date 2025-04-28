@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d47c064bc860, 1107, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: init-db.p $
+$Archive: adm/init-db.p $
 
 Инициализация БД
 
@@ -24,11 +25,11 @@ define input parameter mess-view  as logical   no-undo . /* выводить сообщение в
 define input parameter p-create-adm as logical          no-undo. /* */
 define input parameter p-extra-to as integer   no-undo . /* раскрутка под: 0=ниподкого, 1="1С", 2= */ 
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: d47c064bc860, 1107, rls $":U .
+def var vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+def var vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: init-db.p $":U .
+def var vss-archive     as character no-undo init "$Archive: adm/init-db.p $":U .
 def var vss-description as character no-undo init "Инициализация БД".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

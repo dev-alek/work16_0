@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: e-xldbjq.p $
+$Archive: cmp/e-xldbjq.p $
 
 «аполнение полей временной таблицы дл€ отчета итоги по дисконтным картам
 
@@ -44,11 +45,11 @@ define input parameter t-subsid as logical no-undo .
 define input parameter par-run-names as character no-undo .
 define input parameter p-call-handle as handle no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+define variable vss-author      as character no-undo init "$Author: expertek $":u .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: e-xldbjq.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: cmp/e-xldbjq.p $":u .
 define variable vss-description as character no-undo init "«аполнение полей временной таблицы дл€ отчета итоги по дисконтным картам" .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

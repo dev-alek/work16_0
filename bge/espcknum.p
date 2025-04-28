@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0704feb42aff, 2004, rls $
+$Author: ostroukhov $
+$Date: Wed Sep 18 21:02:01 2019 +0300 $
+$Workfile: espcknum.p $
+$Archive: bge/espcknum.p $
 
 Генерация для ВС номера пакета, имени файла пакета, имени каталога источника и каталога назначени
 
@@ -33,11 +34,11 @@ define output       parameter p-log-file-name  as character no-undo .
 define output       parameter p-list-file-name as character no-undo .
 define output       parameter p-custom-pack-flag as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 0704feb42aff, 2004, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ostroukhov $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Sep 18 21:02:01 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: espcknum.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/espcknum.p $":U .
 define variable vss-description as character no-undo init "Генерация для ВС номера пакета, имени файла пакета, имени каталога источника и каталога назначени".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -453,4 +454,4 @@ define buffer buf_esys-pck-sent for ub.esys-pck-sent .
   
 end procedure . /* end_of findPackNum */
 
-/* $Workfile$ end */
+/* $Workfile: espcknum.p $ end */

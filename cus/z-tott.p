@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e47eaee10c88, 211, rls $
+$Author: SShalanin $
+$Date: Tue Jun 30 11:11:56 2015 +0400 $
+$Workfile: z-tott.p $
+$Archive: cus/z-tott.p $
 
 Вывод заказа в EXCEL и отправка по e-mail
 
@@ -22,11 +23,11 @@ define input  parameter p-ord-doc      as character no-undo .
 define input  parameter p-obj-type as character no-undo .
 define input  parameter p-obj-code as integer   no-undo .
 define output parameter p-file-excel as char no-undo.
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e47eaee10c88, 211, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Jun 30 11:11:56 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: z-tott.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/z-tott.p $":U .
 define variable vss-description as character no-undo init "Вывод заказа в EXCEL и отправка на e-mail".
 { cmp/vssrevis.i    }
 { cmp/str-glbl.i    }

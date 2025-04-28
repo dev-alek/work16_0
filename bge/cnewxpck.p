@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cnewxpck.p $
+$Archive: bge/cnewxpck.p $
 
 Нарезка новых пакетов в OpenXML
 
@@ -18,11 +19,11 @@ Creation date: 02/17/08
 define input  parameter p-esys-list  as character no-undo . /* если возможно, то формируем пакеты только для этих БД */
 define output parameter p-err-code as integer no-undo .   /* 0 - без ошибок, 1 - ошибка подготовки пакетов, 2 - ошибка backup */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cnewxpck.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/cnewxpck.p $":U .
 define variable vss-description as character no-undo init "Нарезка новых пакетов в OpenXML".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -183,4 +184,4 @@ end.
 
 end.
 
-/* $Workfile$ end */
+/* $Workfile: cnewxpck.p $ end */

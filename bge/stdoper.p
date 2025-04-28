@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d47a2bcb93e4, 623, rls $
+$Author: PGridchina $
+$Date: Wed May 11 17:10:50 2016 +0400 $
+$Workfile: stdoper.p $
+$Archive: bge/stdoper.p $
 
 Экспорт товарных остатков на дату.
 
@@ -34,11 +35,11 @@ define input parameter hcnt                     as handle           no-undo.
 define output parameter p-last-xml-file-name    as character        no-undo.
 define output parameter p-last-xml-file-number  as integer          no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d47a2bcb93e4, 623, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Wed May 11 17:10:50 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: stdoper.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/stdoper.p $":U .
 define variable vss-description as character no-undo init "Экспорт товарных остатков на дату.".
 { cmp/vssrevis.i    }
 { str/lib-trn.i     }

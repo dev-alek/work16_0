@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e9c7fc100672, 222, rls $
+$Author: EShklyar $
+$Date: Tue Jul 14 11:27:05 2015 +0400 $
+$Workfile: 00044001.p $
+$Archive: cut/00044001.p $
 
 Файл пирога обрезания. Относится к категории 44.
 
@@ -22,10 +23,10 @@ Creation date: 05/25/09
 
 { utl/00000001.i }
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-revision    as character no-undo init "$Revision: e9c7fc100672, 222, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Jul 14 11:27:05 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: 00044001.p $":U .
 define variable vss-archive     as character no-undo init "$Archive  /cut/pie/00031001.p $":U .
 define variable vss-description as character no-undo init "Файл пирога обрезания. Относится к категории 31." .
 { cmp/str-glbl.i }

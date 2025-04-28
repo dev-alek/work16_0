@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1f78fe327cdf, 1091, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: ththclii.p $
+$Archive: cmp/ththclii.p $
 
 Получение соответствия данных по клиентам из старой версии системы TH
 
@@ -20,11 +21,11 @@ define input parameter p-parent-handle  as widget-handle no-undo .
 define input parameter p-log-handle  as handle no-undo .
 define input parameter p-parameter   as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1f78fe327cdf, 1091, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ththclii.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cmp/ththclii.p $":U .
 define variable vss-description as character no-undo init "Получение соответствия данных по клиентам из старой версии системы TH".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

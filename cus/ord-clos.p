@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e470dcf1e011, 295, rls $
+$Author: SSlivenko $
+$Date: Tue Dec 01 19:11:38 2015 +0300 $
+$Workfile: ord-clos.p $
+$Archive: cus/ord-clos.p $
 
 Переход по графу статусов
 
@@ -23,11 +24,11 @@ define input parameter  p-db-num       as integer   no-undo .   /* текущая база 
 define input parameter  p-ask          as logical   no-undo .   /* задавать вопросы или молча=false */
 define input parameter  p-param-list   as character no-undo .   /*p-param-list пока тока один параметр, говорит что edi или не edi*/
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: e470dcf1e011, 295, rls $":u .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":u .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:38 2015 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: ord-clos.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: cus/ord-clos.p $":u .
 define variable vss-description as character no-undo init  "Переход по графу статусов" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

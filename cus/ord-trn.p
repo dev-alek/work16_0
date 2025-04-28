@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e470dcf1e011, 295, rls $
+$Author: SSlivenko $
+$Date: Tue Dec 01 19:11:38 2015 +0300 $
+$Workfile: ord-trn.p $
+$Archive: cus/ord-trn.p $
 
 Формирование накладной из поставки
 
@@ -21,15 +22,15 @@ define input  parameter parParentProc   as widget-handle no-undo.
 define input  parameter tp-rec as recid no-undo . /* поставка */
 define input  parameter p-allow-chain-trn-qnty as logical no-undo . /*учитывать количества из привязанных накладных*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e470dcf1e011, 295, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:38 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ord-trn.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/ord-trn.p $":U .
 define variable vss-description as character no-undo init "Формирование накладной из поставки".
 { cmp/vssrevis.i }
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: ord-trn.p $ $Revision: e470dcf1e011, 295, rls $".
 
 { cmp/trg-def.i  }
 { str/lib-trn.i  }

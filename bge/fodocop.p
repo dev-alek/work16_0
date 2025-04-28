@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: fodocop.p $
+$Archive: bge/fodocop.p $
 
 Экспорт финансовых обязательств
 
@@ -48,11 +49,11 @@ define output parameter p-last-xml-file-number  as integer                 no-un
 
 define variable p-doc-type-list as character no-undo  init "" .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: fodocop.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: bge/fodocop.p $":U .
 define variable vss-description as character no-undo initial "Экспорт финансовых обязательств":U .
 
 { cmp/vssrevis.i }

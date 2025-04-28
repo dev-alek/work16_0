@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: upg-conn.p $
+$Archive: cmp/upg-conn.p $
 
 процедура connect`а к 14 БД
 
@@ -20,11 +21,11 @@ define input  parameter p-check-version as character no-undo .
 define output parameter p-ok        as logical   no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: upg-conn.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cmp/upg-conn.p $":U .
 define variable vss-description as character no-undo init "процедура connect`а к БД IBS TH другой версии".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

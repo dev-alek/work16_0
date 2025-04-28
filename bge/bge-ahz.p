@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 56408f49832e, 136, rls $
+$Author: EShklyar $
+$Date: Mon Feb 16 20:48:25 2015 +0400 $
+$Workfile: bge-ahz.p $
+$Archive: bge/bge-ahz.p $
 
 Проверка архивов для диапазона дат для выгрузки
 
@@ -29,11 +30,11 @@ define input parameter p-date-to        as date             no-undo.
 define output parameter p-archive-ok    as logical          no-undo.
 define output parameter p-comment       as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 56408f49832e, 136, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Feb 16 20:48:25 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bge-ahz.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bge-ahz.p $":U .
 define variable vss-description as character no-undo init "Проверка архивов для диапазона дат для выгрузки".
 { cmp/vssrevis.i        }
 { cmp/trg-def.i        }

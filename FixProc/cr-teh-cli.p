@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 { cmp/str-glbl.i }
 { utl/runpro.i }
 { ref/cgrplbfn.i }

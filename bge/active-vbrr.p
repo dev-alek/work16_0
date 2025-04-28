@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 
 /*
 
-$Revision$
-$Author$ Shalanin Sergey   $  
-$Date$ 
-$Workfile$ active-vbrr.p $
-$Archive$ bge/active-vbrr.p $
+$Revision: 370d2a7b72c6, 2053, rls $
+$Author: EShklyar $ Shalanin Sergey   $  
+$Date: Fri Oct 18 11:02:52 2019 +0300 $ 
+$Workfile: active-vbrr.p $ active-vbrr.p $
+$Archive: bge/active-vbrr.p $ bge/active-vbrr.p $
 
 Процедура выгрузки информации по пополнениям и активации для сверки с ВБРР
 
@@ -17,10 +18,10 @@ Creation date:  22/04/2016
 */
 
 define variable vss-revision    as character no-undo init "$Revision: $":U .
-define variable vss-author      as character no-undo init "$Author$ SShalanin":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$ active-vbrr.p ":U .
-define variable vss-archive     as character no-undo init "$Archive$ bge/active-vbrr.p ":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $ SShalanin":U .
+define variable vss-date        as character no-undo init "$Date: Fri Oct 18 11:02:52 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: active-vbrr.p $ active-vbrr.p ":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/active-vbrr.p $ bge/active-vbrr.p ":U .
 define variable vss-description as character no-undo init "Процедура выгрузки информации по пополнениям и активации для сверки с ВБРР".
 
 /* ********************  Preprocessor Definitions  ******************** */

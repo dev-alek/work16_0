@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f4cdafb70594, 2001, rls $
+$Author: druban $
+$Date: Wed Sep 18 21:00:35 2019 +0300 $
+$Workfile: cmdeigen.p $
+$Archive: bge/cmdeigen.p $
 
 Импорт файла XML из внешней системы
 
@@ -52,11 +53,11 @@ define input parameter p-pack-num as integer   no-undo .
 define input parameter p-log-file-name as character no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f4cdafb70594, 2001, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Sep 18 21:00:35 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cmdeigen.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/cmdeigen.p $":U .
 define variable vss-description as character no-undo init "Импорт файла XML из внешней системы".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

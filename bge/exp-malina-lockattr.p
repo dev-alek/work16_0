@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 794b9cc81728, 98, rls $
+$Author: EShklyar $
+$Date: Fri Nov 07 16:47:37 2014 +0300 $
+$Workfile: exp-malina-lockattr.p $
+$Archive: bge/exp-malina-lockattr.p $
 
 Блокировка атрибута БД
 
@@ -15,11 +16,11 @@ Creation date: 02/09/14
 
 */
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 794b9cc81728, 98, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: Fri Nov 07 16:47:37 2014 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: exp-malina-lockattr.p $":U .
+def var vss-archive     as character no-undo init "$Archive: bge/exp-malina-lockattr.p $":U .
 def var vss-description as character no-undo init "Блокировка атрибута БД".
 
 { cmp/vssrevis.i }

@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 899f5f3721f3, 1951, rls $
+$Author: ASMorozov $
+$Date: Fri Jul 26 11:39:33 2019 +0300 $
+$Workfile: bge-exp-ATD.p $
+$Archive: bge/bge-exp-ATD.p $
 
 Выгрузка в систему Анализа Трека Данных
 
@@ -13,11 +14,11 @@ Creation date: 11/08/2016
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 899f5f3721f3, 1951, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jul 26 11:39:33 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bge-exp-ATD.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bge-exp-ATD.p $":U .
 define variable vss-description as character no-undo init "Выгрузка в систему Анализа Трека Данных".
 
 /* ********************  Preprocessor Definitions  ******************** */

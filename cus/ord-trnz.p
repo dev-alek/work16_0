@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ord-trnz.p $
+$Archive: cus/ord-trnz.p $
 
 Формирование запроса из поставки
 
@@ -21,15 +22,15 @@ define input parameter tp-rec as recid no-undo .
 define input parameter par-type as character no-undo .     /* Приход расход */
 define input parameter par-doc-code as character no-undo . /* Номер для щепки */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ord-trnz.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/ord-trnz.p $":U .
 define variable vss-description as character no-undo init "Формирование накладной из поставки".
 { cmp/vssrevis.i }
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: ord-trnz.p $ $Revision: aea5316774be, 0, rls $".
 
 { cmp/trg-def.i  }
 { gbl/getcntxt.i def }

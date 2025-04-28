@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define variable conn-par            as character no-undo .
 /* параметры для подключения к БД */
  get-key-value section "REP-SETS"

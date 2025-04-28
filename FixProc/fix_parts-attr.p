@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 { utl/runpro.i}
 define input parameter p-doc-code as character no-undo .
 define input parameter p-gds-code as character no-undo .

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1f78fe327cdf, 1091, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: ththgdsi.p $
+$Archive: cmp/ththgdsi.p $
 
 Импорт данных по товарам из системы TH старой версии
 
@@ -20,11 +21,11 @@ define input parameter p-parent-handle  as widget-handle no-undo .
 define input parameter p-log-handle  as handle no-undo .
 define input parameter p-parameter   as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1f78fe327cdf, 1091, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ththgdsi.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cmp/ththgdsi.p $":U .
 define variable vss-description as character no-undo init "Импорт данных по товарам из системы TH старой версии".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -713,7 +714,7 @@ procedure unitbase :
 end procedure. /* unitbase */
 
 &scoped-define vssseq {&sequence}
-def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: ththgdsi.p $ $Revision: 1f78fe327cdf, 1091, rls $".
 
 &if defined (include_key-rec) = 0 &then
 &glob include_key-rec yes
@@ -1110,10 +1111,10 @@ end procedure. /* gen-key-fv */
 &endif
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: ththgdsi.p $ $Revision: 1f78fe327cdf, 1091, rls $".
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: ththgdsi.p $ $Revision: 1f78fe327cdf, 1091, rls $".
 
 
 procedure gen-b-code :

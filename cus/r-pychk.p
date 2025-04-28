@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: r-pychk.p $
+$Archive: cus/r-pychk.p $
 
 Суммы продаж с разбивкой по типам кассовых платежей и НДС - печать
 
@@ -20,11 +21,11 @@ define input parameter p-group as logical no-undo .
 define input parameter p-rv    as logical no-undo .
 /*расходы возвраты отдельно*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: 2014/01/27 14:27:46 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-pychk.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/r-pychk.p $":U .
 define variable vss-description as character no-undo init "Суммы продаж с разбивкой по типам кассовых платежей и НДС - печать".
 { cmp/vssrevis.i }
 

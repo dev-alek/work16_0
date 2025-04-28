@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter p-user-login    as character no-undo .
 define input  parameter p-user-password as character no-undo .
 &glob defonly yes

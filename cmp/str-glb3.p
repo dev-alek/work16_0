@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8ed7340f1c34, 3424, rls $
+$Author: DRuban $
+$Date: 2023/10/16 15:13:31 $
+$Workfile: str-glb3.p $
+$Archive: cmp/str-glb3.p $
 
 Программа генерации файла s t r - g l b l . i . Часть 3
 
@@ -21,11 +22,11 @@ define input  parameter p-file-name    as character no-undo .
 define output parameter p-num-lines    as character no-undo .
 define output parameter p-vss-revision as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8ed7340f1c34, 3424, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:31 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: str-glb3.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cmp/str-glb3.p $":U .
 define variable vss-description as character no-undo init "Программа генерации файла str-glbl.i".
 { cmp/vssrevis.i }
 { cmp/filwrlib.i }

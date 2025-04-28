@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision:$
@@ -18,11 +19,11 @@ Creation date: 04/27/2014
 routine-level on error undo, throw.
 &ENDIF
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: bbf1530230d5, 2753, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Сб фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: xlssn.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: adm/xlssn.p $":U .
 define variable vss-description as character no-undo initial "Импорт серийных номеров для параметра tsd-list из excel".
 { cmp/vssrevis.i }
 { cmp/library.i }

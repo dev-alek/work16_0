@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 684ed89e110d, 160, rls $
+$Author: EShklyar $
+$Date: Mon Mar 23 18:05:33 2015 +0400 $
+$Workfile: bgecheck.p $
+$Archive: bge/bgecheck.p $
 
 Ёкспорт чеков
 
@@ -20,11 +21,11 @@ Output:
 */
 define input parameter p-mainmenu-handle    as handle           no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 684ed89e110d, 160, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Mar 23 18:05:33 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bgecheck.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bgecheck.p $":U .
 define variable vss-description as character no-undo init "Ёкспорт чеков".
 { cmp/vssrevis.i        }
 { cmp/trg-def.i         }

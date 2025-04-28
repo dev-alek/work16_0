@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: dcb9ba8c712c, 1662, rls $
+$Author: SSlivenko $
+$Date: Fri Nov 23 14:36:18 2018 +0300 $
+$Workfile: unload-m2.p $
+$Archive: adm/unload-m2.p $
 
 Начальный этап выгрузки УБД
 
@@ -17,11 +18,11 @@ Creation date: 03/22/02
 
 define input parameter p-rec-list as longchar no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: dcb9ba8c712c, 1662, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Nov 23 14:36:18 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: unload-m2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/unload-m2.p $":U .
 define variable vss-description as character no-undo init "Начальный этап выгрузки УБД".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -356,4 +357,4 @@ message
 
 end.
 
-/* $Workfile$ end */
+/* $Workfile: unload-m2.p $ end */

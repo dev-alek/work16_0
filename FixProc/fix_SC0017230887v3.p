@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 disable triggers for load of ub.price-doc .
 disable triggers for load of ub.price-list .
 

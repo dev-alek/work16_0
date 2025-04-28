@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : hdd-run-test.p

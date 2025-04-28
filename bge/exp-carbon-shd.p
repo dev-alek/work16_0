@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ca4594d35314, 97, rls $
+$Author: EShklyar $
+$Date: Fri Nov 07 16:47:37 2014 +0300 $
+$Workfile: exp-carbon-shd.p $
+$Archive: bge/exp-carbon-shd.p $
 
 Процедура автоматического запуска выгрузки данных в Carbon
 
@@ -16,10 +17,10 @@ Creation date: 02/09/14
 */
 
 define variable vss-revision as character no-undo init "$Revision: $":U.
-define variable vss-author as character no-undo init "$Author$":U.
+define variable vss-author as character no-undo init "$Author: EShklyar $":U.
 define variable vss-date as character no-undo init "$Date: $":U.
-define variable vss-workfile as character no-undo init "$Workfile$":U.
-define variable vss-archive as character no-undo init "$Archive$":U.
+define variable vss-workfile as character no-undo init "$Workfile: exp-carbon-shd.p $":U.
+define variable vss-archive as character no-undo init "$Archive: bge/exp-carbon-shd.p $":U.
 define variable vss-description as character no-undo init "".
 
 {cmp/vssrevis.i}

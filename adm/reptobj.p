@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9721f156f19a, 502, rls $
+$Author: EShklyar $
+$Date: Sun Feb 28 19:23:25 2016 +0400 $
+$Workfile: reptobj.p $
+$Archive: adm/reptobj.p $
 
 Вызов списка фирменных параметров для отчетов
 
@@ -19,11 +20,11 @@ define input parameter p-mode        as character no-undo.
 define input parameter p-obj-type    like ub.clients.obj-type no-undo.
 define input parameter p-obj-code    like ub.shop.obj-code no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 9721f156f19a, 502, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Sun Feb 28 19:23:25 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: reptobj.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: adm/reptobj.p $":U .
 define variable vss-description as character no-undo initial "Вызов списка фирменных параметров для отчетов".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: rcv-db.p $
+$Archive: cus/rcv-db.p $
 
 Список номеров БД по по поставкам
 
@@ -20,11 +21,11 @@ define input  parameter p-doc like ub.ord-doc-rcv.doc-code no-undo .  /* уникаль
 define input  parameter p-rcv like ub.ord-doc-rcv.rcv-code no-undo .  /* уникальный ключ*/
 define output parameter p-db  as character no-undo .                  /* список БД*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rcv-db.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/rcv-db.p $":U .
 define variable vss-description as character no-undo init "Список номеров БД по по поставкам".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -106,4 +107,4 @@ find first buf_ord-doc-rcv no-lock where  buf_ord-doc-rcv.doc-code  = p-doc  and
    /*  message "Отправляется поставка в БД " p-db  skip "из БД " g#db-num. */
  end.
 
-/* $Workfile$ e n d */
+/* $Workfile: rcv-db.p $ e n d */

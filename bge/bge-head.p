@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: bge-head.p $
+$Archive: bge/bge-head.p $
 
 Определение полного имени файла и вывод заголовка файла XML
 
@@ -26,11 +27,11 @@ define input parameter p-shedule            as logical      no-undo.
 define output parameter p-xml-file-name     as character    no-undo.    /* возвращается полное имя с точкой, без расш.*/
 define output parameter p-log-file-name     as character    no-undo.    /* возвращается полное имя с расширением */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bge-head.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bge-head.p $":U .
 define variable vss-description as character no-undo init "Определение полного имени файла и вывод заголовка файла XML".
 { cmp/vssrevis.i     }
 { cmp/str-glbl.i     }

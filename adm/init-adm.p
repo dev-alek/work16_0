@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 4886e87b5a2b, 3169, rls $
+$Author: DRuban $
+$Date: 2022/12/27 12:54:23 $
+$Workfile: init-adm.p $
+$Archive: adm/init-adm.p $
 
 init-adm.p -- инициализация адм, sysadm и odbc - приведение в начальное состояние (из редактора)
 
@@ -19,11 +20,11 @@ define input  parameter inst     as logical   no-undo . /* YES - вопросы задават
 define input  parameter p-db-num as integer   no-undo .
 define input  parameter p-create-adm as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 4886e87b5a2b, 3169, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:23 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: init-adm.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/init-adm.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

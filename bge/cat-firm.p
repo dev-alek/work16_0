@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c89b59c2f62e, 135, rls $
+$Author: EShklyar $
+$Date: Mon Feb 16 20:48:25 2015 +0400 $
+$Workfile: cat-firm.p $
+$Archive: bge/cat-firm.p $
 
 Экспорт контрагентов
 
@@ -20,11 +21,11 @@ Creation date: 04/05/06
     temp_bge-xml_clients - список клиентов для режима "list"
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c89b59c2f62e, 135, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Feb 16 20:48:25 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cat-firm.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/cat-firm.p $":U .
 define variable vss-description as character no-undo init "Экспорт контрагентов".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

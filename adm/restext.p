@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1351a33238ea, 1271, rls $
+$Author: ASMorozov $
+$Date: Wed Mar 21 09:55:56 2018 +0300 $
+$Workfile: restext.p $
+$Archive: adm/restext.p $
 
 Выгрузка внешних подсистем для rest-rdb.
 
@@ -22,11 +23,11 @@ define input parameter p-log-handle as handle           no-undo.
 define input parameter p-db-num     as integer          no-undo.
 define input parameter p-unload-history as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1351a33238ea, 1271, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Mar 21 09:55:56 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: restext.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/restext.p $":U .
 define variable vss-description as character no-undo init "Выгрузка внешних подсистем для rest-rdb.".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
