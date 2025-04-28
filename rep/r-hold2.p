@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-hold2.p $
+$Archive: rep/r-hold2.p $
 
 Отчет по межфирменным операциям - динамика закупки
 
@@ -19,11 +20,11 @@ define input parameter x-date      as integer   no-undo .
 define input parameter p_provid    as integer   no-undo .
 define input parameter p_cli-list  as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-hold2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-hold2.p $":U .
 define variable vss-description as character no-undo init "Отчет по межфирменным операциям - динамика закупки".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

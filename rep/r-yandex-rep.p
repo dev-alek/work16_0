@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bbf1530230d5, 2753, rls $
+$Author: EShklyar $
+$Date: —б фев 20 15:59:21 2021 +0300 $
+$Workfile: r-yandex-rep.p $
+$Archive: rep/r-yandex-rep.p $
 
 ”тилита проверки целостности свободной зоны марок и восстановлени€
 
@@ -15,11 +16,11 @@ Creation date: 25/05/2020
 
 */
 
-define variable vss-revision as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision as character no-undo initial "$Revision: bbf1530230d5, 2753, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: —б фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-yandex-rep.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-yandex-rep.p $":U .
 define variable vss-description as character no-undo initial "ќтчет по невалидным маркам".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

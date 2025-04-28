@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f557e6fb7653, 115, rls $
+$Author: EShklyar $
+$Date: Tue Dec 23 19:15:09 2014 +0300 $
+$Workfile: op-23.p $
+$Archive: rep/op-23.p $
 
 Печатная форма ОП-23. Производство, акт о разделке мяса-сырья.
 
@@ -24,11 +25,11 @@ define input parameter p-print-in-rubl      as logical          no-undo.
 define input parameter p-print-details      as logical          no-undo.
 define input parameter p-fat                as logical          no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f557e6fb7653, 115, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 23 19:15:09 2014 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: op-23.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/op-23.p $":U .
 define variable vss-description as character no-undo init "Печатная форма ОП-23. Производство, акт о разделке мяса-сырья.".
 { cmp/vssrevis.i    }
 { cmp/str-glbl.i    }

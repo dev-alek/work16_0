@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b2031575dcde, 1694, rls $
+$Author: EShklyar $
+$Date: Tue Dec 11 10:07:56 2018 +0300 $
+$Workfile: r-otkl-total.p $
+$Archive: rep/r-otkl-total.p $
 
 —бор данных дл€ допустимого значени€
 
@@ -15,6 +15,7 @@ Creation date: 09/14/05
 
 */
 using ibs.th.str.*.
+block-level on error undo, throw.
 
 DEFINE INPUT PARAMETER prvs-code             LIKE ub.rvs-doc.rvs-code     NO-UNDO.
 DEFINE INPUT PARAMETER prvs-type             LIKE ub.rvs-doc.rvs-type     NO-UNDO.
@@ -24,11 +25,11 @@ DEFINE INPUT PARAMETER pshift-date           LIKE ub.shift-obj.shift-date NO-UND
 DEFINE INPUT PARAMETER pshift-num            LIKE ub.shift-obj.shift-num  NO-UNDO.
 
 
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision$":U.
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author$":U.
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date$":U.
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile$":U.
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive$":U.
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision: b2031575dcde, 1694, rls $":U.
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author: EShklyar $":U.
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date: Tue Dec 11 10:07:56 2018 +0300 $":U.
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile: r-otkl-total.p $":U.
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive: rep/r-otkl-total.p $":U.
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INITIAL "—бор данных дл€ допустимого значени€":U.
 
 { cmp/vssrevis.i                }

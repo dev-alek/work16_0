@@ -16,7 +16,7 @@ Creation date: 08/06/07
 */
 
 using ibs.th.str.*.
-
+block-level on error undo, throw.
 define input parameter parparentproc              as handle    no-undo.
 define input parameter p-parent-handle            as handle    no-undo .
 define input parameter p-log-handle               as handle    no-undo .

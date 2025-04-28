@@ -1,13 +1,13 @@
 using Progress.Lang.*.
 using Ibs.Th.Gbl.ReportXml.
-
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bbf1530230d5, 2753, rls $
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
+$Workfile: r-segm.p $
+$Archive: rep/r-segm.p $
 
 Процедура формирования отчета по сегментации клиентов
 
@@ -17,11 +17,11 @@ Author: Kaboev Valeriy
 Creation date: 19/09/12
 
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: bbf1530230d5, 2753, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Сб фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-segm.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-segm.p $":U .
 define variable vss-description as character no-undo init "Процедура формирования отчета по сегментации клиентов" .
 { gbl/cur-time.i }
 { cmp/str-glbl.i }

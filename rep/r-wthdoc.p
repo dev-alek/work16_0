@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-wthdoc.p $
+$Archive: rep/r-wthdoc.p $
 
 Печать документа движения материальных ценностей
 
@@ -23,11 +24,11 @@ Created: 30/07/2001.
 define input parameter parparentproc as widget-handle no-undo .
 
 /* VSS Variables Definitions */
-DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision: aea5316774be, 0, rls $":U.
+DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author: expertek $":U.
+DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U.
+DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: r-wthdoc.p $":U.
+DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive: rep/r-wthdoc.p $":U.
 DEF VAR vss-description AS CHAR NO-UNDO INIT "печать документа движения материальных ценностей":U.
 
 /* Shared Variables & Preprocessors Definitions */

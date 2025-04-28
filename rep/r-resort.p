@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 503102c480fa, 3492, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:36 $
+$Workfile: r-resort.p $
+$Archive: rep/r-resort.p $
 
 Печать документа пересортицы
 
@@ -18,11 +19,11 @@ Creation date: 05/23/06
 define input parameter p-parent-proc as widget-handle no-undo .
 define input parameter p-rec-trn-doc as recid         no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 503102c480fa, 3492, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/10/16 15:13:36 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-resort.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-resort.p $":U .
 define variable vss-description as character no-undo initial "Печать документа пересортицы":U .
 
 { cmp/vssrevis.i }

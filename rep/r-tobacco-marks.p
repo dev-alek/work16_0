@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: r-tobacco-marks.p $
+$Archive: rep/r-tobacco-marks.p $
 
 Утилита проверки целостности свободной зоны марок и восстановления
 
@@ -15,11 +16,11 @@ Creation date: 07/23/08
 
 */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: f29df1d5f130, 3104, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: DRuban $":U .
+define variable vss-date        as character no-undo initial "$Date: Вт авг 09 09:15:01 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-tobacco-marks.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-tobacco-marks.p $":U .
 define variable vss-description as character no-undo initial "Отчет по невалидным маркам".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

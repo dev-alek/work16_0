@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: r-bener2.p $
+$Archive: rep/r-bener2.p $
 
 Печать отчета о выручке BreakByCass
 
@@ -19,11 +20,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter cas-num as integer no-undo .
 define input parameter HowBreak        as logical     no-undo.
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+def var vss-author      as character no-undo init "$Author: expertek $":U .
+def var vss-date        as character no-undo init "$Date: 2014/01/27 14:27:46 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: r-bener2.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/r-bener2.p $":U .
 def var vss-description as character no-undo init "Печать отчета о выручке".
 { cmp/vssrevis.i }
 

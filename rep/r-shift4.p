@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ac2de8611dbf, 1057, rls $
+$Author: EShklyar $
+$Date: Fri Oct 06 18:33:18 2017 +0300 $
+$Workfile: r-shift4.p $
+$Archive: rep/r-shift4.p $
 
 печать сменного отчета (ЮКОС лист 4)
 
@@ -31,11 +32,11 @@ define input parameter p-obj-code            like ub.clients.obj-code no-undo.
 define input parameter p-z-number-list       as   character           no-undo.
 define input parameter p-previous-shift-date as   date                no-undo.
 
-DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision: ac2de8611dbf, 1057, rls $":U.
+DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author: EShklyar $":U.
+DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date: Fri Oct 06 18:33:18 2017 +0300 $":U.
+DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: r-shift4.p $":U.
+DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive: rep/r-shift4.p $":U.
 DEF VAR vss-description AS CHAR NO-UNDO INIT "$Печать сменного отчета - лист 4 $":U.
 
 

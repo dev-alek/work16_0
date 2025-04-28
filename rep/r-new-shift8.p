@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fcd3c45be6b6, 3657, test $
+$Author: VSpiridonov $
+$Date: 2024/01/25 16:33:07 $
+$Workfile: r-new-shift8.p $
+$Archive: rep/r-new-shift8.p $
 8 часть сменного отчета
 Автор: 
 Дата создания: 20/05/2022
@@ -17,11 +18,11 @@ DEFINE INPUT PARAMETER tog-82             AS logical   NO-UNDO .            /*с 
 DEFINE INPUT PARAMETER v-report-name-html AS CHARACTER  NO-UNDO . 
 DEFINE INPUT PARAMETER v-report-result    AS logical  NO-UNDO . 
 
-def var vss-revision    AS character NO-UNDO init "$Revision$":U .
-def var vss-author      AS character NO-UNDO init "$Author$":U .
-def var vss-date        AS character NO-UNDO init "$Date$":U .
-def var vss-workfile    AS character NO-UNDO init "$Workfile$":U .
-def var vss-archive     AS character NO-UNDO init "$Archive$":U .
+def var vss-revision    AS character NO-UNDO init "$Revision: fcd3c45be6b6, 3657, test $":U .
+def var vss-author      AS character NO-UNDO init "$Author: VSpiridonov $":U .
+def var vss-date        AS character NO-UNDO init "$Date: 2024/01/25 16:33:07 $":U .
+def var vss-workfile    AS character NO-UNDO init "$Workfile: r-new-shift8.p $":U .
+def var vss-archive     AS character NO-UNDO init "$Archive: rep/r-new-shift8.p $":U .
 def var vss-description AS character NO-UNDO init "8 часть сменного отчета".
 
 { cmp/vssrevis.i    }

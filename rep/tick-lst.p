@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bc08c5dca74b, 164, rls $
+$Author: EShklyar $
+$Date: Mon Mar 23 18:06:20 2015 +0400 $
+$Workfile: tick-lst.p $
+$Archive: rep/tick-lst.p $
 
 Печать ценников (этикеток) по списку
 

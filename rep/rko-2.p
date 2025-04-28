@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1b40de64e20a, 2987, rls $
+$Author: EShklyar $
+$Date: Ср апр 06 16:23:43 2022 +0300 $
+$Workfile: rko-2.p $
+$Archive: rep/rko-2.p $
 
 Печать платежа  типа расход наличные
 
@@ -25,11 +26,11 @@ define input-output parameter p-format as integer no-undo .
 
 &SCOP f-l MonthNameRusGen
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1b40de64e20a, 2987, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:43 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rko-2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/rko-2.p $":U .
 define variable vss-description as character no-undo init "Печать платежа  типа расход наличные".
 
 { cmp/vssrevis.i }

@@ -16,7 +16,7 @@ Creation date: 08/07/14
 */
 
 using ibs.th.str.*.
-
+block-level on error undo, throw.
 
 define variable vss-revision    as character no-undo init "$Revision: 34480d5fe7d9, 3332, rls $":U .
 define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .

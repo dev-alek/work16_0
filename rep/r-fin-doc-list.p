@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6b96c295e5e2, 2873, rls $
+$Author: VRukavishnikov $
+$Date: ѕн но€ 22 19:49:10 2021 +0300 $
+$Workfile: r-fin-doc-list.p $
+$Archive: rep/r-fin-doc-list.p $
 
 —писок кассовых документов
 

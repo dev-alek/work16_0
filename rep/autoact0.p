@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: autoact0.p $
+$Archive: rep/autoact0.p $
 
 Печать акта автоматической переоценки (весовой учет топлива)
 
@@ -26,11 +27,11 @@ define input parameter p-mode        as character     no-undo.
 &scop comm-pars ub.gds-dtl.doc-code ub.goods.artic ub.goods.prod-type ub.goods.prod-code
 &scop f-l       Word-Sum,Total-Word,RedLine,Roubles,Copecks
 
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: expertek $":U.
 define variable vss-date        as character no-undo initial "$date: 12.09.03 15:57 $":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: autoact0.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: rep/autoact0.p $":U.
 define variable vss-description as character no-undo initial "Печать акта автоматической переоценки (весовой учет топлива)".
 
 { cmp/vssrevis.i        }

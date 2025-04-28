@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 77640f64cf73, 2620, rls $
+$Author: EShklyar $
+$Date: ѕн окт 19 09:22:02 2020 +0300 $
+$Workfile: r-print-error.p $
+$Archive: rep/r-print-error.p $
 
 ѕечать ошибок по ”ѕƒ
 
@@ -15,11 +16,11 @@ Creation date: 08/07/14
 
 */
 
-define variable vss-revision as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision as character no-undo init "$Revision: 77640f64cf73, 2620, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн окт 19 09:22:02 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-print-error.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-print-error.p $":U .
 define variable vss-description as character no-undo init "ѕечать ошибок по ”ѕƒ".
 { cmp/vssrevis.i }
 { str/temp_upd.i }

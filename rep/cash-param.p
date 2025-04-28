@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2d76561e6a10, 3381, rls $
+$Author: EShklyar $
+$Date: 2023/05/31 09:28:12 $
+$Workfile: cash-param.p $
+$Archive: rep/cash-param.p $
 Отчет по анализу параметров АРМ Кассира
 Автор: 
 Дата 
@@ -11,11 +12,11 @@ Author:
 Creation date: 
 */
 
-define variable vss-revision as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision as character no-undo init "$Revision: 2d76561e6a10, 3381, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/05/31 09:28:12 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cash-param.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/cash-param.p $":U .
 define variable vss-description as character no-undo init "Отчет по анализу параметров АРМ Кассира".
 {cmp\vssrevis.i }
 {cmp\trg-def.i}

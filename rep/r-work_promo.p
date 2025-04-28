@@ -1,7 +1,7 @@
 using Progress.Lang.*.
 using Ibs.Th.Gbl.ReportXml.
 using Ibs.Th.Gbl.rep-out.
-
+block-level on error undo, throw.
 /*------------------------------------------------------------------------
 $Revision: 14aa1c227e1d, 3435, rls $
 $Author: EShklyar $

@@ -1,7 +1,7 @@
 using Progress.Lang.*.
 using Ibs.Th.Gbl.ReportXml.
 using Ibs.Th.Gbl.rep-out.
-
+block-level on error undo, throw.
 /*------------------------------------------------------------------------
 $Revision$
 $Author$

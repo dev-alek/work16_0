@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 59ca1604305e, 148, rls $
+$Author: EShklyar $
+$Date: Mon Feb 16 20:50:15 2015 +0400 $
+$Workfile: r-new-shift5.p $
+$Archive: rep/r-new-shift5.p $
 
 печать сменного отчета лист 5
 
@@ -34,11 +35,11 @@ define input parameter p-ruleset-id               as integer   no-undo .
 define input parameter p-obj-type    like ub.clients.obj-type no-undo .
 define input parameter p-obj-code    like ub.clients.obj-code no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 59ca1604305e, 148, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Feb 16 20:50:15 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-new-shift5.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-new-shift5.p $":U .
 define variable vss-description as character no-undo initial "печать сменного отчета (ЮКОС лист 4)":U .
 
 { cmp/trg-def.i              }

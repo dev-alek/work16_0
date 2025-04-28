@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-w-inv.p $
+$Archive: rep/r-w-inv.p $
 
 Печать документа инвентаризации материальных ценностей
 
@@ -24,11 +25,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-wth-doc-recid as recid.
 
 /* VSS Variables Definitions */
-define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-define variable vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision: aea5316774be, 0, rls $":U.
+define variable vss-author      AS CHAR NO-UNDO INIT "$Author: expertek $":U.
+define variable vss-date        AS CHAR NO-UNDO INIT "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U.
+define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: r-w-inv.p $":U.
+define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive: rep/r-w-inv.p $":U.
 define variable vss-description AS CHAR NO-UNDO INIT "печать документа инвентаризации материальных ценностей":U.
 
 /* Shared Variables & Preprocessors Definitions */

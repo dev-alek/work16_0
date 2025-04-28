@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: cb9d18173618, 2031, rls $
+$Author: druban $
+$Date: Fri Oct 18 10:56:48 2019 +0300 $
+$Workfile: r-statusvsd.p $
+$Archive: rep/r-statusvsd.p $
 
 Îò÷åò ÂÑÄ
 
@@ -21,16 +21,17 @@ Ruban
 USING ibs.th.str.gds.*.
 USING ibs.th.str.mercury.*.
 USING ibs.th.gbl.storage.*.
+block-level on error undo, throw.
 &scop date-start x-date-start
 &scop date-end x-date-end
 DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO .
 DEFINE INPUT PARAMETER pTime         AS INTEGER       NO-UNDO .
 DEFINE INPUT PARAMETER pStatus       AS CHARACTER     NO-UNDO .
-DEFINE VARIABLE vss-revision AS CHARACTER NO-UNDO INIT "$Revision$":U .
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author$":U .
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date$":U .
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile$":U .
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive$":U .
+DEFINE VARIABLE vss-revision AS CHARACTER NO-UNDO INIT "$Revision: cb9d18173618, 2031, rls $":U .
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author: druban $":U .
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date: Fri Oct 18 10:56:48 2019 +0300 $":U .
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile: r-statusvsd.p $":U .
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive: rep/r-statusvsd.p $":U .
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Îò÷åò ÂÑÄ".
 &ELSE 
  

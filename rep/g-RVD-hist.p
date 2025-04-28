@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7182fdaa4b72, 2879, rls $
+$Author: SSlivenko $
+$Date: Пн ноя 22 19:49:11 2021 +0300 $
+$Workfile: g-RVD-hist.p $
+$Archive: rep/g-RVD-hist.p $
 
 Главная программа запуска отчета r-RVD-hist.p из меню
 
@@ -17,11 +18,11 @@ Creation date: 11/08/10
 
 define input  parameter parParentProc  as widget-handle no-undo.
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 7182fdaa4b72, 2879, rls $":U .
+def var vss-author      as character no-undo init "$Author: SSlivenko $":U .
+def var vss-date        as character no-undo init "$Date: Пн ноя 22 19:49:11 2021 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: g-RVD-hist.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/g-RVD-hist.p $":U .
 def var vss-description as character no-undo init "Главная программа запуска отчета r-RVD-hist.p из меню".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

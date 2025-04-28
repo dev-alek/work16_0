@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 245fc987699b, 3203, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:28 $
+$Workfile: rpychk0.p $
+$Archive: rep/rpychk0.p $
 
 Проверка размазывания чеков по алгоритму 1 и строке запроса
 
@@ -26,11 +27,11 @@ define input parameter p-shift-num-start as integer no-undo .
 define input parameter p-shift-num-end as integer no-undo .
 define input parameter p-inkas-code as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 245fc987699b, 3203, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:28 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rpychk0.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/rpychk0.p $":U .
 define variable vss-description as character no-undo init "Проверка размазывания чеков по алгоритму 1 и строке запроса".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

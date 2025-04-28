@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ccard.p $
+$Archive: rep/ccard.p $
 
 Документ Калькуляционная карта
 
@@ -17,11 +18,11 @@ Creation date: 03/29/04 4:26
 
 */
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+def var vss-author      as character no-undo init "$Author: expertek $":U .
+def var vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: ccard.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/ccard.p $":U .
 def var vss-description as character no-undo init " Документ Калькуляционная карта    ".
 
 { cmp/vssrevis.i }

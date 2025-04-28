@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-ob2-ex.p $
+$Archive: rep/r-ob2-ex.p $
 
 Старая оборотка с признак - экспорт в файл для цума
 
@@ -19,11 +20,11 @@ define input parameter  RADIO-AltObj     as integer   no-undo .
 define input parameter  is-prt           as logical   no-undo .
 define output parameter StrTitul         as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-ob2-ex.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-ob2-ex.p $":U .
 define variable vss-description as character no-undo init "Старая оборотка с признак - экспорт в файл для цума".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

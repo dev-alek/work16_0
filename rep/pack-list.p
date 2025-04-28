@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : pack-list.p
@@ -12,17 +13,17 @@
 
 /* 
 $Revision: $
-$Author$
-$Date$
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
 $Workfile: $
-$Archive$ 
+$Archive: rep/pack-list.p $ 
 */
 
 define variable vss-revision    as character no-undo init "$Revision: $":U .
 define variable vss-author      as character no-undo init "$Author: $":U .
 define variable vss-date        as character no-undo init "$Date: $":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pack-list.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/pack-list.p $":U .
 define variable vss-description as character no-undo init "Запуск процедуры формирования 
                                                           упаковочного листа по выбранной накладной.".
 {cmp/vssrevis.i}

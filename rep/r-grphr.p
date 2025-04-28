@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-grphr.p $
+$Archive: rep/r-grphr.p $
 
 Почасовая статистика розничных продаж по КОЛИЧЕСТВУ ТОВАРОВ - сбор данных
 
@@ -23,11 +24,11 @@ define input parameter Rs-dis-card as integer no-undo .
 define input parameter t-scale as logical no-undo .
 define input parameter p-selectGood as integer no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-grphr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-grphr.p $":U .
 define variable vss-description as character no-undo init "Почасовая статистика розничных продаж по КОЛИЧЕСТВУ ТОВАРОВ - сбор данных".
 { cmp/vssrevis.i }
 

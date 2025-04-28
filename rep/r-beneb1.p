@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 54ccc9e2d3ee, 3460, rls $
+$Author: Ostroukhov $
+$Date: 2023/10/16 15:13:33 $
+$Workfile: r-beneb1.p $
+$Archive: rep/r-beneb1.p $
 
 Печать отчета о выручке Bytemp
 
@@ -20,11 +21,11 @@ define input parameter cas-num as integer no-undo .
 define input parameter HowBreak        as logical     no-undo.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 54ccc9e2d3ee, 3460, rls $":U .
+define variable vss-author      as character no-undo init "$Author: Ostroukhov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:33 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-beneb1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-beneb1.p $":U .
 define variable vss-description as character no-undo init "Печать отчета о выручке".
 { cmp/vssrevis.i }
 

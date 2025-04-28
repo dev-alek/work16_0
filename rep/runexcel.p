@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: runexcel.p $
+$Archive: rep/runexcel.p $
 
 «апуск дополнительной сессии дл€ вывода в Excel
 
@@ -17,11 +18,11 @@ Creation date: 03/20/06
 
 define input parameter tempfile as char no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: 2014/01/27 14:27:46 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: runexcel.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/runexcel.p $":U .
 define variable vss-description as character no-undo init "¬ывод в Excel с запуском дополнительной сессии".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

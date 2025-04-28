@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a8e2cf75ddf6, 2506, rls $
+$Author: EShklyar $
+$Date: Ср июл 08 17:09:06 2020 +0300 $
+$Workfile: r-xldcr2.p $
+$Archive: rep/r-xldcr2.p $
 
 Отчёт по Картам клиентов
 
@@ -41,11 +42,11 @@ define input parameter UpLevel          as decimal format "->>>,>>>,>>9.99":U no
 define input parameter selectcard       as character no-undo.
 define input parameter p-curr-r-b       as character no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a8e2cf75ddf6, 2506, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июл 08 17:09:06 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-xldcr2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-xldcr2.p $":U .
 define variable vss-description as character no-undo init "Отчёт по Картам клиентов".
 { cmp/vssrevis.i }
 

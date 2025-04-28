@@ -16,6 +16,7 @@ Creation date: 24/05/21
 */
 
 using ibs.th.str.*.
+block-level on error undo, throw.
 
 define input parameter iCntxtHostCodeObj as integer   no-undo.
 define input parameter iACType           as integer   no-undo.

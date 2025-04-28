@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a8e2cf75ddf6, 2506, rls $
+$Author: EShklyar $
+$Date: Ср июл 08 17:09:06 2020 +0300 $
+$Workfile: torg-13x-foto.p $
+$Archive: rep/torg-13x-foto.p $
 
 Печать формы ТОРГ-13
 
@@ -26,11 +27,11 @@ define input parameter p-print-gold         as logical          no-undo. /* Если
 define input parameter p-print-prod         as logical          no-undo. /* Если yes, то идет сортировка по производителям */
 define input parameter p-break-name         as logical          no-undo. /* Если yes, то названия товаров переносятся */
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .  
+def var vss-revision    as character no-undo init "$Revision: a8e2cf75ddf6, 2506, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: Ср июл 08 17:09:06 2020 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: torg-13x-foto.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/torg-13x-foto.p $":U .  
 def var vss-description as character no-undo init "Печать формы ТОРГ-13".
 { cmp/vssrevis.i        }
 { cmp/str-glbl.i        }

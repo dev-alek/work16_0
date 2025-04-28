@@ -19,7 +19,7 @@ Creation date: 01/30/09
 */
 
 using ibs.th.str.*.
-
+block-level on error undo, throw.
 define input parameter p-mainmenu-handle as widget-handle no-undo.
 define input parameter rec_id            as recid         no-undo.
 define input parameter parprint-water    as logical       no-undo.

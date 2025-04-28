@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 01d4914e5615, 377, rls $
+$Author: EShklyar $
+$Date: Mon Dec 28 19:14:54 2015 +0300 $
+$Workfile: r-obsal2.p $
+$Archive: rep/r-obsal2.p $
 
 Оборотно-сальдовая ведомость по покупателям
 
@@ -23,11 +24,11 @@ define input parameter is-fin        as logical   no-undo .
 define input parameter is-fo         as logical   no-undo .
 define input parameter is-real       as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 01d4914e5615, 377, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Dec 28 19:14:54 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-obsal2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-obsal2.p $":U .
 define variable vss-description as character no-undo init "Оборотно-сальдовая ведомость по покупателям".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

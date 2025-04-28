@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 992a74a9441b, 3581, rls $
+$Author: VSpiridonov $
+$Date: 2023/12/14 13:36:13 $
+$Workfile: akt-np-make.p $
+$Archive: rep/akt-np-make.p $
 
 Печатные формы. Акт учета НП при проведении Ремонтных работ
 
@@ -25,11 +26,11 @@ on error undo, return error
 define input parameter p-mainmenu-handle    as handle           no-undo.
 define input parameter rec_id               as recid            no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 992a74a9441b, 3581, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/12/14 13:36:13 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: akt-np-make.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/akt-np-make.p $":U .
 define variable vss-description as character no-undo init "Печатные формы. Акт учета НП при проведении Ремонтных работ".
 { cmp/vssrevis.i        }
 { cmp/str-glbl.i        }

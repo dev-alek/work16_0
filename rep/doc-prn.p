@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 51d0b788d6e0, 3546, rls $
+$Author: DRuban $
+$Date: 2023/11/27 08:31:17 $
+$Workfile: doc-prn.p $
+$Archive: rep/doc-prn.p $
 
 Печать складского документа
 
@@ -22,11 +23,11 @@ define input parameter p-mainmenu-handle    as handle           no-undo.
 define input parameter p-alldocs-handle     as handle           no-undo.
 define input parameter v-trn-doc-recid      as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 51d0b788d6e0, 3546, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/11/27 08:31:17 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: doc-prn.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/doc-prn.p $":U .
 define variable vss-description as character no-undo init "Печать складского документа.".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

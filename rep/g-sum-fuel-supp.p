@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: da45aef95689, 3499, rls $
+$Author: ARostovtsev $
+$Date: 2023/10/16 15:13:36 $
+$Workfile: g-sum-fuel-supp.p $
+$Archive: rep/g-sum-fuel-supp.p $
 
 Сводный отчёт по поставкам топлива
 

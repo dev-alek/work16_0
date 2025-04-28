@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 61c78e167033, 1728, rls $
+$Author: ASMorozov $
+$Date: Wed Dec 26 18:20:46 2018 +0300 $
+$Workfile: chk-ahz.p $
+$Archive: rep/chk-ahz.p $
 
 Проверка состояния складских архивов и возвращение правильных дат
 
@@ -36,11 +37,11 @@ define output       parameter p-archive-ok        as logical   no-undo .
 define output       parameter p-comment           as character no-undo .
 define output       parameter p-can-print         as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 61c78e167033, 1728, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Dec 26 18:20:46 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chk-ahz.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/chk-ahz.p $":U .
 define variable vss-description as character no-undo init "Проверка состояния складских архивов и возвращение правильных дат".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4|&5|&6|&7',p-obj-type,p-obj-code,p-verify-arh,p-verify-ahsp,p-verify-aht,p-date-start,p-date-end)" }
 { cmp/trg-def.i  }

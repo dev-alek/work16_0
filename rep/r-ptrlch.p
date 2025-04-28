@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f30204f76123, 1351, rls $
+$Author: PGridchina $
+$Date: Fri May 18 13:28:20 2018 +0300 $
+$Workfile: r-ptrlch.p $
+$Archive: rep/r-ptrlch.p $
 
 Технологический отчет по АЗК - сбор данных и печать
 
@@ -36,11 +37,11 @@ define input parameter p-rs-grp-tech-refuell as integer no-undo.    /* Группиров
 /*define input parameter p-tog-unlock-trans as logical.   /* 5 – Разблокировка транзакций */       */
 /*define input parameter p-tog-total-tech-chk as logical. /* 6 – Итоги по технологическим чекам  */*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f30204f76123, 1351, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Fri May 18 13:28:20 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-ptrlch.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-ptrlch.p $":U .
 define variable vss-description as character no-undo init "Технологический отчет по АЗК - сбор данных и печать".
 { cmp/vssrevis.i }
 

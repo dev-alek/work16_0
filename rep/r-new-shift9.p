@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: eaa8cb55810d, 3483, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:35 $
+$Workfile: r-new-shift9.p $
+$Archive: rep/r-new-shift9.p $
 
 Сменный отчет лист 9 сбор данных
 
@@ -38,11 +39,11 @@ DEFINE INPUT PARAMETER p-shift-date-end   like ub.shift-obj.shift-date  no-undo.
 DEFINE INPUT PARAMETER p-shift-num-end    like ub.shift-obj.shift-num   no-undo.
 define input parameter p-tog-1-out-pump-with-icnt as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: eaa8cb55810d, 3483, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:35 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-new-shift9.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-new-shift9.p $":U .
 define variable vss-description as character no-undo init "Сменный отчет лист 9 сбор данных".
 
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e47eaee10c88, 211, rls $
+$Author: SShalanin $
+$Date: Tue Jun 30 11:11:56 2015 +0400 $
+$Workfile: z-exl.p $
+$Archive: rep/z-exl.p $
 
 Программа запуска excel 
 
@@ -18,11 +19,11 @@ Creation date: 06/02/15
 { gbl/paramls.i }
 define input-output parameter table for temp-param .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e47eaee10c88, 211, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Jun 30 11:11:56 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: z-exl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/z-exl.p $":U .
 define variable vss-description as character no-undo init "Программа запуска excel ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9b6d26303b27, 2913, rls $
+$Author: SSlivenko $
+$Date: Пн ноя 22 19:49:14 2021 +0300 $
+$Workfile: r-QR-rep.p $
+$Archive: rep/r-QR-rep.p $
 
 Сверка по оплатам QR-кодом
 
@@ -15,11 +16,11 @@ Creation date: 25/05/2020
 
 */
 
-define variable vss-revision as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision as character no-undo initial "$Revision: 9b6d26303b27, 2913, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: Пн ноя 22 19:49:14 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-QR-rep.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-QR-rep.p $":U .
 define variable vss-description as character no-undo initial "Отчет по оплатам QR-кодом".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,10 +1,9 @@
-
 /*
 $Revision: $
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: r-xldlnr.p $
+$Archive: rep/r-xldlnr.p $
 
 r-Отчет по картам ЛНР.
 
@@ -18,16 +17,16 @@ v16.0 */
 using Progress.Lang.*.
 using Ibs.Th.Gbl.ReportXml.
 using Ibs.Th.Gbl.rep-out.
-
+block-level on error undo, throw.
 define input parameter p-cb-disType as character no-undo.
 define input parameter p-rs-klass as character no-undo.
 define input parameter p-rs-det as character no-undo.
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 1f78fe327cdf, 1091, rls $":U .
+def var vss-author      as character no-undo init "$Author: ASMorozov $":U .
+def var vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: r-xldlnr.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/r-xldlnr.p $":U .
 def var vss-description as character no-undo init "e-Отчет по картам ЛНР.Печать отчёта в процедуре my-report.".
 
 { cmp/vssrevis.i }

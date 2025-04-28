@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 903a40602d08, 2659, rls $
+$Author: SSlivenko $
+$Date: ѕн но€ 02 16:18:16 2020 +0300 $
+$Workfile: g-QR-rep.p $
+$Archive: rep/g-QR-rep.p $
 
 ”тилита проверки целостности свободной зоны марок
 
@@ -17,11 +18,11 @@ Creation date: 07/30/08
 
 define input parameter parparentproc as widget-handle no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 903a40602d08, 2659, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн но€ 02 16:18:16 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: g-QR-rep.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/g-QR-rep.p $":U .
 define variable vss-description as character no-undo init "—верка по оплатам QR-кодом".
 { cmp/vssrevis.i    }
 { cmp/str-glbl.i    }

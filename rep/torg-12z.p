@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: torg-12z.p $
+$Archive: rep/torg-12z.p $
 
 Форма Torg-12 со спецификой ювелирных товаров
 
@@ -23,11 +24,11 @@ define input parameter p-mainmenu-handle    as handle           no-undo.
 define input parameter rec_id               as recid            no-undo.
 define input parameter Invers               as logical          no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: 2014/01/27 14:27:46 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: torg-12z.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/torg-12z.p $":U .
 define variable vss-description as character no-undo initial "Форма Torg-12 со спецификой ювелирных товаров":U .
 
 { cmp/vssrevis.i     }

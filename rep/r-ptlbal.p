@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0ec5d11e52eb, 2015, rls $
+$Author: EShklyar $
+$Date: Wed Sep 18 21:05:06 2019 +0300 $
+$Workfile: r-ptlbal.p $
+$Archive: rep/r-ptlbal.p $
 
 Оперативный балансовый отчет движения нефтепродуктов
 
@@ -32,11 +33,11 @@ define input parameter parend_shift_num   as integer            no-undo.
 define input parameter p-tog-weight       as logical            no-undo .
 define input parameter p-tog-with-tot-day as logical            no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 0ec5d11e52eb, 2015, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: Wed Sep 18 21:05:06 2019 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: r-ptlbal.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/r-ptlbal.p $":U .
 def var vss-description as character no-undo init "Оперативный балансовый отчет движения нефтепродуктов".
 { cmp/vssrevis.i    }
 { cmp/str-glbl.i    }

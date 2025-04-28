@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fd71895f8900, 2147, rls $
+$Author: EShklyar $
+$Date: Wed Dec 25 15:23:55 2019 +0300 $
+$Workfile: g-paysys.p $
+$Archive: rep/g-paysys.p $
 
 Отчет по платежным системам
 
@@ -16,11 +17,11 @@ Creation date: 19/09/12
 */
 
 DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO .
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision$":U .
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author$":U .
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date$":U .
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile$":U .
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive$":U .
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision: fd71895f8900, 2147, rls $":U .
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author: EShklyar $":U .
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date: Wed Dec 25 15:23:55 2019 +0300 $":U .
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile: g-paysys.p $":U .
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive: rep/g-paysys.p $":U .
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Отчет по платежным системам".
 
 { cmp/vssrevis.i }

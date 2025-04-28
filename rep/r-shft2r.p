@@ -15,6 +15,7 @@ Creation date: 09/14/05
 
 */
 using ibs.th.str.*.
+block-level on error undo, throw.
 
 DEFINE INPUT PARAMETER pobj-type             LIKE ub.shift-obj.obj-type   NO-UNDO.
 DEFINE INPUT PARAMETER pobj-code             LIKE ub.shift-obj.obj-code   NO-UNDO.

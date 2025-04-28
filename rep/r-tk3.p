@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 58482062ad09, 1751, rls $
+$Author: SMMolotkov $
+$Date: Thu Feb 07 16:49:55 2019 +0300 $
+$Workfile: r-tk3.p $
+$Archive: rep/r-tk3.p $
 
 Документ Технологическая карта - 3
 
@@ -18,12 +18,13 @@ Creation date: 02/09/13
 
 using Progress.Lang.*.
 using Ibs.Th.Gbl.Rep-Out.
+block-level on error undo, throw.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 58482062ad09, 1751, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Feb 07 16:49:55 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-tk3.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-tk3.p $":U .
 define variable vss-description as character no-undo init "Документ Технологическая - 3 ".
 
 define input parameter parparentproc as handle no-undo .

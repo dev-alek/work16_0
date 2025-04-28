@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d3f7ea4aa09e, 3307, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:07 $
+$Workfile: g-cash-param.p $
+$Archive: rep/g-cash-param.p $
 
 Отчет по анализу параметров АРМ Кассира
 
@@ -16,11 +17,11 @@ Creation date: 19/09/12
 */
 
 DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO .
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision$":U .
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author$":U .
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date$":U .
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile$":U .
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive$":U .
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision: d3f7ea4aa09e, 3307, rls $":U .
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author: DRuban $":U .
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date: 2023/05/19 13:37:07 $":U .
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile: g-cash-param.p $":U .
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive: rep/g-cash-param.p $":U .
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Отчет по анализу параметров АРМ Кассира".
 
 { cmp/vssrevis.i }

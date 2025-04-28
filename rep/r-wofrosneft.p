@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0bff6b34250a, 11, test $
+$Author: EShklyar $
+$Date: Wed Mar 05 12:40:36 2014 +0300 $
+$Workfile: r-wofrosneft.p $
+$Archive: rep/r-wofrosneft.p $
 
 Документ расхода, возврата и списания  короткий
 
@@ -17,7 +17,7 @@ Creation date: 14/01/14
 
 using Progress.Lang.*.
 using Ibs.Th.Gbl.Rep-Out.
-
+block-level on error undo, throw.
 define input parameter parParentProc        AS WIDGET-HANDLE NO-UNDO.
 define input parameter rec_id               as recid        no-undo.
 define input  parameter is-chek             as logical   no-undo .
@@ -26,11 +26,11 @@ define input parameter p-mode               as character        no-undo.
 define stream out-stream.
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 0bff6b34250a, 11, test $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Wed Mar 05 12:40:36 2014 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-wofrosneft.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-wofrosneft.p $":U .
 define variable vss-description as character no-undo initial "Служебная записка, Html - отчет, Роснефть":U .
 
 

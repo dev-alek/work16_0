@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 45afebdf84b6, 1359, rls $
+$Author: EShklyar $
+$Date: Tue May 22 14:25:55 2018 +0300 $
+$Workfile: g-detcorchk.p $
+$Archive: rep/g-detcorchk.p $
 
 Детализированный отчет по чекам транзакции
 
@@ -16,11 +17,11 @@ Creation date: 04/29/10
 */
 define input parameter parParentProc    AS WIDGET-HANDLE    NO-UNDO .
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 45afebdf84b6, 1359, rls $":u .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":u .
+define variable vss-date        as character no-undo init "$Date: Tue May 22 14:25:55 2018 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: g-detcorchk.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: rep/g-detcorchk.p $":u .
 define variable vss-description as character no-undo init "Детализированный отчет по чекам транзакции" .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

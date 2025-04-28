@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e5665df1db10, 792, rls $
+$Author: EShklyar $
+$Date: Fri Sep 16 16:22:48 2016 +0300 $
+$Workfile: g-p-pp.p $
+$Archive: rep/g-p-pp.p $
 
 Контроль приходных цен
 
