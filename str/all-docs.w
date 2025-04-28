@@ -1699,6 +1699,7 @@ end.
 
 on choose of b-add in frame {&frame-name} /* Добав */
 do:
+
   vardoc-mode = {&add-def}.
   run local-add in this-procedure no-error.
   if pardoc-rec <> ? then do:
@@ -1708,13 +1709,26 @@ end.
 
     ON ROW-DISPLAY OF br-docs IN FRAME {&frame-name}
       DO:
+        define buffer color_inv-doc-attr for ub.inv-doc-attr .  
         if AVAILABLE (t-doc) and t-doc.status_ = {&inquiry} then 
         do:   
           find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
             ub.inv-doc-attr.attr-code = "isManual" and ub.inv-doc-attr.attr-value = string(true) no-error .
           if available (ub.inv-doc-attr) then 
           do:  
-            
+            find first color_inv-doc-attr no-lock where color_inv-doc-attr.doc-code = t-doc.doc-code and
+            color_inv-doc-attr.attr-code = "ManualTSD" and ub.inv-doc-attr.attr-value <> "" no-error .
+            if available (color_inv-doc-attr) then do:
+            do ii = 1 to extent (bcol):  
+              if valid-handle (bcol[ii]) 
+                then 
+              do:
+                assign
+                  bcol[ii]:fgcolor = BROWN_COLOR.
+              end.
+            end.               
+            end.
+            else do:
             do ii = 1 to extent (bcol):  
               if valid-handle (bcol[ii]) 
                 then 
@@ -1722,6 +1736,7 @@ end.
                 assign
                   bcol[ii]:fgcolor = BLUE_COLOR.
               end.
+            end.
             end.
           end.
           find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
@@ -1742,6 +1757,19 @@ end.
             ub.inv-doc-attr.attr-code = "invMultDevice" and ub.inv-doc-attr.attr-value = string(true) no-error .
           if available (ub.inv-doc-attr) then 
           do:  
+            find first color_inv-doc-attr no-lock where color_inv-doc-attr.doc-code = t-doc.doc-code and
+            color_inv-doc-attr.attr-code = "MultiTSD" and ub.inv-doc-attr.attr-value <> "" no-error .
+            if available (color_inv-doc-attr) then do:
+            do ii = 1 to extent (bcol):  
+              if valid-handle (bcol[ii]) 
+                then 
+              do:
+                assign
+                  bcol[ii]:fgcolor = BROWN_COLOR.
+              end.
+            end.               
+            end.
+            else do:
             
             do ii = 1 to extent (bcol):  
               if valid-handle (bcol[ii]) 
@@ -1749,6 +1777,7 @@ end.
               do:
                 assign
                   bcol[ii]:fgcolor = DARK_BLUE_COLOR.
+              end.
               end.
             end.
           end.       
@@ -7670,7 +7699,7 @@ procedure proc-m_to-inv :
       end.
     end.
     list-trn = trim(list-trn,",").
-
+run gbl/inidebug.p.
     if isManual then run itogInvDocManual(list-trn, output pardoc-rec).
     else run itogInvDoc(trnDocCode, list-trn, output pardoc-rec).
     mark-list = "" .
@@ -8041,7 +8070,13 @@ procedure itogInvDoc :
       ub.inv-doc-attr.attr-code  = 'notMes'
       ub.inv-doc-attr.attr-value = string(true)
       .
-
+    do ii = 1 to num-entries (par-list):
+    create ub.inv-doc-attr .
+    assign
+    ub.inv-doc-attr.doc-code = entry(ii,par-list)
+    ub.inv-doc-attr.attr-code = "MultiTSD"
+    ub.inv-doc-attr.attr-value = vardoc-code .
+    end.
     /* создание строк */
     for each buf_doc-line no-lock where buf_doc-line.doc-code = par-docCode:
       create ub.doc-line .
