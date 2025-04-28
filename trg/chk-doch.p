@@ -162,7 +162,6 @@ do
         if not v-create then 
         do:
             /*сначала сотрем*/
-            MESSAGE "сначала сотрем" VIEW-AS ALERT-BOX.
             for each buf_c-chk-gds where
                 buf_c-chk-gds.doc-code = buf_chk-doc.doc-code
                 AND buf_c-chk-gds.chip-num = p-chip-num:
