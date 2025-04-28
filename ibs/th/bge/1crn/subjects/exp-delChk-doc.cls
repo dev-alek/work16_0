@@ -96,7 +96,7 @@ method override public void CrContentToSW (insw as handle):
       if ub.shift-obj.open-date = c-chk-doc.corr-date and ub.shift-obj.open-time > c-chk-doc.corr-time then next .
       if ub.shift-obj.close-date = c-chk-doc.corr-date and ub.shift-obj.close-time < c-chk-doc.corr-time then next .
       end.
-       insw:write-data-element (  "shift-date-deletion":U, iso-date(ub.shift-obj.shift-date) + " " + string(ub.shift-obj.shift-name) ).   
+       insw:write-data-element (  "shift-date-deletion":U, string(ub.shift-obj.shift-date,"99.99.9999") + " " + string(ub.shift-obj.shift-name) ).   
       .
       jj = 1 .
       leave .
