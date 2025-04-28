@@ -38,7 +38,14 @@ class ibs.th.bge.1crn.subjects.exp-delChk-doc inherits send1cerpsub:
 
 define override public property InitSecTag as character no-undo init {&tag-interface}
   get.
-  
+
+
+method override public void CheckParam(  ):
+      
+  return.
+
+end method.  
+
 /*------------------------------------------------------------------------------
  Purpose: выгружает несколько чеков со всеми потрохами в контекст контейнера SAX-writer
  Notes:   обязательный метод
