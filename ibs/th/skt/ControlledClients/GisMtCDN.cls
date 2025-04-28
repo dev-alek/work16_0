@@ -283,7 +283,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
          vTimeCur = now.                          
          os-command silent value(cmd).                 
          vReqTime = now -  vTimeCur.  
-                        
+                           
          if searchFile(vfileresult) <> ? then do:
             file-info:file-name = searchFile(vfileresult).
             if file-info:file-size <> 0 then do:
@@ -411,7 +411,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
            tt-code.codename = "Адрес площадки ГИС МТ"          
            tt-code.codeval = string(iReqTime)                            
            tt-code.misc1 = String(iTimeStart)
-           tt-code.misc2 = ""
+           tt-code.misc2 = if iavgTimeMs = -1 then string(now + 15000 * 60) else  ""
            .  
 
    end method.         
