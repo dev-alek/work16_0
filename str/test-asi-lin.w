@@ -1467,6 +1467,9 @@ DO:
       end .
       assign tt-rvs-line.test-asi-diff = abs(tt-rvs-line.density - tt-rvs-line.izmer-density) * 1000 .
       display tt-rvs-line.test-asi-diff with frame Dialog-Frame .
+      if tt-rvs-line.test-asi-diff > 1.7
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
       
       run str/test-asi-result.w (input "Результат расчета проверки корректности работы канала плотности НП АСИ резервуара",
                                  input "Плотность НП по замерам АСИ в резервуаре (г/см3)|Плотность НП измеренная (г/см3)|Расхождение значения по плотности НП (г/см3)|Расхождение значения по плотности НП (кг/м3)",
@@ -1481,6 +1484,9 @@ DO:
       then return no-apply .
       assign tt-rvs-line.test-asi-diff = abs(tt-rvs-line.asi-pomi-density - tt-rvs-line.pomi-density) * 1000 .
       display tt-rvs-line.test-asi-diff with frame Dialog-Frame .
+      if tt-rvs-line.test-asi-diff > 1.7
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
       
       run str/test-asi-result.w (input "Результат расчета проверки корректности работы канала плотности НП АСИ резервуара",
                                  input "Плотность НП с АСИ, приведенная к стандартным условиям (г/см3)|Плотность НП измеренная и приведенная к стандартным условиям (г/см3)|Расхождение значения по плотности НП (г/см3)|Расхождение значения по плотности НП (кг/м3)",
@@ -1495,6 +1501,9 @@ DO:
       then return no-apply .
       assign tt-rvs-line.test-asi-diff = abs((tt-rvs-line.measure-cli-qnty - tt-rvs-line.state-measure-cli-qnty) / tt-rvs-line.state-measure-cli-qnty) * 100 .
       display tt-rvs-line.test-asi-diff with frame Dialog-Frame .
+      if tt-rvs-line.test-asi-diff > 0.65
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
       
       run str/test-asi-result.w (input "Результат расчета проверки корректности работы АСИ по массе НП",
                                  input "Измеренная масса НП по расчетам АСИ (кг)|Масса НП по расчетам ПОкМИ (кг)|Расхождение значения по массе НП (кг)|Расхождение значения по массе НП (%)",
@@ -4118,9 +4127,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         hide-text-dop-si
       with frame Dialog-Frame.
     end .
+    
     if v-test-asi-type = "test-asi_dens-pump"
     then do :
       display tt-rvs-line.asi-pomi-density with frame Dialog-Frame.
+    end .
+    if v-test-asi-type = "test-asi_mass"
+    then do :
+      if tt-rvs-line.test-asi-diff > 0.65
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
+    end .
+    else do :
+      if tt-rvs-line.test-asi-diff > 1.7
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
     end .
   end.
   else do :
@@ -4158,6 +4179,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         
         vLabel = tt-rvs-line.izmer-density:SIDE-LABEL-HANDLE.
         vLabel:fgcolor = RED_COLOR .
+        
+        if tt-rvs-line.test-asi-diff > 1.7
+        then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+        else tt-rvs-line.test-asi-diff:fgcolor = 0 .
         
         disable
           tt-rvs-line.state-level-total
@@ -4200,6 +4225,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         vLabel = tt-rvs-line.temp-izm-vol:SIDE-LABEL-HANDLE.
         vLabel:fgcolor = RED_COLOR .
         
+        if tt-rvs-line.test-asi-diff > 1.7
+        then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+        else tt-rvs-line.test-asi-diff:fgcolor = 0 .
+        
         disable
           tt-rvs-line.state-level-total
           tt-rvs-line.state-level-water
@@ -4238,6 +4267,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         vLabel:fgcolor = RED_COLOR .
         vLabel = tt-rvs-line.state-level-water:SIDE-LABEL-HANDLE.
         vLabel:fgcolor = RED_COLOR .
+        
+        if tt-rvs-line.test-asi-diff > 0.65
+        then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+        else tt-rvs-line.test-asi-diff:fgcolor = 0 .
         
         if v-mi-dnst > 0
         and tt-rvs-line.state-level-total > 0
