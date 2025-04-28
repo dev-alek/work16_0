@@ -1243,7 +1243,7 @@ method public void createTempGoods(mark_ as logical):
       TempDocLineTSD.prod-type = ub.goods.prod-type
       .
   end.
-  TempDocLineTSD.fact-qnty = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty .
+  TempDocLineTSD.fact-qnty = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty * ub.bar-code.cli-base-rate .
   end.
   /*марки*/
   else 
