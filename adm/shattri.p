@@ -335,8 +335,9 @@ on error undo, return error
               buf_tt0-thbj-attr.upper-prop-code = v-to-find-upper-param-code
               .
               delete tt0-thbj-attr.
-          end.
-          v-num-found = v-num-found + 1.
+            end.
+            else delete tt0-thbj-attr.
+            v-num-found = v-num-found + 1.
         end.
       end.
       if v-num-need = v-num-found then do:
