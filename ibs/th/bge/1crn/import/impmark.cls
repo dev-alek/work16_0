@@ -229,7 +229,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       copyMark2DB(buffer tt-marking, ?).
     end.
 
-/*output stream myProt to c:\wrk\16_0\oxml_imp\oxml\heap\ES00002-038\myprot1.txt.*/
+/*output stream myProt to c:\wrk\16_0\oxml_imp\oxml\heap\myprot.txt.*/
     for each tt-marking where
              tt-marking.unit-ext <> "UNIT"
           or tt-marking.box-qnty > 1
@@ -259,7 +259,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       vKM = GetCodeIdent(tt-marking.mark).
       find first buf_marking exclusive-lock where
                buf_marking.mark begins vKM no-error.
-      if avail buf_marking and
+      if tt-marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and 
+         avail buf_marking and
          (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
           buf_marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB) then
       do:  /* если это упаковка и разгруппирована или —ера€ зона, то анализируем статус марок внутри упаковки */
