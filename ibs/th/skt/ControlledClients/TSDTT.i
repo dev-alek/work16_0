@@ -35,6 +35,7 @@ define temp-table TempTrnDoc no-undo
   field ps           as character
   field Status_      as character
   field Flags_       as integer
+  field ManualTSD    as logical
   index pi line-num ext-doc-code .
 
 define temp-table TempTrnDocMT no-undo

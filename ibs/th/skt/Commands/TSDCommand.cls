@@ -615,6 +615,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + TempTrnDocMT.UserName
         TempTrnDoc.Status_      = TempTrnDocMT.Status_
         TempTrnDoc.Flags_       = TempTrnDocMT.Flags_
+        .
+        if (TempTrnDocMT.ClientID = 0 and TempTrnDocMT.ClientType = "") then TempTrnDoc.ManualTSD = yes .
       .
       myflagsDoc:setFlagsToInt(TempTrnDocMT.Flags_).
        
