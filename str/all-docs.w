@@ -7589,7 +7589,7 @@ procedure proc-m_to-inv :
         end.
         else 
         do:
-          message "Документ " + string(buf_trn-doc.doc-code) + " не соответствует статусу 'запрос-'"  view-as alert-box.
+          message "Выбраны документы, не подлежащие включению в итоговую инвентаризацию! Инвентаризация не создана!" view-as alert-box.
           mark-list = "" .
           run UI-on in this-procedure ( input "open" ).
           return error.
