@@ -264,12 +264,15 @@ function volumeGF RETURNS decimal /*־בתול סכטעמי ֶװ ׁ׃ֳ*/
     do:
       for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
         buf_rvs-line.gds-code = buf_goods.gds-code :
-
+        if buf_rvs-line.state-measure-tc-qnty = ? then
+        afterVol = afterVol + buf_rvs-line.state-brutto-qnty .
+        else 
         afterVol = afterVol + buf_rvs-line.state-measure-tc-qnty .
 
       end.
     end.
   end.
+
   volue = (afterVol - beforeVol) / 1000 .
   return volue .
 end function. 

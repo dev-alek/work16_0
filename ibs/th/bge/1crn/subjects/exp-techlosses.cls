@@ -84,8 +84,6 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
       ub.goods.prod-type = buf_doc-line.prod-type no-error .
       if available (ub.goods) then do: 
       
-
-      hSaxWriter:write-data-element (  "out-code":U,     buf_trn-doc.doc-code   ). 
       find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "blowdown" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
@@ -112,11 +110,12 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
       if available (buf_doc-line-attr) then ctrlvalve = decimal(buf_doc-line-attr.attr-value) .
 
       hSaxWriter:start-element ("techlosse") .
-      hSaxWriter:write-data-element (  "tl-blowdown":U,left-trim(string(blowdown,"->>>>>>>>9.99"))).
-      hSaxWriter:write-data-element (  "tl-fittings":U,left-trim (string(fittings,"->>>>>>>>9.99"))).
-      hSaxWriter:write-data-element (  "tl-emptying":U,left-trim (string(emptying,"->>>>>>>>9.99"))).
+      hSaxWriter:write-data-element (  "out-code":U,     buf_trn-doc.doc-code   ). 
+      hSaxWriter:write-data-element (  "tl-blowdown":U,left-trim(string(blowdown,"->>>>>>>>9.999"))).
+      hSaxWriter:write-data-element (  "tl-fittings":U,left-trim (string(fittings,"->>>>>>>>9.999"))).
+      hSaxWriter:write-data-element (  "tl-emptying":U,left-trim (string(emptying,"->>>>>>>>9.999"))).
       hSaxWriter:write-data-element (  "tl-refund":U,left-trim (string(refund,"->>>>>>>>9.999"))).
-      hSaxWriter:write-data-element (  "tl-ctrlvalve":U,left-trim (string(ctrlvalve,"->>>>>>>>9.99"))).
+      hSaxWriter:write-data-element (  "tl-ctrlvalve":U,left-trim (string(ctrlvalve,"->>>>>>>>9.999"))).
       hSaxWriter:end-element ("techlosse") .      
 end.
    end.
