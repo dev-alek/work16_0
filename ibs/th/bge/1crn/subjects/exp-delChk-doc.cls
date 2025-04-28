@@ -102,24 +102,28 @@ method override public void CrContentToSW (insw as handle):
       insw:write-data-element (  "shift-date-deletion":U, "" ).
     end.
 
+
     insw:write-data-element (  "user-code":U,        usrfulnf(c-chk-doc.corr-user-name)   ).
 
+    find first c-chk-gds no-lock where c-chk-gds.doc-code = c-chk-doc.doc-code and c-chk-gds.chip-num = 1 no-error . 
+    if available (c-chk-gds) then do: 
     insw:start-element ("chk-gds") .
     for each c-chk-gds no-lock where c-chk-gds.doc-code = c-chk-doc.doc-code and c-chk-gds.chip-num = 1:
       find first ub.bar-code no-lock where ub.bar-code.b-code = c-chk-gds.b-code no-error .
       if available (ub.bar-code) then 
       do:
-      
         insw:start-element ("chk-gd") .
         insw:write-data-element (  "gd-code":U,    string(ub.bar-code.gds-code)   ).
         insw:write-data-element (  "qnty":U,       string(c-chk-gds.doc-qnty)   ).
         insw:write-data-element (  "price":U,       string(c-chk-gds.price-base)   ).
         insw:write-data-element (  "sum":U,       string(c-chk-gds.doc-qnty * c-chk-gds.price-base)   ).
         insw:end-element ("chk-gd") .
-
       end.
     end.
+
     insw:end-element ("chk-gds") .
+     end.
+
     insw:write-data-element (  "netto":U,       string (c-chk-doc.tot-doc)   ).
 
     find first c-chk-pay no-lock where c-chk-pay.doc-code = c-chk-doc.doc-code and c-chk-pay.chip-num = 1  no-error .
