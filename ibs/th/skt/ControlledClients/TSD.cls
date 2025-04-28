@@ -47,7 +47,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   {ibs/th/skt/ControlledClients/TSDTT.i}
   { str/utd-err.i class }
   {ibs/th/gbl/doc-codeClass.i}
-  {ibs/th/gbl/basecodeClass.i}  
+  {ibs/th/gbl/basecodeClass.i}
   
   define stream str1 .
   define stream str2 .
@@ -1061,9 +1061,16 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     else 
     do:
-    /* Проверка на создание итогового документа */
+      if not (TempTrnDoc.ext-doc-code begins "TSD-") then do:
+      LogWrite:LogStr = "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code.
+      SomeStr = getStatusXml(false, "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code).
+  
+      return false.
+      end.
+        /* Проверка на создание итогового документа */
     find first bf_inv-doc-attr no-lock where bf_inv-doc-attr.attr-code = "ItogInv" and bf_inv-doc-attr.attr-value = TempTrnDoc.ext-doc-code no-error .
-    if available (bf_inv-doc-attr) then leave .      
+    if available (bf_inv-doc-attr) then leave .       
+   
     empty temp-table TempDocLineTSD .
     find first ub.clients no-lock where ub.clients.obj-code = TempTrnDoc.obj-code and
       ub.clients.obj-type = TempTrnDoc.obj-type no-error .
@@ -1994,7 +2001,8 @@ end.
                   end.
               end. 
           end.
-          
+
+/* Прием марок с ТСД */          
           tsdstreamopenapp("MT_MarkLines.txt").
           jj = jj + 1.
           define variable vqnty as decimal no-undo.
@@ -2387,7 +2395,7 @@ end.
                       v-doc-num,
                       buf_m-l.mark,
                       v-doc-num + "_" + string (buf_goods.gds-code),
-                      v-sts,
+                      "Check",
                       (if available buf_m then buf_m.mark-parent else ""),
                       string(vqnty)
                      )
