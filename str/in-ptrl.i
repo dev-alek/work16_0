@@ -2457,6 +2457,7 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   end.
                 end .
                 else do :
+                  p-infoSectionsTotal:CalcTP() .
                   v-st-doc-temp = true.
                   v-chg-temp = false.
                 end .
