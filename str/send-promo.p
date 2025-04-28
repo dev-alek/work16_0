@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e455fc319afd, 3602, rls $
+$Author: ARostovtsev $
+$Date: 2023/12/28 12:56:37 $
+$Workfile: send-promo.p $
+$Archive: str/send-promo.p $
 
 пересылка промоакций на кассу
 
@@ -39,11 +39,11 @@ define input parameter pSubs as class ibs.th.ref.promo.promoactionsubs no-undo .
 define input parameter p-log-file-name as character no-undo .
 define input-output parameter p-view-log as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e455fc319afd, 3602, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ARostovtsev $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/12/28 12:56:37 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: send-promo.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/send-promo.p $":U .
 define variable vss-description as character no-undo init "Пересылка промоакций на кассы".
 { cmp/vssrevis.i }
 
@@ -143,19 +143,20 @@ procedure putc-16 :
   define variable v-subPromoSetGoods as class     promoGoodssubs                        no-undo .
   define variable v-subPromoSetGood  as class     promoGoodssub                         no-undo .
    
-  define variable v-length           as integer   no-undo .
-  define variable v-lengthSh         as integer   no-undo .
-  define variable v-lengthGD         as integer   no-undo .
-  define variable v-lengthGif        as integer   no-undo .
-  define variable v-i                as integer   no-undo .
-  define variable v-j                as integer   no-undo .
-  define variable v-size             as integer   no-undo .
-  define variable v-sizeGif          as integer   no-undo .
-  define variable vPricePromoSets    as decimal   no-undo.
-  define variable v-mess             as character no-undo . 
-  define variable vgift              as logical   no-undo.
-  define variable vSetGoods          as logical   no-undo.  
-  define variable producer-int       as integer   no-undo . 
+  define variable v-length        as integer   no-undo .
+  define variable v-lengthSh      as integer   no-undo .
+  define variable v-lengthGD      as integer   no-undo .
+  define variable v-lengthGif     as integer   no-undo .
+  define variable v-i             as integer   no-undo .
+  define variable v-j             as integer   no-undo .
+  define variable v-size          as integer   no-undo .
+  define variable v-sizeGif       as integer   no-undo .
+  define variable vPricePromoSets as decimal   no-undo.
+  define variable v-mess          as character no-undo . 
+  define variable vgift           as logical   no-undo.
+  define variable vSetGoods       as logical   no-undo.  
+  define variable producer-int    as integer   no-undo . 
+  define variable change-BL       as integer   no-undo .
   define buffer buf_PromoAction for ub.PromoAction .
   define buffer buf_PromoSched  for ub.promo-schedule .
   define buffer buf_promogoods  for ub.PromoGoods .

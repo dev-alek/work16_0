@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1ee1aa69dd2c, 3342, rls $
+$Author: EShklyar $
+$Date: 2023/05/19 13:37:10 $
+$Workfile: uc_TabTypePay.cls $
+$Archive: ibs/th/ref/promo/uc_TabTypePay.cls $
   
 "Просмотр/редактирование одной акции"
 
@@ -20,16 +20,18 @@ using Progress.Windows.UserControl.
 block-level on error undo, throw.
 
 class ibs.th.ref.promo.uc_TabTypePay inherits UserControl: 
+  define private variable checkBox1 as System.Windows.Forms.CheckBox no-undo.
   /* --- для cmp/vssrevis.i --- */
-    define variable vss-revision       as character no-undo init "$Revision$":U .
-    define variable vss-author         as character no-undo init "$Author$":U .
-    define variable vss-date           as character no-undo init "$Date$":U .
-    define variable vss-workfile       as character no-undo init "$Workfile$":U .
-    define variable vss-archive        as character no-undo init "$Archive$":U .
+    define variable vss-revision       as character no-undo init "$Revision: 1ee1aa69dd2c, 3342, rls $":U .
+    define variable vss-author         as character no-undo init "$Author: EShklyar $":U .
+    define variable vss-date           as character no-undo init "$Date: 2023/05/19 13:37:10 $":U .
+    define variable vss-workfile       as character no-undo init "$Workfile: uc_TabTypePay.cls $":U .
+    define variable vss-archive        as character no-undo init "$Archive: ibs/th/ref/promo/uc_TabTypePay.cls $":U .
     define variable vss-description    as character no-undo init "Просмотр/редактирование одной акции". 
   /* --- end_of для cmp/vssrevis.i --- */
     
     define private variable bindPromoPay as Progress.Data.BindingSource no-undo.
+    define private variable bindPromoPay2 as Progress.Data.BindingSource no-undo.
     define private variable button2 as System.Windows.Forms.Button no-undo.
     define private variable button1 as System.Windows.Forms.Button no-undo.
     define private variable cdpaycodeDataGridViewTextBoxColumn as System.Windows.Forms.DataGridViewTextBoxColumn no-undo.
@@ -71,19 +73,30 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
 
 	end method.
 
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void checkBox1_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+		
+		return.
+
+	end method.
+
     method public void SetPromoTrg(input v-promo-trg as class ibs.th.ref.promo.promo_trg  ):
         m-promo-trg = v-promo-trg.
         SetBind().
     end.
     
     method public void SetBind( ):
+         checkBox1:checked = m-promo-trg:getChangeBL().
          bindPromoPay:handle      = m-promo-trg:getQuery("PromoPay").
     end.
 
         
     constructor public uc_TabTypePay (  ):
-        
-        
+      
         super().
         InitializeComponent().
         this-object:ComponentsCollection:ADD(this-object:components).
@@ -103,14 +116,14 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
     this-object:components = new System.ComponentModel.Container().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable dataGridViewCellStyle1 as System.Windows.Forms.DataGridViewCellStyle no-undo.
-    dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle().
+    define variable dataGridViewCellStyle5 as System.Windows.Forms.DataGridViewCellStyle no-undo.
+    dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable dataGridViewCellStyle2 as System.Windows.Forms.DataGridViewCellStyle no-undo.
-    dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle().
+    define variable dataGridViewCellStyle6 as System.Windows.Forms.DataGridViewCellStyle no-undo.
+    dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle().
     @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable tableDesc1 as Progress.Data.TableDesc no-undo.
-    tableDesc1 = new Progress.Data.TableDesc("tt-CashPay").
+    define variable tableDesc3 as Progress.Data.TableDesc no-undo.
+    tableDesc3 = new Progress.Data.TableDesc("tt-CashPay").
     this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
     this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
     this-object:button2 = new System.Windows.Forms.Button().
@@ -121,6 +134,7 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
     this-object:currcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:paycodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
     this-object:bindPromoPay = new Progress.Data.BindingSource(this-object:components).
+    this-object:checkBox1 = new System.Windows.Forms.CheckBox().
     this-object:tableLayoutPanel1:SuspendLayout().
     this-object:tableLayoutPanel2:SuspendLayout().
     cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -152,6 +166,7 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
     this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
     this-object:tableLayoutPanel2:Controls:Add(this-object:button2, 1, 0).
     this-object:tableLayoutPanel2:Controls:Add(this-object:button1, 0, 0).
+    this-object:tableLayoutPanel2:Controls:Add(this-object:checkBox1, 3, 0).
     this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
     this-object:tableLayoutPanel2:Location = new System.Drawing.Point(3, 7).
     this-object:tableLayoutPanel2:Margin = new System.Windows.Forms.Padding(3, 0, 0, 0).
@@ -213,8 +228,8 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
     /* cdpaycodeDataGridViewTextBoxColumn */
     /*  */
     this-object:cdpaycodeDataGridViewTextBoxColumn:DataPropertyName = "cdpay-code".
-    dataGridViewCellStyle1:Format = "0000".
-    this-object:cdpaycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle1.
+    dataGridViewCellStyle5:Format = "0000".
+    this-object:cdpaycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle5.
     this-object:cdpaycodeDataGridViewTextBoxColumn:HeaderText = "Код".
     this-object:cdpaycodeDataGridViewTextBoxColumn:Name = "cdpaycodeDataGridViewTextBoxColumn".
     this-object:cdpaycodeDataGridViewTextBoxColumn:ReadOnly = true.
@@ -236,8 +251,8 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
     /* paycodeDataGridViewTextBoxColumn */
     /*  */
     this-object:paycodeDataGridViewTextBoxColumn:DataPropertyName = "pay-code".
-    dataGridViewCellStyle2:Format = "00000".
-    this-object:paycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle2.
+    dataGridViewCellStyle6:Format = "00000".
+    this-object:paycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle6.
     this-object:paycodeDataGridViewTextBoxColumn:HeaderText = "Оплата".
     this-object:paycodeDataGridViewTextBoxColumn:Name = "paycodeDataGridViewTextBoxColumn".
     this-object:paycodeDataGridViewTextBoxColumn:ReadOnly = true.
@@ -250,15 +265,26 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
     arrayvar1 = new "Progress.Data.TableDesc[]"(0).
-    tableDesc1:ChildTables = arrayvar1.
+    tableDesc3:ChildTables = arrayvar1.
     @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
     define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 4 no-undo.
     arrayvar2[1] = new Progress.Data.ColumnPropDesc("cdpay-code", "Код", Progress.Data.DataType:INTEGER).
     arrayvar2[2] = new Progress.Data.ColumnPropDesc("curr-code", "Код валюты", Progress.Data.DataType:INTEGER).
     arrayvar2[3] = new Progress.Data.ColumnPropDesc("obj-name", "Название", Progress.Data.DataType:CHARACTER).
     arrayvar2[4] = new Progress.Data.ColumnPropDesc("pay-code", "Оплата", Progress.Data.DataType:INTEGER).
-    tableDesc1:Columns = arrayvar2.
-    this-object:bindPromoPay:TableSchema = tableDesc1.
+    tableDesc3:Columns = arrayvar2.
+    this-object:bindPromoPay:TableSchema = tableDesc3.
+    /*  */
+    /* checkBox1 */
+    /*  */
+    this-object:checkBox1:Location = new System.Drawing.Point(283, 3).
+    this-object:checkBox1:Name = "checkBox1".
+    this-object:checkBox1:Size = new System.Drawing.Size(152, 19).
+    this-object:checkBox1:TabIndex = 2.
+    this-object:checkBox1:Text = "Запрет начисления БЛ".
+    this-object:checkBox1:UseCompatibleTextRendering = true.
+    this-object:checkBox1:UseVisualStyleBackColor = true.
+    this-object:checkBox1:CheckedChanged:Subscribe(this-object:checkBox1_CheckedChanged).
     /*  */
     /* uc_TabTypePay */
     /*  */
@@ -277,16 +303,22 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
     end method.
 
     destructor public uc_TabTypePay ( ):
+      if valid-object (bindPromoPay:Handle) then bindPromoPay:Dispose().
            if valid-object(m-promo-trg) then closeBind().
     end destructor.
     
-    method private void closeBind():
+    method public void AssignBind( ):
+      bindPromoPay:Assign().
+    end method .
+    
+    method public void closeBind():
         if  dataGridView1:SelectedCells:Count > 0
         then
             dataGridView1:SelectedCells[0]:Selected = true.
         if valid-handle(bindPromoPay:handle)
         then
-           bindPromoPay:Assign().
+        bindPromoPay:Assign().
+
         bindPromoPay:Dispose().
  
     end.

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: cf3f2bc9c0d7, 3321, rls $
+$Author: EShklyar $
+$Date: 2023/05/19 13:37:07 $
+$Workfile: ds-promo.i $
+$Archive: bge/ds-promo.i $
 
 Расписания промо-акций
 
@@ -18,7 +18,7 @@ Creation date: 21/06/18
 &global-define ds-promo-i
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: ds-promo.i $ $Revision: cf3f2bc9c0d7, 3321, rls $".
 
 /* для списка акций */
 define temp-table tt-promoaction no-undo
@@ -43,6 +43,7 @@ define temp-table tt-promoaction-one no-undo
   field methodCalclbl    as character
   field typecondlbl      as character
   field scheduleName     as character
+  field changeBL         as logical
   field scheduleType     as logical
   field extCodeSched     as character
   field ChangDateFl      as logical
@@ -192,4 +193,4 @@ define variable hDset-ds-promoaction-two as handle no-undo .
 define variable hQtop-ds-promoaction-two as handle no-undo .
 define variable hQrel-ds-promoaction-two as handle no-undo .
 &endif
-/* $Workfile$ e n d */
+/* $Workfile: ds-promo.i $ e n d */

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 608731145d92, 3401, rls $
+$Author: DRuban $
+$Date: 2023/06/07 13:19:22 $
+$Workfile: promo_trg.cls $
+$Archive: ibs/th/ref/promo/promo_trg.cls $
 
 Ёкранные триггеры промо-акций
 
@@ -54,11 +54,11 @@ define temp-table gds-list no-undo like ub.goods
       field hQuery    as handle
   index NameQuery NameQuery.    
   /* --- дл€ cmp/vssrevis.i --- */
-    define variable vss-revision       as character no-undo init "$Revision$":U .
-    define variable vss-author         as character no-undo init "$Author$":U .
-    define variable vss-date           as character no-undo init "$Date$":U .
-    define variable vss-workfile       as character no-undo init "$Workfile$":U .
-    define variable vss-archive        as character no-undo init "$Archive$":U .
+    define variable vss-revision       as character no-undo init "$Revision: 608731145d92, 3401, rls $":U .
+    define variable vss-author         as character no-undo init "$Author: DRuban $":U .
+    define variable vss-date           as character no-undo init "$Date: 2023/06/07 13:19:22 $":U .
+    define variable vss-workfile       as character no-undo init "$Workfile: promo_trg.cls $":U .
+    define variable vss-archive        as character no-undo init "$Archive: ibs/th/ref/promo/promo_trg.cls $":U .
     define variable vss-description    as character no-undo init "Ёкранные триггеры промо-акций". 
   /* --- end_of дл€ cmp/vssrevis.i --- */
   define variable v-host-code as integer no-undo .
@@ -422,7 +422,9 @@ end . /* end_of низ таблицы и html-файла */
 
   ibs.th.gbl.gbl-inipar:prn-lib-reportviewer(v-file-name-rep-htm,"") .
   end method .
-  
+  method public logical getChangeBL ():
+    return tt-promoaction-one.changeBL .
+  end.
 /* 1.2 запустить браузер с перечнем акций */
     method public handle getQuery (input iNameQuery as character ) :
         return getQuery(iNameQuery,no).
@@ -1128,6 +1130,18 @@ end . /* end_of низ таблицы и html-файла */
        
        tt-PromoAction-one.sub            = cast(p-sub,Progress.Lang.Object)
     no-error.
+
+      define buffer buf_PromoAttr for ub.PromoAttr .
+    find first buf_promoAttr where
+      buf_promoAttr.attr-code = "charge-BL" and
+      buf_promoAttr.tablename = "PromoPay" and
+      tt-promoaction-one.id = int64(entry(1,buf_PromoAttr.p-key,{&delim-key})) and 
+      tt-promoaction-one.db-num = integer(entry(2,buf_PromoAttr.p-key,{&delim-key})) 
+      no-error.     
+      if available (buf_PromoAttr) then tt-promoaction-one.changeBL = logical (buf_PromoAttr.attr-value) . 
+      else tt-promoaction-one.changeBL = false .
+
+
     if p-mode = {&add-def} then tt-PromoAction-one.mode = {&h-create}.
     v-sched-sub = p-sub:Schedule .
     if valid-object(v-sched-sub) then do:

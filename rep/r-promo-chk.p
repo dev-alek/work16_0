@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7fffee6e7c2f, 2684, rls $
+$Author: EShklyar $
+$Date: Пт дек 18 18:16:04 2020 +0300 $
+$Workfile: r-promo-chk.p $
+$Archive: rep/r-promo-chk.p $
 
 Оперативный отчет по реализации промо-акций.
 
@@ -30,11 +30,11 @@ define input parameter p-plain-txt              as logical                 no-un
 define input parameter p-xls                    as logical                 no-undo .
 define input parameter p-dir-name               as character               no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7fffee6e7c2f, 2684, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Пт дек 18 18:16:04 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-promo-chk.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-promo-chk.p $":U .
 define variable vss-description as character no-undo init "Оперативный отчет по реализации промо-акций.".
 { cmp/vssrevis.i }
 
@@ -80,6 +80,7 @@ define TEMP-TABLE tt-promo
   field goods-qnty   as decimal
   field discount-sum as decimal
   field itog-sum     as decimal
+  field change-BL    as character
   index pi
   is unique
   obj-code
@@ -126,6 +127,17 @@ for each buf_obj-list no-lock:
           tt-promo.shift-num   = buf_chk-doc.shift-num
           tt-promo.promo-name  = if available (buf_PromoAction) then buf_PromoAction.nameAction else "".
         .
+        find first ub.promoAttr where
+          ub.promoAttr.attr-code = "charge-BL" and
+          ub.promoAttr.tablename = "PromoPay" and
+          buf_PromoAction.id = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and 
+          buf_PromoAction.db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key})) 
+          no-error.
+        if available (ub.PromoAttr) then do:
+          if logical(ub.PromoAttr.attr-value) = true then tt-promo.change-BL = "да" .
+          else tt-promo.change-BL = "нет" .
+        end.
+        else tt-promo.change-BL = "нет" .
       end.    
       else tt-promo.object-qnty = tt-promo.object-qnty + buf_chk-discnt.object-sum .
                                  
@@ -232,13 +244,14 @@ procedure pr-header:
     '<td style="width: 100px;"></td>' skip
     '<td style="width: 100px;"></td>' skip
     '<td style="width: 100px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
     '</tr>' skip
     .
                         
  
   put stream OutStr-html unformatted
     '<tr>' skip
-    '<td colspan="8" style="text-align: center;">Отчет по реализации промо-акций за период с ' + string(x-Date-Start,"99.99.99") + ' по ' + string(x-Date-End,"99.99.99") + ' </td>' skip
+    '<td colspan="9" style="text-align: center;">Отчет по реализации промо-акций за период с ' + string(x-Date-Start,"99.99.99") + ' по ' + string(x-Date-End,"99.99.99") + ' </td>' skip
     '</tr>' skip   
     '</thead>' skip .
   
@@ -258,6 +271,7 @@ procedure pr-line:
     '<TD text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Количество акционных товаров</TD>' skip
     '<TD text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Сумма скидки</TD>' skip
     '<TD text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Сумма без скидки</TD>' skip
+    '<TD text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Запрет начисления БЛ</TD>' skip
     '</TR>'skip
     .
                             
@@ -272,6 +286,7 @@ procedure pr-line:
       '<TD text_wrap="true" style="text-align: center;">' + STRING (tt-promo.goods-qnty) + '</TD>' skip
       '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-promo.discount-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-promo.discount-sum,"->>>>>>>>>>>9.99",2) + '</TD>' skip
       '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-promo.itog-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-promo.itog-sum,"->>>>>>>>>>>9.99",2) + '</TD>' skip
+      '<TD text_wrap="true" style="text-align: center;">' + tt-promo.change-BL + '</TD>' skip
       '</TR>'skip                       
       .     
   end.
