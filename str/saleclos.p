@@ -479,6 +479,9 @@ define buffer buf_doc-line for ub.doc-line.
 define buffer spis_doc-line for ub.doc-line.
 define buffer buf_sale-doc for ub.sale-doc.
 define buffer spis_sale-doc for ub.sale-doc.
+define buffer bf_doc-fbr-gds for ub.doc-fbr-gds .
+define buffer out-dtl   for ub.gds-dtl. /* расходный документ */
+define buffer ret-dtl   for ub.gds-dtl.
 
 do
 on error undo, return error return-value
@@ -742,6 +745,63 @@ on error undo, return error return-value
   f-close:
   DO  on ERROR undo, return error return-value
       on STOP undo, return error return-value :
+    if auto-fbr
+    then do :
+      /* BTS-1129 Перед закрытием продажи проверям, было ли резервирование возвратов */
+      /* производимых товаров со снятой галочкой "автопроизводтсво". Для таких строк */
+      /* нужно заново снять резервы и перерезервировать с учётом автопроизводства    */
+      doc-fbr-gds_ :
+      for each bf_doc-fbr-gds no-lock where bf_doc-fbr-gds.out-code = p-inkas-code,
+      first buf_goods no-lock where buf_goods.gds-code = bf_doc-fbr-gds.gds-code,
+      first out-dtl no-lock where out-dtl.doc-code  = bf_doc-fbr-gds.out-code
+                              and out-dtl.artic     = buf_goods.artic
+                              and out-dtl.prod-type = buf_goods.prod-type
+                              and out-dtl.prod-code = buf_goods.prod-code
+      :
+        if out-dtl.doc-qnty <> out-dtl.fact-qnty
+        then do :
+          find first ret-dtl no-lock where ret-dtl.doc-code  = replace(out-dtl.doc-code, "-", "=")
+                                       and ret-dtl.artic     = out-dtl.artic
+                                       and ret-dtl.prod-type = out-dtl.prod-type
+                                       and ret-dtl.prod-code = out-dtl.prod-code
+                                       and ret-dtl.prt-code  = out-dtl.prt-code
+                                       no-error .
+          if available ret-dtl
+          and ret-dtl.fact-qnty > 0
+          and ret-dtl.fact-qnty = ret-dtl.doc-qnty
+          then do :
+            find first buf_doc-line no-lock where buf_doc-line.doc-code   = ret-dtl.doc-code
+                                              and buf_doc-line.artic      = ret-dtl.artic
+                                              and buf_doc-line.prod-type  = ret-dtl.prod-type
+                                              and buf_doc-line.prod-code  = ret-dtl.prod-code
+                                              no-error .
+            if available buf_doc-line
+            then do :
+              assign
+                rdoc-line = recid (buf_doc-line)
+                rgds-dtl = recid(ret-dtl)
+                r-qnty = out-dtl.doc-qnty - out-dtl.fact-qnty
+                r-b-code = ?
+                r-or-v = {&TDEDT_vozvrat_vnesh_kass}
+                r-office = {&gds-goods}
+                from-menu = yes
+              .
+              run b-unres-proc in this-procedure (
+                                    buffer buf_inkas
+                                  , buffer buf_trn-doc
+                                  , buffer buf_ret-doc
+                                  , input p-is-tpsi-obj
+                                  , input yes) no-error.
+
+              if error-status:error then do:
+                undo doc-fbr-gds_, return error.
+              end.
+            end .
+          end .
+        end .
+      end .
+    end .
+    
     if auto-comp
     and not v-is-inquiry
     and can-find(first ub.sale-doc where
