@@ -182,6 +182,7 @@ FOR EACH obj-list  NO-LOCK:
       for each buf_trn-doc no-lock where buf_trn-doc.obj-code = obj-list.obj-code and
          buf_trn-doc.obj-type = obj-list.obj-type and
          buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+         buf_trn-doc.reason-code <> 98 and
          /*      buf_trn-doc.status_ = {&fact}*/ /*в ТЗ не указано*/
          buf_trn-doc.shift-date >= X-date-Start and
          buf_trn-doc.shift-date <= x-Date-End:
@@ -211,6 +212,7 @@ FOR EACH obj-list  NO-LOCK:
       for each buf_trn-doc no-lock where buf_trn-doc.obj-code = obj-list.obj-code and
          buf_trn-doc.obj-type = obj-list.obj-type and
          buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+         buf_trn-doc.reason-code <> 98 and
          /*      buf_trn-doc.status_ = {&fact}*/ /*в ТЗ не указано*/
          buf_trn-doc.doc-date >= X-date-Start and
          buf_trn-doc.doc-date <= x-Date-End:
