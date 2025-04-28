@@ -76,7 +76,9 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
       ub.goods.prod-code = buf_doc-line.prod-code and
       ub.goods.prod-type = buf_doc-line.prod-type no-error .
       if available (ub.goods) then do: 
-/*      hSaxWriter:start-element ("techlosses") .*/
+      
+      hSaxWriter:start-element ("techlosse") .
+      hSaxWriter:write-data-element (  "out-code":U,     buf_trn-doc.doc-code   ). 
       find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "blowdown" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
@@ -102,7 +104,7 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
       if available (buf_doc-line-attr) then 
       hSaxWriter:write-data-element (  "tl-ctrlvalve":U,     buf_doc-line-attr.attr-value   ).
-/*      hSaxWriter:end-element ("techlosses") .*/
+      hSaxWriter:end-element ("techlosse") .
 end.
    end.
 end.
