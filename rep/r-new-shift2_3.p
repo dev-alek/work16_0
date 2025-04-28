@@ -1400,6 +1400,8 @@ procedure print-total .
 end procedure .
 
 procedure print-sug .
+
+  if can-find(t-2-sug) then do:
   output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted                                                              
     substitute (                                                                                
@@ -2042,6 +2044,7 @@ procedure print-sug .
     , chr(123), chr(125)                                                                                                 
     ).                                                                                                    
   output stream OutStr-html close.
+end.
 end procedure .
 
 PROCEDURE create-tincome-2 :

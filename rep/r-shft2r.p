@@ -167,7 +167,8 @@ define temp-table temp-rvs no-undo
   FIELD gds-code   as integer
   FIELD shift-date like ub.rvs-doc.shift-date
   FIELD shift-num  like ub.rvs-doc.shift-num
-  INDEX pi IS UNIQUE PRIMARY gds-code
+  field pl-code    like ub.rvs-line.pl-code
+  INDEX pi IS UNIQUE PRIMARY gds-code pl-code
   .
 
 for each  ub.rvs-doc NO-LOCK WHERE
@@ -180,6 +181,7 @@ for each  ub.rvs-doc NO-LOCK WHERE
   :
   if ub.rvs-doc.shift-date = pshift-date  and ub.rvs-doc.shift-num < pshift-num  then next .
   if ub.rvs-doc.shift-date = pshift-date1 and ub.rvs-doc.shift-num > pshift-num1 then next .
+
   _rvs-line:
   FOR EACH ub.rvs-line NO-LOCK WHERE
     ub.rvs-line.rvs-code = ub.rvs-doc.rvs-code AND
@@ -228,7 +230,6 @@ for each  ub.rvs-doc NO-LOCK WHERE
           found-in-previous = YES .
         if pshift-date = ub.rvs-doc.shift-date and pshift-num  = ub.rvs-doc.shift-num then 
         do:
-            
           ASSIGN
             t-2.qnty1-before = t-2.qnty1-before + previous-rvs-line.system-qnty
             t-2.qnty2-before = t-2.qnty2-before + previous-rvs-line.system-cli-qnty
@@ -253,33 +254,44 @@ for each  ub.rvs-doc NO-LOCK WHERE
         BY this-shift-rvs-doc.fact-order
         :
         ASSIGN
-          t-2.qnty1-before = t-2.qnty1-before + this-shift-rvs-line.system-qnty
-          t-2.qnty2-before = t-2.qnty2-before + this-shift-rvs-line.system-cli-qnty
+          t-2.qnty1-before = this-shift-rvs-line.system-qnty
+          t-2.qnty2-before = this-shift-rvs-line.system-cli-qnty
           .
         LEAVE.
       END. /* FOR EACH this-shift-rvs-doc */
     END. /* IF NOT found-in-previous */
 
-    find first temp-rvs where temp-rvs.gds-code = ub.rvs-line.gds-code  no-error .
+    find first temp-rvs where temp-rvs.gds-code = ub.rvs-line.gds-code no-error .
     if available temp-rvs then 
     do:
       if temp-rvs.shift-date < ub.rvs-doc.shift-date or temp-rvs.shift-date = ub.rvs-doc.shift-date and temp-rvs.shift-num  <= ub.rvs-doc.shift-num then 
       do:
+        if temp-rvs.pl-code <> ub.rvs-line.pl-code then do:
+        
         ASSIGN
           t-2.qnty1-after = t-2.qnty1-after + ub.rvs-line.system-qnty
           t-2.qnty2-after = t-2.qnty2-after + ub.rvs-line.system-cli-qnty
           .
+          end.
+          else do:
+        ASSIGN
+          t-2.qnty1-after = ub.rvs-line.system-qnty
+          t-2.qnty2-after = ub.rvs-line.system-cli-qnty
+          .            
+          end.
       end.
     end.
     else 
     do:
+      
       create temp-rvs .
       assign
         temp-rvs.gds-code   = ub.rvs-line.gds-code
         temp-rvs.shift-date = ub.rvs-doc.shift-date
         temp-rvs.shift-num  = ub.rvs-doc.shift-num
-        t-2.qnty1-after     = t-2.qnty1-after + ub.rvs-line.system-qnty
-        t-2.qnty2-after     = t-2.qnty2-after + ub.rvs-line.system-cli-qnty
+        temp-rvs.pl-code    = ub.rvs-line.pl-code
+        t-2.qnty1-after     = ub.rvs-line.system-qnty
+        t-2.qnty2-after     = ub.rvs-line.system-cli-qnty 
         .
     end.
   END. /* FOR EACH ub.rvs-line */
