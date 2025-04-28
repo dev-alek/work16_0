@@ -2046,6 +2046,7 @@ class ibs.th.str.InfoSectionsTotal:
       Parnl:PlCode = ub.place.pl-code no-error.
       release ub.place.
       Parnl:SecNum = InfoSectionCurr:SectionName.
+      Parnl:GroupNP = InfoSectionCurr:GroupNP.
       NLStorage:getNormLoss(Parnl).
       InfoSectionCurr:TPNormAuto = Parnl:AutoNormLoss.
       InfoSectionCurr:TPNormPL = (InfoSectionCurr:TankWeight / 1000 * ParNl:PLNormLoss).

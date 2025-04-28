@@ -179,7 +179,7 @@ class ibs.th.gbl.storage.normloss:
       no-error. 
     end.
     
-    for first bf_norm-loss no-lock where maxlvl > 0 and bf_norm-loss.type = 1 and bf_norm-loss.clim-grp = climGrp
+    for last bf_norm-loss no-lock where maxlvl > 0 and bf_norm-loss.type = 1 and bf_norm-loss.clim-grp = climGrp
         and bf_norm-loss.oil-grp = (if parTPforNorm:GroupNP > "" then parTPforNorm:GroupNP else bf_gds-attr.attr-value) 
         and bf_norm-loss.season = season 
         and 
@@ -188,9 +188,9 @@ class ibs.th.gbl.storage.normloss:
           and (bf_norm-loss.sec-vol2) >= maxlvl)
           or
           ((bf_norm-loss.sec-vol1) < maxlvl
-          and (bf_norm-loss.sec-vol2) = ?)
+          and (bf_norm-loss.sec-vol2) = 0)
         )
-        :
+        by bf_norm-loss.sec-vol1:
 
         autonlValue = bf_norm-loss.value-loss.
         
