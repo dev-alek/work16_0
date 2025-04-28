@@ -1982,7 +1982,8 @@ end.
              if not vMark
              then
                 v-sts = "UTD".
-             else if not buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB   
+             else if not buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB
+                 and not buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB          
              then do:
                   if available buf_m and buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
                       or buf_utd-m-l.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
