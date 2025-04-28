@@ -148,6 +148,7 @@ define temp-table tt-gds-list no-undo like ub.goods
 field nn as integer
 field doc-qnty as decimal
 field fact-qnty as decimal
+field itog-qnty as decimal
 index by-nn nn
 index by_gds-code gds-code
 .
@@ -7570,6 +7571,7 @@ procedure proc-m_to-inv :
         end.
         list-trn = t-doc.doc-code .
       end.
+      if t-doc.status_ <> {&fact} then do:
       message "После создания итогового документа по инвентаризации " + list-trn + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
         "Внести изменения в полученный документ инвентаризации можно будет только вручную." skip
         "Продолжить?"
@@ -7579,6 +7581,7 @@ procedure proc-m_to-inv :
         mark-list = "" .
         run UI-on in this-procedure ( input "open" ).
         return .
+      end.
       end.
     end.
     else 
@@ -7742,7 +7745,6 @@ procedure itogInvDocManual :
   define variable v-is-marking   as logical   no-undo init false.
   define variable vartime        as integer   no-undo.
   define variable varmessage     as character no-undo.
-  define variable varqnty        as decimal   no-undo .
   
   
   define variable nn as integer no-undo .
@@ -7786,6 +7788,7 @@ procedure itogInvDocManual :
       vartime = time
       lns-cnt = 0
       .
+
       do ii = 1 to num-entries(par-list):
         for each buf_doc-line no-lock where buf_doc-line.doc-code = entry(ii,par-list,","):
           find first tt-gds-list where tt-gds-list.artic = buf_doc-line.artic and
@@ -7799,18 +7802,17 @@ procedure itogInvDocManual :
             create tt-gds-list.
               BUFFER-COPY ub.goods to tt-gds-list .
               assign tt-gds-list.nn = nn .
-          end .
-          if varqnty = 0 then do:
+
           assign
           tt-gds-list.doc-qnty = tt-gds-list.doc-qnty + buf_doc-line.doc-qnty
           tt-gds-list.fact-qnty = tt-gds-list.fact-qnty + buf_doc-line.fact-qnty
           .
-          varqnty = tt-gds-list.doc-qnty - tt-gds-list.fact-qnty .
+          tt-gds-list.itog-qnty = tt-gds-list.doc-qnty - tt-gds-list.fact-qnty .
           end.
           else do:
           assign
           tt-gds-list.doc-qnty = tt-gds-list.doc-qnty + buf_doc-line.doc-qnty 
-          tt-gds-list.fact-qnty = tt-gds-list.doc-qnty - varqnty
+          tt-gds-list.fact-qnty = tt-gds-list.doc-qnty - tt-gds-list.itog-qnty
           .   
           end.
         end.
@@ -7937,7 +7939,7 @@ procedure itogInvDocManual :
     if error-status :error then do:
     return .
   end.
-  
+
   for each tt-gds-list:
     for first ub.doc-line exclusive-lock where ub.doc-line.doc-code = bf_trn-doc.doc-code and
     ub.doc-line.artic = tt-gds-list.artic and ub.doc-line.prod-code = tt-gds-list.prod-code and
@@ -8008,6 +8010,7 @@ procedure itogInvDoc :
   define buffer old_doc-line     for ub.doc-line .
   define buffer buf_trn-doc-sum  for ub.trn-doc-sum .
   define buffer buf_doc-line-sum for ub.doc-line-sum .
+  define buffer bf_inv-doc-attr  for ub.inv-doc-attr .
   
   do on error undo, return error return-value : 
     find first buf_trn-doc exclusive-lock where buf_trn-doc.doc-code = par-docCode no-error .
@@ -8077,6 +8080,18 @@ procedure itogInvDoc :
     ub.inv-doc-attr.attr-code = "MultiTSD"
     ub.inv-doc-attr.attr-value = vardoc-code .
     end.
+    
+    /* копирование атрибутов из исходной инвентаризации */
+    for each bf_inv-doc-attr no-lock where bf_inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+    bf_inv-doc-attr.attr-code <> "invMultDevice":
+        create ub.inv-doc-attr.
+        assign
+        ub.inv-doc-attr.doc-code = vardoc-code
+        ub.inv-doc-attr.attr-code = bf_inv-doc-attr.attr-code
+        ub.inv-doc-attr.attr-value = bf_inv-doc-attr.attr-value
+        .
+    end.
+    
     /* создание строк */
     for each buf_doc-line no-lock where buf_doc-line.doc-code = par-docCode:
       create ub.doc-line .
