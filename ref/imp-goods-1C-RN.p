@@ -412,10 +412,10 @@ end.
       undo, return error v-err-mess .
   end.
   if v-nbc = 0 or v-nbc = ? then v-nbc = v-gds-code .
-  if p-GdsObj:fuel-type eq "" or p-GdsObj:fuel-type eq ? or p-GdsObj:fuel-type eq "0"
+  if p-GdsObj:fuel-type eq ? or p-GdsObj:fuel-type =  0
   then v-fuel-type = ? .
   else do:
-     v-fuel-type = entry(int(p-GdsObj:fuel-type),{&prop-list-attr-fuel-type}) no-error.
+     v-fuel-type = entry(p-GdsObj:fuel-type,{&prop-list-attr-fuel-type}) no-error.
      if error-status :error then do:
      v-err-mess = substitute("Ошибка при сохранении goods &1&2 Неизвестный тип топлива &3"
                                 , p-GdsObj:code_
