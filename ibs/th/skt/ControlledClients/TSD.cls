@@ -236,6 +236,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
               and buf_trn-doc.status_ = {&wayb})
             ) 
       no-lock:
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "ItogInv" and ub.inv-doc-attr.attr-value = entry(1,buf_trn-doc.doc-code,"/") no-error .
+    if not available (ub.inv-doc-attr) then do:  
 /*      assign        */
 /*        dFactSum = 0*/
 /*        cHeader = ""*/
@@ -454,6 +456,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       
       
 /*      SomeStr = SomeStr + cHeader + cLine + cMarkLine.*/
+    end.
     end.
 /*    SomeStr = substitute ('<?xml version="1.0" encoding="&1"?><TSD>', CP) + SomeStr + ('</TSD>').*/
 /*    output stream logTSD to value ("logSKTTSD.txt").*/
@@ -954,6 +957,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define buffer buf_doc-line-attr for ub.doc-line-attr.
     define buffer bfTempDocLine for TempDocLine.  
     define buffer bfTempDocLineTSD  for TempDocLineTSD .
+    define buffer bf_inv-doc-attr   for ub.inv-doc-attr .
         
     define variable adapterOra-i506 as class   AdapterOra-i506.
     define variable varzero-string  as logical no-undo.
@@ -1057,6 +1061,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     else 
     do:
+    /* ѕроверка на создание итогового документа */
+    find first bf_inv-doc-attr no-lock where bf_inv-doc-attr.attr-code = "ItogInv" and bf_inv-doc-attr.attr-value = TempTrnDoc.ext-doc-code no-error .
+    if available (bf_inv-doc-attr) then leave .      
     empty temp-table TempDocLineTSD .
     find first ub.clients no-lock where ub.clients.obj-code = TempTrnDoc.obj-code and
       ub.clients.obj-type = TempTrnDoc.obj-type no-error .
