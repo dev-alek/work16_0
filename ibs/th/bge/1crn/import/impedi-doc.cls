@@ -658,18 +658,29 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
            if cisGdsCode > 0
            then do :
               v-must-be-childs = 10 .
-              find first bf_bar-code no-lock where bf_bar-code.gds-code = cisGdsCode
-                                              and bf_bar-code.unit-cli = "бл"
-                                              and bf_bar-code.stts_ = 0
-              no-error .
-              if available bf_bar-code
-              then do :
-                v-must-be-childs = bf_bar-code.cli-base-rate .
-              end .
-              else do :
-                errMSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'бл'" .
-                v-err-childs = true .
-              end .
+              if v-mark-type = "tabak" 
+              then do:
+                find first bf_bar-code no-lock where bf_bar-code.gds-code = cisGdsCode
+                                                 and bf_bar-code.unit-cli = "бл"
+                                                 and bf_bar-code.stts_ = 0
+                no-error .
+                if available bf_bar-code
+                then do :
+                  v-must-be-childs = bf_bar-code.cli-base-rate .
+                end .
+                else do :
+                  errMSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'бл'" .
+                  v-err-childs = true .
+                end .
+              end.
+              else do:
+                  v-must-be-childs = getQntyCodeByGtin(marking.gds-ext-id).     
+                  if v-must-be-childs = ?
+                  then do:
+                    errMSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден коэф. ед. изм. по GTIN" .
+                    v-err-childs = true .
+                  end.      
+              end.
               if not v-err-childs
               then do :
                 if v-mark-type = "tabak"

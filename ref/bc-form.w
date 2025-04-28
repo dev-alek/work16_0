@@ -8,11 +8,11 @@
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-bc-form
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: bc-form.w $
+$Archive: ref/bc-form.w $
 
 Форма работы с собственным бар-кодом
 
@@ -36,11 +36,11 @@ define input-output parameter rid    as recid no-undo .
 
 /* Local Variable Definitions ---                                       */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bc-form.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/bc-form.w $":U .
 define variable vss-description as character no-undo init "Форма работы с собственным бар-кодом".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }
@@ -123,7 +123,7 @@ DEFINE FRAME d-bc-form
      b-exit AT ROW 1 COL 1
      b-quit AT ROW 1 COL 11
      b-help AT ROW 1 COL 21
-     ub.bar-code.b-code AT ROW 2.25 COL 15 COLON-ALIGNED
+     ub.bar-code.b-code AT ROW 2.25 COL 15 COLON-ALIGNED FORMAT ">>>>>>>>>>>>9"
           VIEW-AS FILL-IN
           SIZE 25 BY 1
           FGCOLOR 4
