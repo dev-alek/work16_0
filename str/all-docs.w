@@ -7540,7 +7540,7 @@ procedure proc-m_to-inv :
           ub.inv-doc-attr.attr-code = 'isManual' and ub.inv-doc-attr.attr-value = string(true) no-error .
         if available (ub.inv-doc-attr) then isManual = true .
       end.
-      if isMultiTSD then do:
+      if isMultiTSD and not isManual then do:
       find first buf_trn-doc no-lock where t-doc.doc-code = entry(1,buf_trn-doc.doc-code,"/") and 
       num-entries(buf_trn-doc.doc-code,"/") > 1 and buf_trn-doc.status_ = {&inquiry} and 
       not buf_trn-doc.flag_ no-error .
@@ -7560,7 +7560,7 @@ procedure proc-m_to-inv :
       end.
       trnDocCode = t-doc.doc-code .         
       end.
-      if isManual then do:
+      if isManual and not isMultiTSD then do:
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
         ub.inv-doc-attr.attr-code = "ManualTSD" no-error .
         if available (ub.inv-doc-attr) then do:
@@ -7570,6 +7570,12 @@ procedure proc-m_to-inv :
           return error.
         end.
         list-trn = t-doc.doc-code .
+      end.
+      if isManual and isMultiTSD then do:
+          message "¬ыбранные документы относ€тс€ к разным инвентаризаци€м"  view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.           
       end.
       if t-doc.status_ <> {&fact} then do:
       message "ѕосле создани€ итогового документа по инвентаризации " + list-trn + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
@@ -7622,8 +7628,14 @@ procedure proc-m_to-inv :
         end.          
         end.        
       end.
-      
-        if  isMultiTSD then do:
+            if isManual and isMultiTSD then 
+            do:
+                message "¬ыбранные документы относ€тс€ к разным инвентаризаци€м"  view-as alert-box.
+                mark-list = "" .
+                run UI-on in this-procedure ( input "open" ).
+                return error.           
+            end.
+        if  isMultiTSD and not isManual then do:
           if trnDocCode = "" then trnDocCode = entry(1,buf_trn-doc.doc-code,"/").
           else 
           do:
@@ -7644,7 +7656,7 @@ procedure proc-m_to-inv :
           run UI-on in this-procedure ( input "open" ).
           return error.
         end.
-        if isManual then do:
+        if isManual and not isMultiTSD then do:
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
         ub.inv-doc-attr.attr-code = "ManualTSD" no-error .
         if available (ub.inv-doc-attr) then do:
@@ -7654,10 +7666,11 @@ procedure proc-m_to-inv :
           return error.
         end.
         end.
+
         list-trn = list-trn + "," + string(buf_trn-doc.doc-code) .
       end.
       list-trn = trim(list-trn,",").
-
+       
       if isMultiTSD then do:
       find first bf_trn-doc no-lock where bf_trn-doc.doc-code = trnDocCode no-error .
       if not available (bf_trn-doc) then do:
@@ -7701,6 +7714,9 @@ procedure proc-m_to-inv :
         end.
       end.
     end.
+    
+    
+    
     list-trn = trim(list-trn,",").
 
     if isManual then run itogInvDocManual(list-trn, output pardoc-rec).
