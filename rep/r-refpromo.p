@@ -282,16 +282,39 @@ procedure report:
   for each  buf_chk-gds no-lock where 
             buf_chk-gds.doc-code = buf_chk-doc.doc-code and 
             buf_chk-gds.pl-code <> ?:                    
-                                
-    find  first bf_chk-discnt-attr no-lock where 
+    /* ищем скидку на данную строку товара */                            
+    find first bf_chk-discnt-attr no-lock where 
              bf_chk-discnt-attr.attr-code = "promo-id" and 
              bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and 
              bf_chk-discnt-attr.object-line-num = buf_chk-gds.line-num
-       no-error.
-          
+       no-error.    
+    /* ищем скидку промо на подитог */   
     if not avail bf_chk-discnt-attr
-    then next chkda.
-    if not vAllPromo then do:    
+    then do: 
+        find first bf_chk-discnt-attr no-lock where 
+                 bf_chk-discnt-attr.attr-code = "promo-id" and 
+                 bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and 
+                 bf_chk-discnt-attr.object-line-num <> 0
+           no-error.                      
+        if avail bf_chk-discnt-attr and
+           bf_chk-discnt-attr.object-line-num > buf_chk-gds.line-num
+        then do:   
+            find first buf_chk-discnt no-lock where 
+                   buf_chk-discnt.doc-code = bf_chk-discnt-attr.doc-code and
+                   buf_chk-discnt.discnt-id = bf_chk-discnt-attr.discnt-id and
+                   buf_chk-discnt.record-type = 1 and
+                   buf_chk-discnt.line-num = bf_chk-discnt-attr.line-num and
+                   buf_chk-discnt.object-line-num = buf_chk-gds.line-num
+                   no-error.
+            if available buf_chk-discnt and 
+               buf_chk-discnt.line-type = integer({&discnt-sub-total}) 
+            then . 
+            else next chkda.                     
+        end.   
+        else next chkda.
+    end.
+                  
+    if not vAllPromo then do:     
        if not can-find(first tt-promo where 
                              tt-promo.id = int(bf_chk-discnt-attr.attr-value))
        then next chkda.
@@ -402,8 +425,8 @@ procedure report:
           
        assign    
           tt-info.src-qnty = tt-info.src-qnty + buf_chk-gds.src-qnty              
-          tt-info.discnt = buf_chk-gds.src-discnt
-          v-sum-r = Round((buf_chk-gds.src-price - buf_chk-gds.src-discnt) * buf_chk-gds.src-qnty, 2)          
+          tt-info.discnt = buf_chk-gds.discnt
+          v-sum-r = Round((buf_chk-gds.src-price - buf_chk-gds.discnt) * buf_chk-gds.src-qnty, 2)          
           v-sum-disc = ChkPromoSum(buf_chk-gds.doc-code, buf_chk-gds.line-num)
           v-sum-no-disc = Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2) + v-sum-disc
           .  

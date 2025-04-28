@@ -117,6 +117,7 @@ define variable v-period            as character no-undo .
 define variable v-list-obj          as character no-undo .
 define variable v-obj-name          as character no-undo .
 define variable v-first             as logical   no-undo .
+define variable vRecordType         as integer   no-undo .
 
 define buffer buf_chk-discnt      for ub.chk-discnt .
 define buffer buf_chk-discnt-attr for ub.chk-discnt-attr .
@@ -135,9 +136,10 @@ function ChkPLLine returns logical
     input iPromoId as character)
     : 
     define buffer buf_chk-gds for ub.chk-gds.    
-    define buffer bf_chk-discnt-attr for ub.chk-discnt-attr.
+    define buffer bf_chk-discnt for ub.chk-discnt.
     define buffer buf_bar-code for ub.bar-code.
     define buffer buf_goods for ub.goods.
+    define buffer  buf_chk-discnt-attr for ub.chk-discnt-attr. 
     
     define variable vPromo as logical no-undo.
     define variable is-petrolium         as logical   no-undo.
@@ -167,16 +169,16 @@ function ChkPLLine returns logical
              vPromo = yes.
         end. 
     end.     
-    else do:      
+    else do:    
+        /* если хоть один сопут. товар есть по скидке промо */  
         chkdisc:
-        for each bf_chk-discnt-attr no-lock where 
-                 bf_chk-discnt-attr.attr-code = "promo-id" and 
-                 bf_chk-discnt-attr.doc-code = iDocCode and 
-                 bf_chk-discnt-attr.record-type = 0 and 
-                 bf_chk-discnt-attr.attr-value = iPromoId,                     
+        for each bf_chk-discnt no-lock where                   
+                 bf_chk-discnt.doc-code = iDocCode and 
+                 bf_chk-discnt.record-type = 1 and 
+                 bf_chk-discnt.promo-id = iPromoId,                     
            first buf_chk-gds no-lock where 
-                 buf_chk-gds.doc-code = bf_chk-discnt-attr.doc-code and 
-                 buf_chk-gds.line-num = bf_chk-discnt-attr.object-line-num,
+                 buf_chk-gds.doc-code = bf_chk-discnt.doc-code and 
+                 buf_chk-gds.line-num = bf_chk-discnt.object-line-num,
            first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code,
            first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code:
                                             
@@ -190,8 +192,11 @@ function ChkPLLine returns logical
             }                  
                                
             if is-petrolium then 
-               vPromo = yes.       
-            leave chkdisc.                                       
+               vPromo = yes.    
+            else do:
+                vPromo = no.   
+                leave chkdisc.
+            end.                                           
         end.           
     end.    
     
@@ -293,41 +298,43 @@ procedure report:
             end.
             else tt-promo.change-BL = "нет" .                                                        
         end.                                                   
-      end.  
+      end.              
+      
       assign
         tt-promo.object-qnty = tt-promo.object-qnty + buf_chk-discnt.object-sum
         .
                     
       if buf_chk-doc.chk-type = integer({&rcpt-return}) or buf_chk-doc.chk-type = integer({&rcpt-return-write-off}) then 
         tt-promo.return-qnty = tt-promo.return-qnty + buf_chk-discnt.object-sum .
-     
-      for each bf_chk-discnt-attr no-lock where 
-               bf_chk-discnt-attr.attr-code = "promo-id" and 
-               bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and 
-               bf_chk-discnt-attr.record-type = 0 and 
-               bf_chk-discnt-attr.attr-value = tt-promo.promo-id:
-        for first bf_chk-discnt no-lock where 
-                  bf_chk-discnt.doc-code = bf_chk-discnt-attr.doc-code and 
-                  bf_chk-discnt.record-type = 0 and 
-                  bf_chk-discnt.discnt-id = bf_chk-discnt-attr.discnt-id:
-          /*По товарам*/                    
-          for each buf_chk-gds no-lock where 
-                   buf_chk-gds.doc-code = bf_chk-discnt.doc-code and 
-                   buf_chk-gds.line-num = bf_chk-discnt-attr.object-line-num:            
-            /*сообщение если, тогда нет скидки*/
-            if tt-promo.methodCalc <> 6 then 
-            do:
-              assign
-                tt-promo.discount-sum = tt-promo.discount-sum + bf_chk-discnt.discnt-value-abs
-                .
-            end.
-            assign 
-              tt-promo.goods-qnty = tt-promo.goods-qnty + buf_chk-gds.doc-qnty
-              tt-promo.itog-sum   = tt-promo.itog-sum + buf_chk-gds.src-sum
-              .              
-          end.                              
-        end.              
-
+        
+      if can-find(first bf_chk-discnt no-lock where 
+                        bf_chk-discnt.doc-code =  buf_chk-doc.doc-code and 
+                        bf_chk-discnt.record-type = 1 and                
+                        bf_chk-discnt.promo-id = tt-promo.promo-id)
+      then vRecordType = 1.
+      else vRecordType = 0.                   
+      
+      for each bf_chk-discnt no-lock where 
+               bf_chk-discnt.doc-code =  buf_chk-doc.doc-code and 
+               bf_chk-discnt.record-type = vRecordType and                
+               bf_chk-discnt.promo-id = tt-promo.promo-id,
+         first buf_chk-gds no-lock where 
+               buf_chk-gds.doc-code = bf_chk-discnt.doc-code and 
+               buf_chk-gds.line-num = bf_chk-discnt.object-line-num:        
+            if not ChkPLLine(buf_chk-gds.doc-code, buf_chk-gds.line-num, tt-promo.promo-id)
+            then do:                                         
+                /*сообщение если, тогда нет скидки*/
+                if tt-promo.methodCalc <> 6 then 
+                do:
+                  assign
+                    tt-promo.discount-sum = tt-promo.discount-sum + bf_chk-discnt.discnt-value-abs
+                    .
+                end.
+                assign 
+                  tt-promo.goods-qnty = tt-promo.goods-qnty + buf_chk-gds.doc-qnty
+                  tt-promo.itog-sum   = tt-promo.itog-sum + buf_chk-gds.src-sum
+                  .     
+            end.                        
       end.   
 
       if tt-promo.goods-qnty > 0 or tt-promo.methodCalc = 6 then tt-promo.sale-qnty = tt-promo.object-qnty - (tt-promo.return-qnty * 2) .
