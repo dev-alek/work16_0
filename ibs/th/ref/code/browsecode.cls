@@ -94,6 +94,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       mCodeTrg:mode = imode.
       bindCode:handle = mCodeTrg:getQuery("code").
       this-object:ComponentsCollection:ADD(this-object:components).
+      statusrow:Visible = mCodeTrg:isVisibleStatus.
       
       catch e as Progress.Lang.Error:
          undo, throw e.
