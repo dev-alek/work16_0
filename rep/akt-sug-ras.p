@@ -51,6 +51,8 @@ define stream out-stream.
 { str/is-sug.i }
 { str/placelib.i }
 { rep/spr-sug.i  }
+{ rep/c-temp-place.i }
+{ rep/c-place-attr.i }
     
 define variable is-petrolium         as logical   no-undo.
 define variable is-pieces            as logical   no-undo.
@@ -118,6 +120,8 @@ define variable v-number-car         as character no-undo .
 define variable v-date-income        as date      no-undo .
 define variable ii                   as integer   no-undo .
 define variable reason-code          as logical   no-undo .
+define variable gate-valve           as logical   no-undo .
+define variable NunHoses             as integer   no-undo .
 
 define variable v-volue-AC           as decimal   no-undo .
 define variable v-value              as character no-undo.
@@ -695,14 +699,13 @@ do
             and buf_doc-line-attr.attr-code = "propan-perc":
             tt-petrol.masDol = decimal (buf_doc-line-attr.attr-value) .                                    
           end.
-
+          NunHoses = getNunHoses(buf_trn-doc.doc-code) .
           run doc-line-value(buf_trn-doc.doc-code, "blowdown", ub.goods.gds-code, output vBlowdown) .
           run doc-line-value(buf_trn-doc.doc-code, "fittings", ub.goods.gds-code, output vFittings) .
           run doc-line-value(buf_trn-doc.doc-code, "emptying", ub.goods.gds-code, output vEmptying) .
           run doc-line-value(buf_trn-doc.doc-code, "refund", ub.goods.gds-code, output vRefund) .
           run doc-line-value(buf_trn-doc.doc-code, "ctrlvalve", ub.goods.gds-code, output vCtrlvalve) .
           
- 
           define variable massa-sug as character no-undo .
           define variable teh-loss as character no-undo .
           define variable err-allow as character no-undo .
@@ -759,6 +762,15 @@ do
         and buf_doc-pl.gds-code = buf_goods.gds-code:
         for first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code:
 
+          gate-valve = get_com-vessel(buf_trn-doc.obj-code,
+          buf_trn-doc.obj-type,
+          {&place-gate-valve},
+          ub.place.pl-code, 
+          buf_trn-doc.doc-date, 
+          buf_trn-doc.fact-date, 
+          0, 
+          buf_trn-doc.fact-time) . 
+
           run placelib_get-attr  ( input {&place-twice-code}
             ,input ub.place.obj-code
             ,input ub.place.obj-type
@@ -790,8 +802,7 @@ end.    /*        for each buf_doc-line     */
 
 run print-table1 no-error .
                                         
-/*    run print-table2 no-error .*/
-                        
+       
 put stream OutStr-html unformatted    
   '</tbody>' skip
   '<tfoot>' skip
@@ -813,8 +824,9 @@ put stream OutStr-html unformatted
   '<TD colspan="9" style="height: 14px;"></TD>' skip
   '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
   '<TD colspan="2" style="text-align: right;"></TD>' skip
-  '</TR>'skip              
-    
+  '</TR>'skip .             
+  if not logical (gate-valve) or gate-valve = ? then do:  
+  put stream OutStr-html unformatted      
   '<TR>' skip
   '<TD></TD>' skip
   '<TD text_wrap="true" colspan="8" style="">13.1. при продувке резинотканевых рукавов для удаления воздуха:</TD>' skip
@@ -883,8 +895,155 @@ put stream OutStr-html unformatted
   '<TD colspan="8" style="height: 14px;"></TD>' skip
   '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
   '<TD colspan="2" style="text-align: right;"></TD>' skip
-  '</TR>'skip     
+  '</TR>'skip .    
+  end.
+  else do:
+    if gate-valve and NunHoses > 0 then do:
+  put stream OutStr-html unformatted        
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.1. при продувке резинотканевых рукавов для удаления воздуха:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vBlowdown,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip      
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.2. при продувке СУГ участка арматуры между запорными устройствами резинотканевых рукавов и АЦ для удаления воздуха:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vFittings,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip   
     
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.3. при опорожнении резинотканевых рукавов по окончании налива (слива) АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vEmptying,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip   
+    
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.4. при возврате АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vRefund,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip   
+    
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.5. при проверке уровня наполнения с помощью контрольного вентиля АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vCtrlvalve,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip .          
+    end.
+    else do:
+  put stream OutStr-html unformatted        
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.1. при продувке резинотканевых рукавов для удаления воздуха:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(0,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip      
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.2. при продувке СУГ участка арматуры между запорными устройствами резинотканевых рукавов и АЦ для удаления воздуха:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(0,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip   
+    
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.3. при опорожнении резинотканевых рукавов по окончании налива (слива) АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(0,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip   
+    
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.4. при возврате АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vRefund,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip   
+    
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.5. при проверке уровня наполнения с помощью контрольного вентиля АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vCtrlvalve,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip
+
+  '<TR>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
+  '</TR>'skip .          
+    end.
+  end.  
+  put stream OutStr-html unformatted    
   '<TR>' skip
   '<TD text_wrap="true" colspan="9" style="">14. Допустимая погрешность измерения на АГЗС:</TD>' skip
   '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(pol14,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
@@ -899,7 +1058,7 @@ put stream OutStr-html unformatted
     
   '<TR>' skip
   '<TD text_wrap="true" colspan="9" style="">15. Количество подключений/переподключений рукавов АЦ, осуществленный в ходе приема СУГ в резервуар АГЗС:</TD>' skip
-  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(getNunHoses(buf_trn-doc.doc-code)) + '</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(NunHoses) + '</TD>' skip
   '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 

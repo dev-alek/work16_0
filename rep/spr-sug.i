@@ -161,7 +161,7 @@ FUNCTION getNunHoses RETURNS integer /*Получение кол-ва рукавов*/
         and buf_doc-line-attr.gds-code  = buf_goods.gds-code
         and buf_doc-line-attr.attr-code = "connect-hoses"
         no-lock:
-        vNumHoses = if buf_doc-line-attr.attr-value = "yes" then 1 else 1.
+        vNumHoses = if buf_doc-line-attr.attr-value = "yes" then 1 else 0.
       end.         
     end.
   end. 
@@ -638,6 +638,9 @@ procedure spr-sug:
   define buffer buf_doc-pl   for ub.doc-pl .
   define buffer buf_doc-line for ub.doc-line .
   define buffer buf_doc-attr for ub.doc-attr .
+  define buffer buf_trn-doc  for ub.trn-doc .
+  define buffer buf_clients-attr for ub.clients-attr .
+  
   define variable numHoses    as integer   no-undo .
   define variable vBlowdown   as decimal   no-undo .
   define variable vFittings   as decimal   no-undo .
@@ -653,13 +656,15 @@ procedure spr-sug:
   define variable valve       as logical   no-undo .
   define variable clear-ac    as logical   no-undo .
   define variable GNS         as character no-undo .
-
+  define variable own-supp    as logical   no-undo .
+  
   numHoses = getNunHoses(doc-code) . /*кол-во рукавов*/
   lengthRukav = decimal (autoAttr(doc-code,"con-sleeve")) . /*длина рукава*/
   valve = if autoAttr(doc-code, "valve") = "" then false else logical(autoAttr(doc-code, "valve")) . /*заслонка*/
 
   find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-clear-ac} and
     buf_doc-attr.doc-code = doc-code no-error . /*Зачищена*/
+    
   if available (buf_doc-attr) then clear-ac = logical (buf_doc-attr.attr-value) .
 
   find first buf_doc-attr no-lock where buf_doc-attr.attr-code = {&trdcattr-ptbobj} and
@@ -670,6 +675,18 @@ procedure spr-sug:
     find first ub.goods no-lock where ub.goods.artic = buf_doc-line.artic and
       ub.goods.prod-code = buf_doc-line.prod-code and
       ub.goods.prod-type = buf_doc-line.prod-type no-error .
+      
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = doc-code no-error .
+    if available (buf_trn-doc) then 
+    do:
+      find first buf_clients-attr where buf_clients-attr.obj-type = buf_trn-doc.cli-type
+        and buf_clients-attr.obj-code = buf_trn-doc.cli-code
+        and buf_clients-attr.attr-code = {&attr-own-supp} no-lock no-error .
+      if available (buf_clients-attr) then 
+        own-supp = logical(buf_clients-attr.attr-value).
+      else own-supp = false .
+    end.
+
     for first buf_doc-pl no-lock where buf_doc-pl.out-code = buf_doc-line.doc-code and
       buf_doc-pl.gds-code = ub.goods.gds-code:
 
@@ -684,7 +701,8 @@ procedure spr-sug:
       run tp-emp(vTemp, vMasDol, lengthRukav, output ktp) .
       vEmptying = ktp * numHoses . /*Значение технологических потерь при опорожнении резинотканевых рукавов по окончании налива (слива) АЦ*/
       run tp-ret(vTemp, output ktp) .
-      if GNS > ""  and clear-ac then vRefund = ktp * vVolue .
+
+      if not(own-supp) or (GNS > ""  and clear-ac) then vRefund = ktp * vVolue . /* зависел ои нефтебазы и зачищена или нет*/
       else vRefund = 0 .
       run tp-chklv(vTemp, vMasDol, output ktp) .
       if reason-code = 99 and valve then vCtrlvalve = ktp .

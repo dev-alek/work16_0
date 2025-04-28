@@ -489,7 +489,7 @@ FUNCTION getNunHoses RETURNS INTEGER
              and buf_doc-line-attr.gds-code  = buf_goods.gds-code
              and buf_doc-line-attr.attr-code = "connect-hoses"
            no-lock:
-         vNumHoses = if buf_doc-line-attr.attr-value = "yes" then 1 else 1. /* согласно ТЗ ver. 1.1 всегда выводим 1 */ 
+         vNumHoses = if buf_doc-line-attr.attr-value = "yes" then 1 else 0. /* согласно  ТЗ "Доработка отчетных форм СУГ" (09.12.2024) */ 
        end.         
      end.
   end. 
