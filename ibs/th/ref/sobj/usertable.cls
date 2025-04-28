@@ -42,37 +42,44 @@ super().
 mform = iform.
   create query query_user-table.                    
                query_user-table:set-buffers(buffer tt-objects:HANDLE). 
-               query_user-table:query-prepare("FOR EACH tt-objects").
+               query_user-table:query-prepare("FOR EACH tt-objects BY tt-objects.name_ ").
                query_user-table:query-open.
 
   create query query_user-account.                    
                query_user-account:set-buffers(buffer tt-user-account:HANDLE). 
-               query_user-account:query-prepare("FOR EACH tt-user-account").
+               query_user-account:query-prepare("FOR EACH tt-user-account BY tt-user-account.user_name ").
                query_user-account:query-open.
                
 end constructor.
 
 METHOD public void init_tt(): 
 
-EMPTY TEMP-TABLE tt-user-account.
+/* EMPTY TEMP-TABLE tt-user-account. */
 mform:ParamObj:get-obj-list(output table obj-list).
 for each user-obj  ,
       each ub.user-account no-lock where ub.user-account.user-id = user-obj.user-id:
-         create tt-user-account .
-         assign
-         tt-user-account.db-num    = user-obj.db-num /* obj-code*/ 
-         tt-user-account.user-id_  = ub.user-account.user-id
-         tt-user-account.user_name = "ID: " + ub.user-account.user-id 
-                              + " ‘»Œ: " + user-account.last-name 
+         
+         find first tt-user-account where tt-user-account.user-id_ = ub.user-account.user-id and tt-user-account.flg2 = yes  no-error.
+            if  not AVAILABLE tt-user-account then do:  
+            /*MESSAGE  user-account.last-name VIEW-AS ALERT-BOX. */                
+            create tt-user-account .
+            assign
+            tt-user-account.db-num    = user-obj.db-num /* obj-code*/ 
+            tt-user-account.user-id_  = ub.user-account.user-id
+            tt-user-account.user_name = /*"ID: " + ub.user-account.user-id 
+                              + " ‘»Œ: " + */
+                              user-account.last-name 
                               + " "      + user-account.first-name 
                               + " "      + user-account.second-name
-                               .
+            tt-user-account.flg2 = yes                     
+            .
+         end.
 end.
 
  
 if mform:ParamObj:x-SelectObject <> "firm" then do:
  
- for each tt-user-account:
+ for each tt-user-account  :
     find first obj-list where tt-user-account.db-num = obj-list.db-num no-error.
       if not AVAILABLE obj-list then 
          do:
@@ -82,7 +89,8 @@ END.
 END. 
 
 
-EMPTY TEMP-TABLE tt-objects.
+ EMPTY TEMP-TABLE tt-objects.  
+ 
 for each c-user-log no-lock 
     where c-user-log.corr-date >= mform:ParamObj:x-Date-Start and c-user-log.corr-date <= mform:ParamObj:x-Date-End 
     by c-user-log.head-table :
@@ -92,7 +100,7 @@ for each c-user-log no-lock
          v-user-table = replace(v-table,"c-","").
      end.
      else v-user-table = v-table .    
-     find first tt-objects where tt-objects.table_ = v-user-table no-error .
+     find first tt-objects where tt-objects.table_ = v-user-table and tt-objects.flg2 =  1 no-error .
      if not AVAILABLE (tt-objects) then 
         do:
            { gbl/tblnmusr.i
@@ -102,42 +110,62 @@ for each c-user-log no-lock
         create tt-objects .
             assign
             tt-objects.table_ = v-user-table 
-            tt-objects.name_  = v-user-table-name
-            .    
+            tt-objects.name_  = v-user-table-name 
+            tt-objects.flg2 =  1  
+            .
      end.
  
 end. 
+
+for each tt-objects  :
+    find first tt-objects2 where tt-objects2.table_ = tt-objects.table_ and tt-objects2.flg = yes no-error .
+    if AVAILABLE (tt-objects2) then  
+    do:
+            assign
+            tt-objects.flg =  yes  
+            .
+     end.
+end.
+
+ empty TEMP-TABLE tt-objects2. 
+  
+for each tt-objects  :
+     create tt-objects2 .
+     buffer-copy tt-objects to tt-objects2 .
+end.
             
-END.
+END METHOD.
     
 METHOD public void mark_user():
     tt-user-account.flg = not tt-user-account.flg .
-END.
+END METHOD.
 
 METHOD public void mark_user_all():
       for each tt-user-account  :
             tt-user-account.flg = not tt-user-account.flg .
       end.
-END.
+END METHOD.
 
 METHOD public void mark_table():
     tt-objects.flg = not tt-objects.flg .
-END.
+    for each tt-objects2 where tt-objects.table_ =  tt-objects2.table_ :    
+    tt-objects2.flg = not tt-objects2.flg .
+    end.
 
-METHOD public void chek_table():
- find first tt-user-account no-error. 
-      
-     if NOT AVAILABLE tt-user-account  then do: 
-     init_tt().
-   
-    end. 
-END.
+END METHOD.
 
 METHOD public void mark_table_all():
+    
     for each tt-objects  :    
     tt-objects.flg = not tt-objects.flg .
     end.
-END.
+    
+    for each tt-objects2  :    
+    tt-objects2.flg = not tt-objects2.flg .
+    end.
+ 
+END METHOD.
+
 
 METHOD public void my_report():
     
@@ -154,8 +182,6 @@ if AVAILABLE tt-user-account then do:
       if   tt-user-account.flg = no then delete tt-user-account .
   end.
 end.
-
-
 
 empty TEMP-TABLE tt-objects2. 
 for each tt-objects  :
@@ -190,11 +216,8 @@ for each tt-objects2:
      buffer-copy tt-objects2 to tt-objects .
 end.
 
-
-
-
-
 /* empty TEMP-TABLE tt-user-account2. */
             
-END.
+END METHOD.
+
 END CLASS.

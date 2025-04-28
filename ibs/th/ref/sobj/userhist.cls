@@ -33,23 +33,19 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
     DEFINE PRIVATE VARIABLE usernameDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
     DEFINE PRIVATE VARIABLE useridDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
     DEFINE PRIVATE VARIABLE dbnumDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
-    /* DEFINE         VARIABLE useracntObj AS CLASS ibs.th.ref.sobj.useracnt no-undo. */
     DEFINE         VARIABLE usertableObj AS CLASS ibs.th.ref.sobj.usertable no-undo.  
     DEFINE         VARIABLE mparamObj AS CLASS ibs.th.ref.sobj.sParamObj no-undo.
-     
+    DEFINE PRIVATE VARIABLE srt as logical. 
       
     CONSTRUCTOR PUBLIC userhist (  ):
         
     SUPER().
     InitializeComponent().
     
-    /* useracntObj = new useracnt(). */
-    
     usertableObj = new usertable (THIS-OBJECT).
     users:Handle = usertableObj:query_user-account.
-      
     bindingSource1:Handle = usertableObj:query_user-table.         
-        
+    srt = yes.    
         
         CATCH e AS Progress.Lang.Error:
             UNDO, THROW e.
@@ -89,6 +85,22 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
 	usertableObj:mark_user().
 	users:Refresh().
 		RETURN.
+	END METHOD.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	METHOD PRIVATE VOID dataGridView1_ColumnHeaderMouseClick( INPUT sender AS System.Object, INPUT e AS System.Windows.Forms.DataGridViewCellMouseEventArgs ):
+    /* переключение сортировки пользователей */
+	srt =  not srt. 
+	if srt then      usertableObj:query_user-account:query-prepare("FOR EACH tt-user-account BY tt-user-account.user_name ").
+	if not srt then  usertableObj:query_user-account:query-prepare("FOR EACH tt-user-account BY tt-user-account.user-id_ ").
+    users:handle:query-open. 
+    users:RefreshAll() .
+      	
+	RETURN.
 
 	END METHOD.
 
@@ -212,6 +224,7 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(1088, 279).
         THIS-OBJECT:dataGridView1:TabIndex = 0.
         THIS-OBJECT:dataGridView1:CellContentClick:Subscribe(THIS-OBJECT:dataGridView1_CellContentClick).
+        THIS-OBJECT:dataGridView1:ColumnHeaderMouseClick:Subscribe(THIS-OBJECT:dataGridView1_ColumnHeaderMouseClick).
         /*  */
         /* flg */
         /*  */
@@ -352,7 +365,6 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:button1).
         THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:label1).
         THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:dataGridView1).
-        THIS-OBJECT:splitContainer1:Panel1:Paint:Subscribe(THIS-OBJECT:Panel1_Paint_1).
         /*  */
         /* splitContainer1.Panel2 */
         /*  */
@@ -411,7 +423,6 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         THIS-OBJECT:Controls:Add(THIS-OBJECT:splitContainer1).
         THIS-OBJECT:Name = "userhist".
         THIS-OBJECT:Size = NEW System.Drawing.Size(1094, 628).
-        THIS-OBJECT:Load:Subscribe(THIS-OBJECT:userhist_Load).
         CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
         CAST(THIS-OBJECT:users, System.ComponentModel.ISupportInitialize):EndInit().
         CAST(THIS-OBJECT:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
@@ -426,63 +437,31 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         END CATCH.
     END METHOD.
 
-	
-	
 
-    method override public void my-report ():
+    METHOD OVERRIDE PUBLIC VOID my-report ():
        
     usertableObj:my_report().  /* запуск печати отчета */
     /*usertableObj:init_tt().   /* формирование заново временных таблиц и обновление экрана */ */
-    
     bindingSource1:handle:query-open.  
     bindingSource1:RefreshAll() .
-    
     users:handle:query-open.          
     users:RefreshAll() .
     
     RETURN.  
+    
     END METHOD.
 
     METHOD OVERRIDE PUBLIC VOID my-secected(  ):
         
-    usertableObj:chek_table().   /* если таблица пользователей пустая заполняем */
-    /* usertableObj:init_tt(). */
-   
+    usertableObj:init_tt().      /* формирование заново временных таблиц и обновление экрана */
     bindingSource1:handle:query-open.
     bindingSource1:RefreshAll() .
-    
     users:handle:query-open.
     users:RefreshAll() .
-
+    
+    RETURN.
+    
     END METHOD.
-
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	METHOD PRIVATE VOID Panel1_Paint_1( INPUT sender AS System.Object, INPUT e AS System.Windows.Forms.PaintEventArgs ):
-	
-		RETURN.
-
-	END METHOD.  
-
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	METHOD PRIVATE VOID userhist_Load( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-		
-		RETURN.
-
-	END METHOD. 	 
-	
-		
-	
-	
-	
 
     DESTRUCTOR PUBLIC userhist ( ):
 
