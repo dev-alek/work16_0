@@ -289,9 +289,9 @@ procedure report:
              bf_chk-discnt-attr.object-line-num = buf_chk-gds.line-num
        no-error.
           
-    if not vAllPromo then do:
-       if not avail bf_chk-discnt-attr
-       then next chkda. 
+    if not avail bf_chk-discnt-attr
+    then next chkda.
+    if not vAllPromo then do:    
        if not can-find(first tt-promo where 
                              tt-promo.id = int(bf_chk-discnt-attr.attr-value))
        then next chkda.

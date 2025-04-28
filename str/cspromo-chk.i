@@ -535,3 +535,51 @@ function SetPromoDisc return logical
        
    return yes.
 end function.
+
+/* Возвращает сумму по акционной цене по промоакции НП */
+function GetPromoPriceSum returns decimal
+    (input iDocCode as character)
+    : 
+    define buffer buf_chk-gds for ub.chk-gds.
+    define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+    define variable vPromoSum as decimal no-undo.
+    
+    vPromoSum = 0.
+    cspr:
+    for each buf_chk-gds no-lock where                 
+                 buf_chk-gds.doc-code = iDocCode,
+           first buf_chk-gds-attr no-lock where                 
+                 buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+             and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+             and buf_chk-gds-attr.attr-code = "CSPromo"
+             and can-do("2,4,5,7", buf_chk-gds-attr.attr-value):                 
+       vPromoSum = RoundUp(buf_chk-gds.src-qnty, buf_chk-gds.src-price).
+       leave cspr.          
+    end.          
+    
+    return vPromoSum.
+end.
+
+/* Возвращает сумму по акционной цене по промоакции НП */
+function GetPromoPriceLine returns integer
+    (input iDocCode as character)
+    : 
+    define buffer buf_chk-gds for ub.chk-gds.
+    define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+    define variable vPromoLine as integer no-undo.
+    
+    vPromoLine = 0.
+    cspr:
+    for each buf_chk-gds no-lock where                 
+                 buf_chk-gds.doc-code = iDocCode,
+           first buf_chk-gds-attr no-lock where                 
+                 buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+             and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+             and buf_chk-gds-attr.attr-code = "CSPromo"
+             and can-do("2,4,5,7", buf_chk-gds-attr.attr-value):                 
+       vPromoLine = buf_chk-gds-attr.line-num.
+       leave cspr.          
+    end.          
+    
+    return vPromoLine.
+end.

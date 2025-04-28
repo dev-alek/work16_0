@@ -49,6 +49,8 @@ define variable pychk_line-type-chr as character no-undo .
 define variable pychk_payline_rrn as character no-undo .
 define variable vSum as decimal no-undo.
 define variable vSumRound as decimal no-undo.
+define variable pychk_sum-promo as decimal no-undo. /* сумма оплаты по промо цене (НП) */
+define variable vPromoLineNum as integer no-undo. /* номер строки  чеке по промо цене */
 
 define temp-table temp-ptrl-goods no-undo
 field b-code as integer
@@ -498,6 +500,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                 then 
                    pychk_dop-sumk = temp-chk-pay.tot-r-b.
                 temp-chk-dp.all-sum           = temp-chk-dp.all-sum - pychk_dop-sumk.
+                
                 create buf_chk-gds-pay.
                   assign
                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
@@ -599,8 +602,10 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
         pychk_dop-sumk = min(abs(pychk_dop-sumg), abs(pychk_dop-sump))  * (if pychk_dop-sump > 0 then 1 else -1 ) * (if pychk_dop-sumg < 0 AND ub.chk-doc.chk-type = {&bef-rcpt-sale} then -1 else 1 ) /*квант*/
         pychk_pay-sum = pychk_pay-sum - pychk_dop-sumk
         pychk_dop-sump = pychk_dop-sump - pychk_dop-sumk
-        pychk_dop-sumg = pychk_dop-sumg - pychk_dop-sumk
-        .
+        pychk_dop-sumg = pychk_dop-sumg - pychk_dop-sumk        
+        pychk_sum-promo = GetPromoPriceSum(ub.chk-doc.doc-code)
+        .           
+                                    
         for each buf_temp-chk-gds where
                 buf_temp-chk-gds.doc-code = ub.chk-doc.doc-code
             and buf_temp-chk-gds.b-code = temp-chk-gds.b-code
@@ -617,8 +622,48 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
               pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
             end.
           end case.
+          if pychk_sum-promo <> 0 then 
+             vPromoLineNum = GetPromoPriceLine(buf_temp-chk-gds.doc-code).
+          else vPromoLineNum = 0.   
+          
+          /* если на промоцену уже распределили оплату, то пропускаем */
+          if  vPromoLineNum <> 0 and 
+              temp-chk-gds.num-lines > 1 and 
+              buf_temp-chk-gds.line-num = vPromoLineNum and
+              can-find(first buf_chk-gds-pay no-lock where 
+                             buf_chk-gds-pay.doc-code = buf_temp-chk-gds.doc-code
+                         and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num)
+          then .               
+          else
           /* если строчка была принудительно размазана, то пропускаем ее */
           if not (buf_temp-chk-gds.sum = 0 and can-find (first temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code and buf_temp-chk-gds.line-num  =  temp-chk-dp.line-num)) then do:
+              
+              /* для промо цены всю сумму считаем оплаченой с первой оплаты */                           
+              if vPromoLineNum <> 0 and 
+                 buf_temp-chk-gds.line-num = vPromoLineNum 
+              then do:
+                 vSum = RoundUp(buf_temp-chk-gds.doc-qnty, buf_temp-chk-gds.price-base). 
+              end.
+              else if vPromoLineNum <> 0 and 
+                      temp-chk-gds.num-lines > 1 and 
+                      pychk_sum-promo <> 0 
+              then do:
+                  /* если уже учли оплату промо, то больше не учитываем */
+                  if can-find(first buf_chk-gds-pay no-lock where 
+                                    buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+                                and buf_chk-gds-pay.line-num = vPromoLineNum
+                                )
+                   then vSum = (pychk_dop-sumk * buf_temp-chk-gds.sum / (temp-chk-gds.sum - pychk_sum-promo)).
+                   else vSum = ((pychk_dop-sumk - pychk_sum-promo) * buf_temp-chk-gds.sum / (temp-chk-gds.sum - pychk_sum-promo)).             
+              end.
+              else             
+              vSum                     = (if    temp-chk-gds.num-lines = 1
+                                            and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
+                                          then pychk_dop-sumk
+                                          else (pychk_dop-sumk * buf_temp-chk-gds.sum / temp-chk-gds.sum)
+                                         )
+              .
+              
               if can-find (first temp-chk-dp no-lock where temp-chk-dp.pay-code = temp-chk-pay.pay-code and temp-chk-dp.doc-code = temp-chk-pay.doc-code) then do:
                   find first buf_chk-gds-pay where buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
                   and buf_chk-gds-pay.algo-num = {&current-algo-1}
@@ -630,7 +675,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                   if not available buf_chk-gds-pay then create buf_chk-gds-pay.
               end.    
               else create buf_chk-gds-pay.
-                        
+                     
               assign
               buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
               buf_chk-gds-pay.chk-type = ub.chk-doc.chk-type
@@ -640,27 +685,8 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
               buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
               buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
               buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
-              vSum                     = (if    temp-chk-gds.num-lines = 1
-                                            and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
-                                          then pychk_dop-sumk
-                                          else (pychk_dop-sumk * buf_temp-chk-gds.sum / temp-chk-gds.sum)
-                                         )
               buf_chk-gds-pay.tot-r-b = buf_chk-gds-pay.tot-r-b  + vSum
-              buf_chk-gds-pay.eff-base-rate = pychk_exch
-              .
-                                            
-              if ChkPromoPrice(buf_temp-chk-gds.doc-code, buf_temp-chk-gds.line-num) /* для акционной цены кол-во не вычисляем */ 
-              then buf_chk-gds-pay.eff-doc-qnty = buf_temp-chk-gds.doc-qnty.
-              else 
-              buf_chk-gds-pay.eff-doc-qnty = (if buf_chk-gds-pay.eff-doc-qnty = ? then 0 else buf_chk-gds-pay.eff-doc-qnty) + (if (temp-chk-gds.num-lines = 1
-                                              and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
-                                              and pychk_pays_count = 1) 
-                                              or (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt) = 0 
-                                              then temp-chk-gds.doc-qnty
-                                              else (vSum / (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt))
-                                              )
-              .
-              assign                                
+              buf_chk-gds-pay.eff-base-rate = pychk_exch  
               buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
               buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
               buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
@@ -669,7 +695,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
               buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
               buf_chk-gds-pay.line-type = pychk_line-type-chr
               buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
-          buf_chk-gds-pay.density  = buf_temp-chk-gds.density
+              buf_chk-gds-pay.density  = buf_temp-chk-gds.density
               buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
               buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
               buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
@@ -678,8 +704,22 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
               buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
               buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
               buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
-              buf_temp-chk-gds.flag = yes  
+              buf_temp-chk-gds.flag = yes               
               .
+                                                                             
+              if buf_temp-chk-gds.line-num = vPromoLineNum /* для акционной цены кол-во не вычисляем */ 
+              then do:                                   
+                 buf_chk-gds-pay.eff-doc-qnty = buf_temp-chk-gds.doc-qnty.                                              
+              end.   
+              else 
+              buf_chk-gds-pay.eff-doc-qnty = (if buf_chk-gds-pay.eff-doc-qnty = ? then 0 else buf_chk-gds-pay.eff-doc-qnty) + (if (temp-chk-gds.num-lines = 1
+                                              and abs(pychk_dop-sumk) <= abs(temp-chk-gds.sum)
+                                              and pychk_pays_count = 1) 
+                                              or (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt) = 0 
+                                              then temp-chk-gds.doc-qnty
+                                              else (vSum / (buf_temp-chk-gds.price-base - buf_temp-chk-gds.discnt))
+                                              )
+              .            
             end.
         end.
         /*--------------------записали в нужную таблицу квант товар-оплата--------------------------*/
