@@ -71,7 +71,7 @@ class ibs.th.bge.1crn.subjects.payment-type inherits ibs.th.bge.1crn.subjects.as
       v-str = v-str + ",name" when name_ = ?
       v-str = v-str + ",curr-code" when curr-code = ?
       v-str = v-str + ",ptg-code" when ptg-code = ?
-      v-str = v-str + ",pay-type" when pay-type_ = ?
+      /* v-str = v-str + ",pay-type" when pay-type_ = ? */
     .
     v-str = trim (v-str, ",").
     if v-str > ''
