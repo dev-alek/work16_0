@@ -107,7 +107,7 @@ method override public void CrContentToSW (insw as handle):
         insw:write-data-element (  "edoc-date":U,       iso-date(utd.DocumentDate)    ).
         insw:write-data-element (  "edoc-type":U,       VText).
         insw:write-data-element (  "edoc-stts":U,       ObjSrv:Env:Utd:Sts:th:GetNameProp(utd.sts)   ).
-        insw:write-data-element (  "comment":U,       if utd.comment = ? then "" else utd.comment   ).
+/*        insw:write-data-element (  "comment":U,       if utd.comment = ? then "" else utd.comment   ).*/
       end .
       else do :
         insw:write-data-element (  "edoc-id":U,      if utd.DocumentExt eq "" or utd.DocumentExt eq ? then string(utd.doc-id ) else utd.DocumentExt   ).

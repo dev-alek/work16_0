@@ -12228,6 +12228,19 @@ end procedure.
 &scop manual-edit-attr-dt-seasons 2
 &scop batch-edit-attr-dt-seasons  2
 
+/* Тип сбора марок */
+&scop type-attr-mark-collect-type {&type-int}
+&scop format-attr-mark-collect-type  "9"
+&scop label-attr-mark-collect-type   "Тип сбора марок"
+&scop tooltip-attr-mark-collect-type   "Тип сбора марок"
+&scop user-can-edit-attr-mark-collect-type  false
+&scop output-display-attr-mark-collect-type  true
+&scop other-attr-mark-collect-type  ""
+&glob news-attr-mark-collect-type true
+&scop copy-attr-mark-collect-type false
+&scop manual-edit-attr-mark-collect-type  0
+&scop batch-edit-attr-mark-collect-type  0
+
 /* сюда добавлять новые параметры атрибутов товаров на объекте */
 
 
@@ -12332,6 +12345,8 @@ do
       {&attr-temp-full-code}
       &scop attr-code attr-change-dt-seasons
       {&attr-temp-full-code}
+      &scop attr-code attr-mark-collect-type
+      {&attr-temp-full-code}
        /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара на объекте &1", p-code ).
@@ -12396,6 +12411,8 @@ do
       &scop attr-code attr-dt-seasons
       {&attr-temp-code}
       &scop attr-code attr-change-dt-seasons
+      {&attr-temp-code}
+      &scop attr-code attr-mark-collect-type
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
@@ -13099,6 +13116,8 @@ procedure gdsoattr-copy :
       {&attr-copy-code}
       &scop attr-code attr-change-dt-seasons
       {&attr-copy-code}
+      &scop attr-code attr-mark-collect-type
+      {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
@@ -13229,6 +13248,8 @@ do
       &scop attr-code attr-dt-seasons
       {&attr-batch-edit-code}
       &scop attr-code attr-change-dt-seasons
+      {&attr-batch-edit-code}
+      &scop attr-code attr-mark-collect-type
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */

@@ -242,8 +242,8 @@ DEFINE VARIABLE RADIO-SET-1 AS INTEGER
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
           "Все", 0,
-"В работе", 2,
-"Завершенные", 1
+"Новый", 2,
+"Подтвержден", 1
      SIZE 44.4 BY 1.24 NO-UNDO.
 
 DEFINE VARIABLE RADIO-SET-2 AS INTEGER 
@@ -264,12 +264,13 @@ DEFINE QUERY br-utd FOR
 DEFINE BROWSE br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-utd d-utd _STRUCTURED
   QUERY br-utd NO-LOCK DISPLAY
-      X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(32)":U
+      X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(32)":U width 14
       X_utd.DocumentDate COLUMN-LABEL "Дата документа" FORMAT "99/99/9999":U
-      X_utd.stts COLUMN-LABEL "Статус ТН" FORMAT "X(40)":U width 20
+      X_utd.stts COLUMN-LABEL "Статус" FORMAT "X(40)":U width 14
       X_utd.is-initial COLUMN-LABEL "Первоначальный" FORMAT "X(40)":U width 15
       X_utd.scan-qnty COLUMN-LABEL "Итого просканировано" FORMAT "->>>>>>9"
       X_utd.free-qnty COLUMN-LABEL "Итого остаток" FORMAT "->>>>>>9"
+      X_utd.comment COLUMN-LABEL "Комментарий" FORMAT "X(256)":U width 40
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 14.76 FIT-LAST-COLUMN.
@@ -541,9 +542,11 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-update d-utd
 ON CHOOSE OF b-update IN FRAME d-utd /* Изменить */
 DO:
-    define var      doc-id   like ub.utd.doc-id no-undo .
-    define var      db-num   like ub.utd.db-num no-undo .
-    define var      EDocType like ub.utd.EDocType no-undo .
+    define buffer bf_tt-utd for tt-utd .
+  
+    define variable doc-id   like ub.utd.doc-id no-undo .
+    define variable db-num   like ub.utd.db-num no-undo .
+    define variable EDocType like ub.utd.EDocType no-undo .
     define variable Log-Res  as logical no-undo.
     if available (x_utd) 
     then do:
@@ -565,9 +568,12 @@ DO:
         unsubscribe "getNextseq".  
         
         run init-id (doc-id, db-num).
-        br-utd:refresh ().
+        run init-sort .
+        {&OPEN-QUERY-br-utd}
 
-        reposition br-utd to rowid row_utd.
+        for first bf_tt-utd no-lock where rowid(bf_tt-utd) = row_utd :
+          reposition br-utd to rowid row_utd .
+        end .
       end .
       else do :
         message "Можно изменять документ только в статусе <Новый>" view-as alert-box.  

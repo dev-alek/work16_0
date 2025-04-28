@@ -48,6 +48,7 @@ define variable vss-description as character no-undo init "Сканирование акцизных
 { utl/gtin.i     }
 { gbl/waitfram.i noprocess }
 { gbl/getcntxt.i def }
+{ ref/gdsoattr.i }
 
 
 /* Parameters Definitions ---                                           */
@@ -99,6 +100,10 @@ define variable vLineNum as integer no-undo .
 
 define variable marking as class mark no-undo .
 
+define variable v-attr-value like ub.gds-obj-attr.attr-value no-undo .
+define variable v-attr-type as character no-undo .
+define variable disable-set as logical no-undo init no .
+
 define stream str-err .
 define stream in-stream.
 
@@ -138,10 +143,10 @@ define stream in-stream.
 &Scoped-Define ENABLED-OBJECTS R-TH b-cancel b-exit B_mark c-type ~
 f-num-name f-num f-date-name f-date is-initial-set f-obj-type-TH ~
 f-obj-code-TH r-obj-TH f-obj-name-TH f-status-TH f-comment f-comment-name ~
-f-info f-info-name v-mark a-n-c br-utd-lines b_prov-finish b_del-line 
+v-mark a-n-c br-utd-lines b_prov-finish b_del-line 
 &Scoped-Define DISPLAYED-OBJECTS c-type f-num-name f-num f-date-name f-date ~
 is-initial-set f-obj-type-TH f-obj-code-TH f-obj-name-TH f-status-TH ~
-c-status f-comment f-comment-name f-info f-info-name v-mark a-n-c ~
+c-status f-comment f-comment-name v-mark a-n-c ~
 a-n-c-name f-msg 
 
 /* Custom List Definitions                                              */
@@ -205,11 +210,11 @@ DEFINE VARIABLE c-type AS INTEGER FORMAT "-999":U INITIAL 10
 
 DEFINE VARIABLE f-comment AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 100 BY 1.48 NO-UNDO.
+     SIZE 100 BY 3.5 NO-UNDO.
 
-DEFINE VARIABLE f-info AS CHARACTER 
-     VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 100 BY 1.95 NO-UNDO.
+/*DEFINE VARIABLE f-info AS CHARACTER   */
+/*     VIEW-AS EDITOR SCROLLBAR-VERTICAL*/
+/*     SIZE 100 BY 1.95 NO-UNDO.        */
 
 DEFINE VARIABLE a-n-c-name AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
@@ -228,9 +233,9 @@ DEFINE VARIABLE f-date-name AS CHARACTER FORMAT "X(256)":U INITIAL "Дата:"
      VIEW-AS FILL-IN 
      SIZE 6 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-info-name AS CHARACTER FORMAT "X(256)":U INITIAL "Доп.инфо:" 
-     VIEW-AS FILL-IN 
-     SIZE 9.8 BY 1 NO-UNDO.
+/*DEFINE VARIABLE f-info-name AS CHARACTER FORMAT "X(256)":U INITIAL "Доп.инфо:"*/
+/*     VIEW-AS FILL-IN                                                          */
+/*     SIZE 9.8 BY 1 NO-UNDO.                                                   */
 
 DEFINE VARIABLE f-msg AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
@@ -305,7 +310,7 @@ DEFINE BROWSE br-utd-lines
       X_utd-lines.Quantity FORMAT "->>,>>9":U label "Просканировано"
       X_utd-lines.free-qnty FORMAT "->>,>>9":U label "Общий остаток"
       X_utd-lines.UnitCode FORMAT "x(8)":U label "Единица измерения"
-      X_utd-lines.qnty-mark FORMAT "->>,>>9":U label "Кол-во марок"
+/*      X_utd-lines.qnty-mark FORMAT "->>,>>9":U label "Кол-во марок"*/
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH SEPARATORS SIZE 117 BY 8.
@@ -315,7 +320,7 @@ DEFINE BROWSE br-utd-lines
 
 DEFINE FRAME Dialog-Frame
      b-cancel AT ROW 1.24 COL 2
-     b-exit AT ROW 1.24 COL 12
+     b-exit AT ROW 1.24 COL 12 WIDGET-ID 380
      B_mark AT ROW 1.24 COL 109 WIDGET-ID 80
      c-type AT ROW 2.43 COL 5.2 COLON-ALIGNED WIDGET-ID 240
      f-num-name AT ROW 2.43 COL 53.8 NO-LABEL WIDGET-ID 328
@@ -331,8 +336,8 @@ DEFINE FRAME Dialog-Frame
      c-status AT ROW 6.95 COL 15 COLON-ALIGNED NO-LABEL WIDGET-ID 238
      f-comment AT ROW 8 COL 17 NO-LABEL WIDGET-ID 266
      f-comment-name AT ROW 8.19 COL 4 NO-LABEL WIDGET-ID 340
-     f-info AT ROW 9.48 COL 17 NO-LABEL WIDGET-ID 268
-     f-info-name AT ROW 9.81 COL 7 NO-LABEL WIDGET-ID 342
+/*     f-info AT ROW 9.48 COL 17 NO-LABEL WIDGET-ID 268    */
+/*     f-info-name AT ROW 9.81 COL 7 NO-LABEL WIDGET-ID 342*/
      v-mark AT ROW 11.48 COL 15 COLON-ALIGNED
      a-n-c AT ROW 12.76 COL 3 NO-LABEL WIDGET-ID 272
      a-n-c-name AT ROW 12.81 COL 40.2 COLON-ALIGNED NO-LABEL WIDGET-ID 278
@@ -341,8 +346,6 @@ DEFINE FRAME Dialog-Frame
      f-msg AT ROW 21.95 COL 3 NO-LABEL WIDGET-ID 92
      b_prov-finish AT ROW 23.14 COL 3 WIDGET-ID 70
      b_del-line AT ROW 23.14 COL 39 WIDGET-ID 94
-     "Доп.инфо:" VIEW-AS TEXT
-          SIZE 9.6 BY .67 AT ROW 9.95 COL 7 WIDGET-ID 264
      "Объект:" VIEW-AS TEXT
           SIZE 12 BY .67 AT ROW 4.1 COL 4 WIDGET-ID 182
      "Данные ТН:" VIEW-AS TEXT
@@ -385,15 +388,15 @@ ASSIGN
    NO-ENABLE                                                            */
 /* SETTINGS FOR COMBO-BOX c-status IN FRAME Dialog-Frame
    NO-ENABLE                                                            */
-ASSIGN 
-       f-comment:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+/*ASSIGN                                                         */
+/*       f-comment:READ-ONLY IN FRAME Dialog-Frame        = TRUE.*/
 
 /* SETTINGS FOR FILL-IN f-comment-name IN FRAME Dialog-Frame
    ALIGN-L                                                              */
 /* SETTINGS FOR FILL-IN f-date-name IN FRAME Dialog-Frame
    ALIGN-L                                                              */
-ASSIGN 
-       f-info:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+/*ASSIGN                                                      */
+/*       f-info:READ-ONLY IN FRAME Dialog-Frame        = TRUE.*/
 
 /* SETTINGS FOR FILL-IN f-info-name IN FRAME Dialog-Frame
    ALIGN-L                                                              */
@@ -505,6 +508,28 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME f-comment
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-comment Dialog-Frame
+ON VALUE-CHANGED OF f-comment IN FRAME Dialog-Frame
+DO:
+  assign f-comment .
+END.
+
+ON return OF f-comment IN FRAME Dialog-Frame
+DO:
+  define variable v-cursor as integer no-undo .
+  define variable v-lines as integer no-undo .
+  assign f-comment .
+  v-cursor = f-comment:cursor-offset .
+  v-lines = num-entries((substring(f-comment, 1, v-cursor - 1)), {&new-line}) .
+  f-comment = substring(f-comment, 1, v-cursor - v-lines) + {&new-line} + substring(f-comment, v-cursor + 1 - v-lines) .
+  display f-comment with frame {&frame-name} .
+  f-comment:cursor-offset = v-cursor + 2 .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME a-n-c-name
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL a-n-c-name Dialog-Frame
@@ -525,7 +550,7 @@ DO:
         end.
      when "name" then 
         do:
-           find first X_utd-lines where (X_utd-lines.ProductCode begins a-n-c-name or X_utd-lines.gds-name begins a-n-c-name) no-error .
+           find first X_utd-lines where (X_utd-lines.GdsName begins a-n-c-name) no-error .
             
            if available (X_utd-lines) then 
            do:
@@ -536,7 +561,7 @@ DO:
         end.
      when "context" then 
         do:
-           find first X_utd-lines where (X_utd-lines.ProductCode MATCHES "*" + a-n-c-name + "*" or X_utd-lines.gds-name MATCHES "*" + a-n-c-name + "*") no-error .
+           find first X_utd-lines where (X_utd-lines.GdsName MATCHES "*" + a-n-c-name + "*") no-error .
            if available (X_utd-lines) then 
            do:
               recid_utd = recid (X_utd-lines) .
@@ -704,7 +729,12 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
 ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Ввод */
 do:
-  assign is-initial-set .
+  define buffer bf_utd-lines for ub.utd-lines .
+  
+  assign
+    is-initial-set
+    f-comment
+  .
   find first buf_utd-attr exclusive-lock where buf_utd-attr.db-num = buf_utd.db-num
                                            and buf_utd-attr.doc-id = buf_utd.doc-id
                                            and buf_utd-attr.attr-code = "is-initial-set"
@@ -719,6 +749,20 @@ do:
     .
   end .
   assign buf_utd-attr.attr-value = string(is-initial-set) .
+  assign buf_utd.comment = trim(f-comment) .
+  
+  find first bf_utd-lines no-lock where bf_utd-lines.db-num = buf_utd.db-num
+                                    and bf_utd-lines.doc-id = buf_utd.doc-id
+                                    no-error .
+  if not available bf_utd-lines
+  then do :
+    message "Документ пустой. Изменения не будут сохранены" view-as alert-box .
+    if p-mode <> {&lookup}
+    and available (buf_utd) 
+    then do:
+      delete buf_utd .
+    end .
+  end .
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -792,6 +836,29 @@ DO:
     {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
   end .
   
+  if is-initial-set
+  and not is-initial-set:sensitive
+  then do :
+    assign disable-set = no .
+    for each X_utd-lines no-lock where X_utd-lines.db-num = buf_utd.db-num
+                                   and X_utd-lines.doc-id = buf_utd.doc-id
+    :
+      run gdsoattr-value in this-procedure (input   {&attr-mark-collect-type},
+                                            input   X_utd-lines.gds-code,
+                                            input   buf_utd.obj-type,
+                                            input   buf_utd.obj-code,
+                                            output  v-attr-value,
+                                            output  v-attr-type
+                                            ) no-error.
+      if is-initial-set
+      and (v-attr-value = "" or v-attr-value = "0")
+      then do :
+        assign disable-set = yes .
+        leave .
+      end .
+    end .
+    if not disable-set then enable is-initial-set with frame {&frame-name} .
+  end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -819,7 +886,10 @@ DO:
   define buffer bf_marking           for ub.marking .
   define variable vPawd as character no-undo.
   
-  assign is-initial-set .
+  assign
+    is-initial-set
+    f-comment  
+  .
   
   find first buf_utd-attr exclusive-lock where buf_utd-attr.db-num = buf_utd.db-num
                                            and buf_utd-attr.doc-id = buf_utd.doc-id
@@ -835,13 +905,14 @@ DO:
     .
   end .
   assign buf_utd-attr.attr-value = string(is-initial-set) .
+  assign buf_utd.comment = trim(f-comment) .
 
   find first bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = buf_utd.db-num
                                             and bf_utd-marking-lines.doc-id = buf_utd.doc-id
                                             no-error .
   if not available (bf_utd-marking-lines) 
   then do:
-    message "В документе нет марок"
+    message "Документ пустой. Завершить его обработку невозможно"
       view-as alert-box.
     return no-apply .
   end.  
@@ -906,6 +977,34 @@ DO:
           .
         end .
       end .
+    end .
+    if is-initial-set
+    then do :
+      run gdsoattr-value in this-procedure (input   {&attr-mark-collect-type},
+                                            input   bf_utd-lines.gds-code,
+                                            input   buf_utd.obj-type,
+                                            input   buf_utd.obj-code,
+                                            output  v-attr-value,
+                                            output  v-attr-type
+                                            ) no-error.
+      if v-attr-value = ""
+      or v-attr-value = "0"
+      then do:
+        run gdsoattr-write (input bf_utd-lines.gds-code,
+                            input buf_utd.obj-type,
+                            input buf_utd.obj-code,
+                            input {&attr-mark-collect-type},
+                            input "1"
+                            ).
+      end.
+    end .
+    else do :
+      run gdsoattr-write (input bf_utd-lines.gds-code,
+                          input buf_utd.obj-type,
+                          input buf_utd.obj-code,
+                          input {&attr-mark-collect-type},
+                          input "2"
+                          ).
     end .
   end .
   
@@ -1070,7 +1169,7 @@ DO:
         X_utd-lines.UnitCode    :fGCOLOR in browse br-utd-lines = red_COLOR
         X_utd-lines.Quantity    :fGCOLOR in browse br-utd-lines = red_COLOR
         X_utd-lines.free-qnty   :fGCOLOR in browse br-utd-lines = red_COLOR
-        X_utd-lines.qnty-mark   :fGCOLOR in browse br-utd-lines = red_COLOR
+/*        X_utd-lines.qnty-mark   :fGCOLOR in browse br-utd-lines = red_COLOR*/
       .
     end .   
   end .
@@ -1337,6 +1436,22 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     :
       assign X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
     end .
+    
+    if not disable-set
+    then do :
+      run gdsoattr-value in this-procedure (input   {&attr-mark-collect-type},
+                                            input   buf_goods.gds-code,
+                                            input   buf_utd.obj-type,
+                                            input   buf_utd.obj-code,
+                                            output  v-attr-value,
+                                            output  v-attr-type
+                                            ) no-error.
+      if is-initial-set
+      and (v-attr-value = "" or v-attr-value = "0")
+      then do :
+        assign disable-set = yes .
+      end .
+    end .
   end .
   
   RUN enable_UI.
@@ -1344,7 +1459,6 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     F-msg
     f-num
     f-date
-    f-info
     c-type
     c-status
     f-obj-code-TH
@@ -1384,8 +1498,10 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   if p-mode = {&lookup}
   then do :
-    disable v-mark b-exit b_prov-finish b_del-line is-initial-set with frame {&frame-name}.
+    disable v-mark b-exit b_prov-finish b_del-line is-initial-set f-comment with frame {&frame-name}.
   end .
+  
+  if disable-set then disable is-initial-set with frame {&frame-name}.
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME} focus v-mark .
 END.
@@ -1420,6 +1536,8 @@ PROCEDURE CrCheckMark :
   
   define variable v-GisMTcheckStatus as integer no-undo .
   define variable v-is-off-line as logical no-undo .
+  
+  define variable v-ok        as logical no-undo .
 
   assign 
     v-mark = v-mark:screen-value in frame {&frame-name}.
@@ -1481,6 +1599,14 @@ PROCEDURE CrCheckMark :
     return.
   end .
   
+  run gdsoattr-value in this-procedure (input   {&attr-mark-collect-type},
+                                        input   buf_goods.gds-code,
+                                        input   buf_utd.obj-type,
+                                        input   buf_utd.obj-code,
+                                        output  v-attr-value,
+                                        output  v-attr-type
+                                        ) no-error.
+  
   find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
                                              and buf_utd-marking-lines.doc-id = buf_utd.doc-id
                                              and v-mark-short begins buf_utd-marking-lines.mark
@@ -1497,6 +1623,39 @@ PROCEDURE CrCheckMark :
                                             no-error .
   if not available buf_utd-lines
   then do :
+    if is-initial-set
+    then do :
+      if v-attr-value = "1"
+      or v-attr-value = "2"
+      then do :
+        message substitute("Для товара &1 ранее был выполнен первоначальный сбор марок, хотите произвести его повторно?", buf_goods.gds-name)
+        view-as alert-box question buttons yes-no update v-ok .
+        if not v-ok
+        then do :
+          return .
+        end .
+      end .
+      else do :
+        disable is-initial-set with frame {&frame-name} .
+      end .
+    end .
+    else do :
+      if v-attr-value = ""
+      or v-attr-value = "0"
+      then do :
+        if vLineNum = 0
+        then do :
+          assign is-initial-set = yes .
+          display is-initial-set with frame {&frame-name} .
+          disable is-initial-set with frame {&frame-name} .
+        end .
+        else do :
+          message substitute("Для товара &1 не выполнен первоначальный сбор марок, товар не может быть добавлен в документ без признака «Первоначальный сбор марок». Создайте для товара отдельный документ", buf_goods.gds-name)
+          view-as alert-box .
+          return .
+        end .
+      end .
+    end .
     assign vLineNum = vLineNum + 1 .
     create buf_utd-lines .
     assign
@@ -1710,12 +1869,12 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY c-type f-num-name f-num f-date-name f-date is-initial-set 
           f-obj-type-TH f-obj-code-TH f-obj-name-TH f-status-TH c-status 
-          f-comment f-comment-name f-info f-info-name v-mark a-n-c a-n-c-name 
+          f-comment f-comment-name v-mark a-n-c a-n-c-name 
           f-msg R-error
       WITH FRAME Dialog-Frame.
   ENABLE b-cancel b-exit B_mark
          is-initial-set R-error
-         f-comment f-info v-mark a-n-c a-n-c-name
+         f-comment v-mark a-n-c a-n-c-name
          br-utd-lines b_prov-finish b_del-line 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
