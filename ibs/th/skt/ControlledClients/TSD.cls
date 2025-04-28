@@ -42,6 +42,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   { gbl/attr-lib.i class}
   {str/lib-trn.i class}
   { str/utd-attr.i class }
+  { str/utd-err.i class }
   {ibs/th/skt/ControlledClients/TSDTT.i}
   { str/utd-err.i class }
   {ibs/th/gbl/doc-codeClass.i}
@@ -714,7 +715,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         assign
           TempBCode.gds-code = buf_goods.gds-code
           TempBCode.b-str = full-b-code
-          TempBCode.priceSale = priceSale
+          TempBCode.priceSale = (if available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value) then "-" else "") + priceSale
           TempBCode.unit-cli = buf_bar-code.unit-cli
           TempBCode.cliBaseRate = cliBaseRate 
         no-error.
