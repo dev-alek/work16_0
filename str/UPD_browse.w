@@ -5618,6 +5618,7 @@ PROCEDURE save_mark :
             end.
             else do:
                v-gds-code = ?.
+               m-gds-code = ?.
                F-text = "Товар не найден. Если сканируете КМ транспортной или груп. упак., то просканировать КМ потребительской упак., или верните товар поставщику." .
                display F-text with frame {&frame-name}.
                v-mark:screen-value = "" .
