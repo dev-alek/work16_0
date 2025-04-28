@@ -617,23 +617,26 @@ procedure report-header:
        '<TD colspan="6" style="font-weight: bold;">Отчет по примененным скидкам на НП</TD>' skip
        '</TR>' skip
        '<TR>' skip
-       '<TD colspan="5">Период:</TD>' skip
-       '<TD colspan="9">' + v-period + '</TD>' skip
+       '<TD colspan="4">Период:</TD>' skip
+       '<TD colspan="11">' + v-period + '</TD>' skip
        '</TR>' skip
        '<TR>' skip
-       /*'<TD colspan="9">' + v-obj-name + '</TD>' skip
-       '</TR>'skip
-       '<TR>' skip*/
-      '<TD colspan="5">Объекты:</TD>' skip
-      '<TD colspan="9">' + "АЗК №" + v-list-obj + " маг" + '</TD>' skip
-      '</TR>' skip
+       '<TD colspan="4">Объекты:</TD>' skip            
+       '<TD colspan="11">АЗК № ' + v-list-obj + ' маг</TD>' skip
+       '<TD colspan="3"></TD>' skip
+       '<TD colspan="9">Статус условий может принимать значения:</TD>' skip      
+       '</TR>' skip
        '<TR>' skip
-      '<TD colspan="5">Промоакции:</TD>' skip
-      '<TD colspan="11">' + vPromoName + '</TD>' skip
-      '</TR>' skip
+       '<TD colspan="4">Промоакции:</TD>' skip
+       '<TD colspan="11">' + vPromoName + '</TD>' skip
+       '<TD colspan="3"></TD>' skip
+       '<TD colspan="9">1 – при полном или частичном возврате, когда промоакция перестала действовать.</TD>' skip
+       '</TR>' skip
        '<TR>' skip
-      '<TD colspan="5">Статус выполнения условий:</TD>' skip
-      '<TD colspan="9">' + vStatusCond + '</TD>' skip
+       '<TD colspan="4">Статус выполнения условий:</TD>' skip
+       '<TD colspan="11">' + vStatusCond + '</TD>' skip
+       '<TD colspan="3"></TD>' skip
+       '<TD colspan="9">0 – при частичном возврате, когда промоакция продолжает действовать.</TD>' skip
        '</TR>' skip
     
       '</thead>' skip
@@ -649,7 +652,7 @@ procedure report-header:
         '<TH text_wrap="true" rowspan="4" colspan="8" style="text-align: center; font-weight:bold; ">Чек продажи</TH>'   skip
         '<TH text_wrap="true" rowspan="4" colspan="6" style="text-align: center; font-weight:bold; ">Чек возврата</TH>'  skip
         '<TH text_wrap="true" rowspan="4" colspan="8" style="text-align: center; font-weight:bold; ">Итоги по применению промоакции</TH>' skip
-        '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight:bold; ">Запрет начисления БЛ </TH>'           skip
+        '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight:bold; ">Запрет начисления баллов лояльности</TH>'           skip
         '</TR>' skip
         
         '<TR>' skip
