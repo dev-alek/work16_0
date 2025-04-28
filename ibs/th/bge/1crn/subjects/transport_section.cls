@@ -116,9 +116,9 @@ class ibs.th.bge.1crn.subjects.transport_section inherits ibs.th.bge.1crn.subjec
       def var v-str as char no-undo.
 
       assign
-         v-str = v-str + ",sec-num" 
-         when sec-num = ?
-         v-str = v-str + ",capacity" .
+         v-str = v-str + "sec-num" 
+         when sec-num = ?.
+/*         v-str = v-str + ",capacity"    */
 /*         when capacity = ? and ess = 0  */
 /*         v-str = v-str + ",min-of-lvl"  */
 /*         when min-of-lvl = ? and ess = 0*/
@@ -137,7 +137,7 @@ class ibs.th.bge.1crn.subjects.transport_section inherits ibs.th.bge.1crn.subjec
 /*         v-str = v-str + ",pipe-vlm"     */
 /*         when pipe-vlm = ?               */
 /*         .                      */
-/*      v-str = trim (v-str, ",").*/
+/*      v-str = trim (v-str, ","). */
       if v-str > ''
          then 
          undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
