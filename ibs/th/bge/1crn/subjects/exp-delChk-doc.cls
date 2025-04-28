@@ -82,9 +82,9 @@ method override public void CrContentToSW (insw as handle):
     insw:write-data-element (  "chk-num":U,       string(c-chk-doc.chk-num)   ).
     insw:write-data-element (  "chk-id":U,       string(c-chk-doc.doc-code)   ).
     insw:write-data-element (  "dry-chk-th":U,   if c-chk-doc.is-add then "1" else "0"  ).
-    insw:write-data-element (  "chk-date":U,        string(c-chk-doc.chk-date)   ).
+    insw:write-data-element (  "chk-date":U,        iso-date(c-chk-doc.chk-date)   ).
     insw:write-data-element (  "chk-time":U,       string(c-chk-doc.chk-time,"HH:MM:SS")).
-    insw:write-data-element (  "date-deletion":U,     string(c-chk-doc.corr-date)  ).
+    insw:write-data-element (  "date-deletion":U,     iso-date(c-chk-doc.corr-date)  ).
     insw:write-data-element (  "time-deletion":U,      string(c-chk-doc.corr-time,"HH:MM:SS")   ).
     for each ub.shift-obj no-lock where ub.shift-obj.obj-code = c-chk-doc.obj-code and ub.shift-obj.obj-type = c-chk-doc.obj-type and 
       (ub.shift-obj.open-date < c-chk-doc.corr-date or ub.shift-obj.open-date = c-chk-doc.corr-date) and
