@@ -1328,36 +1328,40 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   v-prt-end-real-time = buf_rvs-line.real-time .
                 end.
                 
-                if varcur-rvs = 1
-                or ptoldfilvalue <> "yes":u
+                find first tt-pump-nozzle no-error .
+                if available tt-pump-nozzle
                 then do :
-                  { str/anls-pmp.i
-                    parParentProc
-                    t-doc.obj-type
-                    t-doc.obj-code
-                    yes
-                    tt-pump-nozzle-file
-                    tt-pump-nozzle
-                    yes
-                    ?
-                    no
-                    no-error
-                  }
-                end.
-                else do :
-                  { str/anls-pmp.i
-                    parParentProc
-                    t-doc.obj-type
-                    t-doc.obj-code
-                    yes
-                    tt-pump-nozzle-file
-                    tt-pump-nozzle
-                    no
-                    ?
-                    no
-                    no-error
-                  }
-                end.
+                  if varcur-rvs = 1
+                  or ptoldfilvalue <> "yes":u
+                  then do :
+                    { str/anls-pmp.i
+                      parParentProc
+                      t-doc.obj-type
+                      t-doc.obj-code
+                      yes
+                      tt-pump-nozzle-file
+                      tt-pump-nozzle
+                      yes
+                      ?
+                      no
+                      no-error
+                    }
+                  end.
+                  else do :
+                    { str/anls-pmp.i
+                      parParentProc
+                      t-doc.obj-type
+                      t-doc.obj-code
+                      yes
+                      tt-pump-nozzle-file
+                      tt-pump-nozzle
+                      no
+                      ?
+                      no
+                      no-error
+                    }
+                  end.
+                end .
                 for each tt-pump-nozzle :
                   find first tt-pump-nozzle-file where
                              tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
@@ -1503,36 +1507,40 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                 buf_rvs-line.real-time = v-time
               .
               
-              if varcur-rvs = 1
-              or ptoldfilvalue <> "yes":u
+              find first tt-pump-nozzle no-error .
+              if available tt-pump-nozzle
               then do :
-                { str/anls-pmp.i
-                  parParentProc
-                  t-doc.obj-type
-                  t-doc.obj-code
-                  yes
-                  tt-pump-nozzle-file
-                  tt-pump-nozzle
-                  yes
-                  ?
-                  no
-                  no-error
-                }
-              end.
-              else do :
-                { str/anls-pmp.i
-                  parParentProc
-                  t-doc.obj-type
-                  t-doc.obj-code
-                  yes
-                  tt-pump-nozzle-file
-                  tt-pump-nozzle
-                  no
-                  ?
-                  no
-                  no-error
-                }
-              end.
+                if varcur-rvs = 1
+                or ptoldfilvalue <> "yes":u
+                then do :
+                  { str/anls-pmp.i
+                    parParentProc
+                    t-doc.obj-type
+                    t-doc.obj-code
+                    yes
+                    tt-pump-nozzle-file
+                    tt-pump-nozzle
+                    yes
+                    ?
+                    no
+                    no-error
+                  }
+                end.
+                else do :
+                  { str/anls-pmp.i
+                    parParentProc
+                    t-doc.obj-type
+                    t-doc.obj-code
+                    yes
+                    tt-pump-nozzle-file
+                    tt-pump-nozzle
+                    no
+                    ?
+                    no
+                    no-error
+                  }
+                end.
+              end .
               for each tt-pump-nozzle :
                 find first tt-pump-nozzle-file where
                            tt-pump-nozzle-file.obj-type    = tt-pump-nozzle.obj-type    and
@@ -1713,41 +1721,51 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                   .
                 end .
                 
-                if ptoldfilvalue = "yes":U then do:
-                  run gbl/d-askw.w
-                    ( input "Выбор источника данных с информацией по ТРК"
-                    ,input "Будем читать текущие данные с ТРК или возьмем данные из файла?"
-                    ,input "|^"
-                    ,input "Текущие данные|Из файлов|Отмена"
-                    ,input "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем"
-                    ,input 1
-                    ,input 3
-                    ,output varnum
-                    ) .
-                  case varnum :
-                    when 1 then do:
-                      assign
-                        varcur-rvs = 1
-                      .
-                    end.
-                    when 2  then do:
-                      assign
-                        varcur-rvs = 0
-                      .
-                    end.
-                    when 3 then do:
-                      assign
-                        varcur-rvs = 3
-                      .
-                    end.
-                  end case. /* varnum */
-                end.
-                else do:
+                find first tt-pump-nozzle no-error .
+                if not available tt-pump-nozzle
+                then do :
                   assign
-                    varcur-rvs = 1
+                    varcur-rvs = 3
+                    error-status:error = no
                   .
-                end.
-                
+                end .
+                else do :
+                  if ptoldfilvalue = "yes":U then do:
+                    run gbl/d-askw.w
+                      ( input "Выбор источника данных с информацией по ТРК"
+                      ,input "Будем читать текущие данные с ТРК или возьмем данные из файла?"
+                      ,input "|^"
+                      ,input "Текущие данные|Из файлов|Отмена"
+                      ,input "Запускается программа для обращения к датчикам резервуаров|Берутся уже сохраненные данные из файла|Ничего не делаем"
+                      ,input 1
+                      ,input 3
+                      ,output varnum
+                      ) .
+                    case varnum :
+                      when 1 then do:
+                        assign
+                          varcur-rvs = 1
+                        .
+                      end.
+                      when 2  then do:
+                        assign
+                          varcur-rvs = 0
+                        .
+                      end.
+                      when 3 then do:
+                        assign
+                          varcur-rvs = 3
+                        .
+                      end.
+                    end case. /* varnum */
+                  end.
+                  else do:
+                    assign
+                      varcur-rvs = 1
+                    .
+                  end.
+                end .
+                  
                 if varcur-rvs <> 3
                 then do :
                   if varcur-rvs = 1
