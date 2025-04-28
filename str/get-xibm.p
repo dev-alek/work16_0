@@ -2424,7 +2424,7 @@ procedure proc-01-gds :
                     buf_chk-gds-attr.line-num = buf_chk-gds.line-num
                     buf_chk-gds-attr.attr-code = "CSPromo"
                     buf_chk-gds-attr.attr-value =  string(v-promo)
-                    .                                                                                 
+                    .                                                                                                     
             end.              
         end. /* if not exist */
     end.
@@ -3351,24 +3351,24 @@ procedure proc-disc :
                         
                     end.                    
                     /* для промо проверяем, если это новый вид промо, то сумму иначе учитываем */
-                    if disc-reason_ = 15 and buf_chk-doc.chk-type = integer({&rcpt-sale}) then do:                        
+                    if disc-reason_ = 15 /*and buf_chk-doc.chk-type = integer({&rcpt-sale})*/ then do:                        
                         find first buf_chk-gds-attr 
                             where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
                             and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
                             and buf_chk-gds-attr.attr-code = "CSPromo"
-                            and buf_chk-gds-attr.attr-value = "1" 
+                            and can-do("1,6", buf_chk-gds-attr.attr-value) 
                             no-error.                                                        
                         if avail buf_chk-gds-attr                             
                         then do:  
                            find first buf2_chk-gds-attr 
                                 where buf2_chk-gds-attr.doc-code  = buf_chk-gds.doc-code                            
                                   and buf2_chk-gds-attr.attr-code = "CSPromo" 
-                                  and can-do("2,4", buf2_chk-gds-attr.attr-value)
+                                  and can-do("2,4,5", buf2_chk-gds-attr.attr-value)
                             no-error.
                            if avail buf2_chk-gds-attr
                            then do:
                               find first buf2_chk-gds  
-                                   where buf2_chk-gds.doc-code  = buf_chk-gds.doc-code
+                                   where buf2_chk-gds.doc-code  = buf2_chk-gds.doc-code
                                      and buf2_chk-gds.line-num  = buf2_chk-gds-attr.line-num
                                      no-error.
                               if avail buf2_chk-gds then  
@@ -3381,32 +3381,11 @@ procedure proc-disc :
                               buf2_chk-gds-attr.line-num = buf_chk-gds.line-num
                               buf2_chk-gds-attr.attr-code = "CSPromoSum"
                               buf2_chk-gds-attr.attr-value =  string(-1 * disc-sum_)
-                              . 
+                              .  
                            disc-sum_ = 0.
                            disc-pcnt_ = 0.                               
-                        end.                                                    
-                                                  
-                    end.
-                    /*else if disc-reason_ = 15 and buf_chk-doc.chk-type = integer({&rcpt-return}) then do:                        
-                        find first buf_chk-gds-attr 
-                            where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
-                            and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
-                            and buf_chk-gds-attr.attr-code = "CSPromo" 
-                            and can-do("1,6,5", buf_chk-gds-attr.attr-value)
-                            no-error.
-                        if avail buf_chk-gds-attr
-                        then do:  
-                           create buf2_chk-gds-attr.
-                           assign
-                              buf2_chk-gds-attr.doc-code = buf_chk-gds.doc-code
-                              buf2_chk-gds-attr.line-num = buf_chk-gds.line-num
-                              buf2_chk-gds-attr.attr-code = "CSPromoSum"
-                              buf2_chk-gds-attr.attr-value =  string(-1 * disc-sum_)
-                              . 
-                           disc-sum_ = 0.
-                           disc-pcnt_ = 0.
-                        end.
-                    end.*/                                        
+                        end.                                                                                                      
+                    end.                                                         
                 end.
                 else if not (disc-mode_ = 'C':U or disc-mode_ = 'P':U) then do:
                     assign
