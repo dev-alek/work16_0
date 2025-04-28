@@ -180,6 +180,63 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      end.     
      /*run PutMesAsunc (substitute ("Окончания обновления площадок &1 заняло времени (мс) &2" , now, now - vTimeStart)).*/
    end method.
+   
+   /* обновление времени заблокированных площадок  */     
+   method public void UpdTimetCdn ():
+     define variable vTimeStart  as datetime-tz no-undo.
+     define variable vTimeUnbl   as datetime-tz no-undo.   
+     define variable vParamProxy as character   no-undo.  
+     define variable vRetOk      as logical     no-undo.  
+     define variable vFileName   as character   no-undo.
+     
+     define buffer buf_code for ub.code.           
+     
+     vParamProxy = GetParamProxy().
+     if not gismt-cdnTurnOn then return .     
+                 
+     vTimeStart = now.
+     
+     empty temp-table tthosts-body.
+     empty temp-table tthosts.
+     empty temp-table tt-code.         
+               
+     do transaction 
+     on error undo, return error:                               
+         vRetOk = SetCdnUpd(vTimeStart).
+         for each buf_code no-lock where 
+                  buf_code.parent = "CDN_GisMt"
+              and buf_code.misc2 <> "":                               
+            vTimeUnbl = datetime-tz(buf_code.misc2) no-error.
+            if vTimeUnbl < vTimeStart then do:
+               ReqHost(buf_code.code, vParamProxy, vTimeStart).               
+            end.   
+         end.
+         /* Обновляем информацию в БД */   
+         UpdCdNAdrFormTT().                             
+         /* удаляем признак, что работает обновление площадок */
+         DelCdnUpd().
+         
+         /* Печатаем в протокол */                        
+         vFileName = GetLogName(). 
+         OUTPUT STREAM out_data TO value(vFileName) APPEND.
+         PUT STREAM out_data UNFORMATTED 
+           now  chr(9) "Установлено новое время доступа к ранее заблокированным площадкам:" skip.
+         OUTPUT STREAM out_data CLOSE.
+         
+         for each tt-code,  
+            first buf_code no-lock where 
+                  buf_code.parent = tt-code.parent 
+              and buf_code.code = tt-code.code:
+            OUTPUT STREAM out_data TO value(vFileName) APPEND.
+            PUT STREAM out_data UNFORMATTED 
+                buf_code.misc1 chr(9) buf_code.code chr(9) buf_code.codeval chr(9) buf_code.misc2 chr(9) skip.
+            OUTPUT STREAM out_data CLOSE.      
+         end.       
+         
+         empty temp-table tt-code.    
+     end.    
+       
+   end method.    
     
     /* проверка площадок и сохранение в БД */     
    method public void ReqHost
@@ -420,17 +477,12 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
         end.              
    end method.
    
-   method  private void WriteLogCdn
-       (iFlagOk as logical):
-           
-        def buffer buf_code for ub.code.    
+   method private character GetLogName ():
         define variable vFileName as character no-undo.
         define variable vCh as character no-undo.
         define variable vFullCh as character no-undo.
         define variable vWork as character no-undo.
-        define variable vNum as int no-undo.
-        define variable vStrLong as longchar no-undo.
-        define variable vTimeUnBlock as character no-undo. 
+        define variable vNum as int no-undo.         
         
         vFileName = "GisMtCDN-" + replace(string(today),"/","-") +  ".log".
         
@@ -444,6 +496,24 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
         then vNum = index(vFullCh,"\pid_").
         if vNum <> 0 then vWork = substring(vFullCh, 1, vNum).
         vFileName =  vWork + vFileName.
+        
+        return vFileName.
+   end method.    
+   
+   method  private void WriteLogCdn
+       (iFlagOk as logical):
+           
+        def buffer buf_code for ub.code.    
+        define variable vFileName as character no-undo.
+        define variable vCh as character no-undo.
+        define variable vFullCh as character no-undo.
+        define variable vWork as character no-undo.
+        define variable vNum as int no-undo.
+        define variable vStrLong as longchar no-undo.
+        define variable vTimeUnBlock as character no-undo.
+         
+        /* определяем имя лог. файла */               
+        vFileName = GetLogName().
         
         if not iFlagOk then do:
             OUTPUT STREAM out_data TO value(vFileName) APPEND.

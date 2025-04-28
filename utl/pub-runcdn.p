@@ -21,6 +21,7 @@ define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 
 def buffer buf_code for ub.code.
+define input param iTypeUpd as integer no-undo. /* 1 - обновить все площадки, 2 - обновить только время заблокированной более 15 мин */
 
 pub-run:
 do 
@@ -47,7 +48,7 @@ find first buf_code where
     
         find current buf_code no-lock no-error.
                                        
-        publish "runCdn".     
+        publish "runCdn" (iTypeUpd).     
 end.
 /* если флаг висит больше 20 минут, то игнорируем его */
 else if datetime-tz(buf_code.codeval) < (now - 20 * 60000) 
@@ -58,7 +59,7 @@ then do:
            return .
         end.            
         find current buf_code no-lock no-error.   
-        publish "runCdn".  
+        publish "runCdn" (iTypeUpd).  
     end.              
     else find current buf_code no-lock no-error.
 end.

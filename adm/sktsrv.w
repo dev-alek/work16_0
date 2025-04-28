@@ -384,7 +384,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   mAsyncHelper:WritelogInter = 5.
   mAsyncHelper:MyBachMode = yes.
   mAsyncHelper:maxproc    = 1.
-  run runCDN.
+  run runCDN (1).
   run runLmStatus.
   IF NOT THIS-PROCEDURE:PERSISTENT THEN 
   do while mWork:
@@ -840,7 +840,9 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _Procedure RunCdn C-Win
 procedure runCdn:
-   run utl/runproc-cdn.p ("CDN",this-procedure).
+   define input param iTypeUpd as integer no-undo. /* 1 - обновить все площадки, 2 - обновить только время заблокированной более 15 мин */
+    
+   run utl/runproc-cdn.p ("CDN",this-procedure,iTypeUpd).
   
 end procedure.
 

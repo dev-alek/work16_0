@@ -55,7 +55,9 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   DEFINE PRIVATE VARIABLE mCheckSts     AS INTEGER   NO-UNDO.
   DEFINE PRIVATE VARIABLE mReqId        AS CHARACTER NO-UNDO. 
   DEFINE PRIVATE VARIABLE mReqTimestamp AS CHARACTER NO-UNDO.
-  DEFINE PRIVATE VARIABLE mCheckGisMT    AS INTEGER NO-UNDO. /* 0 - проверки не было, 1 - проверка была, 2 - аварийна€ ситуаци€ */
+  DEFINE PRIVATE VARIABLE mInst         AS CHARACTER NO-UNDO. 
+  DEFINE PRIVATE VARIABLE mVersion      AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE mCheckGisMT   AS INTEGER NO-UNDO. /* 0 - проверки не было, 1 - проверка была, 2 - аварийна€ ситуаци€ */
     
   DEF STREAM out_s.
   DEF STREAM out_data.
@@ -103,6 +105,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
    FIELD reqId        AS CHAR
    FIELD reqTimestamp AS INT64   
    FIELD inst         AS CHAR
+   FIELD version      AS CHAR
    FIELD description  AS CHAR
    FIELD code         AS INT64 
    FIELD errorCode    AS INT64
@@ -182,6 +185,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       mCheckSts = 1
       mReqId        = ""
       mReqTimeStamp = ""
+      mInst         = ""
+      mVersion      = ""
       answerFlag = FALSE
       cash       = ""      
       shift_id   = ""
@@ -562,7 +567,9 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     IF stsInt = 1 AND mCheckSts = 2 
     THEN stsInt = 2.
       
-    json-str = CHR(123) + substitute ('"status":&1,"comment":"&2","reqid":"&3","reqtimestamp":"&4"', stsInt, msg, mReqId, mReqTimestamp) + chr(125).
+    json-str = CHR(123) + substitute ('"status":&1,"comment":"&2","reqid":"&3","reqtimestamp":"&4","inst":"&5","ver":"&6"', 
+                                       stsInt, msg, mReqId, mReqTimestamp, mInst, mVersion) 
+               + CHR(125).
     RETURN json-str.
   END.
 
@@ -1157,7 +1164,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            IF vNumRep = 1 THEN DO:               
                vMarkShort = percentCoding(mark-short). 
                dbgPrint("marking.log", SUBSTITUTE("—конвертированна€  »: &1 ", vMarkShort)).               
-               RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .
+               RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .               
                CREATE tt-file-name.
                ASSIGN tt-file-name.tmpFileName = vFileResOf
                       tt-file-name.ofline = YES.           
@@ -1177,7 +1184,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                   vFileResOfErr = ""   
                   vFileBatOf = ""
                   .           
-
+           
            vRetVal = RunCurlGisMT(vGisAdress,     
                                   vDataMark,
                                   CmdParamProxy,
@@ -1606,14 +1613,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
           .
        RETURN "".
     END.   
-    /*
-    /* «апускаем проверку, не надо ли обновить 
-    ** площадки и их обновление */
-    if gismt-cdnTurnOn and 
-       CheckCdnNeedUpd()
-       then            
-       run utl/pub-runcdn.p (p-obj-type, string(p-obj-code)).              
-      */     
+ 
     /* произошла аварийна€ ситуаци€ - фиксируем */
     IF vGetGisMt <> 0 THEN DO: 
         IF vGetGisMt = 2 THEN 
@@ -1655,7 +1655,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     THEN DO:
         ASSIGN
            mReqId        = ttmark-body.reqid
-           mReqTimeStamp = STRING(ttmark-body.reqtimestamp)
+           mReqTimeStamp = STRING(ttmark-body.reqtimestamp)           
            .
         /* по новому алгоритму сюда теоретически не должны попасть */   
         IF ttmark-body.code <> 0  
@@ -1859,6 +1859,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                      "ttlocal-mark.reqId: " ttlocal-mark.reqId     SKIP
                      "ttlocal-mark.reqTimestamp: " ttlocal-mark.reqTimestamp     SKIP                     
                      "ttlocal-mark.inst: " ttlocal-mark.inst SKIP
+                     "ttlocal-mark.ver: " ttlocal-mark.ver SKIP
                      "ttlocal-mark.description: " ttlocal-mark.description       SKIP              
                      "ttlocal-mark.code: " ttlocal-mark.code       SKIP                     
                      .                        
@@ -1898,7 +1899,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                                  buf_code.codeval,
                                                  buf_code.misc2,
                                                  vTimeNow)).
-              IF buf_code.misc2 = "" OR datetime-tz(buf_code.misc2) < vTimeNow 
+              IF buf_code.misc2 = "" /*OR datetime-tz(buf_code.misc2) < vTimeNow*/ 
               THEN DO:
                   IF vTimeResp = 0 OR 
                      vTimeResp = ? OR 
@@ -1953,10 +1954,15 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       RETURN vOk.      
   END METHOD. 
   
-  METHOD PUBLIC LOGICAL CheckCdnNeedUpd ():
+  /* ќпредел€ет, нужно ли обновл€ть площадки
+  ** 1 - нужно обновл€ть все площадки
+  ** 2 - нужно обновить только врем€ у площадки */
+  METHOD PUBLIC INTEGER CheckCdnNeedUpd ():
       DEF BUFFER buf_code FOR ub.code.
       DEF VAR vAddr AS CHAR NO-UNDO.
       DEF VAR vNeedUpd AS LOG NO-UNDO.
+      DEF VAR vNeedTimeUpd AS LOG NO-UNDO.
+      DEF VAR vReturnValue AS INTEGER NO-UNDO.       
       DEF VAR vAllBlock AS LOG NO-UNDO.
       DEF VAR vTimeNow AS DATETIME-TZ NO-UNDO.
       DEF VAR vTimeUpd AS DATETIME-TZ NO-UNDO.
@@ -1973,16 +1979,23 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       block_code:
       FOR EACH buf_code NO-LOCK WHERE buf_code.parent = "CDN_GisMt":
           vTimeUpd = DATETIME-TZ(buf_code.misc1) NO-ERROR.
-          IF buf_code.misc2 <> "" THEN 
+          IF buf_code.misc2 <> "" THEN DO: 
              vTimeUnbl = DATETIME-TZ(buf_code.misc2) NO-ERROR.
+             IF vTimeUnbl < vTimeNow THEN vNeedTimeUpd = YES.   
+             dbgPrint("marking.log", SUBSTITUTE("ѕлощадка &1 заблокирована &2, требует обновлени€ &3",
+                                                  buf_code.code,
+                                                  vTimeUnbl,
+                                                  vTimeUnbl < vTimeNow)
+                     ).
+          END.
           /* ищем незаблокированную площадку */   
-          IF buf_code.misc2 = "" OR 
+          IF buf_code.misc2 = "" /*OR 
              (vTimeUnbl <> ? AND
-              vTimeUnbl < vTimeNow)
+              vTimeUnbl < vTimeNow)*/
           THEN DO: 
              vAllBlock = NO.
-             LEAVE block_code.
-          END.   
+             /*LEAVE block_code.*/
+          END.             
       END.      
       
       IF vAllBlock OR
@@ -2004,16 +2017,38 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
          END.    
          /* если прошло 20 минут с момента обновлени€, то игнорим флаг (завис) */
          ELSE IF DATETIME-TZ(buf_code.codeval) < (NOW - 20 * 60000) THEN DO:
-             dbgPrint("marking.log", SUBSTITUTE("ќбновл€ем список площадок, флаг обновлени€ был установлен &1",
+            dbgPrint("marking.log", SUBSTITUTE("ќбновл€ем список площадок, флаг обновлени€ был установлен &1",
                                                 buf_code.codeval )). 
             vNeedUpd = YES.
          END.    
          ELSE dbgPrint("marking.log", SUBSTITUTE("ѕлощадки не обновл€ем, идет обновление &1 ",  buf_code.codeval)).
       END.
-      ELSE dbgPrint("marking.log", SUBSTITUTE("ѕлощадки не обновл€ем, все заблокированы &1 врем€ посл обновлени€ &2 „астота обновлени€ (ч) &3 ",
-                                              vAllBlock, vTimeUpd, gismt-cdnTimeUpd )).    
+      ELSE IF vNeedTimeUpd THEN DO:
+         FIND FIRST buf_code WHERE 
+                  buf_code.parent = "CDN_GisMt" 
+              AND buf_code.code = "CDN_Upd"              
+           NO-LOCK NO-ERROR.
+         IF AVAIL buf_code               
+         THEN DO:
+             vNeedTimeUpd = NO.
+             dbgPrint("marking.log", SUBSTITUTE("«аблокированную площадку не обновл€ем, идет обновление &1 ",  buf_code.codeval)).
+         END.    
+         ELSE dbgPrint("marking.log", SUBSTITUTE("ќбновл€ем заблокированную площадку, 15 минут блокировки истекли в &1",
+                                              vTimeUpd )).             
+      END.
+      ELSE     
+         dbgPrint("marking.log", SUBSTITUTE("ѕлощадки не обновл€ем. ¬се заблокированы? &1 ¬рем€ последнего обновлени€ &2 „астота обновлени€ (ч) &3 «аблокированные площадки &4",
+                                              vAllBlock, vTimeUpd, gismt-cdnTimeUpd, vNeedTimeUpd )).
       
-      RETURN vNeedUpd.
+                                                  
+      IF vNeedUpd THEN vReturnValue = 1.
+      ELSE IF vNeedTimeUpd then vReturnValue = 2.
+      ELSE vReturnValue = 0.
+      
+      dbgPrint("marking.log", SUBSTITUTE("¬озвращаем значение &1 об обновлении площадок",
+                                         vReturnValue )).
+                                              
+      RETURN vReturnValue.
   END METHOD.
   
  /* ¬ызывает curl с переданным адресом и возвращает ответ:
@@ -2047,7 +2082,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE vcmdof AS CHARACTER   NO-UNDO.
     DEFINE VARIABLE vpidof AS INTEGER     NO-UNDO.
         
-    vRetVal = -1.
+    vRetVal = -1.    
          
     cmd = SUBSTITUTE ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
                       SEARCH ("exe/curl.exe"), /*1*/
@@ -2071,7 +2106,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
                           SEARCH ("exe/curl.exe"), /*1*/                                                                  
                           QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
-                          QUOTER(gismt-OflineAdress + "/cis/check?cis=" + vMarkShort), /*3*/
+                          QUOTER(gismt-OflineAdress + "/cis/outCheck?cis=" + vMarkShort), /*3*/
                           vFileResOf,             /*4*/                      
                           vFileResOfErr,          /*5*/                      
                           TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
@@ -2172,7 +2207,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         vErrTxt = "ќшибка при проверке товара в локальном модуле „естный знак. “овар не добавлен в чек. —ообщите управл€ющему/старшему смены. "
         . 
                   
-     FIND FIRST tt-file-name WHERE tt-file-name.ofline = YES NO-ERROR.
+     FIND FIRST tt-file-name WHERE tt-file-name.ofline = YES NO-ERROR.     
+     
      IF AVAIL tt-file-name
         AND searchFile(tt-file-name.tmpFileName) <> ?   
      THEN  DO:         
@@ -2196,6 +2232,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
             ASSIGN
                mReqId = STRING(ttlocal-mark.ReqId)
                mReqTimestamp = STRING(ttlocal-mark.ReqTimestamp)
+               mInst = ttlocal-mark.inst
+               mVersion = ttlocal-mark.version
                . 
            IF ttlocal-mark.errorCode > 0 THEN DO:                             
               mCheckSts = 0.

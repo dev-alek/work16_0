@@ -26,6 +26,8 @@ define variable vss-description as character no-undo init "Асинхронные процессы"
 
 {utl/asuncprocauto.i}
 
+define input param iTypeUpd as integer no-undo. /* 1 - обновить все площадки, 2 - обновить только время заблокированной более 15 мин */
+
 def buffer buf_code for ub.code.
 
 find first buf_code where 
@@ -43,6 +45,6 @@ if not avail buf_code then do:
       .  
 end.   
 
-run AddTask in this-procedure("utl/proc-gismtcdn", "*").
+run AddTask in this-procedure("utl/proc-gismtcdn", string(iTypeUpd)).
 
  
