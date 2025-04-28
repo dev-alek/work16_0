@@ -44,6 +44,9 @@ DO WHILE b-c <> ?:
    run str/chs-bc.w (parparentproc, "Строка накладной № " + t-doc.doc-code, add-sens, YES, YES, output b-c-char, output rate, output ret-mode, input-output add-scan, input-output bar-str).
    b-c = integer(b-c-char).
       IF b-c <> ? then DO:
+      run checkTypeByBarCode in this-procedure (b-c, t-doc.ext-doc-type) no-error.
+      if error-status:error then next.
+
       find ub.bar-code where ub.bar-code.b-code = b-c no-lock no-error.
       find ub.goods where ub.goods.gds-code  = ub.bar-code.gds-code no-lock.
       find ub.gds-prt where ub.gds-prt.upper-code = ub.goods.prt-root no-lock.
