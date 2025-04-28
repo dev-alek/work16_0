@@ -72,7 +72,7 @@ method override public void CrContentToSW (insw as handle):
     insw:start-element ({&tag-check}) .
     insw:write-data-element (  "cb-num":U,     string(c-chk-doc.pay-desk)   ).
     insw:write-data-element (  "shift-num":U,        if c-chk-doc.shift-num eq ? then "" else string(c-chk-doc.shift-num)  ).
-    insw:write-data-element (  "shift-date":U,        if c-chk-doc.shift-date eq ? then "" else string(c-chk-doc.shift-date)   ).
+    insw:write-data-element (  "shift-date":U,        if c-chk-doc.shift-date eq ? then "" else iso-date(c-chk-doc.shift-date)   ).
     insw:write-data-element (  "chk-type":U,       string(c-chk-doc.chk-type)).
     insw:start-element ("condition-check":U) .
     do ii = 1 to num-entries(office):
@@ -92,8 +92,7 @@ method override public void CrContentToSW (insw as handle):
       else ub.shift-obj.close-date = ? :
       if ub.shift-obj.open-date = c-chk-doc.corr-date and ub.shift-obj.open-time > c-chk-doc.corr-time then next .
       if ub.shift-obj.close-date = c-chk-doc.corr-date and ub.shift-obj.close-time < c-chk-doc.corr-time then next .
-    
-      insw:write-data-element (  "shift-date-deletion":U, string(ub.shift-obj.shift-date) ).
+      insw:write-data-element (  "shift-date-deletion":U, iso-date(ub.shift-obj.shift-date) ).
       .
       ii = 1 .  
       leave .
