@@ -66,7 +66,7 @@ class ibs.th.skt.SktServer:
    Purpose: При созаднии объекта SKTServer создадим комманды (т.е. объекты с набором комманд для конкретных клиентов) для всех клиентов сокет-сервера
    Notes:
   ------------------------------------------------------------------------------*/
-  define variable us-tmo           as integer   init 60 no-undo. /*тайм-аут в сек.*/
+  define variable us-tmo           as integer   init 180 no-undo. /*тайм-аут в сек.*/
   
   constructor SktServer (  ):
      this-object(?).
