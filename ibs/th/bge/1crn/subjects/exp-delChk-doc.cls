@@ -55,18 +55,20 @@ method override public void CrContentToSW (insw as handle):
 &global-define OFFICE_CODE_LIST "1,2,3,4,5,6,7,8,9,10,0,11,11,12,13,14"
 &global-define OFFICE_NAME_LIST "Сум-ош,Карт-ош,Сер-ош,При-ош,Смн-ош,Опл-ош,Скидка-ош,Тов-ош,Кол-ош,Прт-ош,0,?, ,Перс-ош,Т,У"
   define variable ii as integer no-undo .
+  define variable jj as integer no-undo .
   define variable office as character no-undo .
-
+  define variable shift-date-deletion as character no-undo .
+  
   find last c-chk-doc where c-chk-doc.doc-code eq string(oldbh:buffer-field( "doc-code":U  ):buffer-value) and c-chk-doc.is-del
     no-lock no-error.
   if available c-chk-doc
     then 
   do:
+
     do ii = 1 to num-entries(c-chk-doc.office):
     if ENTRY(ii,c-chk-doc.office) <> "" then office = office + "," + ENTRY(ii,c-chk-doc.office)  .
     end.
     office = trim(office,",") .
-    
     insw:start-element ({&tag-check-del}) .
     insw:start-element ({&tag-checks}) .
     insw:start-element ({&tag-check}) .
@@ -88,19 +90,20 @@ method override public void CrContentToSW (insw as handle):
     insw:write-data-element (  "time-deletion":U,      string(c-chk-doc.corr-time,"HH:MM:SS")   ).
     for each ub.shift-obj no-lock where ub.shift-obj.obj-code = c-chk-doc.obj-code and ub.shift-obj.obj-type = c-chk-doc.obj-type and 
       (ub.shift-obj.open-date < c-chk-doc.corr-date or ub.shift-obj.open-date = c-chk-doc.corr-date) and
-      if ub.shift-obj.close-date <> ? then (ub.shift-obj.close-date > c-chk-doc.corr-date or ub.shift-obj.close-date = c-chk-doc.corr-date) 
-      else ub.shift-obj.close-date = ? :
+      ub.shift-obj.status_ <> {&sht-expected} and
+      if ub.shift-obj.close-date <> ? then (ub.shift-obj.close-date > c-chk-doc.corr-date or ub.shift-obj.close-date = c-chk-doc.corr-date or  ub.shift-obj.status_ = {&sht-current}) else ub.shift-obj.close-date = ?:
+      if ub.shift-obj.status_ <> {&sht-current} then do:
       if ub.shift-obj.open-date = c-chk-doc.corr-date and ub.shift-obj.open-time > c-chk-doc.corr-time then next .
       if ub.shift-obj.close-date = c-chk-doc.corr-date and ub.shift-obj.close-time < c-chk-doc.corr-time then next .
-      insw:write-data-element (  "shift-date-deletion":U, iso-date(ub.shift-obj.shift-date) ).
+      end.
+       insw:write-data-element (  "shift-date-deletion":U, iso-date(ub.shift-obj.shift-date) + " " + string(ub.shift-obj.shift-name) ).   
       .
-      ii = 1 .  
+      jj = 1 .
       leave .
     end.
-    if ii = 0 then 
-    do:
-      insw:write-data-element (  "shift-date-deletion":U, "" ).
-    end.
+    if jj = 0 then
+      insw:write-data-element (  "shift-date-deletion":U, "0" ).
+
 
 
     insw:write-data-element (  "user-code":U,        usrfulnf(c-chk-doc.corr-user-name)   ).
