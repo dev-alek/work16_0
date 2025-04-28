@@ -5314,7 +5314,7 @@ define buffer bf-units-cli for ub.units.
       if available bf_place-attr
       and logical(bf_place-attr.attr-value)
       then do :
-        if cb-connect-hoses = ""
+        if cb-connect-hoses = "empty"
         then do :
           message "Внимание! Укажите Подключение рукавов при приеме СУГ!"
           view-as alert-box .
