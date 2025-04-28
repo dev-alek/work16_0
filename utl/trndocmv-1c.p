@@ -618,7 +618,8 @@ on error undo, return error return-value
           ub.marking-lines.doc-level = 1.
           if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
           do:
-              if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
+              if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or
+                 can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
                  can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) then
               do: /* если марка добавлена в чек или расходый док-т, то увеличиваем кол-во принятых марок */
                 buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty.
