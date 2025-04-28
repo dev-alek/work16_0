@@ -21,6 +21,9 @@ using ibs.th.str.alcohol.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.gbl.sys.objth.
 using ibs.th.str.utd.handlers.introduce.
+using ibs.th.gbl.env.prmtrs.edo.
+using ibs.th.gbl.sys.objsrv.
+using ibs.th.str.marking.sts.*.
 
 class ibs.th.skt.ControlledClients.TSD inherits objth: 
      define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -41,6 +44,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   { str/utd-attr.i class }
   {ibs/th/skt/ControlledClients/TSDTT.i}
   { str/utd-err.i class }
+  {ibs/th/gbl/doc-codeClass.i}
+  {ibs/th/gbl/basecodeClass.i}  
   
   define stream str1 .
   define stream str2 .
@@ -89,6 +94,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   define private variable keyrec       as class     keyrec       no-undo.
   define private variable v-keyrec     as character no-undo.
 
+  define         variable v-today  as date      no-undo .
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -944,23 +950,64 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define buffer buf_trn-doc       for ub.trn-doc.
     define buffer buf_doc-line      for ub.doc-line.
     define buffer buf_doc-line-attr for ub.doc-line-attr.
-    define buffer bfTempDocLine for TempDocLine.    
+    define buffer bfTempDocLine for TempDocLine.  
+    define buffer bfTempDocLineTSD  for TempDocLineTSD .
+        
     define variable adapterOra-i506 as class   AdapterOra-i506.
     define variable varzero-string  as logical no-undo.
     define variable myflagsDoc     as class flagsdoc     no-undo.
     define variable myflagsDocLine as class flagsdocline no-undo.
+    define variable invMulti as logical no-undo .
+    define variable ii              as integer   no-undo init 0 .
+    define variable vardoc-code     like ub.trn-doc.doc-code no-undo.
+    define variable v-marking-type  as character no-undo .
+    define variable v-type          as character no-undo .
+    define variable isManual        as logical   no-undo .
+    def    var      Marking         as class     mark            no-undo .
     
     find first TempTrnDoc.
     myflagsDoc = new flagsdoc ().
     myflagsDocLine = new flagsdocline ().
     myflagsDoc:setFlagsToInt(TempTrnDoc.Flags_).
-    
-    find first buf_trn-doc exclusive-lock where buf_trn-doc.doc-code = TempTrnDoc.ext-doc-code
-      and buf_trn-doc.status_ = {&permitted}
-      and buf_trn-doc.flag_ = true no-error.
+
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = TempTrnDoc.ext-doc-code
+      and buf_trn-doc.status_ = {&permitted} no-error.
     if available buf_trn-doc then 
     do:
-      
+      invMulti = false .
+      ii = 0 .
+      find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = TempTrnDoc.ext-doc-code and
+        ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
+      if available (ub.inv-doc-attr) then invMulti = true .
+
+      if invMulti then 
+      do:
+        find last ub.trn-doc no-lock where ub.trn-doc.status_ = {&inquiry} and TempTrnDoc.ext-doc-code = entry(1,ub.trn-doc.doc-code,"/") no-error .
+        if available (ub.trn-doc) then 
+        do:
+          ii = integer(entry(2,ub.trn-doc.doc-code,"/")) .
+          TempTrnDoc.ext-doc-code = entry(1,ub.trn-doc.doc-code,"/") + "/" + string(ii + 1) .
+        end. 
+        else TempTrnDoc.ext-doc-code = TempTrnDoc.ext-doc-code + "/" + string(ii + 1) .
+        TempTrnDoc.Status_= {&inquiry} .
+      end.
+      if invMulti then 
+      do:
+        create ub.trn-doc .
+        ub.trn-doc.doc-code = TempTrnDoc.ext-doc-code .
+        ub.trn-doc.status_ = {&inquiry} .
+        ub.trn-doc.flag_ = no .
+        buffer-copy buf_trn-doc except doc-code status_ flag_ to ub.trn-doc .
+        find first ub.inv-doc-attr exclusive-lock where ub.inv-doc-attr.doc-code = ub.trn-doc.doc-code
+        and ub.inv-doc-attr.attr-code = 'invMultDevice' no-error .
+        if not available (ub.inv-doc-attr) then do:
+        create ub.inv-doc-attr .
+        assign
+        ub.inv-doc-attr.doc-code = ub.trn-doc.doc-code
+        ub.inv-doc-attr.attr-code = 'invMultDevice' .
+        end.
+        ub.inv-doc-attr.attr-value = string(true) .
+      end. 
       for each TempDocLine no-lock break by TempDocLine.gds-code:
         find first ub.goods where ub.goods.gds-code  = TempDocLine.gds-code
           no-lock no-error .
@@ -970,6 +1017,19 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           and buf_doc-line.prod-code = ub.goods.prod-code
           no-error  .
         if available buf_doc-line then do:
+          if invMulti then do:
+          create ub.doc-line .
+          ub.doc-line.doc-code = TempTrnDoc.ext-doc-code .
+          buffer-copy buf_doc-line except doc-code to ub.doc-line .
+          assign
+          ub.doc-line.doc-qnty = TempDocLine.fact-qnty .
+          ub.doc-line.fact-qnty = TempDocLine.fact-qnty - TempDocLine.doc-qnty .
+          end.
+/*          else do:                                                               */
+/*          assign                                                                 */
+/*          buf_doc-line.doc-qnty = TempDocLine.fact-qnty .                        */
+/*          buf_doc-line.fact-qnty = TempDocLine.fact-qnty - TempDocLine.doc-qnty .*/
+/*          end.                                                                   */
           find first buf_doc-line-attr where buf_doc-line-attr.doc-code = buf_doc-line.doc-code and buf_doc-line-attr.gds-code = ub.goods.gds-code and buf_doc-line-attr.attr-code = "tsd-qnty" no-lock no-error.
           if not available buf_doc-line-attr and first-of (TempDocLine.gds-code)
             then do:
@@ -983,6 +1043,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             else do:
               TempDocLine.is-tsd-qnty = true.
             end.
+            release ub.doc-line .
         end.
         else do:
           LogWrite:LogStr = substitute ( "В инвентаризации &1 отсутсвует товар с кодом &2.", TempTrnDoc.ext-doc-code, TempDocLine.gds-code ).
@@ -994,12 +1055,122 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     else 
     do:
-      LogWrite:LogStr = "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code.
-      SomeStr = getStatusXml(false, "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code).
-  
-      return false.
+    empty temp-table TempDocLineTSD .
+    find first ub.clients no-lock where ub.clients.obj-code = TempTrnDoc.obj-code and
+      ub.clients.obj-type = TempTrnDoc.obj-type no-error .
+    if available (ub.clients) then 
+    do:    
+      /*Загрузка инвенаризации с ТСД*/
+      /*Проверка товаров*/    
+      isManual = true .
+      for each TempDocLine:
+        find first ub.goods no-lock where string(ub.goods.gds-code) = TempDocLine.b-code no-error .
+        if available (ub.goods) then 
+        do:
+          createTempGoods(false) .
+        end.
+        else 
+        do:
+          find first ub.prod-bc no-lock where (string(ub.prod-bc.b-code) = TempDocLine.b-code or ub.prod-bc.b-str = TempDocLine.b-code) no-error .
+          if available (ub.prod-bc) then 
+          do:
+            find first ub.bar-code no-lock where ub.bar-code.b-code = ub.prod-bc.b-code .
+            find first ub.goods no-lock where ub.goods.gds-code = ub.bar-code.gds-code .
+            createTempGoods(false) .
+          end.
+          else 
+          do:
+            find first ub.marking no-lock where ub.marking.mark = TempDocLine.b-code no-error .
+            if available (ub.marking) then 
+            do:
+              find first ub.goods no-lock where ub.goods.gds-code = ub.marking.gds-code .
+              createTempGoods(true) .
+            end.
+            else 
+            do:
+              createTempGoodsError() .
+            end.
+          end.
+        end.
+      end.
+       /*проверяем на помарочный учет*/
+      for each TempDocLineTSD where not TempDocLineTSD.Flags_error:
+        &scop proc-name gds-attr-value
+        {&run_proc_attr-lib}
+          (input  TempDocLineTSD.gds-code
+          ,input  {&attr-mark-type}
+          ,output v-marking-type
+          ,output v-type
+          ) no-error .
+        if error-status :error
+          then 
+        do:
+          undo, return error return-value .
+        end.
+        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ub.clients.obj-type, ub.clients.obj-code):GetIsMarkingForType(v-marking-type) 
+          then 
+        do:
+          TempDocLineTSD.mark-type = v-marking-type .
+          find first ub.marking no-lock where ub.marking.mark = TempDocLineTSD.mark and ub.marking.sts = Marking:FreeZone:KeyIntDB no-error .
+          if not available (ub.marking) then 
+          do:
+            TempDocLineTSD.Flags_error = true.
+          end.
+        end.
+      end.
+      if can-find(TempDocLineTSD where TempDocLineTSD.mark-type <> "") then 
+      do:
+        if can-find(TempDocLineTSD where TempDocLineTSD.mark-type = "") then 
+        do:
+          for each TempDocLineTSD where not TempDocLineTSD.Flags_error and TempDocLineTSD.mark-type <> "":
+            TempDocLineTSD.Flags_error = true .
+          end.
+        end.  
+      end.  
+      find first TempDocLineTSD no-error .
+      if available (TempDocLineTSD) then 
+      do:
+        /*номер документа*/
+        vardoc-code = docCode("main", ub.clients.obj-type, ub.clients.obj-code, ?) no-error .
+        if error-status:error then 
+        do:
+          LogWrite:LogStr = "Ошибка при генерации номера документа." .
+          SomeStr = getStatusXml(false, "Ошибка при генерации номера документа.").
+          return false.
+        end.
+      end.
+      find first TempDocLineTSD where not TempDocLineTSD.Flags_error no-error .
+      if available (TempDocLineTSD) then 
+      do:
+        /*создаем накладную*/
+        createTrn(vardoc-code,userId_).
+
+        createAttrInv(vardoc-code,"isManual",string(true)).
+        /*Создаем линии для накладной*/
+        for each bfTempDocLineTSD where not bfTempDocLineTSD.Flags_:
+          createDocLine(vardoc-code, bfTempDocLineTSD.gds-code, bfTempDocLineTSD.fact-qnty).
+        end.
+      end.      
+      find first TempDocLineTSD where TempDocLineTSD.Flags_error no-error .
+      if available (TempDocLineTSD) then 
+      do:
+        /*создаем ошибочную накладную*/
+        createTrn(vardoc-code + "-M",userId_).
+        createAttrInv(vardoc-code + "-M","isManualError",string(true)).
+        for each bfTempDocLineTSD where bfTempDocLineTSD.Flags_:
+          find first ub.goods where ub.goods.gds-code = bfTempDocLineTSD.gds-code no-error .
+          if available (ub.goods) then do:
+            createDocLine(vardoc-code + "-M", bfTempDocLineTSD.gds-code, bfTempDocLineTSD.fact-qnty).
+          end.
+          else do:
+            createDocLineError(vardoc-code + "-M", bfTempDocLineTSD.artic, bfTempDocLineTSD.prod-code, bfTempDocLineTSD.prod-type, bfTempDocLineTSD.fact-qnty).
+          end.
+        end.
+      end.
+    end.      
     end.
-    
+    find last ub.trn-doc no-lock .
+    release ub.trn-doc .
     os-delete value (search ("doctsd.txt")) no-error.
     os-delete value (search ("newdoctsd.txt")) no-error.
     output stream str1 to value ("doctsd.txt").
@@ -1015,7 +1186,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     if can-find (first TempDocLine)
     then do: 
       run gbl/filnline.p (input ("doctsd.txt"), output varzero-string).
-      if varzero-string 
+      if varzero-string and not invMulti
       then do:
         run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input "doctsd.txt", if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
         if error-status:error then do:
@@ -1031,7 +1202,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       run gbl/filnline.p (input ("newdoctsd.txt"), output varzero-string).
       if varzero-string 
       then do:
-        run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input "newdoctsd.txt", if myflagsDoc:isDocMarkOn then "rsvmarks" else ""  ) no-error.
+      if not isManual then 
+      do: 
+        if not invMulti then do:
+        run str/scantsd.p ( 1, input no , input if invMulti then recid(ub.trn-doc) else recid(buf_trn-doc) ,input "newdoctsd.txt", if myflagsDoc:isDocMarkOn then "rsvmarks" else ""  ) no-error.
         if error-status:error then do:
           LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
           SomeStr = getStatusXml(false, LogWrite:LogStr).
@@ -1039,7 +1213,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           os-delete value (search ("newdoctsd.txt")) no-error.
           return false.
         end.
-/*        else LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value.*/
+        end.
+      end.
       end.
 
     end.
@@ -1048,77 +1223,292 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     SomeStr = getStatusXml(true, "").
 
     return true.
-    
-    /*
-    
-    for each TempDocLine no-lock where not TempDocLine.b-code matches ("*" + string (TempDocLine.gds-code) + "*"):
-                
-      find first bfTempDocLine where bfTempDocLine.gds-code = TempDocLine.gds-code and bfTempDocLine.b-code matches ( "*" + string (bfTempDocLine.gds-code) + "*")  no-error.
-      find buf_bar-code where 
-        buf_bar-code.gds-code = TempDocLine.gds-code and TempDocLine.b-code matches ("*" + string(buf_bar-code.b-code)+ "*") no-error.
-      
-      if not available buf_bar-code then do:
-        
-        find first buf_prod-bc where buf_prod-bc.b-str = TempDocLine.b-code no-error.
-        if available buf_prod-bc 
-        then do:
-          find first buf_bar-code where buf_bar-code.b-code = buf_prod-bc.b-code and buf_bar-code.gds-code = TempDocLine.gds-code no-error.
-        end.
-        
-        if not available buf_bar-code then do:
-          LogWrite:LogStr = "Не известный штрих-код:" + TempDocLine.b-code + {&new-line}.
-          SomeStr = getStatusXml(false, "Не известный штрих-код: " + TempDocLine.b-code).
+  end method.
 
-          return false.
-        end.
-      end.
-
-      if not available bfTempDocLine
-      then do:
-        create bfTempDocLine.
-        assign
-          bfTempDocLine.gds-code = TempDocLine.gds-code
-          bfTempDocLine.b-code = string (TempDocLine.gds-code)
-        .
-      end.
-      
-      assign
-        bfTempDocLine.doc-qnty  = bfTempDocLine.doc-qnty + TempDocLine.doc-qnty * buf_bar-code.cli-base-rate
-        bfTempDocLine.fact-qnty = bfTempDocLine.fact-qnty + TempDocLine.fact-qnty * buf_bar-code.cli-base-rate
-        bfTempDocLine.RowSum    = bfTempDocLine.RowSum + TempDocLine.RowSum
-        .
-      delete TempDocLine.
-    end.
-    
-    for each TempDocLine no-lock:
-      assign
-        TempDocLine.price-rubl = TempDocLine.RowSum / TempDocLine.fact-qnty.
-        .
-    end. 
-  
-    
-    adapterOra-i506 = new AdapterOra-i506().
-    
-    adapterOra-i506:SetTempTable(table TempTrnDoc, table TempDocLine, userId_ ).
-    
-    glog = adapterOra-i506:WriteDB().
-    
-    LogWrite:LogStr = LogWrite:LogStr + {&new-line} + adapterOra-i506:StrLog.
-    delete object AdapterOra-i506.
-    
-    if glog
-      then 
-    do:
-      SomeStr = getStatusXml(true, "").
-      return true.
-    end.
-    else 
-    do:
-      SomeStr = getStatusXml(false, LogWrite:LogStr).
-      return false.
-    end.*/
+method public void createTempGoods(mark_ as logical):
+  define buffer del_TempDocLineTSD for TempDocLineTSD .
+  if not mark_ then do:
+  find first TempDocLineTSD where TempDocLineTSD.artic = ub.goods.artic and
+    TempDocLineTSD.prod-code = ub.goods.prod-code and
+    TempDocLineTSD.prod-type = ub.goods.prod-type no-error . 
+  if not available (TempDocLineTSD) then 
+  do:
+    create TempDocLineTSD .
+    assign
+      TempDocLineTSD.gds-code  = ub.goods.gds-code
+      TempDocLineTSD.artic     = ub.goods.artic
+      TempDocLineTSD.prod-code = ub.goods.prod-code
+      TempDocLineTSD.prod-type = ub.goods.prod-type
+      .
   end.
+  TempDocLineTSD.fact-qnty = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty .
+  end.
+  /*марки*/
+  else 
+  do:
+    find first ub.marking no-lock where ub.marking.mark = TempDocLine.b-code no-error .
+    if available (ub.marking) then do:
+          find first TempDocLineTSD where TempDocLineTSD.artic = ub.goods.artic and
+    TempDocLineTSD.prod-code = ub.goods.prod-code and
+    TempDocLineTSD.prod-type = ub.goods.prod-type no-error . 
+      if not available (TempDocLineTSD) then 
+  do:
+    create TempDocLineTSD .
+    assign
+      TempDocLineTSD.gds-code  = ub.goods.gds-code
+      TempDocLineTSD.artic     = ub.goods.artic
+      TempDocLineTSD.prod-code = ub.goods.prod-code
+      TempDocLineTSD.prod-type = ub.goods.prod-type
+      TempDocLineTSD.mark = ub.marking.mark
+      TempDocLineTSD.mark-parent = ub.marking.mark-parent
+      .
+      if ub.marking.mark-parent = "" then do:
+        for each del_TempDocLineTSD where del_TempDocLineTSD.mark-parent = ub.marking.mark:
+          delete del_TempDocLineTSD .
+        end.
+      end.
+            TempDocLineTSD.fact-qnty   = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty * ub.marking.box-qnty.
+      end.
+      else do:
+        if not TempDocLineTSD.mark = ub.marking.mark-parent then do:
+    create TempDocLineTSD .
+    assign
+      TempDocLineTSD.gds-code  = ub.goods.gds-code
+      TempDocLineTSD.artic     = ub.goods.artic
+      TempDocLineTSD.prod-code = ub.goods.prod-code
+      TempDocLineTSD.prod-type = ub.goods.prod-type
+      TempDocLineTSD.mark = ub.marking.mark
+      TempDocLineTSD.mark-parent = ub.marking.mark-parent
+      .
+      if ub.marking.mark-parent = "" then do:
+        for each del_TempDocLineTSD where del_TempDocLineTSD.mark-parent = ub.marking.mark:
+          delete del_TempDocLineTSD .
+        end.
+      end.
+            TempDocLineTSD.fact-qnty   = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty * ub.marking.box-qnty.
+                
+        end.  
+      end.
+  end.
+end.
+end.
+  
+method public void createTempGoodsError():
+  find first TempDocLineTSD where TempDocLineTSD.artic = TempDocLine.b-code and
+    TempDocLineTSD.prod-code = 999999 and
+    TempDocLineTSD.prod-type = "орг" no-error . 
+  if not available (TempDocLineTSD) then 
+  do:
+    create TempDocLineTSD .
+    assign
+      TempDocLineTSD.artic       = TempDocLine.b-code
+      TempDocLineTSD.prod-code   = 999999
+      TempDocLineTSD.prod-type   = "орг"
+      TempDocLineTSD.Flags_error = true
+      .
+  end.      
+    .
+  TempDocLineTSD.fact-qnty = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty .
+end.
+  
+method public void createTrn(docCode as character, parUserId as character):
+  define buffer bf_trn-doc    for ub.trn-doc .
+  define buffer bf_curr-accnt for ub.curr-accnt .
+  define buffer bf_sysconf    for ub.sysconf .
+    
+  find first ub.shop no-lock where ub.shop.obj-code = ub.clients.obj-code no-error .
+  find first bf_sysconf no-lock where bf_sysconf.host-code = ub.clients.host-code .
+  v-today = today .
+  { str/crtrndoc.i
+  ?
+  ?
+  1
+  1
+  ub.clients.host-code
+  {&cmp}
+  ub.clients.obj-name
+  ub.clients.db-num
+  parUserId
+  "' '"
+  docCode
+  v-today
+  {&inventory}
+  no
+  ub.clients.host-code
+  no
+  ub.clients.obj-code
+  ub.clients.obj-type
+  no
+  ub.shop.inv-pay
+  "'@  '"
+  no
+  ?
+  {&wayb}
+  ?
+  {&TDEDT_Inv}
+  ?
+  no-error
+  }
+  
+  if error-status:error then 
+  do:
+    return error return-value.
+  end.
+  find bf_trn-doc where bf_trn-doc.doc-code = docCode.
+  assign
+    bf_trn-doc.tot-calc = ?.
 
+  assign
+    bf_trn-doc.status_ = {&inquiry}
+    bf_trn-doc.flag_   = no
+    bf_trn-doc.PS      = TempTrnDoc.ext-doc-code + ", " + string(TempTrnDoc.doc-date)
+    .
+
+  find last bf_curr-accnt where bf_curr-accnt.curr-code = bf_sysconf.base-code
+    and bf_curr-accnt.exch-date <= v-today use-index pi no-lock no-error.
+  if not available bf_curr-accnt then 
+  do:
+    message "На дату" v-today "неизвестен курс базовой валюты." SKIP
+      "Сумма по документу в валюте будет рассчитана при закрытии на факт".
+  end.
+  else 
+  do:
+    assign
+      bf_trn-doc.base-rate  = bf_curr-accnt.exch-rate
+      bf_trn-doc.base-scale = bf_curr-accnt.exch-scale.
+  END.
+  ASSIGN
+    bf_trn-doc.exch-code  = 0
+    bf_trn-doc.exch-rate  = 1
+    bf_trn-doc.exch-scale = 1.
+
+  { str/crinvdoc.i bf_trn-doc.doc-code no-error}
+  if error-status:error then return error return-value.
+
+end.
+  
+method public void createAttrInv(docCode as character, attrCode as character, attrValue as character):
+  create ub.inv-doc-attr .
+  assign
+    ub.inv-doc-attr.doc-code   = docCode
+    ub.inv-doc-attr.attr-code  = attrCode
+    ub.inv-doc-attr.attr-value = attrValue
+    .
+end.
+  
+method public void createDocLine(pardoc-code as character, 
+  pargds-code as integer, factQnty as decimal):
+
+  define variable varis-petrolium as logical no-undo.
+  define variable varis-pieces    as logical no-undo.
+  define buffer cr_doc-line   for ub.doc-line.
+  define buffer last_doc-line for ub.doc-line.
+  define buffer new_trn-doc   for ub.trn-doc .
+  define buffer new_goods     for ub.goods .
+  define variable varline-num  as integer no-undo.
+  define variable rec-inv-line as recid   no-undo.
+  define variable v-vat-pc     as decimal no-undo .
+  define variable v-slt-pc     as decimal no-undo .
+  define buffer bf_sysconf for ub.sysconf .
+    
+  find first new_trn-doc no-lock where new_trn-doc.doc-code = pardoc-code no-error .
+  find first new_goods no-lock where new_goods.gds-code = pargds-code no-error .
+  find first bf_sysconf where bf_sysconf.host-code = new_trn-doc.host-code no-lock no-error .
+  find last last_doc-line where last_doc-line.doc-code = pardoc-code use-index line-num no-lock no-error.
+  if not available last_doc-line then 
+  do:
+    assign 
+      varline-num = 1.
+  end.
+  else 
+  do:
+    assign 
+      varline-num = last_doc-line.line-num + 1.
+  end.
+  find first cr_doc-line where cr_doc-line.doc-code  = pardoc-code  and
+    cr_doc-line.artic     = new_goods.artic     and
+    cr_doc-line.prod-type = new_goods.prod-type and
+    cr_doc-line.prod-code = new_goods.prod-code no-error.
+  if not available cr_doc-line then 
+  do:
+    v-vat-pc = pftxvalg(new_goods.gds-code, 1, ?, new_trn-doc.host-code, new_trn-doc.obj-type, new_trn-doc.obj-code) .
+    v-slt-pc = st-sltpc(recid(new_goods), recid(new_trn-doc), if available(bf_sysconf) then bf_sysconf.cash-pay else 0) .
+    create cr_doc-line.
+    assign
+      cr_doc-line.doc-code     = pardoc-code
+      cr_doc-line.artic        = new_goods.artic
+      cr_doc-line.prod-type    = new_goods.prod-type
+      cr_doc-line.prod-code    = new_goods.prod-code
+      cr_doc-line.obj-type     = new_trn-doc.obj-type
+      cr_doc-line.obj-code     = new_trn-doc.obj-code
+      cr_doc-line.status_      = new_trn-doc.status_
+      cr_doc-line.ext-doc-type = new_trn-doc.ext-doc-type
+      cr_doc-line.prt-root     = new_goods.prt-root
+      cr_doc-line.vat-pc       = v-vat-pc
+      cr_doc-line.slt-pc       = v-slt-pc
+      cr_doc-line.cons-vat-pc  = bf_sysconf.cons-vat-pc
+      cr_doc-line.line-num     = varline-num
+      .
+
+    if ( cr_doc-line.cli-base-rate = 0 or cr_doc-line.cli-base-rate = ? )
+      then
+      cr_doc-line.cli-base-rate = 1 .
+
+  end.
+  find first ub.prt-obj no-lock where ub.prt-obj.artic = cr_doc-line.artic and
+    ub.prt-obj.prod-code = cr_doc-line.prod-code and
+    ub.prt-obj.prod-type = cr_doc-line.prod-type and
+    ub.prt-obj.obj-code = cr_doc-line.obj-code and
+    ub.prt-obj.obj-type = cr_doc-line.obj-type no-error .
+  if available (ub.prt-obj) then cr_doc-line.fact-qnty = factQnty - ub.prt-obj.fact-qnty .
+  cr_doc-line.doc-qnty = factQnty .
+end.
+  
+method public void createDocLineError(pardoc-code as character, 
+  parartic as character, parprod-code as integer, parprod-type as character, factQnty as decimal):
+
+  define variable varis-petrolium as logical no-undo.
+  define variable varis-pieces    as logical no-undo.
+  define buffer cr_doc-line   for ub.doc-line.
+  define buffer last_doc-line for ub.doc-line.
+  define buffer new_trn-doc   for ub.trn-doc .
+  define buffer new_goods     for ub.goods .
+  define variable varline-num  as integer no-undo.
+  define variable rec-inv-line as recid   no-undo.
+  define variable v-vat-pc     as decimal no-undo .
+  define variable v-slt-pc     as decimal no-undo .
+  define buffer bf_sysconf for ub.sysconf .
+    
+  find first new_trn-doc no-lock where new_trn-doc.doc-code = pardoc-code no-error .
+  find first bf_sysconf where bf_sysconf.host-code = new_trn-doc.host-code no-lock.
+  find last last_doc-line where last_doc-line.doc-code = pardoc-code use-index line-num no-lock no-error.
+  if not available last_doc-line then 
+  do:
+    assign 
+      varline-num = 1.
+  end.
+  else 
+  do:
+    assign 
+      varline-num = last_doc-line.line-num + 1.
+  end.
+    
+    create cr_doc-line.
+    assign
+      cr_doc-line.doc-code     = pardoc-code
+      cr_doc-line.artic        = parartic
+      cr_doc-line.prod-type    = parprod-type
+      cr_doc-line.prod-code    = parprod-code
+      cr_doc-line.obj-type     = new_trn-doc.obj-type
+      cr_doc-line.obj-code     = new_trn-doc.obj-code
+      cr_doc-line.status_      = new_trn-doc.status_
+      cr_doc-line.ext-doc-type = new_trn-doc.ext-doc-type
+      cr_doc-line.line-num     = varline-num
+      .
+  
+  cr_doc-line.doc-qnty = factQnty .
+  cr_doc-line.fact-qnty = factQnty .
+end.
   method public logical ImpUTDDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine):
     
     def var v-utd-db-num as integer no-undo.

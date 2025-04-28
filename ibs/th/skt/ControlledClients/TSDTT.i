@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1eba0946c2d7, 3078, rls $
+$Author: DRuban $
+$Date: Яђ рту 05 19:16:25 2022 +0300 $
+$Workfile: TSDTT.i $
+$Archive: ibs/th/skt/ControlledClients/TSDTT.i $
 
 
 
@@ -70,7 +70,25 @@ define temp-table TempDocLine no-undo
   line-num
   gds-code
   .
-    
+  
+define temp-table TempDocLineTSD no-undo
+  field gds-code     as integer
+  field doc-qnty     as decimal
+  field fact-qnty    as decimal
+  field artic        as character
+  field prod-code    as integer
+  field prod-type    as character
+  field Flags_error  as logical
+  field mark-type    as character
+  field mark         as character
+  field mark-parent  as character
+  index pi
+  artic
+  prod-code
+  prod-type
+  mark
+  .
+      
 define temp-table TempTrnLineMT no-undo
   field lineid    as integer 
   field docname   as character   

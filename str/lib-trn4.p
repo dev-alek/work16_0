@@ -43,6 +43,7 @@ field coef as decimal
 { cmp/gds-list.i gds-list def }
 { gbl/getsect.i def }
 { str/cont-ms-def.i }
+{ str/is-mes.i }
 { str/trdcalib.i }
 { str/placelib.i}
 { rep/spr-sug.i }
@@ -1538,9 +1539,13 @@ define variable v-codident as character no-undo.
             varlog = yes.
         end.
         else do :
-          varvalue = "".
+          if is-mes(buf_trn-doc.doc-code) then do:
+            varlog = false .
+          end.
+          else do:
           if buf_trn-doc.reason-code = 99 then
-          do:  /* закрытие накладной по СУГ и основание «Финальный слив СУГ», то проверим данные по тех.потерям */
+          do:  
+          varvalue = "" . /* закрытие накладной по СУГ и основание «Финальный слив СУГ», то проверим данные по тех.потерям */
             { str/tdat-val.i
               buf_trn-doc.doc-code
               {&sugtpattr-massa-sug}
@@ -1662,6 +1667,7 @@ define variable v-codident as character no-undo.
         end case .
         if not varlog then  return error.
 
+       end.
        end.
       else do:
         if can-do ({&expense_write-off_return}, buf_trn-doc.doc-type) and
@@ -1883,12 +1889,15 @@ define variable v-codident as character no-undo.
                   end case .
                 if not varlog then return error .
                 varlog = no.
+                /*Проверка документа, нужно сообщение или нет*/
+                if not is-mes(buf_trn-doc.doc-code) then do: 
                 message
                   "Документ №" buf_trn-doc.doc-code skip (2)
                   "Закрыть ОПИСЬ инвентаризации?" skip
                   "Вы уверены?"
                   view-as alert-box question buttons OK-Cancel update varlog.
                   if not varlog then return error .
+				end.
               end.
               else do:
                   case buf_trn-doc.doc-type
@@ -1995,12 +2004,14 @@ define variable v-codident as character no-undo.
                   end case .
                 if not varlog then return error .
                 varlog = no.
+                if not is-mes(buf_trn-doc.doc-code) then do:
                 message
                   "Документ №" buf_trn-doc.doc-code skip (2)
                   "Начать инвентаризацию по документу?" skip
                   "Вы уверены?" skip
                   view-as alert-box question buttons OK-Cancel update varlog.
                 if not varlog then return error.
+				end.
               end.
             end.
             else do:

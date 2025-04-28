@@ -512,9 +512,9 @@ end.
         and ub.trn-doc.flag_   = true
         )
     then do:
-      assign
-        l-need-check-inv = true
-      .
+      find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = ub.trn-doc.doc-code and
+        ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
+      if not available (ub.inv-doc-attr) then l-need-check-inv = true .
     end.
 
     /* мы переключаемся из статуса разр + */
@@ -903,6 +903,11 @@ end.
         assign
           v-inv-on-attr = "inv-on=" + (if l-new-inv-on then "true" else "false")
         .
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = ub.trn-doc.doc-code and
+          ub.inv-doc-attr.attr-code = "invMultDevice" and 
+          ub.inv-doc-attr.attr-value = string(true) no-error .
+        if available(ub.inv-doc-attr) then return .
+ 
         { gbl/gdsobjat.i
           buf_doc-line.obj-type
           buf_doc-line.obj-code

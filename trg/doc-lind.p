@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 117599f024fc, 1538, rls $
+$Author: SSlivenko $
+$Date: 2018/10/08 16:19:53 $
+$Workfile: doc-lind.p $
+$Archive: trg/doc-lind.p $
 
 Триггер на удаление строки документа
 
@@ -19,11 +19,11 @@ create: Суслов Алексей Юрьевич
 
 TRIGGER PROCEDURE FOR DELETE OF ub.doc-line.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 117599f024fc, 1538, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2018/10/08 16:19:53 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: doc-lind.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: trg/doc-lind.p $":U .
 define variable vss-description as character no-undo initial "Триггер на удаление строки документа".
 
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4', ub.doc-line.doc-code, ub.doc-line.artic, ub.doc-line.prod-type, ub.doc-line.prod-code) " }
@@ -49,7 +49,10 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
   define buffer next_inv-line for ub.inv-line .
   define buffer prev_doc-line for ub.doc-line .
   define buffer prev_inv-line for ub.inv-line .
-
+  find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = ub.doc-line.doc-code and
+  ub.inv-doc-attr.attr-code = "isManualError" and
+  ub.inv-doc-attr.attr-value = string(true) no-error .
+  if not available (ub.inv-doc-attr) then do:
   find ub.goods no-lock
     where ub.goods.artic     = ub.doc-line.artic
       and ub.goods.prod-type = ub.doc-line.prod-type
@@ -73,7 +76,7 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
     is-petrol
     is-pieces
   }
-
+end.
   /* Пытаемся найти документ */
   /* Он уже может быть удален */
   find ub.trn-doc exclusive-lock
@@ -124,8 +127,7 @@ on stop   undo main-block, return error substitute("&1. stop main-block")
       on error undo main-block, return error substitute( "&1&2&3", vss-workfile, {&new-line}, return-value )
       :
          delete ub.gen-attr.
-      end. 
-
+      end.
       define variable vsds as class ibs.th.str.mercury.vsdsubs no-undo.
       define variable vsdstr as class ibs.th.gbl.storage.vsdtostorage no-undo.
       define variable ii as integer no-undo.
