@@ -882,9 +882,11 @@ ON CHOOSE OF b_prov-finish IN FRAME Dialog-Frame /* Проверка завершена */
 DO:
   define variable v-ok        as logical no-undo .
   define buffer bf_utd-marking-lines for ub.utd-marking-lines .
+  define buffer bf2_utd-marking-lines for ub.utd-marking-lines .
   define buffer bf_utd-lines-attr    for ub.utd-lines-attr .
   define buffer bf_utd-lines         for ub.utd-lines .
   define buffer bf_marking           for ub.marking .
+  define buffer bf_marking-parent    for ub.marking .
   define variable vPawd as character no-undo.
   
   assign
@@ -944,6 +946,31 @@ DO:
   
   run waitfram-show in this-procedure (input "ЖДИТЕ...") .
   
+  for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num  = buf_utd.db-num
+                                          and bf_utd-marking-lines.doc-id  = buf_utd.doc-id
+                                          and bf_utd-marking-lines.site   <> "only-send",
+  first bf_marking no-lock where bf_marking.mark = bf_utd-marking-lines.mark
+  :
+    if bf_marking.mark-parent > ""
+    then do :
+      for first bf_marking-parent no-lock where bf_marking-parent.mark = bf_marking.mark-parent :
+        if bf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+        or bf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB
+        then do :
+          if not can-find (first bf2_utd-marking-lines where bf2_utd-marking-lines.db-num  = bf_utd-marking-lines.db-num
+                                                         and bf2_utd-marking-lines.doc-id  = bf_utd-marking-lines.doc-id
+                                                         and bf2_utd-marking-lines.LineNum = bf_utd-marking-lines.LineNum
+                                                         and bf2_utd-marking-lines.mark    = bf_marking-parent.mark
+                                                         and bf2_utd-marking-lines.site   <> "only-send"
+                                                         no-lock)
+          then do :
+            find current bf_marking-parent exclusive-lock .
+            assign bf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .
+          end .
+        end .
+      end .
+    end .
+  end .
   for each bf_utd-lines no-lock where bf_utd-lines.db-num = buf_utd.db-num
                                   and bf_utd-lines.doc-id = buf_utd.doc-id,
   first buf_goods no-lock where buf_goods.gds-code = bf_utd-lines.gds-code
@@ -1553,7 +1580,8 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   if p-mode = {&lookup}
   then do :
-    disable v-mark b-exit b_prov-finish b_del-line is-initial-set f-comment with frame {&frame-name}.
+    disable v-mark b-exit b_prov-finish b_del-line is-initial-set with frame {&frame-name}.
+    f-comment:read-only = yes .
   end .
   
   if disable-set then disable is-initial-set with frame {&frame-name}.
@@ -1650,7 +1678,10 @@ PROCEDURE CrCheckMark :
   ).
   
   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
-  or v-par-val = ""
+  or (not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
+    and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val)
+    and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsMarkingForType(v-par-val)
+      )
   then do :
     run dispmessage ("Сверка марок данного товара не требуется").
     return.
@@ -1802,6 +1833,7 @@ PROCEDURE CrCheckMark :
       buf_utd-marking-lines.doc-level = 1
     .
   end .
+  validate buf_utd-marking-lines .
   
 end.
 
