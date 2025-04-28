@@ -529,6 +529,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Группа товаров на кассе */
 { cmp/cr-prep.i 1 attr-sum-grp-gl              sum-grp-gl               " " sum-grp-gl              }
 
+/* Минимальный запас */
+{ cmp/cr-prep.i 1 attr-min-zapas              min-zapas               " " min-zapas              }
+
 /* Является подконтрольным ФГИС "Меркурий" */
 { cmp/cr-prep.i 1 attr-mercur_FGIS              mercur_FGIS               " " mercur_FGIS              }
 
@@ -625,6 +628,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-time-coock}~
 ,{&bef-attr-mark}~
 ,{&bef-attr-sum-grp-gl}~
+,{&bef-attr-min-zapas}~
 ,{&bef-attr-mercur_FGIS}~
 ,{&bef-attr-perishable}~
 ,{&bef-attr-production-only}~
@@ -934,6 +938,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 /* Товар оплачивается топливным кошельком смарт карты (IBM-POS) */
 { cmp/cr-prep.i 1 attr-petrol-purse-o         petrol-purse          " " petrol-purse         }
 
+/* Минимальный запас */
+{ cmp/cr-prep.i 1 attr-min-zapas-o            min-zapas             " " min-zapas            }
+
 /* Товар требует авторизации на кассе (IBM-XML) */
 { cmp/cr-prep.i 1 attr-need-auth-o            need-auth             " " need-auth            }
 
@@ -988,6 +995,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 ,{&bef-attr-increase-pc-o}~
 ,{&bef-attr-round-method-o}~
 ,{&bef-attr-petrol-purse-o}~
+,{&bef-attr-min-zapas-o}~
 ,{&bef-attr-need-auth-o}~
 ,{&bef-attr-proprietor-o}~
 ,{&bef-attr-no-income-goods}~

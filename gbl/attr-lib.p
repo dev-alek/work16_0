@@ -12006,6 +12006,18 @@ end procedure.
 &scop manual-edit-attr-increase-pc-o  1
 &scop batch-edit-attr-increase-pc-o  1
 
+/* Минимальный запас */
+&scop type-attr-min-zapas-o {&type-dec}
+&scop format-attr-min-zapas-o  ">>>>>>>>>9"
+&scop label-attr-min-zapas-o   "Минимальный запас"
+&scop tooltip-attr-min-zapas-o   "Минимальный запас на объекте"
+&scop user-can-edit-attr-min-zapas-o  true
+&scop output-display-attr-min-zapas-o  true
+&scop other-attr-min-zapas-o  '':u
+&scop copy-attr-min-zapas-o  true
+&scop manual-edit-attr-min-zapas-o  1
+&scop batch-edit-attr-min-zapas-o  1
+
 /* Метод округления цены при расчете переоценки */
 &scop type-attr-round-method-o {&type-char}
 &scop format-attr-round-method-o  "X(21)"
@@ -12270,6 +12282,8 @@ do
       {&attr-temp-full-code}
       &scop attr-code attr-increase-pc-o
       {&attr-temp-full-code}
+      &scop attr-code attr-min-zapas-o
+      {&attr-temp-full-code}
       &scop attr-code attr-round-method-o
       {&attr-temp-full-code}
       &scop attr-code attr-petrol-purse-o
@@ -12331,6 +12345,8 @@ do
       &scop attr-code attr-sum-grp-o
       {&attr-temp-code}
       &scop attr-code attr-increase-pc-o
+      {&attr-temp-code}
+      &scop attr-code attr-min-zapas-o
       {&attr-temp-code}
       &scop attr-code attr-round-method-o
       {&attr-temp-code}
@@ -13031,6 +13047,8 @@ procedure gdsoattr-copy :
       {&attr-copy-code}
       &scop attr-code attr-increase-pc-o
       {&attr-copy-code}
+      &scop attr-code attr-min-zapas-o
+      {&attr-copy-code}
       &scop attr-code attr-round-method-o
       {&attr-copy-code}
       &scop attr-code attr-petrol-purse-o
@@ -13096,6 +13114,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-increase-pc-o
       {&attr-manual-edit-code}
+      &scop attr-code attr-min-zapas-o
+      {&attr-manual-edit-code}
       &scop attr-code attr-round-method-o
       {&attr-manual-edit-code}
       &scop attr-code attr-petrol-purse-o
@@ -13156,6 +13176,8 @@ do
       &scop attr-code attr-sum-grp-o
       {&attr-batch-edit-code}
       &scop attr-code attr-increase-pc-o
+      {&attr-batch-edit-code}
+      &scop attr-code attr-min-zapas-o
       {&attr-batch-edit-code}
       &scop attr-code attr-round-method-o
       {&attr-batch-edit-code}
