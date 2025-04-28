@@ -223,7 +223,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
   end.
-  run gbl/inidebug.p.
+/*  run gbl/inidebug.p.  */
     run bge\send1cerp.p (?,
       this-procedure,
       this-procedure,
