@@ -5332,6 +5332,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
       then do :
         v-dec = decimal (maskedTextBoxTTNTemp:Text) no-error.
         if ( error-status:error or v-dec = ?)
+        or trim(maskedTextBoxTTNTemp:Text) = ""
         then do:
           if p-ShowMsg then ShowMsg( v-str + "температура по ТТН" ).
           setFocusMaskTextDoc = maskedTextBoxTTNTemp.

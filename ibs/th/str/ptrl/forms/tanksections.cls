@@ -603,7 +603,10 @@ class ibs.th.str.ptrl.forms.tanksections inherits Form:
       v-idSel = integer (tabsel:Name).
     end .
     
-    tankSectionControl[v-idSel]:SetInfoSec().
+/*    if infoSecsObj:Mode <> "днаюбкемхе"        */
+/*    then do :                                  */
+/*      tankSectionControl[v-idSel]:SetInfoSec().*/
+/*    end .                                      */
     
     if infoSecsObj:FlagTrn
     then do :

@@ -338,7 +338,7 @@ do
         run trg/lock-rvs.p
             ( input ub.rvs-doc.rvs-code
             ,input "assign-rvs-on=false"
-            ,input ?
+            ,input ""
             ,input false
             ) no-error.
         if error-status :error then 

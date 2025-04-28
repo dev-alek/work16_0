@@ -87,6 +87,9 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                                             and ub.pl-gds.gds-code = ub.rvs-line.gds-code
                                             and ub.pl-gds.rvs-on  <> logical(entry(2, p-action, "="))
               :
+                if p-no-check-rvs-code = ? then p-no-check-rvs-code = "" .
+                p-no-check-rvs-code = p-no-check-rvs-code + "," + ub.rvs-doc.rvs-code .
+                p-no-check-rvs-code = trim(p-no-check-rvs-code, ",") .
                 run trg/lockplgd.p
                     ( input ub.rvs-line.obj-type    /* p-obj-type          */
                     , input ub.rvs-line.obj-code    /* p-obj-code          */
