@@ -537,7 +537,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        input from value(SearchFile(vFilename)) convert source "UTF-8". 
        repeat:  
          create TempTrnDocMT.
-         import TempTrnDocMT.
+         import TempTrnDocMT no-error.
        end. 
        input close.
     end.
@@ -548,7 +548,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        input from value(SearchFile(vFilename)) convert source "UTF-8".
        repeat:  
          create TempTrnLineMT.
-         import TempTrnLineMT.
+         import TempTrnLineMT no-error.
        end. 
        input close.
     end.
@@ -559,7 +559,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        input from value(SearchFile(vFilename)) convert source "UTF-8".
        repeat:  
          create TempMarkLineMT.
-         import TempMarkLineMT.
+         import TempMarkLineMT no-error.
        end. 
        input close.
     end.
@@ -600,7 +600,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       end case.
         
       userId_ = TempTrnDocMT.UserID_.
-      
+
       find first ub.user-login where ub.user-login.db-num = iDbNum and ub.user-login.user-id = userId_ no-lock no-error.  
       create TempTrnDoc.
       assign
@@ -617,15 +617,25 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         TempTrnDoc.Flags_       = TempTrnDocMT.Flags_
       .
       myflagsDoc:setFlagsToInt(TempTrnDocMT.Flags_).
-
+       
+      define variable cFactQntyDec as decimal no-undo .
+      define variable cPriceRublDec as decimal no-undo .  
       for each TempTrnLineMT where TempTrnLineMT.docname = TempTrnDocMT.DocName:
 
-        assign
-          cDocQnty   = replace (TempTrnLineMT.DocQnty, ",", ".")
-          cFactQnty  = replace (TempTrnLineMT.FactQnty, ",", ".")
-          cPriceRubl = replace (TempTrnLineMT.Price_, ",", ".")
-          RowSum    =  decimal (cFactQnty) * decimal (cPriceRubl)
+          cDocQnty   = replace (TempTrnLineMT.DocQnty, ",", ".") .
+          cFactQnty  = replace (TempTrnLineMT.FactQnty, ",", ".") .
+          cPriceRubl = replace (TempTrnLineMT.Price_, ",", ".") .
+          cFactQntyDec = DECIMAL(cFactQnty) no-error.
+          if ERROR-STATUS:ERROR then
+          assign
+          cFactQnty = "0" .
+          cPriceRublDec = DECIMAL (cPriceRubl)no-error.
+          if ERROR-STATUS:error then 
+          ASSIGN 
+          cPriceRubl = "0"
           .
+          RowSum    =  DECIMAL (cFactQnty) * DECIMAL (cPriceRubl) .
+
         /* для помарочного учета объеденим все линии по товару и будем резервировать количество по маркам в rsrv-dtl.p*/
         if myflagsDoc:isDocMarkOn and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
         then do:
