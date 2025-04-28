@@ -14,7 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 03/04/07
 
 */
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-card-sale_obj:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -448,4 +448,4 @@ method public logical esys-add-dump (
   end.
   return yes.
 end method.
-end class.block-level on error undo, throw.
+end class.

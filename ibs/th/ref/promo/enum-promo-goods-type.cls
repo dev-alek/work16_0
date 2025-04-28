@@ -14,7 +14,7 @@ Author: Molotkov Sergey
 Creation date: 11/07/18
 
 */
-
+block-level on error undo, throw.
 enum ibs.th.ref.promo.enum-promo-goods-type:
   define enum
     Appl          = 1  /* товары применения*/
@@ -25,4 +25,4 @@ enum ibs.th.ref.promo.enum-promo-goods-type:
     BarCode       = 6  /* ШК*/
   .
 end enum .
-block-level on error undo, throw.
+

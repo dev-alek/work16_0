@@ -14,7 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 01/28/07
 
 */
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-rule:
 define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
 define variable vss-author      as character no-undo init "$Author: expertek $":U .
@@ -154,4 +154,4 @@ define variable vss-description as character no-undo init "Класс Dis-rule".
     end.
     return 0.0.
   end method.
-end class.block-level on error undo, throw.
+end class.

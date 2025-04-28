@@ -15,7 +15,7 @@ Creation date: 01/28/07
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-tot_host:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -735,4 +735,4 @@ class Ibs.Th.Rul.Dis-tot_host:
   method public override character ToString( ):
     return substitute("&1 фирма &2 срез &3", d-card , host-code, dt-code ).
   end method.
-end class.block-level on error undo, throw.
+end class.

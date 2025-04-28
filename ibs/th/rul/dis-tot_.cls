@@ -15,7 +15,7 @@ Creation date: 01/28/07
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-tot_:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -739,4 +739,4 @@ class Ibs.Th.Rul.Dis-tot_:
   method public override character ToString( ):
     return substitute("ДК &1 глобальный итог срез &2", d-card, dt-code ).
   end method.
-end class.block-level on error undo, throw.
+end class.

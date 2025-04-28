@@ -14,7 +14,7 @@ Creation date: 07/24/08
 
 */
 
-
+block-level on error undo, throw.
 CLASS Ibs.Th.Gbl.XmlFilder:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -269,4 +269,4 @@ CLASS Ibs.Th.Gbl.XmlFilder:
     end.
   end method.
 
-end class.block-level on error undo, throw.
+end class.

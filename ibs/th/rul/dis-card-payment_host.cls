@@ -14,7 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 03/04/07
 
 */
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.dis-card-payment_host:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -235,4 +235,4 @@ class Ibs.Th.Rul.dis-card-payment_host:
   method public override character ToString( ):
     return substitute("&1 &2", d-card, sale-doc).
   end method.
-end class.block-level on error undo, throw.
+end class.

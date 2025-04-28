@@ -15,7 +15,7 @@ Creation date: 11/01/10
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.discount_obj:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -466,4 +466,4 @@ class Ibs.Th.Rul.discount_obj:
                       , obj-code
                       , node-code#).
   end method.
-end class.block-level on error undo, throw.
+end class.

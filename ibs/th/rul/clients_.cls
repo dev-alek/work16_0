@@ -15,7 +15,7 @@ Creation date: 01/28/07
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.clients_:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -589,4 +589,4 @@ class Ibs.Th.Rul.clients_:
     v-h-action = 0
     .
   end method.
-end class.block-level on error undo, throw.
+end class.

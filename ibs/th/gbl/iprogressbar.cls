@@ -14,9 +14,9 @@ Author: Pavel Khnykin
 Creation date: 10/09/07
 
 */
-
+block-level on error undo, throw.
 INTERFACE Ibs.Th.Gbl.IProgressBar:
   METHOD PUBLIC VOID show-bar ( ).
   METHOD PUBLIC VOID hide-bar ( ).
   METHOD PUBLIC VOID increment ( ).
-END INTERFACE.block-level on error undo, throw.
+END INTERFACE.

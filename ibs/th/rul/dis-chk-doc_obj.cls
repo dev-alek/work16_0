@@ -15,7 +15,7 @@ Creation date: 01/01/08
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-chk-doc_obj:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -253,4 +253,4 @@ end method.
     return substitute("Чек &1", doc-code).
   end method.
 
-end class.block-level on error undo, throw.
+end class.

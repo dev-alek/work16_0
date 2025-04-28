@@ -15,7 +15,7 @@ Creation date: 11/06/10
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Discount_host:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -437,4 +437,4 @@ class Ibs.Th.Rul.Discount_host:
                       , host-code
                       , node-code#).
   end method.
-end class.block-level on error undo, throw.
+end class.

@@ -14,7 +14,7 @@ Author: Bakhtadze Natalya
 Creation date: 01/28/07
 
 */
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.R-b:
 define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
 define variable vss-author      as character no-undo init "$Author: expertek $":U .
@@ -59,4 +59,4 @@ define variable vss-description as character no-undo init "Класс r-b".
       R-b = v-R-b.
     end.
   end method.
-end class.block-level on error undo, throw.
+end class.

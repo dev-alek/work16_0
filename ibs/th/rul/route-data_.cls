@@ -15,7 +15,7 @@ Creation date: 01/28/07
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.route-data_
    inherits   ibs.th.gbl.sys.objth:
   { cmp/str-glbl.i class }
@@ -1137,4 +1137,4 @@ class Ibs.Th.Rul.route-data_
         objSetError:setError(iTxt).
    end.
       
-end class.block-level on error undo, throw.
+end class.

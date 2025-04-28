@@ -15,7 +15,7 @@ Creation date: 01/28/07
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-card_:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
@@ -782,4 +782,4 @@ end method.
   method public override character ToString( ):
     return d-card.
   end method.
-end class.block-level on error undo, throw.
+end class.

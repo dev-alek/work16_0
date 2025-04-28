@@ -15,7 +15,7 @@ Creation date: 01/30/15
 
 */
 
-
+block-level on error undo, throw.
 class ibs.th.skt.Commands.IResponse abstract: 
 
    /*------------------------------------------------------------------------------
@@ -83,4 +83,4 @@ class ibs.th.skt.Commands.IResponse abstract:
 	end destructor.
  
     
-end class.block-level on error undo, throw.
+end class.
