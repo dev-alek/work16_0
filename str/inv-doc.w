@@ -2389,14 +2389,14 @@ invTSD
   else do:
     display t-doc.doc-qnty with frame {&FRAME-NAME}.
   end.
-  if pardoc-mode = {&add-def} then
+  if t-doc.status_ = {&wayb}
+  and pardoc-mode <> {&lookup} then
   enable invTSD with frame {&FRAME-NAME}.
-  else do:
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
     ub.inv-doc-attr.attr-code = 'invMultDevice' no-error .
     if available (ub.inv-doc-attr) then invTSD = logical(ub.inv-doc-attr.attr-value) .
   display invTSD with frame {&FRAME-NAME}.
-  end.
+
   /* Читаем атрибуты on-line-ового расчета */
   { str/tdat-val.i t-doc.doc-code
                {&trdcattr-clcasol}

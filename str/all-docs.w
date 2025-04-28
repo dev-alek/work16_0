@@ -4945,6 +4945,7 @@ define variable varno-change-cli-cntr as logical   no-undo.
 define variable varvalue-oldsuppcntr  as character no-undo.
 define variable vartype-oldsuppcntr   as character no-undo.
 {&net-proc}
+if t-doc.status_ <> {&wayb} then do:
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
     (ub.inv-doc-attr.attr-code = 'invMultDevice' or ub.inv-doc-attr.attr-code begins 'isManual') and
     ub.inv-doc-attr.attr-value = string(true) no-error .
@@ -4953,6 +4954,7 @@ define variable vartype-oldsuppcntr   as character no-undo.
       view-as alert-box.
       return .
     end.
+end.    
 if ( t-doc.status_ = {&wayb}  and  t-doc.flag_ = false ) or
      t-doc.status_ = {&inquiry}  then do:
   case t-doc.ext-doc-type
@@ -7483,6 +7485,7 @@ procedure proc-m_to-inv :
   define variable glog        as logical   no-undo .
   define variable isManual    as logical   no-undo .
   define variable isMultiTSD  as logical   no-undo .
+  define variable trn-doc     as character no-undo .
   
   do on error undo, return error return-value :
     if not available t-doc and mark-list = "" then 
@@ -7573,6 +7576,7 @@ procedure proc-m_to-inv :
         end.          
         end.        
       end.
+      
         if  isMultiTSD then do:
           if trnDocCode = "" then trnDocCode = entry(1,buf_trn-doc.doc-code,"/").
           else 
@@ -7606,10 +7610,20 @@ procedure proc-m_to-inv :
         end.
         list-trn = list-trn + "," + string(buf_trn-doc.doc-code) .
       end.
-      list-trn = trim(list-trn).
+      list-trn = trim(list-trn,",").
+
       if isMultiTSD then do:
-      for each bf_trn-doc no-lock where t-doc.doc-code = entry(1,bf_trn-doc.doc-code,"/") and 
-        num-entries(buf_trn-doc.doc-code,"/") > 1 and bf_trn-doc.status_ = {&inquiry} and not bf_trn-doc.flag_:
+      find first bf_trn-doc no-lock where bf_trn-doc.doc-code = trnDocCode no-error .
+      if not available (bf_trn-doc) then do:
+          message "По инвентаризации " + string(trnDocCode) + " уже создана итоговая инвентаризация " + string(trnDocCode) + "/и" skip
+          "Необходимые изменения можно внести вручную в " + string(trnDocCode) + "/и"
+           view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.        
+      end.  
+      for each bf_trn-doc no-lock where trnDocCode = entry(1,bf_trn-doc.doc-code,"/") and 
+      num-entries(buf_trn-doc.doc-code,"/") > 1 and bf_trn-doc.status_ = {&inquiry} and not bf_trn-doc.flag_: 
         if lookup(string(bf_trn-doc.doc-code),list-trn) = 0 then 
         do:
           misTrnDoc = misTrnDoc + ","  + bf_trn-doc.doc-code .
@@ -7618,9 +7632,9 @@ procedure proc-m_to-inv :
       if misTrnDoc <> "" then 
       do:
         list-trn <> trim(misTrnDoc,",") .
-        message "Не все документы выбраны, относящиеся к инвентаризации." skip
-          "После созданя итогового документа, все документы, относящиеся к инвентаризации будут удалены" skip
-          "Продолжать создание итогового документа?"
+        message "По инвентаризации " + trnDocCode + " есть другие загруженные документы." skip
+          "При продолжении они будут заблокированы." skip
+          "Продолжить?"
           view-as alert-box QUESTION buttons YES-NO update glog.
         if not glog then 
         do:

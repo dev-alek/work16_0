@@ -37,6 +37,15 @@ on choose of b-open in frame {&frame-name} /* Откр */
           view-as alert-box information .
         return .
       end.
+      find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+      ub.inv-doc-attr.attr-code = 'invMultDevice' no-error .
+      if available (ub.inv-doc-attr) then 
+      do:
+        message "Этот документ запрещено открывать!" skip
+          "Номер документа" t-doc.doc-code
+          view-as alert-box information .
+        return .
+      end.
     end.
     { gbl/int-open.i
     parparentproc
