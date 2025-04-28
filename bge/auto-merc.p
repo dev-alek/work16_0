@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d6a01d2b837a, 2559, rls $
+$Author: SSlivenko $
+$Date: Вт авг 11 18:31:46 2020 +0300 $
+$Workfile: auto-merc.p $
+$Archive: bge/auto-merc.p $
 
 Работа с ФГИС меркурий
 
@@ -28,11 +29,11 @@ define input  parameter p-user-login    as character no-undo .
 define input  parameter p-user-password as character no-undo .
 define input  parameter p-list-db       as character no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: d6a01d2b837a, 2559, rls $":U .
+def var vss-author      as character no-undo init "$Author: SSlivenko $":U .
+def var vss-date        as character no-undo init "$Date: Вт авг 11 18:31:46 2020 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: auto-merc.p $":U .
+def var vss-archive     as character no-undo init "$Archive: bge/auto-merc.p $":U .
 def var vss-description as character no-undo init "Работа с ФГИС меркурий".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -620,4 +621,4 @@ on error undo, return error
   
 end.
 
-/* $Workfile$ end */
+/* $Workfile: auto-merc.p $ end */

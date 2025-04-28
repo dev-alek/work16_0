@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter parparentproc as handle no-undo.
 define input  parameter iMask         as character no-undo.
 define input  parameter iFile-name    as character no-undo.

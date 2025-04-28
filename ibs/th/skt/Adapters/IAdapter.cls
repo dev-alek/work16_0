@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6ef98e62eaee, 955, rls $
+$Author: ASMorozov $
+$Date: Thu Feb 16 15:19:51 2017 +0300 $
+$Workfile: IAdapter.cls $
+$Archive: ibs/th/skt/Adapters/IAdapter.cls $
 
 
 
@@ -16,6 +16,7 @@ Creation date: 01/30/15
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 interface ibs.th.skt.Adapters.IAdapter:  
       

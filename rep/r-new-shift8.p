@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fcd3c45be6b6, 3657, test $
+$Author: VSpiridonov $
+$Date: 2024/01/25 16:33:07 $
+$Workfile: r-new-shift8.p $
+$Archive: rep/r-new-shift8.p $
 8 часть сменного отчета
 Автор: 
 Дата создания: 20/05/2022
@@ -17,11 +18,11 @@ DEFINE INPUT PARAMETER tog-82             AS logical   NO-UNDO .            /*с 
 DEFINE INPUT PARAMETER v-report-name-html AS CHARACTER  NO-UNDO . 
 DEFINE INPUT PARAMETER v-report-result    AS logical  NO-UNDO . 
 
-def var vss-revision    AS character NO-UNDO init "$Revision$":U .
-def var vss-author      AS character NO-UNDO init "$Author$":U .
-def var vss-date        AS character NO-UNDO init "$Date$":U .
-def var vss-workfile    AS character NO-UNDO init "$Workfile$":U .
-def var vss-archive     AS character NO-UNDO init "$Archive$":U .
+def var vss-revision    AS character NO-UNDO init "$Revision: fcd3c45be6b6, 3657, test $":U .
+def var vss-author      AS character NO-UNDO init "$Author: VSpiridonov $":U .
+def var vss-date        AS character NO-UNDO init "$Date: 2024/01/25 16:33:07 $":U .
+def var vss-workfile    AS character NO-UNDO init "$Workfile: r-new-shift8.p $":U .
+def var vss-archive     AS character NO-UNDO init "$Archive: rep/r-new-shift8.p $":U .
 def var vss-description AS character NO-UNDO init "8 часть сменного отчета".
 
 { cmp/vssrevis.i    }
@@ -38,6 +39,7 @@ def var vss-description AS character NO-UNDO init "8 часть сменного отчета".
 { str/lib-trn.i }   
 
 DEFINE BUFFER buf_clients for ub.clients .
+DEFINE BUFFER buf_chk-gds-pay FOR ub.chk-gds-pay.
 DEFINE VARIABLE v-file-name-rep-htm AS character NO-UNDO.
 DEFINE VARIABLE var-report-num      AS INT       NO-UNDO.
 
@@ -48,6 +50,7 @@ define variable is-petrol           as logical   no-undo .
 define variable is-pieces           as logical   no-undo .
 define variable handmade            as character no-undo.  /* добавлен вручную */
 define variable gds_chk             as int       no-undo.        /* код товара*/
+define variable v-src-sum           as decimal   no-undo.  /* сумма чека со скидкой */
 
 DEF    VAR      kol-ch              AS DECIMAL   NO-UNDO.
 DEF    VAR      sum-ch              AS DECIMAL   NO-UNDO.
@@ -114,10 +117,15 @@ FOR EACH chk-doc WHERE
 			
       find first bar-code where bar-code.b-code eq chk-gds.b-code no-lock no-error.
       IF AVAILABLE bar-code THEN  gds_chk = bar-code.gds-code.
-    
-    
-    
-    
+      
+      v-src-sum = 0.
+      for each  buf_chk-gds-pay no-lock where 
+                buf_chk-gds-pay.doc-code = chk-gds.doc-code                
+            and buf_chk-gds-pay.line-num = chk-gds.line-num 
+      :
+          v-src-sum = v-src-sum + buf_chk-gds-pay.tot-r-b. 
+      end.    
+      if v-src-sum = 0 then v-src-sum = chk-gds.src-sum.    
 
       CREATE tt-chk.
  
@@ -128,7 +136,7 @@ FOR EACH chk-doc WHERE
          tt-chk.trk       = chk-gds.pump
          tt-chk.qnt-chk   = chk-gds.doc-qnty 
          tt-chk.price-chk = chk-gds.price-base
-         tt-chk.sum-chk   = chk-gds.src-sum
+         tt-chk.sum-chk   = v-src-sum
          tt-chk.flag      = FLG
          tt-chk.npp       = npp
          tt-chk.type-fuel = produkt
@@ -227,19 +235,21 @@ DO:
       '</tr>' skip
       .
 
-   FOR EACH tt-chk:
+   FOR EACH tt-chk
+       group by tt-chk.doc-code:
       
       if tt-chk.is-petrol THEN 
       do:                          /* если топливо       */ 
          if tt-chk.flag = "1" THEN 
          do:                     /* частичные возвраты */
-            kol-ch = kol-ch + 1.
+            if first-of(tt-chk.doc-code)
+            then kol-ch = kol-ch + 1.
             sum-ch = sum-ch + tt-chk.sum-chk.
             PUT STREAM OutStr-html UNFORMATTED 
                '<tr>' skip
                '<td text_wrap="true" style="text-align:left;">' + string(tt-chk.type-fuel) + '</td>' skip
                '<td text_wrap="true" style="text-align:right;">' + string(tt-chk.trk) + '</td>' skip
-               '<td colspan="2" text_wrap="true" style="text-align:right;">' + string(ABSOLUTE(tt-chk.qnt-chk)) + '</td>' skip
+               '<td colspan="2" text_wrap="true" style="text-align:right;">' + string(ABSOLUTE(tt-chk.qnt-chk),"->>>>>>>>9.99") + '</td>' skip
                '<td>'    '</td>' skip
                '<td colspan="2">'    '</td>' skip
                '<td text_wrap="true" style="text-align:right;">' + string(tt-chk.chk-num) + ':' + string(tt-chk.chk-z) + '</td>' skip
@@ -251,7 +261,8 @@ DO:
 	
          ELSE IF tt-chk.flag = "2" OR tt-chk.flag = "4" OR tt-chk.flag = "3" OR tt-chk.flag = "0"  THEN 
             DO:
-               kol-ost = kol-ost + 1.
+               if first-of(tt-chk.doc-code)
+               then kol-ost = kol-ost + 1.
                sum-ost = sum-ost + tt-chk.sum-chk.
                PUT STREAM OutStr-html UNFORMATTED 
                   '<tr>' skip

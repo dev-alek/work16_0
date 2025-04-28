@@ -22,6 +22,8 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
   define private variable cb2 as System.Windows.Forms.CheckBox no-undo.
   define private variable cb1 as System.Windows.Forms.CheckBox no-undo.
   define private variable components as System.ComponentModel.IContainer no-undo.
+  define private variable label2 as System.Windows.Forms.Label no-undo.
+  define private variable label1 as System.Windows.Forms.Label no-undo.
   define private variable panel1 as System.Windows.Forms.Panel no-undo.
   define private variable groupBox1 as System.Windows.Forms.GroupBox no-undo.
   define private variable rb3 as System.Windows.Forms.RadioButton no-undo.
@@ -113,6 +115,8 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
     this-object:rb3 = new System.Windows.Forms.RadioButton().
     this-object:rb2 = new System.Windows.Forms.RadioButton().
     this-object:rb1 = new System.Windows.Forms.RadioButton().
+    this-object:label1 = new System.Windows.Forms.Label().
+    this-object:label2 = new System.Windows.Forms.Label().
     this-object:groupBox1:SuspendLayout().
     this-object:panel1:SuspendLayout().
     this-object:SuspendLayout().
@@ -141,6 +145,8 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
     /*  */
     /* groupBox1 */
     /*  */
+    this-object:groupBox1:Controls:Add(this-object:label2).
+    this-object:groupBox1:Controls:Add(this-object:label1).
     this-object:groupBox1:Controls:Add(this-object:cb3).
     this-object:groupBox1:Controls:Add(this-object:cb2).
     this-object:groupBox1:Controls:Add(this-object:cb1).
@@ -168,7 +174,6 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
     /*  */
     this-object:cb2:Checked = true.
     this-object:cb2:CheckState = System.Windows.Forms.CheckState:Checked.
-    this-object:cb2:Enabled = false.
     this-object:cb2:Location = new System.Drawing.Point(352, 85).
     this-object:cb2:Name = "cb2".
     this-object:cb2:Size = new System.Drawing.Size(70, 24).
@@ -211,7 +216,6 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
     /*  */
     /* rb2 */
     /*  */
-    this-object:rb2:Enabled = false.
     this-object:rb2:Location = new System.Drawing.Point(10, 55).
     this-object:rb2:Name = "rb2".
     this-object:rb2:Size = new System.Drawing.Size(294, 44).
@@ -231,6 +235,26 @@ class ibs.th.str.ptrl.forms.TestAsiAdd inherits Form:
     this-object:rb1:Text = "Проверка корректности работы канала плотности НП АСИ резервуара (отбор пробы/замер в резервуаре)".
     this-object:rb1:UseCompatibleTextRendering = true.
     this-object:rb1:UseVisualStyleBackColor = true.
+    /*  */
+    /* label1 */
+    /*  */
+    this-object:label1:Location = new System.Drawing.Point(-3, 111).
+    this-object:label1:Name = "label1".
+    this-object:label1:Size = new System.Drawing.Size(439, 19).
+    this-object:label1:TabIndex = 5.
+    this-object:label1:Text = "________________________________________________________________________________________".
+    this-object:label1:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label1:UseCompatibleTextRendering = true.
+    /*  */
+    /* label2 */
+    /*  */
+    this-object:label2:Location = new System.Drawing.Point(-3, 63).
+    this-object:label2:Name = "label2".
+    this-object:label2:Size = new System.Drawing.Size(439, 19).
+    this-object:label2:TabIndex = 6.
+    this-object:label2:Text = "________________________________________________________________________________________".
+    this-object:label2:TextAlign = System.Drawing.ContentAlignment:MiddleCenter.
+    this-object:label2:UseCompatibleTextRendering = true.
     /*  */
     /* TestAsiAdd */
     /*  */

@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: mtreq007.p $
+$Archive: gbl/mtreq007.p $
 
 Мобильный терминал. Удаление строки чека
 
@@ -36,11 +37,11 @@ define input  parameter p-fbr-depart        as integer   no-undo .
 
 define output parameter p-send-message  as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: mtreq007.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/mtreq007.p $":U .
 define variable vss-description as character no-undo init "Мобильный терминал. Ввод строки чека".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

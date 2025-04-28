@@ -38,6 +38,8 @@ define input parameter parobj-code like ub.clients.obj-code no-undo.
 { cmp/showinf.i  }
 { cmp/library.i  }
 { gbl/prn-lib.i  }
+{ str/fact-bc.i  &onlycheck=yes}
+{ ref/gds-attr.i }
 { gbl/waitfram.i }
 define variable g#report-num as integer   no-undo .
 run get-report-num in parparentproc (output g#report-num ).
@@ -548,6 +550,17 @@ define buffer bf_tt-bar-code-ne for tt-bar-code-ne.
 assign frame {&frame-name} varstr.
 
 { str/sclspref.i }
+
+if varstr <> "" then
+do:
+  run checkTypeByBarCode in this-procedure (integer(varstr), ?) no-error.
+  if error-status:error then
+  do:
+    varstr = "".
+    disp varstr with frame {&frame-name}.
+    return no-apply.
+  end.
+end.
 
 { str/bc-rcnz.i
   parparentproc

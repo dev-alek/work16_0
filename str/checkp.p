@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 55e470c22f96, 3463, rls $
+$Author: VSpiridonov $
+$Date: 2023/10/16 15:13:34 $
+$Workfile: checkp.p $
+$Archive: str/checkp.p $
 
 Печать одного чека
 
@@ -18,11 +19,11 @@ Creation date: 09/08/05
 define input parameter parparentproc as widget-handle no-undo .
 DEFINE INPUT PARAMETER cdoc like chk-doc.doc-code.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 55e470c22f96, 3463, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:34 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: checkp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/checkp.p $":U .
 define variable vss-description as character no-undo init "Печать одного чека".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }

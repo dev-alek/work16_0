@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 19a7bcd6f844, 1625, rls $
+$Author: SMMolotkov $
+$Date: Tue Nov 06 04:41:39 2018 +0300 $
+$Workfile: sht-reestr.p $
+$Archive: bge/sht-reestr.p $
 
 Экспорт отчёта-реестра документов выгрузки в Лексему
 
@@ -18,11 +19,11 @@ Input:
 Output:
 
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 19a7bcd6f844, 1625, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Nov 06 04:41:39 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sht-reestr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/sht-reestr.p $":U .
 define variable vss-description as character no-undo init "Экспорт отчёта-реестра документов выгрузки в Лексему".
 {cmp/vssrevis.i}
 

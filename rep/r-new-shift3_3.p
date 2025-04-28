@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 /*
 
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ebd98983fbc5, 2627, rls $
+$Author: EShklyar $
+$Date: ѕн окт 19 09:22:02 2020 +0300 $
+$Workfile: r-new-shift3_3.p $
+$Archive: rep/r-new-shift3_3.p $
 
 печать сменного отчета лист 3
 
@@ -38,11 +39,11 @@ define input parameter pvar-lavel as int no-undo.
 define input parameter p-previous-shift-date as date no-undo .
 define input parameter p-param  as logical no-undo .
 
-define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-define variable vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision: ebd98983fbc5, 2627, rls $":U.
+define variable vss-author      AS CHAR NO-UNDO INIT "$Author: EShklyar $":U.
+define variable vss-date        AS CHAR NO-UNDO INIT "$Date: ѕн окт 19 09:22:02 2020 +0300 $":U.
+define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: r-new-shift3_3.p $":U.
+define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive: rep/r-new-shift3_3.p $":U.
 define variable vss-description AS CHAR NO-UNDO INIT "$ѕечать сменного отчета - лист 3 $":U.
 /*переменные дл€ вывода отчета в HTML*/
 define stream Out-Stream.

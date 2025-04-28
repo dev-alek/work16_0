@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: is_motp.cls $
+$Archive: ibs/th/bge/is_motp/is_motp.cls $
 
 Класс работы с ИС МОТП
 
@@ -24,6 +24,7 @@ using ibs.th.gbl.storage.*.
 using ibs.th.str.clients.*.
 using ibs.th.str.utd.*.
 using ibs.th.str.utd.sts.*.
+block-level on error undo, throw.
 &glob prefixfile IsMotp_
 class ibs.th.bge.is_motp.is_motp inherits objth: 
     define override public property vss-revision    as character no-undo init "$Revision:$":U get .

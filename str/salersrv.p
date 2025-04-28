@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 220955104cd9, 2417, rls $
+$Author: SSlivenko $
+$Date: Ср июн 10 21:13:46 2020 +0300 $
+$Workfile: salersrv.p $
+$Archive: str/salersrv.p $
 
 Резервирование продажи - вызывается через diallog.w
 
@@ -51,11 +52,11 @@ define variable neg-tpsi-qnty   as decimal no-undo .
 define variable neg-tpsi-oper   as logical no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 220955104cd9, 2417, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:46 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: salersrv.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/salersrv.p $":U .
 define variable vss-description as character no-undo init "Резервирование продажи".
 { gbl/objsrv.i }
 { cmp/vssrevis.i "substitute('&1':u,p-inkas-code)" }

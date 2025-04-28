@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -1109,7 +1110,7 @@ procedure print-total .
               if pay-line = no then "" else string(pol14,"->>>>>>>>>>>9.99"),
               if pay-line = no or pol15 = 0 then "" else string(pol15,"->>>>>>>>>>>9.99"),
               if pay-line = no or pol16 = 0 then "" else string(pol16,"->>>>>>>>>>>9.99"),
-              if main-line = no or pol17 = 0 then "" else string(pol17,"->>>>>>>>>>>9.99"),
+              if /*main-line = no or*/ pol17 = 0 then "" else string(pol17,"->>>>>>>>>>>9.99"),
               if main-line = no then "" else string(pol19,"->>>>>>>>>>>9.99")
               ).
 
@@ -1400,6 +1401,8 @@ procedure print-total .
 end procedure .
 
 procedure print-sug .
+
+  if can-find(t-2-sug) then do:
   output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted                                                              
     substitute (                                                                                
@@ -2042,6 +2045,7 @@ procedure print-sug .
     , chr(123), chr(125)                                                                                                 
     ).                                                                                                    
   output stream OutStr-html close.
+end.
 end procedure .
 
 PROCEDURE create-tincome-2 :

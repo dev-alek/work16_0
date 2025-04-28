@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1f78fe327cdf, 1091, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: thth14.p $
+$Archive: utl/thth14.p $
 
 Запуск пакета утилита THTH - 16.0 и 14
 
@@ -17,11 +18,11 @@ Creation date: 01/19/10
 
 define input parameter parparentproc as widget-handle no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1f78fe327cdf, 1091, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: thth14.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/thth14.p $":U .
 define variable vss-description as character no-undo init "Запуск пакета утилита THTH - 16.0 и 14".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

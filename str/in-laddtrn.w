@@ -84,18 +84,21 @@ define buffer buf_goods for ub.goods .
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-save b-quit b-help f-autoent-obj-code ~
 f-autoent-obj-type b-clients f-car-num b-auto-tank f-condition ~
-f-seals-condition f-insp-cert f-seals-condition-2 f-date-cert f-fio ~
-f-ptbocode f-ptbotype b-ptb f-date-pour f-hour-pour f-min-pour ~
-f-hour-income f-min-income f-item-pour f-acc-ship b-doc f-date-start ~
-f-date-end f-hour-start f-min-start f-hour-end f-min-end 
+f-seals-condition f-insp-cert f-seals-condition-2 f-date-cert f-num-pasport ~
+f-date-pasport f-fio f-ptbocode f-ptbotype b-ptb f-date-pour f-hour-pour ~
+f-min-pour f-date-income f-hour-income f-min-income f-item-pour f-acc-ship ~
+b-doc t-clear f-date-start f-date-end f-hour-start f-min-start f-hour-end ~
+f-min-end 
 &Scoped-Define DISPLAYED-OBJECTS f-autoent f-autoent-obj-code ~
 f-autoent-obj-type f-autoent-obj-name f-car f-car-num f-condition-name ~
 f-condition f-seals-1 f-seals-condition f-insp f-insp-cert f-seals-2 ~
-f-seals-condition-2 f-insp-2 f-date-cert f-fio-name f-fio f-ptbocode-1 ~
-f-ptbocode f-ptbotype f-ptboname f-date-pour-1 f-date-pour f-hour-pour-2 ~
-f-hour-pour f-min-pour f-hour-income-2 f-hour-income f-min-income ~
-f-item-pour-2 f-item-pour f-acc-ship-2 f-acc-ship f-doc b-doc f-item-doc ~
-f-date-start f-date-end f-hour-start f-min-start f-hour-end f-min-end 
+f-seals-condition-2 f-insp-2 f-date-cert f-pasport f-num-pasport ~
+f-pasport-num f-date-pasport f-fio-name f-fio f-ptbocode-1 f-ptbocode ~
+f-ptbotype f-ptboname f-date-pour-1 f-date-pour f-hour-pour-2 f-hour-pour ~
+f-min-pour f-date-income-2 f-date-income f-hour-income-2 f-hour-income ~
+f-min-income f-item-pour-2 f-item-pour f-acc-ship-2 f-acc-ship f-doc b-doc ~
+t-clear f-item-doc f-date-start f-date-end f-hour-start f-min-start ~
+f-hour-end f-min-end 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -195,13 +198,25 @@ DEFINE VARIABLE f-date-end AS DATE FORMAT "99/99/99":U
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-date-income AS DATE FORMAT "99/99/99":U 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-date-income-2 AS CHARACTER FORMAT "X(256)":U INITIAL "Дата прибытия на АЗС:" 
+     VIEW-AS FILL-IN 
+     SIZE 21.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-date-pasport AS DATE FORMAT "99/99/99":U 
+     VIEW-AS FILL-IN 
+     SIZE 13.5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-date-pour AS DATE FORMAT "99/99/99":U 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-date-pour-1 AS CHARACTER FORMAT "X(256)":U INITIAL "Дата налива:" 
      VIEW-AS FILL-IN 
-     SIZE 12.5 BY 1 NO-UNDO.
+     SIZE 21.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-date-start AS DATE FORMAT "99/99/99":U 
      LABEL "Дата начала слива" 
@@ -286,6 +301,18 @@ DEFINE VARIABLE f-min-start AS INTEGER FORMAT "99":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 4 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-num-pasport AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 7 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-pasport AS CHARACTER FORMAT "X(256)":U INITIAL "Паспорт качества №, дата:" 
+     VIEW-AS FILL-IN 
+     SIZE 25.5 BY 1 NO-UNDO.
+
+DEFINE VARIABLE f-pasport-num AS CHARACTER FORMAT "X(256)":U INITIAL " от" 
+     VIEW-AS FILL-IN 
+     SIZE 5 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-ptbocode AS INTEGER FORMAT ">>>>>>>>9":U INITIAL ? 
      VIEW-AS FILL-IN 
      SIZE 11 BY 1 NO-UNDO.
@@ -322,7 +349,7 @@ DEFINE VARIABLE b-doc AS LOGICAL INITIAL no
      LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 2.5 BY .83 NO-UNDO.
-     
+
 DEFINE VARIABLE t-clear AS LOGICAL INITIAL no 
      LABEL "Произведена зачистка АЦ перед наполнением на ГНС" 
      VIEW-AS TOGGLE-BOX
@@ -353,38 +380,50 @@ DEFINE FRAME Dialog-Frame
      f-seals-condition-2 AT ROW 7.38 COL 16 COLON-ALIGNED NO-LABEL WIDGET-ID 44
      f-insp-2 AT ROW 7.46 COL 45.5 NO-LABEL WIDGET-ID 92
      f-date-cert AT ROW 7.46 COL 82.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 34
-     f-fio-name AT ROW 8.58 COL 1.5 NO-LABEL WIDGET-ID 94
-     f-fio AT ROW 8.58 COL 82.5 RIGHT-ALIGNED NO-LABEL
-     f-ptbocode-1 AT ROW 9.83 COL 1.5 NO-LABEL WIDGET-ID 96
-     f-ptbocode AT ROW 9.83 COL 16.13 COLON-ALIGNED NO-LABEL
-     f-ptbotype AT ROW 9.83 COL 27.88 COLON-ALIGNED NO-LABEL
-     f-ptboname AT ROW 9.83 COL 82.51 RIGHT-ALIGNED NO-LABEL
-     b-ptb AT ROW 9.92 COL 34.63
-     f-date-pour-1 AT ROW 11 COL 1.5 NO-LABEL WIDGET-ID 98
-     f-date-pour AT ROW 11 COL 12.25 COLON-ALIGNED NO-LABEL WIDGET-ID 40
-     f-hour-pour-2 AT ROW 11 COL 29.5 NO-LABEL WIDGET-ID 100
-     f-hour-pour AT ROW 11 COL 42 COLON-ALIGNED NO-LABEL WIDGET-ID 38
-     f-min-pour AT ROW 11 COL 46 COLON-ALIGNED NO-LABEL WIDGET-ID 36
-     f-hour-income-2 AT ROW 11 COL 53.5 NO-LABEL WIDGET-ID 102
-     f-hour-income AT ROW 11 COL 75.13 COLON-ALIGNED NO-LABEL
-     f-min-income AT ROW 11 COL 82.5 RIGHT-ALIGNED NO-LABEL
-     f-item-pour-2 AT ROW 12.17 COL 1.5 NO-LABEL WIDGET-ID 104
-     f-item-pour AT ROW 13.29 COL 82.5 RIGHT-ALIGNED NO-LABEL
-     f-acc-ship-2 AT ROW 14.46 COL 1.5 NO-LABEL WIDGET-ID 106
-     f-acc-ship AT ROW 14.46 COL 38.13 NO-LABEL WIDGET-ID 42
-     f-doc AT ROW 14.67 COL 4.5 NO-LABEL WIDGET-ID 108
-     b-doc AT ROW 14.75 COL 2 WIDGET-ID 48
-     t-clear AT ROW 14.75 COL 32 WIDGET-ID 148
-     f-item-doc AT ROW 15.83 COL 82.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 46
-     f-date-start AT ROW 17 COL 19.25 COLON-ALIGNED WIDGET-ID 60
-     f-date-end AT ROW 17 COL 59.5 COLON-ALIGNED WIDGET-ID 58
-     f-hour-start AT ROW 18.17 COL 19.13 COLON-ALIGNED WIDGET-ID 50
-     f-min-start AT ROW 18.17 COL 23.63 COLON-ALIGNED NO-LABEL WIDGET-ID 54
-     f-hour-end AT ROW 18.17 COL 59.63 COLON-ALIGNED WIDGET-ID 52
-     f-min-end AT ROW 18.17 COL 64.25 COLON-ALIGNED NO-LABEL WIDGET-ID 56
+     f-pasport AT ROW 8.63 COL 32.63 NO-LABEL WIDGET-ID 156
+     f-num-pasport AT ROW 8.63 COL 64.13 RIGHT-ALIGNED NO-LABEL WIDGET-ID 154
+     f-pasport-num AT ROW 8.63 COL 65 NO-LABEL WIDGET-ID 152
+     f-date-pasport AT ROW 8.63 COL 82.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 150
+     f-fio-name AT ROW 9.75 COL 1.38 NO-LABEL WIDGET-ID 94
+     f-fio AT ROW 9.75 COL 82.38 RIGHT-ALIGNED NO-LABEL
+     f-ptbocode-1 AT ROW 11 COL 1.38 NO-LABEL WIDGET-ID 96
+     f-ptbocode AT ROW 11 COL 16 COLON-ALIGNED NO-LABEL
+     f-ptbotype AT ROW 11 COL 27.75 COLON-ALIGNED NO-LABEL
+     f-ptboname AT ROW 11 COL 82.38 RIGHT-ALIGNED NO-LABEL
+     b-ptb AT ROW 11.08 COL 34.5
+     f-date-pour-1 AT ROW 12.17 COL 1.38 NO-LABEL WIDGET-ID 98
+     f-date-pour AT ROW 12.17 COL 20.88 COLON-ALIGNED NO-LABEL WIDGET-ID 40
+     f-hour-pour-2 AT ROW 12.25 COL 38.13 NO-LABEL WIDGET-ID 100
+     f-hour-pour AT ROW 12.25 COL 59.63 COLON-ALIGNED NO-LABEL WIDGET-ID 38
+     f-min-pour AT ROW 12.25 COL 63.13 COLON-ALIGNED NO-LABEL WIDGET-ID 36
+     f-date-income-2 AT ROW 13.5 COL 1.5 NO-LABEL WIDGET-ID 160
+     f-date-income AT ROW 13.5 COL 21 COLON-ALIGNED NO-LABEL WIDGET-ID 158
+     f-hour-income-2 AT ROW 13.5 COL 38.13 NO-LABEL WIDGET-ID 102
+     f-hour-income AT ROW 13.5 COL 59.75 COLON-ALIGNED NO-LABEL
+     f-min-income AT ROW 13.5 COL 67.13 RIGHT-ALIGNED NO-LABEL
+     f-item-pour-2 AT ROW 15.5 COL 1.38 NO-LABEL WIDGET-ID 104
+     f-item-pour AT ROW 16.63 COL 82.38 RIGHT-ALIGNED NO-LABEL
+     f-acc-ship-2 AT ROW 17.79 COL 1.38 NO-LABEL WIDGET-ID 106
+     f-acc-ship AT ROW 17.79 COL 38 NO-LABEL WIDGET-ID 42
+     f-doc AT ROW 18 COL 4.38 NO-LABEL WIDGET-ID 108
+     b-doc AT ROW 18.08 COL 1.88 WIDGET-ID 48
+     t-clear AT ROW 18.08 COL 31.88 WIDGET-ID 148
+     f-item-doc AT ROW 19.17 COL 82.38 RIGHT-ALIGNED NO-LABEL WIDGET-ID 46
+     f-date-start AT ROW 20.33 COL 19.13 COLON-ALIGNED WIDGET-ID 60
+     f-date-end AT ROW 20.33 COL 59.38 COLON-ALIGNED WIDGET-ID 58
+     f-hour-start AT ROW 21.5 COL 19 COLON-ALIGNED WIDGET-ID 50
+     f-min-start AT ROW 21.5 COL 23.5 COLON-ALIGNED NO-LABEL WIDGET-ID 54
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         DEFAULT-BUTTON b-save CANCEL-BUTTON b-quit.
+
+/* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
+DEFINE FRAME Dialog-Frame
+     f-hour-end AT ROW 21.5 COL 59.5 COLON-ALIGNED WIDGET-ID 52
+     f-min-end AT ROW 21.5 COL 64.13 COLON-ALIGNED NO-LABEL WIDGET-ID 56
      "Примечание к нефтебазе" VIEW-AS TEXT
-          SIZE 25.5 BY 1 AT ROW 12.17 COL 1.13
-     SPACE(56.99) SKIP(6.24)
+          SIZE 25.5 BY 1 AT ROW 15.5 COL 1
+     SPACE(57.12) SKIP(7.03)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Дополнительная информация по приемке топлива"
@@ -427,6 +466,10 @@ ASSIGN
    NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN f-date-cert IN FRAME Dialog-Frame
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-date-income-2 IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN f-date-pasport IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN f-date-pour-1 IN FRAME Dialog-Frame
    NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN f-doc IN FRAME Dialog-Frame
@@ -453,6 +496,12 @@ ASSIGN
    NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN f-min-income IN FRAME Dialog-Frame
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-num-pasport IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN f-pasport IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
+/* SETTINGS FOR FILL-IN f-pasport-num IN FRAME Dialog-Frame
+   NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN f-ptbocode-1 IN FRAME Dialog-Frame
    NO-ENABLE ALIGN-L                                                    */
 /* SETTINGS FOR FILL-IN f-ptboname IN FRAME Dialog-Frame
@@ -496,6 +545,10 @@ DO:
                               f-seals-condition-2
                               f-insp-cert
                               f-date-cert
+                              f-pasport
+                              f-pasport-num
+                              f-date-pasport
+                              f-num-pasport
                               f-fio
                               f-ptbocode
                               f-ptbotype
@@ -506,6 +559,7 @@ DO:
                               f-hour-pour
                               f-min-pour
                               f-date-pour
+                              f-date-income
                               f-acc-ship
                               b-doc
                               f-item-doc
@@ -972,6 +1026,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME f-date-pasport
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-date-pasport Dialog-Frame
+ON return OF f-date-pasport IN FRAME Dialog-Frame
+DO:
+/*  apply "entry" to f-car-vol in frame {&frame-name}.*/
+return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME f-hour-income
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-hour-income Dialog-Frame
 ON LEAVE OF f-hour-income IN FRAME Dialog-Frame
@@ -1167,6 +1233,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME f-num-pasport
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-num-pasport Dialog-Frame
+ON return OF f-num-pasport IN FRAME Dialog-Frame
+DO:
+/*  apply "entry" to f-car-vol in frame {&frame-name}.*/
+return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME f-ptbocode
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-ptbocode Dialog-Frame
 ON LEAVE OF f-ptbocode IN FRAME Dialog-Frame
@@ -1263,7 +1341,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   define buffer buf_doc-attr for ub.doc-attr.
   
-  
+
   
   { str/tdat-val.i
      p-doc-code
@@ -1448,6 +1526,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             assign
               f-date-pour = date(buf_doc-attr.attr-value).
         end.
+        when {&trdcattr-date-income} then do:
+            assign
+              f-date-income = date(buf_doc-attr.attr-value).
+        end.
         when {&trdcattr-inspection-cert} then do:
             assign
               f-insp-cert = buf_doc-attr.attr-value.
@@ -1455,6 +1537,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         when {&trdcattr-date-cert} then do:
             assign
               f-date-cert = date(buf_doc-attr.attr-value).
+        end.
+        when {&trdcattr-date-pasport} then do:
+            assign
+              f-date-pasport = date(buf_doc-attr.attr-value).
+        end.
+        when {&trdcattr-num-pasport} then do:
+            assign
+              f-num-pasport = buf_doc-attr.attr-value.
         end.
         when {&trdcattr-condition} then do:
             assign
@@ -1537,6 +1627,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-seals-condition-2
       f-insp-cert
       f-date-cert
+      f-num-pasport
+      f-date-pasport
       f-fio
       f-ptbocode
       f-ptbotype
@@ -1547,6 +1639,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-hour-pour
       f-min-pour
       f-date-pour
+      f-date-income
       f-hour-pour
       f-min-pour
       b-save
@@ -1613,6 +1706,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-seals-condition-2
       f-insp-cert
       f-date-cert
+      f-num-pasport
+      f-date-pasport
       f-fio
       f-ptbocode
       f-ptbotype
@@ -1621,6 +1716,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-min-income
       f-item-pour
       f-date-pour
+      f-date-income
       f-hour-pour
       f-min-pour
       b-save
@@ -1648,7 +1744,7 @@ find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code .
         for each thbjattr_thbj-attr :
             if thbjattr_thbj-attr.prop-code = 'dop-info' then v-dop-info =  thbjattr_thbj-attr.property-value-character .
         end.
-  
+
       for each tt-upd-attr-fuel no-lock where lookup (tt-upd-attr-fuel.code, v-dop-info) > 0:
       case tt-upd-attr-fuel.code:
         when {&trdcattr-ptbobj} then do:
@@ -1705,6 +1801,12 @@ find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code .
               f-date-pour-1:fgcolor = 12
               .
         end.
+        when {&trdcattr-date-income} then do:
+            assign
+              f-date-income:fgcolor = 12
+              f-date-income-2:fgcolor = 12
+              .
+        end.
         when {&trdcattr-inspection-cert} then do:
             assign
               f-insp-cert:fgcolor = 12
@@ -1717,6 +1819,18 @@ find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code .
               f-insp-2:fgcolor  = 12
               .
         end.
+        when {&trdcattr-date-pasport} then do:
+            assign
+              f-date-pasport:fgcolor = 12
+              f-pasport-num:fgcolor  = 12
+              .
+        end.
+        when {&trdcattr-num-pasport} then do:
+            assign
+              f-num-pasport:fgcolor = 12
+              f-pasport:fgcolor  = 12
+              .
+        end.        
         when {&trdcattr-condition} then do:
             assign
               f-condition:fgcolor = 12
@@ -1838,19 +1952,21 @@ PROCEDURE enable_UI :
   DISPLAY f-autoent f-autoent-obj-code f-autoent-obj-type f-autoent-obj-name 
           f-car f-car-num f-condition-name f-condition f-seals-1 
           f-seals-condition f-insp f-insp-cert f-seals-2 f-seals-condition-2 
-          f-insp-2 f-date-cert f-fio-name f-fio f-ptbocode-1 f-ptbocode 
-          f-ptbotype f-ptboname f-date-pour-1 f-date-pour f-hour-pour-2 
-          f-hour-pour f-min-pour f-hour-income-2 f-hour-income f-min-income 
-          f-item-pour-2 f-item-pour f-acc-ship-2 f-acc-ship f-doc b-doc 
-          f-item-doc f-date-start f-date-end f-hour-start f-min-start f-hour-end 
-          f-min-end 
+          f-insp-2 f-date-cert f-pasport f-num-pasport f-pasport-num 
+          f-date-pasport f-fio-name f-fio f-ptbocode-1 f-ptbocode f-ptbotype 
+          f-ptboname f-date-pour-1 f-date-pour f-hour-pour-2 f-hour-pour 
+          f-min-pour f-date-income-2 f-date-income f-hour-income-2 f-hour-income 
+          f-min-income f-item-pour-2 f-item-pour f-acc-ship-2 f-acc-ship f-doc 
+          b-doc t-clear f-item-doc f-date-start f-date-end f-hour-start 
+          f-min-start f-hour-end f-min-end 
       WITH FRAME Dialog-Frame.
   ENABLE b-save b-quit b-help f-autoent-obj-code f-autoent-obj-type b-clients 
          f-car-num b-auto-tank f-condition f-seals-condition f-insp-cert 
-         f-seals-condition-2 f-date-cert f-fio f-ptbocode f-ptbotype b-ptb 
-         f-date-pour f-hour-pour f-min-pour f-hour-income f-min-income 
-         f-item-pour f-acc-ship b-doc f-date-start f-date-end f-hour-start 
-         f-min-start f-hour-end f-min-end t-clear
+         f-seals-condition-2 f-date-cert f-num-pasport f-date-pasport f-fio 
+         f-ptbocode f-ptbotype b-ptb f-date-pour f-hour-pour f-min-pour 
+         f-date-income f-hour-income f-min-income f-item-pour f-acc-ship b-doc 
+         t-clear f-date-start f-date-end f-hour-start f-min-start f-hour-end 
+         f-min-end 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1870,6 +1986,7 @@ PROCEDURE save-attr :
   define buffer buf_doc-attr for ub.doc-attr.
   
   do transaction:
+    _LABEL_FOR:
     for each tt-upd-attr-fuel no-lock:
       assign 
         v-attr-value = ? .
@@ -1893,6 +2010,10 @@ PROCEDURE save-attr :
         when {&trdcattr-fio-driver} then do:
             assign
               v-attr-value = f-fio when f-fio <> "".
+        end.
+        when {&trdcattr-date-income} then do:
+            assign
+              v-attr-value = string(f-date-income) when string(f-date-income) <> "".
         end.
         when {&trdcattr-time-income} then do:
             assign
@@ -1921,6 +2042,14 @@ PROCEDURE save-attr :
         when {&trdcattr-date-cert} then do:
             assign
               v-attr-value = string(f-date-cert) when string(f-date-cert) <> "".
+        end.
+        when {&trdcattr-date-pasport} then do:
+            assign
+              v-attr-value = string(f-date-pasport) when string(f-date-pasport) <> "".
+        end.
+        when {&trdcattr-num-pasport} then do:
+            assign
+              v-attr-value = string(f-num-pasport) when string(f-num-pasport) <> "".
         end.
         when {&trdcattr-condition} then do:
             assign
@@ -1963,6 +2092,8 @@ PROCEDURE save-attr :
         end.
 /*          infoSectionTotal:GetInfoSectionProp(v-page-current):TimeStart = f-hour-start * 3600 + f-min-start * 60*/
 /*        infoSectionTotal:GetInfoSectionProp(v-page-current):TimeEnd = f-hour-end   * 3600 + f-min-end   * 60*/
+        otherwise
+          next _LABEL_FOR.            
       end case.
       
       find first buf_doc-attr

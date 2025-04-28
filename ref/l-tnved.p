@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e374adcb297c, 1109, rls $
+$Author: PGridchina $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: l-tnved.p $
+$Archive: ref/l-tnved.p $
 
 Загрузка справочника ТНВЭД
 
@@ -19,11 +20,11 @@ create: Суслов Алексей Юрьевич
 
 define input parameter f-name as char no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e374adcb297c, 1109, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: l-tnved.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/l-tnved.p $":U .
 define variable vss-description as character no-undo init "Загрузка справочника ТНВЭД".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

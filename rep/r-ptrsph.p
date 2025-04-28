@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c7170b2137c1, 2069, rls $
+$Author: EShklyar $
+$Date: Fri Oct 18 13:05:47 2019 +0300 $
+$Workfile: r-ptrsph.p $
+$Archive: rep/r-ptrsph.p $
 
 Почасовая статистика продаж ТРК с детализацией по пистолетам
 
@@ -19,11 +20,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-obj-type    as character     no-undo .
 define input parameter p-obj-code    as integer       no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: c7170b2137c1, 2069, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Fri Oct 18 13:05:47 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-ptrsph.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-ptrsph.p $":U .
 define variable vss-description as character no-undo initial "Почасовая статистика продаж ТРК с детализацией по пистолетам":U .
 
 

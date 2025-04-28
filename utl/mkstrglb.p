@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6cc672b19ae2, 2597, rls $
+$Author: DRuban $
+$Date: Ср сен 23 11:55:30 2020 +0300 $
+$Workfile: mkstrglb.p $
+$Archive: utl/mkstrglb.p $
 
 Создание файла препроцессингов для системы
 
@@ -16,11 +16,11 @@ Creation date: 10/18/05
 */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 6cc672b19ae2, 2597, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Ср сен 23 11:55:30 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: mkstrglb.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/mkstrglb.p $":U .
 define variable vss-description as character no-undo init "Создание файла препроцессингов для системы".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }

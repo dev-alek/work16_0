@@ -11,6 +11,7 @@
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
 using Ibs.Th.Gbl.ProgressBar.
+block-level on error undo, throw.
 
 class ibs.th.bge.egais.admutm inherits EGAISUTM:
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: fix-sldc.p $
+$Archive: utl/fix-sldc.p $
 
 Корректировка расхождения между полученными trn-doc/inkas и командой на расчет ДК по этим документам
 
@@ -18,11 +19,11 @@ Creation date: 06/01/09
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-read-only as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fix-sldc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/fix-sldc.p $":U .
 define variable vss-description as character no-undo init "Корректировка расхождения между полученными trn-doc/inkas и командой на расчет ДК по этим документам".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

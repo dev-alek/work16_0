@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f64b9a795962, 1118, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: cur-time.cls $
+$Archive: ibs/th/gbl/cur-time.cls $
 
 
 
@@ -16,6 +16,7 @@ Creation date: 01/30/15
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.cur-time: 

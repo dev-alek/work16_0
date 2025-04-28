@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -114,6 +115,7 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
      else if    new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB
              or new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Receipt:KeyIntDB
              or new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:LK_RECEIPT:KeyIntDB
+             or new-{&main-tbl}.EDocType = objSrv:Env:Utd:EDocType:Mark_Collect:KeyIntDB
          
      then
         new-{&main-tbl}.sts-edi eq  utdEDISts:RecipientResponseStatusNotAccep:KeyIntDB.
@@ -344,28 +346,74 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        and new-{&main-tbl}.sts      ne old-utd.sts
        and new-{&main-tbl}.EDocType ne objSrv:Env:Utd:EDocType:returns:KeyIntDB
     then do:
-       run bge\send1cerp.p (?,
-                    this-procedure,
-                    this-procedure,
-                    "edi-doc",
-                    (buffer old-{&main-tbl}:handle),
-                    (buffer new-{&main-tbl}:handle),
-                    ?) no-error.
-       if error-status:error 
-       then do:
-          message return-value view-as alert-box.
-       end.
-       for each utd-marking-lines where utd-marking-lines.db-num eq new-{&main-tbl}.db-num
-                                    and utd-marking-lines.doc-id eq new-{&main-tbl}.doc-id
-                                    and utd-marking-lines.doc-level eq 1
-       no-lock:
-          find first marking where marking.mark eq utd-marking-lines.mark
-          no-lock no-error.
-          if     available marking
-             and marking.sts eq objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB 
-          then
-             run sendmark(marking.mark).
-       end.
+       if new-{&main-tbl}.EDocType eq objSrv:Env:Utd:EDocType:Mark_Collect:KeyIntDB
+       then do :
+          find first utd-attr no-lock where utd-attr.db-num = new-{&main-tbl}.db-num
+                                        and utd-attr.doc-id = new-{&main-tbl}.doc-id
+                                        and utd-attr.attr-code = "is-initial-set"
+                                        no-error .
+          if available utd-attr
+          and logical(utd-attr.attr-value)
+          then do :
+             run bge\send1cerp.p (?,
+                        this-procedure,
+                        this-procedure,
+                        "edi-doc",
+                        (buffer old-{&main-tbl}:handle),
+                        (buffer new-{&main-tbl}:handle),
+                        ?) no-error.
+             if error-status:error 
+             then do:
+                message return-value view-as alert-box.
+             end.
+          end .
+          else do :
+             find first utd-marking-lines no-lock where utd-marking-lines.db-num  = new-{&main-tbl}.db-num
+                                                    and utd-marking-lines.doc-id  = new-{&main-tbl}.doc-id
+                                                    and utd-marking-lines.doc-level = 1 
+                                                    and (utd-marking-lines.sts = 0
+                                                      or utd-marking-lines.site = "only-send")
+                                                    no-error .
+             if available utd-marking-lines
+             then do :
+                run bge\send1cerp.p (?,
+                            this-procedure,
+                            this-procedure,
+                            "edi-doc",
+                            (buffer old-{&main-tbl}:handle),
+                            (buffer new-{&main-tbl}:handle),
+                            ?) no-error.
+                if error-status:error 
+                then do:
+                   message return-value view-as alert-box.
+                end.
+             end .
+          end .
+       end . /* Mark_Collect */
+       else do :
+         run bge\send1cerp.p (?,
+                      this-procedure,
+                      this-procedure,
+                      "edi-doc",
+                      (buffer old-{&main-tbl}:handle),
+                      (buffer new-{&main-tbl}:handle),
+                      ?) no-error.
+         if error-status:error 
+         then do:
+            message return-value view-as alert-box.
+         end.
+         for each utd-marking-lines where utd-marking-lines.db-num eq new-{&main-tbl}.db-num
+                                      and utd-marking-lines.doc-id eq new-{&main-tbl}.doc-id
+                                      and utd-marking-lines.doc-level eq 1
+         no-lock:
+            find first marking where marking.mark eq utd-marking-lines.mark
+            no-lock no-error.
+            if     available marking
+               and marking.sts eq objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB 
+            then
+               run sendmark(marking.mark).
+         end.
+       end .  
     end.
     if g#db-num = 0 and 
       (

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: gray-zone.p $
+$Archive: utl/gray-zone.p $
 
 Утилита для создания Серой зоны
 Автор: Шкляр Елена
@@ -17,11 +18,11 @@ Creation date: 07/23/08
 */
 using ibs.th.str.marking.sts.*.
 
-define variable vss-revision as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision as character no-undo init "$Revision: f29df1d5f130, 3104, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 09 09:15:01 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gray-zone.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/gray-zone.p $":U .
 define variable vss-description as character no-undo init "Утилита для создания Серой зоны".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

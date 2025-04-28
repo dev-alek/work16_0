@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c40b85de8d6c, 956, rls $
+$Author: SSlivenko $
+$Date: Thu Feb 16 15:19:57 2017 +0300 $
+$Workfile: AdapterWebSrv-TrnDoc.cls $
+$Archive: ibs/th/skt/Adapters/AdapterWebSrv-TrnDoc.cls $
 
 
 
@@ -17,6 +17,7 @@ Creation date: 01/30/15
 
 using Progress.Lang.*.
 using ibs.th.skt.Adapters.*. 
+block-level on error undo, throw.
 
 
 class ibs.th.skt.Adapters.AdapterWebSrv-TrnDoc implements IAdapter: 

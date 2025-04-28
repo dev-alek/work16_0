@@ -149,7 +149,7 @@ MarkType = ObjSrv:Env:Marking:Types.
  
 define variable mImp2CdH as handle no-undo.
 run str/imp2cdgeth.p(output mImp2CdH).
-
+define variable s-gds-code as integer no-undo init 0 .
 define variable lns-cnt as integer no-undo .
 define variable line-rec as recid no-undo .
 /* ********************  Preprocessor Definitions  ******************** */
@@ -412,10 +412,10 @@ end.
       undo, return error v-err-mess .
   end.
   if v-nbc = 0 or v-nbc = ? then v-nbc = v-gds-code .
-  if p-GdsObj:fuel-type eq "" or p-GdsObj:fuel-type eq ? or p-GdsObj:fuel-type eq "0"
+  if p-GdsObj:fuel-type eq ? or p-GdsObj:fuel-type =  0
   then v-fuel-type = ? .
   else do:
-     v-fuel-type = entry(int(p-GdsObj:fuel-type),{&prop-list-attr-fuel-type}) no-error.
+     v-fuel-type = entry(p-GdsObj:fuel-type,{&prop-list-attr-fuel-type}) no-error.
      if error-status :error then do:
      v-err-mess = substitute("Ошибка при сохранении goods &1&2 Неизвестный тип топлива &3"
                                 , p-GdsObj:code_
@@ -480,8 +480,20 @@ end.
     then
        undo, return error
                 (merror-code + " Товар " + p-GdsObj:code_) .
+
+    find first ub.goods-attr no-lock where ub.goods-attr.gds-code  = v-gds-code 
+                             and ub.goods-attr.attr-code = "emrc-type"
+                             and ub.goods-attr.attr-value = mEMRC no-error.
+    if not available ub.goods-attr then s-gds-code = v-gds-code.
+
     RUN gds-attr-write (v-nbc, {&attr-emrc-type}, mEMRC).  
+
+    find first ub.goods no-lock where ub.goods.gds-code = s-gds-code no-error.
+	  if available ub.goods then do:  
+	     run fill-g-list in mImp2CdH ( input ub.goods.gds-code, input ?, input ?).
+          end.
   end.
+
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-emrc-type}, output v-attr-del).     
   end.
@@ -559,6 +571,17 @@ end.
         v-barcode = cast (v-barcodes:SubjectObjCurr, goods_barcode).
 
 
+         find first buf_units no-lock where buf_units.unit-name = v-barcode:unit-code no-error.
+         if not available buf_units
+         then do :
+         undo, return error ("Нет единицы измерения " + v-barcode:unit-code) .
+         end.
+
+         if lookup( {&petrolium}, buf_units.type ) > 0 and length(v-barcode:bcode) > 2 then do:
+         undo, return error substitute( 'Для топливной ед. измерения невозможно создать баркод  &1 .', v-barcode:bcode ).
+         end.
+
+
          if length (v-barcode:bcode) <= 2
          then do :
               next ii_ .
@@ -568,12 +591,12 @@ end.
             end.  
         v-barcode-list = v-barcode-list + v-barcode:bcode + "," .
         v-bc-mode = "".
+
         find first ub.prod-bc exclusive-lock where ub.prod-bc.b-str = v-barcode:bcode no-error.
 
         if not available ub.prod-bc
         then do :
-
-      
+     
             v-bc-mode = {&add-def} .
         end.
         else do :
@@ -596,7 +619,7 @@ end.
               ttKF.bar_code   = ub.bar-code.b-code
               ttKF.unit_code  = v-barcode:unit-code
               ttKF.coef       = v-barcode:coeff
-              .
+              . 
 
                   ub.prod-bc.bc-on = true .
                   ub.prod-bc.bc-on-type = (if p-GdsObj:gds-type = "н" then {&loc-pt-code} else if v-barcode:barcode-type = 1 then {&gtin} else "").
@@ -665,8 +688,14 @@ end.
                                      no-error.
 
             if not available ub.bar-code 
-            then do :                                        
-                run ref/barcode1.p (
+            then do :    
+              CREATE ttKF.
+              ASSIGN 
+              ttKF.bar_code   = v-gds-code
+              ttKF.unit_code  = v-barcode:unit-code
+              ttKF.coef       = v-barcode:coeff
+              . 
+              run ref/barcode1.p (
 
                                      input v-bc-mode 
                                     ,input yes /*p-silent*/
@@ -791,9 +820,7 @@ end.
       end.
   end.
 
-
-
-  
+ 
   for each buf_bar-code no-lock where buf_bar-code.gds-code = v-gds-code,
     each buf_prod-bc exclusive-lock where buf_prod-bc.b-code = buf_bar-code.b-code :
      if lookup( buf_prod-bc.b-str, v-barcode-list ) = 0
@@ -833,14 +860,11 @@ end.
     END.
     END.
 
-/*    if unit-list <> "" then do:
-    message "Ошибка" unit-list  view-as alert-box.
-    end. */
-
-/*    if unit-list <> "" then do:
-          v-err-mess = substitute("Ошибка изменения коэфф у ед.изм. &1", unit-list).
-          undo, return error v-err-mess .     
-    end. */ 
+/*    if unit-list <> "" then do: 
+      v-err-mess = substitute("Ошибка изменения коэфф у ед.изм. &1", unit-list).
+      undo, return error v-err-mess .     
+      end. 
+*/ 
     run str/imp2cdgeth.p(output mImp2CdH).
     FOR EACH ttKF:
     FIND FIRST ub.bar-code exclusive-lock WHERE ub.bar-code.b-code = ttKF.bar_code no-error.
@@ -854,9 +878,6 @@ end.
                END. 
         END.
     END.
-
-
-
 
    EMPTY TEMP-TABLE ttKF.
    EMPTY TEMP-TABLE ttToDel.

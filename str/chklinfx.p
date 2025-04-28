@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: chklinfx.p $
+$Archive: str/chklinfx.p $
 
 Заполнение номеров товарных строк и строк оплат по чеку, созданному в версиях TH < 11.1
 
@@ -21,11 +22,11 @@ define input parameter p-chk-doc-code  like ub.chk-doc.doc-code no-undo .
 define input parameter p-with-question as logical no-undo .
 define output parameter p-ok as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chklinfx.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/chklinfx.p $":U .
 define variable vss-description as character no-undo init "Заполнение номеров товарных строк и строк оплат по чеку, созданному в версиях TH < 11.1".
 { cmp/vssrevis.i "substitute('&1', (if avail buf_chk-doc then buf_chk-doc.doc-code else p-chk-doc-code))" }
 

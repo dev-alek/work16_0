@@ -29,8 +29,8 @@ class ibs.th.bge.xmlimpexp final:
    define variable vss-workfile    as character no-undo init "$Workfile:$":U .
    define variable vss-archive     as character no-undo init "$Archive:$":U .
    define variable vss-description as character no-undo init "".
-   {cmp\str-glbl.i class }  
-   {GBL\xmldom.i class }
+   {cmp/str-glbl.i class }  
+   {GBL/xmldom.i class }
    define variable objKeyRec as ibs.th.gbl.keyrec no-undo.
    define variable iAll as logical no-undo.
    define variable iDopInfo as logical no-undo.
@@ -80,7 +80,7 @@ class ibs.th.bge.xmlimpexp final:
 
 &glob prefix-table "table-"
 &glob record-table "record-"
-   method public void updatetableforxml(ihquery as handle):
+   method public void updatetableforxml(ihandle as handle):
       define variable vBuffer as handle no-undo.
       define variable hField  as handle no-undo.
       define variable VTableName as character no-undo.
@@ -131,10 +131,28 @@ class ibs.th.bge.xmlimpexp final:
          .
       end.
       end.
-      ihquery:get-first().
-      vBuffer = ihquery:get-buffer-handle ().
-      VTAbleName = vBuffer:table.
-      if not ihquery:query-off-end 
+      define variable vHQry as handle no-undo.
+      if ihandle:type eq "temp-table"
+      then do:
+         vBuffer = ihandle:default-buffer-handle.
+         create query  vHQry.
+         vhQry:set-buffers (vBuffer).
+   
+         vHQry:query-prepare ("FOR EACH " + vBuffer:name + "  NO-LOCK").
+         vHQry:query-open ().
+         vHQry:get-first().
+         VTAbleName = vBuffer:serialize-name.
+      end.
+      else if ihandle:type eq "query" 
+      then do:
+         vHQry = ihandle.   
+         vHQry:get-first().
+         vBuffer = ihandle:get-buffer-handle ().
+         VTAbleName = vBuffer:table.
+      end.
+      else
+         return error "Данный тип handle не поддерживается поддерживается только temp-table и query".
+      if not vHQry:query-off-end 
       then do:
          vNodeName = {&prefix-table} + VTAbleName.
          find first buf_XML-node
@@ -164,7 +182,7 @@ class ibs.th.bge.xmlimpexp final:
          vNodeName = {&record-table} + VTAbleName.
       end.
        
-      do while not ihquery:query-off-end:
+      do while not vHQry:query-off-end:
          assign
             v-xmldom-key = v-xmldom-key + 1
          .
@@ -200,9 +218,9 @@ class ibs.th.bge.xmlimpexp final:
             .
          end.
          
-         ihquery:get-next().
+         vHQry:get-next().
       end.
-      ihquery:query-close().
+      vHQry:query-close().
       repspecTableforXml(yes).
       
       /*delete object ihquery.*/

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: currency.cls $
+$Archive: ibs/th/bge/1crn/subjects/currency.cls $
 
 Структура данных currency в 1С
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 USING Progress.Lang.*.
+block-level on error undo, throw.
 
 CLASS ibs.th.bge.1crn.subjects.currency inherits ibs.th.bge.1crn.subjects.asubject: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -85,12 +86,12 @@ CLASS ibs.th.bge.1crn.subjects.currency inherits ibs.th.bge.1crn.subjects.asubje
       v-str = "code" when code_ = ?
       v-str = v-str + ",name" when name_ = ?
       v-str = v-str + ",sym-name" when sym-name = ?
-      v-str = v-str + ",name-in-words-1" when name-in-words-1 = ?
+      /*v-str = v-str + ",name-in-words-1" when name-in-words-1 = ?
       v-str = v-str + ",name-in-words-2" when name-in-words-2 = ?
       v-str = v-str + ",name-in-words-3" when name-in-words-3 = ?
       v-str = v-str + ",name-in-words-4" when name-in-words-4 = ?
       v-str = v-str + ",name-in-words-5" when name-in-words-5 = ?
-      v-str = v-str + ",name-in-words-6" when name-in-words-6 = ?
+      v-str = v-str + ",name-in-words-6" when name-in-words-6 = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''

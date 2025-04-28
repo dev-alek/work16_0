@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: wthat-v.p $
+$Archive: gbl/wthat-v.p $
 
 Считать значение атрибута документа МЦ
 
@@ -23,11 +24,11 @@ define input  parameter p-code     like ub.wth-doc-attr.attr-code  no-undo .
 define output parameter p-value    like ub.wth-doc-attr.attr-value no-undo .
 define output parameter p-type     as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: wthat-v.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/wthat-v.p $":U .
 define variable vss-description as character no-undo init "Считать значение атрибута документа МЦ".
 { cmp/vssrevis.i "substitute('&1|&2|&3',p-doc-code,p-code)" }
 { cmp/str-glbl.i    }

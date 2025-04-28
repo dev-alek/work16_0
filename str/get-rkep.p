@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9263cff4388a, 1753, rls $
+$Author: SMMolotkov $
+$Date: Thu Feb 07 16:50:10 2019 +0300 $
+$Workfile: get-rkep.p $
+$Archive: str/get-rkep.p $
 
 Программа приема чеков с касс R-keeper
 
@@ -28,11 +29,11 @@ define input parameter p-table as character no-undo .
 define input parameter p-file-num  as integer no-undo .
 define input-output parameter p-view-log as logical no-undo .
 
-DEFINE VARIABLE vss-revision    as character no-undo init "$Revision$":u .
-DEFINE VARIABLE vss-author      as character no-undo init "$Author$":u .
-DEFINE VARIABLE vss-date        as character no-undo init "$Date$":u .
-DEFINE VARIABLE vss-workfile    as character no-undo init "$Workfile$":u .
-DEFINE VARIABLE vss-archive     as character no-undo init "$Archive$":u .
+DEFINE VARIABLE vss-revision    as character no-undo init "$Revision: 9263cff4388a, 1753, rls $":u .
+DEFINE VARIABLE vss-author      as character no-undo init "$Author: SMMolotkov $":u .
+DEFINE VARIABLE vss-date        as character no-undo init "$Date: Thu Feb 07 16:50:10 2019 +0300 $":u .
+DEFINE VARIABLE vss-workfile    as character no-undo init "$Workfile: get-rkep.p $":u .
+DEFINE VARIABLE vss-archive     as character no-undo init "$Archive: str/get-rkep.p $":u .
 DEFINE VARIABLE vss-description as character no-undo init "Программа приема чеков с касс R-keeper" .
 { cmp/vssrevis.i }
 

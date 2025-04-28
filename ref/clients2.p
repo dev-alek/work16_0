@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7d2fe421d6dd, 1113, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: clients2.p $
+$Archive: ref/clients2.p $
 
 Изменение статуса клиента
 
@@ -32,11 +33,11 @@ define input parameter p-source-type as character no-undo .
 define input parameter p-source-ref as character no-undo .
 /*можно удалять и объекты TH*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7d2fe421d6dd, 1113, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: clients2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/clients2.p $":U .
 define variable vss-description as character no-undo init "Изменение статуса клиента".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

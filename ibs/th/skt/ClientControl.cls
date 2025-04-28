@@ -18,6 +18,7 @@ Creation date: 01/30/15
 using Progress.Lang.*.
 using ibs.th.skt.Commands.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.ClientControl: 
 
@@ -54,7 +55,7 @@ class ibs.th.skt.ClientControl:
     if not available (ttCommands) then 
     do:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
-      return error.
+      return true.
     end.
     do transaction:
        cast(ttCommands.objCommand, ibs.th.skt.Commands.ICommand):Execute_(req, resp)no-error.
@@ -91,7 +92,7 @@ class ibs.th.skt.ClientControl:
     if not available (ttCommands) then 
     do:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
-      return error .
+      return true .
     end.
     do transaction:
        cast(ttCommands.objCommand, ibs.th.skt.Commands.TSDCommand):Execute_(req, resp, lpar) no-error.

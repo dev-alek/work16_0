@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bbf1530230d5, 2753, rls $
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
+$Workfile: prtdcxls.p $
+$Archive: str/prtdcxls.p $
 
 Печать информации по признакам в формате EXCEL
 
@@ -26,11 +27,11 @@ define input  parameter p-sort-value     as character no-undo .
 define input  parameter p-filter-label   as character no-undo .
 define input  parameter p-filter-value   as character no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: bbf1530230d5, 2753, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Сб фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: prtdcxls.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/prtdcxls.p $":U .
 define variable vss-description as character no-undo initial "Печать информации по признакам в формате EXCEL".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }

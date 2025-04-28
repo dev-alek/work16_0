@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c96af91888ad, 3081, rls $
+$Author: SSlivenko $
+$Date: Пт авг 05 19:16:26 2022 +0300 $
+$Workfile: vsdtostorage.cls $
+$Archive: ibs/th/gbl/storage/vsdtostorage.cls $
 
 ВСД
 Модуль взаимодействия сущностей TH с базой данных
@@ -23,7 +23,7 @@ using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 using ibs.th.str.clients.*.
-
+block-level on error undo, throw.
 
 class ibs.th.gbl.storage.vsdtostorage: 
   

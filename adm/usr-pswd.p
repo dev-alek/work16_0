@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3c72df46e096, 3170, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:23 $
+$Workfile: usr-pswd.p $
+$Archive: adm/usr-pswd.p $
 
 Изменить пароль для текущего пользовател
 
@@ -21,11 +22,11 @@ Creation date: 05/08/07
 
 define input  parameter parParentProc  as widget-handle no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 3c72df46e096, 3170, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:23 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: usr-pswd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/usr-pswd.p $":U .
 define variable vss-description as character no-undo init "Изменить пароль для текущего пользователя".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

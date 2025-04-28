@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d862744f2b63, 1905, rls $
+$Author: EShklyar $
+$Date: Fri Jun 07 16:26:46 2019 +0300 $
+$Workfile: r-torg29.p $
+$Archive: rep/r-torg29.p $
 
 ‘ÓÏ‡ “Œ–√-29
 
@@ -15,12 +15,12 @@ Creation date: 10/17/07
 
 */
 using Ibs.Th.Gbl.ProgressBar.
-
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+block-level on error undo, throw.
+define variable vss-revision    as character no-undo init "$Revision: d862744f2b63, 1905, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jun 07 16:26:46 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-torg29.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-torg29.p $":U .
 define variable vss-description as character no-undo init "‘ÓÏ‡ “Œ–√-29".
 { cmp/vssrevis.i     }
 { cmp/str-glbl.i     }

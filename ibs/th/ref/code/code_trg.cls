@@ -126,6 +126,9 @@ class ibs.th.ref.code.code_trg final:
      saveChekErpRN().
      chek-erpRN = arg.
   end.
+  define property isVisibleStatus as logical no-undo init true
+  get.
+  set.
   
   method  public void saveChekErpRN ():
      if not isForm  then return.
@@ -477,6 +480,14 @@ class ibs.th.ref.code.code_trg final:
              formLable(1, 5, "НДС в ПЦ").
              formLable(1, 6, "ЕИ в ПЦ").
              MaxLevel = MaxLevel + 1.
+          end.
+          else if icode eq "FuelCodeInfo"
+          then do:
+             formLable(1, 1, "Код АСУ АЗК").
+             formLable(1, 3, "Эталонный код").
+             MaxLevel = MaxLevel + 1.
+             chek-erpRN = yes.
+             isVisibleStatus = false.
           end.
        end.
     end.

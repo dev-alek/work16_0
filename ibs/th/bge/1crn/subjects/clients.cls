@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: clients.cls $
+$Archive: ibs/th/bge/1crn/subjects/clients.cls $
 
 Структура данных clients (контрагенты) из 1С
 
@@ -20,6 +20,7 @@ using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.clients from propath.
 using ibs.th.bge.1crn.subjects.clients_suppliers from propath.
 using ibs.th.bge.1crn.subjects.clients_carriers from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -182,12 +183,12 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
       when code_ = ?
       v-str = v-str + ",name" 
       when name_ = ?
-      v-str = v-str + ",full-name" 
+/*      v-str = v-str + ",full-name" 
       when full-name = ?
-      v-str = v-str + ",inn" 
+       v-str = v-str + ",inn" 
       when inn = ?
       v-str = v-str + ",kpp" 
-      when kpp = ?
+      when kpp = ? */
       .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(

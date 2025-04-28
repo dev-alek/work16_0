@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7502ab9e34da, 2658, rls $
+$Author: SSlivenko $
+$Date: Пн ноя 02 16:18:16 2020 +0300 $
+$Workfile: fill-pl-attr.p $
+$Archive: utl/fill-pl-attr.p $
 
 утилита  Привязка партий и складских документов к договору поставщика на удаленке
 
@@ -16,11 +17,11 @@ Creation date: 03/27/06
 */
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 7502ab9e34da, 2658, rls $":u .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":u .
+define variable vss-date        as character no-undo init "$Date: Пн ноя 02 16:18:16 2020 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: fill-pl-attr.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: utl/fill-pl-attr.p $":u .
 define variable vss-description as character no-undo init "утилита установки атрибута резервуара на удаленке" .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }

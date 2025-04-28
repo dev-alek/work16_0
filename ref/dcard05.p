@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: dcard05.p $
+$Archive: ref/dcard05.p $
 
 Определение полного номера карты по первой подходящей маске для данной карты
 
@@ -26,11 +27,11 @@ define input parameter p-issue-code             like ub.dis-card.issue-code no-u
 define output parameter p-cli-mask              like ub.dis-card-mask.cli-mask no-undo .
 define output parameter p-full-number           like ub.dis-card.d-card no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: dcard05.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/dcard05.p $":U .
 define variable vss-description as character no-undo init "Определение полного номера карты по первой подходящей маске для данной карты".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4':u,p-d-card,p-type,p-emitent-host-code,p-issue-code)" }
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aa3cb396dbbb, 2685, rls $
+$Author: EShklyar $
+$Date: ѕт дек 18 18:16:04 2020 +0300 $
+$Workfile: send-petrol.p $
+$Archive: str/send-petrol.p $
 
 ќтсылка данных по соответствию товаров/кошельков
 
@@ -32,11 +33,11 @@ DEFINE INPUT PARAMETER rid-list as char no-undo.
 define input parameter p-log-file-name as character no-undo .
 define input-output parameter p-view-log as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aa3cb396dbbb, 2685, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: ѕт дек 18 18:16:04 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: send-petrol.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/send-petrol.p $":U .
 define variable vss-description as character no-undo init "ќтсылка данных по соответствию товаров/кошельков".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

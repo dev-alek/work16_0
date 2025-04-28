@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 &scoped-define main-tbl xgroupobj
 trigger procedure for delete of ub.{&main-tbl}.
 define buffer buf-GroupObj for xGroupObj.

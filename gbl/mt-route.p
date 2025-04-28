@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: mt-route.p $
+$Archive: gbl/mt-route.p $
 
 Маршрутизатор сообщений радиотерминала
 
@@ -42,12 +42,12 @@ Creation date: 07/24/08
 
 */
 using Ibs.Th.Gbl.XmlFilder.
-
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+block-level on error undo, throw.
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: mt-route.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/mt-route.p $":U .
 define variable vss-description as character no-undo init "Маршрутизатор сообщений радиотерминала ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

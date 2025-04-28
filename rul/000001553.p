@@ -51,7 +51,7 @@ Creation date: 10/08/06
 /*---------------------------&start-using-class&-------------------------------*/
 using Ibs.Th.Rul.Dis-card_.
 using Ibs.Th.Rul.Next-discount_.
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

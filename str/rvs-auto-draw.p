@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7b0cc5f31b3c, 1617, rls $
+$Author: SSlivenko $
+$Date: Tue Nov 06 04:41:38 2018 +0300 $
+$Workfile: rvs-auto-draw.p $
+$Archive: str/rvs-auto-draw.p $
 
 Автоматическое создание контрольной сверки
 АВТОМАТИЧЕСКИЙ ОПРОС ТРК ОТКЛЮЧЕН, ТАК КАК КОЛОНКИ ВСТАЮТ ЕСЛИ ОПРОС ИДЕТ ВО ВРЕМЯ НАЛИВА
@@ -21,11 +22,11 @@ Creation date: 11/29/06
 
 define input  parameter iUtil as class ibs.th.utl.method-for-draw-utility no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: 7b0cc5f31b3c, 1617, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U.
+define variable vss-date        as character no-undo initial "$Date: Tue Nov 06 04:41:38 2018 +0300 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: rvs-auto-draw.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: str/rvs-auto-draw.p $":U.
 define variable vss-description as character no-undo initial "Автоматическое создание контрольной сверки":U.
 
 { cmp/vssrevis.i }

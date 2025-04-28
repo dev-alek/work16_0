@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f5e72f13272f, 2363, rls $
+$Author: druban $
+$Date: 2020/06/10 18:13:42 $
+$Workfile: goods01.p $
+$Archive: ref/goods01.p $
 
 Проверка и создание goods
 
@@ -86,11 +87,11 @@ define input parameter par-BarDis as integer no-undo . /*главный код товара бере
 define input-output parameter par-rec as recid no-undo .
 define output parameter par-nbc like ub.bar-code.b-code no-undo . /*gds-code*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f5e72f13272f, 2363, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: 2020/06/10 18:13:42 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: goods01.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/goods01.p $":U .
 define variable vss-description as character no-undo init "Проверка и создание goods".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

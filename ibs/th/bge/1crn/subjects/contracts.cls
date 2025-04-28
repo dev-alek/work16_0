@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: contracts.cls $
+$Archive: ibs/th/bge/1crn/subjects/contracts.cls $
 
 Структура данных contracts в 1С
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubject:
@@ -133,24 +134,24 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
     assign
       v-str = "code" 
       when code_ = ?
-      v-str = v-str + ",status" 
-      when status_ = ?
+      /*v-str = v-str + ",status" 
+      when status_ = ?*/
       v-str = v-str + ",org-code" 
       when org-code = ?
       v-str = v-str + ",contr-code" 
       when contr-code = ?
-      v-str = v-str + ",date-srt" 
+      /*v-str = v-str + ",date-srt" 
       when date-srt = ?
       v-str = v-str + ",date-end" 
       when date-end = ?
       v-str = v-str + ",number" 
-      when number = ?
+      when number = ?*/
       v-str = v-str + ",date" 
       when date_ = ?
-      v-str = v-str + ",code-SCVD" 
-      when code-SCVD = ?
-      v-str = v-str + ",edi" 
-      when edi_ = ?
+      /* v-str = v-str + ",code-SCVD" 
+      when code-SCVD = ?  */
+      /*v-str = v-str + ",edi" 
+      when edi_ = ?*/
       .
     v-str = trim (v-str, ",").
     if v-str > ''

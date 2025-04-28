@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5c3607367a23, 584, rls $
+$Author: SShalanin $
+$Date: Mon Apr 11 17:28:29 2016 +0400 $
+$Workfile: lock-dc.p $
+$Archive: str/lock-dc.p $
 
 Блокировка ДК участвующих в продаже или накладной
 
@@ -30,11 +31,11 @@ define output parameter p-num-dc          as integer no-undo .
 
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 5c3607367a23, 584, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Apr 11 17:28:29 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: lock-dc.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/lock-dc.p $":U .
 define variable vss-description as character no-undo initial "Блокировка товаров по документу":U .
 
 { cmp/vssrevis.i "substitute('&1|&2',p-doc-code,p-is-news)" }

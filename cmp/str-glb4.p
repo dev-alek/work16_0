@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -529,6 +530,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* Группа товаров на кассе */
 { cmp/cr-prep.i 1 attr-sum-grp-gl              sum-grp-gl               " " sum-grp-gl              }
 
+/* Минимальный запас */
+{ cmp/cr-prep.i 1 attr-min-zapas              min-zapas               " " min-zapas              }
+
 /* Является подконтрольным ФГИС "Меркурий" */
 { cmp/cr-prep.i 1 attr-mercur_FGIS              mercur_FGIS               " " mercur_FGIS              }
 
@@ -625,6 +629,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-time-coock}~
 ,{&bef-attr-mark}~
 ,{&bef-attr-sum-grp-gl}~
+,{&bef-attr-min-zapas}~
 ,{&bef-attr-mercur_FGIS}~
 ,{&bef-attr-perishable}~
 ,{&bef-attr-production-only}~
@@ -691,7 +696,7 @@ attr-group-np
 
 /* типы топлива */
 { cmp/cr-prepc.i 1 prop-list-attr-fuel-type
-"petrol,diesel-sum,diesel-wint,metan,propan,lgas,diesel"
+"petrol,diesel-sum,diesel-wint,metan,propan,lgas,diesel,arctic,megsesson"
 attr-fuel-type
 }
 
@@ -934,6 +939,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 /* Товар оплачивается топливным кошельком смарт карты (IBM-POS) */
 { cmp/cr-prep.i 1 attr-petrol-purse-o         petrol-purse          " " petrol-purse         }
 
+/* Минимальный запас */
+{ cmp/cr-prep.i 1 attr-min-zapas-o            min-zapas             " " min-zapas            }
+
 /* Товар требует авторизации на кассе (IBM-XML) */
 { cmp/cr-prep.i 1 attr-need-auth-o            need-auth             " " need-auth            }
 
@@ -976,6 +984,11 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 /* Сезон ДТ */
 { cmp/cr-prep.i 1 attr-dt-seasons       dt-seasons      " " dt-seasons     }
 
+/* Дата/время изменения Сезон ДТ */
+{ cmp/cr-prep.i 1 attr-change-dt-seasons       change-dt-seasons      " " change-dt-seasons     }
+
+/* Тип сбора марок */
+{ cmp/cr-prep.i 1 attr-mark-collect-type       mark-collect-type      " " mark-collect-type     }
 /* сюда добавлять новые названия атрибутов товаров на объекте */
 
 
@@ -988,6 +1001,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 ,{&bef-attr-increase-pc-o}~
 ,{&bef-attr-round-method-o}~
 ,{&bef-attr-petrol-purse-o}~
+,{&bef-attr-min-zapas-o}~
 ,{&bef-attr-need-auth-o}~
 ,{&bef-attr-proprietor-o}~
 ,{&bef-attr-no-income-goods}~
@@ -1000,6 +1014,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 ,{&bef-attr-normal-wastage-o}~
 ,{&bef-attr-dop-alt-name-o}~
 ,{&bef-attr-dt-seasons}~
+,{&bef-attr-change-dt-seasons}~
+,{&bef-attr-mark-collect-type}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define gdsoattr-list {&gdsoattr-list}" ).
 
@@ -1423,6 +1439,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Ф.И.О. водителя-экспедитора */
 { cmp/cr-prep.i 1 trdcattr-fio-driver "fio-driver" " " "fio-driver" }
 
+/* Дата прибытия на АЗС */
+{ cmp/cr-prep.i 1 trdcattr-date-income "date-income" " " "date-income" }
+
 /* Время прибытия на АЗС */
 { cmp/cr-prep.i 1 trdcattr-time-income "time-income" " " "time-income" }
 
@@ -1443,6 +1462,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 
 /* Свидетельство о проверке */
 { cmp/cr-prep.i 1 trdcattr-date-cert "date-cert" " " "date-cert" }
+
+/* Паспорт качества дата  */
+{ cmp/cr-prep.i 1 trdcattr-date-pasport "date-pasport" " " "date-pasport" }
+
+/* Паспорт качества номер */
+{ cmp/cr-prep.i 1 trdcattr-num-pasport "num-pasport" " " "num-pasport" }
 
 /* Техническое состояние */
 { cmp/cr-prep.i 1 trdcattr-condition "condition" " " "condition" }
@@ -1534,6 +1559,15 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Должность участника комиссии */
 { cmp/cr-prep.i 1 trdcattr-pos-player3 "trdcattr-pos-player3" " " "trdcattr-pos-player3" }
 
+/* Масса слитого СУГ на промежуточных станциях АГЗС */
+{ cmp/cr-prep.i 1 sugtpattr-massa-sug "sugtpattr-massa-sug" " " "sugtpattr-massa-sug" }
+
+/* Технологические потери предыдущих станций */
+{ cmp/cr-prep.i 1 sugtpattr-teh-loss "sugtpattr-teh-loss" " " "sugtpattr-teh-loss" }
+
+/* Допустимые погрешности предыдущих станций */
+{ cmp/cr-prep.i 1 sugtpattr-err-allow "sugtpattr-err-allow" " " "err-allow" }
+
 
 &glob trdcattr-list '~
 {&bef-trdcattr-hold-part-code}~
@@ -1618,6 +1652,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-autoent}~
 ,{&bef-trdcattr-car-num}~
 ,{&bef-trdcattr-fio-driver}~
+,{&bef-trdcattr-date-income}~
 ,{&bef-trdcattr-hour-income}~
 ,{&bef-trdcattr-inspection-cert}~
 ,{&bef-trdcattr-condition}~

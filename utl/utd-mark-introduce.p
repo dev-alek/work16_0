@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : utd-mark-introduce.p
@@ -13,11 +14,11 @@
   ----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-Workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 21edbbf42a72, 2617, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн окт 19 09:22:02 2020 +0300 $":U .
+define variable vss-Workfile    as character no-undo init "$Workfile: utd-mark-introduce.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/utd-mark-introduce.p $":U .
 define variable vss-description as character no-undo init "¬вод в оборот табачных марок (распределение по свободной зоне)" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

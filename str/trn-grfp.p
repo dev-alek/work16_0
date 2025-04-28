@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 498238e333a5, 491, rls $
+$Author: SSlivenko $
+$Date: Sun Feb 28 19:23:10 2016 +0400 $
+$Workfile: trn-grfp.p $
+$Archive: str/trn-grfp.p $
 
 —тандартный граф переходов складских документов по параметрам
 
@@ -37,11 +38,11 @@ define output parameter parstatus         like ub.trn-doc.status_      no-undo. 
 define output parameter parflag           like ub.trn-doc.flag_        no-undo. /*флаг в который документ перейдет*/
 define output parameter parcopystatus     like ub.trn-doc.status_      no-undo. /*статус в который документ будет скопирован*/
 define output parameter parcopyflag       like ub.trn-doc.flag_        no-undo. /*флаг в который документ будет скопирован*/
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 498238e333a5, 491, rls $":U .
+def var vss-author      as character no-undo init "$Author: SSlivenko $":U .
+def var vss-date        as character no-undo init "$Date: Sun Feb 28 19:23:10 2016 +0400 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: trn-grfp.p $":U .
+def var vss-archive     as character no-undo init "$Archive: str/trn-grfp.p $":U .
 def var vss-description as character no-undo init "—тандартный граф переходов складских документов по параметрам".
 { cmp/vssrevis.i "substitute('&1|&2':u,substitute('&1|&2|&3|&4|&5|&6|&7|&8':u,pardoc-type,parext-doc-type,parstatus-current,parflag-current,parinternal,parmode,parcur-db-num,pardoc-db-num),substitute('&1|&2|&3|&4|&5|&6|&7':u,parcur-db-name,pardb-num,pardb-name,parobj-type,parobj-code,paractive,parhold-gen))"}
 { cmp/str-glbl.i }

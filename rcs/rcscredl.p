@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5baf537283c9, 2487, rls $
+$Author: SSlivenko $
+$Date: 2020/06/26 13:47:04 $
+$Workfile: rcscredl.p $
+$Archive: rcs/rcscredl.p $
 
 Импорт RCS: Создание строк приходной накладной
 
@@ -27,11 +28,11 @@ define input parameter p-base-rate          as decimal      no-undo.
 define input parameter p-base-scale         as integer      no-undo.
 define input parameter p-line-num           as integer      no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 5baf537283c9, 2487, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2020/06/26 13:47:04 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rcscredl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rcs/rcscredl.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

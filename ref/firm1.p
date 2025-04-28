@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d47c064bc860, 1107, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: firm1.p $
+$Archive: ref/firm1.p $
 
 —охранение изменений в карточке организации
 
@@ -64,11 +65,11 @@ define input parameter p-turnover-buyer      like ub.clients.turnover-buyer     
 define input parameter p-turnover-buyer-gds  like ub.clients.turnover-buyer-gds   no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d47c064bc860, 1107, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: firm1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/firm1.p $":U .
 define variable vss-description as character no-undo init "—охранение изменений в карточке организации".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

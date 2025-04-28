@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e8ddcb64563b, 3202, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:28 $
+$Workfile: r-schk2.p $
+$Archive: rep/r-schk2.p $
 Отчет по всем возвратным операциям
 Автор: 
 Дата создания: 20/12/2014
@@ -15,11 +16,11 @@ define input parameter parobj-type        like ub.trn-doc.obj-type no-undo. /*об
 define input parameter parobj-code        like ub.trn-doc.obj-code no-undo.
 define input parameter p-tog-with-tot-day as logical            no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: e8ddcb64563b, 3202, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: 2022/12/27 12:54:28 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: r-schk2.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/r-schk2.p $":U .
 def var vss-description as character no-undo init "Отчет по всем возвратным операциям".
 
 { cmp/vssrevis.i    }
@@ -759,7 +760,10 @@ procedure proc-report:
 
       /*тип платежа*/
       opl-chr = ''.
-      for EACH  chk-gds-pay where chk-gds-pay.doc-code = chk-gds.doc-code and chk-gds-pay.b-code = chk-gds.b-code no-lock :
+      for EACH  chk-gds-pay where chk-gds-pay.doc-code = chk-gds.doc-code 
+                           /* and chk-gds-pay.b-code = chk-gds.b-code*/
+                              and chk-gds-pay.line-num = chk-gds.line-num 
+      no-lock :
          /* MESSAGE chk-pay.tot-sum VIEW-AS ALERT-BOX. */
          find first cash-pay where cash-pay.cdpay-code = chk-gds-pay.pay-code no-lock no-error.
          IF AVAILABLE cash-pay THEN opl-chr = cash-pay.obj-name.

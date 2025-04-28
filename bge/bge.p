@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 &ANALYZE-SUSPend _VERSIon-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WindoW-NAME CURRENT-WindoW
@@ -5,11 +6,11 @@
 &ANALYZE-SUSPend _UIB-CODE-BLOCK _CUStoM _definITIonS DLG-LOG
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a61e6bb0c7e0, 2871, rls $
+$Author: SSlivenko $
+$Date: ѕн но€ 22 19:49:10 2021 +0300 $
+$Workfile: bge.p $
+$Archive: bge/bge.p $
 
 Ёкспорт во внешнюю бухгалтерию.
 
@@ -50,11 +51,11 @@ define input parameter parparentproc        as widget-handle no-undo .
 define input parameter p-format-type        as character no-undo.
 define input parameter p-export-type        as character no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-revision    as character no-undo init "$Revision: a61e6bb0c7e0, 2871, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
 define variable vss-date        as character no-undo init "$date: 14.08.03 11:06 $":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bge.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bge.p $":U .
 define variable vss-description as character no-undo init "Ёкспорт XML".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

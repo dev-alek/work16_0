@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cndkeep1.p $
+$Archive: ref/cndkeep1.p $
 
 —охранение изменений в карточке условий хранени
 
@@ -32,11 +33,11 @@ define input parameter p-h-mode-to like ub.condition-keeping.h-mode-to no-undo .
 define input parameter p-t-mode-from like ub.condition-keeping.t-mode-from no-undo .
 define input parameter p-t-mode-to like ub.condition-keeping.t-mode-to no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cndkeep1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/cndkeep1.p $":U .
 define variable vss-description as character no-undo init "—охранение изменений в карточке условий хранени€".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

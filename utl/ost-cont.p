@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ost-cont.p $
+$Archive: utl/ost-cont.p $
 
 —оздание записи остатков финансового архива
 
@@ -17,11 +18,11 @@ Creation date: 07/16/07
 define input parameter parparentproc as widget-handle no-undo .
 
 /* ***************************  Definitions  ************************** */
-def var vss-revision    as character no-undo init "$Revision$":u .
-def var vss-author      as character no-undo init "$Author$":u .
-def var vss-date        as character no-undo init "$Date$":u .
-def var vss-workfile    as character no-undo init "$Workfile$":u .
-def var vss-archive     as character no-undo init "$Archive$":u .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+def var vss-author      as character no-undo init "$Author: expertek $":u .
+def var vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+def var vss-workfile    as character no-undo init "$Workfile: ost-cont.p $":u .
+def var vss-archive     as character no-undo init "$Archive: utl/ost-cont.p $":u .
 def var vss-description as character no-undo init "—оздание записи остатков финансового архива arh-trn-doc-contract" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

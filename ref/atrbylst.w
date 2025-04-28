@@ -15,11 +15,11 @@ DEFINE BUFFER X_clients-obj FOR ub.clients.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2de6324c153c, 2832, rls $
+$Author: EShklyar $
+$Date: ѕн но€ 22 19:48:51 2021 +0300 $
+$Workfile: atrbylst.w $
+$Archive: ref/atrbylst.w $
 
 ћеханизм простановки атрибутов на различные сущности - gds-obj-attr gds-host-attr cli-attr
 
@@ -47,11 +47,11 @@ define input parameter parobj-type like ub.clients.obj-type no-undo.
 define input parameter parobj-code like ub.clients.obj-code no-undo.
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2de6324c153c, 2832, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн но€ 22 19:48:51 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: atrbylst.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/atrbylst.w $":U .
 define variable vss-description as character no-undo init "јтрибуты товара на объекте ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -86,6 +86,7 @@ define variable updated      as logical no-undo.
 define variable temp-doc-rec as recid   no-undo.
 define buffer del_temp-attr for temp-attr.
 define variable glog        as logical   no-undo .
+define variable glog-obj    as logical   no-undo .
 define variable v-tab-order AS character no-undo.
 
 DEFINE MENU menu-b-add.
@@ -674,9 +675,67 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          view-as alert-box error.
       return error.
    end.
+
    CASE par-subject:
       when {&table_gds-obj-attr}
-      or
+      then do:
+     { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_reference_update_dopinfo':U
+          {&cntxt-object}
+          v-cntxt-host-code-obj
+          v-cntxt-obj-type
+          v-cntxt-obj-code
+          0
+          0
+          0
+          false
+          glog-obj
+        }
+     if glog-obj then 
+     do:
+       { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      false
+      glog
+      }
+     end.
+     else 
+     do:
+       { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      true
+      glog
+      }
+       if not glog then 
+       do:
+         return.
+       end.   
+     end.
+     
+      end.
       when {&table_gds-host-attr}
       or
       when {&table_goods-attr}
@@ -753,7 +812,24 @@ run attr-pop-clean-up in this-procedure ( input par-subject ).
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE choose-to-add Dialog-Frame
 PROCEDURE choose-to-add :
    define input parameter p-attr-code as character no-undo .
-
+    if p-attr-code <> "min-zapas" then do:
+            { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      true
+      glog
+      }
+    if not glog then return error .
+    end.
    assign
       add-option = p-attr-code
       .
@@ -766,7 +842,24 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE choose-to-delete Dialog-Frame
 PROCEDURE choose-to-delete :
    define input parameter p-attr-code as character no-undo .
-
+    if p-attr-code <> "min-zapas" then do:
+            { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      true
+      glog
+      }
+    if not glog then return error .
+    end.
    assign
       add-option = p-attr-code
       .
@@ -955,6 +1048,15 @@ PROCEDURE MyEnable :
          end.
       when {&table_gds-obj-attr} then 
          do:
+           if not glog and glog-obj then do:
+             disable
+               b-list-obj
+               with frame {&frame-name} .
+               create obj-list .
+               assign
+               obj-list.obj-code = v-cntxt-obj-code
+               obj-list.obj-type = v-cntxt-obj-type .
+           end.
          end. /*{&table_gds-obj-attr}*/
       when {&table_gds-host-attr} then 
          do:
@@ -1152,6 +1254,7 @@ PROCEDURE proc-b-add-2 :
    define variable loc-action          as logical   no-undo.
    define buffer buf_temp-attr for temp-attr.
    DEFINE VARIABLE attr-range as integer no-undo .
+   
    if add-option = "" then 
    do:
       run gbl/pop-up.p ( input self:handle, input no) no-error.

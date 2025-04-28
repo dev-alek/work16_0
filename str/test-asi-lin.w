@@ -24,6 +24,7 @@ field fact-sum-vol       AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
 field temp-izm-vol       as decimal format "->>>9.9":U initial ?
 field test-asi-diff      as decimal format ">>>9.99":U initial ?
 field pomi-density       AS DECIMAL FORMAT "9.9999":U INITIAL 0
+field asi-pomi-density   AS DECIMAL FORMAT "9.9999":U INITIAL 0
 .
 
 define new shared temp-table tt-temps-tab no-undo
@@ -157,6 +158,8 @@ define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
 
 define variable v-test-asi-type   as character no-undo .
 
+define variable vLabel as handle no-undo .
+
 define buffer buf_goods        for ub.goods .
 define buffer buf_rvs-doc      for ub.rvs-doc.
 define buffer buf_doc-attr     for ub.doc-attr .
@@ -232,7 +235,7 @@ tt-rvs-line.state-brutto-cli-qnty tt-rvs-line.state-level-petrol ~
 tt-rvs-line.state-level-total tt-rvs-line.state-temperature 
 &Scoped-define ENABLED-TABLES tt-rvs-line
 &Scoped-define FIRST-ENABLED-TABLE tt-rvs-line
-&Scoped-Define ENABLED-OBJECTS b-save RECT-2 RECT-3 b-cancel b-help b-calc ~
+&Scoped-Define ENABLED-OBJECTS b-save RECT-2 RECT-3 b-cancel b-help ~
 delta-mass-qnty CriticalDif /* mass-float-cov */
 &Scoped-Define DISPLAYED-FIELDS tt-rvs-line.measure-qnty ~
 tt-rvs-line.state-measure-qnty tt-rvs-line.meas-calc-qnty ~
@@ -292,17 +295,11 @@ tt-rvs-line.state-temperature
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-calc 
-     LABEL "Рассчитать" 
-     SIZE 13 BY .88.
      
 DEFINE BUTTON b-calc-diff 
      LABEL "Расчёт проверки" 
      SIZE 18 BY .88.
      
-DEFINE BUTTON b-calc-result
-     LABEL "Результат расчёта" 
-     SIZE 18 BY .88.
      
 DEFINE BUTTON b-POkMI-result 
      LABEL "Результаты ПОкМИ" 
@@ -450,11 +447,11 @@ DEFINE VARIABLE varstate-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 52.25 BY 21.71.
+     SIZE 55 BY 21.75.
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 47.88 BY 21.75.
+     SIZE 51 BY 21.75.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -490,7 +487,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Объем расчетно-книжный (л)"
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
-     tt-rvs-line.system-cli-qnty AT ROW 2.25 COL 76 COLON-ALIGNED
+     tt-rvs-line.system-cli-qnty AT ROW 2.25 COL 90 COLON-ALIGNED
           FORMAT "->>,>>>,>>9.9":U
           LABEL "Масса расчетно-книжная (кг)"
           VIEW-AS FILL-IN 
@@ -501,7 +498,7 @@ DEFINE FRAME Dialog-Frame
           VIEW-AS FILL-IN 
           SIZE 19 BY .88
           FGCOLOR 4 
-     tt-rvs-line.orig-system-cli-qnty AT ROW 3.25 COL 76 COLON-ALIGNED
+     tt-rvs-line.orig-system-cli-qnty AT ROW 3.25 COL 90 COLON-ALIGNED
           FORMAT "->>,>>>,>>9.9":U
           LABEL "Первоначально (кг)"
           VIEW-AS FILL-IN 
@@ -510,7 +507,7 @@ DEFINE FRAME Dialog-Frame
      tt-rvs-line.measure-qnty AT ROW 6.75 COL 28.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-qnty AT ROW 6.75 COL 73.25 COLON-ALIGNED
+     tt-rvs-line.state-measure-qnty AT ROW 6.75 COL 90 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.meas-calc-qnty AT ROW 7.75 COL 34 COLON-ALIGNED WIDGET-ID 20
@@ -520,36 +517,43 @@ DEFINE FRAME Dialog-Frame
      tt-rvs-line.measure-tc-qnty AT ROW 8.75 COL 28.25 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-tc-qnty AT ROW 8.75 COL 73.25 COLON-ALIGNED
+     tt-rvs-line.state-measure-tc-qnty AT ROW 8.75 COL 90 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      tt-rvs-line.density AT ROW 18.75 COL 32 COLON-ALIGNED FORMAT "9.9999"
           LABEL "Измер. Плотность НП (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-density AT ROW 18.75 COL 85 COLON-ALIGNED FORMAT "9.9999"
+     tt-rvs-line.state-density AT ROW 18.75 COL 90 COLON-ALIGNED FORMAT "9.9999"
           LABEL "Плотность НП (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     b-calc AT ROW 10.75 COL 65 WIDGET-ID 6
+     tt-rvs-line.asi-pomi-density AT ROW 19.75 COL 2 WIDGET-ID 14
+          FORMAT "9.9999"
+          LABEL "Плотность с АСИ прив. к ст. усл. (г/см3)"
+          VIEW-AS FILL-IN 
+          SIZE 10 BY .88
      tt-rvs-line.meas-calc-dens AT ROW 10.75 COL 35 /* COLON-ALIGNED */ WIDGET-ID 8
           FORMAT "9.9999"
           LABEL "Плотность расчит. по измер. (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.izmer-density AT ROW 9.75 COL 79 COLON-ALIGNED WIDGET-ID 4
+     tt-rvs-line.izmer-density AT ROW 9.75 COL 90 COLON-ALIGNED WIDGET-ID 24
           FORMAT "9.9999"
-          LABEL "Плотность измер. для ПО к МИ (г/см3)"
+          LABEL "Плотность измер. для ПОкМИ (г/см3)"
           VIEW-AS FILL-IN 
-          SIZE 13 BY .88
-     b-density at row 9.75 col 97
-     tt-rvs-line.temp-izm-vol AT ROW 11.75 COL 79 COLON-ALIGNED WIDGET-ID 4
+          SIZE 10 BY .88
+     b-density at row 9.75 col 104
+     tt-rvs-line.temp-izm-vol AT ROW 10.75 COL 90 COLON-ALIGNED WIDGET-ID 4
           LABEL "Температура изм. Объема (°С)"
           VIEW-AS FILL-IN 
-          SIZE 13 BY .88
-     b-temperature at row 11.75 col 97     
-     b-calc-diff at row 13 col 65 WIDGET-ID 206
-     b-calc-result at row 14.25 col 65 WIDGET-ID 208
+          SIZE 10 BY .88
+     b-temperature at row 10.75 col 104     
+     b-calc-diff at row 12 col 65 WIDGET-ID 206
+     tt-rvs-line.test-asi-diff AT ROW 13 COL 56 WIDGET-ID 34
+          LABEL "Расхождение значения по плотности НП (кг/м3)"
+          VIEW-AS FILL-IN 
+          SIZE 7 BY .88
      tt-rvs-line.add-qnty AT ROW 12.75 COL 35 COLON-ALIGNED
           FORMAT "->>,>>>,>>9":U
           LABEL "Объем в трубопроводе (л)"
@@ -559,12 +563,12 @@ DEFINE FRAME Dialog-Frame
           LABEL "Рассч. Масса в трубопроводе (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.fact-calc-add-mass AT ROW 13.75 COL 85 COLON-ALIGNED
+     tt-rvs-line.fact-calc-add-mass AT ROW 13.75 COL 90 COLON-ALIGNED
           LABEL "Рассч. Масса в трубопроводе (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     abs-delta-mass-add-qnty AT ROW 14.75 COL 85 COLON-ALIGNED
-     tt-rvs-line.state-add-qnty AT ROW 12.75 COL 85 COLON-ALIGNED
+     abs-delta-mass-add-qnty AT ROW 14.75 COL 90 COLON-ALIGNED
+     tt-rvs-line.state-add-qnty AT ROW 12.75 COL 90 COLON-ALIGNED
           FORMAT "->>,>>>,>>9":U
           LABEL "Объем в трубопроводе (л)"
           VIEW-AS FILL-IN 
@@ -589,7 +593,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Рассч. Объем НП (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.fact-calc-vol AT ROW 16.75 COL 85 COLON-ALIGNED
+     tt-rvs-line.fact-calc-vol AT ROW 16.75 COL 90 COLON-ALIGNED
           LABEL "Объем НП (л)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
@@ -598,7 +602,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Измер. Масса НП (кг)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
-     tt-rvs-line.state-measure-cli-qnty AT ROW 17.75 COL 85 COLON-ALIGNED
+     tt-rvs-line.state-measure-cli-qnty AT ROW 17.75 COL 90 COLON-ALIGNED
           FORMAT "->>,>>>,>>9.9":U
           LABEL "Масса НП (кг)"
           VIEW-AS FILL-IN 
@@ -646,7 +650,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Измер. уровень топлива (см)"
           VIEW-AS FILL-IN 
           SIZE 9 BY .88
-     tt-rvs-line.state-level-petrol AT ROW 19.75 COL 73.5 COLON-ALIGNED
+     tt-rvs-line.state-level-petrol AT ROW 19.75 COL 90 COLON-ALIGNED
           FORMAT ">>,>>9.9":U
           LABEL "Факт уровень топлива (см)"
           VIEW-AS FILL-IN 
@@ -656,7 +660,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Измер. общий уровень (см)"
           VIEW-AS FILL-IN 
           SIZE 9 BY .88
-     tt-rvs-line.state-level-total AT ROW 6.75 COL 75.5 COLON-ALIGNED
+     tt-rvs-line.state-level-total AT ROW 6.75 COL 90 COLON-ALIGNED
           FORMAT ">>,>>9.9":U
           LABEL "Факт общий уровень (см)"
           VIEW-AS FILL-IN 
@@ -666,7 +670,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Измер. уровень воды (см)"
           VIEW-AS FILL-IN 
           SIZE 5 BY .88
-     tt-rvs-line.state-level-water AT ROW 7.75 COL 75.5 COLON-ALIGNED
+     tt-rvs-line.state-level-water AT ROW 7.75 COL 90 COLON-ALIGNED
           FORMAT ">>,>>9.9":U
           LABEL "Факт уровень воды (см)"
           VIEW-AS FILL-IN 
@@ -676,7 +680,7 @@ DEFINE FRAME Dialog-Frame
           LABEL "Измер. Температура (°С)"
           VIEW-AS FILL-IN 
           SIZE 9 BY .88
-     tt-rvs-line.state-temperature AT ROW 8.75 COL 75.5 COLON-ALIGNED
+     tt-rvs-line.state-temperature AT ROW 8.75 COL 90 COLON-ALIGNED
           FORMAT "->>9.9":U
           LABEL "Температура (°С)"
           VIEW-AS FILL-IN 
@@ -730,14 +734,14 @@ DEFINE FRAME Dialog-Frame
           LABEL "Количество наливов"
           VIEW-AS FILL-IN 
           SIZE 10 BY .88
-     delta-mass-qnty AT ROW 19.75 COL 85 COLON-ALIGNED  WIDGET-ID 22
-     abs-delta-mass-qnty AT ROW 20.75 COL 85 COLON-ALIGNED  WIDGET-ID 22
+     delta-mass-qnty AT ROW 19.75 COL 90 COLON-ALIGNED  WIDGET-ID 22
+     abs-delta-mass-qnty AT ROW 20.75 COL 90 COLON-ALIGNED  WIDGET-ID 22
      CriticalDif AT ROW 4.25 COL 34 COLON-ALIGNED WIDGET-ID 2
 /*     mass-float-cov AT ROW 26.5 COL 54 COLON-ALIGNED WIDGET-ID 2*/
 /*       "Погр. изм." VIEW-AS TEXT                             */
 /*          SIZE 12.5 BY .75 AT ROW 24.75 COL 88.5 WIDGET-ID 24*/
      
-     RECT-2 AT ROW 6.5 COL 50.25
+     RECT-2 AT ROW 6.5 COL 54.25
      RECT-3 AT ROW 6.5 COL 2
      SPACE(58.61) SKIP(2.74)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -1462,94 +1466,58 @@ DO:
         return no-apply .
       end .
       assign tt-rvs-line.test-asi-diff = abs(tt-rvs-line.density - tt-rvs-line.izmer-density) * 1000 .
+      display tt-rvs-line.test-asi-diff with frame Dialog-Frame .
+      if tt-rvs-line.test-asi-diff > 1.7
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
+      
+      run str/test-asi-result.w (input "Результат расчета проверки корректности работы канала плотности НП АСИ резервуара",
+                                 input "Плотность НП по замерам АСИ в резервуаре (г/см3)|Плотность НП измеренная (г/см3)|Расхождение значения по плотности НП (г/см3)|Расхождение значения по плотности НП (кг/м3)",
+                                 input substitute("&1,&2,&3,&4", tt-rvs-line.density, tt-rvs-line.izmer-density, tt-rvs-line.test-asi-diff / 1000, tt-rvs-line.test-asi-diff)
+                                 ) .
     end .
     when "test-asi_dens-pump"
     then do :
-      find first rvs-line-attr no-lock
-           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
-             and rvs-line-attr.attr-code = "is-calc" no-error.
-      if not available rvs-line-attr
-      or (available rvs-line-attr and rvs-line-attr.attr-value <> "yes") 
-      then do :
-        message "Не выполнено приведение параметров НП к стандартной температуре." skip
-                'Нажмите кнопку "Рассчитать" и повторите попытку.'
-        view-as alert-box information.
-        apply "entry" to b-calc in frame {&frame-name}.
-        return no-apply.
-      end.
-      assign tt-rvs-line.test-asi-diff = abs(tt-rvs-line.density - tt-rvs-line.pomi-density) * 1000 .
+      run pomi-calc .
+      if return-value = "need-data"
+      or return-value = "pomi-error"
+      then return no-apply .
+      assign tt-rvs-line.test-asi-diff = abs(tt-rvs-line.asi-pomi-density - tt-rvs-line.pomi-density) * 1000 .
+      display tt-rvs-line.test-asi-diff with frame Dialog-Frame .
+      if tt-rvs-line.test-asi-diff > 1.7
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
+      
+      run str/test-asi-result.w (input "Результат расчета проверки корректности работы канала плотности НП АСИ резервуара",
+                                 input "Плотность НП с АСИ, приведенная к стандартным условиям (г/см3)|Плотность НП измеренная и приведенная к стандартным условиям (г/см3)|Расхождение значения по плотности НП (г/см3)|Расхождение значения по плотности НП (кг/м3)",
+                                 input substitute("&1,&2,&3,&4", tt-rvs-line.asi-pomi-density, tt-rvs-line.pomi-density, tt-rvs-line.test-asi-diff / 1000, tt-rvs-line.test-asi-diff)
+                                 ) .
     end .
     when "test-asi_mass"
     then do :
-      find first rvs-line-attr no-lock
-           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
-             and rvs-line-attr.attr-code = "is-calc" no-error.
-      if not available rvs-line-attr
-      or (available rvs-line-attr and rvs-line-attr.attr-value <> "yes") 
-      then do :
-        message "Не выполнено приведение параметров НП к стандартной температуре." skip
-                'Нажмите кнопку "Рассчитать" и повторите попытку.'
-        view-as alert-box information.
-        apply "entry" to b-calc in frame {&frame-name}.
-        return no-apply.
-      end.
+      run pomi-calc .
+      if return-value = "need-data"
+      or return-value = "pomi-error"
+      then return no-apply .
       assign tt-rvs-line.test-asi-diff = abs((tt-rvs-line.measure-cli-qnty - tt-rvs-line.state-measure-cli-qnty) / tt-rvs-line.state-measure-cli-qnty) * 100 .
-    end .
-  end case .
-  if tt-rvs-line.test-asi-diff <> ?
-  then do :
-    enable b-calc-result with frame Dialog-Frame .
-  end .
-end .
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b-calc-result
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-calc-result Dialog-Frame
-ON CHOOSE OF b-calc-result IN FRAME Dialog-Frame /* Рассчитать */
-DO:
-  case v-test-asi-type :
-    when "test-asi_dens-place"
-    then do :
-      run str/test-asi-result.w (input "Результат расчета проверки корректности работы канала плотности НП АСИ резервуара",
-                                 input "Плотность НП по замерам АСИ в резервуаре (г/см3)|Плотность НП измеренная (г/см3)|Расхождение значения по плотности НП (кг/м3)",
-                                 input substitute("&1,&2,&3", tt-rvs-line.density, tt-rvs-line.izmer-density, tt-rvs-line.test-asi-diff)
-                                 ) .
-    end .
-    when "test-asi_dens-pump"
-    then do :
-      run str/test-asi-result.w (input "Результат расчета проверки корректности работы канала плотности НП АСИ резервуара",
-                                 input "Измеренная АСИ плотность НП (г/см3)|Плотность НП, приведенная к стандартным условиям (г/см3)|Расхождение значения по плотности НП (кг/м3)",
-                                 input substitute("&1,&2,&3", tt-rvs-line.density, tt-rvs-line.pomi-density, tt-rvs-line.test-asi-diff)
-                                 ) .
-    end .
-    when "test-asi_mass"
-    then do :
+      display tt-rvs-line.test-asi-diff with frame Dialog-Frame .
+      if tt-rvs-line.test-asi-diff > 0.65
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
+      
       run str/test-asi-result.w (input "Результат расчета проверки корректности работы АСИ по массе НП",
-                                 input "Измеренная масса НП по расчетам АСИ (кг)|Масса НП по расчетам ПОкМИ (кг)|Расхождение значения по массе НП (%)",
-                                 input substitute("&1,&2,&3", tt-rvs-line.measure-cli-qnty, tt-rvs-line.state-measure-cli-qnty, tt-rvs-line.test-asi-diff)
+                                 input "Измеренная масса НП по расчетам АСИ (кг)|Масса НП по расчетам ПОкМИ (кг)|Расхождение значения по массе НП (кг)|Расхождение значения по массе НП (%)",
+                                 input substitute("&1,&2,&3,&4", tt-rvs-line.measure-cli-qnty, tt-rvs-line.state-measure-cli-qnty, ABS(tt-rvs-line.state-measure-cli-qnty - tt-rvs-line.measure-cli-qnty), tt-rvs-line.test-asi-diff)
                                  ) .
     end .
   end case .
-  
 end .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME b-calc
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-calc Dialog-Frame
-ON CHOOSE OF b-calc IN FRAME Dialog-Frame /* Рассчитать */
-DO:
+
+procedure pomi-calc:
 
 define variable v-mm as com-handle.
 define variable v-proc as character no-undo.
@@ -1625,7 +1593,7 @@ define buffer bf_place for ub.place .
   assign frame {&frame-name} CriticalDif .
   assign frame {&frame-name} delta-mass-qnty . 
   _trpomi :
-    do on error undo, return no-apply :
+    do on error undo, return :
     
     if tt-rvs-line.izmer-density = ? or tt-rvs-line.izmer-density = 0 then do :
       message
@@ -1634,7 +1602,7 @@ define buffer bf_place for ub.place .
         "Введите плотность измер.для ПО МИ"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.izmer-density in frame {&frame-name}.
-      undo _trpomi, return .
+      undo _trpomi, return "need-data" .
     end.
     if tt-rvs-line.state-level-total = ? or tt-rvs-line.state-level-total = 0 then do :
       message
@@ -1643,7 +1611,7 @@ define buffer bf_place for ub.place .
         "Введите факт. общий уровень"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.state-level-total in frame {&frame-name}.
-      undo _trpomi, return .
+      undo _trpomi, return "need-data" .
     end.
     if tt-rvs-line.state-level-water = ? then do :
       message
@@ -1652,7 +1620,7 @@ define buffer bf_place for ub.place .
         "Введите факт. уровень воды"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.state-level-water in frame {&frame-name}.
-      undo _trpomi, return .
+      undo _trpomi, return "need-data" .
     end.
     if tt-rvs-line.state-temperature = ?
     then do :
@@ -1662,7 +1630,7 @@ define buffer bf_place for ub.place .
         "Введите температуру"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.state-temperature in frame {&frame-name}.
-      undo _trpomi, return .
+      undo _trpomi, return "need-data" .
     end.
     
     if tt-rvs-line.temp-izm-vol = ?
@@ -1673,7 +1641,7 @@ define buffer bf_place for ub.place .
         "Введите температуру измерения объема"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.temp-izm-vol in frame {&frame-name}.
-      undo _trpomi, return .
+      undo _trpomi, return "need-data" .
     end.
     
     /*данные по резервуару для ПО МИ*/
@@ -1771,7 +1739,7 @@ define buffer bf_place for ub.place .
                    ,(if available bf_goods then string(bf_goods.gds-code) else "?")
                    ,(if available bf_goods then bf_goods.gds-name else "?") )
       view-as alert-box .
-      undo _trpomi, return .
+      undo _trpomi, return "need-data" .
     end .
     DeltaOtn_K = ? .                                    
     for first buf_pl-level-attr no-lock where buf_pl-level-attr.pl-code  = total1_pl-level.pl-code
@@ -1798,7 +1766,7 @@ define buffer bf_place for ub.place .
                    ,(if available bf_goods then string(bf_goods.gds-code) else "?")
                    ,(if available bf_goods then bf_goods.gds-name else "?") )
       view-as alert-box .
-      undo _trpomi, return .
+      undo _trpomi, return "need-data" .
     end .                                    
     if available water1_pl-level
     then do :
@@ -1827,7 +1795,7 @@ define buffer bf_place for ub.place .
         message
           substitute ("Для складского места &1 не заданно средство измерения",tt-rvs-line.pl-code)
         view-as alert-box error.
-        undo _trpomi, return no-apply.
+        undo _trpomi, return "need-data" .
       end.
       else do :
         find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
@@ -1836,7 +1804,7 @@ define buffer bf_place for ub.place .
           "Ошибка работы с библиотекой ПО МИ"
           substitute( 'Не найдено средство измерения с кодом &1', place-si ) skip
           view-as alert-box error.
-          undo _trpomi, return no-apply.
+          undo _trpomi, return "need-data" .
         end.
         else do :
           assign
@@ -1872,7 +1840,7 @@ define buffer bf_place for ub.place .
         message
           substitute ("Для складского места &1 не заданно дополнительное средство измерения уровня",tt-rvs-line.pl-code)
         view-as alert-box error.
-        undo _trpomi, return no-apply.
+        undo _trpomi, return "need-data" .
       end .
       else
       if v-mi-lvl <> place-si
@@ -1884,7 +1852,7 @@ define buffer bf_place for ub.place .
           "Ошибка работы с библиотекой ПО МИ"
           substitute( 'Не найдено средство измерения с кодом &1', v-mi-lvl ) skip
           view-as alert-box error.
-          undo _trpomi, return no-apply.
+          undo _trpomi, return "need-data" .
         end.
         else do :
           assign
@@ -1907,7 +1875,7 @@ define buffer bf_place for ub.place .
         message
           substitute ("Для складского места &1 не заданно дополнительное средство измерения плотности",tt-rvs-line.pl-code)
         view-as alert-box error.
-        undo _trpomi, return no-apply.
+        undo _trpomi, return "need-data" .
       end .
       else
       if v-mi-dnst <> place-si 
@@ -1919,7 +1887,7 @@ define buffer bf_place for ub.place .
           "Ошибка работы с библиотекой ПО МИ"
           substitute( 'Не найдено средство измерения с кодом &1', v-mi-dnst ) skip
           view-as alert-box error.
-          undo _trpomi, return no-apply.
+          undo _trpomi, return "need-data" .
         end.
         else do :
           assign
@@ -1940,7 +1908,7 @@ define buffer bf_place for ub.place .
         message
           substitute ("Для складского места &1 не заданно дополнительное средство измерения температуры",tt-rvs-line.pl-code)
         view-as alert-box error.
-        undo _trpomi, return no-apply.
+        undo _trpomi, return "need-data" .
       end .
       else
       if v-mi-tmp <> place-si 
@@ -1952,7 +1920,7 @@ define buffer bf_place for ub.place .
           "Ошибка работы с библиотекой ПО МИ"
           substitute( 'Не найдено средство измерения с кодом &1', v-mi-tmp ) skip
           view-as alert-box error.
-          undo _trpomi, return no-apply.
+          undo _trpomi, return "need-data" .
         end.
         else do :
           assign
@@ -2046,7 +2014,7 @@ define buffer bf_place for ub.place .
       message
         substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) skip
       view-as alert-box error.
-      undo _trpomi, return no-apply .
+      undo _trpomi, return "pomi-error" .
     end .
     
     if LevelToolType > 0
@@ -2061,7 +2029,7 @@ define buffer bf_place for ub.place .
         RELEASE OBJECT v-mm57 NO-ERROR.
         v-mm57 = ?.
         message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) view-as alert-box .
-        undo _trpomi, return no-apply  .
+        undo _trpomi, return "pomi-error"  .
       END.
       ELSE DO :
         assign
@@ -2091,7 +2059,7 @@ define buffer bf_place for ub.place .
           v-mm57 = ?.
           output stream outstream close.
           message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
-          undo _trpomi, return no-apply .
+          undo _trpomi, return "pomi-error" .
         end.
         else do :
           DeltaAbs_H = v-mm57:DeltaAbs_H .
@@ -2160,7 +2128,7 @@ define buffer bf_place for ub.place .
       with frame Dialog-Frame.
       RELEASE OBJECT v-mm NO-ERROR.
       v-mm = ?.
-      undo _trpomi, return no-apply .
+      undo _trpomi, return "pomi-error" .
     END.
     ELSE DO :
       ASSIGN
@@ -2276,7 +2244,7 @@ define buffer bf_place for ub.place .
       output stream outstream close.
       v-mm:Exec() .
       if v-mm:Result <> 0 then do :
-        error-string = substitute("~nРезервуар: &1.~n", if avail buf2_place then buf2_place.loc1 else "") 
+        error-string = substitute("~nРезервуар: &1.~n", if avail buf_place then buf_place.loc1 else "") 
                      + replace(v-mm:ResultDetail,";0x","~n0x") .
         output stream outstream to value ("pomi.log")  append.
         put stream outstream error-string format "X(1024)" skip.
@@ -2286,7 +2254,7 @@ define buffer bf_place for ub.place .
         RELEASE OBJECT v-mm NO-ERROR.
         v-mm = ?.
         output stream outstream close.
-        undo _trpomi, return no-apply .
+        undo _trpomi, return "pomi-error" .
       end.
       else do :
         v-mm-density = decimal(v-mm:Rv) / 1000 .
@@ -2451,11 +2419,8 @@ define buffer bf_place for ub.place .
   end.
   rvs-line-attr.attr-value = "yes" .
   release rvs-line-attr no-error .
-END.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
+end procedure .
 
 &Scoped-define SELF-NAME b-temperature
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-temperature Dialog-Frame
@@ -2973,6 +2938,7 @@ DO:
   define buffer buf_doc-pl for ub.doc-pl .
   define buffer buf_place for ub.place .
   define buffer buf_doc-pl-attr for doc-pl-attr .
+  define buffer buf_sr-izmerenia for sr-izmerenia .
     
   { gbl/curshift.i
     buf_rvs-doc.obj-type
@@ -3210,6 +3176,31 @@ DO:
     else do :
       rvs-line-attr.attr-value = string(v-mi-tmp) .
     end.
+    
+    for first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si :
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "main-mi-name" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "main-mi-name"
+          rvs-line-attr.attr-value = buf_sr-izmerenia.sr-model
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = buf_sr-izmerenia.sr-model .
+      end.
+    end .
   end .
 
 release rvs-line-attr no-error .
@@ -3895,6 +3886,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.sum-vol
       tt-rvs-line.fact-sum-mass
       tt-rvs-line.fact-sum-vol
+      tt-rvs-line.asi-pomi-density
       
       in frame Dialog-Frame.
   
@@ -3906,7 +3898,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       tt-rvs-line.izmer-density
       delta-mass-qnty
       abs-delta-mass-qnty
-      b-calc
       in frame Dialog-Frame.
       
   end.
@@ -3959,6 +3950,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           end.
           when "pomi-density" then do :
             tt-rvs-line.pomi-density = decimal(rvs-line-attr.attr-value) .
+          end.
+          when "asi-pomi-density" then do :
+            tt-rvs-line.asi-pomi-density = decimal(rvs-line-attr.attr-value) .
           end.
         end case.
   end.
@@ -4093,6 +4087,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     varstate-sum-vol
     
     tt-rvs-line.temp-izm-vol
+    
+    tt-rvs-line.test-asi-diff
   with frame {&frame-name}.
   
   if rdc-value = 'pomi-rn'
@@ -4114,7 +4110,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     disable tt-rvs-line.izmer-density with frame {&frame-name}.
     disable tt-rvs-line.temp-izm-vol with frame {&frame-name}.
 /*    disable mass-float-cov with frame {&frame-name}.*/
-    disable b-calc b-temperature b-density b-calc-diff with frame {&frame-name}.
+    disable b-temperature b-density b-calc-diff with frame {&frame-name}.
     if rdc-value =  "pomi-rn"
     then do :
       hide
@@ -4130,6 +4126,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       display
         hide-text-dop-si
       with frame Dialog-Frame.
+    end .
+    
+    if v-test-asi-type = "test-asi_dens-pump"
+    then do :
+      display tt-rvs-line.asi-pomi-density with frame Dialog-Frame.
+    end .
+    if v-test-asi-type = "test-asi_mass"
+    then do :
+      if tt-rvs-line.test-asi-diff > 0.65
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
+    end .
+    else do :
+      if tt-rvs-line.test-asi-diff > 1.7
+      then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+      else tt-rvs-line.test-asi-diff:fgcolor = 0 .
     end .
   end.
   else do :
@@ -4161,14 +4173,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-rvs-line.state-level-total
             tt-rvs-line.state-level-water
             tt-rvs-line.state-temperature
+            tt-rvs-line.temp-izm-vol
           with frame Dialog-Frame.  
         end .
+        
+        vLabel = tt-rvs-line.izmer-density:SIDE-LABEL-HANDLE.
+        vLabel:fgcolor = RED_COLOR .
+        
+        if tt-rvs-line.test-asi-diff > 1.7
+        then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+        else tt-rvs-line.test-asi-diff:fgcolor = 0 .
         
         disable
           tt-rvs-line.state-level-total
           tt-rvs-line.state-level-water
           b-temperature
-          b-calc
         with frame Dialog-Frame.
         
         if v-mi-dnst > 0
@@ -4199,6 +4218,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           with frame Dialog-Frame.
         end .
         
+        display tt-rvs-line.asi-pomi-density with frame Dialog-Frame.
+        
+        vLabel = tt-rvs-line.izmer-density:SIDE-LABEL-HANDLE.
+        vLabel:fgcolor = RED_COLOR .
+        vLabel = tt-rvs-line.temp-izm-vol:SIDE-LABEL-HANDLE.
+        vLabel:fgcolor = RED_COLOR .
+        
+        if tt-rvs-line.test-asi-diff > 1.7
+        then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+        else tt-rvs-line.test-asi-diff:fgcolor = 0 .
+        
         disable
           tt-rvs-line.state-level-total
           tt-rvs-line.state-level-water
@@ -4226,6 +4256,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           pl-rvd-temp = yes
           pl-rvd-lvl  = yes
         .
+        
+        assign tt-rvs-line.test-asi-diff:label = "Расхождение значения по массе НП (%)" .
+        
+        vLabel = tt-rvs-line.izmer-density:SIDE-LABEL-HANDLE.
+        vLabel:fgcolor = RED_COLOR .
+        vLabel = tt-rvs-line.temp-izm-vol:SIDE-LABEL-HANDLE.
+        vLabel:fgcolor = RED_COLOR .
+        vLabel = tt-rvs-line.state-level-total:SIDE-LABEL-HANDLE.
+        vLabel:fgcolor = RED_COLOR .
+        vLabel = tt-rvs-line.state-level-water:SIDE-LABEL-HANDLE.
+        vLabel:fgcolor = RED_COLOR .
+        
+        if tt-rvs-line.test-asi-diff > 0.65
+        then tt-rvs-line.test-asi-diff:fgcolor = RED_COLOR .
+        else tt-rvs-line.test-asi-diff:fgcolor = 0 .
         
         if v-mi-dnst > 0
         and tt-rvs-line.state-level-total > 0
@@ -4263,18 +4308,23 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   if v-test-asi-type = "test-asi_dens-place"
   then do :
-    apply "del" to v-mi-lvl .
-    apply "del" to v-mi-tmp .
+    assign
+      v-mi-lvl = ?
+      v-mi-lvl-name = "?"
+      v-mi-lvl-name:screen-value = ""
+      v-mi-tmp = ?
+      v-mi-tmp-name = "?"
+      v-mi-tmp-name:screen-value = ""
+    .
   end .
   
   if v-test-asi-type = "test-asi_dens-pump"
   then do :
-    apply "del" to v-mi-lvl .
-  end .
-  
-  if tt-rvs-line.test-asi-diff <> ?
-  then do :
-    enable b-calc-result with frame Dialog-Frame.
+    assign
+      v-mi-lvl = ?
+      v-mi-lvl-name = "?"
+      v-mi-lvl-name:screen-value = ""
+    .
   end .
   
   find first rvs-line-attr no-lock
@@ -4472,7 +4522,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           create tt-dens .
           assign
             tt-dens.ii = ikey
-            tt-dens.key_ = "P" + string(ikey)
+            tt-dens.key_ = "P" + string(ikey) + (if ikey = 1 then "(низ)" else "")
             tt-dens.density = decimal(entry(id, v-izm-denses-attr))
           .
         end .
@@ -4647,7 +4697,7 @@ PROCEDURE enable_UI :
           tt-rvs-line.meas-cf-qnty tt-rvs-line.state-cf-qnty
       WITH FRAME Dialog-Frame.
   ENABLE b-save b-cancel b-help RECT-2 RECT-3 tt-rvs-line.state-measure-qnty
-         tt-rvs-line.state-density b-calc
+         tt-rvs-line.state-density
          tt-rvs-line.state-brutto-qnty tt-rvs-line.state-brutto-cli-qnty
          tt-rvs-line.state-level-petrol tt-rvs-line.state-level-total
          tt-rvs-line.state-temperature

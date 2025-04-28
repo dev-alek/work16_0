@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a61e6bb0c7e0, 2871, rls $
+$Author: SSlivenko $
+$Date: Пн ноя 22 19:49:10 2021 +0300 $
+$Workfile: shd-incr.p $
+$Archive: bge/shd-incr.p $
 
 Инкрементальный экспорт во Внешнюю Бухгалтерию документов, чеков и справочников
 
@@ -24,11 +25,11 @@ define input parameter p-obj-list       as character  no-undo. /* Список объекто
 define input parameter p-need-checks    as logical    no-undo. /* надо ли экспортировать чеки по документам */
 define input parameter p-doc-rvs        as logical    no-undo. /* надо ли выгружать сверки до/после слива по топливным приходным накладным */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a61e6bb0c7e0, 2871, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Пн ноя 22 19:49:10 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: shd-incr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/shd-incr.p $":U .
 define variable vss-description as character no-undo init "Инкрементальный экспорт во Внешнюю Бухгалтерию документов, чеков и справочников".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

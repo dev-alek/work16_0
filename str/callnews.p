@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3c72df46e096, 3170, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:23 $
+$Workfile: callnews.p $
+$Archive: str/callnews.p $
 
 Маршрутизация новостей
 
@@ -20,11 +21,11 @@ using ibs.th.adm.upd.*.
 define input parameter p-tbl-name   like ub.route.name-rec no-undo .
 define input parameter p-tbl-handle as   handle            no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 3c72df46e096, 3170, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/12/27 12:54:23 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: callnews.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/callnews.p $":U .
 define variable vss-description as character no-undo initial "Маршрутизация новостей":U .
 
 { cmp/vssrevis.i "substitute('&1|&2',p-tbl-name,p-tbl-handle)" }

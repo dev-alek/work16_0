@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -334,8 +335,9 @@ on error undo, return error
               buf_tt0-thbj-attr.upper-prop-code = v-to-find-upper-param-code
               .
               delete tt0-thbj-attr.
-          end.
-          v-num-found = v-num-found + 1.
+            end.
+            else delete tt0-thbj-attr.
+            v-num-found = v-num-found + 1.
         end.
       end.
       if v-num-need = v-num-found then do:
@@ -3175,7 +3177,7 @@ end.
 
       v-prop-code = "{&bef-attr-petrol_dop-info}" .
 &scop ptype character
-&scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj':U
+&scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj,date-income':U
 &scop prop-code  entry(v-ii,v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):

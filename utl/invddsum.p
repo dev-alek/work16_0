@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2df3cb32ffae, 112, rls $
+$Author: EShklyar $
+$Date: Tue Dec 23 19:14:15 2014 +0300 $
+$Workfile: invddsum.p $
+$Archive: utl/invddsum.p $
 
 Утилита пересчета дополнительных сумм по одной инвентаризации
 
@@ -18,11 +19,11 @@ Creation date: 12/04/11
 
 define input parameter pardoc-code               like ub.trn-doc.doc-code no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 2df3cb32ffae, 112, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Tue Dec 23 19:14:15 2014 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: invddsum.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/invddsum.p $":U .
 define variable vss-description as character no-undo initial "Утилита по расчету дополнительных сумм по документу":U .
 
 def var p-ok as log no-undo.

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8f5f559ebdb3, 2359, rls $
+$Author: EShklyar $
+$Date: Ср июн 10 21:13:34 2020 +0300 $
+$Workfile: r-help-road.p $
+$Archive: rep/r-help-road.p $
 
 Выгрузка реализации банковских продуктов
 
@@ -28,11 +29,11 @@ define input parameter table   FOR tt-obj.
 define input parameter table   FOR tt-oss-ref.
 define input parameter table   FOR tt-gds-list.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8f5f559ebdb3, 2359, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:34 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-help-road.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-help-road.p $":U .
 define variable vss-description as character no-undo init "Выгрузка реализации банковских продуктов".
 
 { cmp/vssrevis.i }

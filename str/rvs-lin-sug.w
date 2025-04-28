@@ -367,12 +367,12 @@ DEFINE BUTTON b-rez
      BGCOLOR 8 .
 
 DEFINE VARIABLE delta-mass-qnty AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
-     LABEL "ќтн. погр. изм. массы —”√ (ѕќ к ћ»)" 
+     LABEL "ќтн. погр. изм. массы —”√ (ѕќкћ»)" 
      VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
      
 DEFINE VARIABLE abs-delta-mass-qnty AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 0 
-     LABEL "јбс. погр. изм. массы —”√ (ѕќ к ћ»)" 
+     LABEL "јбс. погр. изм. массы —”√ (ѕќкћ»)" 
      VIEW-AS FILL-IN 
      SIZE 10 BY 1 NO-UNDO.
      

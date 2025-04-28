@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 288743b2d1c0, 2956, rls $
+$Author: VRukavishnikov $
+$Date: 2022/04/06 13:23:40 $
+$Workfile: ora-i516.p $
+$Archive: utl/ora-i516.p $
 
 Импорт накладных из временной таблицы
 
@@ -42,11 +43,11 @@ define input  PARAMETER TABLE FOR  tt-excisemarks.
 define output parameter p-ok-doc as integer   no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 288743b2d1c0, 2956, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VRukavishnikov $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/04/06 13:23:40 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ora-i516.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ora-i516.p $":U .
 define variable vss-description as character no-undo init "Импорт накладных из временной таблицы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

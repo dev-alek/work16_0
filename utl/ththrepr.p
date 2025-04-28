@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 /* Connected Databases
@@ -15,11 +16,11 @@ DEFINE TEMP-TABLE tt_obj-list NO-UNDO LIKE ub.clients.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1f78fe327cdf, 1091, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: ththrepr.p $
+$Archive: utl/ththrepr.p $
 
 Выбор объектов для запуска отчета по ИМПОРТу ПН из старой версии TH в 16.0 ( перенос остатков )
 
@@ -41,11 +42,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-from-version   as character no-undo .
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1f78fe327cdf, 1091, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ththrepr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ththrepr.p $":U .
 define variable vss-description as character no-undo init "Выбор объектов для запуска отчета по ИМПОРТу ПН из старой версии TH в 16.0 ( перенос остатков )".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

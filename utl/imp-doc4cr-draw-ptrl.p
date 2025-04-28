@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 {utl/imp-parts-ptrl.i }
 define input  parameter iUtil        as class ibs.th.utl.method-for-draw-utility no-undo.
 define input  parameter iosn-fname   as character no-undo.

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 206c91217f77, 1790, rls $
+$Author: ASMorozov $
+$Date: Tue Feb 26 13:12:51 2019 +0300 $
+$Workfile: dc-del.p $
+$Archive: utl/dc-del.p $
 
 Удаление неиспользованных ДК two-commit
 
@@ -20,11 +21,11 @@ define input parameter p-parent-handle  as widget-handle no-undo .
 define input parameter p-log-handle  as handle no-undo .
 define input parameter p-parameter   as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 206c91217f77, 1790, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Feb 26 13:12:51 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: dc-del.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/dc-del.p $":U .
 define variable vss-description as character no-undo init "Удаление неиспользованных ДК two-commit".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fb60a1cec256, 3462, rls $
+$Author: VSpiridonov $
+$Date: 2023/10/16 15:13:34 $
+$Workfile: r-beneq2.p $
+$Archive: rep/r-beneq2.p $
 
 «аполнение временной таблицы по выручке по кассам по продажам дл€ отчета о выручке
 
@@ -19,11 +20,11 @@ define input parameter cas-num like ub.cash-desk.cash-num no-undo .
 define output parameter AllDay-BaseSum as decimal no-undo .
 define output parameter AllDay-RublSum as decimal no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: fb60a1cec256, 3462, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:34 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-beneq2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-beneq2.p $":U .
 define variable vss-description as character no-undo init "«аполнение временной таблицы по выручке по кассам по продажам дл€ отчета о выручке".
 { cmp/vssrevis.i }
 

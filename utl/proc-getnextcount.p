@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 .session:debug-alert = yes.
 /*{ utl/setpwd.i }*/

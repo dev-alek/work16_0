@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: rclcfarh.p $
+$Archive: utl/rclcfarh.p $
 
 Полный пересчет всех финансовых архивов по всем фирмам
 
@@ -65,6 +66,8 @@ on write  of arh-fin-doc-schet-tax-nal     override do: end.
 on write  of arh-fin-doc-schet-tax-obj     override do: end.
 on write  of arh-fin-ob-contr              override do: end.
 on write  of arh-fin-ob-contr-obj          override do: end.
+
+if parlist-arh = "" then parlist-arh = "all" .
 run del-for-one-firm  (input parhost-code, input parlist-arh) no-error.
 if error-status:error then do:
   message return-value error-status:get-message(1) error-status:get-message(2) view-as alert-box error.

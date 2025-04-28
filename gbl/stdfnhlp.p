@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 89462fe805e0, 527, rls $
+$Author: EShklyar $
+$Date: Thu Mar 17 18:42:35 2016 +0400 $
+$Workfile: stdfnhlp.p $
+$Archive: gbl/stdfnhlp.p $
 
 Описание функций из std-func.i.
 
@@ -178,11 +179,11 @@ define input parameter p-func-name as character no-undo .
 &scop fillin                 view-as fill-in                                    size-chars 16.50 by  1.00
 
 /* VSS Variable Definitions ---                                         */
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 89462fe805e0, 527, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Thu Mar 17 18:42:35 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: stdfnhlp.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: gbl/stdfnhlp.p $":U .
 define variable vss-description as character no-undo initial "Описание функций из std-func.i":U .
 
 /* Global, Shared, Preprocessor Definitions ---                         */
@@ -3167,4 +3168,4 @@ procedure GetFunctionHelp2 :
   end case. /* p-name */
 end procedure. /* GetFunctionHelp2 */
 
-/* $Workfile$   E n d */
+/* $Workfile: stdfnhlp.p $   E n d */

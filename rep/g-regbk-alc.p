@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2b6efd249362, 700, rls $
+$Author: EShklyar $
+$Date: Mon Jul 11 17:27:09 2016 +0300 $
+$Workfile: g-regbk-alc.p $
+$Archive: rep/g-regbk-alc.p $
 
 Журнал учёта объёма розничной продажи алкогольной и спиртосодержащей продукции
 
@@ -15,11 +16,11 @@ Creation date: 15/10/14
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2b6efd249362, 700, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jul 11 17:27:09 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: g-regbk-alc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/g-regbk-alc.p $":U .
 define variable vss-description as character no-undo init "Журнал учёта розничной продажи алкоголя".
 { cmp/vssrevis.i }
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 80217c7fc235, 1589, rls $
+$Author: EShklyar $
+$Date: Tue Nov 06 04:41:36 2018 +0300 $
+$Workfile: prvssinf.p $
+$Archive: gbl/prvssinf.p $
 
 Показать информацию о процедуре
 

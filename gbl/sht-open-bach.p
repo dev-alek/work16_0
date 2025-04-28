@@ -1,4 +1,4 @@
-
+block-level on error undo, throw.
 
 define input  parameter iUtil as class ibs.th.utl.method-for-draw-utility no-undo.
 define output parameter oOk as logical no-undo. 

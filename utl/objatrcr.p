@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: objatrcr.p $
+$Archive: utl/objatrcr.p $
 
 Создание атрибутов партий по всем документам объекта
 
@@ -21,11 +22,11 @@ create: Перваков Михаил Сергеевич
 define input  parameter p-obj-type as character no-undo .
 define input  parameter p-obj-code as integer   no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: objatrcr.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/objatrcr.p $":U .
 define variable vss-description as character no-undo initial "Создание атрибутов партий по всем документам объекта".
 { cmp/vssrevis.i "substitute('&1|&2':u,p-obj-type,p-obj-code)" }
 { cmp/trg-def.i  }

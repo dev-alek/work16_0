@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 54ccc9e2d3ee, 3460, rls $
+$Author: Ostroukhov $
+$Date: 2023/10/16 15:13:33 $
+$Workfile: r-beneq1.p $
+$Archive: rep/r-beneq1.p $
 
 Заполнение временной таблицы по чекам для отчета о выручке
 

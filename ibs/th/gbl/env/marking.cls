@@ -16,6 +16,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
 using ibs.th.str.marking.sts.
 using ibs.th.str.marking.types.
+block-level on error undo, throw.
 
 class ibs.th.gbl.env.marking inherits objth:
    define override public property vss-revision    as character no-undo init "$Revision:$":U get .

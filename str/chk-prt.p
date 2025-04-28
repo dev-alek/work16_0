@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: chk-prt.p $
+$Archive: str/chk-prt.p $
 
 Проверка того, что признаки соответствует строке документа
 
@@ -24,11 +25,11 @@ define input parameter par-line-rec as  recid   no-undo.
 define input parameter par-mes      as  logical no-undo.
 define parameter buffer t-doc for ub.trn-doc .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+def var vss-author      as character no-undo init "$Author: expertek $":U .
+def var vss-date        as character no-undo init "$Date: 2014/01/27 14:27:46 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: chk-prt.p $":U .
+def var vss-archive     as character no-undo init "$Archive: str/chk-prt.p $":U .
 def var vss-description as character no-undo init "Проверка того, что признаки соответствует строке документа".
 { cmp/vssrevis.i "substitute('&1|&2':u,par-line-rec,par-mes)" }
 { cmp/str-glbl.i }

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : r-testasidoc.p
@@ -47,9 +48,10 @@ end function.
 
 { cmp/str-glbl.i }
 { cmp/library.i  }
+{ str/placelib.i }
 { cmp/r-pril.i   }
 { gbl/paramls.i  }
-{ gbl/prn-lib.i     }
+{ gbl/prn-lib.i  }
 { rep/html-conv.i }
 
 DEFINE TEMP-TABLE tt-result
@@ -66,14 +68,22 @@ DEFINE TEMP-TABLE tt-result
   /*  Данные замеров АСИ в резервуаре  */
   field level-total             as decimal    /*col8 Уровень, см  */
   field density                 as decimal    /*col9 Плотность по уровнемеру, г/см3  */
-  field temperature             as decimal    /*col10 Температура, С  */
-  field mass                    as decimal    /*col11 Масса, кг  */
+  field asi-pomi-density        as decimal    /*col10 Плотность с АСИ, приведенная к стандартной температуре, г/см3 */
+  field temperature             as decimal    /*col11 Температура, С  */
+  field mass                    as decimal    /*col12 Масса, кг  */
   /*  Результат расчета проверки  */
-  field diff-density            as decimal    /*col12 Расхождение значения по плотности НП (кг/м3)  */
-  field diff-mass               as decimal    /*col13 Расхождение в % по массе  */
+  field diff-density-gram       as decimal    /*col13 Расхождение значения по плотности НП (г/cм3)  */
+  field diff-density            as decimal    /*col14 Расхождение значения по плотности НП (кг/м3)  */
+  field diff-mass-kilo          as decimal    /*col15 Расхождение по массе  (кг)  */
+  field diff-mass               as decimal    /*col16 Расхождение в % по массе  */
   
   field test-asi-type           as character
-  field asi-type-name           as character  /*col14 Тип проверки  */
+  field asi-type-name           as character  /*col17 Тип проверки  */
+  
+  field main-mi-name            as character
+  field temp-mi-name            as character
+  field dens-mi-name            as character
+  field level-mi-name           as character
   
   index pi 
     gds-code pl-code
@@ -81,18 +91,24 @@ DEFINE TEMP-TABLE tt-result
 
 define stream OutStr-html.
 
-define buffer buf_rvs-doc for ub.rvs-doc .
-define buffer buf_doc-attr for ub.doc-attr .
-define buffer buf_rvs-line for ub.rvs-line .
+define buffer buf_rvs-doc       for ub.rvs-doc .
+define buffer buf_doc-attr      for ub.doc-attr .
+define buffer buf_rvs-line      for ub.rvs-line .
 define buffer buf_rvs-line-attr for ub.rvs-line-attr . 
-define buffer buf_clients for ub.clients .
+define buffer buf_clients       for ub.clients .
 define buffer buf_goods         for ub.goods .
 define buffer buf_place         for ub.place .
+define buffer buf_sr-izmerenia  for ub.sr-izmerenia .
+define buffer buf_rvs-doc-attr  for ub.rvs-doc-attr .
 
 define variable v-report-id         as character no-undo .
 define variable v-file-name-rep-htm as character no-undo .
 define variable v-obj-name          as character no-undo .
 define variable v-test-asi-type     as character no-undo .
+
+define variable ii         as integer   no-undo .
+define variable v-chairmen as character no-undo extent 5 .
+define variable v-jobtitle as character no-undo extent 5 .
 
 /* ***************************  Main Block  *************************** */
 do
@@ -104,6 +120,13 @@ on error undo, return error return-value
   then do :
     message "Документ не найден!" view-as alert-box error .
     return error .
+  end .
+  
+  do ii = 1 to 5 :
+    assign
+      v-chairmen[ii] = "&nbsp;"
+      v-jobtitle[ii] = "&nbsp;"
+    .
   end .
   
   for first buf_doc-attr no-lock where buf_doc-attr.doc-code  = buf_rvs-doc.rvs-code
@@ -119,10 +142,66 @@ on error undo, return error return-value
   :
     assign v-obj-name = buf_clients.obj-name .
   end .
+  
+  find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = buf_rvs-doc.rvs-code
+                                        and buf_rvs-doc-attr.attr-code = "test-asi-commission-1"
+                                        no-error .
+  if available buf_rvs-doc-attr
+  and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+  then do :
+    assign
+      v-chairmen[1] = entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})
+      v-jobtitle[1] = entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})
+    .
+  end .
+  find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = buf_rvs-doc.rvs-code
+                                        and buf_rvs-doc-attr.attr-code = "test-asi-commission-2"
+                                        no-error .
+  if available buf_rvs-doc-attr
+  and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+  then do :
+    assign
+      v-chairmen[2] = entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})
+      v-jobtitle[2] = entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})
+    .
+  end .
+  find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = buf_rvs-doc.rvs-code
+                                        and buf_rvs-doc-attr.attr-code = "test-asi-commission-3"
+                                        no-error .
+  if available buf_rvs-doc-attr
+  and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+  then do :
+    assign
+      v-chairmen[3] = entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})
+      v-jobtitle[3] = entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})
+    .
+  end .
+  find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = buf_rvs-doc.rvs-code
+                                        and buf_rvs-doc-attr.attr-code = "test-asi-commission-4"
+                                        no-error .
+  if available buf_rvs-doc-attr
+  and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+  then do :
+    assign
+      v-chairmen[4] = entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})
+      v-jobtitle[4] = entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})
+    .
+  end .
+  find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = buf_rvs-doc.rvs-code
+                                        and buf_rvs-doc-attr.attr-code = "test-asi-commission-5"
+                                        no-error .
+  if available buf_rvs-doc-attr
+  and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+  then do :
+    assign
+      v-chairmen[5] = entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})
+      v-jobtitle[5] = entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})
+    .
+  end .
 
 /*печать*/
   run get-report-num (output v-report-id).
-    
+  
   v-file-name-rep-htm = session:temp-directory + string(v-report-id) + ".html".   
                         
   output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
@@ -155,11 +234,14 @@ on error undo, return error return-value
     '<td style="width: 70px;"></td>' skip
     '<td style="width: 85px;"></td>' skip
     '<td style="width: 85px;"></td>' skip
-    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 85px;"></td>' skip
+    '<td style="width: 85px;"></td>' skip
     '<td style="width: 70px;"></td>' skip
     '<td style="width: 70px;"></td>' skip
     '<td style="width: 85px;"></td>' skip
-    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
+    '<td style="width: 110px;"></td>' skip
+    '<td style="width: 110px;"></td>' skip
     '<td style="width: 110px;"></td>' skip
     '<td style="width: 110px;"></td>' skip
     '<td style="width: 70px;"></td>' skip
@@ -169,17 +251,18 @@ on error undo, return error return-value
   run put-empty-string .
   
   put stream OutStr-html unformatted
-    '<tr>' skip
+    '<tr class="nowrap">' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td style="text-align: center;">АЗС/АЗК</td>' skip
-    '<td colspan="2" style="text-align: center; font-weight: bold;">' + v-obj-name + '</td>' skip
+    '<td colspan="3" style="text-align: center; font-weight: bold; border-bottom: 1px solid black;">' + v-obj-name + '</td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td style="text-align: center;">Дата:</td>' skip
-    '<td colspan="2" style="text-align: center;">' + get-DD-Month-YYYY(buf_rvs-doc.sys-date) + '</td>' skip
+    '<td colspan="3" style="text-align: center;">' + get-DD-Month-YYYY(buf_rvs-doc.sys-date) + '</td>' skip
+    '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '</tr>' skip
@@ -196,7 +279,10 @@ on error undo, return error return-value
     '<td></td>' skip
     '<td></td>' skip
     '<td style="height: 14px; text-align: center; font-weight: bold;">Акт №</td>' skip
-    '<td colspan="2" style="height: 14px; text-align: center; font-weight: bold;">' + buf_rvs-doc.rvs-code + '</td>' skip
+    '<td colspan="2" style="height: 14px; text-align: center; font-weight: bold; border-bottom: 1px solid black;">' + buf_rvs-doc.rvs-code + '</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
@@ -210,66 +296,6 @@ on error undo, return error return-value
     '<td></td>' skip
     '<td colspan="10" style="text-align: center; font-weight: bold;">проверки корректности работы АСИ в резервуаре</td>' skip
     '<td></td>' skip
-    '</tr>' skip
-  .
-  
-  run put-empty-string .
-  
-  put stream OutStr-html unformatted
-    '<tr>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td colspan="2" style="text-align: left;">Комиссия в составе:</td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '</tr>' skip
-  .
-  
-  put stream OutStr-html unformatted
-    '<tr>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td colspan="2" style="text-align: left;">Председатель:</td>' skip
-    '<td colspan="4" style="text-align: center; font-weight: bold;">Управляющий АЗК/АЗС</td>' skip
-    '<td colspan="2" style="border-bottom: 1px solid black;"></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '</tr>' skip
-  .
-  
-  put stream OutStr-html unformatted
-    '<tr>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td colspan="2" style="text-align: left;">Члены комиссии:</td>' skip
-    '<td colspan="4" style="text-align: center; font-weight: bold;">Ст. смены (оператор-кассир)</td>' skip
-    '<td colspan="2" style="border-bottom: 1px solid black;"></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '</tr>' skip
-  .
-  
-  put stream OutStr-html unformatted
-    '<tr>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td colspan="4" style="text-align: center; font-weight: bold;">Ст. смены (оператор-кассир)</td>' skip
-    '<td colspan="2" style="border-bottom: 1px solid black;"></td>' skip
-    '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
@@ -282,7 +308,115 @@ on error undo, return error return-value
     '<tr>' skip
     '<td></td>' skip
     '<td></td>' skip
-    '<td colspan="5" style="text-align: left;">составили настоящий акт о нижеследующем:</td>' skip
+    '<td colspan="2" style="text-align: left; border: 1px solid black;">Комиссия в составе:</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="2" style="text-align: left; border: 1px solid black;">Председатель:</td>' skip
+    '<td colspan="3" style="text-align: center; border: 1px solid black;">' + v-chairmen[1] + '</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[1] + '</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="2" style="text-align: left; border: 1px solid black;">Члены комиссии:</td>' skip
+    '<td colspan="3" style="text-align: center; border: 1px solid black;">' + v-chairmen[2] + '</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[2] + '</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="3" style="text-align: center; border: 1px solid black;">' + v-chairmen[3] + '</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[3] + '</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="3" style="text-align: center; border: 1px solid black;">' + v-chairmen[4] + '</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[4] + '</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="3" style="text-align: center; border: 1px solid black;">' + v-chairmen[5] + '</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[5] + '</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  run put-empty-string .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="6" style="text-align: left;">составили настоящий акт о нижеследующем:</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
@@ -301,8 +435,8 @@ on error undo, return error return-value
     '<TH text_wrap="true" rowspan="5" style="text-align: center; font-size: 11px; font-weight: bold;">Марка НП</TH>' skip
     '<TH text_wrap="true" rowspan="5" style="text-align: center; font-size: 11px; font-weight: bold;">№ резервура</TH>' skip
     '<TH text_wrap="true" colspan="5" style="text-align: center; font-size: 11px; font-weight: bold;">Фактические замеры комиссии</TH>' skip
-    '<TH text_wrap="true" colspan="4" style="text-align: center; font-size: 11px; font-weight: bold;">Данные замеров АСИ в резервуаре</TH>' skip
-    '<TH text_wrap="true" colspan="2" style="text-align: center; font-size: 11px; font-weight: bold;">Результат расчета проверки</TH>' skip
+    '<TH text_wrap="true" colspan="5" style="text-align: center; font-size: 11px; font-weight: bold;">Данные замеров АСИ в резервуаре</TH>' skip
+    '<TH text_wrap="true" colspan="4" style="text-align: center; font-size: 11px; font-weight: bold;">Результат расчета проверки</TH>' skip
     '<TH text_wrap="true" rowspan="5" style="text-align: center; font-size: 11px; font-weight: bold;">Тип проверки</TH>' skip
     '</TR>'skip 
     
@@ -314,9 +448,12 @@ on error undo, return error return-value
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Масса, кг</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Уровень, см</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Плотность по уровнемеру, г/см3</TH>' skip
+    '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Плотность с АСИ, приведенная к стандартной температуре, г/см3</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Температура, С</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Масса, кг</TH>' skip
+    '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Расхождение значения по плотности НП (г/см3)</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Расхождение значения по плотности НП (кг/м3)</TH>' skip
+    '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Расхождение по массе (кг)</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-size: 9px; font-weight: bold;">Расхождение в % по массе</TH>' skip
     '</TR>'skip  
     
@@ -344,6 +481,9 @@ on error undo, return error return-value
     '<TH style="text-align: center; font-size: 9px; font-weight:bold; ">12</TH>'  skip
     '<TH style="text-align: center; font-size: 9px; font-weight:bold; ">13</TH>'  skip
     '<TH style="text-align: center; font-size: 9px; font-weight:bold; ">14</TH>'  skip
+    '<TH style="text-align: center; font-size: 9px; font-weight:bold; ">15</TH>'  skip
+    '<TH style="text-align: center; font-size: 9px; font-weight:bold; ">16</TH>'  skip
+    '<TH style="text-align: center; font-size: 9px; font-weight:bold; ">17</TH>'  skip
     '</TR>'skip    
   .
   
@@ -359,9 +499,12 @@ on error undo, return error return-value
       '<TH num="#,##0" val="'    + fDec2Str(tt-result.state-mass, "->>>>>>>>>>>9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.state-mass, "->>>>>>>>>>>9"  ) + '</TH>'  skip
       '<TH num="#,##0.0" val="'  + fDec2Str(tt-result.level-total, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.level-total, "->>>>>>>>>>>9.9"  ) + '</TH>'  skip
       '<TH num="#0.0000" val="'  + fDec2Str(tt-result.density, "-9.9999") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.density, "-9.9999"  ) + '</TH>'  skip
+      '<TH num="#0.0000" val="'  + fDec2Str(tt-result.asi-pomi-density, "-9.9999") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.asi-pomi-density, "-9.9999"  ) + '</TH>'  skip
       '<TH num="#,##0.0" val="'  + fDec2Str(tt-result.temperature, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.temperature, "->>>>>>>>>>>9.9"  ) + '</TH>'  skip
       '<TH num="#,##0" val="'    + fDec2Str(tt-result.mass, "->>>>>>>>>>>9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.mass, "->>>>>>>>>>>9"  ) + '</TH>'  skip
+      '<TH num="#0.0000" val="'  + fDec2Str(tt-result.diff-density-gram, "-9.9999") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-density-gram, "-9.9999"  ) + '</TH>'  skip
       '<TH num="#,##0.00" val="' + fDec2Str(tt-result.diff-density, "->>>9.99") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-density, "->>>9.99"  ) + '</TH>'  skip
+      '<TH num="#,##0" val="'    + fDec2Str(tt-result.diff-mass-kilo, "->>>>>>>>>>>9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-mass-kilo, "->>>>>>>>>>>9"  ) + '</TH>'  skip
       '<TH num="#,##0.00" val="' + fDec2Str(tt-result.diff-mass, "->>>9.99") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-mass, "->>>9.99"  ) + '</TH>'  skip
       '<TH text_wrap="true" style="text-align: center; font-weight: normal;">' + tt-result.asi-type-name + '</TH>' skip
       '</TR>'skip
@@ -377,24 +520,35 @@ on error undo, return error return-value
   
   put stream OutStr-html unformatted
     '<tr>' skip
-    '<td colspan="2" style="text-align: right;">Уровнемер:</td>' skip
-    '<td colspan="2" style="border-bottom: 1px solid black;"></td>' skip
-    '<td style="border-bottom: 1px solid black;"></td>' skip
-    '<td style="border-bottom: 1px solid black;"></td>' skip
-    '<td colspan="3" style="border-bottom: 1px solid black;"></td>' skip
-    '<td colspan="4" style="text-align: left; border-bottom: 1px solid black;">канал измерения плотности НП:' + fill("&nbsp;" , 6) + 'да' + fill("&nbsp;" , 3) + '/' + fill("&nbsp;" , 3) + 'нет</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">Значения получены по АСИ:</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
     '<td></td>' skip
     '</tr>' skip
   .
   
   put stream OutStr-html unformatted
     '<tr>' skip
+    '<td colspan="2" style="text-align: center; border: 1px solid black;">Номер резервуара</td>' skip
+    '<td colspan="2" style="text-align: center; border: 1px solid black;">Наименование АСИ</td>' skip
     '<td></td>' skip
     '<td></td>' skip
-    '<td colspan="2" style="text-align: center; font-size: 9px; vertical-align: top;">наименование</td>' skip
     '<td></td>' skip
-    '<td style="text-align: center; font-size: 9px; vertical-align: top;">тип</td>' skip
-    '<td colspan="3" style="text-align: center; font-size: 9px; vertical-align: top;">заводской номер</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
@@ -402,68 +556,113 @@ on error undo, return error return-value
     '<td></td>' skip
     '</tr>' skip
   .
+  
+  for each tt-result by tt-result.loc1 :
+    put stream OutStr-html unformatted
+      '<tr>' skip
+      '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.loc1 + '</td>' skip
+      '<td colspan="2" style="text-align: left; border: 1px solid black;">' + tt-result.main-mi-name + '</td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '</tr>' skip
+    .
+  end .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">Замеры проводились дополнительными СИ:</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td colspan="2" style="text-align: center; border: 1px solid black;">Номер резервуара</td>' skip
+    '<td colspan="2" style="text-align: center; border: 1px solid black;">По плотности</td>' skip
+    '<td colspan="2" style="text-align: center; border: 1px solid black;">По уровню</td>' skip
+    '<td colspan="3" style="text-align: center; border: 1px solid black;">По температуре</td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  for each tt-result by tt-result.loc1 :
+    put stream OutStr-html unformatted
+      '<tr>' skip
+      '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.loc1 + '</td>' skip
+      '<td colspan="2" style="text-align: left; border: 1px solid black;">' + tt-result.dens-mi-name + '</td>' skip
+      '<td colspan="2" style="text-align: left; border: 1px solid black;">' + tt-result.level-mi-name + '</td>' skip
+      '<td colspan="3" style="text-align: left; border: 1px solid black;">' + tt-result.temp-mi-name + '</td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '<td></td>' skip
+      '</tr>' skip
+    .
+  end .
   
   run put-empty-string .
   
   put stream OutStr-html unformatted
     '<tr>' skip
     '<td></td>' skip
-    '<td colspan="4" style="text-align: left;">Значения получены:</td>' skip
-    '<td colspan="2" style="border-bottom: 1px solid black;"></td>' skip
     '<td></td>' skip
     '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '</tr>' skip
-  .
-  
-  run put-empty-string .
-  
-  put stream OutStr-html unformatted
-    '<tr>' skip
-    '<td></td>' skip
-    '<td colspan="4" style="text-align: left;">Замеры проводились:</td>' skip
-    '<td colspan="6" style="border-bottom: 1px solid black;"></td>' skip
+    '<td colspan="3" style="text-align: right; border: 1px solid black;">Председатель комиссии:</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[1] + '</td>' skip
+    '<td colspan="4" style="border-bottom: 1px solid black;"></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '</tr>' skip
   .
-  
-  run put-empty-string .
   
   put stream OutStr-html unformatted
     '<tr>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
-    '<td colspan="3" style="text-align: right;">Председатель комиссии:</td>' skip
-    '<td colspan="3" style="text-align: center; font-weight: bold;">Управляющий АЗК/АЗС</td>' skip
-    '<td colspan="3" style="border-bottom: 1px solid black;"></td>' skip
+    '<td colspan="3" style="text-align: right; border: 1px solid black;">Члены комиссии:</td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[2] + '</td>' skip
+    '<td colspan="4" style="border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '</tr>' skip
   .
-  
-  run put-empty-string .
-  
-  put stream OutStr-html unformatted
-    '<tr>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '<td colspan="3" style="text-align: right;">Члены комиссии:</td>' skip
-    '<td colspan="3" style="text-align: center; font-weight: bold;">Ст. смены (оператор-кассир)</td>' skip
-    '<td colspan="3" style="border-bottom: 1px solid black;"></td>' skip
-    '<td></td>' skip
-    '<td></td>' skip
-    '</tr>' skip
-  .
-  
-  run put-empty-string .
   
   put stream OutStr-html unformatted
     '<tr>' skip
@@ -473,8 +672,41 @@ on error undo, return error return-value
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
-    '<td colspan="3" style="text-align: center; font-weight: bold;">Ст. смены (оператор-кассир)</td>' skip
-    '<td colspan="3" style="border-bottom: 1px solid black;"></td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[3] + '</td>' skip
+    '<td colspan="4" style="border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[4] + '</td>' skip
+    '<td colspan="4" style="border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '</tr>' skip
+  .
+  
+  put stream OutStr-html unformatted
+    '<tr>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td></td>' skip
+    '<td colspan="4" style="text-align: center; border: 1px solid black;">' + v-jobtitle[5] + '</td>' skip
+    '<td colspan="4" style="border-bottom: 1px solid black;"></td>' skip
+    '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '</tr>' skip
@@ -540,6 +772,17 @@ procedure fill-tt :
   define variable v-pomi-density      as decimal no-undo .
   define variable v-diff              as decimal no-undo .
   define variable v-temp-izm-vol      as decimal no-undo .
+  define variable v-asi-pomi-density  as decimal no-undo .
+  define variable v-main-mi-name      as character no-undo .
+  define variable v-temp-mi-name      as character no-undo .
+  define variable v-dens-mi-name      as character no-undo .
+  define variable v-level-mi-name     as character no-undo .
+  define variable v-place-si          as integer no-undo .
+  define variable v-mi-lvl            as integer no-undo .
+  define variable v-mi-dnst           as integer no-undo .
+  define variable v-mi-tmp            as integer no-undo .
+  define variable v-value             as character no-undo .
+  define variable v-ok                as logical no-undo .
 
   for each buf_rvs-line no-lock where buf_rvs-line.obj-type = buf_rvs-doc.obj-type
                                   and buf_rvs-line.obj-code = buf_rvs-doc.obj-code
@@ -554,6 +797,15 @@ procedure fill-tt :
       v-pomi-density  = ?
       v-diff          = ?
       v-temp-izm-vol  = ?
+      v-asi-pomi-density = ?
+      v-place-si      = 0
+      v-mi-lvl        = 0
+      v-mi-dnst       = 0
+      v-mi-tmp        = 0
+      v-main-mi-name  = ""
+      v-temp-mi-name  = ""
+      v-dens-mi-name  = ""
+      v-level-mi-name = ""
     .
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
                                           and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
@@ -578,6 +830,15 @@ procedure fill-tt :
                                           and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
                                           and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
                                           and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "asi-pomi-density"
+    :
+      assign v-asi-pomi-density = decimal(buf_rvs-line-attr.attr-value) .
+    end .
+    for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
                                           and buf_rvs-line-attr.attr-code = "test-asi-diff"
     :
       assign v-diff = decimal(buf_rvs-line-attr.attr-value) .
@@ -592,13 +853,81 @@ procedure fill-tt :
       assign v-temp-izm-vol = decimal(buf_rvs-line-attr.attr-value) .
     end .
     
+    find first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                           and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                           and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                           and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                           and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                           and buf_rvs-line-attr.attr-code = "main-mi-name"
+                                           no-error .
+    if available buf_rvs-line-attr
+    and buf_rvs-line-attr.attr-value > ""
+    then do :
+      assign v-main-mi-name = buf_rvs-line-attr.attr-value .
+    end .
+    else do :
+      run placelib_get-attr  ( input {&place-si}
+                              ,input buf_rvs-line.obj-code
+                              ,input buf_rvs-line.obj-type
+                              ,input buf_rvs-line.pl-code
+                              ,output v-value
+                              ,output v-ok      ) no-error.
+      if v-ok then assign v-place-si = integer(v-value) no-error .
+      for first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = v-place-si :
+        assign v-main-mi-name = buf_sr-izmerenia.sr-model .
+      end .
+    end .
+    
+    for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "mi-lvl"
+    :
+      assign v-mi-lvl = integer(buf_rvs-line-attr.attr-value) no-error .
+      for first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = v-mi-lvl :
+        assign v-level-mi-name = buf_sr-izmerenia.sr-model .
+      end .
+    end .
+    
+    for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "mi-dnst"
+    :
+      assign v-mi-dnst = integer(buf_rvs-line-attr.attr-value) no-error .
+      for first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = v-mi-dnst :
+        assign v-dens-mi-name = buf_sr-izmerenia.sr-model .
+      end .
+    end .
+    
+    for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "mi-tmp"
+    :
+      assign v-mi-tmp = integer(buf_rvs-line-attr.attr-value) no-error .
+      for first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = v-mi-tmp :
+        assign v-temp-mi-name = buf_sr-izmerenia.sr-model .
+      end .
+    end .
+    
     create tt-result .
     assign
-      tt-result.gds-code          = buf_goods.gds-code
-      tt-result.gds-name          = buf_goods.gds-name
-      tt-result.pl-code           = buf_place.pl-code
-      tt-result.loc1              = buf_place.loc1
-      tt-result.test-asi-type     = v-test-asi-type
+      tt-result.gds-code      = buf_goods.gds-code
+      tt-result.gds-name      = buf_goods.gds-name
+      tt-result.pl-code       = buf_place.pl-code
+      tt-result.loc1          = buf_place.loc1
+      tt-result.test-asi-type = v-test-asi-type
+      tt-result.main-mi-name  = v-main-mi-name
+      tt-result.level-mi-name = v-level-mi-name
+      tt-result.temp-mi-name  = v-temp-mi-name
+      tt-result.dens-mi-name  = v-dens-mi-name
     .
     case v-test-asi-type :
       when "test-asi_dens-place"
@@ -612,10 +941,13 @@ procedure fill-tt :
           
           tt-result.level-total       = ?
           tt-result.density           = buf_rvs-line.density
+          tt-result.asi-pomi-density  = ?
           tt-result.temperature       = ?
           tt-result.mass              = ?
           
+          tt-result.diff-density-gram = v-diff / 1000
           tt-result.diff-density      = v-diff
+          tt-result.diff-mass-kilo    = ?
           tt-result.diff-mass         = ?
                            
           tt-result.asi-type-name     = "Резервуар"
@@ -632,10 +964,13 @@ procedure fill-tt :
           
           tt-result.level-total       = ?
           tt-result.density           = buf_rvs-line.density
+          tt-result.asi-pomi-density  = v-asi-pomi-density
           tt-result.temperature       = buf_rvs-line.temperature
           tt-result.mass              = ?
           
+          tt-result.diff-density-gram = v-diff / 1000
           tt-result.diff-density      = v-diff
+          tt-result.diff-mass-kilo    = ?
           tt-result.diff-mass         = ?
           
           tt-result.asi-type-name     = "ТРК"
@@ -652,10 +987,13 @@ procedure fill-tt :
           
           tt-result.level-total       = buf_rvs-line.level-total
           tt-result.density           = buf_rvs-line.density
+          tt-result.asi-pomi-density  = ?
           tt-result.temperature       = buf_rvs-line.temperature
           tt-result.mass              = buf_rvs-line.measure-cli-qnty
           
+          tt-result.diff-density-gram = ?
           tt-result.diff-density      = ?
+          tt-result.diff-mass-kilo    = ABS(buf_rvs-line.state-measure-cli-qnty - buf_rvs-line.measure-cli-qnty)
           tt-result.diff-mass         = v-diff
                            
           tt-result.asi-type-name     = "Масса"
@@ -670,6 +1008,9 @@ procedure put-empty-string :
   
   put stream OutStr-html unformatted
     '<tr>' skip
+    '<td>&nbsp;</td>' skip
+    '<td>&nbsp;</td>' skip
+    '<td>&nbsp;</td>' skip
     '<td>&nbsp;</td>' skip
     '<td>&nbsp;</td>' skip
     '<td>&nbsp;</td>' skip

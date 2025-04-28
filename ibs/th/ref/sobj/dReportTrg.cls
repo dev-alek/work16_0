@@ -11,7 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.ref.sobj.sSchet from propath.
-
+using ibs.th.ref.sobj.userhist from propath.
 block-level on error undo, throw.
 
 class ibs.th.ref.sobj.dReportTrg: 
@@ -49,7 +49,9 @@ class ibs.th.ref.sobj.dReportTrg:
    
    define variable mParamObj  as class ibs.th.ref.sobj.sParamObj  no-undo.
    define variable mParamForm as class ibs.th.ref.sobj.sParamForm no-undo.
+
    define variable mType      as class ibs.th.ref.sobj.stype      no-undo.
+   define variable userhist      as class ibs.th.ref.sobj.userhist      no-undo.
    
    
    define public property mDReport as class ibs.th.ref.sobj.dreport no-undo
@@ -849,6 +851,13 @@ method private void make-btn ():
 
   end.  /* do */
 end .
+
+
+METHOD public void my_select():
+AssignParam ().    
+Assign-frame().    
+end.
+
 
 method private void AssignParam ():
    define variable vtext as character no-undo.

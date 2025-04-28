@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bc54e1f2bf34, 3466, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:34 $
+$Workfile: r-regdoc.p $
+$Archive: rep/r-regdoc.p $
 
 Реестр документов расширенный
 
@@ -32,11 +33,11 @@ define input parameter rz-objecte   as logical no-undo.                    /* ра
 define input parameter p-sel-gds    as integer no-undo.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: bc54e1f2bf34, 3466, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:34 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-regdoc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-regdoc.p $":U .
 define variable vss-description as character no-undo init "Реестр документов расширенный".
 
 { cmp/vssrevis.i }

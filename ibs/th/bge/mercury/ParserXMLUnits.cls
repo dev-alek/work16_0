@@ -1,11 +1,11 @@
  
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0f3280859945, 1577, rls $
+$Author: SSlivenko $
+$Date: Tue Nov 06 04:41:35 2018 +0300 $
+$Workfile: ParserXMLUnits.cls $
+$Archive: ibs/th/bge/mercury/ParserXMLUnits.cls $
 
 Парсинг товаров из Меркурия
 
@@ -17,7 +17,7 @@ Creation date: 10/10/08
 
 using Progress.Lang.*.
 using ibs.th.bge.mercury.*.
-
+block-level on error undo, throw.
 class ibs.th.bge.mercury.ParserXMLUnits:
   
   define temp-table tt-units-merc

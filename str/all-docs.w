@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6298093c26d2, 2419, rls $
+$Author: druban $
+$Date: Ср июн 10 21:13:46 2020 +0300 $
+$Workfile: all-docs.w $
+$Archive: str/all-docs.w $
 
 Список документов
 
@@ -32,11 +32,11 @@ define input  parameter paris-hold      as   logical              no-undo.
 define input  parameter pardoc-rec      as   recid                no-undo.
 define output parameter mark-list       as   character            no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 6298093c26d2, 2419, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: druban $":U .
+define variable vss-date        as character no-undo initial "$Date: Ср июн 10 21:13:46 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: all-docs.w $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/all-docs.w $":U .
 define variable vss-description as character no-undo initial "Список документов":U .
 
 { cmp/vssrevis.i "substitute('&1|&2',bttns,parext-doc-type)"  }
@@ -48,6 +48,7 @@ define variable vss-description as character no-undo initial "Список документов"
 { str/tt-tax.i new }
 { cmp/library.i    }
 { str/lib-trn.i    }
+{ str/doc-code.i }
 { str/lib-farh.i   }
 { gbl/waitfram.i   noprocess }
 { cmp/gds-list.i gds-list def "new shared"}
@@ -60,7 +61,15 @@ define variable vss-description as character no-undo initial "Список документов"
 { gbl/fltopend.i defproc }
 { cmp/strcodec.i }
 {str\utdreturn.i}
+{ str/invMulti.i }
+{ ref/gds-attr.i }
+{ gbl/color.i }
+
 define variable v-sale             as   logical               no-undo.
+define variable bcol                                as   handle                        extent no-undo.
+define variable hBrowse                             as   handle                        no-undo.
+define variable ii                                  as   integer                       no-undo.
+
 
 { str/all-docs.i }
 { str/all-docc.i }
@@ -132,7 +141,18 @@ define new shared buffer t-doc for ub.trn-doc.
 { cmp/doc-list.i  doc-list def "new shared" }
 
 define new shared buffer temp-trn-doc for doc-list  .
+define temp-table tt-line like ub.doc-line .
 define variable r-2 as integer   no-undo init 1 .
+
+define temp-table tt-gds-list no-undo like ub.goods
+field nn as integer
+field doc-qnty as decimal
+field fact-qnty as decimal
+field itog-qnty as decimal
+index by-nn nn
+index by_gds-code gds-code
+.
+
 
 create doc-list.
 doc-list.doc-code = "" .
@@ -308,8 +328,10 @@ define variable v_shift            as   character             no-undo initial ?.
 define variable v_data-type        as   character             no-undo initial ?.
 define variable varhold            as   character             no-undo.
 define variable varhold-type       as   character             no-undo.
+define variable varpar-type        as   character             no-undo.
 define variable sort-column-name   as   character             no-undo.
 define variable filter-point       as   character             no-undo.
+define variable filter-label       as   character             no-undo.
 define variable l-query-was-opened as   logical               no-undo.
 define variable sort-column-phrase as   character             no-undo.
 define variable parschdoc-code     like ub.trn-doc.doc-code   no-undo.
@@ -422,6 +444,16 @@ DEFINE BUTTON b-f-ed
      LABEL "Основ&ан.":L
      SIZE 9 BY 1.
 
+DEFINE BUTTON b-to-inv
+     LABEL "В инвен.":L
+     tooltip "В инвентаризацию"
+     SIZE 9 BY 1. 
+
+DEFINE BUTTON b-to-update
+     LABEL "Обнов.":L
+     tooltip "Обновить интерфейс"
+     SIZE 7 BY 1. 
+          
 DEFINE BUTTON b-uf
      image file "cmp/b-must.bmp":u
      tooltip "Настройка колонок в таблице для пользователя"
@@ -1202,13 +1234,15 @@ DEFINE FRAME {&frame-name}
      b-unrv   AT ROW 2.3 COL 55
      b-exp    AT ROW 2.3 COL 64
      b-f-ed   AT ROW 2.3 COL 72
+     b-to-inv AT ROW 2.3 COL 81
+     b-to-update AT ROW 2.3 COL 90
      b-covdocs AT ROW 2.3 COL  81
-     b-history    AT ROW 2.3 COL 81
-     b-print  AT ROW 2.3 COL 90
+     b-history    AT ROW 2.3 COL 90
+     b-print  AT ROW 2.3 COL 98
      b-uf     AT ROW 1 COL 82
      b-filter-ext     AT ROW 1 COL 85
-     b-scaner         AT ROW 2.3 COL 89
-     r-scaner         AT ROW 2.3   COL 89
+     b-scaner         AT ROW 2.3 COL 98
+     r-scaner         AT ROW 2.3   COL 98
      br-docs  AT ROW 3.5 COL 1
      sch-code at row 19 col 2 label "&Начало номера"   VIEW-AS FILL-IN SIZE 15 BY 1 fgcolor 4
      sch-date at row 19 col 33 label "Д&ата"
@@ -1558,6 +1592,19 @@ ON CHOOSE OF MENU-ITEM m-rep-4 in menu m-rep DO:  /* ттн */
 END.
 */
 
+on choose of b-to-inv do: /* в инвентаризацию */
+  if not available t-doc then do:
+    message "Неправильно выбран документ." view-as alert-box.
+    return no-apply.
+  end.
+  run proc-m_to-inv in this-procedure.
+  return no-apply.
+end.
+
+on choose of b-to-update do: /* обновить */
+run UI-on          in this-procedure ('open').
+run init-browse-p  in this-procedure .
+end.
 on choose of menu-item m_fact-edit-1 in menu POPUP-MENU-b-f-ed do: /* текущий */
   if not available t-doc then do:
     message "Неправильно выбран документ." view-as alert-box.
@@ -1653,12 +1700,90 @@ end.
 
 on choose of b-add in frame {&frame-name} /* Добав */
 do:
+
   vardoc-mode = {&add-def}.
   run local-add in this-procedure no-error.
   if pardoc-rec <> ? then do:
     reposition {&browse-name} to recid pardoc-rec no-error.
   end.
 end.
+
+    ON ROW-DISPLAY OF br-docs IN FRAME {&frame-name}
+      DO:
+        define buffer color_inv-doc-attr for ub.inv-doc-attr .  
+        if AVAILABLE (t-doc) and t-doc.status_ = {&inquiry} then 
+        do:   
+          find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+            ub.inv-doc-attr.attr-code = "isManual" and ub.inv-doc-attr.attr-value = string(true) no-error .
+          if available (ub.inv-doc-attr) then 
+          do:  
+            find first color_inv-doc-attr no-lock where color_inv-doc-attr.doc-code = t-doc.doc-code and
+            color_inv-doc-attr.attr-code = "ManualTSD" and ub.inv-doc-attr.attr-value <> "" no-error .
+            if available (color_inv-doc-attr) then do:
+            do ii = 1 to extent (bcol):  
+              if valid-handle (bcol[ii]) 
+                then 
+              do:
+                assign
+                  bcol[ii]:fgcolor = BROWN_COLOR.
+              end.
+            end.               
+            end.
+            else do:
+            do ii = 1 to extent (bcol):  
+              if valid-handle (bcol[ii]) 
+                then 
+              do:
+                assign
+                  bcol[ii]:fgcolor = BLUE_COLOR.
+              end.
+            end.
+            end.
+          end.
+          find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+            ub.inv-doc-attr.attr-code = "isManualError" and ub.inv-doc-attr.attr-value = string(true) no-error .
+          if available (ub.inv-doc-attr) then 
+          do:  
+            
+            do ii = 1 to extent (bcol):  
+              if valid-handle (bcol[ii]) 
+                then 
+              do:
+                assign
+                  bcol[ii]:fgcolor = RED_COLOR.
+              end.
+            end.
+          end.      
+          find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+            ub.inv-doc-attr.attr-code = "invMultDevice" and ub.inv-doc-attr.attr-value = string(true) no-error .
+          if available (ub.inv-doc-attr) then 
+          do:  
+            find first color_inv-doc-attr no-lock where color_inv-doc-attr.doc-code = t-doc.doc-code and
+            color_inv-doc-attr.attr-code = "MultiTSD" and ub.inv-doc-attr.attr-value <> "" no-error .
+            if available (color_inv-doc-attr) then do:
+            do ii = 1 to extent (bcol):  
+              if valid-handle (bcol[ii]) 
+                then 
+              do:
+                assign
+                  bcol[ii]:fgcolor = BROWN_COLOR.
+              end.
+            end.               
+            end.
+            else do:
+            
+            do ii = 1 to extent (bcol):  
+              if valid-handle (bcol[ii]) 
+                then 
+              do:
+                assign
+                  bcol[ii]:fgcolor = DARK_BLUE_COLOR.
+              end.
+              end.
+            end.
+          end.       
+        end.
+      end.
 
 on choose of b-copy in frame {&frame-name}
 do:
@@ -2296,6 +2421,13 @@ run init-browse-p  in this-procedure .
 /*-- Проверка, нужна ли кнопка для внешней программы. Если нужна, включаем b-ext ---*/
 /*--------------------Проверка Нужна ли кнопка СОЗДАНИЕ РАСХОДНЫХ ВНУТРЕННИХ ЗАПРОСОВ------------------------------- */
 run create-button  in this-procedure .
+  extent (bcol) = ?.
+  hbrowse = browse {&BROWSE-NAME}:handle.
+  extent (bcol) = hbrowse:num-columns.
+  bcol[1] = hbrowse:first-column.
+  do ii = 1 to extent (bcol).  
+    bcol[ii] = hbrowse:get-browse-column (ii).
+  end.
 run UI-on          in this-procedure ('open').
 /* message time - tt. */
 WAIT-FOR GO OF FRAME {&FRAME-NAME} focus br-docs.
@@ -4355,9 +4487,64 @@ else do:
   else do:
     assign
     varlog = no.
+
+    if t-doc.status_ = {&inquiry} and num-entries(t-doc.doc-code,"/") > 0 then do:
+    if t-doc.doc-type = {&inventory} then do:
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_expense_del-INV-inquiry':U
+        {&cntxt-object}
+        t-doc.host-code
+        t-doc.obj-type
+        t-doc.obj-code
+        0
+        0
+        0
+        true
+        varlog
+      }
+    if not varlog then return .
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "ItogInv" and
+    ub.inv-doc-attr.attr-value = entry(1,t-doc.doc-code,"/") no-error .
+    if available (ub.inv-doc-attr) then do:
+      message "Документ нельзя удалить"
+      view-as alert-box.
+      return.
+    end.
+
+    message "Удалить документ №" t-doc.doc-code "?   Вы уверены ?"
+            view-as alert-box question buttons OK-Cancel update varlog.
+    {&if-not-true}      
+
+    end.      
+    else do:
+      { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_expense_del-inquiry':U
+        {&cntxt-object}
+        t-doc.host-code
+        t-doc.obj-type
+        t-doc.obj-code
+        0
+        0
+        0
+        true
+        varlog
+      }
+    message "Удалить документ №" t-doc.doc-code "?   Вы уверены ?"
+            view-as alert-box question buttons OK-Cancel update varlog.
+    {&if-not-true}      
+    end.
+    end.
+    else do:
     message "Удалить документ №" t-doc.doc-code "?   Вы уверены ?"
             view-as alert-box question buttons OK-Cancel update varlog.
     {&if-not-true}
+    end.
   end.
 end.
 
@@ -4788,6 +4975,16 @@ define variable varno-change-cli-cntr as logical   no-undo.
 define variable varvalue-oldsuppcntr  as character no-undo.
 define variable vartype-oldsuppcntr   as character no-undo.
 {&net-proc}
+if t-doc.status_ <> {&wayb} then do:
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+    (ub.inv-doc-attr.attr-code = 'invMultDevice' or ub.inv-doc-attr.attr-code begins 'isManual') and
+    ub.inv-doc-attr.attr-value = string(true) no-error .
+    if available (ub.inv-doc-attr) then do:
+      message "Редактирование запрещено! Инвентаризация разрешена только на ТСД"
+      view-as alert-box.
+      return .
+    end.
+end.    
 if ( t-doc.status_ = {&wayb}  and  t-doc.flag_ = false ) or
      t-doc.status_ = {&inquiry}  then do:
   case t-doc.ext-doc-type
@@ -5142,6 +5339,7 @@ case t-doc.doc-type :
   when {&inventory} then do:
       case t-doc.ext-doc-type :
           when {&TDEDT_Inv} then do:
+              if t-doc.status_ = {&permitted} then run proc-check-inv .
               run str/inv-doc.w
                 (input parparentproc,
                  input-output pardoc-rec,
@@ -5696,7 +5894,14 @@ do while varnext-prev <> ?:
     end.
     when {&inventory} then do:
       if t-doc.ext-doc-type = {&TDEDT_Inv} then do:
-        run str/inv-doc.w  (input parparentproc, input-output pardoc-rec, input vardoc-mode, input {&inventory}, input no, input-output varnext-prev, input t-doc.ext-doc-type, input paris-hold, input-output varline-rec, input br-handle, input bf-handle) .
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "isManualError" and
+        ub.inv-doc-attr.doc-code = t-doc.doc-code and
+        ub.inv-doc-attr.attr-value = string(true) no-error .
+        if available (ub.inv-doc-attr) then run str/inv-doc-err.w  (input parparentproc, input-output pardoc-rec, input vardoc-mode, input {&inventory}, input no, input-output varnext-prev, input t-doc.ext-doc-type, input paris-hold, input-output varline-rec, input br-handle, input bf-handle) .
+        else do:
+          if t-doc.status_ = {&permitted} then run proc-check-inv .
+          run str/inv-doc.w  (input parparentproc, input-output pardoc-rec, input vardoc-mode, input {&inventory}, input no, input-output varnext-prev, input t-doc.ext-doc-type, input paris-hold, input-output varline-rec, input br-handle, input bf-handle) .
+        end.
       end.
       else do:
         if t-doc.ext-doc-type = {&TDEDT_Peresort} then do:
@@ -7032,7 +7237,12 @@ b-quit b-lkp b-print b-exp b-history b-sch b-help br-docs b-rep b-f-ed
 sch-code sch-date sch-fact sch-objtype sch-objcode sch-sum ed-notes b-uf b-filter-ext b-scaner
 b-akt WITH FRAME {&frame-name}.
 hide b-copy in FRAME {&frame-name}.
-
+if parext-doc-type = {&TDEDT_Inv} then do:
+  enable b-to-inv b-to-update with frame {&frame-name} .
+end.
+else do:
+  hide b-to-inv b-to-update in frame {&frame-name} .
+end.
 assign
   v-is-lgas = true when lookup({&trdcattr-is-lgas-corr}, bttns) > 0.
 
@@ -7297,6 +7507,767 @@ procedure proc-rash-zapr :
     end.
  end. /* do */
 end procedure. /* proc-rash-zapr */
+
+procedure proc-m_to-inv :
+  define buffer buf_trn-doc for ub.trn-doc .
+  define buffer bf_trn-doc  for ub.trn-doc .
+  define variable ii          as integer   no-undo .
+  define variable list-trn    as character no-undo .
+  define variable trnDocCode  as character no-undo .
+  define variable errorTrnDoc as character no-undo .
+  define variable misTrnDoc   as character no-undo .
+  define variable glog        as logical   no-undo .
+  define variable isManual    as logical   no-undo .
+  define variable isMultiTSD  as logical   no-undo .
+  define variable trn-doc     as character no-undo .
+  
+  do on error undo, return error return-value :
+    if not available t-doc and mark-list = "" then 
+    do:
+      message "Не выбран документ." view-as alert-box.
+      return error.
+    end.
+    if mark-list = "" then 
+    do:
+      assign 
+        pardoc-rec = recid( t-doc ).
+      find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+        ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
+      if available (ub.inv-doc-attr) then isMultiTSD = true .
+      else 
+      do:
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+          ub.inv-doc-attr.attr-code = 'isManual' and ub.inv-doc-attr.attr-value = string(true) no-error .
+        if available (ub.inv-doc-attr) then isManual = true .
+      end.
+      if isMultiTSD and not isManual then do:
+      find first buf_trn-doc no-lock where t-doc.doc-code = entry(1,buf_trn-doc.doc-code,"/") and 
+      num-entries(buf_trn-doc.doc-code,"/") > 1 and buf_trn-doc.status_ = {&inquiry} and 
+      not buf_trn-doc.flag_ no-error .
+      if not available (buf_trn-doc) then 
+      do:
+        message "У выбранного документа нет документов для объединения"
+          view-as alert-box.
+        return error .
+      end.
+      else 
+      do:
+        for each bf_trn-doc no-lock where t-doc.doc-code = entry(1,bf_trn-doc.doc-code,"/") and 
+          num-entries(buf_trn-doc.doc-code,"/") > 1 and bf_trn-doc.status_ = {&inquiry} and not bf_trn-doc.flag_:
+          list-trn = list-trn + "," + string(bf_trn-doc.doc-code) .
+        end. 
+        list-trn = trim(list-trn,",") .
+      end.
+      trnDocCode = t-doc.doc-code .         
+      end.
+      if isManual and not isMultiTSD then do:
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+        ub.inv-doc-attr.attr-code = "ManualTSD" no-error .
+        if available (ub.inv-doc-attr) then do:
+          message "На основе документа инвентаризации " + string(t-doc.doc-code) + " уже сформирована итоговая инвентаризация" view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.
+        end.
+        list-trn = t-doc.doc-code .
+      end.
+      if isManual and isMultiTSD then do:
+          message "Выбранные документы относятся к разным инвентаризациям"  view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.           
+      end.
+      if t-doc.status_ <> {&fact} then do:
+      message "После создания итогового документа по инвентаризации " + list-trn + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
+        "Внести изменения в полученный документ инвентаризации можно будет только вручную." skip
+        "Продолжить?"
+        view-as alert-box QUESTION buttons YES-NO update glog.
+      if not glog then 
+      do:
+        mark-list = "" .
+        run UI-on in this-procedure ( input "open" ).
+        return .
+      end.
+      end.
+    end.
+    else 
+    do:
+      do ii = 1 to num-entries(mark-list):
+        find first buf_trn-doc no-lock where recid(buf_trn-doc) = integer(entry(ii,mark-list)) no-error .
+        if not available (buf_trn-doc) then 
+        do:
+          message "Не найден документ." view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.
+        end.
+        if buf_trn-doc.status_ = {&inquiry} and not buf_trn-doc.flag_ then 
+        do:
+
+      find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+        ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
+      if available (ub.inv-doc-attr) then isMultiTSD = true .
+      else do:
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+          ub.inv-doc-attr.attr-code = 'isManual' and ub.inv-doc-attr.attr-value = string(true) no-error .
+        if available (ub.inv-doc-attr) then isManual = true .
+        else do:
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+          ub.inv-doc-attr.attr-code = 'isManualError' and ub.inv-doc-attr.attr-value = string(true) no-error .
+        if available (ub.inv-doc-attr) then do:
+              message "Выбраны документы, не подлежащие включению в итоговую инвентаризацию! Инвентаризация не создана!"  view-as alert-box.
+              mark-list = "" .
+              run UI-on in this-procedure ( input "open" ).
+              return error.                    
+        end.
+        else do:
+              message "Выбраны документы, не подлежащие включению в итоговую инвентаризацию! Инвентаризация не создана!"  view-as alert-box.
+              mark-list = "" .
+              run UI-on in this-procedure ( input "open" ).
+              return error.                    
+        end.          
+        end.        
+      end.
+            if isManual and isMultiTSD then 
+            do:
+                message "Выбранные документы относятся к разным инвентаризациям"  view-as alert-box.
+                mark-list = "" .
+                run UI-on in this-procedure ( input "open" ).
+                return error.           
+            end.
+        if  isMultiTSD and not isManual then do:
+          if trnDocCode = "" then trnDocCode = entry(1,buf_trn-doc.doc-code,"/").
+          else 
+          do:
+            if trnDocCode <> entry(1,buf_trn-doc.doc-code,"/") then 
+            do:
+              message "Выбранные документы относятся к разным инвентаризациям"  view-as alert-box.
+              mark-list = "" .
+              run UI-on in this-procedure ( input "open" ).
+              return error.              
+            end.
+          end.
+          end.
+        end.
+        else 
+        do:
+          message "Выбраны документы, не подлежащие включению в итоговую инвентаризацию! Инвентаризация не создана!" view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.
+        end.
+        if isManual and not isMultiTSD then do:
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+        ub.inv-doc-attr.attr-code = "ManualTSD" no-error .
+        if available (ub.inv-doc-attr) then do:
+          message "На основе документа инвентаризации " + string(buf_trn-doc.doc-code) + " уже сформирована итоговая инвентаризация" view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.
+        end.
+        end.
+
+        list-trn = list-trn + "," + string(buf_trn-doc.doc-code) .
+      end.
+      list-trn = trim(list-trn,",").
+       
+      if isMultiTSD then do:
+      find first bf_trn-doc no-lock where bf_trn-doc.doc-code = trnDocCode no-error .
+      if not available (bf_trn-doc) then do:
+          message "По инвентаризации " + string(trnDocCode) + " уже создана итоговая инвентаризация " + string(trnDocCode) + "/и" skip
+          "Необходимые изменения можно внести вручную в " + string(trnDocCode) + "/и"
+           view-as alert-box.
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return error.        
+      end.  
+      for each bf_trn-doc no-lock where trnDocCode = entry(1,bf_trn-doc.doc-code,"/") and 
+      num-entries(buf_trn-doc.doc-code,"/") > 1 and bf_trn-doc.status_ = {&inquiry} and not bf_trn-doc.flag_: 
+        if lookup(string(bf_trn-doc.doc-code),list-trn) = 0 then 
+        do:
+          misTrnDoc = misTrnDoc + ","  + bf_trn-doc.doc-code .
+        end.
+      end. 
+      if misTrnDoc <> "" then 
+      do:
+        list-trn <> trim(misTrnDoc,",") .
+        message "По инвентаризации " + trnDocCode + " есть другие загруженные документы." skip
+          "При продолжении они будут проигнорированы." skip
+          "Продолжить?"
+          view-as alert-box QUESTION buttons YES-NO update glog.
+        if not glog then 
+        do:
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return .
+        end.
+      end.
+        message "После создания итогового документа по инвентаризации " + trnDocCode + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
+          "Внести изменения в полученный документ инвентаризации можно будет только вручную." skip
+          "Продолжить?"
+          view-as alert-box QUESTION buttons YES-NO update glog.
+        if not glog then 
+        do:
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return .
+        end.
+      end.
+    end.
+    
+    
+    
+    list-trn = trim(list-trn,",").
+
+    if isManual then run itogInvDocManual(list-trn, output pardoc-rec).
+    else run itogInvDoc(trnDocCode, list-trn, output pardoc-rec).
+    mark-list = "" .
+    apply "ENTRY":U to {&BROWSE-NAME} in frame {&FRAME-NAME}.
+    if error-status :error then 
+    do:
+      find t-doc no-lock where recid( t-doc ) = pardoc-rec. /* буфер ломается при return error */
+      return error.
+    end.
+    
+    find t-doc no-lock where recid( t-doc ) = pardoc-rec.
+
+    run UI-on in this-procedure ( input "open" ).
+  end. /* on error */
+end procedure. /* proc-m_to-inv */
+
+procedure itogInvDocManual :
+  define input parameter par-list as character no-undo .
+  define output parameter pardoc-rec as recid no-undo .
+  
+  define variable vardoc-code  as character no-undo .
+  define variable ii           as integer   no-undo .
+  define variable line-rec     as recid     no-undo .
+  define variable old-line-rec as recid     no-undo .
+  define variable chg-qnty     like ub.doc-line.fact-qnty no-undo .
+  define buffer buf_trn-doc       for ub.trn-doc .
+  define buffer bf_trn-doc        for ub.trn-doc .
+  define buffer buf_doc-line      for ub.doc-line .
+  define buffer bf_doc-line       for ub.doc-line .
+  define buffer old_doc-line      for ub.doc-line .
+  define buffer buf_trn-doc-sum   for ub.trn-doc-sum .
+  define buffer buf_doc-line-sum  for ub.doc-line-sum .
+  define buffer bf_curr-accnt     for ub.curr-accnt .
+  define buffer bf_sysconf        for ub.sysconf .
+  define buffer buf_marking-lines for ub.marking-lines .
+  define variable vismsg         as logical   no-undo init true.
+  define variable lns-cnt        as integer   no-undo.
+  define variable v-marking-type as character no-undo.
+  define variable v-type         as character no-undo.
+  define variable v-is-marking   as logical   no-undo init false.
+  define variable vartime        as integer   no-undo.
+  define variable varmessage     as character no-undo.
+  
+  
+  define variable nn as integer no-undo .
+  do on error undo, return error return-value : 
+
+    empty temp-table tt-gds-list .
+  { str/adinvdoc.i
+        v-cntxt-obj-type
+        v-cntxt-obj-code
+        v-cntxt-userid
+        pardoc-rec
+        no-error
+      }
+    if error-status :error then 
+    do:
+      return error.
+    end.
+
+    find bf_trn-doc where recid(bf_trn-doc) = pardoc-rec .
+    assign
+      bf_trn-doc.tot-calc = ?.
+
+    assign
+      bf_trn-doc.PS      = par-list
+      .
+    create ub.inv-doc-attr .
+    assign
+      ub.inv-doc-attr.doc-code   = bf_trn-doc.doc-code
+      ub.inv-doc-attr.attr-code  = 'ItogInvManual'
+      ub.inv-doc-attr.attr-value = par-list
+      .
+    /*создание атрибута, чтобы не было сообщений, после удалить его*/
+    create ub.inv-doc-attr .
+    assign
+      ub.inv-doc-attr.doc-code   = bf_trn-doc.doc-code
+      ub.inv-doc-attr.attr-code  = 'notMes'
+      ub.inv-doc-attr.attr-value = string(true)
+      .
+      
+    assign
+      vartime = time
+      lns-cnt = 0
+      .
+
+      do ii = 1 to num-entries(par-list):
+        for each buf_doc-line no-lock where buf_doc-line.doc-code = entry(ii,par-list,","):
+          find first tt-gds-list where tt-gds-list.artic = buf_doc-line.artic and
+          tt-gds-list.prod-code = buf_doc-line.prod-code and
+          tt-gds-list.prod-type = buf_doc-line.prod-type no-error .
+          if not available (tt-gds-list) then do:
+            nn = nn + 1 .
+            find first ub.goods no-lock where ub.goods.artic = buf_doc-line.artic and
+            ub.goods.prod-code = buf_doc-line.prod-code and
+            ub.goods.prod-type = buf_doc-line.prod-type no-error .
+            create tt-gds-list.
+              BUFFER-COPY ub.goods to tt-gds-list .
+              assign tt-gds-list.nn = nn .
+
+          assign
+          tt-gds-list.doc-qnty = tt-gds-list.doc-qnty + buf_doc-line.doc-qnty
+          tt-gds-list.fact-qnty = tt-gds-list.fact-qnty + buf_doc-line.fact-qnty
+          .
+          tt-gds-list.itog-qnty = tt-gds-list.doc-qnty - tt-gds-list.fact-qnty .
+          end.
+          else do:
+          assign
+          tt-gds-list.doc-qnty = tt-gds-list.doc-qnty + buf_doc-line.doc-qnty 
+          tt-gds-list.fact-qnty = tt-gds-list.doc-qnty - tt-gds-list.itog-qnty
+          .   
+          end.
+        end.
+      end.
+    tr:
+    for each tt-gds-list
+      break by tt-gds-list.nn
+      on error undo tr, next tr
+      :
+      find ub.goods no-lock
+        where  ub.goods.gds-code = tt-gds-list.gds-code .
+
+      assign
+        lns-cnt = lns-cnt + 1
+        .
+
+      run gds-attr-value (
+        input ub.goods.gds-code,
+        input {&attr-mark-type},
+        output v-marking-type,
+        output v-type
+        ).
+
+      
+      if can-find (first ub.doc-line where ub.doc-line.doc-code = bf_trn-doc.doc-code)
+        then 
+      do:
+        if v-marking-type <> "" and v-marking-type <> "not-type" and
+          ((not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code):GetIsMarkingForType(v-marking-type) and (v-is-marking = true))
+          or (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code):GetIsMarkingForType(v-marking-type) and v-is-marking = false))
+          then 
+        do:
+          message
+            substitute("Ошибка при добавлении строки инвентаризации. Совместное добавление товаров, подлежащих маркировке и не подлежащих маркировке, запрещено.") skip
+            view-as alert-box error .
+          undo tr, next tr.
+        end.
+      end.
+      else 
+      do: 
+        if v-marking-type <> "" and v-marking-type <> "not-type" then 
+        do:
+          if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
+            then v-is-marking = true.
+        end.  
+      end. 
+      
+      find first bf_doc-line where
+        bf_doc-line.doc-code  = bf_trn-doc.doc-code         and
+        bf_doc-line.artic     = ub.goods.artic     and
+        bf_doc-line.prod-type = ub.goods.prod-type and
+        bf_doc-line.prod-code = ub.goods.prod-code no-error.
+      if available bf_doc-line then 
+      do:
+        undo tr, next tr.
+      end.
+      run waitfram-join in this-procedure (  input "Добавление товаров в документ инвентаризации.",
+        input substitute( " Добавлено &1.", lns-cnt - 1 ),
+        input substitute( " Время &1.", string( time - vartime, "hh:mm:ss":U ) ),
+        output varmessage ).
+      run waitfram-show in this-procedure (  input varmessage ).
+      { str/adinvlin.i
+          parparentproc
+          bf_trn-doc.doc-code
+          ub.goods.artic
+          ub.goods.prod-type
+          ub.goods.prod-code
+          line-rec
+          no-error
+      }
+      if error-status :error then 
+      do:
+        run waitfram-hide in this-procedure.
+        message
+          vss-workfile vss-revision vss-description skip
+          substitute("Ошибка при добавлении строки инвентаризации") skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        undo tr, next tr.
+      end.
+      find first ub.doc-line where recid( ub.doc-line ) = line-rec.
+      assign
+        ub.doc-line.prt-OK = ?
+        .
+      if t-doc.status_ = {&permitted} and
+        t-doc.flag_   = no           then 
+      do:
+      { str/filinvln.i
+            ub.doc-line.doc-code
+            ub.doc-line.artic
+            ub.doc-line.prod-type
+            ub.doc-line.prod-code
+            this-procedure:handle
+            no-error
+        }
+        if error-status :error then 
+        do:
+          run waitfram-hide in this-procedure.
+          message "Ошибка при заполнении сумм по строке товара: "
+            ub.doc-line.artic " " ub.doc-line.prod-type " " ub.doc-line.prod-code skip
+            return-value skip
+            view-as alert-box error.
+          undo tr, next tr .
+        end.
+      end.
+    end.
+
+          { gbl/int-clos.i
+    parparentproc
+    bf_trn-doc.doc-code
+    gds-list
+    no-error
+  }
+  if error-status :error then do:
+    return .
+  end.
+            { gbl/int-clos.i
+    parparentproc
+    bf_trn-doc.doc-code
+    gds-list
+    no-error
+  }
+    if error-status :error then do:
+    return .
+  end.
+
+  for each tt-gds-list:
+    for first ub.doc-line exclusive-lock where ub.doc-line.doc-code = bf_trn-doc.doc-code and
+    ub.doc-line.artic = tt-gds-list.artic and ub.doc-line.prod-code = tt-gds-list.prod-code and
+    ub.doc-line.prod-type = tt-gds-list.prod-type:
+
+              if tt-gds-list.fact-qnty <> 0 then 
+      do:
+
+        find first ub.goods no-lock where ub.goods.artic = doc-line.artic and
+          ub.goods.prod-code = doc-line.prod-code and
+          ub.goods.prod-type = doc-line.prod-type no-error .
+        line-rec = recid(doc-line) .
+      
+        find first old_doc-line no-lock where old_doc-line.doc-code = bf_trn-doc.doc-code and
+          old_doc-line.artic = ub.doc-line.artic and
+          old_doc-line.prod-code = ub.doc-line.prod-code and
+          old_doc-line.prod-type = ub.doc-line.prod-type no-error .
+        old-line-rec = recid(old_doc-line) .
+        
+        find first ub.units   no-lock where ub.units.unit-name    = ub.goods.unit-base.
+        find       ub.gds-prt no-lock where ub.gds-prt.upper-code = ub.goods.prt-root.
+
+        run invMulti(
+          input parparentproc,
+          input pardoc-rec,
+          input line-rec,
+          input recid(ub.goods),
+          input recid (ub.gds-prt),
+          input tt-gds-list.fact-qnty,
+          input {&g#root}).
+      end.
+
+    end.
+      
+    end.
+    run str/clcsumga.p ( input bf_trn-doc.doc-code ).
+
+      for first ub.inv-doc-attr exclusive-lock where
+    ub.inv-doc-attr.doc-code = bf_trn-doc.doc-code and
+    ub.inv-doc-attr.attr-code = "notMes":
+      delete ub.inv-doc-attr .
+    end. 
+    do ii = 1 to num-entries (par-list):
+    create ub.inv-doc-attr .
+    assign
+    ub.inv-doc-attr.doc-code = entry(ii,par-list)
+    ub.inv-doc-attr.attr-code = "ManualTSD"
+    ub.inv-doc-attr.attr-value = bf_trn-doc.doc-code .
+    end.
+  end. /* on error */
+end procedure. /* itogInvDocManual */
+
+procedure itogInvDoc :
+  define input parameter par-docCode as character no-undo .
+  define input parameter par-list as character no-undo .
+  define output parameter pardoc-rec   as recid     no-undo .
+  define variable vardoc-code  as character no-undo .
+  define variable ii           as integer   no-undo .
+  
+  define variable line-rec     as recid     no-undo .
+  define variable old-line-rec as recid     no-undo .
+  define variable chg-qnty     like ub.doc-line.fact-qnty no-undo .
+
+  define buffer buf_trn-doc      for ub.trn-doc .
+  define buffer bf_trn-doc       for ub.trn-doc .
+  define buffer buf_doc-line     for ub.doc-line .
+  define buffer bf_doc-line      for ub.doc-line .
+  define buffer old_doc-line     for ub.doc-line .
+  define buffer buf_trn-doc-sum  for ub.trn-doc-sum .
+  define buffer buf_doc-line-sum for ub.doc-line-sum .
+  define buffer bf_inv-doc-attr  for ub.inv-doc-attr .
+  
+  do on error undo, return error return-value : 
+    find first buf_trn-doc exclusive-lock where buf_trn-doc.doc-code = par-docCode no-error .
+    if not available (buf_trn-doc) then do:
+      message "Не выбран документ для создания итогового документа"
+        view-as alert-box.
+        return error .
+    end.
+    if num-entries (buf_trn-doc.doc-code,"/") > 0 then vardoc-code
+     = entry (1,buf_trn-doc.doc-code,"/") + "/и" .
+    else vardoc-code = buf_trn-doc.doc-code + "/и" .
+    if buf_trn-doc.status_ = {&wayb} then 
+    do:
+    /*Проверка на ошибки в документах запрос*/
+    end.
+    /*Создание итогового документа в статусе*/
+/*    run doc-code in this-procedure                         */
+/*      (input  "main":u,                                    */
+/*      input  buf_trn-doc.obj-type,                         */
+/*      input  buf_trn-doc.obj-code,                         */
+/*      input  ?,                                            */
+/*      output vardoc-code) no-error.                        */
+/*    if error-status :error then                            */
+/*    do:                                                    */
+/*      message "Ошибка при генерации номера документа." skip*/
+/*        return-value skip                                  */
+/*        error-status :get-message(1)                       */
+/*        view-as alert-box error.                           */
+/*      undo, return error.                                  */
+/*    end.                                                   */
+  
+    create ub.trn-doc .
+    assign
+      ub.trn-doc.doc-code = vardoc-code 
+      ub.trn-doc.out-code = buf_trn-doc.doc-code
+      . 
+    if buf_trn-doc.status_ = {&wayb} then 
+    do:
+      ub.trn-doc.status_ = {&wayb}.
+      ub.trn-doc.flag_    = no .
+    end.
+    else 
+    do:
+      ub.trn-doc.status_ = {&wayb}.
+      ub.trn-doc.flag_    = true .      
+    end.
+
+    buffer-copy buf_trn-doc except doc-code status_ flag_ out-code to ub.trn-doc .    
+    release ub.trn-doc .
+    create ub.inv-doc-attr .
+    assign
+      ub.inv-doc-attr.doc-code   = vardoc-code
+      ub.inv-doc-attr.attr-code  = 'ItogInv'
+      ub.inv-doc-attr.attr-value = par-docCode
+      .
+    /*создание атрибута, чтобы не было сообщений, после удалить его*/
+    create ub.inv-doc-attr .
+    assign
+      ub.inv-doc-attr.doc-code   = vardoc-code
+      ub.inv-doc-attr.attr-code  = 'notMes'
+      ub.inv-doc-attr.attr-value = string(true)
+      .
+    do ii = 1 to num-entries (par-list):
+    create ub.inv-doc-attr .
+    assign
+    ub.inv-doc-attr.doc-code = entry(ii,par-list)
+    ub.inv-doc-attr.attr-code = "MultiTSD"
+    ub.inv-doc-attr.attr-value = vardoc-code .
+    end.
+    
+    /* копирование атрибутов из исходной инвентаризации */
+    for each bf_inv-doc-attr no-lock where bf_inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+    bf_inv-doc-attr.attr-code <> "invMultDevice":
+        create ub.inv-doc-attr.
+        assign
+        ub.inv-doc-attr.doc-code = vardoc-code
+        ub.inv-doc-attr.attr-code = bf_inv-doc-attr.attr-code
+        ub.inv-doc-attr.attr-value = bf_inv-doc-attr.attr-value
+        .
+    end.
+    
+    /* создание строк */
+    for each buf_doc-line no-lock where buf_doc-line.doc-code = par-docCode:
+      create ub.doc-line .
+      assign
+        ub.doc-line.doc-code  = vardoc-code
+        ub.doc-line.artic     = buf_doc-line.artic
+        ub.doc-line.prod-code = buf_doc-line.prod-code
+        ub.doc-line.prod-type = buf_doc-line.prod-type
+        ub.doc-line.line-num  = buf_doc-line.line-num
+        .
+      buffer-copy buf_doc-line except doc-code artic prod-code prod-type line-num to ub.doc-line .
+      create tt-line.
+      tt-line.fact-qnty = - buf_doc-line.doc-qnty .
+      tt-line.doc-qnty  = 0 .
+      buffer-copy ub.doc-line except doc-qnty fact-qnty to tt-line . 
+      for first ub.gds-obj exclusive-lock where ub.gds-obj.artic = buf_doc-line.artic and
+      ub.gds-obj.prod-code = buf_doc-line.prod-code and
+      ub.gds-obj.prod-type = buf_doc-line.prod-type and
+      ub.gds-obj.obj-code = buf_doc-line.obj-code and
+      ub.gds-obj.obj-type = buf_doc-line.obj-type:
+        ub.gds-obj.inv-on = false .
+      end.
+      release ub.doc-line .
+    end.
+    
+      for each ub.parts exclusive-lock where ub.parts.in-code = par-docCode :
+      delete ub.parts .
+      end. 
+    /* Проставляем фактическое значение из накладных запрос*/
+    if not buf_trn-doc.status_ = {&wayb} then 
+    do:
+      { gbl/int-clos.i
+    parparentproc
+    vardoc-code
+    gds-list
+    no-error
+  }
+  if error-status:error then return error .
+    end.
+    do ii = 1 to num-entries(par-list):
+      for each bf_doc-line no-lock where bf_doc-line.doc-code = entry(ii,par-list):
+        find first tt-line exclusive-lock where 
+          tt-line.doc-code = vardoc-code and
+          tt-line.artic = bf_doc-line.artic and
+          tt-line.prod-code = bf_doc-line.prod-code and
+          tt-line.prod-type = bf_doc-line.prod-type no-error .
+        if not available(tt-line) then 
+        do:
+        end.
+        tt-line.doc-qnty = tt-line.doc-qnty + bf_doc-line.doc-qnty .
+        tt-line.fact-qnty = tt-line.fact-qnty + bf_doc-line.doc-qnty .
+      end.
+    end.
+
+    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = vardoc-code .
+    pardoc-rec = recid(buf_trn-doc) .
+    for each tt-line no-lock where tt-line.doc-code = buf_trn-doc.doc-code:
+      find first ub.goods no-lock where ub.goods.artic = tt-line.artic and
+        ub.goods.prod-code = tt-line.prod-code and
+        ub.goods.prod-type = tt-line.prod-type no-error .
+      
+      /*если остаток не равен 0*/
+      if tt-line.fact-qnty <> 0 then 
+      do:
+        find first ub.doc-line no-lock where ub.doc-line.doc-code = tt-line.doc-code and
+          ub.doc-line.artic = tt-line.artic and
+          ub.doc-line.prod-code = tt-line.prod-code and
+          ub.doc-line.prod-type = tt-line.prod-type no-error .
+        if not available (ub.doc-line) then 
+        do:
+          /*Нет товара в начальной инвентаризации*/
+          next .
+        end.
+        find first ub.goods no-lock where ub.goods.artic = doc-line.artic and
+          ub.goods.prod-code = doc-line.prod-code and
+          ub.goods.prod-type = doc-line.prod-type no-error .
+        line-rec = recid(doc-line) .
+      
+        find first old_doc-line no-lock where old_doc-line.doc-code = par-docCode and
+          old_doc-line.artic = ub.doc-line.artic and
+          old_doc-line.prod-code = ub.doc-line.prod-code and
+          old_doc-line.prod-type = ub.doc-line.prod-type no-error .
+        old-line-rec = recid(old_doc-line) .
+
+        find first ub.units   no-lock where ub.units.unit-name    = ub.goods.unit-base.
+        find       ub.gds-prt no-lock where ub.gds-prt.upper-code = ub.goods.prt-root.
+
+        run invMulti(
+          input parparentproc,
+          input pardoc-rec,
+          input line-rec,
+          input recid(ub.goods),
+          input recid (ub.gds-prt),
+          input tt-line.fact-qnty,
+          input {&g#root}).
+      end.
+
+      for each gds-obj exclusive-lock where gds-obj.artic = doc-line.artic and
+        gds-obj.prod-code = doc-line.prod-code and
+        gds-obj.prod-type = doc-line.prod-type and
+        gds-obj.obj-code = doc-line.obj-code and
+        gds-obj.obj-type = doc-line.obj-type:
+        assign
+          gds-obj.inv-on = true 
+          gds-obj.in-ov  = true .
+      end.
+    end.
+
+    run str/clcsumga.p ( input buf_trn-doc.doc-code ).
+    find first t-doc where t-doc.doc-code = vardoc-code no-error .
+/*    apply "CHOOSE" to b-close IN FRAME {&FRAME-NAME} .*/
+    for first ub.inv-doc-attr exclusive-lock where
+    ub.inv-doc-attr.doc-code = vardoc-code and
+    ub.inv-doc-attr.attr-code = "notMes":
+      delete ub.inv-doc-attr .
+    end. 
+
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+      ub.inv-doc-attr.attr-code = 'ItogInv' no-error .
+    if available(ub.inv-doc-attr) then 
+    do:
+      for each ub.trn-doc exclusive-lock where ub.trn-doc.doc-code = ub.inv-doc-attr.attr-value:
+        delete ub.trn-doc .
+      end.
+    end.
+  end. /* on error */
+end procedure. /* itogInvDoc */
+
+
+procedure loc-cr-gds-dtl :
+  define variable n-c like ub.gds-prt.node-code          no-undo.
+  find first ub.gds-dtl where
+             ub.gds-dtl.doc-code  = ub.doc-line.doc-code  and
+             ub.gds-dtl.artic     = ub.doc-line.artic     and
+             ub.gds-dtl.prod-code = ub.doc-line.prod-code and
+             ub.gds-dtl.prod-type = ub.doc-line.prod-type no-error.
+  if not available ub.gds-dtl then do:
+    { gbl/termnode.i ub.goods.prt-root n-c }
+    { str/crgdsdtl.i
+        ub.doc-line.obj-code
+        ub.doc-line.obj-type
+        t-doc.doc-code
+        ub.doc-line.artic
+        ub.doc-line.prod-code
+        ub.doc-line.prod-type
+        n-c
+        yes
+    }
+    find first ub.gds-dtl where
+               ub.gds-dtl.doc-code  = ub.doc-line.doc-code  and
+               ub.gds-dtl.artic     = ub.doc-line.artic     and
+               ub.gds-dtl.prod-code = ub.doc-line.prod-code and
+               ub.gds-dtl.prod-type = ub.doc-line.prod-type and
+               ub.gds-dtl.prt-code  = n-c.
+    assign
+      ub.gds-dtl.fact-qnty = ub.doc-line.doc-qnty
+      ub.gds-dtl.doc-qnty  = 0
+    .
+  end. /* if not available ub.gds-dtl */
+end procedure. /* loc-cr-gds-dtl */
 
 
 procedure proc-m_fact-edit-1 :
@@ -7669,6 +8640,137 @@ on error undo, return error
     .
 end.
 end procedure. /* get-browse-buffer-handle */
+
+procedure proc-check-inv : /* проверка товаров в инвентаризации на кол-во = 0 и было ли движение товара */
+    define buffer buf_trn-doc  for ub.trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_parts    for ub.parts .
+    define buffer buf_goods    for ub.goods .
+    do
+        on error undo, return error return-value
+        :
+        EMPTY TEMP-TABLE tt-gds-line-err .
+
+        for each buf_doc-line no-lock where buf_doc-line.doc-code = t-doc.doc-code 
+            and (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty) = 0 and buf_doc-line.doc-qnty > 0:
+            /* Проверка, если кол-во было = 0, посмотреть было ли движение у товара на объекте */
+
+            find first buf_parts where buf_parts.obj-code = t-doc.obj-code and
+                buf_parts.obj-type = t-doc.obj-type and buf_parts.artic = buf_doc-line.artic and
+                buf_parts.prod-code = buf_doc-line.prod-code and buf_parts.prod-type = buf_doc-line.prod-type and
+                buf_parts.out-code <> t-doc.doc-code no-error .
+                if not available (buf_parts) then
+            do:
+                find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
+                    buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type no-error .
+                create tt-gds-line-err .
+                assign
+                    tt-gds-line-err.artic       = buf_doc-line.artic
+                    tt-gds-line-err.prod-code   = buf_doc-line.prod-code
+                    tt-gds-line-err.prod-type   = buf_doc-line.prod-type
+                    tt-gds-line-err.qnty-tsd    = buf_doc-line.doc-qnty
+                    tt-gds-line-err.date-report = today
+                    tt-gds-line-err.time-report = time .
+                tt-gds-line-err.gds-name = if available (buf_goods) then buf_goods.gds-name else '' .
+            
+            end.
+        end.
+        if can-find (tt-gds-line-err) then 
+        do:
+            define variable v-name-txt as character no-undo .
+            v-name-txt = session:temp-directory + '/' + 'errors-inv' + ".txt".
+            
+            if search(v-name-txt) <> ? then
+            do:
+                os-delete value(v-name-txt ).
+            end.
+            output to value(v-name-txt) .
+            for each tt-gds-line-err:
+                export string (tt-gds-line-err.date-report,"99/99/9999") string (tt-gds-line-err.time-report,"HH:MM:SS") "Ошибка при загрузке в инвентаризацию товара: " string (tt-gds-line-err.gds-name) 
+                    "Артикул: " string (tt-gds-line-err.artic) "кол-во: " string (tt-gds-line-err.qnty-tsd) .
+            end.
+            output close .
+        
+       
+            message "Не все товары загружены в документ инвентаризации " + t-doc.doc-code + "!" skip 
+                "Список незагруженных товаров выведен в файл " + v-name-txt + "" skip
+                view-as alert-box.
+        
+            run rep/errors-inv.p (
+                input parparentproc,
+                input table tt-gds-line-err) no-error.
+    
+        end.
+    end. /* do */
+end procedure. /*  proc-check-inv */
+
+procedure proc-close-inv : /* проверка товаров в инвентаризации на кол-во = 0 и было ли движение товара */
+    define output parameter v-show-err-message as logical no-undo .
+    define buffer buf_trn-doc  for ub.trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_parts    for ub.parts .
+    define buffer buf_goods    for ub.goods .
+
+    do
+        on error undo, return error return-value
+        :
+        v-show-err-message = true .
+
+        EMPTY TEMP-TABLE tt-gds-line-err .
+
+        for each buf_doc-line no-lock where buf_doc-line.doc-code = t-doc.doc-code 
+            and (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty) = 0 and buf_doc-line.doc-qnty > 0:
+            /* Проверка, если кол-во было = 0, посмотреть было ли движение у товара на объекте */
+
+            find first buf_parts where buf_parts.obj-code = t-doc.obj-code and
+                buf_parts.obj-type = t-doc.obj-type and buf_parts.artic = buf_doc-line.artic and
+                buf_parts.prod-code = buf_doc-line.prod-code and buf_parts.prod-type = buf_doc-line.prod-type and
+                buf_parts.out-code <> t-doc.doc-code no-error .
+                if not available (buf_parts) then 
+            do:
+                find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
+                    buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type no-error .
+                create tt-gds-line-err .
+                assign
+                    tt-gds-line-err.artic       = buf_doc-line.artic
+                    tt-gds-line-err.prod-code   = buf_doc-line.prod-code
+                    tt-gds-line-err.prod-type   = buf_doc-line.prod-type
+                    tt-gds-line-err.qnty-tsd    = buf_doc-line.doc-qnty
+                    tt-gds-line-err.date-report = today
+                    tt-gds-line-err.time-report = time .
+                tt-gds-line-err.gds-name = if available (buf_goods) then buf_goods.gds-name else '' .
+            
+            end.    
+        end.
+        if can-find (tt-gds-line-err) then 
+        do:
+            define variable v-name-txt as character no-undo .
+            v-name-txt = session:temp-directory + '/' + 'errors-inv' + ".txt".
+            
+            if search(v-name-txt) <> ? then
+            do:
+                os-delete value(v-name-txt ).
+            end.
+            output to value(v-name-txt) .
+            for each tt-gds-line-err:
+                export string (tt-gds-line-err.date-report,"99/99/9999") string (tt-gds-line-err.time-report,"HH:MM:SS") "Ошибка при загрузке в инвентаризацию товара: " string (tt-gds-line-err.gds-name) 
+                    "Артикул: " string (tt-gds-line-err.artic) "кол-во: " string (tt-gds-line-err.qnty-tsd) .
+            end.
+            output close .
+        
+       
+            message "Не все товары загружены в документ инвентаризации " + t-doc.doc-code + "!" skip 
+                "Список незагруженных товаров выведен в файл " + v-name-txt + "" skip
+                "Вы уверены, что хотите закрыть документ инвентаризации до «факта»?"
+                view-as alert-box question buttons yes-no update v-show-err-message .
+            if not v-show-err-message then do:
+            run rep/errors-inv.p (
+                input parparentproc,
+                input table tt-gds-line-err) no-error.
+            end.
+        end.
+    end. /* do */
+end procedure. /*  proc-close-inv */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-mark-list W-Win
 PROCEDURE get-mark-list :

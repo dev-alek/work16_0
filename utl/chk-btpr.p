@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 784232a2254b, 2720, rls $
+$Author: SSlivenko $
+$Date: Пн янв 18 10:14:30 2021 +0300 $
+$Workfile: chk-btpr.p $
+$Archive: utl/chk-btpr.p $
 
 проверка BatchProcess ДО начала обрезани
 
@@ -21,11 +22,11 @@ define input  parameter p-type-cut as integer   no-undo .
 define input  parameter p-db-list  as character no-undo .
 define output parameter p-ready    as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 784232a2254b, 2720, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Пн янв 18 10:14:30 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chk-btpr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/chk-btpr.p $":U .
 define variable vss-description as character no-undo init "проверка BatchProcess ДО начала обрезания".
 { cmp/str-glbl.i }
 
@@ -199,4 +200,4 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   return v-return-value .
 end.
 
-/* $Workfile$ end */
+/* $Workfile: chk-btpr.p $ end */

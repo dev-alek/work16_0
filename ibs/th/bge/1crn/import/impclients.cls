@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7685cb2d18a9, 2983, rls $
+$Author: SSlivenko $
+$Date: Ср апр 06 16:23:43 2022 +0300 $
+$Workfile: impclients.cls $
+$Archive: ibs/th/bge/1crn/import/impclients.cls $
 
 Класс ипорта данных clients (контрагенты) из 1С
 
@@ -17,6 +17,7 @@ Creation date: 02/10/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsubject: 
   

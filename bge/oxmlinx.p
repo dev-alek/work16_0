@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 10060ac8659a, 2974, rls $
+$Author: SSlivenko $
+$Date: Ср апр 06 16:23:42 2022 +0300 $
+$Workfile: oxmlinx.p $
+$Archive: bge/oxmlinx.p $
 
 Импорт из файла OpenXML
 
@@ -29,11 +30,11 @@ define input parameter p-log-handle         as handle           no-undo.
 define input parameter p-parameter-string   as character        no-undo.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 10060ac8659a, 2974, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:42 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: oxmlinx.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/oxmlinx.p $":U .
 define variable vss-description as character no-undo init "Импорт из файла OpenXML".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -703,8 +704,9 @@ on error undo, return error substitute( "&1. &2&3&4", vss-workfile, return-value
                          2 – несоответствие файла данных и ЭП;
                          3 – ошибка формата файла данных; 
                       */
+                      os-delete value(v-full-path) .
                       run write-log in p-log-handle (input 2 ,
-                        substitute ("Подтверждение на пакет номер &1 обработано. Статус: &2. Текст ошибки: &3. Файл &4 оставлен без удаления."
+                        substitute ("Подтверждение на пакет номер &1 обработано. Статус: &2. Текст ошибки: &3. Файл &4 успешно удалён."
                               , v-ack-snum_pack
                               , v-1c-stat 
                               , v-ack-err

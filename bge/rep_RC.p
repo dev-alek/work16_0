@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f7e80aacd3fe, 2168, rls $
+$Author: EShklyar $
+$Date: Wed Dec 25 15:23:56 2019 +0300 $
+$Workfile: rep_RC.p $
+$Archive: bge/rep_RC.p $
 
 Отчет по версиям RC на УБД
 
@@ -23,11 +24,11 @@ define input parameter p-task-num       as integer      no-undo.
 define input parameter p-db-num         as integer      no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f7e80aacd3fe, 2168, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Dec 25 15:23:56 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rep_RC.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/rep_RC.p $":U .
 define variable vss-description as character no-undo init "Отчет по версиям RC на УБД".
 
 { cmp/vssrevis.i }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: trn-mark.cls $
+$Archive: ibs/th/bge/1crn/subjects/trn-mark.cls $
 
 Структура данных prts накладной из 1С ERPRN
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubject: 
@@ -81,7 +82,7 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
     def var v-str as char no-undo.
     
     assign
-      v-str = "prt-id" when prt-id = ?
+     /*  v-str = "prt-id" when prt-id = ? */
       v-str = v-str + ",mark-code" when mark-code = ?
     .
     v-str = trim (v-str, ",").

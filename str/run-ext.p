@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3ac8d1d44d52, 3383, rls $
+$Author: DRuban $
+$Date: 2023/05/31 09:28:12 $
+$Workfile: run-ext.p $
+$Archive: str/run-ext.p $
 
 Запуск внешней программы пользователя.
 
@@ -32,11 +33,11 @@ define input parameter p-place          as character        no-undo.
 define input parameter p-init           as character        no-undo.
 define output parameter p-button-label  as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 3ac8d1d44d52, 3383, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/05/31 09:28:12 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: run-ext.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/run-ext.p $":U .
 define variable vss-description as character no-undo init "Запуск внешней программы пользователя.".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4|&5':u,p-recid,p-place,p-init)" }
 { cmp/str-glbl.i }

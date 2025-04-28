@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7596fb7dbb2f, 3446, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:33 $
+$Workfile: r-alc-rees.p $
+$Archive: rep/r-alc-rees.p $
 
 Реестр документов ЕГАИС
 
@@ -16,14 +16,14 @@ Creation date: 11/04/16
 
 */
 using ibs.th.bge.egais.*.
-
+block-level on error undo, throw.
 
 
 define variable vss-revision    as character no-undo init "$Revision: ":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:33 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-alc-rees.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-alc-rees.p $":U .
 define variable vss-description as character no-undo init "Реестр документов ЕГАИС".
 
 

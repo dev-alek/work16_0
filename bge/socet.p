@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 { bge/socet.i }
 { utl/proc-async.i proc_def}
 procedure setParam:

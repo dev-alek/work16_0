@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: abcanal1.p $
+$Archive: ref/abcanal1.p $
 
 Сохранение изменений в карточке Заголовка АМ
 
@@ -42,11 +43,11 @@ define variable  v-abc-string-period            like ub.abc-analysis.abc-string-
 define variable  v-abc-string-doc               like ub.abc-analysis.abc-string-doc               no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: abcanal1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/abcanal1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений в карточке Заголовка АМ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

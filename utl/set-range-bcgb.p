@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 &scope minvalue 1000000000
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 120b44b64ef4, 1863, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Wed May 08 13:02:45 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: set-range-bcgb.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/set-range-bcgb.p $":U .
 define variable vss-description as character no-undo init "Установка диапазона дя товаров с 1с".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

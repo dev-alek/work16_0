@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 79dbeab10a26, 2672, rls $
+$Author: Ostroukhov $
+$Date: ¬т но€ 17 10:53:20 2020 +0300 $
+$Workfile: enum-chk-type.cls $
+$Archive: ibs/th/bge/1crn/enum-chk-type.cls $
 
 коды типов чеков согласно протоколу взаимодействи€ с 1—
 
@@ -14,7 +14,7 @@ Author: Molotkov Sergey
 Creation date: 10/11/17
 
 */
-
+block-level on error undo, throw.
 enum ibs.th.bge.1crn.enum-chk-type:
   define enum
     ensale     =  1 /* продажа */
@@ -33,3 +33,4 @@ enum ibs.th.bge.1crn.enum-chk-type:
     entechrefuell   = 17 /* &rcpt-tech-refuell   = тех. пролив. */
   .
 end enum .
+

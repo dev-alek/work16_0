@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: chckwthr.p $
+$Archive: str/chckwthr.p $
 
 Запуск процедуры рождения чека МЦ
 
@@ -23,11 +24,11 @@ define input parameter parobj-type like ub.clients.obj-type no-undo.
 define input parameter parobj-code like ub.clients.obj-code no-undo.
 
 /* Local Variable Definitions ---                                       */
-DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision: aea5316774be, 0, rls $":U.
+DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author: expertek $":U.
+DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U.
+DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: chckwthr.p $":U.
+DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive: str/chckwthr.p $":U.
 DEF VAR vss-description AS CHAR NO-UNDO INIT "Запуск процедуры ргждения чека МЦ":U.
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

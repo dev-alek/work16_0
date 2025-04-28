@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: cb632b432cdb, 3204, rls $
+$Author: Ostroukhov $
+$Date: 2022/12/27 12:54:28 $
+$Workfile: g-attir.p $
+$Archive: ref/g-attir.p $
 
 Запуск интерфейса редактирования глобальных атрибутов товара
 
@@ -22,11 +23,11 @@ define input parameter p-update-on-exit as logical no-undo .
 define output parameter p-modified as logical no-undo .
 define output parameter p-is-error as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: cb632b432cdb, 3204, rls $":U .
+define variable vss-author      as character no-undo init "$Author: Ostroukhov $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:28 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: g-attir.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/g-attir.p $":U .
 define variable vss-description as character no-undo init "Запуск интерфейса редактирования глобальных атрибутов товара".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

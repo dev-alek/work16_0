@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: autoobj.p $
+$Archive: str/autoobj.p $
 
 Возвращает имя объекта по умолчанию для экрана покупател
 
@@ -22,11 +23,11 @@ define output parameter p-obj-type as character no-undo .
 define output parameter p-obj-code as integer   no-undo .
 define output parameter p-state    as logical   no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: autoobj.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/autoobj.p $":U .
 define variable vss-description as character no-undo initial "Возвращает имя объекта по умолчанию для экрана покупателя".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

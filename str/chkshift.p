@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6557e99634e7, 3192, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:28 $
+$Workfile: chkshift.p $
+$Archive: str/chkshift.p $
 
 Изменение даты, номера смены или резервуара(для линий в чеке) для одного чека
 
@@ -31,11 +32,11 @@ define output parameter p-changed as logical no-undo. /* если в чеке что-то поме
 /*параметр имеет смысл только для сменной работы в BO*/
 /*будет равняться yes если в результате изменения чека он СТАНЕТ ПОППАДАТ В текущую смену BO*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 6557e99634e7, 3192, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:28 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chkshift.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/chkshift.p $":U .
 define variable vss-description as character no-undo init "Изменение даты и или номера смены для одного чека".
 { cmp/vssrevis.i }
 

@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: setbgefo.p $
+$Archive: bge/setbgefo.p $
 
 Устанавливает дату выгрузки в атрибут ФО
 
@@ -29,11 +30,11 @@ define input parameter p-corr-user-db-num  as integer no-undo .
 define input parameter p-chip-num          as integer no-undo .
 define input parameter p-cur-date          as date       no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: setbgefo.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/setbgefo.p $":U .
 define variable vss-description as character no-undo init "Устанавливает дату выгрузки в атрибут ФО".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4|&5|&6':u, p-table-name, p-host-code, p-doc-code, p-corr-user-db-num, p-chip-num, p-cur-date)" }
 { cmp/trg-def.i }

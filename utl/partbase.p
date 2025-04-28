@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: partbase.p $
+$Archive: utl/partbase.p $
 
 Программа изменения учетной цены партии
 
@@ -28,11 +29,11 @@ define input parameter p-price-rubl like ub.parts.price-rubl no-undo .
 define input parameter p-vat-pc     like ub.parts.vat-pc     no-undo .
 define input parameter p-slt-pc     like ub.parts.slt-pc     no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: partbase.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/partbase.p $":U .
 define variable vss-description as character no-undo init "Программа изменения учетной цены партии".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5baf537283c9, 2487, rls $
+$Author: SSlivenko $
+$Date: ѕт июн 26 16:47:04 2020 +0300 $
+$Workfile: rv-out.p $
+$Archive: str/rv-out.p $
 
 ѕереведение запроса в накладную с резервированием товара
 
@@ -21,11 +22,11 @@ define input  parameter p-trn-code    like ub.trn-doc.doc-code no-undo.  /* номе
 define input  parameter p-null        as logical   no-undo .             /* да - если ничего не удалось зарезервировать то переносить в щепку */
 define input  parameter p-mess-neg    as logical   no-undo .             /* нет - в резервировании нет вопроса об отриц остатках */
 
-define variable  vss-revision    as character no-undo init "$Revision$":U .
-define variable  vss-author      as character no-undo init "$Author$":U .
-define variable  vss-date        as character no-undo init "$Date$":U .
-define variable  vss-workfile    as character no-undo init "$Workfile$":U .
-define variable  vss-archive     as character no-undo init "$Archive$":U .
+define variable  vss-revision    as character no-undo init "$Revision: 5baf537283c9, 2487, rls $":U .
+define variable  vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable  vss-date        as character no-undo init "$Date: ѕт июн 26 16:47:04 2020 +0300 $":U .
+define variable  vss-workfile    as character no-undo init "$Workfile: rv-out.p $":U .
+define variable  vss-archive     as character no-undo init "$Archive: str/rv-out.p $":U .
 define variable  vss-description as character no-undo init "ѕереведение запроса в накладную с резервированием товара".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

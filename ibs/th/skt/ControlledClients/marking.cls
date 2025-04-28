@@ -21,6 +21,7 @@ USING ibs.th.skt.Adapters.LogWrite.
 USING ibs.th.gbl.propmap.
 USING ibs.th.gbl.sys.objsrv.
 USING ibs.th.gbl.sys.objth.
+block-level on error undo, throw.
 /*using ibs.th.skt.ControlledClients.GisMtCDN.*/
 
 CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc: 
@@ -54,7 +55,9 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   DEFINE PRIVATE VARIABLE mCheckSts     AS INTEGER   NO-UNDO.
   DEFINE PRIVATE VARIABLE mReqId        AS CHARACTER NO-UNDO. 
   DEFINE PRIVATE VARIABLE mReqTimestamp AS CHARACTER NO-UNDO.
-  DEFINE PRIVATE VARIABLE mCheckGisMT    AS INTEGER NO-UNDO. /* 0 - проверки не было, 1 - проверка была, 2 - аварийная ситуация */
+  DEFINE PRIVATE VARIABLE mInst         AS CHARACTER NO-UNDO. 
+  DEFINE PRIVATE VARIABLE mVersion      AS CHARACTER NO-UNDO.
+  DEFINE PRIVATE VARIABLE mCheckGisMT   AS INTEGER NO-UNDO. /* 0 - проверки не было, 1 - проверка была, 2 - аварийная ситуация */
     
   DEF STREAM out_s.
   DEF STREAM out_data.
@@ -102,6 +105,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
    FIELD reqId        AS CHAR
    FIELD reqTimestamp AS INT64   
    FIELD inst         AS CHAR
+   FIELD version      AS CHAR
    FIELD description  AS CHAR
    FIELD code         AS INT64 
    FIELD errorCode    AS INT64
@@ -175,11 +179,14 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE listStatusesForReturn AS CHARACTER NO-UNDO.    
     DEFINE VARIABLE vAccMarkCheck AS CHARACTER NO-UNDO.
     DEFINE VARIABLE vAccMarkCheckOff AS CHARACTER NO-UNDO.  
+    DEFINE VARIABLE vCheckLocalMark  AS LOGICAl NO-UNDO INIT FALSE. /* признак запуска offline-проверки */
 
     ASSIGN
       mCheckSts = 1
       mReqId        = ""
       mReqTimeStamp = ""
+      mInst         = ""
+      mVersion      = ""
       answerFlag = FALSE
       cash       = ""      
       shift_id   = ""
@@ -313,6 +320,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
           RETURN.
         END.
         
+        FIND FIRST buf_marking EXCLUSIVE-LOCK WHERE buf_marking.mark BEGINS mark-short NO-WAIT NO-ERROR.
         IF action = cashSts:SaleLock:NameProp THEN 
         DO:
            mCheckGisMT    = 0. 
@@ -326,13 +334,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            IF mCheckSts = 0 OR 
               mCheckSts = 3 /* faund = false */
            THEN DO:
+              /* если марки нет в ГИС МТ или не прошла проверку в ГИС МТ, то ее создадим ниже, но продавать нельзя */
               vAccMarkCheck = vAccMarkCheck + "Снимите с продажи и передайте товар управляющему/старшему смены".
-              /* если марки нет в ГИС МТ, то не сохраняем ее, а сразу выходим */
-              IF mCheckSts = 3 THEN DO:
-                 vLC = getJson(0, vAccMarkCheck, mark).
-                 sendContent(vLC).
-                 RETURN.
-              END.   
            END.
            /* Если прошло более 72ч с момента аварии ГИС МТ */
            IF mCheckSts = 4 THEN DO:
@@ -342,15 +345,28 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            END.     
            /* если марку не удалось проверить онлайн */
            IF (mCheckSts = 2 AND mCheckGisMT <> 1) OR mCheckGisMT = 2 THEN DO:
-              vAccMarkCheckOff = ChekLocalMark(mark-short).
-              if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" then 
-              vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
-              else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
+              /* проверим значение online-result марки (? - если марки в ТН нет)*/
+              dbgPrint("marking.log", SUBSTITUTE("Считываем online-result: &1.", 
+                                                IF NOT AVAIL buf_marking THEN "marking не найдена"
+                                                ELSE STRING(buf_marking.online-result))).
+              IF AVAIL buf_marking AND buf_marking.online-result = 0 
+              THEN DO:
+                  vAccMarkCheck = "Выполнить текущую онлайн-проверку не удалось. Продажа заблокирована по результату ранее выполненной проверки. Снимите с продажи и передайте товар управляющему/старшему смены".
+                  vLC = getJson(0, vAccMarkCheck, mark).
+                  sendContent(vLC).
+                  RETURN.
+              END.
+              ELSE DO:
+                  vAccMarkCheckOff = ChekLocalMark(mark-short).
+                  vCheckLocalMark = TRUE.
+                  if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" then 
+                  vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
+                  else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
+              END.
               
            END.                 
         END.
   
-        FIND FIRST buf_marking EXCLUSIVE-LOCK WHERE buf_marking.mark BEGINS mark-short NO-WAIT NO-ERROR.
         IF NOT AVAILABLE (buf_marking) THEN 
         DO:      /* марка не найдена в БД TH */
           IF LOCKED buf_marking THEN DO:
@@ -362,8 +378,13 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
             WHEN cashSts:SaleLock:NameProp THEN
             DO:
               createMark(mark-short, buffer buf_marking).
-              /* если марка не прошла проверку в ГИС МТ, то ее создаем, но продавать нельзя */
-              IF mCheckSts = 0 THEN DO:
+              IF NOT vCheckLocalMark 
+              THEN DO:   /* online-result устанавливаем, если offline-проверка не запускалась */
+                setOnlineResult(BUFFER buf_marking).
+              END.
+              IF mCheckSts = 0 OR 
+                 mCheckSts = 3 /* faund = false */
+              THEN DO:
                  vLC = getJson(0, vAccMarkCheck, mark).
                  sendContent(vLC).
                  RETURN.
@@ -397,8 +418,12 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         END.
         ELSE 
         DO:      /* марка найдена */
+          IF  action = cashSts:SaleLock:NameProp /* если продажа */ 
+          AND NOT vCheckLocalMark THEN           /* и offline-проверка не запускалась, то устанавливаем online-result */
+            setOnlineResult(BUFFER buf_marking).
+
           IF action = cashSts:SaleLock:NameProp AND 
-             mCheckSts = 0 
+             (mCheckSts = 0 OR mCheckSts = 3) 
           THEN DO:
                  vLC = getJson(0, vAccMarkCheck, mark).
                  sendContent(vLC).
@@ -542,7 +567,9 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     IF stsInt = 1 AND mCheckSts = 2 
     THEN stsInt = 2.
       
-    json-str = CHR(123) + substitute ('"status":&1,"comment":"&2","reqid":"&3","reqtimestamp":"&4"', stsInt, msg, mReqId, mReqTimestamp) + chr(125).
+    json-str = CHR(123) + substitute ('"status":&1,"comment":"&2","reqid":"&3","reqtimestamp":"&4","inst":"&5","ver":"&6"', 
+                                       stsInt, msg, mReqId, mReqTimestamp, mInst, mVersion) 
+               + CHR(125).
     RETURN json-str.
   END.
 
@@ -1137,7 +1164,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            IF vNumRep = 1 THEN DO:               
                vMarkShort = percentCoding(mark-short). 
                dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)).               
-               RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .
+               RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .               
                CREATE tt-file-name.
                ASSIGN tt-file-name.tmpFileName = vFileResOf
                       tt-file-name.ofline = YES.           
@@ -1157,7 +1184,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                   vFileResOfErr = ""   
                   vFileBatOf = ""
                   .           
-
+           
            vRetVal = RunCurlGisMT(vGisAdress,     
                                   vDataMark,
                                   CmdParamProxy,
@@ -1586,14 +1613,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
           .
        RETURN "".
     END.   
-    /*
-    /* Запускаем проверку, не надо ли обновить 
-    ** площадки и их обновление */
-    if gismt-cdnTurnOn and 
-       CheckCdnNeedUpd()
-       then            
-       run utl/pub-runcdn.p (p-obj-type, string(p-obj-code)).              
-      */     
+ 
     /* произошла аварийная ситуация - фиксируем */
     IF vGetGisMt <> 0 THEN DO: 
         IF vGetGisMt = 2 THEN 
@@ -1635,7 +1655,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     THEN DO:
         ASSIGN
            mReqId        = ttmark-body.reqid
-           mReqTimeStamp = STRING(ttmark-body.reqtimestamp)
+           mReqTimeStamp = STRING(ttmark-body.reqtimestamp)           
            .
         /* по новому алгоритму сюда теоретически не должны попасть */   
         IF ttmark-body.code <> 0  
@@ -1839,6 +1859,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                      "ttlocal-mark.reqId: " ttlocal-mark.reqId     SKIP
                      "ttlocal-mark.reqTimestamp: " ttlocal-mark.reqTimestamp     SKIP                     
                      "ttlocal-mark.inst: " ttlocal-mark.inst SKIP
+                     "ttlocal-mark.version: " ttlocal-mark.version SKIP
                      "ttlocal-mark.description: " ttlocal-mark.description       SKIP              
                      "ttlocal-mark.code: " ttlocal-mark.code       SKIP                     
                      .                        
@@ -1878,7 +1899,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                                  buf_code.codeval,
                                                  buf_code.misc2,
                                                  vTimeNow)).
-              IF buf_code.misc2 = "" OR datetime-tz(buf_code.misc2) < vTimeNow 
+              IF buf_code.misc2 = "" /*OR datetime-tz(buf_code.misc2) < vTimeNow*/ 
               THEN DO:
                   IF vTimeResp = 0 OR 
                      vTimeResp = ? OR 
@@ -1933,10 +1954,15 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       RETURN vOk.      
   END METHOD. 
   
-  METHOD PUBLIC LOGICAL CheckCdnNeedUpd ():
+  /* Определяет, нужно ли обновлять площадки
+  ** 1 - нужно обновлять все площадки
+  ** 2 - нужно обновить только время у площадки */
+  METHOD PUBLIC INTEGER CheckCdnNeedUpd ():
       DEF BUFFER buf_code FOR ub.code.
       DEF VAR vAddr AS CHAR NO-UNDO.
       DEF VAR vNeedUpd AS LOG NO-UNDO.
+      DEF VAR vNeedTimeUpd AS LOG NO-UNDO.
+      DEF VAR vReturnValue AS INTEGER NO-UNDO.       
       DEF VAR vAllBlock AS LOG NO-UNDO.
       DEF VAR vTimeNow AS DATETIME-TZ NO-UNDO.
       DEF VAR vTimeUpd AS DATETIME-TZ NO-UNDO.
@@ -1953,16 +1979,23 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       block_code:
       FOR EACH buf_code NO-LOCK WHERE buf_code.parent = "CDN_GisMt":
           vTimeUpd = DATETIME-TZ(buf_code.misc1) NO-ERROR.
-          IF buf_code.misc2 <> "" THEN 
+          IF buf_code.misc2 <> "" THEN DO: 
              vTimeUnbl = DATETIME-TZ(buf_code.misc2) NO-ERROR.
+             IF vTimeUnbl < vTimeNow THEN vNeedTimeUpd = YES.   
+             dbgPrint("marking.log", SUBSTITUTE("Площадка &1 заблокирована &2, требует обновления &3",
+                                                  buf_code.code,
+                                                  vTimeUnbl,
+                                                  vTimeUnbl < vTimeNow)
+                     ).
+          END.
           /* ищем незаблокированную площадку */   
-          IF buf_code.misc2 = "" OR 
+          IF buf_code.misc2 = "" /*OR 
              (vTimeUnbl <> ? AND
-              vTimeUnbl < vTimeNow)
+              vTimeUnbl < vTimeNow)*/
           THEN DO: 
              vAllBlock = NO.
-             LEAVE block_code.
-          END.   
+             /*LEAVE block_code.*/
+          END.             
       END.      
       
       IF vAllBlock OR
@@ -1984,16 +2017,38 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
          END.    
          /* если прошло 20 минут с момента обновления, то игнорим флаг (завис) */
          ELSE IF DATETIME-TZ(buf_code.codeval) < (NOW - 20 * 60000) THEN DO:
-             dbgPrint("marking.log", SUBSTITUTE("Обновляем список площадок, флаг обновления был установлен &1",
+            dbgPrint("marking.log", SUBSTITUTE("Обновляем список площадок, флаг обновления был установлен &1",
                                                 buf_code.codeval )). 
             vNeedUpd = YES.
          END.    
          ELSE dbgPrint("marking.log", SUBSTITUTE("Площадки не обновляем, идет обновление &1 ",  buf_code.codeval)).
       END.
-      ELSE dbgPrint("marking.log", SUBSTITUTE("Площадки не обновляем, все заблокированы &1 время посл обновления &2 Частота обновления (ч) &3 ",
-                                              vAllBlock, vTimeUpd, gismt-cdnTimeUpd )).    
+      ELSE IF vNeedTimeUpd THEN DO:
+         FIND FIRST buf_code WHERE 
+                  buf_code.parent = "CDN_GisMt" 
+              AND buf_code.code = "CDN_Upd"              
+           NO-LOCK NO-ERROR.
+         IF AVAIL buf_code               
+         THEN DO:
+             vNeedTimeUpd = NO.
+             dbgPrint("marking.log", SUBSTITUTE("Заблокированную площадку не обновляем, идет обновление &1 ",  buf_code.codeval)).
+         END.    
+         ELSE dbgPrint("marking.log", SUBSTITUTE("Обновляем заблокированную площадку, 15 минут блокировки истекли в &1",
+                                              vTimeUpd )).             
+      END.
+      ELSE     
+         dbgPrint("marking.log", SUBSTITUTE("Площадки не обновляем. Все заблокированы? &1 Время последнего обновления &2 Частота обновления (ч) &3 Заблокированные площадки &4",
+                                              vAllBlock, vTimeUpd, gismt-cdnTimeUpd, vNeedTimeUpd )).
       
-      RETURN vNeedUpd.
+                                                  
+      IF vNeedUpd THEN vReturnValue = 1.
+      ELSE IF vNeedTimeUpd then vReturnValue = 2.
+      ELSE vReturnValue = 0.
+      
+      dbgPrint("marking.log", SUBSTITUTE("Возвращаем значение &1 об обновлении площадок",
+                                         vReturnValue )).
+                                              
+      RETURN vReturnValue.
   END METHOD.
   
  /* Вызывает curl с переданным адресом и возвращает ответ:
@@ -2027,7 +2082,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE vcmdof AS CHARACTER   NO-UNDO.
     DEFINE VARIABLE vpidof AS INTEGER     NO-UNDO.
         
-    vRetVal = -1.
+    vRetVal = -1.    
          
     cmd = SUBSTITUTE ('&1 &8 --connect-timeout &9 --max-time &9 -X POST -H "Content-Type: application/json" -H &5 &6 --data @&4 &3 >&2 --stderr &7',
                       SEARCH ("exe/curl.exe"), /*1*/
@@ -2051,7 +2106,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
                           SEARCH ("exe/curl.exe"), /*1*/                                                                  
                           QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
-                          QUOTER(gismt-OflineAdress + "/cis/check?cis=" + vMarkShort), /*3*/
+                          QUOTER(gismt-OflineAdress + "/cis/outCheck?cis=" + vMarkShort), /*3*/
                           vFileResOf,             /*4*/                      
                           vFileResOfErr,          /*5*/                      
                           TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
@@ -2152,7 +2207,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         vErrTxt = "Ошибка при проверке товара в локальном модуле Честный знак. Товар не добавлен в чек. Сообщите управляющему/старшему смены. "
         . 
                   
-     FIND FIRST tt-file-name WHERE tt-file-name.ofline = YES NO-ERROR.
+     FIND FIRST tt-file-name WHERE tt-file-name.ofline = YES NO-ERROR.     
+     
      IF AVAIL tt-file-name
         AND searchFile(tt-file-name.tmpFileName) <> ?   
      THEN  DO:         
@@ -2176,6 +2232,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
             ASSIGN
                mReqId = STRING(ttlocal-mark.ReqId)
                mReqTimestamp = STRING(ttlocal-mark.ReqTimestamp)
+               mInst = ttlocal-mark.inst
+               mVersion = ttlocal-mark.version
                . 
            IF ttlocal-mark.errorCode > 0 THEN DO:                             
               mCheckSts = 0.
@@ -2304,7 +2362,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
                           SEARCH ("exe/curl.exe"), /*1*/                                                                  
                           QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
-                          QUOTER(gismt-OflineAdress + "/cis/check?cis=" + vMarkShort), /*3*/
+                          QUOTER(gismt-OflineAdress + "/cis/outCheck?cis=" + vMarkShort), /*3*/
                           vFileResOf,             /*4*/                      
                           vFileResOfErr,          /*5*/                      
                           TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
@@ -2499,6 +2557,23 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     END.                 
     
     RETURN mCheckSts.
+  END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:  устанавливает online-result 
+  ------------------------------------------------------------------------------*/
+  METHOD PRIVATE VOID setOnlineResult(buffer buf_marking for ub.marking):
+   
+    IF mCheckSts = 0 OR mCheckSts = 3    /* Оборот запрещен ошибки errorcode (1, …11) */
+    THEN
+      buf_marking.online-result = 0.  
+    ELSE IF mCheckSts = 2 AND mCheckGisMT = 1  /* нет срока годности, а проверка его включена */
+    THEN  
+      buf_marking.online-result = 2.
+    ELSE IF mCheckSts = 1 AND mCheckGisMT = 1  /* Оборот разрешен */
+    THEN
+      buf_marking.online-result = 1.
   END METHOD.
       
 	/*------------------------------------------------------------------------------

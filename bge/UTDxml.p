@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : UTDxml.p
@@ -8,19 +9,19 @@
     Created     : Mon Dec 10 12:01:39 MSK 2012
     Notes       :
         
-    $Revision$
-    $Author$
-    $Date$
-    $Workfile$
-    $Archive$
+    $Revision: ef92e69868bb, 3214, rls $
+    $Author: DRuban $
+    $Date: 2022/12/27 12:54:29 $
+    $Workfile: UTDxml.p $
+    $Archive: bge/UTDxml.p $
     
   ----------------------------------------------------------------------*/
 /*                                                                                                 */
-define variable vss-revision as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision as character no-undo init "$Revision: ef92e69868bb, 3214, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:29 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: UTDxml.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/UTDxml.p $":U .
 define variable vss-description as character no-undo init "Выгрузка УПД в XML".
 
 /* ********************  Preprocessor Definitions  ******************** */

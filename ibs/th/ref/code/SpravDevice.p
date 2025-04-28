@@ -11,6 +11,7 @@ Author:  Shklyar Elena
 Creation date: 31 июля 2019 г.
 
 */
+block-level on error undo, throw.
 {cmp/str-glbl.i }
 { ibs\th\ref\code\codepar.i }
 

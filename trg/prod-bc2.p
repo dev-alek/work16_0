@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -196,7 +197,7 @@ define buffer same-gds-prt  for ub.gds-prt.
          buf_bar-code.unit-cli
          buf_goods.unit-base
          "'global=request'"
-         v-is-global
+         v-is-global                            	
          no-error
          }
          if not (v-is-weight and (not v-is-global)) then do:
@@ -560,17 +561,20 @@ define buffer same-gds-prt  for ub.gds-prt.
         run err-mess in this-procedure ( input-output v-mess).
         undo, return error (if p-silent then v-mess else '').
       end.
-      dopi = 0.
-      assign
-      dopi = integer(p-b-str) no-error .
-      if trim(string(dopi, ">>>>>>>>9")) <> p-b-str then do:
-        v-mess =  "“опливный код не должен содержать лидирующих нулей,&1" +
-                  "дес€тичных разделителей и других спец. символов" .
+
+      if length(p-b-str) > 2 then do:
+        v-mess = substitute("“опливный код не должен быть длиннее 2 разр€дов").
         run err-mess in this-procedure ( input-output v-mess).
         undo, return error (if p-silent then v-mess else '').
       end.
-      if dopi > 99 then do:
-        v-mess = substitute("“опливный код не должен быть длиннее 2 разр€дов").
+
+      dopi = 0.
+      assign
+      dopi = integer(p-b-str) no-error .
+
+      if trim(string(dopi, ">>>>>>>>9")) <> p-b-str then do:
+      v-mess =  "“опливный код не должен содержать лидирующих нулей,&1" +
+                  "дес€тичных разделителей и других спец. символов" .
         run err-mess in this-procedure ( input-output v-mess).
         undo, return error (if p-silent then v-mess else '').
       end.
@@ -614,9 +618,22 @@ define buffer same-gds-prt  for ub.gds-prt.
       undo, return error (if p-silent then v-mess else '').
     end.
   end case.
+
   if p-cdrg-type eq {&gtin}
+
   then do:
-     if length(p-b-str) ne 14 
+      if length(p-b-str) > 2 and lookup ({&petrolium},  u-base.type) > 0
+        then do:
+        v-mess = substitute("“опливный код не должен быть длиннее 2 разр€дов").
+        run err-mess in this-procedure ( input-output v-mess).
+        undo, return error (if p-silent then v-mess else '').
+      end.
+
+      dopi = 0.
+      assign
+      dopi = integer(p-b-str) no-error .
+
+     if length(p-b-str) ne 14  and lookup ({&petrolium}, u-base.type) = 0
      then do:
         v-mess = "¬ GTIN должно быть 14 цифр.".
         run err-mess in this-procedure ( input-output v-mess).

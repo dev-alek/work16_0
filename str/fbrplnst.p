@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: fbrplnst.p $
+$Archive: str/fbrplnst.p $
 
 Создание запроса на объекте для план-меню
 
@@ -29,11 +30,11 @@ define  input parameter p-kitchen-obj-code   as integer        no-undo.
 define  input parameter p-fbr-doc-code       as character      no-undo.
 define output parameter p-doc-created        as logical        no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: 2014/01/27 14:27:46 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: fbrplnst.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/fbrplnst.p $":U .
 define variable vss-description as character no-undo initial "Создание запроса на объекте для план-меню":U .
 
 { cmp/vssrevis.i }

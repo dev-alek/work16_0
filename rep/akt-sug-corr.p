@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 34480d5fe7d9, 3332, rls $
+$Author: SSlivenko $
+$Date: 2023/05/19 13:37:09 $
+$Workfile: akt-sug-corr.p $
+$Archive: rep/akt-sug-corr.p $
 
 Акт приема СУГ (корректировка)
 
@@ -16,12 +16,12 @@ Creation date: 08/07/14
 */
 
 using ibs.th.str.*.
-
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+block-level on error undo, throw.
+define variable vss-revision    as character no-undo init "$Revision: 34480d5fe7d9, 3332, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/05/19 13:37:09 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: akt-sug-corr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/akt-sug-corr.p $":U .
 define variable vss-description as character no-undo init "Акт приема СУГ (корректировка)".
 { cmp/vssrevis.i }
 

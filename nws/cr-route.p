@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f63859adafce, 2420, rls $
+$Author: ASMorozov $
+$Date: Ср июн 10 21:13:46 2020 +0300 $
+$Workfile: cr-route.p $
+$Archive: nws/cr-route.p $
 
 Создание записи маршрутизации (route)
 
@@ -19,11 +20,11 @@ define input parameter p-tbl-name   as character no-undo .
 define input parameter p-tbl-handle as handle    no-undo.
 define input parameter p-send-list  as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f63859adafce, 2420, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:46 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cr-route.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/cr-route.p $":U .
 define variable vss-description as character no-undo init "Создание записи маршрутизации (route)".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4':u,p-act-name,p-tbl-name,p-tbl-handle,p-send-list)" }
 { cmp/trg-def.i  }

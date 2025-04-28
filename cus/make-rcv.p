@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2a79bf27b012, 291, rls $
+$Author: ASMorozov $
+$Date: Tue Dec 01 19:11:26 2015 +0300 $
+$Workfile: make-rcv.p $
+$Archive: cus/make-rcv.p $
 
 Процедура генерации поставок по заказу  по объектам.
 
@@ -42,11 +43,11 @@ define input parameter p-t-rcv        as logical no-undo .
 define input parameter p-t-clos       as logical no-undo .
 define input parameter TABLE for  temp-dates.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2a79bf27b012, 291, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:26 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: make-rcv.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/make-rcv.p $":U .
 define variable vss-description as character no-undo init "Процедура генерации поставок по заказу  по объектам. ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

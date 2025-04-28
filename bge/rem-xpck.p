@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f0ffd58b8bac, 1562, rls $
+$Author: SMMolotkov $
+$Date: Tue Nov 06 04:41:34 2018 +0300 $
+$Workfile: rem-xpck.p $
+$Archive: bge/rem-xpck.p $
 
 Удаление пакетов OXML по указанной ВС
 
@@ -18,11 +19,11 @@ Creation date: 11/12/08
 define input parameter p-esys-id      like ub.ext-system.esys-id         no-undo .
 define input parameter p-db-num       like ub.ext-system.db-num          no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f0ffd58b8bac, 1562, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Nov 06 04:41:34 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rem-xpck.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/rem-xpck.p $":U .
 define variable vss-description as character no-undo init "Удаление пакетов OXML по указанной ВС".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -296,4 +297,4 @@ on error undo, return error
   end.
 end.
 
-/* $Workfile$ end */
+/* $Workfile: rem-xpck.p $ end */

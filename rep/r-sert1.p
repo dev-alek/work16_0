@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 51db29575c5c, 1011, rls $
+$Author: EShklyar $
+$Date: Fri Jul 21 16:12:20 2017 +0300 $
+$Workfile: r-sert1.p $
+$Archive: rep/r-sert1.p $
 
 Печатная форма Список сертификатов для накладной расширенна
 
@@ -18,11 +19,11 @@ Creation date: 11/19/07
 define input parameter p-mainmenu-handle    as handle           no-undo.
 define input parameter p-recid              as recid            no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 51db29575c5c, 1011, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jul 21 16:12:20 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-sert1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-sert1.p $":U .
 define variable vss-description as character no-undo init "Печатная форма Список сертификатов для накладной расширенна".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

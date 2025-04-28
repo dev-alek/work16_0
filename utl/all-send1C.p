@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : send2c.p
@@ -24,7 +25,7 @@
 { cmp/trg-def.i  }
 { cmp/library.i  }
 { gbl/objsrv.i }
-
+{ str/trdcalib.i }
 
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
     then run str/lib-trn.p persistent no-error .
@@ -43,6 +44,9 @@ define variable v-obj-type as character no-undo .
 define variable v-obj-code as integer   no-undo .
 define variable v-sht-date as date      no-undo .
 define variable v-sht-num  as integer   no-undo .
+define variable varvalue   as character no-undo .
+define variable vartype    as character no-undo .
+
 define button btnOk auto-go label "Ok" .
 define button btnCancel auto-endkey label "Cancel".
 
@@ -106,6 +110,30 @@ if error-status:error
 then do:
   message return-value view-as alert-box.
 end.
+{ str/tdat-val.i
+     ub.trn-doc.doc-code
+     {&trdcattr-is-lgas}
+     varvalue
+     vartype
+     no-error
+   }
+   
+  if varvalue = "yes" then 
+  do:
+    run bge\send1cerp.p (?,
+      this-procedure,
+      this-procedure,
+      "techlosses",
+      (buffer ub.trn-doc:handle),
+      ?,
+      ?) no-error.
+    if error-status:error 
+      then 
+    do:
+      message return-value view-as alert-box.
+    end.
+  end.
+
 for each tt-trn:
     delete tt-trn .
 end.    

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aa9f57929aa3, 2828, rls $
+$Author: VRukavishnikov $
+$Date: Пн ноя 15 13:32:14 2021 +0300 $
+$Workfile: in-pr.p $
+$Archive: str/in-pr.p $
 
 Генерация переоценки
 
@@ -40,11 +41,11 @@ define input parameter parParentProc  as widget-handle no-undo.
 define input parameter p-doc-rec      as recid no-undo .      /* recid TRN_DOC */
 define input parameter gen-mode       as character no-undo .  /* режим генерации переоценки */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aa9f57929aa3, 2828, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VRukavishnikov $":U .
+define variable vss-date        as character no-undo init "$Date: Пн ноя 15 13:32:14 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: in-pr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/in-pr.p $":U .
 define variable vss-description as character no-undo init "Генерация переоценки при фактическом закрытии приходной накладной".
 { cmp/vssrevis.i "substitute('&1|&2':u,p-doc-rec,gen-mode)" }
 { cmp/str-glbl.i     }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a38042964324, 1747, rls $
+$Author: ASMorozov $
+$Date: Thu Jan 24 17:02:17 2019 +0300 $
+$Workfile: cmdsndgd.p $
+$Archive: nws/cmdsndgd.p $
 
 Отправить в ГБД информацию обо всех товарах по указанному объекту
 
@@ -20,11 +21,11 @@ define input  parameter p-counter    as integer   no-undo .
 define input  parameter p-obj-type   as character no-undo .
 define input  parameter p-obj-code   as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a38042964324, 1747, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Jan 24 17:02:17 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cmdsndgd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/cmdsndgd.p $":U .
 define variable vss-description as character no-undo init "Отправить в ГБД информацию обо всех товарах по указанному объекту".
 { cmp/vssrevis.i "substitute('&1|&2|&3':u,p-counter,p-obj-type,p-obj-code)" }
 { cmp/trg-def.i  }

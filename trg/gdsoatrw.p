@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e455fc319afd, 3602, rls $
+$Author: ARostovtsev $
+$Date: 2023/12/28 12:56:37 $
+$Workfile: gdsoatrw.p $
+$Archive: trg/gdsoatrw.p $
 
 Триггер на запись gds-obj-attr
 
@@ -17,11 +18,11 @@ Creation date: 10/10/05
 
 TRIGGER PROCEDURE FOR WRITE OF ub.gds-obj-attr OLD oldgds-obj-attr.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e455fc319afd, 3602, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ARostovtsev $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/12/28 12:56:37 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gdsoatrw.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: trg/gdsoatrw.p $":U .
 define variable vss-description as character no-undo init "Триггер на запись gds-obj-attr".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -223,4 +224,19 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
   end.
+  if available (ub.gds-obj-attr) and ub.gds-obj-attr.attr-code = "dt-seasons" then 
+  do:
+    run bge\send1cerp.p (?,
+      this-procedure,
+      this-procedure,
+      "DTSeasons",
+      (buffer ub.gds-obj-attr:handle),
+      ?,
+      ?) no-error.  
+    if error-status:error 
+      then 
+    do:
+      message return-value view-as alert-box.
+    end.
+  end.  
 end.

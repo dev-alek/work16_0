@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 55cbd55c1b5e, 500, rls $
+$Author: EShklyar $
+$Date: Sun Feb 28 19:23:25 2016 +0400 $
+$Workfile: trn-open.p $
+$Archive: str/trn-open.p $
 
 Изменение статуса складского документа - Открытие документа
 выделено в отдельную процедуру т.к. в trn-stat.p ECODE
@@ -28,11 +29,11 @@ define input parameter parload-time    as   integer             no-undo. /*интер
 define input parameter parholidays     as   character           no-undo. /*выходные дни в неделе*/
 define input parameter parmessage      as   logical             no-undo. /*можно задавать вопросы*/
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 55cbd55c1b5e, 500, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Sun Feb 28 19:23:25 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: trn-open.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/trn-open.p $":U .
 define variable vss-description as character no-undo initial "Изменение статуса складского документа":U .
 
 { cmp/vssrevis.i "substitute('&1|&2':u,substitute('&1|&2|&3|&4|&5':u,parparentproc,parmode,pardoc-code,parcheck-return,pardb-num),substitute('&1|&2|&3|&4|&5':u,parin-ov,parrsrv-time,parload-time,parholidays,parmessage))" }

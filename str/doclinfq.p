@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f80e41f51855, 1693, rls $
+$Author: ASMorozov $
+$Date: Tue Dec 11 10:07:53 2018 +0300 $
+$Workfile: doclinfq.p $
+$Archive: str/doclinfq.p $
 
 Редактирование фактического количества в приходной накладной
 
@@ -26,11 +27,11 @@ define input  parameter p-fact-qnty   as decimal   no-undo .
 define output parameter p-edit-ok     as logical   no-undo .
 define output parameter p-err-message as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f80e41f51855, 1693, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 11 10:07:53 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: doclinfq.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/doclinfq.p $":U .
 define variable vss-description as character no-undo init "Редактирование фактического количества в приходной накладной".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

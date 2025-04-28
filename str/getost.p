@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*define variable iobj-type as character no-undo init "маг".
 define variable iobj-code as integer   no-undo init 38.
@@ -8,11 +9,11 @@ define input  parameter iobj-code as integer no-undo.
 define input  parameter igds-code as integer no-undo.
 define input  parameter idoc-code as character no-undo.
 define output parameter oquantity as decimal no-undo.
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c16f204c84f9, 2642, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: ѕт окт 23 21:03:38 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: getost.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/getost.p $":U .
 define variable vss-description as character no-undo init "ќстаток наначало смены".
 
 {cmp\str-glbl.i }

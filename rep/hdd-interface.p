@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 968516208b7e, 2374, rls $
+$Author: EShklyar $
+$Date: Ср июн 10 21:13:42 2020 +0300 $
+$Workfile: hdd-interface.p $
+$Archive: rep/hdd-interface.p $
 
 Результаты проверки HDD
 
@@ -16,12 +16,12 @@ Creation date: 08/07/14
 */
 
 using ibs.th.str.*.
-
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+block-level on error undo, throw.
+define variable vss-revision    as character no-undo init "$Revision: 968516208b7e, 2374, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:42 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: hdd-interface.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/hdd-interface.p $":U .
 define variable vss-description as character no-undo init "Результаты проверки HDD".
 { cmp/vssrevis.i }
 

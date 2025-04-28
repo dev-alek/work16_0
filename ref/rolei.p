@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9d0726b3ce11, 2757, rls $
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
+$Workfile: rolei.p $
+$Archive: ref/rolei.p $
 
 Заведение и редактирование ролей
 
@@ -25,11 +26,11 @@ define temp-table tt0-staff no-undo like ub.staff.
 DEFINE INPUT-OUTPUT PARAMETER TABLE FOR tt0-staff.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 9d0726b3ce11, 2757, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Сб фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rolei.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/rolei.p $":U .
 define variable vss-description as character no-undo init "Заведение и редактирование ролей".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cons-db.p $
+$Archive: cus/cons-db.p $
 
 Список номеров БД по СЗФП
 
@@ -16,11 +17,11 @@ Creation date: 03/02/06
 Creation date: 04/12/02 5:52
 
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cons-db.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/cons-db.p $":U .
 define variable vss-description as character no-undo init "Список номеров БД по СЗФП    ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -51,4 +52,4 @@ find first buf_ord-cons no-lock where  buf_ord-cons.cons-code  = p-doc no-error 
 
     end.
 end.
-/* $Workfile$ e n d */
+/* $Workfile: cons-db.p $ e n d */

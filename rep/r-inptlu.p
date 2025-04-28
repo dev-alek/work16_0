@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 099a383cf864, 290, rls $
+$Author: PGridchina $
+$Date: Tue Dec 01 19:11:24 2015 +0300 $
+$Workfile: r-inptlu.p $
+$Archive: rep/r-inptlu.p $
 
 Отчет по приходу нефтепродуктов на АЗК (Украина)
 
@@ -18,11 +19,11 @@ create: Булгаков Андрей Николаевич
 
 */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 099a383cf864, 290, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo initial "$Date: Tue Dec 01 19:11:24 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-inptlu.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-inptlu.p $":U .
 define variable vss-description as character no-undo initial "отчет по приходу нефтепродуктов на АЗК (Украина)":U .
 
 /* Parameters Definitions ---                                           */

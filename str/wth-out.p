@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: wth-out.p $
+$Archive: str/wth-out.p $
 
 —оздание документов внутреннего перемещени
 
@@ -18,11 +19,11 @@ Creation date: 09/08/05
 define parameter buffer buf_wth-doc for ub.wth-doc.
 define parameter buffer buf_out_wth-doc for ub.wth-doc.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: wth-out.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/wth-out.p $":U .
 define variable vss-description as character no-undo init "—оздание документов внутреннего перемещени€".
 { cmp/vssrevis.i }
 { cmp/library.i  }

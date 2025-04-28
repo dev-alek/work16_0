@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6557e99634e7, 3192, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:28 $
+$Workfile: r-klkkm.p $
+$Archive: rep/r-klkkm.p $
 Количество работающих ККМ на АЗК/АЗС за период
 Автор: 
 Дата создания: 20/12/2014
@@ -14,11 +15,11 @@ define input parameter parobj-type        like ub.trn-doc.obj-type no-undo. /*об
 define input parameter parobj-code        like ub.trn-doc.obj-code no-undo.
 define input parameter type-pos     as character    no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 6557e99634e7, 3192, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: 2022/12/27 12:54:28 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: r-klkkm.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/r-klkkm.p $":U .
 def var vss-description as character no-undo init "Количество работающих ККМ на АЗК/АЗС за период".
 
 { cmp/vssrevis.i    }

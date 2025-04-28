@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 94ef014b26b5, 1116, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: specattr.cls $
+$Archive: ibs/th/str/specattr.cls $
 
 
 
@@ -16,7 +16,7 @@ Creation date: 01/30/15
 */
 
 using Progress.Lang.*.
-
+block-level on error undo, throw.
 
 class ibs.th.str.specattr: 
 

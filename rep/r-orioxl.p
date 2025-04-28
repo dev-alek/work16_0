@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0ec5d11e52eb, 2015, rls $
+$Author: EShklyar $
+$Date: Wed Sep 18 21:05:06 2019 +0300 $
+$Workfile: r-orioxl.p $
+$Archive: rep/r-orioxl.p $
 
 Инвентаризационная описись нефтепродуктов (Орел)
 
@@ -22,11 +23,11 @@ define input parameter p-parent-proc as widget-handle no-undo .
 define input parameter p-rec-invent  as recid         no-undo .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 0ec5d11e52eb, 2015, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Wed Sep 18 21:05:06 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-orioxl.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-orioxl.p $":U .
 define variable vss-description as character no-undo initial "Инвентаризационная описись нефтепродуктов (Орел)":U .
 
 { cmp/vssrevis.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: impgdstx.p $
+$Archive: utl/impgdstx.p $
 
 —оздание или изменение карточки товара.
 
@@ -86,11 +87,11 @@ define input parameter par-BarDis           as integer no-undo . /*главный код т
 define input-output parameter par-rec       as recid no-undo .
 define output parameter par-nbc             like ub.bar-code.b-code no-undo . /*gds-code*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: impgdstx.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/impgdstx.p $":U .
 define variable vss-description as character no-undo init "—оздание или изменение карточки товара.".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

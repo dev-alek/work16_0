@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: wthidnt.p $
+$Archive: str/wthidnt.p $
 
 Процедура идентификации топливных талонов
 
@@ -30,11 +31,11 @@ define output parameter p-priceBase like ub.wth-parts.price-base  no-undo.   */
 define output parameter p-range     like ub.wth-parts.fact-rangeFrom  no-undo.
 /*define output parameter p-payCode   as integer no-undo.       */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: wthidnt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/wthidnt.p $":U .
 define variable vss-description as character no-undo init "Процедура идентификации топливных талонов".
 { cmp/vssrevis.i substitute('&1|&2',p-bar-code,p-zone)}
 { cmp/trg-def.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6b203531fb4a, 3411, rls $
+$Author: SSlivenko $
+$Date: 2023/08/17 10:18:56 $
+$Workfile: conf-rd.p $
+$Archive: gbl/conf-rd.p $
 
 Чтение параметров конфигурации для текущей БД
 
@@ -47,11 +48,11 @@ define input param  msg-on  as logical   no-undo . /* yes - сообщения выдаются *
 define output param p-value as character no-undo . /* значение параметра - character */
 define output param p-type  as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 6b203531fb4a, 3411, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/08/17 10:18:56 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: conf-rd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/conf-rd.p $":U .
 define variable vss-description as character no-undo init "Чтение параметров конфигурации для текущей БД".
 
 { cmp/str-glbl.i }

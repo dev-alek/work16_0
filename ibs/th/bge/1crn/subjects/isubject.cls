@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 123aa31c12d3, 2868, rls $
+$Author: SSlivenko $
+$Date: Пн ноя 22 19:49:10 2021 +0300 $
+$Workfile: isubject.cls $
+$Archive: ibs/th/bge/1crn/subjects/isubject.cls $
 
 инерфейс сущности 1С ERPRN
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 interface ibs.th.bge.1crn.subjects.isubject:  
   

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: business-units.cls $
+$Archive: ibs/th/bge/1crn/subjects/business-units.cls $
 
 Структура данных business-units в 1С
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.business-units inherits ibs.th.bge.1crn.subjects.asubject: 
@@ -63,7 +64,7 @@ class ibs.th.bge.1crn.subjects.business-units inherits ibs.th.bge.1crn.subjects.
     
     assign
       v-str = "code" when code_ = ?
-      v-str = v-str + ",name" when name_ = ?
+     /* v-str = v-str + ",name" when name_ = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''

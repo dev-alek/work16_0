@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f4fc214ea39a, 40, test $
+$Author: EShklyar $
+$Date: 2014/05/23 10:49:54 $
+$Workfile: chk-date.p $
+$Archive: gbl/chk-date.p $
 
 Проверка правильного заведения даты в документе
 
@@ -27,11 +28,11 @@ define input parameter s-date    as date      no-undo . /* дата начала смены для
 define input parameter s-num     as integer   no-undo . /* номер смены для документа            */
 define input parameter is-berate as logical   no-undo . /* выводить сообщения об ошибках        */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: f4fc214ea39a, 40, test $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2014/05/23 10:49:54 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: chk-date.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: gbl/chk-date.p $":U .
 define variable vss-description as character no-undo initial "Проверка правильного заведения даты в документе":U .
 
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4|&5|&6',o-type,o-code,f-date,f-time,s-date,s-num)" }

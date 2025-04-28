@@ -18,6 +18,7 @@ Creation date: 03/11/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.enum-chk-type.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 /*block-level on error undo, throw.*/
 
 class ibs.th.bge.1crn.subjects.check implements iexpsubject:
@@ -493,6 +494,8 @@ define private temp-table tt-recid-TranFuel no-undo
     define variable v-sum-s        as decimal no-undo .
     define variable v-parts-qnty   as decimal no-undo .
     define variable v-marking      as character no-undo .
+    define variable v-sum-promo    as decimal no-undo . /* сумма скидки по промо НП */
+    define variable v-pcnt-promo   as decimal no-undo . /* процент скидки по промо НП */
     
     insw:start-element ({&tag-message}) .
 
@@ -552,8 +555,8 @@ define private temp-table tt-recid-TranFuel no-undo
     
     /* обязательность 1-1 */
     if p-buf_chk-doc.chk-date = ? then insw:write-empty-element( "chk-date":U ). /* Дата чека (Дата) */
-    else insw:write-data-element (  "chk-date":U,  iso-date(p-buf_chk-doc.chk-date)  ).
-    
+    else insw:write-data-element (  "chk-date":U,  iso-date(p-buf_chk-doc.chk-date)  ).        
+        
     insw:write-data-element (  "chk-time",     timeFormat(p-buf_chk-doc.chk-time)    ). /* Время чека (Время) */
     insw:write-data-element (  "cashier",          string(p-buf_chk-doc.cashier)     ). /* Код кассира (Строка) */
     insw:write-data-element (  "z-num",            string(p-buf_chk-doc.z-number)    ). /* Номер z-отчета (Число) */
@@ -718,12 +721,19 @@ define private temp-table tt-recid-TranFuel no-undo
             left-trim( string(buf_chk-gds.doc-qnty * buf_chk-gds.density, "->>>>>>>>9.999") )
           ) . /* Объем, кг (Число 15,3) */ 
         end.
-
+        /* ищем спец. скидку по промо НП */
+        find first buf_chk-gds-attr no-lock where                 
+                   buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code       
+               and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                 
+               and buf_chk-gds-attr.attr-code = "CSPromoSum"
+            no-error.
+        if avail buf_chk-gds-attr then v-sum-promo = dec(buf_chk-gds-attr.attr-value) no-error.
+        else v-sum-promo = 0.      
         /* 18/I-2018 даже если в БД в поле sum-base лежит ? - в выгрузке всё равно должен быть 0 */
         insw:write-data-element (  "sum",
           if buf_chk-gds.sum-base = ?
           then  "0"
-          else  left-trim( string(buf_chk-gds.sum-base, "->>>>>>>>9.99") )
+          else  left-trim( string(buf_chk-gds.sum-base + v-sum-promo, "->>>>>>>>9.99") )
         ) . /* Сумма (Число 15,2) */
         
         if available buf_goods
@@ -758,7 +768,7 @@ define private temp-table tt-recid-TranFuel no-undo
         /* chk-gds.discnt - скидка относительно цены; чтобы получить скидку по строке - её надо умножать на количество */
         if (buf_chk-gds.discnt > 0) or (buf_chk-gds.discnt < 0) then
         insw:write-data-element (  "sum-discnt",
-          left-trim( string(buf_chk-gds.doc-qnty * buf_chk-gds.discnt, "->>>>>>>>>9.9<<<<<<<<<") )
+          left-trim( string(buf_chk-gds.doc-qnty * buf_chk-gds.discnt + v-sum-promo, "->>>>>>>>>9.9<<<<<<<<<") )
         ) . /* Скидка на строку товара - с учетом всех скидок на строку и на итог (Число) */
         
         if v-is-petrolium and (buf_chk-gds.density > 0) then
@@ -1018,9 +1028,17 @@ define private temp-table tt-recid-TranFuel no-undo
     /* если в чеке есть скидка по топливному купону, у которой discnt-type = 23 и discnt-value-pcnt = 0 - то
        из этого чека скидки не выгружаем вообще. Там попадается скидка -1000% */
     define variable vflg as logical no-undo.
+    define variable vflg0 as logical no-undo.
+    define variable v-discnt-value-abs as decimal no-undo.
+    assign
+       vflg  = no
+       vflg0 = no
+       v-discnt-value-abs = 0
+       .
     if not can-find (first chk-discnt where chk-discnt.doc-code = p-buf_chk-doc.doc-code
                                         and chk-discnt.discnt-type       = 23
-                                        and chk-discnt.discnt-value-pcnt = 0) then do :
+                                        and chk-discnt.discnt-value-pcnt = 0) then do :    
+            
     for each buf_chk-discnt no-lock
        where buf_chk-discnt.doc-code = p-buf_chk-doc.doc-code
         /* скидки обычные (record-type = 0) и скидки, которыми выравниваются погрешности (record-type = 2) */
@@ -1040,6 +1058,7 @@ define private temp-table tt-recid-TranFuel no-undo
          for each bf_chk-discnt no-lock
           where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code and bf_chk-discnt.record-type = 1  and bf_chk-discnt.discnt-id = buf_chk-discnt.discnt-id  break by bf_chk-discnt.object-line-num:
           vflg = yes.
+          
           insw:start-element ({&tag-item3}) .
           insw:write-data-element (  "discnt-num",       string(bf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
           insw:write-data-element (  "line-num",         string(bf_chk-discnt.object-line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
@@ -1060,23 +1079,82 @@ define private temp-table tt-recid-TranFuel no-undo
         end.
       end.
       else 
-      do:  
-        insw:start-element ({&tag-item3}) .
-        insw:write-data-element (  "discnt-num",       string(buf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
-        insw:write-data-element (  "line-num",         string(buf_chk-discnt.line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
-        insw:write-data-element (  "discnt-type",      string(buf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
-        insw:write-data-element (  "discntValueAbs",   left-trim(string(buf_chk-discnt.discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
-        insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt, "->>>>9.9<"))                 ) . /* % скидки (Число) */
-        /* обязательность 0-1 */
-        if buf_chk-discnt.promo-id > "" then 
+      do: 
+        assign
+          v-sum-promo = 0
+          v-pcnt-promo = 0
+          . 
+        if buf_chk-discnt.record-type = 1 and 
+           buf_chk-discnt.promo-id > "" then 
         do:
-          find first PromoAction where PromoAction.id =  int(buf_chk-discnt.promo-id) no-lock no-error.
-         
-          insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
-        
+            find first buf_chk-gds-attr no-lock                  
+                 where buf_chk-gds-attr.doc-code =  buf_chk-discnt.doc-code       
+                   and buf_chk-gds-attr.line-num  =  buf_chk-discnt.line-num                 
+                   and buf_chk-gds-attr.attr-code = "CSPromoSum"
+               no-error.
+            if avail buf_chk-gds-attr then do:
+                v-sum-promo = dec(buf_chk-gds-attr.attr-value).
+                find first  buf_chk-gds no-lock
+                      where buf_chk-gds.doc-code = buf_chk-discnt.doc-code
+                        and buf_chk-gds.line-num = buf_chk-discnt.line-num
+                   no-error.                   
+                if avail buf_chk-gds then
+                   v-pcnt-promo = 100 * ( 1 - (buf_chk-gds.sum-base / (buf_chk-gds.sum-base + v-sum-promo))).
+            end.
         end.
-        if buf_chk-discnt.templ-rl-root > 0 then  insw:write-data-element (  "discntGdsReason",       string(buf_chk-discnt.templ-rl-root)          ) .
-        insw:end-element ({&tag-item3}) .
+        if buf_chk-discnt.discnt-type = 999 and
+           buf_chk-discnt.record-type = 2 and  
+           buf_chk-discnt.value-type = 2 and  
+           buf_chk-discnt.line-num = 0 and 
+           buf_chk-discnt.promo-id = ""
+           then do:           
+           if not vflg0
+           then do:
+             v-discnt-value-abs = 0.  
+             for each bf_chk-discnt no-lock
+                where bf_chk-discnt.doc-code = buf_chk-discnt.doc-code 
+                  and bf_chk-discnt.record-type = buf_chk-discnt.record-type
+                  and bf_chk-discnt.discnt-type = buf_chk-discnt.discnt-type 
+                  and bf_chk-discnt.value-type = buf_chk-discnt.value-type
+                  and bf_chk-discnt.line-num = buf_chk-discnt.line-num
+                  :
+                  vflg0 = yes.
+                  v-discnt-value-abs = v-discnt-value-abs + bf_chk-discnt.discnt-value-abs.    
+             end.
+             insw:start-element ({&tag-item3}) .
+             insw:write-data-element (  "discnt-num",       string(buf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
+             insw:write-data-element (  "line-num",         string(buf_chk-discnt.line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
+             insw:write-data-element (  "discnt-type",      string(buf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
+             insw:write-data-element (  "discntValueAbs",   left-trim(string(v-discnt-value-abs,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
+             insw:write-data-element (  "discntValuePcnt",  left-trim(string(0, "->>>>9.9<"))                 ) . /* % скидки (Число) */
+             /* обязательность 0-1 */
+             if buf_chk-discnt.promo-id > "" then 
+             do:
+               find first PromoAction where PromoAction.id =  int(buf_chk-discnt.promo-id) no-lock no-error.             
+               insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */            
+             end.
+             if buf_chk-discnt.templ-rl-root > 0 then  insw:write-data-element (  "discntGdsReason",       string(buf_chk-discnt.templ-rl-root)          ) .
+             insw:end-element ({&tag-item3}) .
+           end.              
+        end.   
+        else do:   
+            insw:start-element ({&tag-item3}) .
+            insw:write-data-element (  "discnt-num",       string(buf_chk-discnt.discnt-id)          ) . /* Номер строки скидки (Число) */
+            insw:write-data-element (  "line-num",         string(buf_chk-discnt.line-num)           ) . /* Номер строки чека на которую предоставлена скидка (Число) */
+            insw:write-data-element (  "discnt-type",      string(buf_chk-discnt.value-type)        ) . /* Тип скидки (Строка) */
+            insw:write-data-element (  "discntValueAbs",   left-trim(string(buf_chk-discnt.discnt-value-abs + v-sum-promo,  "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки - сумма (Число) */
+            insw:write-data-element (  "discntValuePcnt",  left-trim(string(buf_chk-discnt.discnt-value-pcnt + v-pcnt-promo, "->>>>9.9<"))                 ) . /* % скидки (Число) */
+            /* обязательность 0-1 */
+            if buf_chk-discnt.promo-id > "" then 
+            do:
+              find first PromoAction where PromoAction.id =  int(buf_chk-discnt.promo-id) no-lock no-error.
+             
+              insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  buf_chk-discnt.promo-id  ) . /* Код промо-акции (Строка) */
+            
+            end.
+            if buf_chk-discnt.templ-rl-root > 0 then  insw:write-data-element (  "discntGdsReason",       string(buf_chk-discnt.templ-rl-root)          ) .
+            insw:end-element ({&tag-item3}) .        
+        end.        
       
       end.
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section3}) .
@@ -1157,7 +1235,15 @@ define private temp-table tt-recid-TranFuel no-undo
       /* 21/XI-2017 Добавлены поля pay-card (обязательность 0-1) и discntValueAbs (обязательность 1-1) */
       if buf_chk-gds-pay.pay-card > "" then
       insw:write-data-element (  "pay-card",               buf_chk-gds-pay.pay-card  ) . /* Номер платежной карты. Заполняется в случае оплаты банковской картой (Строка) */
-      insw:write-data-element (  "discntValueAbs",  left-trim(string(buf_chk-gds-pay.discnt, "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки – сумма (Число) */
+      
+      find first buf_chk-gds-attr no-lock where                 
+                   buf_chk-gds-attr.doc-code = buf_chk-gds-pay.doc-code       
+               and buf_chk-gds-attr.line-num  = buf_chk-gds-pay.line-num                 
+               and buf_chk-gds-attr.attr-code = "CSPromoSum"
+            no-error.
+      v-sum-promo = if avail buf_chk-gds-attr then dec(buf_chk-gds-attr.attr-value) else 0 no-error. 
+        
+      insw:write-data-element (  "discntValueAbs",  left-trim(string((buf_chk-gds-pay.discnt + (v-sum-promo / buf_chk-gds-pay.eff-doc-qnty)), "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* Абсолютное значение скидки – сумма (Число) */
       
       insw:end-element ({&tag-item6}) .
       if last-of(buf_chk-gds-pay.doc-code) then insw:end-element ({&tag-section6}) .

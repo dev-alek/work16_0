@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: db20b37e7994, 1993, rls $
+$Author: SMMolotkov $
+$Date: Fri Aug 23 12:08:20 2019 +0300 $
+$Workfile: bge-ini.p $
+$Archive: bge/bge-ini.p $
 
 Cоздание каталогов, секции и ключа для Экспорта XML
 
@@ -25,11 +26,11 @@ Output:
 define input  parameter strB        as character        no-undo.
 define output parameter strFRG-ACC  as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: db20b37e7994, 1993, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Aug 23 12:08:20 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bge-ini.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bge-ini.p $":U .
 define variable vss-description as character no-undo init "Cоздание каталогов, секции и ключа для Экспорта XML".
 { cmp/vssrevis.i }
 

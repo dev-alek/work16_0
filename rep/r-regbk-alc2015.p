@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 
 
 /*------------------------------------------------------------------------
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7596fb7dbb2f, 3446, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:33 $
+$Workfile: r-regbk-alc2015.p $
+$Archive: rep/r-regbk-alc2015.p $
 
 Журнал учёта объёма розничной продажи алкогольной и спиртосодержащей продукции
 
@@ -18,11 +19,11 @@ Creation date: 11/12/15
   
 DEFINE INPUT PARAMETER parParentProc AS HANDLE NO-UNDO.
 
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision$":U .
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author$":U .
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date$":U .
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile$":U .
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive$":U .
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision: 7596fb7dbb2f, 3446, rls $":U .
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author: EShklyar $":U .
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date: 2023/10/16 15:13:33 $":U .
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile: r-regbk-alc2015.p $":U .
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive: rep/r-regbk-alc2015.p $":U .
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Журнал учёта розничной продажи алкогольной продукции".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

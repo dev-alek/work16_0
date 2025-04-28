@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-shift3.p $
+$Archive: rep/r-shift3.p $
 
 печать сменного отчета (ЮКОС лист 3)
 
@@ -36,11 +37,11 @@ define input parameter ptog-lavel as logical   no-undo.
 define input parameter pvar-lavel as integer   no-undo.
 define input parameter p-previous-shift-date as date no-undo .
 
-define variable  vss-revision    AS character NO-UNDO INIT "$Revision$":U.
-define variable  vss-author      AS character NO-UNDO INIT "$Author$":U.
-define variable  vss-date        AS character NO-UNDO INIT "$Date$":U.
-define variable  vss-workfile    AS character NO-UNDO INIT "$Workfile$":U.
-define variable  vss-archive     AS character NO-UNDO INIT "$Archive$":U.
+define variable  vss-revision    AS character NO-UNDO INIT "$Revision: aea5316774be, 0, rls $":U.
+define variable  vss-author      AS character NO-UNDO INIT "$Author: expertek $":U.
+define variable  vss-date        AS character NO-UNDO INIT "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U.
+define variable  vss-workfile    AS character NO-UNDO INIT "$Workfile: r-shift3.p $":U.
+define variable  vss-archive     AS character NO-UNDO INIT "$Archive: rep/r-shift3.p $":U.
 define variable  vss-description AS character NO-UNDO INIT "$Печать сменного отчета - лист 3 $":U.
 
 

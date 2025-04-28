@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3a62839ff969, 963, rls $
+$Author: EShklyar $
+$Date: Thu Feb 16 15:20:37 2017 +0300 $
+$Workfile: r-obort1.p $
+$Archive: rep/r-obort1.p $
 
 Старая оборотная ведомость
 
@@ -61,11 +62,11 @@ define input parameter ExportZUM         as logical   no-undo .
 define input parameter sz-qnty           as integer   no-undo .
 define input parameter sys-key           as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 3a62839ff969, 963, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Feb 16 15:20:37 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-obort1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-obort1.p $":U .
 define variable vss-description as character no-undo init "Старая оборотная ведомость".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

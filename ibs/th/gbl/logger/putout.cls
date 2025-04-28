@@ -13,6 +13,7 @@
   */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.logger.putout inherits ibs.th.gbl.sys.objth :

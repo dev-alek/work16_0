@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 24d6fc541c24, 417, rls $
+$Author: PGridchina $
+$Date: Mon Jan 18 18:07:08 2016 +0400 $
+$Workfile: reclcwth.p $
+$Archive: utl/reclcwth.p $
 
 Пересчет остатков по объекту и месту хранения мат-ценностей
 
@@ -19,11 +20,11 @@ Creation date: 04/10/06
 define input parameter parobj-type like ub.clients.obj-type no-undo.
 define input parameter parobj-code like ub.clients.obj-code no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 24d6fc541c24, 417, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 18 18:07:08 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: reclcwth.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/reclcwth.p $":U .
 define variable vss-description as character no-undo init "Пересчет остатков по объекту и месту хранения мат-ценностей".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

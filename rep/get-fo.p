@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: get-fo.p $
+$Archive: rep/get-fo.p $
 
 Определение диапазона fact-order по диапазону дат
 
@@ -27,11 +28,11 @@ define output parameter p-fact-order-from   like ub.stk-tot.fact-order no-undo.
 define output parameter p-fact-order-to     like ub.stk-tot.fact-order no-undo.
 define output parameter p-docs-exists       as logical              no-undo.
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+def var vss-author      as character no-undo init "$Author: expertek $":U .
+def var vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: get-fo.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/get-fo.p $":U .
 def var vss-description as character no-undo init "Определение диапазона fact-order по диапазону дат".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

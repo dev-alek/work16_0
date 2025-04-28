@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 40e5534edb20, 59, rls $
+$Author: AShutilov $
+$Date: Thu Aug 28 16:27:53 2014 +0400 $
+$Workfile: r-achmat.p $
+$Archive: rep/r-achmat.p $
 
 Отчет Акт на списание материалов ( для инвентаризации, факт )
 
@@ -28,11 +29,11 @@ define buffer bf_goods for ub.goods.
 define buffer bf_doc-line-sum for ub.doc-line-sum.
 define buffer bf_trn-reason for ub.trn-reason.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 40e5534edb20, 59, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: AShutilov $":U .
+define variable vss-date        as character no-undo initial "$Date: Thu Aug 28 16:27:53 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-achmat.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-achmat.p $":U .
 define variable vss-description as character no-undo initial "Отчет Акт на списание материалов".
 
 define variable g#gds-engl as logical   no-undo .

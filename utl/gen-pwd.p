@@ -23,7 +23,7 @@ block-level on error undo, throw.
 define input parameter parParentProc as handle no-undo .
 
 define variable mForm as class gpwdbrw no-undo.
-
+define variable mForm2 as class gpwdbrw2 no-undo.
   /* --- дл€ cmp/vssrevis.i --- */
     define variable vss-revision       as character no-undo init "$Revision$":U .
     define variable vss-author         as character no-undo init "$Author$":U .
@@ -33,7 +33,7 @@ define variable mForm as class gpwdbrw no-undo.
     define variable vss-description    as character no-undo init "Ёкранные триггеры промо-акций". 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
-if ibs.th.gbl.gbl-var:g#db-num <> 0 then
+if ibs.th.gbl.gbl-var:g#db-num ne 0 then
 do:
    System.Windows.Forms.MessageBox:Show(
       "ѕункт меню доступен только в √Ѕƒ.",
@@ -46,8 +46,6 @@ end.
 assign
    session:debug-alert = yes
    session:error-stack-trace = yes
-   gpwdbrw:parParentProc = parParentProc
-   gpwdfrm:parParentProc = parParentProc
 .
 { gbl/getcntxt.i def }
 
@@ -72,11 +70,36 @@ assign
  }
  if not mOk then
       return .
-mForm = new utl.gpwdbrw().
+define variable v-sys-key   as character         no-undo.
 
-if valid-object(mForm) then
-    mForm:Wait().
-    
+   { gbl/currsysk.i
+      v-sys-key 
+      no-error
+   }                                                      
+   if v-sys-key eq "SibintekTechProl"
+   then do:
+      assign
+         gpwdbrw2:parParentProc = parParentProc
+         gpwdfrm2:parParentProc = parParentProc
+      .
+      
+      mForm2 = new utl.gpwdbrw2().
+      
+      if valid-object(mForm2) then
+          mForm2:Wait().
+   end.       
+   else do:
+         
+      assign
+         gpwdbrw:parParentProc = parParentProc
+         gpwdfrm:parParentProc = parParentProc
+      .
+      
+      mForm = new utl.gpwdbrw().
+      
+      if valid-object(mForm) then
+          mForm:Wait().
+   end.    
 catch mErr as Progress.Lang.Error :
    
    System.Windows.Forms.MessageBox:Show(

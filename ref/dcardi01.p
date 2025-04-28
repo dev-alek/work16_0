@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 560be6005277, 558, rls $
+$Author: PGridchina $
+$Date: Wed Mar 30 17:48:23 2016 +0400 $
+$Workfile: dcardi01.p $
+$Archive: ref/dcardi01.p $
 
 Сохранение изменений в карточке дисконтной карты
 
@@ -66,11 +67,11 @@ DEFINE INPUT PARAMETER TABLE FOR tt0-dis-card-property.
 
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 560be6005277, 558, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Mar 30 17:48:23 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: dcardi01.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/dcardi01.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений в карточке дисконтной карты".
 { cmp/vssrevis.i }
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7fd4558db973, 297, rls $
+$Author: EShklyar $
+$Date: Tue Dec 01 19:11:39 2015 +0300 $
+$Workfile: cd-inf.p $
+$Archive: str/cd-inf.p $
 
 Информация по имеющимся отложенным заданиям отсылки на кассу
 
@@ -19,11 +20,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-interface as logical no-undo.
 define input parameter p-run as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7fd4558db973, 297, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:39 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cd-inf.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/cd-inf.p $":U .
 define variable vss-description as character no-undo init "Информация по имеющимся отложенным заданиям отсылки на кассу".
 { cmp/vssrevis.i }
 

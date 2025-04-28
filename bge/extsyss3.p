@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bfb4ae97be9f, 14, test $
+$Author: ASMorozov $
+$Date: Wed Mar 05 12:48:25 2014 +0300 $
+$Workfile: extsyss3.p $
+$Archive: bge/extsyss3.p $
 
 Удаление специальной ВС
 
@@ -19,11 +20,11 @@ define input parameter p-silent as logical no-undo .
 define input parameter p-rec as recid no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: bfb4ae97be9f, 14, test $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Mar 05 12:48:25 2014 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: extsyss3.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/extsyss3.p $":U .
 define variable vss-description as character no-undo init "Удаление специальной ВС".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

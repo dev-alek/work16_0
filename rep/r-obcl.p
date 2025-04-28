@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-obcl.p $
+$Archive: rep/r-obcl.p $
 
 Оборотная ведомость по контрагентам
 
@@ -39,11 +40,11 @@ define input parameter xtog-lavel-2 as log no-undo.
 define input parameter xvar-lavel-2 as int no-undo.
 /* define input parameter  xserv      as char no-undo. */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-obcl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-obcl.p $":U .
 define variable vss-description as character no-undo init "Оборотная ведомость по контрагентам ".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }

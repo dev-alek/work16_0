@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 870fbceb5a42, 3029, rls $
+$Author: Ostroukhov $
+$Date: ѕт апр 29 17:03:42 2022 +0300 $
+$Workfile: cash-doc.cls $
+$Archive: ibs/th/bge/1crn/subjects/cash-doc.cls $
 
 Ёкспорт сообщени€ с накладаной в 1— ERPRN cash-doc
 
@@ -17,11 +17,13 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
 
   
   { cmp/str-glbl.i class }
+  { gbl/xmlchar.i CLASS}
   { ibs/th/ref/Coins_Bank_tt.i }
   define temp-table tt-fin-doc like ub.c-fin-doc .
   define temp-table tt-fin-doc-tax like ub.c-fin-doc-tax .
@@ -214,18 +216,18 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       sw:write-data-element ("contr-name", if tt-fin-doc.receiver-name = ? then "" else string(tt-fin-doc.receiver-name)).
       sw:write-data-element ("contr-code", string-mth(tt-fin-doc.receiver-code)).
     end.
-    sw:write-data-element ("doc-osn", if tt-fin-doc.naznach-plat = ? then "" else string(tt-fin-doc.naznach-plat)).
-    sw:write-data-element ("pril", if tt-fin-doc.enclosure = ? then "" else string(tt-fin-doc.enclosure)).
-    sw:write-data-element ("nds-str", if tt-fin-doc.including = ? then "" else string(tt-fin-doc.including)).
+    sw:write-data-element ("doc-osn", if tt-fin-doc.naznach-plat = ? then "" else xmlchar-encode-1c(string(tt-fin-doc.naznach-plat))).
+    sw:write-data-element ("pril", xmlchar-encode-1c(tt-fin-doc.enclosure)).
+    sw:write-data-element ("nds-str", if tt-fin-doc.including = ? then "" else xmlchar-encode-1c(string(tt-fin-doc.including))).
     sw:write-data-element ("operator", if tt-fin-doc.user-name-doc = ? then "" else user-name(tt-fin-doc.user-name-doc)).
-    sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else string(tt-fin-doc.receiver-passport)).
+    sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else xmlchar-encode-1c(string(tt-fin-doc.receiver-passport))).
 
     find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
     if available (tt-fin-doc-attr) then do:
        if     tt-fin-doc-attr.sumka ne ?
           and tt-fin-doc-attr.sumka ne ""
        then
-          sw:write-data-element ("sumka", string(tt-fin-doc-attr.sumka)).
+          sw:write-data-element ("sumka", xmlchar-encode-1c(tt-fin-doc-attr.sumka)).
 /*       if     tt-fin-doc-attr.banknote ne ?                                     */
 /*          and tt-fin-doc-attr.banknote ne ""                                    */
 /*       then                                                                     */

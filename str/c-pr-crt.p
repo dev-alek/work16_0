@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: c-pr-crt.p $
+$Archive: str/c-pr-crt.p $
 
 Копирование переоценки
 
@@ -21,11 +22,11 @@ define input  parameter p-doc-num  like ub.price-doc.doc-num no-undo .
 define output parameter p-chip-num like ub.c-price-doc.chip-num no-undo .
 define variable p-corr-doc-code like ub.price-doc.doc-num no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: c-pr-crt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/c-pr-crt.p $":U .
 define variable vss-description as character no-undo init "Копирование переоценки ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -240,4 +241,4 @@ define variable v-time  as integer   no-undo.
     end.
   end.
 end procedure . /* process-line */
-/* $Workfile$ e n d */
+/* $Workfile: c-pr-crt.p $ e n d */

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ba90cb26dd49, 1888, rls $
+$Author: druban $
+$Date: Fri Jun 07 16:26:45 2019 +0300 $
+$Workfile: factur.p $
+$Archive: rep/factur.p $
 
 Печать счета-фактуры.
 
@@ -37,11 +38,11 @@ define input parameter p-mode           as character            no-undo.   /* ис
 define input parameter p-round          as character            no-undo.   /* 'round' включает округление */
 define input parameter p-no-slt         as logical              no-undo .  /* yes - не печатаем строку НП */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: ba90cb26dd49, 1888, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: druban $":U .
+define variable vss-date        as character no-undo initial "$Date: Fri Jun 07 16:26:45 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: factur.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/factur.p $":U .
 define variable vss-description as character no-undo initial "Печать счета-фактуры.":U .
 
 { cmp/vssrevis.i     }

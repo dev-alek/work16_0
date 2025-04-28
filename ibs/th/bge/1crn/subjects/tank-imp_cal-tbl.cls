@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: tank-imp_cal-tbl.cls $
+$Archive: ibs/th/bge/1crn/subjects/tank-imp_cal-tbl.cls $
 
 Структура данных transport_section в 1С
 
@@ -19,6 +19,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.tank-imp_cal-tbl from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.tank-imp_cal-tbl inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

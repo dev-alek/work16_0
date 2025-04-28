@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f9f9d1396dd0, 1038, rls $
+$Author: SSlivenko $
+$Date: Fri Oct 06 18:30:18 2017 +0300 $
+$Workfile: del-doc.p $
+$Archive: str/del-doc.p $
 
 Удаление документов + вывод информации о ходе процесса
 
@@ -31,11 +32,11 @@ define  input parameter parphchip-num      as   integer                      no-
 define output parameter parchip-num        as   integer                      no-undo.
 
 /* VSS Variable Definitions ---                                         */
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: f9f9d1396dd0, 1038, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U.
+define variable vss-date        as character no-undo initial "$Date: Fri Oct 06 18:30:18 2017 +0300 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: del-doc.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: str/del-doc.p $":U.
 define variable vss-description as character no-undo initial "Удаление документов + вывод информации о ходе процесса":U.
 
 /* Global, Shared, Preprocessor Definitions ---                         */
@@ -153,4 +154,4 @@ end.
 
   run waitfram-hide in this-procedure no-error.
 
-/* $Workfile$   E n d */
+/* $Workfile: del-doc.p $   E n d */

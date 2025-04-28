@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d855a480b4c6, 3515, rls $
+$Author: DRuban $
+$Date: 2023/10/25 15:17:32 $
+$Workfile: upddb.p $
+$Archive: adm/upddb.p $
 
 Процедура обновления TH и схемы БД
 

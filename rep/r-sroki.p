@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 20108dc8c1b8, 971, rls $
+$Author: EShklyar $
+$Date: Tue Apr 18 18:37:36 2017 +0300 $
+$Workfile: r-sroki.p $
+$Archive: rep/r-sroki.p $
 
 ѕечать товаров с истекающими сроками годности.
 
@@ -25,11 +26,11 @@ define input parameter p-sort-type      as character        no-undo.
 define input parameter p-empty-disabled as logical          no-undo.
 define input parameter p-free as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 20108dc8c1b8, 971, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Apr 18 18:37:36 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-sroki.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-sroki.p $":U .
 define variable vss-description as character no-undo init "ѕечать товаров с истекающими сроками годности.".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

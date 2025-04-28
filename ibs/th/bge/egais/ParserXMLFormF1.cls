@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 189a413f5bcf, 825, rls $
+$Author: ASMorozov $
+$Date: Thu Sep 29 16:06:21 2016 +0300 $
+$Workfile: ParserXMLFormF1.cls $
+$Archive: ibs/th/bge/egais/ParserXMLFormF1.cls $
 
 Класс разбора XML справок 1 ЕГАИС.
 
@@ -18,6 +18,7 @@ Creation date: 15/09/16
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
 using ibs.th.gbl.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.egais.ParserXMLFormF1 inherits EGAISUTM:
     

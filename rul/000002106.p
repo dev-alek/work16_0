@@ -1,4 +1,5 @@
 
+
 /*------------------------------------------------------------------------
     File        : 000002106.p
     Purpose     : 
@@ -24,7 +25,7 @@
 using Ibs.Th.Rul.Route-data_.
 using ibs.th.bge.1crn.export.expsubject from propath.
 using ibs.th.bge.1crn.subjects.cash-doc from propath.
-
+block-level on error undo, throw.
 /*---------------------------&end-using-class&---------------------------------*/
 
 

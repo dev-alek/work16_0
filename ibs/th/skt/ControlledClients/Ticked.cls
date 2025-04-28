@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 51d0b788d6e0, 3546, rls $
+$Author: DRuban $
+$Date: 2023/11/27 08:31:17 $
+$Workfile: Ticked.cls $
+$Archive: ibs/th/skt/ControlledClients/Ticked.cls $
 
 
 
@@ -17,6 +17,7 @@ Creation date: 01/30/15
 
 using Progress.Lang.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 
 class ibs.th.skt.ControlledClients.Ticked: 

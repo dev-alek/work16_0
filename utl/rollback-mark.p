@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: rollback-mark.p $
+$Archive: utl/rollback-mark.p $
 
 Утилита отката помарочного учета
 
@@ -18,11 +19,11 @@ Creation date: 07/23/08
 */
 using ibs.th.str.marking.sts.*.
 
-define variable vss-revision as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision as character no-undo init "$Revision: f29df1d5f130, 3104, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 09 09:15:01 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rollback-mark.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/rollback-mark.p $":U .
 define variable vss-description as character no-undo init "Утилита отката помарочного учета".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

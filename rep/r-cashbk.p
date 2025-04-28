@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 95acbc8cdeb8, 3449, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:33 $
+$Workfile: r-cashbk.p $
+$Archive: rep/r-cashbk.p $
 
 Кассовая книга
 
@@ -34,11 +35,11 @@ define input parameter p-xls                    as   logical               no-un
 define input parameter p-dir-name               as   character             no-undo .
 define input parameter p-titul                  as logical                 no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 95acbc8cdeb8, 3449, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:33 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-cashbk.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-cashbk.p $":U .
 define variable vss-description as character no-undo init "Кассовая книга".
 { cmp/vssrevis.i }
 

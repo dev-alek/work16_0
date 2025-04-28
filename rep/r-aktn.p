@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-aktn.p $
+$Archive: rep/r-aktn.p $
 
 Переоценка: Отчет по неосновным кодам
 
@@ -25,11 +26,11 @@ define input parameter p-price-celection    as integer          no-undo.
 define input parameter p-print-null-qnty    as logical          no-undo.
 define input parameter p-sort-by-group      as logical          no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-aktn.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-aktn.p $":U .
 define variable vss-description as character no-undo init "Переоценка: Отчет по неосновным кодам".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

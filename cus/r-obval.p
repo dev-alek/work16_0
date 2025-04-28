@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-obval.p $
+$Archive: cus/r-obval.p $
 
 Оборот в валюте поставщика - создание записей во времнной таблице
 
@@ -21,11 +22,11 @@ define input parameter pcurr-code like ub.trn-doc.exch-code no-undo.
 define input parameter pnum-obj    as integer no-undo.
 /* количество объектов в выборке */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-obval.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/r-obval.p $":U .
 define variable vss-description as character no-undo init "Оборот в валюте поставщика - создание записей во времнной таблице".
 { cmp/vssrevis.i }
 

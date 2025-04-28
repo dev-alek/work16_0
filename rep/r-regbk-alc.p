@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1f78fe327cdf, 1091, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: r-regbk-alc.p $
+$Archive: rep/r-regbk-alc.p $
 
 Журнал учёта объёма розничной продажи алкогольной и спиртосодержащей продукции
 
@@ -16,11 +17,11 @@ Creation date: 15/10/14
   ----------------------------------------------------------------------*/
 define input parameter parParentProc as handle no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1f78fe327cdf, 1091, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-regbk-alc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-regbk-alc.p $":U .
 define variable vss-description as character no-undo init "Журнал учёта розничной продажи алкогольной продукции".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

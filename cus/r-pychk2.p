@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: cc275b2610da, 3580, rls $
+$Author: EShklyar $
+$Date: 2023/12/14 13:36:13 $
+$Workfile: r-pychk2.p $
+$Archive: cus/r-pychk2.p $
 
 Суммы продаж с разбивкой по типам кассовых платежей и НДС - печать
 
@@ -20,11 +21,11 @@ define input parameter p-group as logical no-undo .
 define input parameter p-rv    as logical no-undo .
 /*расходы возвраты отдельно*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: cc275b2610da, 3580, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/12/14 13:36:13 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-pychk2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/r-pychk2.p $":U .
 define variable vss-description as character no-undo init "Суммы продаж с разбивкой по типам кассовых платежей и НДС - печать".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -49,8 +50,8 @@ define variable ii-excel as integer no-undo .
 define variable ii-page as integer no-undo init 1.
 define variable v-curr-code like ub.currency.curr-code no-undo init ?.
 define variable v-one-curr-code as logical no-undo .
-define variable inkas-uslugi as character no-undo .
-
+define variable inkas-uslugi1 as character no-undo .
+define variable inkas-uslugi2 as character no-undo .
 
 define buffer buf_inkas for ub.inkas.
 define buffer buf_cash-pay for ub.cash-pay.
@@ -332,8 +333,9 @@ on error undo, return error
   END. /*FOR EACH ub.chk-doc No-LOCK WHERE*/
   /*заполним vat*/
   /*пройдем по всем записям, которые обновлялись  в текущей продаже */
-  inkas-uslugi = entry(1,buf_inkas.inkas-code,"-") + "у-" + entry(2,buf_inkas.inkas-code,"-") .  
-
+  inkas-uslugi1 = entry(1,buf_inkas.inkas-code,"-") + "у-" + entry(2,buf_inkas.inkas-code,"-") .  
+  inkas-uslugi2 = entry(1,buf_inkas.inkas-code,"-") + "у=" + entry(2,buf_inkas.inkas-code,"-") .  
+  
   _doc-line:
   FOR EACH treal-3 where
           treal-3.vat-pc = - 1,
@@ -369,9 +371,10 @@ on error undo, return error
       end.
     end.
     /*для услуг*/
+    
      if not p-rv or treal-3.rv = 1 then do:
       FIND FIRST buf_doc-line no-lock WHERE
-                buf_doc-line.doc-code = inkas-uslugi AND
+                buf_doc-line.doc-code = inkas-uslugi1 AND
                 buf_doc-line.artic     = buf_goods.artic AND
                 buf_doc-line.prod-type = buf_goods.prod-type AND
                 buf_doc-line.prod-code = buf_goods.prod-code  no-error .
@@ -382,6 +385,18 @@ on error undo, return error
         {&create-treal-vat2}.
         NEXT _doc-line.
       end.
+      FIND FIRST buf_doc-line no-lock WHERE
+                buf_doc-line.doc-code begins inkas-uslugi2 AND
+                buf_doc-line.artic     = buf_goods.artic AND
+                buf_doc-line.prod-type = buf_goods.prod-type AND
+                buf_doc-line.prod-code = buf_goods.prod-code  no-error .
+      if available buf_doc-line then do:
+        assign
+        treal-3.vat-pc = buf_doc-line.vat-pc.
+        {&create-treal-vat}.
+        {&create-treal-vat2}.
+        NEXT _doc-line.
+      end.      
     end.
   end. /*for each treal-3*/
 end.

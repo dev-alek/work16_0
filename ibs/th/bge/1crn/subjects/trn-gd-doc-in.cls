@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.trn-gd-doc from propath.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.asubject: 
@@ -160,11 +161,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
     
     assign
       v-str = "doc-code" when doc-code = ?
-      v-str = v-str + ",doc-num" when doc-num = ?
-      v-str = v-str + ",doc-date" when doc-date = ?
+      /*v-str = v-str + ",doc-num" when doc-num = ? 
+      v-str = v-str + ",doc-date" when doc-date = ? */
       v-str = v-str + ",doc-type" when doc-type = ?
-      v-str = v-str + ",shift-date" when shift-date = ?
-      v-str = v-str + ",shift-num" when shift-num = ?
+      /* v-str = v-str + ",shift-date" when shift-date = ?
+      v-str = v-str + ",shift-num" when shift-num = ? */
     .
     v-str = trim (v-str, ",").
     if v-str > ''

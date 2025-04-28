@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cont-slave-run.p $
+$Archive: str/cont-slave-run.p $
 
 Запуск процедуры привязки подчиненных договоров 
 
@@ -17,11 +18,11 @@ Creation date: 09/02/2011
 */
 
 /* Define VSS  */
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision$":U .
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author$":U .
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date$":U .
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile$":U .
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive$":U .
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INIT "$Revision: aea5316774be, 0, rls $":U .
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author: expertek $":U .
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile: cont-slave-run.p $":U .
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive: str/cont-slave-run.p $":U .
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Создает или удаляет подчиненный договор".
 
 /* Инклуды  */ 

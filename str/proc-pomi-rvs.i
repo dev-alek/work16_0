@@ -1506,8 +1506,8 @@ procedure calc-pomi-rvs :
       NPE = infoSectionTotal:NormalWastage
       dmd = MF * dF * 0.01
       dMP = MF - MTTH
-      dMEd = MTTH * NPE * 0.001.
-      ME = MTTH - MF - dmd.
+      dMEd = MTTH * NPE * 0.001
+      ME = MTTH - MF - dmd
     .
     
     if MTTH > MF

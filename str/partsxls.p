@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bbf1530230d5, 2753, rls $
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
+$Workfile: partsxls.p $
+$Archive: str/partsxls.p $
 
 Печать партий в Excel
 
@@ -20,11 +21,11 @@ create: Перваков Михаил Сергеевич
 
 define input  parameter p-handle-callback as handle    no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: bbf1530230d5, 2753, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Сб фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: partsxls.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/partsxls.p $":U .
 define variable vss-description as character no-undo initial "Печать партий в формате EXCEL".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

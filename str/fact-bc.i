@@ -21,6 +21,8 @@ Creation date: 06/20/07
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
+&if defined(onlycheck) eq 0 
+&then
 procedure fact-bc:
 define input parameter pardoc-code like ub.trn-doc.doc-code no-undo.
 define variable g-log       as logical              no-undo.
@@ -215,6 +217,59 @@ for each bf_doc-line where bf_doc-line.doc-code = bf_trn-doc.doc-code no-lock by
   end.
 end.
 end.
+end procedure.
+&endif
+
+/*
+    Создана: 27.03.2025 Ростовцев А.М.
+    Описание: Процедура проверки возможности добавления товара в накладную
+              по бар-коду
+              Запрещает добавлять товар в накладную по бар-коду, если на товаре
+              установлен тип маркировки
+              Доработка по BTS-1493 
+*/
+procedure checkTypeByBarCode:
+  define input parameter iBarCode    as integer no-undo.
+  define input parameter iExtDocType as character no-undo.
+  
+  define variable vValue as character no-undo.
+  define variable vType  as character no-undo.
+  define buffer buf_bar-code for ub.bar-code.
+  define buffer buf_goods    for ub.goods.
+
+  /* согласно сапроса только для 
+    Расход внешний
+    Расход внешний (возврат поставщику)
+    Приход внешний
+    Приход внутренний
+    Расход внутренний
+    Списание
+   */
+  if iExtDocType = ? or
+     iExtDocType = {&TDEDT_Ras_Vnesh} or
+     iExtDocType = {&TDEDT_Pri_Vnesh} or
+     iExtDocType = {&TDEDT_Pri_Perem} or
+     iExtDocType = {&TDEDT_Ras_Perem} or
+     iExtDocType = {&TDEDT_Spi_Vnesh} then
+
+      find buf_bar-code where buf_bar-code.b-code = iBarCode no-lock.
+      find buf_goods where buf_goods.gds-code = buf_bar-code.gds-code no-lock.
+     
+      RUN gds-attr-value (
+         INPUT buf_goods.gds-code,
+         INPUT {&attr-mark-type},
+         OUTPUT vValue,
+         OUTPUT vType
+      ).
+      if vValue <> "" then
+      do:
+        message 
+          substitute("Товар: &1 &2", b-c, buf_goods.gds-name) skip
+          "нельзя добавлять в ручном режиме, так как он подлежит маркировке."   
+          view-as alert-box error buttons ok.
+        return error.
+      end.
+    
 end procedure.
 
 /* $Workfile$ e n d */

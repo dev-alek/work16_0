@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: imp-bush.p $
+$Archive: nws/imp-bush.p $
 
 Прием кустовых команд
 
@@ -21,11 +22,11 @@ define input  parameter p-uniq-gate-rec as character no-undo .
 define input  parameter p-counter    as integer   no-undo .
 define input  parameter p-db-source  as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f29df1d5f130, 3104, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 09 09:15:01 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-bush.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/imp-bush.p $":U .
 define variable vss-description as character no-undo init "Прием кустовых команд".
 { cmp/vssrevis.i "substitute('&1|&2|&3':u,p-full-cmd,p-counter,p-db-source)"}
 { cmp/trg-def.i  }

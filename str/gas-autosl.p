@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a1ec81b583b9, 1957, rls $
+$Author: SSlivenko $
+$Date: 2019/07/26 08:40:52 $
+$Workfile: gas-autosl.p $
+$Archive: str/gas-autosl.p $
 
 Создание приходного документа по документу продажи газа (ТГУ)
 
@@ -32,11 +33,11 @@ define parameter buffer buf-sale_doc-line for ub.doc-line.
 /* создарнный документ прихода */
 define parameter buffer buf-new_trn-doc for ub.trn-doc.
 
-define variable vss-revision as character no-undo init "$Revision$":U .
-define variable vss-author as character no-undo init "$Author$":U .
-define variable vss-date as character no-undo init "$Date$":U .
-define variable vss-workfile as character no-undo init "$Workfile$":U .
-define variable vss-archive as character no-undo init "$Archive$":U .
+define variable vss-revision as character no-undo init "$Revision: a1ec81b583b9, 1957, rls $":U .
+define variable vss-author as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date as character no-undo init "$Date: 2019/07/26 08:40:52 $":U .
+define variable vss-workfile as character no-undo init "$Workfile: gas-autosl.p $":U .
+define variable vss-archive as character no-undo init "$Archive: str/gas-autosl.p $":U .
 define variable vss-description as character no-undo init "Создание приходного документа техпролива по документу продажи газа (ТГУ)".
 {cmp/vssrevis.i}
 

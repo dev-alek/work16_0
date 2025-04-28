@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 76575567272c, 2782, rls $
+$Author: ASMorozov $
+$Date: Чт апр 08 19:52:17 2021 +0300 $
+$Workfile: invs-trk.cls $
+$Archive: ibs/th/bge/1crn/subjects/invs-trk.cls $
 
 Экспорт сообщения с накладаной в 1С ERPRN invs-trk
 
@@ -18,6 +18,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 58d3c7fbfb02, 2708, rls $
+$Author: EShklyar $
+$Date: Вт дек 29 14:38:14 2020 +0300 $
+$Workfile: r-inp.p $
+$Archive: rep/r-inp.p $
 
 Документ прихода (старый)
 
@@ -20,11 +21,11 @@ on error undo, return error
   define input parameter p-mainmenu-handle  as handle           no-undo.
   define input parameter rec_id             as recid            no-undo.
 
-  define variable vss-revision    as character no-undo initial "$Revision$":U .
-  define variable vss-author      as character no-undo initial "$Author$":U .
-  define variable vss-date        as character no-undo initial "$Date$":U .
-  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-  define variable vss-archive     as character no-undo initial "$Archive$":U .
+  define variable vss-revision    as character no-undo initial "$Revision: 58d3c7fbfb02, 2708, rls $":U .
+  define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+  define variable vss-date        as character no-undo initial "$Date: Вт дек 29 14:38:14 2020 +0300 $":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile: r-inp.p $":U .
+  define variable vss-archive     as character no-undo initial "$Archive: rep/r-inp.p $":U .
   define variable vss-description as character no-undo initial "Документ прихода (старый)":U .
 
   { cmp/vssrevis.i    }

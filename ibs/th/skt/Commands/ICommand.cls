@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 43c09557cdee, 3584, rls $
+$Author: DRuban $
+$Date: 2023/12/28 12:56:36 $
+$Workfile: ICommand.cls $
+$Archive: ibs/th/skt/Commands/ICommand.cls $
 
 
 
@@ -18,6 +18,7 @@ Creation date: 01/30/15
 using ibs.th.skt.Commands.*.
 using ibs.th.gbl.sys.objth.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.Commands.ICommand inherits objth abstract :
   

@@ -19,6 +19,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.gbl-var.
 using ibs.th.ref.typl-ad.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impshops implements ibs.th.bge.1crn.import.iimpsubject:
   

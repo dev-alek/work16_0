@@ -48,7 +48,7 @@ using Ibs.Th.Rul.Dis-card_.
 using Ibs.Th.Rul.Dis-card-sale_obj.
 using Ibs.Th.Rul.Dis-tot_.
 using Ibs.Th.Rul.Dis-tot_obj.
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

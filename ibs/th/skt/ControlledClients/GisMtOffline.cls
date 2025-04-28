@@ -15,6 +15,7 @@ using ibs.th.gbl.propmap.
 using ibs.th.gbl.sys.objsrv.
 using ibs.th.gbl.sys.objth.
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.ControlledClients.GisMtOffline inherits objth : 
      

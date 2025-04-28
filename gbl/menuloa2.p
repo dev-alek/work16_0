@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 89045e861607, 3582, rls $
+$Author: SSlivenko $
+$Date: 2023/12/14 13:36:13 $
+$Workfile: menuloa2.p $
+$Archive: gbl/menuloa2.p $
 
 Пункты меню для утилит смены версии, функций администратора и заказных программ
 
@@ -30,11 +31,11 @@ Creation date: 07/16/07
 /* АРМ Администратор   Утилиты/Коррекция при смене версии                     */
 /* -------------------------------------------------------------------------- */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 89045e861607, 3582, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/12/14 13:36:13 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: menuloa2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/menuloa2.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

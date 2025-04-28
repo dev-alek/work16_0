@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
 /* Connected Databases
@@ -15,11 +16,11 @@ DEFINE BUFFER X_sum-grp FOR ub.sum-grp.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS d-sum-grp
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 31da2d7eacb9, 493, rls $
+$Author: EShklyar $
+$Date: Sun Feb 28 19:23:13 2016 +0400 $
+$Workfile: gds-sumgrp.p $
+$Archive: ref/gds-sumgrp.p $
 
 Справочник групп товаров на кассах
 
@@ -39,11 +40,11 @@ define input parameter bttns  as char   no-undo .
 define input-output parameter p-rid-list    as  char no-undo . /* список recid'ов выбранных записей */
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 31da2d7eacb9, 493, rls $":u .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":u .
+define variable vss-date        as character no-undo init "$Date: Sun Feb 28 19:23:13 2016 +0400 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: gds-sumgrp.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: ref/gds-sumgrp.p $":u .
 define variable vss-description as character no-undo init "Справочник групп товаров на кассах" .
 { cmp/vssrevis.i }
 

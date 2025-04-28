@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -713,7 +714,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
       end .
       if not buf_place.is-meas
       then do :
-        return substitute('NMS! Проверка корректности работы АСИ в резервуаре НП возможна только по измеряемым резервуарам. Выбранный резервуар неизмеряемый и не может быть добавлен в документ!', c-value).
+        return substitute('NMS! Проверка корректности работы АСИ в резервуаре НП возможна только по измеряемым резервуарам. Выбранный резервуар &1 неизмеряемый и не может быть добавлен в документ!', p-pl-code).
       end .
       /* Для виртуального резервуара */
       run placelib_get-attr(input {&place-virtual}
@@ -725,7 +726,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
       is-vir = if (v-ok and logical(v-value)) then true else false.
       if is-vir
       then do :
-        return substitute('VIR! Проверка корректности работы АСИ в резервуаре НП не возможна по виртуальным резервуарам. Выбранный резервуар виртуальный и не может быть добавлен в документ!', c-value).
+        return substitute('VIR! Проверка корректности работы АСИ в резервуаре НП не возможна по виртуальным резервуарам. Выбранный резервуар &1 виртуальный и не может быть добавлен в документ!', p-pl-code).
       end .
       
       find first buf_rvs-line no-lock
@@ -6501,7 +6502,13 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
     find first tt-param-pump where
                tt-param-pump.strfrfile = 'STATUS' .
     if integer( tt-param-pump.meaning ) <> 0 then do:
-     vErrorText = if integer(tt-param-pump.meaning) eq 70
+     vErrorText = if integer(tt-param-pump.meaning) eq 10
+                   then "При получении данных со счетчиков ТРК возникла ошибка status 10 Не могу прочитать обьем"
+                   else if integer(tt-param-pump.meaning) eq 20
+                   then "При получении данных со счетчиков ТРК возникла ошибка status 20 Не могу прочитать колличество"
+                   else if integer(tt-param-pump.meaning) eq 40
+                   then "При получении данных со счетчиков ТРК возникла ошибка status 40 Не могу прочитать колличество транзакций"
+                   else if integer(tt-param-pump.meaning) eq 70
                    then "При получении данных со счетчиков ТРК возникла ошибка несоответствия ТРК-ПИСТОЛЕТ-ТОПЛИВО либо отсутствует связь с одной или более ТРК."
                    else if integer(tt-param-pump.meaning) eq 73
                    then "Не удалось получить данные по счетчикам ТРК. Необходима проверка состояния/связи с ТРК."

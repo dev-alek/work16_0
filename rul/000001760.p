@@ -47,7 +47,7 @@ Creation date: 10/08/06
 using Ibs.Th.Rul.Dis-card_.
 using Ibs.Th.Rul.Dis-tot_obj.
 using Ibs.Th.Rul.Gds-dtl_obj.
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

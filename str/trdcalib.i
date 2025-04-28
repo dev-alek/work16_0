@@ -1180,6 +1180,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-fio-driver true
 &glob sort-trdcattr-fio-driver 190
 
+/* Паспорт качества дата */
+&glob fillin_width-trdcattr-date-income 11
+&glob fillin_height-trdcattr-date-income 1
+&glob type-trdcattr-date-income {&type-date}
+&glob format-trdcattr-date-income "99/99/9999"
+&glob label-trdcattr-date-income "Дата прибытия на АЗС"
+&glob tooltip-trdcattr-date-income "Дата прибытия на АЗС"
+&glob user-can-edit-trdcattr-date-income true
+&glob output-display-trdcattr-date-income true
+&glob other-trdcattr-date-income '':u
+&glob news-trdcattr-date-income true
+&glob sort-trdcattr-date-income 180
+
 /* Время прибытия на АЗС */
 &glob fillin_width-trdcattr-time-income 20
 &glob fillin_height-trdcattr-time-income 1
@@ -1219,6 +1232,32 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-date-cert true
 &glob sort-trdcattr-date-cert 100
 
+
+/* Паспорт качества дата */
+&glob fillin_width-trdcattr-date-pasport 11
+&glob fillin_height-trdcattr-date-pasport 1
+&glob type-trdcattr-date-pasport {&type-date}
+&glob format-trdcattr-date-pasport "99/99/9999"
+&glob label-trdcattr-date-pasport "Паспорт качества дата"
+&glob tooltip-trdcattr-date-pasport "Паспорт качества дата"
+&glob user-can-edit-trdcattr-date-pasport true
+&glob output-display-trdcattr-date-pasport true
+&glob other-trdcattr-date-pasport '':u
+&glob news-trdcattr-date-pasport true
+&glob sort-trdcattr-date-pasport 100
+
+/* Паспорт качества номер */
+&glob fillin_width-trdcattr-num-pasport 20
+&glob fillin_height-trdcattr-num-pasport 1
+&glob type-trdcattr-num-pasport {&type-char}
+&glob format-trdcattr-num-pasport "X(20)"
+&glob label-trdcattr-num-pasport "Паспорт качества номер"
+&glob tooltip-trdcattr-num-pasport "Паспорт качества номер"
+&glob user-can-edit-trdcattr-num-pasport true
+&glob output-display-trdcattr-num-pasport true
+&glob other-trdcattr-num-pasport '':u
+&glob news-trdcattr-num-pasport true
+&glob sort-trdcattr-num-pasport 100
 
 /* Техническое состояние */
 &glob fillin_width-trdcattr-condition 20
@@ -1657,6 +1696,46 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob other-trdcattr-pos-player3 'nws':u
 &glob news-trdcattr-pos-player3 true
 &glob sort-trdcattr-pos-player3 120
+
+/* Масса слитого СУГ на промежуточных станциях АГЗС */
+&glob fillin_width-sugtpattr-massa-sug 20
+&glob fillin_height-sugtpattr-massa-sug 1
+&glob type-sugtpattr-massa-sug {&type-dec}
+&glob format-sugtpattr-massa-sug "->,>>>,>>>,>>9.999"
+&glob label-sugtpattr-massa-sug "Масса слитого СУГ на промежуточных станциях АГЗС, кг"
+&glob tooltip-sugtpattr-massa-sug "Масса слитого СУГ на промежуточных станциях АГЗС"
+&glob user-can-edit-sugtpattr-massa-sug true
+&glob output-display-sugtpattr-massa-sug true
+&glob other-sugtpattr-massa-sug 'nws':u
+&glob news-sugtpattr-massa-sug true
+&glob sort-sugtpattr-massa-sug 130
+
+/* Технологические потери предыдущих станций */
+&glob fillin_width-sugtpattr-teh-loss 20
+&glob fillin_height-sugtpattr-teh-loss 1
+&glob type-sugtpattr-teh-loss {&type-dec}
+&glob format-sugtpattr-teh-loss "->,>>>,>>>,>>9.999"
+&glob label-sugtpattr-teh-loss "Технологические потери предыдущих станций, кг"
+&glob tooltip-sugtpattr-teh-loss "Технологические потери предыдущих станций"
+&glob user-can-edit-sugtpattr-teh-loss true
+&glob output-display-sugtpattr-teh-loss true
+&glob other-sugtpattr-teh-loss 'nws':u
+&glob news-sugtpattr-teh-loss true
+&glob sort-sugtpattr-teh-loss 131
+
+/* Допустимые погрешности предыдущих станций */
+&glob fillin_width-sugtpattr-err-allow 20
+&glob fillin_height-sugtpattr-err-allow 1
+&glob type-sugtpattr-err-allow {&type-dec}
+&glob format-sugtpattr-err-allow "->,>>>,>>>,>>9.999"
+&glob label-sugtpattr-err-allow "Допустимые погрешности предыдущих станций, кг"
+&glob tooltip-sugtpattr-err-allow "Допустимые погрешности предыдущих станций"
+&glob user-can-edit-sugtpattr-err-allow true
+&glob output-display-sugtpattr-err-allow true
+&glob other-sugtpattr-err-allow 'nws':u
+&glob news-sugtpattr-err-allow true
+&glob sort-sugtpattr-err-allow 132
+
 
 &if "{1}" = "class" &then
 &else

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e41006018ff7, 3417, rls $
+$Author: DRuban $
+$Date: 2023/10/16 15:13:30 $
+$Workfile: file2clb.p $
+$Archive: gbl/file2clb.p $
 
 Копирование файла в CLOB
 
@@ -61,11 +62,11 @@ define input-output parameter p-int64-id as int64 no-undo .
 define input parameter p-file as character no-undo .
 define input parameter p-encoding as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e41006018ff7, 3417, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:30 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: file2clb.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/file2clb.p $":U .
 define variable vss-description as character no-undo init "Копирование файла в CLOB".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

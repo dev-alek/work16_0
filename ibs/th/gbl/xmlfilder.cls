@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: xmlfilder.cls $
+$Archive: ibs/th/gbl/xmlfilder.cls $
 
 
 Автор: Хныкин Павел Андреевич
@@ -14,11 +14,11 @@ Creation date: 07/24/08
 
 */
 
-
+block-level on error undo, throw.
 CLASS Ibs.Th.Gbl.XmlFilder:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: xmlfilder.cls $ $Revision: aea5316774be, 0, rls $".
 
 
   define private temp-table tag-pair no-undo

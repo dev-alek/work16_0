@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter iParam as character no-undo.
 define output parameter oOK as logical no-undo.
 

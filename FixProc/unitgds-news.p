@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 43079881fc1c, 3306, rls $
+$Author: Ostroukhov $
+$Date: 2023/05/19 13:37:06 $
+$Workfile: unitgds-news.p $
+$Archive: FixProc/unitgds-news.p $
 
 ”тилита дл€ изменени€ ед.измерени€ с блк на бл по новост€м
 јвтор: Ўкл€р ≈лена

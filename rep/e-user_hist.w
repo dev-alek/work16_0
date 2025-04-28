@@ -263,6 +263,9 @@ for each user-obj no-lock where user-obj.obj-code = obj-list.obj-code and user-o
 end.      
 end.  
 
+
+if x-SelectObject = "firm" then user-name:list-item-pairs in frame {&frame-name} = "бяе,-1" .
+if x-SelectObject <> "firm" then do:
 user-name:list-item-pairs in frame {&frame-name} = "бяе,-1" .
 for each tt-user-account no-lock by tt-user-account.user_name:
   assign
@@ -274,6 +277,8 @@ for each tt-user-account no-lock by tt-user-account.user_name:
   )
   .
 end.
+End.
+
         define VARIABLE v-head-table as character no-undo .
   
         define BUFFER bf_c-user-log for ub.c-user-log .
@@ -306,6 +311,10 @@ end.
                     .    
             end.  
         end.   
+
+
+/* if x-SelectObject = "firm" then object-name:list-item-pairs in frame {&frame-name} = "бяе,-1" .         */
+/* if x-SelectObject <> "firm" then do: */
 object-name:list-item-pairs in frame {&frame-name} = "бяе,-1" .        
 for each tt-objects no-lock by tt-objects.name_:
   assign
@@ -317,6 +326,7 @@ for each tt-objects no-lock by tt-objects.name_:
                                                    )
   .
 end.
+/* end. */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

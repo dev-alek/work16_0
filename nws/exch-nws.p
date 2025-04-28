@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 55d27c209910, 3559, rls $
+$Author: BelovaMM $
+$Date: 2023/11/27 08:31:19 $
+$Workfile: exch-nws.p $
+$Archive: nws/exch-nws.p $
 
 Обмен новостями (при необходимости)
 
@@ -20,11 +21,11 @@ define input  parameter p-user-login    as character no-undo .
 define input  parameter p-user-password as character no-undo .
 define input  parameter p-list-db       as character no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 55d27c209910, 3559, rls $":U .
+def var vss-author      as character no-undo init "$Author: BelovaMM $":U .
+def var vss-date        as character no-undo init "$Date: 2023/11/27 08:31:19 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: exch-nws.p $":U .
+def var vss-archive     as character no-undo init "$Archive: nws/exch-nws.p $":U .
 def var vss-description as character no-undo init "Обмен новостями (при необходимости)".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -329,4 +330,4 @@ end.
   
 end.
 
-/* $Workfile$ end */
+/* $Workfile: exch-nws.p $ end */

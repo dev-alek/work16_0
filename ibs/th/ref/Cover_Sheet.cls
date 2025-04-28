@@ -21,7 +21,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
   {cmp/str-glbl.i class}
   { gbl/getcntxt.i def }
   { ibs/th/ref/Coins_Bank_tt.i }
-  
+  { ref/clean_char.i}  
   define private variable b_bank_recip   as System.Windows.Forms.Button      no-undo.
   define private variable b_deposit_bank as System.Windows.Forms.Button      no-undo.
   define private variable b_save         as System.Windows.Forms.Button      no-undo.
@@ -213,7 +213,7 @@ class ibs.th.ref.Cover_Sheet inherits Form:
     end.  
     if this-object:source_rec:Text = "Поступления от продажи товаров" then v-source = "02" .
     else v-source = "32" .
-    attr-value = this-object:num_bag:Text + ";" + string(v-deposit_bank) + ";" + string(v-recip_bank) + ";" + 
+    attr-value = clean_char(this-object:num_bag:Text) + ";" + string(v-deposit_bank) + ";" + string(v-recip_bank) + ";" + 
       this-object:pin02:Text + ";" + this-object:source_rec:Text + ";" + string(windowContainer1:v-total-sum) + ";" + v-recip_schet . 
     bf_fin-doc-attr.attr-value = attr-value .
     

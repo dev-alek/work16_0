@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bf04b0e5cfa2, 2256, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:24:01 2019 +0300 $
+$Workfile: authoriz.p $
+$Archive: gbl/authoriz.p $
 
 ѕрограмма авторизации пользовател€ дл€ выполнени€ определенного действи€.
 
@@ -21,11 +22,11 @@ Creation date: 05/08/07
 define input parameter  p-action as character no-undo .
 define output parameter p-permit as logical no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: bf04b0e5cfa2, 2256, rls $":U .
+def var vss-author      as character no-undo init "$Author: druban $":U .
+def var vss-date        as character no-undo init "$Date: Wed Dec 25 15:24:01 2019 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: authoriz.p $":U .
+def var vss-archive     as character no-undo init "$Archive: gbl/authoriz.p $":U .
 def var vss-description as character no-undo init "ѕрограмма авторизации пользовател€ дл€ выполнени€ определенного действи€".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

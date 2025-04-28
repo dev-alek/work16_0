@@ -30,8 +30,11 @@ DEFINE BUFFER pay_currency FOR currency.
 DEFINE BUFFER sales-man FOR person.
 define buffer buf_shift-obj for ub.shift-obj.
 define buffer buf_chk-doc-attr for ub.chk-doc-attr .
+define buffer buf_chk-gds-attr for ub.chk-gds-attr .
 define variable v-corr-osnov1 as integer no-undo .
-DEFINE NEW SHARED TEMP-TABLE tt-chk-discnt NO-UNDO LIKE chk-discnt.
+DEFINE NEW SHARED TEMP-TABLE tt-chk-discnt NO-UNDO LIKE chk-discnt
+       field  real-value-abs as decimal
+       field  real-value-pcnt as decimal.
 DEFINE NEW SHARED TEMP-TABLE tt-chk-doc NO-UNDO LIKE chk-doc
        field real-subdiscnt as decimal.
 DEFINE TEMP-TABLE tt-chk-doc-attr NO-UNDO LIKE chk-doc-attr.
@@ -95,6 +98,7 @@ define variable vss-description AS CHAR NO-UNDO INIT "чек : добавление, изменени
 { ref/gds-attr.i }
 { str/temp_upd.i }
 { utl/gtin.i }
+{ str/cspromo-chk.i } /* функции для работы с промоакциями по НП */
 
 DEFINE VARIABLE var-mode as character no-undo.
 /*настройка - разрешено ли менять на бар-код с другой текущей прейскурантной ценой*/
@@ -237,8 +241,8 @@ data-relation line-discnt for tt-chk-doc, tt-chk-discnt relation-fields (doc-cod
 tt-chk-pay tt-pay-info tt-chk-doc
 
 /* Definitions for BROWSE BR-discnt                                     */
-&Scoped-define FIELDS-IN-QUERY-BR-discnt tt-chk-discnt.line-num {&discnt-v-name} tt-chk-discnt.object-line-num {&discnt-target-name} (IF tt-chk-discnt.record-type < 4 THEN {&discnt-type-name} ELSE STRING(tt-chk-discnt.discnt-type)) tt-chk-discnt.discnt-value-abs tt-chk-discnt.discnt-value-pcnt tt-chk-discnt.src-d-card tt-chk-discnt.discnt-id tt-chk-discnt.kateg tt-chk-discnt.d-card get-templ-rl-name( INPUT tt-chk-discnt.templ-rl-root) tt-chk-discnt.promo-id   
-&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-discnt tt-chk-discnt.discnt-value-abs tt-chk-discnt.discnt-value-pcnt   
+&Scoped-define FIELDS-IN-QUERY-BR-discnt tt-chk-discnt.line-num {&discnt-v-name} tt-chk-discnt.object-line-num {&discnt-target-name} (IF tt-chk-discnt.record-type < 4 THEN {&discnt-type-name} ELSE STRING(tt-chk-discnt.discnt-type)) tt-chk-discnt.real-value-abs tt-chk-discnt.real-value-pcnt tt-chk-discnt.src-d-card tt-chk-discnt.discnt-id tt-chk-discnt.kateg tt-chk-discnt.d-card get-templ-rl-name( INPUT tt-chk-discnt.templ-rl-root) tt-chk-discnt.promo-id   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-BR-discnt tt-chk-discnt.real-value-abs tt-chk-discnt.real-value-pcnt   
 &Scoped-define ENABLED-TABLES-IN-QUERY-BR-discnt tt-chk-discnt
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BR-discnt tt-chk-discnt
 &Scoped-define SELF-NAME BR-discnt
@@ -697,8 +701,8 @@ tt-chk-discnt.object-line-num COLUMN-LABEL "N строки!товара!-объекта"
 (IF tt-chk-discnt.record-type < 4
  THEN {&discnt-type-name}
  ELSE STRING(tt-chk-discnt.discnt-type)) COLUMN-LABEL "Тип скидки/!код схемы" FORMAT "X(20)"
-tt-chk-discnt.discnt-value-abs COLUMN-LABEL "abs!Знач.скидки/!бонуса"
-tt-chk-discnt.discnt-value-pcnt COLUMN-LABEL "% Знач.скидки/!бонуса" FORMAT "->>9.99"
+tt-chk-discnt.real-value-abs COLUMN-LABEL "abs!Знач.скидки/!бонуса"
+tt-chk-discnt.real-value-pcnt COLUMN-LABEL "% Знач.скидки/!бонуса" FORMAT "->>9.99"
 tt-chk-discnt.src-d-card COLUMN-LABEL "№ Карты!для начисления"
 tt-chk-discnt.discnt-id COLUMN-LABEL "ID!транзакц" FORMAT ">>>>>>>>9"
 tt-chk-discnt.kateg COLUMN-LABEL "Код !валюты" FORMAT "->>>9"
@@ -706,8 +710,8 @@ tt-chk-discnt.d-card COLUMN-LABEL "№ карты" FORMAT "X(20)"
 get-templ-rl-name( INPUT tt-chk-discnt.templ-rl-root) COLUMN-LABEL {&label_templ-rl-root} FORMAT "X(255)" WIDTH 50
 tt-chk-discnt.promo-id COLUMN-LABEL "Промо" FORMAT "X(20)"
 ENABLE
-tt-chk-discnt.discnt-value-abs
-tt-chk-discnt.discnt-value-pcnt
+tt-chk-discnt.real-value-abs
+tt-chk-discnt.real-value-pcnt
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 102.5 BY 6.67
@@ -742,8 +746,8 @@ DEFINE BROWSE BR-gds
       tt-chk-gds.pl-code COLUMN-LABEL  "Скл.!место!БД" FORMAT ">>>>>>>>>>9"
       if (tt-chk-gds.write-off-code = 1 and can-do("14,15,16,17,36", string(tt-chk-doc.chk-type))) then "Пролито"       
       else {&wro-name} COLUMN-LABEL "Код спис" FORMAT "X(20)"
-      tt-chk-gds.depart-id COLUMN-LABEL "Объект!кухни!в чеке"
-      tt-chk-gds.depart-code COLUMN-LABEL "Объект!кухни!в БД"
+      tt-chk-gds.depart-id COLUMN-LABEL "Объект!кухни!в чеке" FORMAT ">>>>9" 
+      tt-chk-gds.depart-code COLUMN-LABEL "Объект!кухни!в БД" FORMAT ">>>>9"
       tt-chk-gds.sales-man COLUMN-LABEL "Код!продавца"
       tt-gds-info.salesman-name COLUMN-LABEL "Продавец" FORMAT "X(16)"
       tt-chk-gds.road-tax COLUMN-LABEL "Дор. налог/! или тара"
@@ -2213,6 +2217,16 @@ DO:
 
 END.
 
+find first user-login where user-login.user-id = ibs.th.gbl.gbl-var:g#userid 
+                        and user-login.db-num  = ibs.th.gbl.gbl-var:g#db-num  
+                        no-lock no-error.
+  if user-login.user-administrator = no then do: 
+    menu-item m-gds:sensitive   in menu M-prt = no.
+    menu-item m-prt-1:sensitive in menu M-prt = no.
+    menu-item m-prt-2:sensitive in menu M-prt = no.
+  end.
+
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -2854,13 +2868,13 @@ ON LEAVE OF tt-chk-gds.pump IN BROWSE br-gds,
     .
 end.
 
-ON LEAVE OF tt-chk-discnt.discnt-value-abs IN BROWSE br-discnt DO:
+ON LEAVE OF tt-chk-discnt.real-value-abs IN BROWSE br-discnt DO:
   if tt-chk-discnt.value-type <> Integer({&discnt-v-abs}) and tt-chk-discnt.value-type <> Integer({&discnt-v-bonus}) then do:
     message
     "Для % и др. скидки редактируйте % значение скидки"
     view-as alert-box error.
     display
-    tt-chk-discnt.discnt-value-abs
+    tt-chk-discnt.real-value-abs
     with browse br-discnt .
   end.
   else do:
@@ -2868,13 +2882,13 @@ ON LEAVE OF tt-chk-discnt.discnt-value-abs IN BROWSE br-discnt DO:
   end.
 end.
 
-ON LEAVE OF tt-chk-discnt.discnt-value-pcnt IN BROWSE br-discnt DO:
+ON LEAVE OF tt-chk-discnt.real-value-pcnt IN BROWSE br-discnt DO:
   if tt-chk-discnt.value-type = Integer({&discnt-v-abs})  or tt-chk-discnt.value-type = Integer({&discnt-v-bonus})  then do:
     message
     "Для абс скидки редактируйте асб значение скидки"
     view-as alert-box error.
     display
-    tt-chk-discnt.discnt-value-pcnt
+    tt-chk-discnt.real-value-pcnt
     with browse br-discnt .
   end.
   else do:
@@ -3006,8 +3020,8 @@ ON RETURN OF tt-chk-gds.src-qnty IN BROWSE br-gds,
             tt-chk-gds.pl-code IN BROWSE br-gds,
             tt-chk-gds.loc1 IN BROWSE br-gds,
             tt-chk-gds.road-tax IN BROWSE br-gds,
-            tt-chk-discnt.discnt-value-abs IN BROWSE br-discnt,
-            tt-chk-discnt.discnt-value-pcnt IN BROWSE br-discnt,
+            tt-chk-discnt.real-value-abs IN BROWSE br-discnt,
+            tt-chk-discnt.real-value-pcnt IN BROWSE br-discnt,
             tt-chk-pay.tot-sum IN BROWSE br-pay,
             tt-chk-pay.curr-code IN BROWSE br-pay,
             tt-chk-pay.pay-code IN BROWSE br-pay DO:
@@ -4080,6 +4094,8 @@ define variable v-seller-psn-code as integer no-undo .
 define variable v-updated as logical no-undo .
 define buffer no_buffer_chk-doc for ub.chk-doc.
 DEFINE VARIABLE var-is-error as logical no-undo .
+define variable v-sum-promo as decimal no-undo.
+define variable v-pcnt-promo as decimal no-undo.
 for each tt-chk-doc:
     delete tt-chk-doc.
 end.
@@ -4309,10 +4325,10 @@ else do:
                                      ,output var-is-error)
         tt-gds-info.src-d-pcnt = (tt-chk-gds.src-discnt / tt-chk-gds.src-price * 100)
         tt-gds-info.d-pcnt = (tt-chk-gds.discnt / tt-chk-gds.price-base * 100)
-        tt-gds-info.src-sum-netto = (tt-chk-gds.src-price - tt-chk-gds.src-discnt) * tt-chk-gds.src-qnty
+        tt-gds-info.src-sum-netto = GetRoundSum(tt-chk-gds.doc-code, tt-chk-gds.line-num, tt-chk-gds.src-qnty,(tt-chk-gds.src-price - tt-chk-gds.src-discnt)) 
         tt-gds-info.src-d-pcnt = (tt-chk-gds.src-discnt / tt-chk-gds.src-price * 100)
         tt-gds-info.src-price-netto = tt-chk-gds.src-price - tt-chk-gds.src-discnt
-        tt-gds-info.sum-netto = (tt-chk-gds.price-base - tt-chk-gds.discnt) * tt-chk-gds.doc-qnty
+        tt-gds-info.sum-netto = GetRoundSum(tt-chk-gds.doc-code, tt-chk-gds.line-num, tt-chk-gds.doc-qnty,(tt-chk-gds.price-base - tt-chk-gds.discnt))
         tt-gds-info.d-pcnt = (tt-chk-gds.discnt / tt-chk-gds.price-base * 100)
         tt-gds-info.price-netto = tt-chk-gds.price-base - tt-chk-gds.discnt
         .
@@ -4354,8 +4370,8 @@ else do:
 
     end.
   for each locked_chk-discnt no-lock where
-                       locked_chk-discnt.doc-code = tt-chk-doc.doc-code AND
-                       locked_chk-discnt.record-type = 0:
+           locked_chk-discnt.doc-code = tt-chk-doc.doc-code AND
+           locked_chk-discnt.record-type = 0:
     /*отсечем % скидку для IBM и т.д.*/
         if locked_chk-discnt.line-num = 0
          AND locked_chk-discnt.line-type = integer({&discnt-receipt}) then NEXT.
@@ -4364,6 +4380,21 @@ else do:
         */
         create tt-chk-discnt.
         buffer-copy locked_chk-discnt to tt-chk-discnt.
+        
+        v-sum-promo = ChkPromoSum(locked_chk-discnt.doc-code, locked_chk-discnt.line-num).
+        if v-sum-promo <> 0 
+           and v-sum-promo <> ?
+        then do:
+           v-pcnt-promo = 100 * ( 1 - (locked_chk-discnt.object-sum / (locked_chk-discnt.object-sum + v-sum-promo))).
+           assign
+              tt-chk-discnt.real-value-abs = v-sum-promo
+              tt-chk-discnt.real-value-pcnt = v-pcnt-promo 
+              .
+        end.   
+        else assign
+               tt-chk-discnt.real-value-abs = tt-chk-discnt.discnt-value-abs
+               tt-chk-discnt.real-value-pcnt = tt-chk-discnt.discnt-value-pcnt
+               . 
   end.
 
 end.
@@ -4372,6 +4403,10 @@ end.
                        locked_chk-discnt.record-type = 4:
     create tt-chk-discnt.
     buffer-copy locked_chk-discnt to tt-chk-discnt.
+    assign
+       tt-chk-discnt.real-value-abs = tt-chk-discnt.discnt-value-abs
+       tt-chk-discnt.real-value-pcnt = tt-chk-discnt.discnt-value-pcnt
+       .
   end.
 if not par-mode = {&lookup} then do:
   if par-mode = {&add-def}
@@ -5671,8 +5706,8 @@ case PAR-MODE:
     tt-chk-pay.src-val:read-only in browse br-pay = yes
     tt-chk-pay.doc-qnty:read-only in browse br-pay = yes
     tt-chk-pay.par-val:read-only in browse br-pay = yes
-    tt-chk-discnt.discnt-value-abs:read-only in browse br-discnt = yes
-    tt-chk-discnt.discnt-value-pcnt:read-only in browse br-discnt = yes
+    tt-chk-discnt.real-value-abs:read-only in browse br-discnt = yes
+    tt-chk-discnt.real-value-pcnt:read-only in browse br-discnt = yes
     tt-chk-gds.doc-qnty:read-only in browse br-gds = yes
     b-addgds:label = "Товар"
     Br-gds:POPUP-MENU IN FRAME Dialog-Frame       = ?
@@ -5734,8 +5769,8 @@ case PAR-MODE:
     tt-chk-pay.pay-card:read-only in browse br-pay = yes
     tt-chk-pay.src-qnty:read-only in browse br-pay = yes
     tt-chk-pay.src-val:read-only in browse br-pay= yes
-    tt-chk-discnt.discnt-value-abs:read-only in browse br-discnt = yes
-    tt-chk-discnt.discnt-value-pcnt:read-only in browse br-discnt = yes
+    tt-chk-discnt.real-value-abs:read-only in browse br-discnt = yes
+    tt-chk-discnt.real-value-pcnt:read-only in browse br-discnt = yes
     b-addgds:label = "Товар"
     .
     if dflt-cd = {&cd-type-ncr-gm}
@@ -7023,17 +7058,17 @@ if dflt-cd <> {&cd-type-ncr-gm} and
   message
   "Нельзя менять значение скидки для скидки по товарной строке"
   view-as alert-box .
-  assign
-  tt-chk-discnt.discnt-value-abs:screen-value in browse br-discnt = string(v-old-discnt-value)
+  assign  
+  tt-chk-discnt.real-value-abs:screen-value in browse br-discnt = string(v-old-discnt-value)
   .
   if p-type = integer({&discnt-v-abs}) then  do:
     assign
-    tt-chk-discnt.discnt-value-abs:screen-value in browse br-discnt = string(v-old-discnt-value)
+    tt-chk-discnt.real-value-abs:screen-value in browse br-discnt = string(v-old-discnt-value)
     .
   end.
   else do:
     assign
-    tt-chk-discnt.discnt-value-pcnt:screen-value in browse br-discnt = string(v-old-discnt-value)
+    tt-chk-discnt.real-value-pcnt:screen-value in browse br-discnt = string(v-old-discnt-value)
     .
   end.
 end.
@@ -7045,13 +7080,13 @@ else do:
     AND locked_chk-discnt.discnt-id = tt-chk-discnt.discnt-id.
   IF LOCKED_chk-discnt.value-type = INTEGER({&discnt-v-abs}) or LOCKED_chk-discnt.value-type = INTEGER({&discnt-v-bonus})  THEN DO:
       assign
-      locked_chk-discnt.discnt-value-abs = decimal(tt-chk-discnt.discnt-value-abs:screen-value in browse br-discnt    )
+      locked_chk-discnt.discnt-value-abs = decimal(tt-chk-discnt.real-value-abs:screen-value in browse br-discnt    )
       tt-chk-discnt.discnt-value-abs = locked_chk-discnt.discnt-value-abs
       .
   END.
   ELSE DO:
       assign
-      locked_chk-discnt.discnt-value-pcnt = decimal(tt-chk-discnt.discnt-value-pcnt:screen-value in browse br-discnt    )
+      locked_chk-discnt.discnt-value-pcnt = decimal(tt-chk-discnt.real-value-pcnt:screen-value in browse br-discnt    )
       tt-chk-discnt.discnt-value-pcnt = locked_chk-discnt.discnt-value-pcnt
       locked_chk-discnt.discnt-value-abs = tt-chk-discnt.discnt-value-pcnt * tt-chk-discnt.object-sum / 100
       tt-chk-discnt.discnt-value-abs = locked_chk-discnt.discnt-value-abs

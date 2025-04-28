@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 82f568d3f6c1, 3551, rls $
+$Author: ARostovtsev $
+$Date: 2023/11/27 08:31:18 $
+$Workfile: oxmlshd.p $
+$Archive: bge/oxmlshd.p $
 
 Обмен OpenXML по расписанию.
 
@@ -26,11 +27,11 @@ define input parameter p-task-num   as integer   no-undo .
 define input parameter p-db-num     as integer   no-undo .
 define input parameter p-extsys     as char   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 82f568d3f6c1, 3551, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ARostovtsev $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/11/27 08:31:18 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: oxmlshd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/oxmlshd.p $":U .
 define variable vss-description as character no-undo init "Обмен OpenXML по расписанию.".
 { cmp/vssrevis.i    }
 { cmp/trg-def.i     }

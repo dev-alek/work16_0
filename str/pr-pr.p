@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: pr-pr.p $
+$Archive: str/pr-pr.p $
 
 вызов печати переоценок для АКТ и для автоматич закр по параметру
 
@@ -17,11 +18,11 @@ Creation date: 10/07/10
 Дата создания1: 03/03/06
 
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pr-pr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/pr-pr.p $":U .
 define variable vss-description as character no-undo init "вызов печати переоценок для АКТ и для автоматич закр по параметру".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

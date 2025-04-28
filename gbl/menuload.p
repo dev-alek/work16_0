@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 03b1296bf1bc, 3388, rls $
+$Author: DRuban $
+$Date: 2023/06/07 13:19:21 $
+$Workfile: menuload.p $
+$Archive: gbl/menuload.p $
 
 Пункты меню для утилит смены версии, функций администратора и заказных программ
 
@@ -27,11 +28,11 @@ Creation date: 07/16/07
 */
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 03b1296bf1bc, 3388, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/06/07 13:19:21 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: menuload.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/menuload.p $":U .
 define variable vss-description as character no-undo init "Информация об объекте интерфейса".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

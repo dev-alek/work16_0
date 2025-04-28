@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: payment-type.cls $
+$Archive: ibs/th/bge/1crn/subjects/payment-type.cls $
 
 Структура данных payment-type в 1С
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 USING Progress.Lang.*.
 using System.Boolean from assembly.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.payment-type inherits ibs.th.bge.1crn.subjects.asubject: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -70,7 +71,7 @@ class ibs.th.bge.1crn.subjects.payment-type inherits ibs.th.bge.1crn.subjects.as
       v-str = v-str + ",name" when name_ = ?
       v-str = v-str + ",curr-code" when curr-code = ?
       v-str = v-str + ",ptg-code" when ptg-code = ?
-      v-str = v-str + ",pay-type" when pay-type_ = ?
+      /* v-str = v-str + ",pay-type" when pay-type_ = ? */
     .
     v-str = trim (v-str, ",").
     if v-str > ''

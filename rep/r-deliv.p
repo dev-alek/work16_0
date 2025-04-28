@@ -1,14 +1,14 @@
 using Progress.Lang.*.
 using Ibs.Th.Gbl.ReportXml.
 using Ibs.Th.Gbl.rep-out.
-
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 121cc63762c0, 1070, rls $
+$Author: EShklyar $
+$Date: Fri Oct 06 18:35:02 2017 +0300 $
+$Workfile: r-deliv.p $
+$Archive: rep/r-deliv.p $
 
 Процедура формирования отчёта по продажам
 
@@ -19,10 +19,10 @@ Creation date: 19/09/12
 
 */
 define variable vss-revision    as character no-undo init "$5183 $":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Oct 06 18:35:02 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-deliv.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-deliv.p $":U .
 define variable vss-description as character no-undo init "Процедура формирования отчёта по продажам":u .
 
 { cmp/vssrevis.i }

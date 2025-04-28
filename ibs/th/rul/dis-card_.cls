@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: dis-card_.cls $
+$Archive: ibs/th/rul/dis-card_.cls $
 
 Класс  Дисконтная карта
 
@@ -15,11 +15,11 @@ Creation date: 01/28/07
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-card_:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: dis-card_.cls $ $Revision: aea5316774be, 0, rls $".
   define protected variable v_gc as handle no-undo.
   define protected variable v_ph as handle no-undo. /*p-parent-handle*/
   define protected variable v_pp as widget-handle no-undo. /*p-parent-proc*/

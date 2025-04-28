@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bbf1530230d5, 2753, rls $
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
+$Workfile: ord-load.p $
+$Archive: cus/ord-load.p $
 
 Загрузка заказа из Excel
 
@@ -21,11 +22,11 @@ Creation date: 07/23/10
 define input parameter parParentProc  as widget-handle no-undo .
 define input parameter p-type-ord     as character     no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-Workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: bbf1530230d5, 2753, rls $":u .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":u .
+define variable vss-date        as character no-undo init "$Date: Сб фев 20 15:59:21 2021 +0300 $":u .
+define variable vss-Workfile    as character no-undo init "$Workfile: ord-load.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: cus/ord-load.p $":u .
 define variable vss-description as character no-undo init "Загрузка заказа из Excel".
 { cmp/vssrevis.i     }
 { cmp/str-glbl.i     }

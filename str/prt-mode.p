@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: prt-mode.p $
+$Archive: str/prt-mode.p $
 
 Значение сортировки по умолчанию для интерфейса редактирования признаков
 
@@ -26,11 +27,11 @@ define output parameter p-sort-mode          as integer   no-undo .
 define output parameter p-filter-mode        as integer   no-undo .
 define output parameter p-can-create-gds-dtl as logical   no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: prt-mode.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/prt-mode.p $":U .
 define variable vss-description as character no-undo initial "Значение сортировки по умолчанию для интерфейса редактирования признаков".
 { cmp/vssrevis.i "substitute('&1|&2|&3':u,p-doc-code,p-gds-code,p-update-doc)" }
 { cmp/trg-def.i  }

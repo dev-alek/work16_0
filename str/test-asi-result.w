@@ -48,7 +48,7 @@ define input parameter p-values as character no-undo .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-1 Btn_OK 
-&Scoped-Define DISPLAYED-OBJECTS FILL-IN-1 FILL-IN-2 FILL-IN-3 
+&Scoped-Define DISPLAYED-OBJECTS FILL-IN-1 FILL-IN-2 FILL-IN-3 FILL-IN-4
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -78,23 +78,29 @@ DEFINE VARIABLE FILL-IN-2 AS DECIMAL FORMAT "->>>>9.9999":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 8 BY 1 NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-3 AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0 
+DEFINE VARIABLE FILL-IN-3 AS DECIMAL FORMAT "->>>>9.9999":U INITIAL 0 
+     LABEL "Fill 1" 
+     VIEW-AS FILL-IN 
+     SIZE 8 BY 1 NO-UNDO.
+     
+DEFINE VARIABLE FILL-IN-4 AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0 
      LABEL "Fill 1" 
      VIEW-AS FILL-IN 
      SIZE 8 BY 1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 75 BY 5.95.
+     SIZE 85 BY 7.5.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     FILL-IN-1 AT ROW 1.95 COL 62 COLON-ALIGNED WIDGET-ID 2
-     FILL-IN-2 AT ROW 3.48 COL 62 COLON-ALIGNED WIDGET-ID 4
-     FILL-IN-3 AT ROW 5.1 COL 62 COLON-ALIGNED WIDGET-ID 6
-     Btn_OK AT ROW 7.43 COL 57
+     FILL-IN-1 AT ROW 2 COL 70 COLON-ALIGNED WIDGET-ID 2
+     FILL-IN-2 AT ROW 3.5 COL 70 COLON-ALIGNED WIDGET-ID 4
+     FILL-IN-3 AT ROW 5 COL 70 COLON-ALIGNED WIDGET-ID 6
+     FILL-IN-4 AT ROW 6.5 COL 70 COLON-ALIGNED WIDGET-ID 6
+     Btn_OK AT ROW 9 COL 65
      RECT-1 AT ROW 1 COL 2 WIDGET-ID 8
      SPACE(1) SKIP(1)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -139,6 +145,11 @@ ASSIGN
 ASSIGN 
        FILL-IN-3:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
+/* SETTINGS FOR FILL-IN FILL-IN-4 IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+ASSIGN 
+       FILL-IN-4:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
+       
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -183,11 +194,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   FILL-IN-2:label = entry(2, p-labels, "|") no-error .
   FILL-IN-3 = decimal(entry(3, p-values)) no-error .
   FILL-IN-3:label = entry(3, p-labels, "|") no-error .
+  FILL-IN-4 = decimal(entry(4, p-values)) no-error .
+  FILL-IN-4:label = entry(4, p-labels, "|") no-error .
   
   if p-title = "Результат расчета проверки корректности работы АСИ по массе НП"
   then do :
     FILL-IN-1:format = "->>>>>>>>>>9.9" .
     FILL-IN-2:format = "->>>>>>>>>>9.9" .
+    FILL-IN-3:format = "->>>>>>>>>>9.9" .
   end .
   
   RUN enable_UI.
@@ -229,7 +243,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY FILL-IN-1 FILL-IN-2 FILL-IN-3 
+  DISPLAY FILL-IN-1 FILL-IN-2 FILL-IN-3 FILL-IN-4 
       WITH FRAME Dialog-Frame.
   ENABLE RECT-1 Btn_OK 
       WITH FRAME Dialog-Frame.

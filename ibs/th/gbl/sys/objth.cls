@@ -13,6 +13,7 @@
   */
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objsrv.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.sys.objth abstract: 

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 { cmp/str-glbl.i }
 
 for each clients-attr where clients-attr.attr-code = {&attr-bge-incr-cur}:

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -56,6 +57,9 @@ define buffer buf_pl-gds   for ub.pl-gds .
 define buffer buf_gds-obj  for ub.gds-obj .
 define buffer buf_rvs-doc  for ub.rvs-doc .
 define buffer buf_rvs-line for ub.rvs-line .
+
+define variable v-check-rvs-code as character no-undo .
+define variable ii as integer no-undo .
 
 main-block :
 do transaction
@@ -273,50 +277,61 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       if buf_pl-gds.rvs-on = true then do:
         /* проверяем, что не существует документов сверки */
         /* в статусах {&permitted}, {&rvs-froze} */
-        if not g#news then for each buf_rvs-doc no-lock
-          where buf_rvs-doc.obj-type = buf_pl-gds.obj-type
-            and buf_rvs-doc.obj-code = buf_pl-gds.obj-code
-            and ( buf_rvs-doc.status_  = {&permitted}
-                  or buf_rvs-doc.status_ = {&rvs-froze}
-                )
-        on error undo main-block, return error
-        :
-          if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0
-          or buf_rvs-doc.rvs-type = {&test-asi}
-          then do:
-            next.
-          end.
-          for each buf_rvs-line no-lock
-            where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-              and buf_rvs-line.obj-type = buf_pl-gds.obj-type
-              and buf_rvs-line.obj-code = buf_pl-gds.obj-code
-              and buf_rvs-line.pl-code  = buf_pl-gds.pl-code
-              and buf_rvs-line.gds-code = buf_pl-gds.gds-code
+        if not g#news
+        then do :
+        rvs-docs_ :
+          for each buf_rvs-doc no-lock
+            where buf_rvs-doc.obj-type = buf_pl-gds.obj-type
+              and buf_rvs-doc.obj-code = buf_pl-gds.obj-code
+              and ( buf_rvs-doc.status_  = {&permitted}
+                    or buf_rvs-doc.status_ = {&rvs-froze}
+                  )
           on error undo main-block, return error
           :
-            if p-is-berate = yes then do:
-              message
-                vss-workfile vss-revision vss-description skip
-                "Невозможно снять блокировку на товар на месте хранения" skip
-                "Объект" p-obj-type p-obj-code skip
-                "Место хранения" p-pl-code skip
-                "Артикул" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
-                "Существует сверка" buf_rvs-doc.rvs-code skip
-                "Статус сверки" buf_rvs-doc.status_ skip
-              view-as alert-box information .
+            if lookup( buf_rvs-doc.rvs-code, p-no-check-rvs-code ) > 0
+            or buf_rvs-doc.rvs-type = {&test-asi}
+            then do:
+              next rvs-docs_ .
             end.
-            undo main-block, return error substitute( 'Невозможно снять блокировку на товар на месте хранения.&1' +
-                                                      'Объект &2 &3&1Место хранения &4&1Код товара&5&1' +
-                                                      'Существует сверка &6 (статус "&7")',
-                                                      {&new-line},
-                                                      p-obj-type,
-                                                      p-obj-code,
-                                                      p-pl-code,
-                                                      p-gds-code,
-                                                      buf_rvs-doc.rvs-code,
-                                                      buf_rvs-doc.status_ ) .
+            do ii = 1 to num-entries(p-no-check-rvs-code) :
+              v-check-rvs-code = entry(ii, p-no-check-rvs-code) .
+              if (num-entries(v-check-rvs-code, "-") = 3 and entry(1, v-check-rvs-code, "-") = entry(1, buf_rvs-doc.rvs-code, "-"))
+              then do :
+                next rvs-docs_ .
+              end .
+            end .
+            for each buf_rvs-line no-lock
+              where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
+                and buf_rvs-line.obj-type = buf_pl-gds.obj-type
+                and buf_rvs-line.obj-code = buf_pl-gds.obj-code
+                and buf_rvs-line.pl-code  = buf_pl-gds.pl-code
+                and buf_rvs-line.gds-code = buf_pl-gds.gds-code
+            on error undo main-block, return error
+            :
+              if p-is-berate = yes then do:
+                message
+                  vss-workfile vss-revision vss-description skip
+                  "Невозможно снять блокировку на товар на месте хранения" skip
+                  "Объект" p-obj-type p-obj-code skip
+                  "Место хранения" p-pl-code skip
+                  "Артикул" buf_goods.artic buf_goods.prod-type buf_goods.prod-code skip
+                  "Существует сверка" buf_rvs-doc.rvs-code skip
+                  "Статус сверки" buf_rvs-doc.status_ skip
+                view-as alert-box information .
+              end.
+              undo main-block, return error substitute( 'Невозможно снять блокировку на товар на месте хранения.&1' +
+                                                        'Объект &2 &3&1Место хранения &4&1Код товара&5&1' +
+                                                        'Существует сверка &6 (статус "&7")',
+                                                        {&new-line},
+                                                        p-obj-type,
+                                                        p-obj-code,
+                                                        p-pl-code,
+                                                        p-gds-code,
+                                                        buf_rvs-doc.rvs-code,
+                                                        buf_rvs-doc.status_ ) .
+            end.
           end.
-        end.
+        end .
         do
         on error undo main-block, return error
         :

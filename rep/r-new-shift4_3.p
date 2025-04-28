@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ac2de8611dbf, 1057, rls $
+$Author: EShklyar $
+$Date: Fri Oct 06 18:33:18 2017 +0300 $
+$Workfile: r-new-shift4_3.p $
+$Archive: rep/r-new-shift4_3.p $
 
 печать сменного отчета лист 4
 
@@ -32,11 +33,11 @@ define input parameter p-z-number-list       as   character           no-undo.
 define input parameter p-previous-shift-date as   date                no-undo.
 define input parameter p-param  as logical no-undo .
 
-define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-define variable vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision: ac2de8611dbf, 1057, rls $":U.
+define variable vss-author      AS CHAR NO-UNDO INIT "$Author: EShklyar $":U.
+define variable vss-date        AS CHAR NO-UNDO INIT "$Date: Fri Oct 06 18:33:18 2017 +0300 $":U.
+define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: r-new-shift4_3.p $":U.
+define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive: rep/r-new-shift4_3.p $":U.
 define variable vss-description AS CHAR NO-UNDO INIT "$Печать сменного отчета - лист 4 $":U.
 
 

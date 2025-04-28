@@ -98,7 +98,7 @@ class ibs.th.bge.1crn.subjects.dt-season inherits ibs.th.bge.1crn.subjects.code:
     end.
     else misc2 = "20".
     
-    if misc3 <> "" then do:
+    if misc3 <> "" and misc3 <> ? then do:
       if not can-find(first buf_units where buf_units.unit-name = misc3 no-lock) then
         strErr = strErr + substitute("~nЗначение ~"&1~" тега <unit-code> не найден в справочнике ~"Единицы измерения~"", misc3)
       .

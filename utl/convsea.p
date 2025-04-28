@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2a79bf27b012, 291, rls $
+$Author: ASMorozov $
+$Date: Tue Dec 01 19:11:26 2015 +0300 $
+$Workfile: convsea.p $
+$Archive: utl/convsea.p $
 
 Конвертация сезонов в новый формат.
 
@@ -17,11 +18,11 @@ Creation date: 10/08/13
 
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2a79bf27b012, 291, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:26 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: convsea.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/convsea.p $":U .
 define variable vss-description as character no-undo init "Конвертация сезонов в новый формат.".
 
 define variable v-year  as integer no-undo.

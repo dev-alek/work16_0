@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 59ca1604305e, 148, rls $
+$Author: EShklyar $
+$Date: Mon Feb 16 20:50:15 2015 +0400 $
+$Workfile: r-new-shift7.p $
+$Archive: rep/r-new-shift7.p $
 
 печать сменного отчета лист 7
 

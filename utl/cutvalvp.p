@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cutvalvp.p $
+$Archive: utl/cutvalvp.p $
 
 Проверка наличия документов внутреннего перемещени
 
@@ -19,11 +20,11 @@ define input  parameter p-cut-date as date no-undo . /* дата обрезания */
 define output parameter p-ok as logical   no-undo .
 define output parameter p-mess as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cutvalvp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/cutvalvp.p $":U .
 define variable vss-description as character no-undo init "Проверка наличия документов внутреннего перемещени ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

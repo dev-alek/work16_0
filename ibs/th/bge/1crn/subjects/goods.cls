@@ -12,6 +12,7 @@
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.goods_barcode from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -46,7 +47,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property enbl-zc       as integer      no-undo get. private set.
   define property enbl-exc      as integer      no-undo get. private set.
   define property srvc-type     as integer      no-undo get. private set.
-  define property fuel-type     as character    no-undo get. private set.
+  define property fuel-type     as integer      no-undo get. private set.
   define property oil-grp       as character    no-undo get. private set.
   define property max-dnsty     as decimal      no-undo get. private set.
   define property min-dnsty     as decimal      no-undo get. private set.
@@ -105,7 +106,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "enbl-zc"       then enbl-zc       = {&attr-integer} .
       when "enbl-exc"      then enbl-exc      = {&attr-integer} .
       when "srvc-type"     then srvc-type     = {&attr-integer} .
-      when "fuel-type"     then fuel-type     = {&attr-str} .
+      when "fuel-type"     then fuel-type     = {&attr-integer} .
       when "oil-grp"       then oil-grp       = {&attr-str} .
       when "max-dnsty"     then max-dnsty     = {&attr-dec} .
       when "min-dnsty"     then min-dnsty     = {&attr-dec} .
@@ -170,8 +171,9 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       v-str = ",code" when code_ = ?
       v-str = v-str + ",grp-code" when grp-code = ?
       v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",label-name" when label-name = ?
-      v-str = v-str + ",chk-name" when label-name = ?
+/*      v-str = v-str + ",label-name" when label-name = ? */
+/*      v-str = v-str + ",chk-name" when chk-name = ?     */
+      v-str = v-str + ",unit-k" when unit-k = ?
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(

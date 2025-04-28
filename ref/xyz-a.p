@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c5e125f9f735, 902, rls $
+$Author: EShklyar $
+$Date: Tue Dec 06 17:15:45 2016 +0300 $
+$Workfile: xyz-a.p $
+$Archive: ref/xyz-a.p $
 
 ‘ормирование таблицы с оборотами и прибыл€ми дл€ ABC XYZ анализов
 
@@ -15,11 +16,11 @@ Creation date: 03/03/06
 ƒата создани€: 05/12/05
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c5e125f9f735, 902, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 06 17:15:45 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: xyz-a.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/xyz-a.p $":U .
 define variable vss-description as character no-undo init "‘ормирование таблицы с оборотами и прибыл€ми дл€ ABC XYZ анализов".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

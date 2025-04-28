@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0f3280859945, 1577, rls $
+$Author: SSlivenko $
+$Date: Tue Nov 06 04:41:35 2018 +0300 $
+$Workfile: unitsub.cls $
+$Archive: ibs/th/str/mercury/unitsub.cls $
 
 Сущность TH ВСД
 
@@ -22,7 +22,7 @@ using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 using ibs.th.str.clients.*.
 using ibs.th.str.mercury.*.
-
+block-level on error undo, throw.
 
 class ibs.th.str.mercury.unitsub implements ithsub: 
   

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 71d18cf8f6ea, 2244, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:24:00 2019 +0300 $
+$Workfile: r-km7.p $
+$Archive: rep/r-km7.p $
 
 сведения о показаниях счетчиков ККМ и выручке КМ-7
 
@@ -34,11 +35,11 @@ define input parameter p-xls                    as logical                 no-un
 define input parameter p-dir-name               as character               no-undo .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 71d18cf8f6ea, 2244, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: druban $":U .
+define variable vss-date        as character no-undo initial "$Date: Wed Dec 25 15:24:00 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-km7.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-km7.p $":U .
 define variable vss-description as character no-undo initial "сведения о показаниях счетчиков ККМ и выручке КМ-7".
 
 define variable g#report-num              as integer              no-undo .

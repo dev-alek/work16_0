@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define variable mOutFile as character no-undo.
 
 function gen-key-rec character ( i-tbl-name    as character ):

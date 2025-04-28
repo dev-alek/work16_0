@@ -24,6 +24,7 @@ Creation date: 02/05/09
 /*---------------------------&start-using-class&-------------------------------*/
 
 using Ibs.Th.Rul.Route-data_.
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 20b73597f255, 21, test $
+$Author: SKiryxin $
+$Date: Wed Mar 05 15:13:08 2014 +0300 $
+$Workfile: r-exp-sl.p $
+$Archive: rep/r-exp-sl.p $
 
 Отчет для Nielsen запуск из интерфейса
 
@@ -28,11 +29,11 @@ define input parameter p-log-handle    as handle no-undo .
 /*define input parameter p-visible       as logical          no-undo.*/
 define input parameter table   FOR tt-obj.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 20b73597f255, 21, test $":U .
+define variable vss-author      as character no-undo init "$Author: SKiryxin $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Mar 05 15:13:08 2014 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-exp-sl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-exp-sl.p $":U .
 define variable vss-description as character no-undo init "Отчет для Nielsen запуск из интерфейса".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

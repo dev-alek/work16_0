@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d841b7465f64, 462, rls $
+$Author: SShalanin $
+$Date: Fri Feb 12 16:16:31 2016 +0400 $
+$Workfile: r-zpostr.p $
+$Archive: rep/r-zpostr.p $
 
 Отчет "Состояние запаса с учетом резервов"
 
@@ -31,11 +32,11 @@ def input parameter xvar-lavel   as integer no-undo.
 def input parameter xtog-lavel-2 as logical no-undo.
 def input parameter xvar-lavel-2 as integer no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d841b7465f64, 462, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Feb 12 16:16:31 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-zpostr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-zpostr.p $":U .
 define variable vss-description as character no-undo init "Состояние запаса с учетом резервов".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

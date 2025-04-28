@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: Вт авг 09 09:15:01 2022 +0300 $
+$Workfile: rest-rdb.p $
+$Archive: adm/rest-rdb.p $
 
 Добавление и восстановление УБД запускается не из редактора!!!!!!!
 
@@ -21,11 +22,11 @@ define input parameter p-db-key-enc  like ub.db.db-key-enc no-undo . /* код. клю
 define input parameter p-type-unload as   character        no-undo . /* тип выгрузки */
 define input parameter p-unload-history as logical         no-undo . /* выгружать историю */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: f29df1d5f130, 3104, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: DRuban $":U .
+define variable vss-date        as character no-undo initial "$Date: Вт авг 09 09:15:01 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: rest-rdb.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: adm/rest-rdb.p $":U .
 define variable vss-description as character no-undo initial "Добавление и восстановление УБД".
 define variable mode-erprn as logical no-undo.
 { cmp/str-glbl.i      }

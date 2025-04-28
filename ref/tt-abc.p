@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: tt-abc.p $
+$Archive: ref/tt-abc.p $
 
 Процедура проставления ABC по временной таблице temp-tt
 
@@ -35,11 +36,11 @@ define temp-table  x-analysis        no-undo  like ub.abc-analysis.
 define input         parameter table for    x-analysis.
 define input-output  parameter table for    temp-tt.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: tt-abc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/tt-abc.p $":U .
 define variable vss-description as character no-undo init "Процедура проставления ABC по временной таблице temp-tt".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

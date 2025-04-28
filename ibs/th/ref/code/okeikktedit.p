@@ -13,7 +13,7 @@ Creation date: 27.04.2021
 */
 
 using System.Runtime.InteropServices.ComTypes.IMoniker from assembly.
-
+block-level on error undo, throw.
 {cmp/str-glbl.i }
 { ibs\th\ref\code\codefrmpar.i }
 

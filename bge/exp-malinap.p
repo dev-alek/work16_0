@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 64215249eb5e, 199, rls $
+$Author: EShklyar $
+$Date: Mon Jun 08 18:12:30 2015 +0400 $
+$Workfile: exp-malinap.p $
+$Archive: bge/exp-malinap.p $
 
 Процедура выгружает данные для Малины
 
@@ -16,10 +17,10 @@ Creation date: 02/09/14
 */
 
 define variable vss-revision    as character no-undo init "$Revision: $":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jun 08 18:12:30 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: exp-malinap.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/exp-malinap.p $":U .
 define variable vss-description as character no-undo init "Передача данных в Малину".
 
 /* ********************  Preprocessor Definitions  ******************** */

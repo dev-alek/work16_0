@@ -142,6 +142,7 @@ define variable v-sum-doc-tab-order  as character no-undo init "sum-doc,curr-cod
 { ref/getCliKassa.i }
 { ref/findocip.i &action="define" }
 { ref/fd-attr.i " " tt0-fin-doc-attr }
+{ ref/clean_char.i}
 
 function is-fact-and-edit returns logical ():
     return (p-mode = {&update} and locked_fin-doc.status_ = {&fin-fact}).
@@ -1766,9 +1767,9 @@ else do:
     tt-fin-doc.payer-code
     tt-fin-doc.payer-type
     tt-fin-doc.payer-name
-    tt-fin-doc.naznach-plat
-    tt-fin-doc.including
-    tt-fin-doc.enclosure
+    tt-fin-doc.naznach-plat = clean_char(tt-fin-doc.naznach-plat:screen-value)
+    tt-fin-doc.including = clean_char(tt-fin-doc.including:screen-value)
+    tt-fin-doc.enclosure = clean_char(tt-fin-doc.enclosure:screen-value)
     tt-fin-doc.PS
     tt-fin-doc.receiver-sign2
     tt-fin-doc.receiver-sign3

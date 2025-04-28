@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 151fe727385f, 696, rls $
+$Author: EShklyar $
+$Date: Wed Jul 06 18:00:55 2016 +0300 $
+$Workfile: goods01r.p $
+$Archive: utl/goods01r.p $
 
 Изменение товаров по списку
 
@@ -66,11 +67,11 @@ define variable p-stts          as logical no-undo .
 DEFINE VARIABLE var-fact-order like ub.tax-rate-value.fact-order no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 151fe727385f, 696, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Jul 06 18:00:55 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: goods01r.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/goods01r.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

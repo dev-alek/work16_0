@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: gbl-print.cls $
+$Archive: ibs/th/gbl/gbl-print.cls $
 
 Статический класс со значениями параметров из ini-файла
 
@@ -20,6 +20,7 @@ Creation date: 14/02/18
 */   
 
 using ibs.th.gbl.sys.*.
+block-level on error undo, throw.
 class ibs.th.gbl.gbl-print inherits objth: 
 define override public property vss-revision    as character no-undo init "$Revision:$":U get .
     

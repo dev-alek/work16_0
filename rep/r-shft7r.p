@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-shft7r.p $
+$Archive: rep/r-shft7r.p $
 
 сбор данных дл€ печати сменного отчета (лист 7)
 
@@ -24,11 +25,11 @@ DEFINE INPUT PARAMETER pshift-num1 like ub.shift-obj.shift-num no-undo.
 define input parameter p-previous-shift-date as date no-undo .
 
 
-DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+DEF VAR vss-revision    AS CHAR NO-UNDO INIT "$Revision: aea5316774be, 0, rls $":U.
+DEF VAR vss-author      AS CHAR NO-UNDO INIT "$Author: expertek $":U.
+DEF VAR vss-date        AS CHAR NO-UNDO INIT "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U.
+DEF VAR vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: r-shft7r.p $":U.
+DEF VAR vss-archive     AS CHAR NO-UNDO INIT "$Archive: rep/r-shft7r.p $":U.
 DEF VAR vss-description AS CHAR NO-UNDO INIT "$—бор данных дл€ сменного отчета - лист 5 $":U.
 
 { cmp/str-glbl.i }

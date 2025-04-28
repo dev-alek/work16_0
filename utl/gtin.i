@@ -272,17 +272,33 @@ function GetNextElement return character
      define variable vLength as integer no-undo.
      define variable vi as integer no-undo.
      define variable vj as integer no-undo.
-     if mtypemark eq objsrv:Env:Marking:Types:milk:NameProp or mtypemark eq objsrv:Env:Marking:Types:milk-40:NameProp
+     define buffer code for ub.code. 
+   
+     find first code where Code.parent eq "MarkType"
+                       and Code.CodeValue   eq mTypeMark
+                       no-lock no-error.
+     if     available code
+        and Code.misc1 ne ""
+        and Code.misc1 ne ?
      then do:
-        entry (4,vlistleng) = "06".
+        integer (Code.misc1) no-error.
+        if not error-status:error
+        then
+          entry (4,vlistleng) = Code.misc1.
      end.
-     else if mtypemark eq objsrv:Env:Marking:Types:tabak:NameProp 
-          or mtypemark eq objsrv:Env:Marking:Types:stiki:NameProp
-          or mtypemark eq objsrv:Env:Marking:Types:NSJ  :NameProp
-     then do:
-        entry ( 4,vlistleng) = "07".
-        entry (10,vlistleng) = "07".
-     end.
+/*     else do:                                                                                                           */
+/*        if mtypemark eq objsrv:Env:Marking:Types:milk:NameProp or mtypemark eq objsrv:Env:Marking:Types:milk-40:NameProp*/
+/*        then do:                                                                                                        */
+/*           entry (4,vlistleng) = "06".                                                                                  */
+/*        end.                                                                                                            */
+/*        else if mtypemark eq objsrv:Env:Marking:Types:tabak:NameProp                                                    */
+/*             or mtypemark eq objsrv:Env:Marking:Types:stiki:NameProp                                                    */
+/*             or mtypemark eq objsrv:Env:Marking:Types:NSJ  :NameProp                                                    */
+/*        then do:                                                                                                        */
+/*           entry ( 4,vlistleng) = "07".                                                                                 */
+/*           entry (10,vlistleng) = "07".                                                                                 */
+/*        end.                                                                                                            */
+/*     end.                                                                                                               */
      if iAllTeg
      then 
         assign
@@ -819,7 +835,7 @@ define output parameter vok as logical   no-undo init yes.
    define variable vPrice       as decimal no-undo.
    define variable vparent      as character no-undo.
    define variable vgds-code    as integer no-undo.
-    
+   define buffer code for ub.code. 
    vMRC = getMRCByDM(iDm).
    if vMRC > 0
    then do:
@@ -938,7 +954,7 @@ function addGs2Mark return character
      if vIdx > 1 then
        vDM = substitute("&1&4&2&4&3",
                         substring(iMark,1,25),
-                        substring(iMark,26,vIdx - 26 - 1),
+                        substring(iMark,26,vIdx - 25 - 1),
                         substring(iMark,vIdx),
                         chr(29)) no-error.
      else 
@@ -946,6 +962,14 @@ function addGs2Mark return character
                         substring(iMark,1,25),
                         substring(iMark,26),
                         chr(29)) no-error.
+     vIdx = index(vDm,"240",vIdx).
+     if vIdx > 0 then
+     do:
+       vDM = substitute("&1&3&2",
+                        substring(vDm,1,vIdx - 1),
+                        substring(vDm,vIdx),
+                        chr(29)) no-error.
+     end.    
    end.
    else if substring(iMark,32,2) = "91" then
    do:  /* легпром, духи, обувь, шины, лекарства, велосипеды, кресла-коляски, консервы  */

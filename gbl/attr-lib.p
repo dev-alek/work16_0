@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
   
 $Revision$
@@ -12006,6 +12007,18 @@ end procedure.
 &scop manual-edit-attr-increase-pc-o  1
 &scop batch-edit-attr-increase-pc-o  1
 
+/* Минимальный запас */
+&scop type-attr-min-zapas-o {&type-dec}
+&scop format-attr-min-zapas-o  ">>>>>>>>>9"
+&scop label-attr-min-zapas-o   "Минимальный запас"
+&scop tooltip-attr-min-zapas-o   "Минимальный запас на объекте"
+&scop user-can-edit-attr-min-zapas-o  true
+&scop output-display-attr-min-zapas-o  true
+&scop other-attr-min-zapas-o  '':u
+&scop copy-attr-min-zapas-o  true
+&scop manual-edit-attr-min-zapas-o  1
+&scop batch-edit-attr-min-zapas-o  1
+
 /* Метод округления цены при расчете переоценки */
 &scop type-attr-round-method-o {&type-char}
 &scop format-attr-round-method-o  "X(21)"
@@ -12188,6 +12201,20 @@ end procedure.
 &scop manual-edit-attr-dop-alt-name-o  1
 &scop batch-edit-attr-dop-alt-name-o  1
 
+/* дата/время изменения сезона */
+
+&glob type-attr-change-dt-seasons {&type-char}
+&glob format-attr-change-dt-seasons  "X(50)"
+&glob label-attr-change-dt-seasons   "дата/время изменения сезон"
+&glob tooltip-attr-change-dt-seasons   "дата/время изменения сезон"
+&glob user-can-edit-attr-change-dt-seasons  false
+&glob output-display-attr-change-dt-seasons  false
+&glob other-attr-change-dt-seasons  ""
+&glob news-attr-change-dt-seasons true
+&glob copy-attr-change-dt-seasons  false
+&scop manual-edit-attr-change-dt-seasons 2
+&scop batch-edit-attr-change-dt-seasons  2
+
 /* Сезон топлива */
 
 &glob type-attr-dt-seasons {&type-char}
@@ -12201,6 +12228,19 @@ end procedure.
 &glob copy-attr-dt-seasons  true
 &scop manual-edit-attr-dt-seasons 2
 &scop batch-edit-attr-dt-seasons  2
+
+/* Тип сбора марок */
+&scop type-attr-mark-collect-type {&type-int}
+&scop format-attr-mark-collect-type  "9"
+&scop label-attr-mark-collect-type   "Тип сбора марок"
+&scop tooltip-attr-mark-collect-type   "Тип сбора марок"
+&scop user-can-edit-attr-mark-collect-type  false
+&scop output-display-attr-mark-collect-type  true
+&scop other-attr-mark-collect-type  ""
+&glob news-attr-mark-collect-type true
+&scop copy-attr-mark-collect-type false
+&scop manual-edit-attr-mark-collect-type  0
+&scop batch-edit-attr-mark-collect-type  0
 
 /* сюда добавлять новые параметры атрибутов товаров на объекте */
 
@@ -12270,6 +12310,8 @@ do
       {&attr-temp-full-code}
       &scop attr-code attr-increase-pc-o
       {&attr-temp-full-code}
+      &scop attr-code attr-min-zapas-o
+      {&attr-temp-full-code}
       &scop attr-code attr-round-method-o
       {&attr-temp-full-code}
       &scop attr-code attr-petrol-purse-o
@@ -12302,7 +12344,10 @@ do
       {&attr-temp-full-code}
       &scop attr-code attr-dt-seasons
       {&attr-temp-full-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-temp-full-code}
+      &scop attr-code attr-mark-collect-type
+      {&attr-temp-full-code}
        /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара на объекте &1", p-code ).
@@ -12332,6 +12377,8 @@ do
       {&attr-temp-code}
       &scop attr-code attr-increase-pc-o
       {&attr-temp-code}
+      &scop attr-code attr-min-zapas-o
+      {&attr-temp-code}
       &scop attr-code attr-round-method-o
       {&attr-temp-code}
       &scop attr-code attr-petrol-purse-o
@@ -12364,7 +12411,10 @@ do
       {&attr-temp-code}
       &scop attr-code attr-dt-seasons
       {&attr-temp-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-temp-code}
+      &scop attr-code attr-mark-collect-type
+      {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
@@ -13031,6 +13081,8 @@ procedure gdsoattr-copy :
       {&attr-copy-code}
       &scop attr-code attr-increase-pc-o
       {&attr-copy-code}
+      &scop attr-code attr-min-zapas-o
+      {&attr-copy-code}
       &scop attr-code attr-round-method-o
       {&attr-copy-code}
       &scop attr-code attr-petrol-purse-o
@@ -13063,7 +13115,10 @@ procedure gdsoattr-copy :
       {&attr-copy-code}
       &scop attr-code attr-dt-seasons
       {&attr-copy-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-copy-code}
+      &scop attr-code attr-mark-collect-type
+      {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
@@ -13095,6 +13150,8 @@ do
       &scop attr-code attr-sum-grp-o
       {&attr-manual-edit-code}
       &scop attr-code attr-increase-pc-o
+      {&attr-manual-edit-code}
+      &scop attr-code attr-min-zapas-o
       {&attr-manual-edit-code}
       &scop attr-code attr-round-method-o
       {&attr-manual-edit-code}
@@ -13157,6 +13214,8 @@ do
       {&attr-batch-edit-code}
       &scop attr-code attr-increase-pc-o
       {&attr-batch-edit-code}
+      &scop attr-code attr-min-zapas-o
+      {&attr-batch-edit-code}
       &scop attr-code attr-round-method-o
       {&attr-batch-edit-code}
       &scop attr-code attr-petrol-purse-o
@@ -13189,7 +13248,10 @@ do
       {&attr-batch-edit-code}
       &scop attr-code attr-dt-seasons
       {&attr-batch-edit-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-batch-edit-code}
+      &scop attr-code attr-mark-collect-type
+      {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:

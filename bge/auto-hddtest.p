@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5c1b000f89f8, 2349, rls $
+$Author: SSlivenko $
+$Date: Ср июн 10 21:13:33 2020 +0300 $
+$Workfile: auto-hddtest.p $
+$Archive: bge/auto-hddtest.p $
 
 Мониторинг HDD
 
@@ -23,11 +24,11 @@ define input  parameter p-user-login    as character no-undo .
 define input  parameter p-user-password as character no-undo .
 define input  parameter p-db-num        as integer no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 5c1b000f89f8, 2349, rls $":U .
+def var vss-author      as character no-undo init "$Author: SSlivenko $":U .
+def var vss-date        as character no-undo init "$Date: Ср июн 10 21:13:33 2020 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: auto-hddtest.p $":U .
+def var vss-archive     as character no-undo init "$Archive: bge/auto-hddtest.p $":U .
 def var vss-description as character no-undo init "Работа с ФГИС меркурий".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -536,4 +537,4 @@ function my-date returns datetime-tz (input v-str as character) :
   
 end function.
 
-/* $Workfile$ end */
+/* $Workfile: auto-hddtest.p $ end */

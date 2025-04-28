@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 $Revision: $
 $Author: $
@@ -15,11 +16,11 @@ define input parameter p-CheckId as character no-undo .
 define input parameter p-RRN as character no-undo .
 define input parameter p-print-type as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 495342954825, 3030, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: ѕт апр 29 17:03:44 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chk-slip-print.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/chk-slip-print.p $":U .
 define variable vss-description as character no-undo init "ѕечать слипов чека".
 { cmp/vssrevis.i }
 

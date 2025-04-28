@@ -27,6 +27,7 @@ class ibs.th.gbl.env.conf.markingtypegbl inherits objth.
   define temp-table tt-conf no-undo
     field objNum  as integer 
     field ConfStr as character
+    index objNum objNum
   .
 
 

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fd21875b889d, 1394, rls $
+$Author: ASMorozov $
+$Date: Thu Jun 28 15:24:33 2018 +0300 $
+$Workfile: gdsmercsub.cls $
+$Archive: ibs/th/str/mercury/gdsmercsub.cls $
 
 Сущность TH товар меркурия
 
@@ -21,7 +21,7 @@ using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 using ibs.th.str.mercury.*.
 using ibs.th.str.gds.*.
-
+block-level on error undo, throw.
 
 class ibs.th.str.mercury.gdsmercsub implements ithsub: 
   

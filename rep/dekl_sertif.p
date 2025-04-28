@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ff7c46c71de5, 3298, rls $
+$Author: EShklyar $
+$Date: 2023/03/29 08:48:06 $
+$Workfile: dekl_sertif.p $
+$Archive: rep/dekl_sertif.p $
 
 Сертификаты/декларации
 
@@ -17,13 +17,13 @@ Creation date: 08/07/14
 
 using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.marking.sts.*.
+block-level on error undo, throw.
 
-
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: ff7c46c71de5, 3298, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/03/29 08:48:06 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: dekl_sertif.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/dekl_sertif.p $":U .
 define variable vss-description as character no-undo init "Сертификаты/декларации".
 { cmp/vssrevis.i }
 { str/temp_upd.i }

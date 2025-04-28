@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 00556a14f793, 2650, rls $
+$Author: ASMorozov $
+$Date: ѕт окт 23 21:03:42 2020 +0300 $
+$Workfile: msg.p $
+$Archive: utl/msg.p $
 
 —ообщение в отдельной сессии.
 

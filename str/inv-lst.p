@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6e7a63c8908d, 2425, rls $
+$Author: ASMorozov $
+$Date: Ср июн 10 21:13:46 2020 +0300 $
+$Workfile: inv-lst.p $
+$Archive: str/inv-lst.p $
 
 Формирование списка документов, мешающих инвентаризации
 
@@ -24,11 +25,11 @@ define input parameter p-curr-obj-type  like ub.clients.obj-type no-undo .
 define input parameter p-curr-obj-code  like ub.clients.obj-code no-undo .
 define input param inv-code like trn-doc.doc-code no-undo.          /* номер инвентаризации */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 6e7a63c8908d, 2425, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:46 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: inv-lst.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/inv-lst.p $":U .
 define variable vss-description as character no-undo init "Формирование списка документов, мешающих инвентаризации ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

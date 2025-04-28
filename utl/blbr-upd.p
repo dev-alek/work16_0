@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
 $Revision: $
 $Author: $
 $Date: $
-$Workfile$
-$Archive$
+$Workfile: blbr-upd.p $
+$Archive: utl/blbr-upd.p $
 
 Утилита корректирующая раскурутку БД для Блекбери
 
@@ -18,8 +19,8 @@ Creation date: 03/11/09
 define variable vss-revision    as character no-undo init "$Revision: $":U .
 define variable vss-author      as character no-undo init "$Author: $":U .
 define variable vss-date        as character no-undo init "$Date: $":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-workfile    as character no-undo init "$Workfile: blbr-upd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/blbr-upd.p $":U .
 define variable vss-description as character no-undo init "Утилита корректирующая раскурутку БД для Блекбери".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

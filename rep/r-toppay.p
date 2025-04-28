@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3b789addcaba, 2696, rls $
+$Author: EShklyar $
+$Date: Пт дек 18 18:16:05 2020 +0300 $
+$Workfile: r-toppay.p $
+$Archive: rep/r-toppay.p $
 
 Продажа топлива по видам платежа
 
@@ -18,12 +18,13 @@ Creation date: 09/07/05
 using Progress.Lang.*.
 using Ibs.Th.Gbl.ReportXml.
 using Ibs.Th.Gbl.rep-out.
+block-level on error undo, throw.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 3b789addcaba, 2696, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Пт дек 18 18:16:05 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-toppay.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-toppay.p $":U .
 define variable vss-description as character no-undo init "Продажи топлива по видам платежа".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }

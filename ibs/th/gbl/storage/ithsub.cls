@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fd21875b889d, 1394, rls $
+$Author: ASMorozov $
+$Date: Thu Jun 28 15:24:33 2018 +0300 $
+$Workfile: ithsub.cls $
+$Archive: ibs/th/gbl/storage/ithsub.cls $
 
 Интерфейс сущностей
 Модуль взаимодействия сущностей TH с базой данных
@@ -18,7 +18,7 @@ Creation date: 04/23/18
 */
 
 using Progress.Lang.*.
-
+block-level on error undo, throw.
 interface ibs.th.gbl.storage.ithsub:  
   
   

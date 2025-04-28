@@ -1,10 +1,11 @@
+block-level on error undo, throw.
  /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: get-ncr.p $
+$Archive: str/get-ncr.p $
 
 Программа приема чеков с касс NCR
 
@@ -25,11 +26,11 @@ define input parameter p-version as character no-undo .
 DEFINE INPUT PARAMETER file_ as character no-undo.
 define input-output parameter p-view-log as logical no-undo .
 
-DEFINE VARIABLE vss-revision    as character no-undo init "$Revision$":u .
-DEFINE VARIABLE vss-author      as character no-undo init "$Author$":u .
-DEFINE VARIABLE vss-date        as character no-undo init "$Date$":u .
-DEFINE VARIABLE vss-workfile    as character no-undo init "$Workfile$":u .
-DEFINE VARIABLE vss-archive     as character no-undo init "$Archive$":u .
+DEFINE VARIABLE vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+DEFINE VARIABLE vss-author      as character no-undo init "$Author: expertek $":u .
+DEFINE VARIABLE vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+DEFINE VARIABLE vss-workfile    as character no-undo init "$Workfile: get-ncr.p $":u .
+DEFINE VARIABLE vss-archive     as character no-undo init "$Archive: str/get-ncr.p $":u .
 DEFINE VARIABLE vss-description as character no-undo init "Программа приема чеков с касс NCR" .
 { cmp/vssrevis.i }
 

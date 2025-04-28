@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: trn-gd-fuel.cls $
+$Archive: ibs/th/bge/1crn/subjects/trn-gd-fuel.cls $
 
 Структура данных gds накладной из 1С ERPRN
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.trn-gd-fuel inherits ibs.th.bge.1crn.subjects.asubject: 
@@ -95,11 +96,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-fuel inherits ibs.th.bge.1crn.subjects.asu
     def var v-str as char no-undo.
     
     assign
-      v-str = "line-num" when line-num = ?
+      /* v-str = "line-num" when line-num = ? */
       v-str = v-str + ",gd-code" when gd-code = ?
-      v-str = v-str + ",cap-fact" when cap-fact = ?
-      v-str = v-str + ",wght-fact" when wght-fact = ?
-      v-str = v-str + ",sum" when sum = ?
+      /* v-str = v-str + ",cap-fact" when cap-fact = ? */
+      /* v-str = v-str + ",wght-fact" when wght-fact = ? */
+      /* v-str = v-str + ",sum" when sum = ? */
     .
     v-str = trim (v-str, ",").
     if v-str > ''

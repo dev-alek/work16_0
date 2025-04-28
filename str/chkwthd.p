@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: chkwthd.p $
+$Archive: str/chkwthd.p $
 
 Проверка партий при удалении документов МЦ закрытых на факт
 
@@ -21,11 +22,11 @@ Output:
 define input parameter p-doc-code as char no-undo.
 define input parameter p-file-name-err as char no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chkwthd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/chkwthd.p $":U .
 define variable vss-description as character no-undo init "Проверка партий при удалении документов МЦ".
 { cmp/vssrevis.i p-doc-code }
 { cmp/trg-def.i  }

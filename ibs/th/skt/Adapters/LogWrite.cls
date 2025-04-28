@@ -10,6 +10,7 @@
  ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.skt.Adapters.LogWrite: 
@@ -28,10 +29,18 @@ class ibs.th.skt.Adapters.LogWrite:
       run ibs/th/skt/Adapters/WriteFileToLog.p (ifile).
     end.
     method public void WriteFileToLog(iText as longchar) :
-       os-delete "filewrireLog.txt".
-       copy-lob iText to
-                file "filewrireLog.txt".
-      run ibs/th/skt/Adapters/WriteFileToLog.p ("filewrireLog.txt").
+       if length (iText) < 1000
+       then do:
+          define variable vTempStr as character no-undo.
+          vTempStr = iText.
+          WriteFileToLog(vTempStr).
+       end.
+       else do:
+          os-delete "filewrireLog.txt".
+          copy-lob iText to
+                   file "filewrireLog.txt".
+          run ibs/th/skt/Adapters/WriteFileToLog.p ("filewrireLog.txt").
+       end.
     end.
 
 end class.

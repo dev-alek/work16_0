@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
+$Revision: a5f04f494b3d, 1100, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
 $Workfile:cpattr.cls $
-$Archive$
+$Archive: ibs/th/ref/cpattr.cls $
 
 
 
@@ -16,6 +16,7 @@ Creation date: 01/30/15
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.ref.cpattr: 

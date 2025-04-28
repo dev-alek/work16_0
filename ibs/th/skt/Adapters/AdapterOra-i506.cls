@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6ef98e62eaee, 955, rls $
+$Author: ASMorozov $
+$Date: Thu Feb 16 15:19:51 2017 +0300 $
+$Workfile: AdapterOra-i506.cls $
+$Archive: ibs/th/skt/Adapters/AdapterOra-i506.cls $
 
 
 
@@ -17,6 +17,7 @@ Creation date: 01/30/15
 
 using Progress.Lang.*.
 using ibs.th.skt.Adapters.*. 
+block-level on error undo, throw.
 
 
 class ibs.th.skt.Adapters.AdapterOra-i506 implements IAdapter: 

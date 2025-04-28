@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9b2d0772002d, 3091, rls $
+$Author: EShklyar $
+$Date: ѕт авг 05 19:16:27 2022 +0300 $
+$Workfile: r-new-shift2.p $
+$Archive: rep/r-new-shift2.p $
 
 печать сменного отчета лист 2
 
@@ -38,11 +39,11 @@ define input parameter p-previous-shift-date    as date                    no-un
 define input parameter p-with-cp-grouping       as logical                 no-undo .
 
 /* VSS Variable Definitions ---                                         */
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: 9b2d0772002d, 3091, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U.
+define variable vss-date        as character no-undo initial "$Date: ѕт авг 05 19:16:27 2022 +0300 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: r-new-shift2.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-new-shift2.p $":U.
 define variable vss-description as character no-undo initial "ѕечать сменного отчета - лист 2 ":U.
 
 { cmp/vssrevis.i                }

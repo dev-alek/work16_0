@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 278fa297b56f, 1047, rls $
+$Author: SMMolotkov $
+$Date: Fri Oct 06 18:31:46 2017 +0300 $
+$Workfile: p-exp-ATD.p $
+$Archive: bge/p-exp-ATD.p $
 
 Выгрузка СТ в SAP (Сургутнефтегаз)
 

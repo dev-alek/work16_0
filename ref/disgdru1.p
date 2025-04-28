@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: disgdru1.p $
+$Archive: ref/disgdru1.p $
 
 Сохранение изменеий скидок товара на объекте
 
@@ -23,11 +24,11 @@ define temp-table tt0-dis-gds-rule no-undo like ub.dis-gds-rule.
 DEFINE INPUT PARAMETER TABLE FOR tt0-dis-gds-rule.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: disgdru1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/disgdru1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменеий атрибутов товара на объекте".
 { cmp/vssrevis.i "substitute('&1|&2|&3':u,p-gds-code,p-obj-type,p-obj-code)" }
 { cmp/trg-def.i }

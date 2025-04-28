@@ -11,7 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
-using ibs.th.gbl.map.mapstringgbl.
+using ibs.th.gbl.map.*.
 using ibs.th.gbl.env.conf.markingtypegbl.
 block-level on error undo, throw.
 
@@ -32,13 +32,18 @@ class ibs.th.gbl.sys.SystemAux inherits objth:
     get.
     private set.
     
-    define property MarkingTypeGbl as class MarkingTypeGbl no-undo
+   define property MarkingTypeGbl as class MarkingTypeGbl no-undo
     get.
     private set.    
+   define property ParamColectionGbl as class ParamColectionGbl no-undo
+    get.
+    private set.    
+   
    constructor public SystemAux (  ):
       super ().
       {utl\objreg.i MapStringGbl MapStringGbl}
       {utl\objreg.i MarkingTypeGbl MarkingTypeGbl}
+      {utl\objreg.i ParamColectionGbl ParamColectionGbl}
    end constructor.
 
 end class.

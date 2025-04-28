@@ -21,6 +21,7 @@ using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.tank-imp_cal-tbl from propath.
 using ibs.th.bge.1crn.subjects.tank-imp from propath.
 USING ibs.th.bge.1crn.subjects.tank FROM PROPATH.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

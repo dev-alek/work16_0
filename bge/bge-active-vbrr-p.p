@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: da70ce2a1328, 1072, rls $
+$Author: SMMolotkov $
+$Date: Fri Oct 06 18:35:13 2017 +0300 $
+$Workfile: bge-active-vbrr-p.p $
+$Archive: bge/bge-active-vbrr-p.p $
 
 Процедура ручного запуска выгрузки информации по пополнениям и активации для с верки с ВБРР
 

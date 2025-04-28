@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 228d0892697a, 495, rls $
+$Author: SShalanin $
+$Date: Sun Feb 28 19:23:24 2016 +0400 $
+$Workfile: r-zpost.p $
+$Archive: rep/r-zpost.p $
 
 "Состояние запаса поставщикам"
 
@@ -17,11 +18,11 @@ Creation date: 09/12/05
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 228d0892697a, 495, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Sun Feb 28 19:23:24 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-zpost.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-zpost.p $":U .
 define variable vss-description as character no-undo init "Состояние запаса поставщикам".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }
@@ -313,4 +314,4 @@ PROCEDURE CalcItog :
 xTog-obj = xtogobj .
 END PROCEDURE.
 { rep/ostatok.i }
-/* $Workfile$ e n d */
+/* $Workfile: r-zpost.p $ e n d */

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -6,11 +7,11 @@
 /*------------------------------------------------------------------------
 
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ecc773e5a8dc, 1421, test $
+$Author: EShklyar $
+$Date: Fri Jun 29 17:59:55 2018 +0300 $
+$Workfile: egais-marks.p $
+$Archive: bge/egais-marks.p $
 
 Интерфейс для расшифровки акцизной марки
 
@@ -32,11 +33,11 @@ define input parameter parparentproc  as widget-handle no-undo .
 
 /* Local Variable Definitions ---                                       */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: ecc773e5a8dc, 1421, test $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jun 29 17:59:55 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: egais-marks.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/egais-marks.p $":U .
 define variable vss-description as character no-undo init "Интерфейс для расшифровки акцизной марки".
 
 {ibs/th/bge/egais/ab-egais.i 1 new shared}

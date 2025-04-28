@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 34ad735ba6bf, 2144, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:23:55 2019 +0300 $
+$Workfile: enum-type-discount.cls $
+$Archive: ibs/th/ref/promo/enum-type-discount.cls $
 
 коды типов промо-акций согласно протоколу взаимодействия с 1С
 

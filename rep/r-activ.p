@@ -1,7 +1,7 @@
 using Progress.Lang.*.
 using Ibs.Th.Gbl.ReportXml.
 using Ibs.Th.Gbl.rep-out.
-
+block-level on error undo, throw.
 /*------------------------------------------------------------------------
     File        : r-activ.p
     Purpose     : 
@@ -26,11 +26,11 @@ define input parameter det-by-obj     as    logical no-undo.
 define input parameter dcard-mode 	  as	integer no-undo.
 define input parameter fill-days      as    integer no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 6a63bd75f17f, 234, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Jul 28 13:39:50 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-activ.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-activ.p $":U .
 define variable vss-description as character no-undo init "Отчет Итоги по дисконтным картам" .
 
 { cmp/vssrevis.i }

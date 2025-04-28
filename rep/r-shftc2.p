@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -75,6 +76,8 @@ define variable v-value-integer as INTEGER no-undo .
 define variable v-value-logical AS LOGICAL no-undo .
 define variable v-param-type as character no-undo .
 define variable v-grp-name    as    character           no-undo .
+define variable v-sum-promo as decimal   no-undo.
+define variable v-sum-promo-d as decimal   no-undo.
 
 define buffer buf_dis-card    for ub.dis-card.
 define buffer buf_goods       for ub.goods.
@@ -86,6 +89,7 @@ define buffer ras-doc         for ub.trn-doc.
 define buffer buf_chk-discnt  for ub.chk-discnt.
 define buffer buf_chk-discnt2 for ub.chk-discnt .
 define buffer buf_chk-gds     for ub.chk-gds.
+define buffer buf_chk-gds-attr for ub.chk-gds-attr.
 define buffer buf_doc-line    for ub.doc-line .
 
 DEFINE BUFFER b-treal-2       for treal-2.
@@ -143,7 +147,6 @@ define buffer buf_doc-line    for ub.doc-line.
            
   return v-density .
 end function . /* end_of calcDensity */
-
 
 /* Учет расходных материалов */
 { gbl/conf-rd.i
@@ -243,8 +246,7 @@ FOR EACH ub.chk-doc No-LOCK WHERE
 
   _chk-doc:
   for each buf_chk-gds-pay where
-          buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code
-      and buf_chk-gds-pay.algo-num = {&current-algo-1},
+          buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code,
       FIRST buf_bar-code No-LOCK WHERE
               buf_bar-code.b-code =  buf_chk-gds-pay.b-code,
     first buf_cash-pay no-lock where
@@ -254,7 +256,9 @@ FOR EACH ub.chk-doc No-LOCK WHERE
           (buf_chk-gds-pay.pay-code = 1 and buf_cash-pay.curr-code = 0)
           or
           (buf_chk-gds-pay.pay-code > 1 and buf_cash-pay.curr-code = buf_chk-gds-pay.curr-code)
-        )*/   :
+        )*/   
+    group by buf_chk-gds-pay.b-code :
+        if buf_chk-gds-pay.algo-num <> {&current-algo-1} then next _chk-doc.
         CASE entry(1, buf_chk-gds-pay.line-type, {&delim-par}):
             WHEN {&petrolium} then 
                 do:
@@ -362,6 +366,15 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                         end.
 */                          
 /*  -------------------------  calcDensity returns decimal private (input p-cdens as integer) : */
+                        /* ищем спец. скидку по промо НП */
+                        v-sum-promo = 0.               
+                        for each buf_chk-gds-attr no-lock where                 
+                                 buf_chk-gds-attr.doc-code = buf_chk-gds-pay.doc-code   
+                             and buf_chk-gds-attr.line-num  = buf_chk-gds-pay.line-num                                                    
+                             and buf_chk-gds-attr.attr-code = "CSPromoSum"
+                           :
+                           v-sum-promo = v-sum-promo + dec(buf_chk-gds-attr.attr-value) no-error.
+                        end.
                         assign
                             treal-2.netto    = treal-2.netto +
                                           (if v-curr-r-b = {&r-b-base}
@@ -374,8 +387,10 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                             
                             treal-2.qnty1    = treal-2.qnty1 + buf_chk-gds-pay.eff-doc-qnty
                             treal-2.qnty2    = treal-2.qnty2 + (buf_chk-gds-pay.eff-doc-qnty * v-density)
-                            treal-2.chk-qnty = treal-2.chk-qnty + 1 
+                            treal-2.chk-qnty = treal-2.chk-qnty + (if first-of(buf_chk-gds-pay.b-code) then 1 else 0) 
                             treal-2.brutto   = treal-2.brutto + buf_chk-gds-pay.tot-r-b.
+                              
+
 /*message v-density treal-2.qnty1 treal-2.qnty2 (treal-2.qnty2 / treal-2.qnty1) v-doc-code*/
 /*view-as alert-box.                                                                      */
                         if pdiscnt then
@@ -384,9 +399,10 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                             for each buf_chk-discnt no-lock where (buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
                                                               and  buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
                                                               and  buf_chk-discnt.record-type     = 0
-                                                              and not can-find(buf_chk-discnt2 where buf_chk-discnt2.doc-code       = buf_chk-gds-pay.doc-code
-                                                                                                and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
-                                                                                                and buf_chk-discnt2.record-type     = 1)
+                                                              and not can-find(first buf_chk-discnt2 no-lock where 
+                                                                                     buf_chk-discnt2.doc-code       = buf_chk-gds-pay.doc-code
+                                                                                 and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
+                                                                                 and buf_chk-discnt2.record-type     = 1)
                                                                   )
                                                               or
                                                                  (   buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
@@ -394,7 +410,7 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                                                  and buf_chk-discnt.record-type     = 1
                                                                  )                                  
                             :
-                                                        
+                                                                                                                                      
                                 FIND FIRST b-treal-2 No-LOCK WHERE
                                     b-treal-2.gds-code = buf_bar-code.gds-code
                                     AND b-treal-2.cpay-code = buf_chk-gds-pay.pay-code
@@ -420,7 +436,10 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                         b-treal-2.is-pay      = yes
                                         b-treal-2.ii          = treal-2.ii + 1
                                         .
-                                end.       
+                                end.   
+                                
+                                v-sum-promo-d = if buf_chk-discnt.promo-id > "" then v-sum-promo else 0.                                   
+                                     
                                 assign
                                     b-treal-2.netto        = b-treal-2.netto +
                                           (if v-curr-r-b = {&r-b-base}
@@ -433,11 +452,12 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                     /*netto всегда в б.в.*/
                                     b-treal-2.qnty1        = b-treal-2.qnty1 + buf_chk-gds-pay.eff-doc-qnty
                                     b-treal-2.qnty2        = b-treal-2.qnty2 + (buf_chk-gds-pay.eff-doc-qnty * v-density)
-                                    b-treal-2.chk-qnty     = b-treal-2.chk-qnty + 1 
-                                    b-treal-2.brutto       = b-treal-2.brutto + buf_chk-discnt.object-sum 
-                                    b-treal-2.discount-sum = b-treal-2.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
-                                    treal-2.brutto         = treal-2.brutto + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty)
-                                    treal-2.discount-sum   = treal-2.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty) .
+                                    b-treal-2.chk-qnty     = b-treal-2.chk-qnty + (if first-of(buf_chk-gds-pay.b-code) then 1 else 0)  
+                                    b-treal-2.brutto       = b-treal-2.brutto + buf_chk-discnt.object-sum + v-sum-promo-d
+                                    b-treal-2.discount-sum = b-treal-2.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty) + v-sum-promo-d
+                                    treal-2.brutto         = treal-2.brutto + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty) + v-sum-promo-d
+                                    treal-2.discount-sum   = treal-2.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty / buf_chk-discnt.object-qnty) + v-sum-promo-d.
+                                    
                             end.
                         end.
                         
@@ -725,12 +745,23 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                                 treal-3.chk-qnty = treal-3.chk-qnty + 1
                                 treal-3.brutto   = treal-3.brutto + buf_chk-gds-pay.tot-r-b
                                 .
+                             
                             if pdiscnt then
                             do:
-                                for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-gds-pay.doc-code
-                                    and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
-                                    and buf_chk-discnt.record-type = 0
-                                    :
+                                for each buf_chk-discnt no-lock where (buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
+                                                              and  buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                                              and  buf_chk-discnt.record-type     = 0
+                                                              and not can-find(first buf_chk-discnt2 no-lock where 
+                                                                                     buf_chk-discnt2.doc-code       = buf_chk-gds-pay.doc-code
+                                                                                 and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
+                                                                                 and buf_chk-discnt2.record-type     = 1)
+                                                                  )
+                                                              or
+                                                                 (   buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
+                                                                 and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                                                 and buf_chk-discnt.record-type     = 1
+                                                                 )                                  
+                                    :                                
                                     FIND FIRST b-treal-3 No-LOCK WHERE
                                         b-treal-3.grp-code = t-3.grp-code-sheet
                                         AND b-treal-3.cpay-code = buf_chk-gds-pay.pay-code
@@ -820,13 +851,23 @@ FOR EACH ub.chk-doc No-LOCK WHERE
                             treal-4.chk-qnty = treal-4.chk-qnty + 1
                             treal-4.brutto   = treal-4.brutto + buf_chk-gds-pay.tot-r-b
                             .
+                     
                         if pdiscnt then
                         do:
-                            for each buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-gds-pay.doc-code
-                                and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
-                                and buf_chk-discnt.record-type = 0
+                            for each buf_chk-discnt no-lock where (buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
+                                                              and  buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                                              and  buf_chk-discnt.record-type     = 0
+                                                              and not can-find(first buf_chk-discnt2 no-lock where 
+                                                                                     buf_chk-discnt2.doc-code       = buf_chk-gds-pay.doc-code
+                                                                                 and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
+                                                                                 and buf_chk-discnt2.record-type     = 1)
+                                                                  )
+                                                              or
+                                                                 (   buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
+                                                                 and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
+                                                                 and buf_chk-discnt.record-type     = 1
+                                                                 )                                  
                                 :
-                            
                                 FIND FIRST b-treal-4 No-LOCK WHERE
                                     b-treal-4.gds-code = buf_bar-code.gds-code
                                     AND  b-treal-4.cpay-code = buf_chk-gds-pay.pay-code

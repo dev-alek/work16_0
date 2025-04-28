@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 993a05482fd8, 1104, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: rule-dtt.p $
+$Archive: ref/rule-dtt.p $
 
 Обработка сложных типов данных для параметров правил
 
@@ -29,11 +30,11 @@ define input-output parameter p-value-integer as integer no-undo .
 define input-output parameter p-value-logical as integer no-undo .
 define output parameter p-ok as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 993a05482fd8, 1104, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rule-dtt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/rule-dtt.p $":U .
 define variable vss-description as character no-undo init "Обработка сложных типов данных для параметров правил".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

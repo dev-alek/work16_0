@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: goatrlst.p $
+$Archive: ref/goatrlst.p $
 
 Пакетное изменение по списку атрибутов товара на объекте
 
@@ -28,11 +29,11 @@ define input parameter parobj-code like ub.clients.obj-code no-undo .
 define input parameter pardelete-OK as logical no-undo .
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: goatrlst.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/goatrlst.p $":U .
 define variable vss-description as character no-undo init "Пакетное изменение по списку атрибутов товара на объекте".
 { cmp/vssrevis.i }
 
@@ -379,6 +380,7 @@ define input parameter p-obj-type as character no-undo.
 define output parameter p-ok as logical no-undo.
 
 define variable glog as logical no-undo.
+define variable glog-obj as logical no-undo.
 
 do
 on error undo, return error
@@ -405,6 +407,26 @@ on error undo, return error
       assign
         p-ok = true.
     end.
+    else do:
+        { gbl/chk-actg.i
+          v-cntxt-db-num
+          v-cntxt-userid
+          {&action-head-code-main}
+          'actn_reference_update_dopinfo':U
+          {&cntxt-object}
+          v-cntxt-host-code-obj
+          v-cntxt-obj-type
+          v-cntxt-obj-code
+          0
+          0
+          0
+          false
+          glog-obj
+        }
+    if glog-obj then do :
+      assign
+        p-ok = true.
+    end.  
     else do :
       find first gds-grp no-lock
            where gds-grp.node-code = p-grp-code no-error.
@@ -415,7 +437,9 @@ on error undo, return error
                    , (string(gds-grp.node-code) + " " + gds-grp.node-name)
                     ).
       undo,return error v-mes.
+    end.        
     end.
+
 end.
 
 end procedure.   /*check-actg*/

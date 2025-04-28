@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3e87f6d879b9, 3293, rls $
+$Author: VSpiridonov $
+$Date: 2023/03/29 08:48:06 $
+$Workfile: r-km4.p $
+$Archive: rep/r-km4.p $
 
 Журнал кассира операциониста КМ-4
 
@@ -42,11 +43,11 @@ define input parameter table for tt-cash-desk .
 
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 3e87f6d879b9, 3293, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/03/29 08:48:06 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-km4.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-km4.p $":U .
 define variable vss-description as character no-undo initial "Журнал кассира операциониста КМ-4".
 
 define variable g#report-num              as integer              no-undo .

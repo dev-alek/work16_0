@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aeb9a0c708e2, 18, test $
+$Author: SKiryxin $
+$Date: Wed Mar 05 12:57:20 2014 +0300 $
+$Workfile: lockshda.p $
+$Archive: adm/lockshda.p $
 
 Ѕлокировка атрибутов расписания
 
@@ -21,11 +22,11 @@ define input parameter  p-code           as character  no-undo.
 define parameter buffer pbuf_schedule-attr for ub.schedule-attr.
 
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aeb9a0c708e2, 18, test $":U .
+def var vss-author      as character no-undo init "$Author: SKiryxin $":U .
+def var vss-date        as character no-undo init "$Date: Wed Mar 05 12:57:20 2014 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: lockshda.p $":U .
+def var vss-archive     as character no-undo init "$Archive: adm/lockshda.p $":U .
 def var vss-description as character no-undo init "Ѕлокировка атрибутов расписания".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4':u,p-db-num,p-task-type,p-task-num,p-code )" }
 { cmp/str-glbl.i }

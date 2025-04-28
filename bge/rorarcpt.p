@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f0ffd58b8bac, 1562, rls $
+$Author: SMMolotkov $
+$Date: Tue Nov 06 04:41:34 2018 +0300 $
+$Workfile: rorarcpt.p $
+$Archive: bge/rorarcpt.p $
 
 Создание квитанции ORA взамен испорченной
 
@@ -23,11 +24,11 @@ define input parameter p-db-num as integer no-undo .
 define input parameter p-espr-pack-num as integer no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f0ffd58b8bac, 1562, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Nov 06 04:41:34 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rorarcpt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/rorarcpt.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

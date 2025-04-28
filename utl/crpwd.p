@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter iRc as logical no-undo.
 define variable mOutFile as character no-undo.
 define variable mMaxNumPas as integer no-undo.

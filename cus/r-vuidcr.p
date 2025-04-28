@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-vuidcr.p $
+$Archive: cus/r-vuidcr.p $
 
 ÎÒ×ÅÒ ÏÎ ÏÎÊÓÏÊÀÌ ÏÎÑÒÎßÍÍÛÕ ÊËÈÅÍÒÎÂ ( Ñ ÄÈÑ.ÊÀĞÒÀÌÈ) äëÿ Lui Vuitton - ñáîğ äàííûõ
 
@@ -25,11 +26,11 @@ define input parameter p-list as character no-undo .
 define input parameter v-proc-check as character no-undo .
 define input parameter p-call-handle as handle no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-vuidcr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/r-vuidcr.p $":U .
 define variable vss-description as character no-undo init "ÎÒ×ÅÒ ÏÎ ÏÎÊÓÏÊÀÌ ÏÎÑÒÎßÍÍÛÕ ÊËÈÅÍÒÎÂ ( Ñ ÄÈÑ.ÊÀĞÒÀÌÈ) äëÿ Lui Vuitton - ñáîğ äàííûõ".
 { cmp/vssrevis.i }
 

@@ -101,7 +101,7 @@ class ibs.th.bge.1crn.import.impCode inherits ibs.th.gbl.sys.objth implements ib
         do i = 1 to exAppErrors:NumMessages :
           Msg = Msg + {&new-line} + exAppErrors:GetMessage(i) .
         end .
-        if Msg > "" then . else Msg = "AppError â mark" .
+        if Msg > "" then . else Msg = "AppError â impcode" .
       end .
       v-retfl = false .
       undo, throw exAppErrors .
@@ -110,12 +110,12 @@ class ibs.th.bge.1crn.import.impCode inherits ibs.th.gbl.sys.objth implements ib
       do i = 1 to exProErrors:NumMessages :
         Msg = Msg + {&new-line} + exProErrors:GetMessage(i) .
       end .
-      if Msg > "" then . else Msg = "ProError â mark" .
+      if Msg > "" then . else Msg = "ProError â impcode" .
       v-retfl = false.
       undo, throw exProErrors .
     end catch .
     catch exAnyErrors as class Progress.Lang.Error:
-      Msg = "Unexpected error â mark" .
+      Msg = "Unexpected error â impcode" .
       v-retfl = false .
       undo, throw exAnyErrors .
     end catch .

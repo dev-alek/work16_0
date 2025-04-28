@@ -105,6 +105,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
     define buffer buf_goods       for ub.goods .
     define buffer buf_clients     for ub.clients .
     define buffer buf_goods-attr  for ub.goods-attr .
+    define buffer buf_PromoAttr   for ub.PromoAttr .
+    
     { gbl/objsrv.i}
     
     define variable v-ban-recipes as logical no-undo init false.
@@ -164,6 +166,7 @@ do: // заголок промо-акции
         v-promo-action:paymenttype = if objImp:pmnt-types   = ? then buf_PromoAction.paymenttype else objImp:pmnt-types
       .
     */
+
     end . /* end_of update */
     else do:
       assign
@@ -186,8 +189,7 @@ do: // заголок промо-акции
         v-promo-action:description = objImp:description_
      // v-promo-action:paymenttype = objImp:pmnt-types
         v-promo-action:paymenttype = replace(objImp:pmnt-types, ",",{&delim-key} + "0" + {&delim-par}) +  {&delim-key}+ "0"
-      .
-
+        .
       if available (buf_PromoAction) and (buf_PromoAction.beg-date <> v-promo-action:beg-date or buf_PromoAction.end-date <> v-promo-action:end-date) then do:
          v-message = true .
       end.   
@@ -326,8 +328,7 @@ do: // объекты
     v-promo-objs:AddItem (v-promo-obj) .
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-obj-type, v-obj-code):IsBanRecipes then v-ban-recipes = true .
 end . // end_of объекты
-
-
+        
 if valid-object (v-schedule) then do: // schedule - расписание
 
     v-promo-sched  = new ibs.th.ref.promo.promoSchedsub () .
@@ -661,6 +662,22 @@ end. // end_of_gifts
     
     v-storage:insertDB(v-promo-action) .
 
+        find first buf_PromoAttr exclusive-lock  where
+        buf_PromoAttr.attr-code = "charge-BL" and
+        buf_promoAttr.tablename = "PromoPay" and
+        v-promo-action:ID = int64(entry(1,buf_PromoAttr.p-key,{&delim-key})) and 
+        v-db-num = integer(entry(2,buf_PromoAttr.p-key,{&delim-key})) no-error .
+        if not available (buf_PromoAttr) then do:
+    create buf_promoAttr.
+    assign
+      buf_promoAttr.attr-code  = "charge-BL"
+      buf_promoAttr.tablename  = "PromoPay"
+      buf_promoAttr.p-key      = string(v-promo-action:ID) + {&delim-key} + 
+                          string(v-db-num) 
+    no-error .
+        end. 
+        buf_PromoAttr.attr-value  = if objImp:prohibition-charge-BL = 1 then string(true) else string(false) 
+        .
     define variable mDelCd as logical no-undo.
     mDelCd =
               (v-promo-action:changeDate <> ? 

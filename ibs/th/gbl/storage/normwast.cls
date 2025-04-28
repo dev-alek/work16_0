@@ -12,7 +12,7 @@
 using Progress.Lang.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.ref.*.
-
+block-level on error undo, throw.
 
 class ibs.th.gbl.storage.normwast:
   

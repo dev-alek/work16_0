@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2adf6a12c8b0, 3165, rls $
+$Author: VSpiridonov $
+$Date: 2022/12/27 12:54:22 $
+$Workfile: g-ztskkm.p $
+$Archive: rep/g-ztskkm.p $
 
 Отчет по анализу длительности пересменка (Закрытие технологической смены на ККМ)
 
@@ -20,11 +21,11 @@ Creation date: 08/09/07
 define input parameter parparentproc as widget-handle no-undo .
 /*define input parameter custom-par    as character     no-undo .*/
 define variable custom-par as character no-undo .
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 2adf6a12c8b0, 3165, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/12/27 12:54:22 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: g-ztskkm.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/g-ztskkm.p $":U .
 define variable vss-description as character no-undo initial "Отчет по анализу длительности пересменка (Закрытие технологической смены на ККМ)":U .
 
 { cmp/str-glbl.i     }
@@ -45,4 +46,4 @@ run rep/d-report.w (
                 input custom-par,
                 input no).
 
-/* $Workfile$   E n d */
+/* $Workfile: g-ztskkm.p $   E n d */

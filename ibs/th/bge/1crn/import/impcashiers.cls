@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f64b9a795962, 1118, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: impcashiers.cls $
+$Archive: ibs/th/bge/1crn/import/impcashiers.cls $
 
 Класс ипорта данных currency из 1С
 
@@ -19,6 +19,7 @@ using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.gbl.cur-time FROM PROPATH.
 USING ibs.th.gbl.*.
+block-level on error undo, throw.
 
 /*block-level on error undo, throw.*/
 

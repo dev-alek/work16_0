@@ -10,6 +10,7 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 
@@ -133,7 +134,7 @@ end.*/
             then do:
                block-cr: 
                do vi = 1 to 1:
-                  MyWorkDir = substitute("&1&2" , preWorkDir, string(random(1,9999999))).
+                  MyWorkDir = substitute("&1&2_&3" , preWorkDir, string(mypid), string(random(1,9999999))).
                   if objExists( MyWorkDir)
                   then
                      next block-cr.
@@ -247,7 +248,7 @@ end.*/
             myCompUser = replace(myCompUser,entry(vi,vrep),"_")
          .
       end.
-      preWorkDir = substitute("pid_&1_&2_&3_&4" , myCompName, myCompUser, string(myPID)).                  
+      preWorkDir = substitute("pid_&1_&2_&3" , myCompName, myCompUser).                  
       DelDontWorkProc().
 /*      MyWorkDir = "pid_".*/
     /*  creatTTForDir("c:\11").
@@ -1742,6 +1743,7 @@ method public logical WaitFor ( input iSched as character, input ipInterval as i
          if     vFileType =  "d"
             and vPureName begins  preWorkDir  
          then do:
+            
             file-info:file-name = vFullPath.
             if file-info:full-pathname <> ?
             and ( ( file-info:file-create-date = today

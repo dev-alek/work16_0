@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cr-chpdf.p $
+$Archive: str/cr-chpdf.p $
 
 Cоздание ДНЦ-детей по Кустовому ТПЛ
 
@@ -21,11 +22,11 @@ define input  parameter p-action      as character no-undo . /* {&fact}  до како
 define input  parameter p-trn-doc     as character no-undo . /* Номер ПН */
 define input  parameter p-ask-pr      as logical   no-undo . /* Молча закрывать переоценки */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cr-chpdf.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/cr-chpdf.p $":U .
 define variable vss-description as character no-undo init "Cоздание ДНЦ-детей по Кустовому ТПЛ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

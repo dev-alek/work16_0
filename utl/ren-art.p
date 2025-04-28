@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d37bfb33277f, 3423, rls $
+$Author: DRuban $
+$Date: 2023/10/16 15:13:31 $
+$Workfile: ren-art.p $
+$Archive: utl/ren-art.p $
 
 Изменение артикула и(или) производителя для одного товара
 
@@ -29,11 +30,11 @@ define input  parameter new-artic     like ub.goods.artic     no-undo .
 define input  parameter new-prod-type like ub.goods.prod-type no-undo .
 define input  parameter new-prod-code like ub.goods.prod-code no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d37bfb33277f, 3423, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:31 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ren-art.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ren-art.p $":U .
 define variable vss-description as character no-undo init "Изменение артикула и(или) производителя для одного товара".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,4 +1,3 @@
-
 /*------------------------------------------------------------------------
     File        : exp-clients_kontur.p
     Purpose     : 
@@ -13,13 +12,13 @@
   ----------------------------------------------------------------------*/
   
 using Ibs.Th.Rul.Route-data_.
- 
+block-level on error undo, throw. 
   
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e470dcf1e011, 295, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:38 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: exp-clients_kontur.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: cus/exp-clients_kontur.p $":U .
 define variable vss-description as character no-undo init "Экспорт информации о структуре Фирм/объектов в Контур.EDI".
 
 /* ***************************  Definitions  ************************** */

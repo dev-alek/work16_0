@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b65640f2406f, 2724, rls $
+$Author: SSlivenko $
+$Date: Пн янв 18 10:14:31 2021 +0300 $
+$Workfile: auto-exp-is_PM.p $
+$Archive: bge/auto-exp-is_PM.p $
 
 Работа с ФГИС меркурий
 
@@ -29,11 +30,11 @@ define input parameter p-cre-db-num as integer   no-undo .
 define input parameter p-task-type  as character no-undo .
 define input parameter p-task-num   as integer   no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: b65640f2406f, 2724, rls $":U .
+def var vss-author      as character no-undo init "$Author: SSlivenko $":U .
+def var vss-date        as character no-undo init "$Date: Пн янв 18 10:14:31 2021 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: auto-exp-is_PM.p $":U .
+def var vss-archive     as character no-undo init "$Archive: bge/auto-exp-is_PM.p $":U .
 def var vss-description as character no-undo init "Работа с ФГИС меркурий".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -220,4 +221,4 @@ on error undo, return error
 
 end.
 
-/* $Workfile$ end */
+/* $Workfile: auto-exp-is_PM.p $ end */

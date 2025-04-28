@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: g-ptlrtr.p $
+$Archive: rep/g-ptlrtr.p $
 
 Главная программа запуска отчета r-ptlrtr.p из меню
 
@@ -17,11 +18,11 @@ Creation date: 03/27/06
 
 define input parameter parParentProc as widget-handle no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: g-ptlrtr.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/g-ptlrtr.p $":U .
 define variable vss-description as character no-undo initial "Главная программа запуска отчета r-ptlrtr.p из меню":U .
 
 { cmp/str-glbl.i     }

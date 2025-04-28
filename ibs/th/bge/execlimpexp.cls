@@ -16,6 +16,7 @@ Creation date: 12 февр. 2023 г.
 using Progress.Lang.*.
 using ibs.th.gbl.sys.*.
 using ibs.th.gbl.*.
+block-level on error undo, throw.
 class ibs.th.bge.execlimpexp inherits objth:
    define override public property vss-revision    as character no-undo init "$Revision:$":U get .
    define override public property vss-author      as character no-undo init "$Author:$":U get.

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d3f7ea4aa09e, 3307, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:07 $
+$Workfile: db-info.p $
+$Archive: adm/db-info.p $
 
 Информация о текущей базе данных
 
@@ -18,11 +19,11 @@ define output parameter oDbNum  as integer   no-undo .
 define output parameter oDBInfo as character no-undo.
 
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: d3f7ea4aa09e, 3307, rls $":U .
+def var vss-author      as character no-undo init "$Author: DRuban $":U .
+def var vss-date        as character no-undo init "$Date: 2023/05/19 13:37:07 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: db-info.p $":U .
+def var vss-archive     as character no-undo init "$Archive: adm/db-info.p $":U .
 def var vss-description as character no-undo init "Информация о текущей базе данных".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -50,4 +51,4 @@ on error undo, return error
   end.
 end.
 
-/* $Workfile$ end */
+/* $Workfile: db-info.p $ end */

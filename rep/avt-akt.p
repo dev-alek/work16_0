@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b3895136ba97, 1684, rls $
+$Author: EShklyar $
+$Date: Tue Dec 11 10:07:19 2018 +0300 $
+$Workfile: avt-akt.p $
+$Archive: rep/avt-akt.p $
 
 Печать акта формирования продажной цены
 
@@ -23,11 +24,11 @@ define input parameter rec_id               as recid            no-undo .
 define input parameter prod-price           as logical          no-undo .
 define input parameter pskov                as logical          no-undo .  /* Для Пскова */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b3895136ba97, 1684, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 11 10:07:19 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: avt-akt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/avt-akt.p $":U .
 define variable vss-description as character no-undo init "Печать акта формирования продажной цены".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

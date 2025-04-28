@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: fin-def1.p $
+$Archive: adm/fin-def1.p $
 
 Сохранение настроек фирмы для взаиморасчетов и СФ
 
@@ -63,11 +64,11 @@ define input parameter  p-cor-acc-in-payoff          like ub.sysconf.cor-acc-in-
 define input parameter  p-cor-acc1-in-payoff         like ub.sysconf.cor-acc1-in-payoff       no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fin-def1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/fin-def1.p $":U .
 define variable vss-description as character no-undo init "Сохранение настроек фирмы для взаиморасчетов и СФ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

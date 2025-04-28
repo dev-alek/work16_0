@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: fin-init.p $
+$Archive: utl/fin-init.p $
 
  опирование финанс. настроек по фирме - шифры учета, банки и счета
 
@@ -21,11 +22,11 @@ define input parameter p-is-an-uchet   as logical   no-undo .   /*p-is-an-uchet 
 define input parameter p-is-cor-acc    as logical   no-undo .   /*p-is-cor-acc   - копирование записи fin-code-cor-acc                 */
 define input parameter p-is-bank       as logical   no-undo .   /*p-is-bank      - копирование записи fin-bank и св€з с ней fin-schet  */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fin-init.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/fin-init.p $":U .
 define variable vss-description as character no-undo init " опирование финанс. настроек по фирме".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

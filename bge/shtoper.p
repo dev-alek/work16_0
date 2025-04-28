@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5260d850f792, 2610, rls $
+$Author: SSlivenko $
+$Date: 2020/10/19 06:22:02 $
+$Workfile: shtoper.p $
+$Archive: bge/shtoper.p $
 
 Ёкспорт XML смены
 
@@ -29,11 +30,11 @@ define input parameter p-log-file-name      as character        no-undo.
 define input parameter p-bge-editor-handle  as handle           no-undo.
 define input parameter p-bge-fillin-handle  as handle           no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 5260d850f792, 2610, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2020/10/19 06:22:02 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: shtoper.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/shtoper.p $":U .
 define variable vss-description as character no-undo init "Ёкспорт XML смены".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

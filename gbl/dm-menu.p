@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -9183,12 +9184,13 @@ define variable v-rid-list as character no-undo .
   do
   on error undo, return error
   :
-    run ref/esysgds.w ( input parparentproc
-                        ,input (if v-cntxt-db-num > 0 then '':U else "b-add")
-                        ,input {&all}
-                        ,input 0
-                        ,input-output v-rid-list) no-error.
-
+    run ref/codelay.p
+      (input  parparentproc
+      ,input  {&lookup}
+      ,input  ""
+      ,input  "FuelCodeInfo"
+      ,input  ?
+      ) .
 
   end.
 end procedure. /* m_goods-esys-exe */
@@ -12738,7 +12740,18 @@ procedure m-utd-exe :
     release object vconnect no-error.
   end.
 
-end procedure. /* m-docs-pricelists-exe */
+end procedure. /* m-utd-exe */
+
+procedure m-mark_collect-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    define variable v-rec-list as character no-undo .
+    run str/Mark_Collect-docs.w ( parparentproc, "", output v-rec-list) .
+  end.
+
+end procedure. /* m-mark_collect-exe */
 
 procedure m-docs-pricelists-exe :
 define variable v-ok as logical   no-undo .

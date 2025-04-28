@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: wth-par1.p $
+$Archive: ref/wth-par1.p $
 
 Сохранение номинала МЦ
 
@@ -25,11 +26,11 @@ define input parameter p-par-feat as character no-undo .
 define input parameter p-par-rate as decimal no-undo .
 define input parameter p-par-unit as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: wth-par1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/wth-par1.p $":U .
 define variable vss-description as character no-undo init "Сохранение номинала МЦ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

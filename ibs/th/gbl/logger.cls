@@ -11,6 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.gbl.logger.putout.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.logger: 

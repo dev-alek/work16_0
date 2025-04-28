@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 099a383cf864, 290, rls $
+$Author: PGridchina $
+$Date: Tue Dec 01 19:11:24 2015 +0300 $
+$Workfile: rdcdnst.p $
+$Archive: str/rdcdnst.p $
 
 Процедура расчета приведенной плотности и объема.
 

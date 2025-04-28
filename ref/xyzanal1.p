@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c5e125f9f735, 902, rls $
+$Author: EShklyar $
+$Date: Tue Dec 06 17:15:45 2016 +0300 $
+$Workfile: xyzanal1.p $
+$Archive: ref/xyzanal1.p $
 
 Сохранение изменений в карточке XYZ
 
@@ -64,11 +65,11 @@ define variable  v-XYZ-string-period            like ub.XYZ-analysis.XYZ-string-
 define variable  v-XYZ-string-doc               like ub.XYZ-analysis.XYZ-string-doc               no-undo .
 
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: c5e125f9f735, 902, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: Tue Dec 06 17:15:45 2016 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: xyzanal1.p $":U .
+def var vss-archive     as character no-undo init "$Archive: ref/xyzanal1.p $":U .
 def var vss-description as character no-undo init "Сохранение изменений в карточке Заголовка АМ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

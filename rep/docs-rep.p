@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 16a79e67eba9, 1355, rls $
+$Author: EShklyar $
+$Date: Fri May 18 13:28:42 2018 +0300 $
+$Workfile: docs-rep.p $
+$Archive: rep/docs-rep.p $
 
 Печать документов из списка документов
 
@@ -55,11 +56,11 @@ define input  parameter p-continue          as logical   no-undo .
 define input  parameter g#report-num        as integer   no-undo .
 define output parameter p-frame-width       as integer   no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 16a79e67eba9, 1355, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: Fri May 18 13:28:42 2018 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: docs-rep.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/docs-rep.p $":U .
 def var vss-description as character no-undo init "Печать документов из списка документов".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }

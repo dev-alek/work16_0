@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7162739bf0ea, 3555, rls $
+$Author: ARostovtsev $
+$Date: 2023/11/27 08:31:18 $
+$Workfile: trnutd.p $
+$Archive: ibs/th/str/utd/trnutd.p $
 
 Импорт накладных из временной таблицы все надо переделать.
 
@@ -31,11 +32,11 @@ define input  PARAMETER TABLE FOR  tt-excisemarks.
 define output parameter p-msg    as character no-undo .
 define output parameter p-ok-doc as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7162739bf0ea, 3555, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ARostovtsev $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/11/27 08:31:18 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: trnutd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ibs/th/str/utd/trnutd.p $":U .
 define variable vss-description as character no-undo init "Импорт накладных из временной таблицы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -168,16 +169,6 @@ define variable br-handle    as handle  no-undo .
 define variable bf-handle    as handle  no-undo .
 define variable v-doc-rec    as recid   no-undo .
 define variable varline-rec  as recid   no-undo .
-define variable stsChecked   as character no-undo.
-
-stsChecked = substitute(
-  "&1,&2,&3,&4,&5",
-  objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB,
-  objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB,
-  objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB,
-  objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB,
-  objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
-).
 
 /*define variable objMarks as class excisemarks no-undo.*/
 
@@ -1084,7 +1075,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               
               if logical (getAttrUtdLinesEx(ub.utd-marking-lines.db-num,ub.utd-marking-lines.doc-id,ub.utd-marking-lines.LineNum,"MarkUtdLine","no"))
               then do :
-                find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and can-do(stsChecked,string(ub.marking.sts)) no-error.
+                find first ub.marking no-lock where 
+                           ub.marking.mark = ub.utd-marking-lines.mark 
+                       and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
+                       and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
                 if not available (ub.marking)
                 then next fe1_.
               end .
@@ -1187,7 +1181,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             and ub.utd-marking-lines.LineNum = temp_doc-line.line-num
             :
 
-              find first ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark and can-do(stsChecked,string(ub.marking.sts)) no-error.
+              find first ub.marking no-lock where 
+                         ub.marking.mark = ub.utd-marking-lines.mark 
+                     and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
+                     and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
               if not available (ub.marking)
                 then next fe1_.
               

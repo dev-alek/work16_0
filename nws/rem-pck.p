@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 4e080738a7b9, 3543, rls $
+$Author: Ostroukhov $
+$Date: 2023/11/27 08:31:17 $
+$Workfile: rem-pck.p $
+$Archive: nws/rem-pck.p $
 
 Удаление пакетов СПН по указанной БД
 
@@ -18,11 +19,11 @@ Creation date: 03/23/99
 define input parameter parparentproc as   widget-handle        no-undo .
 define input parameter p-db-num      like ub.db.db-num         no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 4e080738a7b9, 3543, rls $":U .
+def var vss-author      as character no-undo init "$Author: Ostroukhov $":U .
+def var vss-date        as character no-undo init "$Date: 2023/11/27 08:31:17 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: rem-pck.p $":U .
+def var vss-archive     as character no-undo init "$Archive: nws/rem-pck.p $":U .
 def var vss-description as character no-undo init "Удаление пакетов СПН по указанной БД".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -249,4 +250,4 @@ on error undo, return error
 
 end.
 
-/* $Workfile$ end */
+/* $Workfile: rem-pck.p $ end */

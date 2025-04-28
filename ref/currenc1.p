@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7872d7f298c6, 1094, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: currenc1.p $
+$Archive: ref/currenc1.p $
 
 Сохранение изменений в карточке валюты
 
@@ -45,11 +46,11 @@ define input parameter        p-okv-code            like ub.currency.okv-code   
 define input parameter        p-okv-code-chr        as character no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7872d7f298c6, 1094, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: currenc1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/currenc1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений в карточке валюты".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

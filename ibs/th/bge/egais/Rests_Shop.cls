@@ -11,6 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.egais.Rests_Shop inherits ParserXMLRests_Shop:
 

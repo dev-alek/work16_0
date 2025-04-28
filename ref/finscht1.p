@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 70a347534c9d, 1171, rls $
+$Author: PGridchina $
+$Date: Thu Dec 14 02:20:27 2017 +0300 $
+$Workfile: finscht1.p $
+$Archive: ref/finscht1.p $
 
 Сохранение изменений в карточке банковского счета
 
@@ -38,11 +39,11 @@ define input parameter p-dop2            like ub.fin-schet.dop2      no-undo .
 define input parameter p-r-schet         like ub.fin-schet.r-schet   no-undo .
 define input parameter p-PS              like ub.fin-schet.PS        no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 70a347534c9d, 1171, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:20:27 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: finscht1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/finscht1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений в карточке банковского счета".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b147bda3dbf4, 1291, rls $
+$Author: SSlivenko $
+$Date: Tue Apr 10 12:03:17 2018 +0300 $
+$Workfile: log_arh.p $
+$Archive: bge/log_arh.p $
 
 Архивация логов
 
@@ -23,11 +24,11 @@ define input parameter p-task-type      as character    no-undo.
 define input parameter p-task-num       as integer      no-undo.
 define input parameter p-db-num         as integer      no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b147bda3dbf4, 1291, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Apr 10 12:03:17 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: log_arh.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/log_arh.p $":U .
 define variable vss-description as character no-undo init "Импорт данных по ДК из текстового файла - исполняемый модуль - вызов по расписанию".
 { cmp/vssrevis.i }
 

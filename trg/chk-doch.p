@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d765e193a656, 1242, rls $
+$Author: EShklyar $
+$Date: 2018/02/26 16:31:29 $
+$Workfile: chk-doch.p $
+$Archive: trg/chk-doch.p $
 
 «апись истории дл€ таблицы chk-doc
 
@@ -24,11 +25,11 @@ define input-output parameter p-chip-num like ub.c-chk-doc.chip-num no-undo .
 define output parameter p-is-update as logical no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d765e193a656, 1242, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2018/02/26 16:31:29 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chk-doch.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: trg/chk-doch.p $":U .
 define variable vss-description as character no-undo init "«апись истории дл€ таблицы chk-doc".
 { cmp/vssrevis.i }
 
@@ -46,12 +47,17 @@ define buffer buf_c-chk-gds      for ub.c-chk-gds.
 define buffer buf_c-chk-pay      for ub.c-chk-pay.
 define buffer buf_c-chk-discnt   for ub.c-chk-discnt.
 define buffer buf_c-chk-doc-attr for ub.c-chk-doc-attr.
+define buffer buf_c-marking-chk  for ub.c-marking-chk.
 
 define buffer last_c-chk-doc     for ub.c-chk-doc.
 define buffer buf_chk-gds        for ub.chk-gds.
 define buffer buf_chk-pay        for ub.chk-pay.
 define buffer buf_chk-discnt     for ub.chk-discnt.
 define buffer buf_chk-doc-attr   for ub.chk-doc-attr.
+define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+define buffer buf_chk-pay-attr for ub.chk-pay-attr.
+define buffer buf_chk-discnt-attr for ub.chk-discnt-attr.
+define buffer buf_marking-chk for marking-chk.
 
 _main:
 do
@@ -74,7 +80,7 @@ do
         if not available buf_c-chk-doc then 
         do:
             find last last_c-chk-doc no-lock where
-                last_c-chk-doc.doc-code = buf_chk-doc.doc-code use-index pi no-error .
+                last_c-chk-doc.doc-code = buf_chk-doc.doc-code no-error .
             if available last_c-chk-doc then 
             do:
                 assign
@@ -178,6 +184,12 @@ do
                 AND buf_c-chk-doc-attr.chip-num = p-chip-num:
                 delete buf_c-chk-doc-attr.
             END.
+            for each buf_c-marking-chk where
+                buf_c-marking-chk.doc-code = buf_chk-doc.doc-code
+                AND buf_c-marking-chk.chip-num = p-chip-num:
+                delete buf_c-marking-chk.
+            END.
+            
         end.
         for each buf_chk-gds no-lock where
             buf_chk-gds.doc-code = buf_chk-doc.doc-code
@@ -200,10 +212,10 @@ do
                 buf_c-chk-pay.chip-num = p-chip-num
                 buf_c-chk-pay.corr-user-db-num = g#db-num
                 .
-        end.
+        end.        
         for each buf_chk-discnt no-lock where
             buf_chk-discnt.doc-code = buf_chk-doc.doc-code
-            And buf_chk-discnt.record-type = 0
+          /*  And buf_chk-discnt.record-type = 0*/ /* —охран€ем в историю все скидки, почему-то раньше только 0 и 4 сохран€ли */
             on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
             create buf_c-chk-discnt.
             buffer-copy buf_chk-discnt
@@ -213,7 +225,7 @@ do
                 buf_c-chk-discnt.corr-user-db-num = g#db-num
                 .
         end.
-        for each buf_chk-discnt no-lock where
+        /*for each buf_chk-discnt no-lock where
             buf_chk-discnt.doc-code = buf_chk-doc.doc-code
             And buf_chk-discnt.record-type = 4
             on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
@@ -224,7 +236,7 @@ do
                 buf_c-chk-discnt.chip-num = p-chip-num
                 buf_c-chk-discnt.corr-user-db-num = g#db-num
                 .
-        end.
+        end.*/
         for each buf_chk-doc-attr no-lock where
             buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
             on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
@@ -236,7 +248,59 @@ do
                 buf_c-chk-doc-attr.corr-user-db-num = g#db-num
                 .
         end.
-        if p-del
+     for each buf_marking-chk no-lock where
+             buf_marking-chk.doc-code = buf_chk-doc.doc-code
+    on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
+      create buf_c-marking-chk.
+      buffer-copy buf_marking-chk
+      to buf_c-marking-chk
+      assign
+      buf_c-marking-chk.chip-num = p-chip-num
+      buf_c-marking-chk.corr-user-db-num = g#db-num
+      .
+    end. 
+    for each buf_chk-gds-attr no-lock where
+            buf_chk-gds-attr.doc-code = buf_chk-doc.doc-code
+    on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
+      create buf_c-chk-doc-attr.
+      buffer-copy buf_chk-gds-attr
+      to buf_c-chk-doc-attr
+      assign
+      buf_c-chk-doc-attr.attr-code = "gds=" + string(buf_chk-gds-attr.line-num) + {&delim-par} + buf_chk-gds-attr.attr-code
+      buf_c-chk-doc-attr.chip-num = p-chip-num
+      buf_c-chk-doc-attr.corr-user-db-num = g#db-num
+      .
+    end.
+    for each buf_chk-pay-attr no-lock where
+            buf_chk-pay-attr.doc-code = buf_chk-doc.doc-code
+    on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
+      create buf_c-chk-doc-attr.
+      buffer-copy buf_chk-pay-attr
+      to buf_c-chk-doc-attr
+      assign
+      buf_c-chk-doc-attr.attr-code = "pay=" + string(buf_chk-pay-attr.line-num) + {&delim-par} + buf_chk-pay-attr.attr-code
+      buf_c-chk-doc-attr.chip-num = p-chip-num
+      buf_c-chk-doc-attr.corr-user-db-num = g#db-num
+      .
+    end.
+    for each buf_chk-discnt-attr no-lock where
+            buf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code
+    on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
+      create buf_c-chk-doc-attr.
+      buffer-copy buf_chk-discnt-attr
+      to buf_c-chk-doc-attr
+      assign
+      buf_c-chk-doc-attr.attr-code = "discnt=" + string(buf_chk-discnt-attr.line-num)
+                                   + {&delim-key} + string(buf_chk-discnt-attr.record-type)
+                                   + {&delim-key} + string(buf_chk-discnt-attr.discnt-id)
+                                   + {&delim-key} + string(buf_chk-discnt-attr.object-line-num)
+                                   + {&delim-par} + buf_chk-discnt-attr.attr-code
+      buf_c-chk-doc-attr.chip-num = p-chip-num
+      buf_c-chk-doc-attr.corr-user-db-num = g#db-num
+      .
+    end.
+
+         if p-del
             and ( g#db-num > 0 )
             then 
         do:

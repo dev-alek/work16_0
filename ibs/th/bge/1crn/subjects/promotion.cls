@@ -36,6 +36,7 @@ class ibs.th.bge.1crn.subjects.promotion inherits ibs.th.bge.1crn.subjects.asubj
   define property dscnt-value-type as integer   no-undo get. private set.
   define property threshold-type as integer     no-undo get. private set.
   define property pmnt-types    as character    no-undo get. private set.
+  define property prohibition-charge-BL as integer no-undo get. private set.
   define property status_       as integer      no-undo get. private set.
     
   define property schedule     as ibs.th.bge.1crn.subjects.promotion_schedule no-undo
@@ -95,6 +96,7 @@ class ibs.th.bge.1crn.subjects.promotion inherits ibs.th.bge.1crn.subjects.asubj
       when "dscnt-value-type" then dscnt-value-type = {&attr-integer} .
       when "threshold-type"   then threshold-type   = {&attr-integer} .
       when "pmnt-types"       then pmnt-types       = {&attr-str} .
+      when "prohibition-charge-BL" then prohibition-charge-BL = {&attr-integer} .
       // !! перечень статусов акции в 1с отличается от перечня статусов акции в TH !!
       when "status"           then status_          = {&attr-integer} .
     end case.
@@ -169,6 +171,7 @@ class ibs.th.bge.1crn.subjects.promotion inherits ibs.th.bge.1crn.subjects.asubj
       dscnt-value-type = ?
       threshold-type = ?
       pmnt-types   = ?
+      prohibition-charge-BL = ?
       status_      = ?
     .
     if valid-object(schedule)        then delete object schedule .

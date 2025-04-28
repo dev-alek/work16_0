@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: uaddsum.p $
+$Archive: utl/uaddsum.p $
 
 Утилита по расчету дополнительных сумм по документу
 
@@ -40,11 +41,11 @@ define input parameter parcalc-sum-without-param as   logical             no-und
 define input parameter parcalc-wastage           as   logical             no-undo.
 define input parameter parcalc-cli               as   logical             no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: uaddsum.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/uaddsum.p $":U .
 define variable vss-description as character no-undo initial "Утилита по расчету дополнительных сумм по документу":U .
 
 { cmp/vssrevis.i }

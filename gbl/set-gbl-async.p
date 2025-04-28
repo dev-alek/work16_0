@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b30922a289ff, 3175, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:24 $
+$Workfile: set-gbl-async.p $
+$Archive: gbl/set-gbl-async.p $
 
 Инициализация глобальных переменных
 
@@ -19,11 +20,11 @@ define input  parameter p-auto-value  as logical   no-undo .
 define input  parameter p-user-id     as character no-undo .
 define input  parameter p-user-passwd as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b30922a289ff, 3175, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:24 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: set-gbl-async.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/set-gbl-async.p $":U .
 define variable vss-description as character no-undo init "Инициализация глобальных переменных".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

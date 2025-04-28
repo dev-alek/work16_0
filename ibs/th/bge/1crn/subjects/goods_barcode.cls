@@ -10,6 +10,7 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.goods_barcode inherits ibs.th.bge.1crn.subjects.asubject:

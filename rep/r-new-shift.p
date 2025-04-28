@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 $Revision: eaa8cb55810d, 3483, rls $
 $Author: EShklyar $

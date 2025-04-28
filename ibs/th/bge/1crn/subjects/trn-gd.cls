@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: trn-gd.cls $
+$Archive: ibs/th/bge/1crn/subjects/trn-gd.cls $
 
 Структура данных gds накладной из 1С ERPRN
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -118,11 +119,11 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
     def var v-str as char no-undo.
     
     assign
-      v-str = "line-num" when line-num = ?
+/*      v-str = "line-num" when line-num = ? */
       v-str = v-str + ",gd-code" when gd-code = ?
       v-str = v-str + ",unit-code" when unit-code = ?
       v-str = v-str + ",qnty-ttn" when qnty-fact = ?
-      v-str = v-str + ",sum" when sum = ?
+/*      v-str = v-str + ",sum" when sum = ? */
     .
     v-str = trim (v-str, ",").
     if v-str > ''

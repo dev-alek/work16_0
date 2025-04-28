@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 $Revision$
 $Author$
@@ -36,7 +37,8 @@ def var vss-description as character no-undo init "ПРИЕМ ТОПЛИВА С ПРЕВЫШЕНИЕМ П
 { str/is-gas.i }
 { str/trdcalib.i }
 { str/placelib.i }
-
+{ rep/c-temp-place.i }
+{ rep/c-place-attr.i }
 define variable var-report-num      as character no-undo .
 define variable v-file-name-rep-htm as character no-undo .
 define variable is-petrol           as logical   no-undo .
@@ -107,6 +109,9 @@ define variable v-attr-type     as character no-undo.
 define variable v-curr-grp-name as character no-undo .
 define variable v-host-code     like ub.clients.host-code no-undo .
 define variable v-obj-list      as character no-undo .
+
+define variable curr-date as date no-undo .
+define variable curr-time as integer no-undo .
    
 do on error undo, return error return-value:
 
@@ -177,6 +182,7 @@ FOR EACH obj-list  NO-LOCK:
       for each buf_trn-doc no-lock where buf_trn-doc.obj-code = obj-list.obj-code and
          buf_trn-doc.obj-type = obj-list.obj-type and
          buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+         buf_trn-doc.reason-code <> 98 and
          /*      buf_trn-doc.status_ = {&fact}*/ /*в ТЗ не указано*/
          buf_trn-doc.shift-date >= X-date-Start and
          buf_trn-doc.shift-date <= x-Date-End:
@@ -206,6 +212,7 @@ FOR EACH obj-list  NO-LOCK:
       for each buf_trn-doc no-lock where buf_trn-doc.obj-code = obj-list.obj-code and
          buf_trn-doc.obj-type = obj-list.obj-type and
          buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and
+         buf_trn-doc.reason-code <> 98 and
          /*      buf_trn-doc.status_ = {&fact}*/ /*в ТЗ не указано*/
          buf_trn-doc.doc-date >= X-date-Start and
          buf_trn-doc.doc-date <= x-Date-End:
@@ -343,6 +350,9 @@ procedure proc-report:
       find first ub.goods no-lock where ub.goods.gds-code = tt-report.gds-code no-error .
       if available (ub.goods) then tt-report.gds-name = ub.goods.gds-name .
   
+
+  /* Объем резервуара история */
+  tt-report.max-vol-pl = get_max-qnty(tt-report.obj-code, tt-report.obj-type, tt-report.pl-code, buf_trn-doc.fact-date, buf_trn-doc.fact-time) . /*Объем резервуа-ра 100%, л*/
       find first ub.place no-lock where ub.place.obj-code = tt-report.obj-code and
          ub.place.obj-type = tt-report.obj-type and
          ub.place.pl-code = tt-report.pl-code no-error .
@@ -357,7 +367,7 @@ procedure proc-report:
             ,output v-ok      ) no-error.
          if v-ok and v-value <> "" then tt-report.loc1 = ub.place.loc1 + "(" + v-value + ")".
          else tt-report.loc1       = ub.place.loc1 . /*№ резервуара*/
-         tt-report.max-vol-pl = ub.place.max-qnty . /*Объем резервуа-ра 100%, л*/
+/*         tt-report.max-vol-pl = ub.place.max-qnty . /*Объем резервуа-ра 100%, л*/*/
             
       end. 
       /*Накладная, номер*/

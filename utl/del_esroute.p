@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 for each esys-route :
  find first esys-pck-sent no-lock where esys-pck-sent.esys-id = esys-route.esys-id
                                     and esys-pck-sent.db-num = esys-route.db-num

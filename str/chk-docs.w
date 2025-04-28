@@ -27,11 +27,11 @@ DEFINE BUFFER find_trn-doc FOR ub.trn-doc.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6557e99634e7, 3192, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:28 $
+$Workfile: chk-docs.w $
+$Archive: str/chk-docs.w $
 
 Список чеков
 
@@ -64,11 +64,11 @@ define input parameter p-chk-type as integer no-undo .
 define output param rid-list    as  char no-undo . /* список recid'ов выбранных chk-doc */
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-define variable vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision: 6557e99634e7, 3192, rls $":U.
+define variable vss-author      AS CHAR NO-UNDO INIT "$Author: EShklyar $":U.
+define variable vss-date        AS CHAR NO-UNDO INIT "$Date: 2022/12/27 12:54:28 $":U.
+define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: chk-docs.w $":U.
+define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive: str/chk-docs.w $":U.
 define variable vss-description AS CHAR NO-UNDO INIT "Список чеков":U.
 { cmp/vssrevis.i }
 
@@ -416,6 +416,16 @@ DEFINE QUERY BR-docs FOR c-doc SCROLLING.
 /* ************************  Control Triggers  ************************ */
 
 &Scoped-define SELF-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
+ON END-ERROR OF FRAME Dialog-Frame
+DO:
+  if deleted then return "deleted".
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON ENDKEY OF FRAME Dialog-Frame
 DO:

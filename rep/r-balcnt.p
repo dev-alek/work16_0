@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8af0ca92507d, 852, rls $
+$Author: EShklyar $
+$Date: Wed Oct 19 12:26:26 2016 +0300 $
+$Workfile: r-balcnt.p $
+$Archive: rep/r-balcnt.p $
 
 Баланс фин.обязательств и выплат по контрагенту за период
 
@@ -18,11 +19,11 @@ Creation date: 03/22/06
 define input parameter itog-comp   as logical   no-undo .
 define input parameter itog-contract   as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8af0ca92507d, 852, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Oct 19 12:26:26 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-balcnt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-balcnt.p $":U .
 define variable vss-description as character no-undo init "Баланс фин.обязательств и выплат по контрагенту за период".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

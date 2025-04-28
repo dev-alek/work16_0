@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a61e6bb0c7e0, 2871, rls $
+$Author: SSlivenko $
+$Date: ѕн но€ 22 19:49:10 2021 +0300 $
+$Workfile: bge-doch.p $
+$Archive: bge/bge-doch.p $
 
 Ёкспорт во ¬нешнюю Ѕухгалтерию документов и суммарного расхода по чекам
 
@@ -45,11 +46,11 @@ define variable v-shift-name-num-from as character no-undo.
 define variable v-shift-name-to       as character no-undo.
 define variable v-shift-name-num-to   as character no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a61e6bb0c7e0, 2871, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн но€ 22 19:49:10 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bge-doch.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bge-doch.p $":U .
 define variable vss-description as character no-undo init "Ёкспорт во ¬нешнюю Ѕухгалтерию документов и суммарного расхода по чекам".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

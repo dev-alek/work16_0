@@ -1197,6 +1197,11 @@ define variable fi-val-header as character format "x(5)":U initial " ВАЛ "
      size 5.9 by 0.60
      bgcolor cyan_color fgcolor white_color .
 
+DEFINE VARIABLE invTSD AS LOGICAL INITIAL no 
+     LABEL "ИНУ" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 10.4 BY .81 NO-UNDO.
+     
 define variable fi-rub-header as character format "x(5)":U initial " {&abbr_rub_allshift} "
      view-as fill-in
      size 5.9 by 0.60
@@ -1287,6 +1292,7 @@ define frame {&FRAME-NAME}
   rect-inv-doc                 at row 6.7 col 1
   rect-tog                     at row 6.7 col 48
   fi-val-header                at row 4   col 15                 no-label
+  invTSD                       AT ROW 3.14 COL 70                WIDGET-ID 2
   fi-rub-header                at row 4   col 33                 no-label
   fi-plusbal-header            at row 4   col 18                 no-label
   fi-minusbal-header           at row 4   col 37                 no-label
@@ -1953,6 +1959,31 @@ do:
   run local-parts in this-procedure.
 end.
 
+on value-changed of invTSD in frame {&FRAME-NAME} /* ИНУ */
+  do:
+    define buffer buf_inv-doc-attr for ub.inv-doc-attr .
+    assign invTSD .
+    find first buf_inv-doc-attr exclusive-lock where buf_inv-doc-attr.doc-code = t-doc.doc-code and
+      buf_inv-doc-attr.attr-code = 'invMultDevice' no-error . 
+    if invTSD then 
+    do:
+      if available (buf_inv-doc-attr) then buf_inv-doc-attr.attr-value = string(invTSD) .
+      else 
+      do:
+        create buf_inv-doc-attr .
+        assign
+          buf_inv-doc-attr.doc-code   = t-doc.doc-code
+          buf_inv-doc-attr.attr-code  = 'invMultDevice'
+          buf_inv-doc-attr.attr-value = string(invTSD)
+          .
+      end.
+    end.
+    else 
+    do:
+      if available (buf_inv-doc-attr) then delete buf_inv-doc-attr .
+    end.
+  end.
+
 ON CHOOSE OF b-attr IN FRAME {&FRAME-NAME} /* Атрибуты */
 DO:
 
@@ -2296,6 +2327,7 @@ define variable p-type  as character no-undo.
     fi-izlishki-header
     fi-nedostacha-header
     fi-raschet-header
+invTSD
     with frame {&FRAME-NAME} .
 
   hide loc-art in frame {&FRAME-NAME} loc-name loc-code in frame {&FRAME-NAME}.
@@ -2357,6 +2389,14 @@ define variable p-type  as character no-undo.
   else do:
     display t-doc.doc-qnty with frame {&FRAME-NAME}.
   end.
+  if t-doc.status_ = {&wayb}
+  and pardoc-mode <> {&lookup} then
+  enable invTSD with frame {&FRAME-NAME}.
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+    ub.inv-doc-attr.attr-code = 'invMultDevice' no-error .
+    if available (ub.inv-doc-attr) then invTSD = logical(ub.inv-doc-attr.attr-value) .
+  display invTSD with frame {&FRAME-NAME}.
+
   /* Читаем атрибуты on-line-ового расчета */
   { str/tdat-val.i t-doc.doc-code
                {&trdcattr-clcasol}
@@ -2618,6 +2658,10 @@ end.
   find first ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code no-error.
   if available (ub.doc-line)
   then do:
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+    ub.inv-doc-attr.attr-code = "isManualError" and
+    ub.inv-doc-attr.attr-value = string(true) no-error .
+    if not available (ub.inv-doc-attr) then do:
     find first ub.goods no-lock where
           ub.goods.artic     = ub.doc-line.artic     and
           ub.goods.prod-type = ub.doc-line.prod-type and
@@ -2646,6 +2690,7 @@ end.
           .
     end.
    end.
+  end.
   end.
   extent (bcol) = ?.
   hbrowse = browse {&BROWSE-NAME}:handle.

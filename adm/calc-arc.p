@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: calc-arc.p $
+$Archive: adm/calc-arc.p $
 
 Расчет архивов для всех объектов, которые принадлежат указанной базе данных
 
@@ -23,11 +24,11 @@ define input  parameter p-cre-db-num as integer   no-undo .
 define input  parameter p-task-type  as character no-undo .
 define input  parameter p-task-num   as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: calc-arc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/calc-arc.p $":U .
 define variable vss-description as character no-undo init "Расчет архивов для всех объектов, которые принадлежат указанной базе данных".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4',p-cre-db-num,p-task-type,p-task-num)" }
 { cmp/trg-def.i  }

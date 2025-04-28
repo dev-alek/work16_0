@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f5e72f13272f, 2363, rls $
+$Author: druban $
+$Date: Ср июн 10 21:13:42 2020 +0300 $
+$Workfile: imd-all.p $
+$Archive: utl/imd-all.p $
 
 Драйвер импорта из внешнего текстового файла любой информации
 
@@ -48,11 +49,11 @@ message
 'parhost-code  '  parhost-code   skip .
  */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: f5e72f13272f, 2363, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: druban $":U .
+define variable vss-date        as character no-undo initial "$Date: Ср июн 10 21:13:42 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: imd-all.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/imd-all.p $":U .
 define variable vss-description as character no-undo initial "Драйвер импорта из внешнего текстового файла любой информации".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

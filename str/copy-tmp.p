@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: copy-tmp.p $
+$Archive: str/copy-tmp.p $
 
 Добавление в строку накладной количества по строке и признаку методом копирования.
 

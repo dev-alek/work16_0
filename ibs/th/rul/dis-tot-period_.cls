@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: dis-tot-period_.cls $
+$Archive: ibs/th/rul/dis-tot-period_.cls $
 
 йКЮЯЯ хрнцх он дй он назейрс dtm-code = 5
 
@@ -15,11 +15,11 @@ Creation date: 01/28/07
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.Dis-tot-period_ inherits Ibs.Th.Rul.Dis-tot_:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: dis-tot-period_.cls $ $Revision: aea5316774be, 0, rls $".
   CONSTRUCTOR PUBLIC dis-tot-period_(
                                input parparentproc as widget-handle
                               ,input p-parent-handle as handle

@@ -19,6 +19,7 @@ using ibs.th.gbl.env.marking.
 using ibs.th.gbl.sys.env.ini.
 using ibs.th.gbl.env.conf.
 using ibs.th.gbl.env.prmtrs.section.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.env inherits objth: 

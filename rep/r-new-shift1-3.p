@@ -16,7 +16,7 @@ Creation date: 08/06/07
 */
 
 using ibs.th.str.*.
-
+block-level on error undo, throw.
 define input parameter parparentproc              as handle    no-undo.
 define input parameter p-parent-handle            as handle    no-undo .
 define input parameter p-log-handle               as handle    no-undo .
@@ -567,9 +567,8 @@ define variable vss-description as character no-undo init "$Печать сменного отче
       and ub.rvs-line-pump.pl-code  = temp-rvs-line.pl-code
       :
             
-        
       for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.pump-code = ub.rvs-line-pump.pump-code
-        and ub.pl-gds-pump.gds-code = ub.rvs-line-pump.gds-code
+        /*and ub.pl-gds-pump.gds-code = ub.rvs-line-pump.gds-code*/
         and ub.pl-gds-pump.pl-code = ub.rvs-line-pump.pl-code
         :
         find first temp-line-pump where temp-line-pump.gds-code = rvs-line-pump.gds-code and temp-line-pump.pl-code = rvs-line-pump.pl-code and temp-line-pump.loc1 
@@ -1451,7 +1450,7 @@ procedure print-total:
             else 
             do:
               put stream OutStr-html unformatted        
-                '<td text_wrap="true" rowspan="2"  num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-l-system,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right; vertical-align: bottom;">' + if bf_temp-rvs-line.pol4-l-system <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-l-system,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+                '<td text_wrap="true" rowspan="2"  num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right; vertical-align: bottom;">' + if bf_temp-rvs-line.pol4-kg-system <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
                 .
             end.  
             put stream OutStr-html unformatted 
@@ -1526,7 +1525,7 @@ procedure print-total:
           else 
           do:
             put stream OutStr-html unformatted        
-              '<td text_wrap="true" rowspan="2"  num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-l-system,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right; vertical-align: bottom;">' + if bf_temp-rvs-line.pol4-l-system <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-l-system,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
+              '<td text_wrap="true" rowspan="2"  num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right; vertical-align: bottom;">' + if bf_temp-rvs-line.pol4-kg-system <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol4-kg-system,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
               .
           end.  
           put stream OutStr-html unformatted             
@@ -1616,9 +1615,15 @@ procedure print-sug:
   
   /*------------------------------------------------------------------------------------------------------------------------------------*/
   /*выводим на печать отчет*/
+  define variable is-sug as logical no-undo .
 
   /*шапка таблицы HTML*/
-         
+  for each temp-rvs-line:
+    
+    is-sug = is-sug(temp-rvs-line.gds-code) .
+    if is-sug then leave . 
+  end.   
+  if is-sug then do:
   output stream OutStr-html to value(v-report-name-html) append convert target 'UTF-8' /*no-convert*/.
   put stream OutStr-html unformatted
             
@@ -2121,9 +2126,8 @@ procedure print-sug:
 
     '</tbody>' skip .                                                                                                    
   output stream OutStr-html close.
+end.
 end procedure .
-
-
 procedure add-chk :
   define input  parameter p-obj-type like ub.chk-doc.obj-type no-undo .
   define input  parameter p-obj-code like ub.chk-doc.obj-code no-undo .

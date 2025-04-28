@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c40b85de8d6c, 956, rls $
+$Author: SSlivenko $
+$Date: Thu Feb 16 15:19:57 2017 +0300 $
+$Workfile: websrv.cls $
+$Archive: ibs/th/skt/ControlledClients/websrv.cls $
 
 
 
@@ -20,6 +20,7 @@ using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
 using ibs.th.skt.*.
+block-level on error undo, throw.
 
 
 class ibs.th.skt.ControlledClients.websrv : 

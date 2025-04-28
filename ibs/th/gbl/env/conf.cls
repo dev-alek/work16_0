@@ -15,6 +15,7 @@ Creation date: 16 мая 2022 г.
 using Progress.Lang.*.
 using ibs.th.gbl.env.conf.markingtype.
 using ibs.th.gbl.sys.objth.
+block-level on error undo, throw.
 
 class ibs.th.gbl.env.conf inherits objth:
     define override public property vss-revision    as character no-undo init "$Revision:$":U get .

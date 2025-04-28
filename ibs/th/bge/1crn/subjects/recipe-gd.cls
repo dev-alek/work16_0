@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: recipe-gd.cls $
+$Archive: ibs/th/bge/1crn/subjects/recipe-gd.cls $
 
 Структура данных recipe-gd в 1С
 
@@ -16,6 +16,7 @@ Creation date: 31/10/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.recipe-gd inherits ibs.th.bge.1crn.subjects.asubject:

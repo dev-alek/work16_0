@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d247db01eab0, 2628, rls $
+$Author: ASMorozov $
+$Date: Пн окт 19 09:22:02 2020 +0300 $
+$Workfile: saledc.p $
+$Archive: str/saledc.p $
 
 Вызов обсчета ДК при закрытии документа или форсированном обсчете
 
@@ -39,11 +40,11 @@ define input  parameter par-sign      as integer no-undo .
 define input  parameter par-direction as integer no-undo .
 define input  parameter p-save        as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: d247db01eab0, 2628, rls $":u .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":u .
+define variable vss-date        as character no-undo init "$Date: Пн окт 19 09:22:02 2020 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: saledc.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/saledc.p $":u .
 define variable vss-description as character no-undo init "Вызов обсчета ДК при закрытии документа или форсированном обсчете" .
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4|&5|&6':u
                               ,p-process

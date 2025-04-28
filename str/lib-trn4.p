@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: 2022/08/09 06:15:01 $
+$Workfile: lib-trn4.p $
+$Archive: str/lib-trn4.p $
 
 библиотека процедур для работы со складскими документами (4)
 
@@ -21,13 +22,18 @@ Create: Булгаков Андрей Николаевич
 
 using ibs.th.gbl.gbl-hndllib from propath.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: f29df1d5f130, 3104, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: DRuban $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/08/09 06:15:01 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: lib-trn4.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/lib-trn4.p $":U .
 define variable vss-description as character no-undo initial "библиотека процедур для работы со складскими документами (4)":U .
 
+define temp-table tt-techLoss
+field temperatura as decimal
+field masdol as decimal
+field coef as decimal
+.
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { str/lib-trn.i  }
@@ -38,7 +44,10 @@ define variable vss-description as character no-undo initial "библиотека процеду
 { cmp/gds-list.i gds-list def }
 { gbl/getsect.i def }
 { str/cont-ms-def.i }
+{ str/is-mes.i }
 { str/trdcalib.i }
+{ str/placelib.i}
+{ rep/spr-sug.i }
 
 { utl/gtin.i    }
 
@@ -506,6 +515,11 @@ procedure lib-trn4_int-clos :
   define variable varperc-expvalue   as character no-undo .
   define variable varperc-exptype    as character no-undo .
   define variable varchg-inv         as logical   no-undo .
+  define variable varvalue           as character no-undo .
+  DEFINE VARIABLE varvalue_massa-sug as character no-undo .
+  DEFINE VARIABLE varvalue_teh-loss  as character no-undo .
+  DEFINE VARIABLE varvalue_err-allow as character no-undo .
+  define variable vartype            as character no-undo .
   define variable skip-all           as logical   no-undo initial no .
   define variable skip-zero          as logical   no-undo initial no .
   define variable v-num              as integer   no-undo initial ? .
@@ -1529,9 +1543,41 @@ define variable v-codident as character no-undo.
             varlog = yes.
         end.
         else do :
-            message "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
-                    "Вы уверены ?"
-                    view-as alert-box question buttons OK-Cancel title "Вопрос" update varlog.
+          if is-mes(buf_trn-doc.doc-code) then do:
+            varlog = false .
+          end.
+          else do:
+          if buf_trn-doc.reason-code = 99 then
+          do:  
+          varvalue = "" . /* закрытие накладной по СУГ и основание «Финальный слив СУГ», то проверим данные по тех.потерям */
+            { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&sugtpattr-massa-sug}
+              varvalue_massa-sug
+              vartype
+              no-error
+            }
+            { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&sugtpattr-teh-loss}
+              varvalue_teh-loss
+              vartype
+              no-error
+            }
+             { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&sugtpattr-err-allow}
+              varvalue_err-allow
+              vartype
+              no-error
+            }       
+            if varvalue_err-allow = '' or varvalue_teh-loss = '' or varvalue_massa-sug = '' then                
+            varvalue = "Не заполнены данные для расчета технологических потерь.~n" .
+              else varvalue = "".
+          end.
+          message varvalue
+                  "Закрыть накладную № " buf_trn-doc.doc-code " до статуса ФАКТ?" skip (2)
+                  view-as alert-box question buttons OK-Cancel title "Вопрос" update varlog.
         end.
         if not varlog then  return error.
         case buf_trn-doc.doc-type
@@ -1637,7 +1683,9 @@ define variable v-codident as character no-undo.
           end.
         end case .
         if not varlog then  return error.
-      end.
+
+       end.
+       end.
       else do:
         if can-do ({&expense_write-off_return}, buf_trn-doc.doc-type) and
                   buf_trn-doc.status_   = {&wayb}                     and
@@ -1858,12 +1906,15 @@ define variable v-codident as character no-undo.
                   end case .
                 if not varlog then return error .
                 varlog = no.
+                /*Проверка документа, нужно сообщение или нет*/
+                if not is-mes(buf_trn-doc.doc-code) then do: 
                 message
                   "Документ №" buf_trn-doc.doc-code skip (2)
                   "Закрыть ОПИСЬ инвентаризации?" skip
                   "Вы уверены?"
                   view-as alert-box question buttons OK-Cancel update varlog.
                   if not varlog then return error .
+				end.
               end.
               else do:
                   case buf_trn-doc.doc-type
@@ -1970,12 +2021,14 @@ define variable v-codident as character no-undo.
                   end case .
                 if not varlog then return error .
                 varlog = no.
+                if not is-mes(buf_trn-doc.doc-code) then do:
                 message
                   "Документ №" buf_trn-doc.doc-code skip (2)
                   "Начать инвентаризацию по документу?" skip
                   "Вы уверены?" skip
                   view-as alert-box question buttons OK-Cancel update varlog.
                 if not varlog then return error.
+				end.
               end.
             end.
             else do:
@@ -2864,6 +2917,35 @@ define variable v-codident as character no-undo.
     end.
 
   end.
+if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and varstatus = {&fact} then 
+do:
+{ str/tdat-val.i
+             buf_trn-doc.doc-code
+             {&trdcattr-is-lgas}
+             varvalue
+             vartype
+             no-error
+          }
+
+  if varvalue = "yes" then
+  do:
+    /*Расчет тех потерь*/
+    run spr-sug (buf_trn-doc.doc-code, buf_trn-doc.reason-code) no-error .
+    run bge\send1cerp.p (?,
+      this-procedure,
+      this-procedure,
+      "techlosses",
+      (buffer buf_trn-doc:handle),
+      ?,
+      ?) no-error.
+
+    if error-status:error 
+      then 
+    do:
+      message return-value view-as alert-box.
+    end.
+  end.
+end.
 end procedure. /* lib-trn4_int-clos */
 
 procedure lib-trn4_int-open :
@@ -3557,4 +3639,4 @@ procedure change_mark_sts_trn-doc:
     end.
 end procedure.
 
-/* $Workfile$   E n d */
+/* $Workfile: lib-trn4.p $   E n d */

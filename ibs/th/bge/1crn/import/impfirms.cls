@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2f1124ce5189, 1642, rls $
+$Author: SMMolotkov $
+$Date: Mon Nov 19 15:15:35 2018 +0300 $
+$Workfile: impfirms.cls $
+$Archive: ibs/th/bge/1crn/import/impfirms.cls $
 
 Класс ипорта данных firms (фирмы, на АЗС выгружается только своя организация) из 1С
 
@@ -17,6 +17,7 @@ Creation date: 02/10/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impfirms implements ibs.th.bge.1crn.import.iimpsubject: 
   

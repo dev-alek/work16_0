@@ -1,20 +1,21 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b30922a289ff, 3175, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:24 $
+$Workfile: last-pwd.p $
+$Archive: rep/last-pwd.p $
 Процедура для записи истории по БД добавляемые в группу
 Автор: 
 Дата 
 Author: 
 Creation date: 
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b30922a289ff, 3175, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:24 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: last-pwd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/last-pwd.p $":U .
 define variable vss-description as character no-undo init "Процедура для записи истории по БД добавляемые в группу".
 {cmp\vssrevis.i }
 {cmp\trg-def.i}

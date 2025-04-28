@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
 $Revision: $
-$Author$ Shalanin Sergey
-$Date$
-$Workfile$
-$Archive$
+$Author: EShklyar $ Shalanin Sergey
+$Date: Вт авг 04 12:57:17 2020 +0300 $
+$Workfile: r-srcheck.p $
+$Archive: rep/r-srcheck.p $
 
 Средний чек
 
@@ -16,10 +17,10 @@ Creation date: 29/05/15
 
 /* ***************************  Definitions  ************************** */
 define variable vss-revision    as character no-undo init "$Revision: ":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 04 12:57:17 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-srcheck.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-srcheck.p $":U .
 define variable vss-description as character no-undo init "Средний чек".
 { cmp/vssrevis.i }
 
@@ -98,6 +99,7 @@ function fnc-DD-MM-YYYY returns character
 function fnc-convert-dot-to-colon returns character 
 (input p-data as decimal, input p-accur as character) forward.
 
+{ str/cspromo-chk.i  } /* функции для работы с промоакциями по НП */
 
 /* ***************************  Main Block  *************************** */
 
@@ -199,6 +201,7 @@ define variable v-found as logical no-undo.
 define variable v-use-line as logical no-undo.
 define variable ii-grp as integer no-undo.
 define variable v-name         as char      no-undo.
+define variable vSumUnBase as decimal no-undo.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay .
 define buffer buf_bar-code for ub.bar-code .
 define buffer buf_goods    for ub.goods .
@@ -399,15 +402,16 @@ define buffer buf-qnty-temp-chk for temp-chk .
         obj-temp-chk.pok-qnty = obj-temp-chk.pok-qnty + 1
       .
     end .
-   
+      
     assign
+      vSumUnBase = GetUnBaseSum(buf_chk-gds-pay.doc-code, buf_chk-gds-pay.line-num, buf_chk-gds-pay.eff-doc-qnty, buf_chk-gds-pay.price-base) 
       /* буффер temp-chk создан и спозиционирован в first-of_b-code */
       temp-chk.qnty       = temp-chk.qnty       + buf_chk-gds-pay.eff-doc-qnty
-      temp-chk.sum-unbase = temp-chk.sum-unbase + buf_chk-gds-pay.eff-doc-qnty * buf_chk-gds-pay.price-base          
+      temp-chk.sum-unbase = temp-chk.sum-unbase + vSumUnBase          
       temp-chk.sum-base   = temp-chk.sum-base   + buf_chk-gds-pay.tot-r-b
       /* буффер obj-temp-chk виден глобально и спозиционирован в вызывающей процедуре */
       obj-temp-chk.qnty       = obj-temp-chk.qnty       + buf_chk-gds-pay.eff-doc-qnty
-      obj-temp-chk.sum-unbase = obj-temp-chk.sum-unbase + buf_chk-gds-pay.eff-doc-qnty * buf_chk-gds-pay.price-base 
+      obj-temp-chk.sum-unbase = obj-temp-chk.sum-unbase + vSumUnBase 
       obj-temp-chk.sum-base   = obj-temp-chk.sum-base   + buf_chk-gds-pay.tot-r-b
     .
 

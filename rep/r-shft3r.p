@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e2c00fbc6380, 2303, rls $
+$Author: EShklyar $
+$Date: Fri Feb 14 16:31:04 2020 +0300 $
+$Workfile: r-shft3r.p $
+$Archive: rep/r-shft3r.p $
 
 печать сменного отчета (ЮКОС лист 3 сбор данных)
 
@@ -28,11 +29,11 @@ define input parameter pvar-lavel            as   integer                 no-und
 define input parameter p-previous-shift-date as   date                    no-undo .
 define input parameter p-batch               as   integer                 no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: e2c00fbc6380, 2303, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Fri Feb 14 16:31:04 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-shft3r.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-shft3r.p $":U .
 define variable vss-description as character no-undo initial "печать сменного отчета (ЮКОС лист 3 сбор данных)":U .
 
 { cmp/str-glbl.i                }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: pck-num.p $
+$Archive: nws/pck-num.p $
 
 √енераци€ номера пакета, имени файла пакета, имени каталога источника и каталога назначени
 
@@ -23,11 +24,11 @@ define output       parameter p-source-dir as   character    no-undo .
 define output       parameter p-target-dir as   character    no-undo .
 define output       parameter p-temp-dir   as   character    no-undo .
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+def var vss-author      as character no-undo init "$Author: expertek $":U .
+def var vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: pck-num.p $":U .
+def var vss-archive     as character no-undo init "$Archive: nws/pck-num.p $":U .
 def var vss-description as character no-undo init "√енераци€ номера пакета, имени файла пакета, имени каталога источника и каталога назначени".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -154,4 +155,4 @@ on error undo, return error
 
 end.
 
-/* $Workfile$ end */
+/* $Workfile: pck-num.p $ end */

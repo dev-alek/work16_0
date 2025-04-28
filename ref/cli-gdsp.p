@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cli-gdsp.p $
+$Archive: ref/cli-gdsp.p $
 
 Печать справочника товаров контрагентов
 
@@ -35,11 +36,11 @@ define output parameter accum-supp-qnty  as decimal no-undo .
 define output parameter accum-supp-base  as decimal no-undo .
 define output parameter accum-supp-rubl  as decimal no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cli-gdsp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/cli-gdsp.p $":U .
 define variable vss-description as character no-undo init "Печать справочника товаров контрагентов".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

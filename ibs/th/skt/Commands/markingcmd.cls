@@ -19,6 +19,7 @@ using Progress.Lang.*.
 using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.Commands.markingcmd inherits ICommand: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -53,6 +54,7 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
 
   method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
     def buffer buf_code for ub.code.
+    def var vNeedUpd as integer no-undo.
     
     empty temp-table tt-code.
     
@@ -88,11 +90,11 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
            end.    
         end.    
     end.
-    /* обновляем, если надо, CDN площадки */             
-    if marking:CheckCdnNeedUpd() then 
-    do:           
-      run utl/pub-runcdn.p .
-    end.
+    /* обновляем, если надо, CDN площадки */
+    vNeedUpd = marking:CheckCdnNeedUpd().              
+    if vNeedUpd <> 0 then                
+      run utl/pub-runcdn.p (vNeedUpd).
+    
 
   end method.
 

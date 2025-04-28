@@ -15,11 +15,11 @@ using ibs.th.ref.promo.*.
 block-level on error undo, throw.
 
 class ibs.th.gbl.storage.promoObjectStorage: 
-  define variable vss-revision    as character no-undo initial "$Revision$":U .
-  define variable vss-author      as character no-undo initial "$Author$":U .
-  define variable vss-date        as character no-undo initial "$Date$":U .
-  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-  define variable vss-archive     as character no-undo initial "$Archive$":U . 
+  define variable vss-revision    as character no-undo initial "$Revision: 2131ac572a79, 4114, test $":U .
+  define variable vss-author      as character no-undo initial "$Author: VSpiridonov $":U .
+  define variable vss-date        as character no-undo initial "$Date: 2025/02/28 14:26:23 $":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile: promoObjectStorage.cls $":U .
+  define variable vss-archive     as character no-undo initial "$Archive: ibs/th/gbl/storage/promoObjectStorage.cls $":U . 
   define variable vss-description as character no-undo initial "Storage Object Action". 
 
 { cmp/str-glbl.i class }

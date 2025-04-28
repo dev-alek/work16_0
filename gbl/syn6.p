@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2cbe4bce4854, 621, rls $
+$Author: PGridchina $
+$Date: Wed May 11 17:10:38 2016 +0400 $
+$Workfile: syn6.p $
+$Archive: gbl/syn6.p $
 
 запуск на выполнение командной строки без экрана
 
@@ -28,11 +29,11 @@ DEFINE INPUT PARAMETER mess AS CHARACTER NO-UNDO.
 /*результат команды возвращенный вызванной программой через файл*/
 DEFINE OUTPUT  PARAMETER Result AS CHARACTER NO-UNDO.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2cbe4bce4854, 621, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Wed May 11 17:10:38 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: syn6.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/syn6.p $":U .
 define variable vss-description as character no-undo init "Запуск на выполнение командной строки без экрана".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: discount_obj.cls $
+$Archive: ibs/th/rul/discount_obj.cls $
 
 Класс скидка по ДК с дифференциацией по объектам
 
@@ -15,11 +15,11 @@ Creation date: 11/01/10
 
 */
 
-
+block-level on error undo, throw.
 class Ibs.Th.Rul.discount_obj:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: discount_obj.cls $ $Revision: aea5316774be, 0, rls $".
   define protected variable v_pp as widget-handle no-undo. /*parparentproc*/
   define protected variable v_ph as handle no-undo.        /*p-parent-handle*/
   define protected variable v_lh as widget-handle no-undo. /*p-log-handle*/

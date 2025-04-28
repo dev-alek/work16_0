@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1f9b5fe554b5, 784, rls $
+$Author: EShklyar $
+$Date: Wed Sep 14 12:28:21 2016 +0300 $
+$Workfile: r-slg-d.p $
+$Archive: rep/r-slg-d.p $
 
 Отчет по закончившимся наименованиям
 
@@ -18,11 +19,11 @@ Creation date: 03/23/06
 define input parameter x-date   as date no-undo .
 define input parameter NullStr  as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1f9b5fe554b5, 784, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Sep 14 12:28:21 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-slg-d.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-slg-d.p $":U .
 define variable vss-description as character no-undo init "Отчет по закончившимся наименованиям".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

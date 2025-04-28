@@ -51,6 +51,7 @@ abc-analysis-attr~
 ,chk-gds~
 ,chk-gds-attr~
 ,marking-chk~
+,c-marking-chk~
 ,c-marking-attr~
 ,c-chk-gds~
 ,chk-pay~

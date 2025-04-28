@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bd053105d967, 188, rls $
+$Author: SShalanin $
+$Date: Thu Apr 23 14:36:18 2015 +0400 $
+$Workfile: in-ov1.p $
+$Archive: utl/in-ov1.p $
 
 Снятие отметки 'Требует переоценки' с товаров
 
@@ -16,11 +17,11 @@ Creation date: 04/12/06
 */
 
 
-define variable  vss-revision    as character no-undo init "$Revision$":U .
-define variable  vss-author      as character no-undo init "$Author$":U .
-define variable  vss-date        as character no-undo init "$Date$":U .
-define variable  vss-workfile    as character no-undo init "$Workfile$":U .
-define variable  vss-archive     as character no-undo init "$Archive$":U .
+define variable  vss-revision    as character no-undo init "$Revision: bd053105d967, 188, rls $":U .
+define variable  vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable  vss-date        as character no-undo init "$Date: Thu Apr 23 14:36:18 2015 +0400 $":U .
+define variable  vss-workfile    as character no-undo init "$Workfile: in-ov1.p $":U .
+define variable  vss-archive     as character no-undo init "$Archive: utl/in-ov1.p $":U .
 define variable  vss-description as character no-undo init "Снятие отметки 'Требует переоценки' с удаленных товаров".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }

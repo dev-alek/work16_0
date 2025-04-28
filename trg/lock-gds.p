@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision: f4eb1c45dbd4, 240, rls $
@@ -96,7 +97,10 @@ on error undo main-block, return error
       view-as alert-box error .
     undo main-block, return error .
   end.
-
+ find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+ ub.inv-doc-attr.attr-code = "invMultDevice" and 
+ ub.inv-doc-attr.attr-value = string(true) no-error .
+ if available(ub.inv-doc-attr) then return .
   def frame a
     "Блокировка товаров на объекте." skip
     num_rec           format ">>>>>>>9"   label "Обработано артикулов" skip
@@ -333,6 +337,10 @@ on error undo main-block, return error
               .
             end.
             else do:
+              find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = 'invMultDevice' and
+              ub.inv-doc-attr.doc-code = inv_trn-doc.doc-code and
+              ub.inv-doc-attr.attr-value = string(true) no-error .
+              if not available(ub.inv-doc-attr) then do:
               vErrorMessage = substitute(
                 "Товар: &1 &2 &3~n&4~nна объекте &5 &6~nсейчас в инвентаризации (Документ № &7).",
                 buf_goods.artic,
@@ -349,7 +357,7 @@ on error undo main-block, return error
             end.
           end.
         end.
-
+		end.
         for each inv_doc-line no-lock
           where inv_doc-line.obj-type  = buf_doc-line.obj-type
             and inv_doc-line.obj-code  = buf_doc-line.obj-code

@@ -1,3 +1,4 @@
+
 /*------------------------------------------------------------------------
     File        : 000002103.p
     Purpose     : Ёкспорт смен
@@ -23,6 +24,7 @@ using Ibs.Th.Rul.Route-data_.
 using ibs.th.bge.1crn.export.expsubject from propath.
 using ibs.th.bge.1crn.subjects.check from propath.
 using ibs.th.bge.1crn.subjects.shift from propath.
+block-level on error undo, throw.
 /*---------------------------&end-using-class&---------------------------------*/
 
 define input parameter parparentproc as widget-handle no-undo .

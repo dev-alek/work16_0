@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ren-gdsc.p $
+$Archive: utl/ren-gdsc.p $
 
 Изменение gds-code для одного товара
 
@@ -24,11 +25,11 @@ Creation date: 07/19/05
 define input  parameter old-gds-code  like ub.goods.gds-code  no-undo .
 define input  parameter new-gds-code  like ub.goods.gds-code  no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ren-gdsc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ren-gdsc.p $":U .
 define variable vss-description as character no-undo init "Изменение gds-code для одного товара".
 { cmp/vssrevis.i "substitute('&1|&2':u,old-gds-code,new-gds-code)" }
 { cmp/trg-def.i  }

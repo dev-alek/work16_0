@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: season.cls $
+$Archive: ibs/th/bge/1crn/subjects/season.cls $
 
 Структура данных season в 1С
 
@@ -17,6 +17,7 @@ Creation date: 09/11/19
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.season inherits ibs.th.bge.1crn.subjects.asubject: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -69,7 +70,7 @@ class ibs.th.bge.1crn.subjects.season inherits ibs.th.bge.1crn.subjects.asubject
     
     assign
       v-str = "Tbg-code" when Tbg-code = ?
-      v-str = v-str + ",Tb-name" when Tb-name = ?
+      /*v-str = v-str + ",Tb-name" when Tb-name = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''

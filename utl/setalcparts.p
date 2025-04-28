@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 using ibs.th.bge.egais.*.
 /* Parameters Definitions ---                                           */

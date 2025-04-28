@@ -1764,14 +1764,14 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
           and ub.marking-lines.obj-code = t-doc.obj-code
           and ub.marking-lines.out-code = t-doc.doc-code
           and ub.marking-lines.gds-code = ub.goods.gds-code:
-          if v-is-return
-          then do :
-            create tt-marking-lines.
-            buffer-copy ub.marking-lines to tt-marking-lines.
-            tt-marking-lines.box-qnty = 1 .
-            tt-marking-lines.unit = "шт" .
-          end .
-          else do :
+/*          if v-is-return                                     */
+/*          then do :                                          */
+/*            create tt-marking-lines.                         */
+/*            buffer-copy ub.marking-lines to tt-marking-lines.*/
+/*            tt-marking-lines.box-qnty = 1 .                  */
+/*            tt-marking-lines.unit = "шт" .                   */
+/*          end .                                              */
+/*          else do :                                          */
             find first ub.marking no-lock where ub.marking.mark begins ub.marking-lines.mark and ub.marking.sts <> ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB no-error.
             if available (ub.marking)
               then 
@@ -1804,8 +1804,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                   tt-marking-lines.mark-parent = ub.marking.mark-parent.
               end.
             end.
-          end .
-
+/*          end .*/
         end.
       end.
 
@@ -2100,6 +2099,13 @@ if t-doc.doc-type = {&income} and
    t-doc.internal = yes       and
    t-doc.status_  = {&wayb}   and
    t-doc.flag_                then do:
+
+   if avail ub.bar-code then
+   do:
+     run checkTypeByBarCode in this-procedure (ub.bar-code.b-code, t-doc.ext-doc-type) no-error.
+     if error-status:error then return no-apply.
+   end.
+   
    run fact-bc in this-procedure (t-doc.doc-code)  no-error.
    if error-status :error then do:
      message
@@ -2123,6 +2129,9 @@ else do:
      run str/chs-bc.w (parparentproc, "Строка накладной № " + t-doc.doc-code, add-sens, no, yes, output b-c-char, output rate, output ret-mode, input-output add-scan, input-output bar-str).
      b-c = integer(b-c-char).
      if b-c <> ? then do:
+        run checkTypeByBarCode in this-procedure (b-c, t-doc.ext-doc-type) no-error.
+        if error-status:error then next.
+        
         do transaction on error undo, return no-apply :
            /*По факту добавляем сразу, если включен флаг: добавить со сканера.*/
            if t-doc.flag_ and t-doc.status_ = {&permitted} then do:

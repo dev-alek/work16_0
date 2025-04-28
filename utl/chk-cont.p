@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: chk-cont.p $
+$Archive: utl/chk-cont.p $
 
 утилита  проверка привязки партий и складских документов к договору поставщика
 
@@ -18,11 +19,11 @@ define input parameter parParentProc as handle           no-undo.
 
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+define variable vss-author      as character no-undo init "$Author: expertek $":u .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: chk-cont.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: utl/chk-cont.p $":u .
 define variable vss-description as character no-undo init "утилита проверка привязки партий и складских документов к договору поставщика " .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }

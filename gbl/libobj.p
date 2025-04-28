@@ -1,12 +1,13 @@
+block-level on error undo, throw.
 
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 47c30cad4995, 3593, rls $
+$Author: DRuban $
+$Date: 2023/12/28 12:56:36 $
+$Workfile: libobj.p $
+$Archive: gbl/libobj.p $
 
 Запрос глобального/синглтон объека objserv
 

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input parameter p-min as integer.
 define input parameter p-max as integer.
 

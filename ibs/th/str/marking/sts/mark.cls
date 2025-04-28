@@ -15,7 +15,7 @@
 using Progress.Lang.*.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.TypeMap.
-
+block-level on error undo, throw.
 
 class ibs.th.str.marking.sts.mark inherits TypeMap:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -54,6 +54,8 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
   
   define public property  EqualChecked as character  no-undo get.  protected set.
   define public property  Sale_Return_Wait as character  no-undo get.  protected set.
+  define public property  Doc_Status       as character  no-undo get.  protected set.
+  define public property  FreeStatuses     as character  no-undo get.  protected set.
   /*
   define public property  ErrorSubordinateCodes as class propmap no-undo get.  protected set.
   define public property  ErrorOver as class propmap no-undo get.  protected set.
@@ -90,14 +92,17 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
     Ungrouped  = crProp(20,"Ungrouped","Разгруппирован").
     
     GrayZone  = crProp(21,"GrayZone","Серая зона").
-    OutOfInventory  = crProp(22,"Retired","Выбыл в инвентаризацию").
+    OutOfInventory  = crProp(22,"Retired","Выбыл при инвентаризации марок").
     Returned   = crProp(23,"Returned","Возвращен поставщику").
     
     
     UnknowSts  = crProp(0,"UnknowSts","Неизвестный статус маркированного товара.").
     
-    EqualChecked = "7,11,12".
-    Sale_Return_Wait  = "11,12,14,15".
+    EqualChecked = "7,11,12".            /* Cтатусы равносильные статусу Проверен */
+    Sale_Return_Wait  = "11,12,14,15".   /* Статусы, что марка добавлена  чек  */
+    Doc_Status = "13,16,17,18,19,22,23". /* Статусы, что марка добавлена в какой-либо расходный док-т */
+    FreeStatuses = "1,3,5,6,7,10".       /* Статусы, что марка не добавена в чек или в какой-либо расходный док-т */
+    
     
    /* 
     ErrorSubordinateCodes  = crProp(6,"ErrorSubordinateCodes","Ошибка подчиненных кодов").

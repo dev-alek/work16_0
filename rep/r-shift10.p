@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a8f7c80f242a, 1738, rls $
+$Author: druban $
+$Date: Sat Dec 29 17:15:50 2018 +0300 $
+$Workfile: r-shift10.p $
+$Archive: rep/r-shift10.p $
 
 Сменный отчет лист 10 сбор данных
 
@@ -37,11 +38,11 @@ DEFINE INPUT PARAMETER p-shift-num-start  like ub.shift-obj.shift-num   no-undo.
 DEFINE INPUT PARAMETER p-shift-date-end   like ub.shift-obj.shift-date  no-undo.
 DEFINE INPUT PARAMETER p-shift-num-end    like ub.shift-obj.shift-num   no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a8f7c80f242a, 1738, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Sat Dec 29 17:15:50 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-shift10.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-shift10.p $":U .
 define variable vss-description as character no-undo init "Сменный отчет лист 10 сбор данных".
 
 

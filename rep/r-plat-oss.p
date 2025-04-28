@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*------------------------------------------------------------------------
 $Revision: $
 $Author: $
 $Date: $
-$Workfile$
-$Archive$
+$Workfile: r-plat-oss.p $
+$Archive: rep/r-plat-oss.p $
 
 Отчет Платежи ОСС
 
@@ -14,11 +15,11 @@ Creation date: 23/11/14
 
   ----------------------------------------------------------------------*/
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: a8e2cf75ddf6, 2506, rls $":U .
+def var vss-author      as character no-undo init "$Author: EShklyar $":U .
+def var vss-date        as character no-undo init "$Date: Ср июл 08 17:09:06 2020 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: r-plat-oss.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/r-plat-oss.p $":U .
 def var vss-description as character no-undo init "Печать Платежей ОСС".
 
 { cmp/vssrevis.i }

@@ -445,7 +445,7 @@ varcontract-prn-code b-contr-lkp r-clients r-currency r-acc r-outs r-pay ~
 varpurch-code-name r-wrkr r-agnt r-boss r-sht ov-pc b-add-doc-yes m-inc ~
 r-reas a-n-c loc-art loc-name loc-code b-mark b-add b-bc b-prt b-parts ~
 b-lkp b-chg b-del b-live b-renum b-marks varinplnsum br-dtl wrkr-name agnt-name ~
-boss-name rsn-name
+boss-name rsn-name b-calc-tp
 &Scoped-Define DISPLAYED-FIELDS t-doc.cli-code t-doc.cli-type ~
 clients.obj-name t-doc.exch-code t-doc.exch-date t-doc.discnt-pc ~
 t-doc.cst-code t-doc.exch-rate t-doc.exch-scale t-doc.tot-cli ~
@@ -633,6 +633,10 @@ DEFINE BUTTON b-next AUTO-GO
 DEFINE BUTTON b-notes
      LABEL "Примечание":L
      SIZE 11.5 BY 1.
+
+DEFINE BUTTON b-calc-tp
+     LABEL "ТП поставки" 
+     SIZE 12 BY 1.
 
 DEFINE BUTTON b-parts
      LABEL "Па&рт":L
@@ -877,6 +881,7 @@ DEFINE FRAME d-in-doc
      b-attr AT ROW 1 COL 53.13
      b-in-attr-fuel AT ROW 1 COL 63.25
      b-notes AT ROW 1 COL 73.25
+     b-calc-tp AT ROW 1 COL 84.8
      b-history AT ROW 1 COL 89.5
      b-print AT ROW 1 COL 93
      b-help AT ROW 1 COL 96
@@ -1388,6 +1393,21 @@ DO:
     else do:
       run str/in-laddtrn.w (input ParParentproc, input (if not v-can-edit then {&lookup} else pardoc-mode), input t-doc.doc-code, input table tt-upd-attr-fuel) no-error.
     end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-calc-tp
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-calc-tp d-in-doc
+ON CHOOSE OF b-calc-tp IN FRAME d-in-doc /* ТП поставки */
+DO:
+  run str/in-laddsugtp.w (
+    input ParParentproc, 
+    input if t-doc.reason-code <> 99 then {&lookup} else pardoc-mode, 
+    input t-doc.doc-code, 
+    input table tt-upd-attr-fuel) 
+  no-error.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2931,7 +2951,7 @@ do on error undo main-block, leave main-block :
         then trn-type = {&is-fuel}.
     end.
   end.
-
+/*run gbl/inidebug.p.*/
    run UI-on in this-procedure ( input "enable" ) no-error.
 
    if error-status :error then do:
@@ -3057,6 +3077,14 @@ do on error undo main-block, leave main-block :
     t-doc.doc-qnty:label = "Док.кол-во(л)" .
     t-doc.fact-qnty:label = "Факт.кол-во(л)" .
   end .
+  if trn-type = {&is-lgas} then
+  do:
+    view b-calc-tp in frame d-in-doc .
+    enable b-calc-tp with frame d-in-doc .
+  end.
+  else do:
+    hide b-calc-tp in frame d-in-doc .
+  end.
   
   IF mImagePh THEN
   DO:
@@ -4355,6 +4383,18 @@ end.
 {&create-record-fuel}
 &scop attr-code trdcattr-clear-ac
 {&create-record-fuel}
+&scop attr-code sugtpattr-massa-sug
+{&create-record-fuel}
+&scop attr-code sugtpattr-teh-loss
+{&create-record-fuel}
+&scop attr-code sugtpattr-err-allow
+{&create-record-fuel}
+&scop attr-code trdcattr-date-income
+{&create-record-fuel}
+&scop attr-code trdcattr-date-pasport
+{&create-record-fuel}
+&scop attr-code trdcattr-num-pasport
+{&create-record-fuel}
 
 end.
 end procedure.
@@ -4908,7 +4948,7 @@ PROCEDURE enable_UI :
          varinplnsum br-dtl ub.currency.curr-abbr t-doc.tot-calc t-doc.road-tax
          ub.pay-type.obj-name t-doc.tot-sale wrkr-name t-doc.tot-fact
          t-doc.VAT-rubl agnt-name t-doc.VAT-base boss-name t-doc.cli-qnty
-         t-doc.doc-qnty t-doc.fact-qnty t-doc.reason-code rsn-name
+         t-doc.doc-qnty t-doc.fact-qnty t-doc.reason-code rsn-name b-calc-tp
       WITH FRAME d-in-doc.
   VIEW FRAME d-in-doc.
   {&OPEN-BROWSERS-IN-QUERY-d-in-doc}
@@ -6672,6 +6712,7 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-reason d-in-doc
 PROCEDURE select-reason :
 define variable j-rsn-code like ub.trn-reason.reason-code no-undo.
+define variable vDeleted as logical no-undo.
 
   assign j-rsn-code = ( input frame {&FRAME-NAME} t-doc.reason-code ).
   run str/trn-reas.w ( input ParParentProc, input {&choose}, input-output j-rsn-code ).
@@ -6680,6 +6721,29 @@ define variable j-rsn-code like ub.trn-reason.reason-code no-undo.
     assign  rsn-name          = ub.trn-reason.reason-name
             t-doc.reason-code = ub.trn-reason.reason-code.
     display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
+
+    if trn-type = {&is-lgas} and t-doc.reason-code <> 99 then
+    do:       
+      /* для СУГ, если основание не "Финальный слив СУГ" чистим данные ТП */
+      { str/tdat-del.i
+        t-doc.doc-code
+        {&sugtpattr-massa-sug}
+        vDeleted
+        no-error
+      } 
+      { str/tdat-del.i
+        t-doc.doc-code
+        {&sugtpattr-teh-loss}
+        vDeleted
+        no-error
+      } 
+      { str/tdat-del.i
+        t-doc.doc-code
+        {&sugtpattr-err-allow}
+        vDeleted
+        no-error
+      }
+    end.
   end.
 
 END PROCEDURE.
@@ -6732,6 +6796,7 @@ if lookup( fnc, "enable" ) > 0 then do:
 
   enable b-print b-exit b-help b-lkp {&browse-name} b-history a-n-c b-notes b-attr b-arch b-live b-cnt b-contr-lkp with frame {&frame-name}.
   hide loc-art in frame {&frame-name} loc-name loc-code in frame {&frame-name}.
+
   assign ub.goods.gds-name:resizable in browse {&browse-name} = yes
          ub.goods.gds-name:width-chars in browse {&browse-name} = 30  .
 
@@ -7224,6 +7289,7 @@ end.
   then 
 do:*/
 b-in-attr-fuel:sensitive = true.
+b-calc-tp:sensitive = true.
 /*end.*/
 if num-results('{&browse-name}') > 0 then do:
    if {&browse-name}:refresh() then.

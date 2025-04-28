@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 96e5dfe574dc, 846, rls $
+$Author: ASMorozov $
+$Date: Fri Oct 14 14:13:25 2016 +0300 $
+$Workfile: alctypeattr.cls $
+$Archive: ibs/th/ref/alctypeattr.cls $
 
 Библиотека методов для работы с атрибутами видов алкогольной продукции
 
@@ -16,6 +16,7 @@ Creation date: 10/09/16
 */
 
 using ibs.th.ref.*.
+block-level on error undo, throw.
 
 class ibs.th.ref.AlcTypeAttr :
 

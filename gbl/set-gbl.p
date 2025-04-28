@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6eb2e10e43c1, 3410, rls $
+$Author: DRuban $
+$Date: 2023/08/17 10:18:56 $
+$Workfile: set-gbl.p $
+$Archive: gbl/set-gbl.p $
 
 Инициализация глобальных переменных
 
@@ -21,11 +22,11 @@ define input  parameter p-auto-value  as logical   no-undo .
 define input  parameter p-user-id     as character no-undo .
 define input  parameter p-user-passwd as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 6eb2e10e43c1, 3410, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/08/17 10:18:56 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: set-gbl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/set-gbl.p $":U .
 define variable vss-description as character no-undo init "Инициализация глобальных переменных".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: tax-tr01.p $
+$Archive: ref/tax-tr01.p $
 
 Изменение статуса налога
 
@@ -26,11 +27,11 @@ Creation date: 01/20/04
 */
 
 define input parameter par-recid as recid no-undo.
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+def var vss-author      as character no-undo init "$Author: expertek $":U .
+def var vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: tax-tr01.p $":U .
+def var vss-archive     as character no-undo init "$Archive: ref/tax-tr01.p $":U .
 def var vss-description as character no-undo init "Изменение статуса налога".
 { cmp/vssrevis.i }
 

@@ -616,10 +616,22 @@ end.
       delete object v-tth1.
       if v-value-logical = true then varcontract = "yes" .
                                 else varcontract = "no" .
+
+{ str/tdat-val.i
+   t-doc.doc-code
+   {&trdcattr-is-return}
+   varvalue
+   vartype
+   no-error
+}
+if varvalue = "yes"
+then do :
+  trn-is-return = yes .
+end .
 if ( varis-fin = "yes":u
  and ( t-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or
        t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or
-   ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and (paris-hold = true or mode-erprn = true) ) or
+   ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and (paris-hold = true or mode-erprn = true or trn-is-return = true) ) or
      ( t-doc.ext-doc-type = {&TDEDT_Vozvrat_Vnesh} and (paris-hold = true or mode-erprn = true)   )))
   or ( varis-finby = "yes":u
   and ( t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}      or
@@ -631,7 +643,9 @@ if ( varis-fin = "yes":u
                                  bf_contract.cli-type  = input frame {&frame-name} t-doc.cli-type and
                                  bf_contract.cli-code  = input frame {&frame-name} t-doc.cli-code no-lock no-error.
     if not available bf_contract then do:
-      if varcontract <> "yes":u or trn-type = {&is-fuel} then do:
+      if (varcontract <> "yes":u or trn-type = {&is-fuel}) and
+         not (t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} and trn-is-return) /* если внешний расход-возврат, то на контрагенте должен быть договор  */ 
+      then do:
         assign
           t-doc.contract-code  = 0.
       end.
@@ -645,17 +659,6 @@ if ( varis-fin = "yes":u
       end.
     end.
     else do:
-        { str/tdat-val.i
-           t-doc.doc-code
-           {&trdcattr-is-return}
-           varvalue
-           vartype
-           no-error
-        }
-        if varvalue = "yes"
-        then do :
-          trn-is-return = yes .
-        end .
         run check-contract-code in this-procedure (input  substitute("&1,&2=&3", "choose":u, "doc-type", t-doc.ext-doc-type),
                                                   input  t-doc.host-code,
                                                   input  input frame {&frame-name} t-doc.cli-type,

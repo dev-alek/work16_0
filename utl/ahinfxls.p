@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bbf1530230d5, 2753, rls $
+$Author: EShklyar $
+$Date: Сб фев 20 15:59:21 2021 +0300 $
+$Workfile: ahinfxls.p $
+$Archive: utl/ahinfxls.p $
 
 Печать информации по складским архивам по товарам, по поставщикам, по типам приобретени
 
@@ -20,11 +21,11 @@ Creation date: 07/23/08
 
 define input  parameter p-ah-infov-handle as handle    no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: bbf1530230d5, 2753, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Сб фев 20 15:59:21 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: ahinfxls.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/ahinfxls.p $":U .
 define variable vss-description as character no-undo initial "Печать информации по складским архивам по товарам, по поставщикам, по типам приобретени".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }

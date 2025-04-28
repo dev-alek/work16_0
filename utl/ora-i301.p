@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ae105fa20a43, 3653, test $
+$Author: VSpiridonov $
+$Date: 2024/01/25 16:33:07 $
+$Workfile: ora-i301.p $
+$Archive: utl/ora-i301.p $
 
 
 
@@ -16,11 +17,11 @@ Creation date: 10/30/09
 */
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ae105fa20a43, 3653, test $
+$Author: VSpiridonov $
+$Date: 2024/01/25 16:33:07 $
+$Workfile: ora-i301.p $
+$Archive: utl/ora-i301.p $
 
 Импорт ДНЦ из временной таблицы
 
@@ -38,11 +39,11 @@ define input  PARAMETER TABLE FOR  temp-price-doc.
 define input  PARAMETER TABLE FOR  temp-price-list.
 define output parameter p-ok-doc as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: ae105fa20a43, 3653, test $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2024/01/25 16:33:07 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ora-i301.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ora-i301.p $":U .
 define variable vss-description as character no-undo init "Импорт ДНЦ из временной таблицы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

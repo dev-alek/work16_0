@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: bank-accounts_bank.cls $
+$Archive: ibs/th/bge/1crn/subjects/bank-accounts_bank.cls $
 
 Структура данных bank-accounts в 1С
 
@@ -19,6 +19,7 @@ USING Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.bank-accounts from propath.
 using ibs.th.bge.1crn.subjects.bank-accounts_bank from propath.
+block-level on error undo, throw.
 
 CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subjects.asubject: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -90,20 +91,20 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
     def var v-str as char no-undo.
     
     assign
-      v-str = v-str + ",bank-name" 
-      when bank-name = ?
+      /*v-str = v-str + ",bank-name" 
+      when bank-name = ?*/
       v-str = v-str + ",bik" 
       when bik = ?
-      v-str = v-str + ",bank-city" 
-      when bank-city = ?
+      /*v-str = v-str + ",bank-city" 
+      when bank-city = ?*/
       v-str = v-str + ",cor-acc" 
       when cor-acc = ?
-      v-str = v-str + ",qr-rule" 
+      /*v-str = v-str + ",qr-rule" 
       when qr-rule = ?
       v-str = v-str + ",bank-deposit-debit" 
       when bank-deposit-debit = ?
       v-str = v-str + ",bank-deposit-kredit" 
-      when bank-deposit-kredit = ?
+      when bank-deposit-kredit = ?*/
       .
     v-str = trim (v-str, ",").
     if v-str > ''

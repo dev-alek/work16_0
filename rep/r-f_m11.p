@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 540d86a07c0d, 3497, rls $
+$Author: ARostovtsev $
+$Date: 2023/10/16 15:13:36 $
+$Workfile: r-f_m11.p $
+$Archive: rep/r-f_m11.p $
 
 Печать требования-накладной (форма М-11)
 
@@ -21,11 +22,11 @@ DEFINE INPUT PARAMETER p-parent-proc AS WIDGET-HANDLE NO-UNDO.
 DEFINE INPUT PARAMETER p-rec-id      AS RECID         NO-UNDO.
 
 /* VSS Variables Definitions */
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision$":U.
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author$":U.
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date$":U.
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile$":U.
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive$":U.
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision: 540d86a07c0d, 3497, rls $":U.
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author: ARostovtsev $":U.
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date: 2023/10/16 15:13:36 $":U.
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile: r-f_m11.p $":U.
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive: rep/r-f_m11.p $":U.
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INITIAL "печать требования-накладной (форма М-11)":U.
 /* Local Variable Definitions ---                                       */
 { cmp/vssrevis.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a35951db4a04, 289, rls $
+$Author: EShklyar $
+$Date: Tue Dec 01 19:11:22 2015 +0300 $
+$Workfile: dynatrig.p $
+$Archive: ref/dynatrig.p $
 
 Адаптер динамических триггеров
 
@@ -15,11 +16,11 @@ Creation date: 12/29/14
 
 */
 
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision$":U .
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author$":U .
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date$":U .
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile$":U .
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive$":U .
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision: a35951db4a04, 289, rls $":U .
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author: EShklyar $":U .
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date: Tue Dec 01 19:11:22 2015 +0300 $":U .
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile: dynatrig.p $":U .
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive: ref/dynatrig.p $":U .
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INITIAL "Адаптер динамических триггеров".
 
 DEFINE VARIABLE mHandle AS HANDLE NO-UNDO. /* Ссылка на объект */

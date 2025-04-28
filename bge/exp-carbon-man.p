@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ca4594d35314, 97, rls $
+$Author: EShklyar $
+$Date: Fri Nov 07 16:47:37 2014 +0300 $
+$Workfile: exp-carbon-man.p $
+$Archive: bge/exp-carbon-man.p $
 
 Процедура ручного запуска выгрузки данных в Carbon
 

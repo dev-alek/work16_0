@@ -18,6 +18,7 @@ Creation date: 02/19/06
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+
 assign
   v-version-dec = decimal(p-pos-version)
     no-error .
@@ -27,6 +28,17 @@ run bgelib-tag-open in this-procedure ( input 2, input "PromoAction"
   then "ADD":U
   else "DEL":U),
   OS2-time, v-promo-action:ID)).
+        find first ub.promoAttr where
+          ub.promoAttr.attr-code = "charge-BL" and
+          ub.promoAttr.tablename = "PromoPay" and
+          v-promo-action:ID = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and 
+          v-promo-action:db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key})) 
+          no-error.
+        if available (ub.PromoAttr) then do:
+          if logical(ub.PromoAttr.attr-value) = true then change-BL = 1 .
+          else change-BL = 0 .
+        end.
+        else change-BL = 0 . 
 run bgelib-tag-put in this-procedure ( input 3, input "PAName":U
   , input string(v-promo-action:NameAction), input 1 ).
 run bgelib-tag-put in this-procedure ( input 3, input "PAType":U
@@ -37,6 +49,8 @@ run bgelib-tag-put in this-procedure ( input 3, input "PAEnd":U
   , input Xml-CD-DateTimetoString(if v-promo-action:changeDate <> ? then v-promo-action:changeDate else v-promo-action:end-date,86399), input 1 ).
 run bgelib-tag-put in this-procedure ( input 3, input "PAPriority":U
   , input string(v-promo-action:priority), input 1 ).
+run bgelib-tag-put in this-procedure ( input 3, input "PALoyalRest":U
+  , input string(change-BL), input 1 ).  
 vTypePay = "".
 do vIp = 1 to num-entries(v-promo-action:paymenttype,{&delim-par}):
   vTypePay = vTypePay + "," + LEFT-TRIM(entry(1,

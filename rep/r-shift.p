@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ac2de8611dbf, 1057, rls $
+$Author: EShklyar $
+$Date: Fri Oct 06 18:33:18 2017 +0300 $
+$Workfile: r-shift.p $
+$Archive: rep/r-shift.p $
 
 сменный отчет
 
@@ -63,11 +64,11 @@ define input-output parameter p-dataseth        as   handle                no-un
 define input parameter table      for temp-xml-tables .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: ac2de8611dbf, 1057, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Fri Oct 06 18:33:18 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-shift.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-shift.p $":U .
 define variable vss-description as character no-undo initial "сменный отчет":U .
 
 /* Parameters Definitions ---                                           */

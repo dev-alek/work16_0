@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c2e03acbfec4, 3152, rls $
+$Author: VSpiridonov $
+$Date: 2022/12/27 12:54:22 $
+$Workfile: torg-12.p $
+$Archive: rep/torg-12.p $
 
 Печатные формы. Торг-12 для внешнего прихода, расхода и возврата поставщику
 
@@ -32,11 +33,11 @@ define input parameter p-round              as character        no-undo.
 define input parameter p-from-check         as logical          no-undo.
 define input parameter p-reverse            as logical          no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c2e03acbfec4, 3152, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:22 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: torg-12.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/torg-12.p $":U .
 define variable vss-description as character no-undo init "Печатные формы. Торг-12 для внешнего прихода, расхода и возврата поставщику".
 
 { cmp/vssrevis.i    }

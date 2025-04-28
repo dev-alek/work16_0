@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: recipe.cls $
+$Archive: ibs/th/bge/1crn/subjects/recipe.cls $
 
 Структура данных recipe в 1С
 
@@ -19,6 +19,7 @@ using Progress.Lang.*.
 using ibs.th.bge.1crn.enum-recipe-status.
 using ibs.th.bge.1crn.enum-recipe-type.
 using ibs.th.bge.1crn.subjects.subjects from propath.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject:

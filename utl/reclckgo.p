@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bf04b0e5cfa2, 2256, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:24:01 2019 +0300 $
+$Workfile: reclckgo.p $
+$Archive: utl/reclckgo.p $
 
 Утилита пересчета остатков в кг по топливным товарам
 
@@ -23,11 +24,11 @@ define input parameter parobj-type like ub.trn-doc.obj-type no-undo.
 define input parameter parobj-code like ub.trn-doc.obj-code no-undo.
 define input parameter p-action      as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: bf04b0e5cfa2, 2256, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Dec 25 15:24:01 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: reclckgo.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/reclckgo.p $":U .
 define variable vss-description as character no-undo init "процедура импорта пакета".
 
 { cmp/vssrevis.i }

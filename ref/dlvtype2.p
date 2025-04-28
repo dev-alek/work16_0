@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: dlvtype2.p $
+$Archive: ref/dlvtype2.p $
 
 Изменение статуса типа доставки
 
@@ -28,11 +29,11 @@ Creation date: 03/16/04
 define input parameter par-recid as recid no-undo.
 define input-output parameter par-sts like ub.delivery-type.sts no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: dlvtype2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/dlvtype2.p $":U .
 define variable vss-description as character no-undo init "Изменение статуса типа доставки".
 { cmp/vssrevis.i }
 

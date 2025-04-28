@@ -12,7 +12,7 @@
 using Progress.Lang.*.
 using Progress.Windows.UserControl.
 using ibs.th.str.* from propath.
-
+block-level on error undo, throw.
 
 class ibs.th.str.ptrl.forms.tanksum inherits UserControl: 
   

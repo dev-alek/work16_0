@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: adf14615eb79, 3434, rls $
+$Author: DRuban $
+$Date: 2023/10/16 15:13:32 $
+$Workfile: uc_TabBase.cls $
+$Archive: ibs/th/ref/promo/uc_TabBase.cls $
   
 "Просмотр/редактирование одной акции"
 
@@ -21,11 +21,11 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 CLASS ibs.th.ref.promo.uc_TabBase INHERITS UserControl: 
   /* --- для cmp/vssrevis.i --- */
-    define variable vss-revision       as character no-undo init "$Revision$":U .
-    define variable vss-author         as character no-undo init "$Author$":U .
-    define variable vss-date           as character no-undo init "$Date$":U .
-    define variable vss-workfile       as character no-undo init "$Workfile$":U .
-    define variable vss-archive        as character no-undo init "$Archive$":U .
+    define variable vss-revision       as character no-undo init "$Revision: adf14615eb79, 3434, rls $":U .
+    define variable vss-author         as character no-undo init "$Author: DRuban $":U .
+    define variable vss-date           as character no-undo init "$Date: 2023/10/16 15:13:32 $":U .
+    define variable vss-workfile       as character no-undo init "$Workfile: uc_TabBase.cls $":U .
+    define variable vss-archive        as character no-undo init "$Archive: ibs/th/ref/promo/uc_TabBase.cls $":U .
     define variable vss-description    as character no-undo init "Просмотр/редактирование одной акции". 
   /* --- end_of для cmp/vssrevis.i --- */
     
@@ -251,7 +251,7 @@ CLASS ibs.th.ref.promo.uc_TabBase INHERITS UserControl:
     arrayvar1[6] = new Progress.Data.ColumnPropDesc("end-date", "Дата конца", Progress.Data.DataType:DATE).
     arrayvar1[7] = new Progress.Data.ColumnPropDesc("nameAction", "Наим. акции", Progress.Data.DataType:CHARACTER).
     arrayvar1[8] = new Progress.Data.ColumnPropDesc("priority", "Приоритет", Progress.Data.DataType:INTEGER).
-    arrayvar1[9] = new Progress.Data.ColumnPropDesc("ChangDateFl", "становлена дата досрочного завершения", Progress.Data.DataType:LOGICAL).
+    arrayvar1[9] = new Progress.Data.ColumnPropDesc("ChangDateFl", "установлена дата досрочного завершения", Progress.Data.DataType:LOGICAL).
     tableDesc1:Columns = arrayvar1.
     this-object:bindPromoActionOne:TableSchema = tableDesc1.
     /*  */

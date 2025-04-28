@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: edocrum.p $
+$Archive: str/edocrum.p $
 
 Вызов процедур RUM для обработки операции электронного документооборота
 
@@ -27,11 +28,11 @@ define input  parameter p-uniq-key-rec as character no-undo .
 define input  parameter p-doc-code as character no-undo .
 define input  parameter p-save        as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+define variable vss-author      as character no-undo init "$Author: expertek $":u .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: edocrum.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/edocrum.p $":u .
 define variable vss-description as character no-undo init "Вызов процедур RUM для обработки операции электронного документооборота" .
 { cmp/vssrevis.i "substitute('&1|&2|&3':u
                               ,p-process

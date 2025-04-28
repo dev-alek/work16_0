@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 43c09557cdee, 3584, rls $
+$Author: DRuban $
+$Date: 2023/12/28 12:56:36 $
+$Workfile: TableMenu.cls $
+$Archive: ibs/th/skt/ControlledClients/TableMenu.cls $
 
 
 
@@ -21,6 +21,7 @@ Creation date: 01/30/15
 
 using Progress.Lang.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.ControlledClients.TableMenu: 
 

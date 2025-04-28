@@ -993,6 +993,40 @@ PROCEDURE save_update :
       end.
 
       case t_doc.ext-doc-type:
+      when {&TDEDT_Ras_Vnesh} then
+      do:  /* Расход внешний. НЕ возврат */
+        if not v-is-return and 
+           marking.sts <> thMarkSts:FreeZone:KeyIntDB and
+           marking.sts <> thMarkSts:Checked_:KeyIntDB then 
+        do:
+          run dispmessage (substitute("Марка в статусе <&1> не может быть добавлена в документ внешнего расхода.",
+                           thMarkSts:GetLabel(marking.sts))
+                          ).
+          return.
+        end.  
+        vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, no, output vRunedOffLineCheck) no-error.
+        if error-status:error then
+        do:
+            run dispmessage (
+              substitute("Марка не может быть списана,~nт.к. возникла ошибка при проверке: &1.",error-status:get-message(1))
+              ).
+            return.
+        end.
+        if vStatusCheckMark = 2 then
+        do:
+            run dispmessage (
+              "Проверка марки не выполнена, марка не может быть добавлена в документ."
+              ).
+            return.
+        end.
+        if vStatusCheckMark = 0 then
+        do:
+            run dispmessage (
+              "Проверка марки дала отрицательный результат, марка не может быть добавлена в документ."
+              ).
+            return.
+        end.
+      end.
       when {&TDEDT_Ras_Perem} then
       do:
         if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 

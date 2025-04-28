@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -75,9 +76,10 @@ if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB
   or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB)
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB
+  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB)
 then do:
-  new-{&main-tbl}.sts = old-{&main-tbl}.sts.
+/*  new-{&main-tbl}.sts = old-{&main-tbl}.sts.*/
   if old-{&main-tbl}.loc-key <> "" then
     new-{&main-tbl}.loc-key = old-{&main-tbl}.loc-key.
 end.

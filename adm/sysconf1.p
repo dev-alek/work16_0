@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7d2fe421d6dd, 1113, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: sysconf1.p $
+$Archive: adm/sysconf1.p $
 
 Сохранение изменений СВОЕЙ фирмы
 
@@ -64,11 +65,11 @@ define input parameter  p-egrip-num           as character                     n
 define input parameter  p-gen-s-f-office      like ub.sysconf.gen-s-f-office   no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7d2fe421d6dd, 1113, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sysconf1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/sysconf1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений СВОЕЙ ФИРМЫ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

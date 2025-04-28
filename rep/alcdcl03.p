@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: alcdcl03.p $
+$Archive: rep/alcdcl03.p $
 
 Декларация об объемах розничной продажи алкогольной продукции (Москва)
 
@@ -21,11 +22,11 @@ Creation date:
    DEFINITIONS
 
 *******************************************************************************/
-DEFINE VAR vss-revision    as character no-undo init "$Revision$":u .
-DEFINE VAR vss-author      as character no-undo init "$Author$":u .
-DEFINE VAR vss-date        as character no-undo init "$Date$":u .
-DEFINE VAR vss-workfile    as character no-undo init "$Workfile$":u .
-DEFINE VAR vss-archive     as character no-undo init "$Archive$":u .
+DEFINE VAR vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+DEFINE VAR vss-author      as character no-undo init "$Author: expertek $":u .
+DEFINE VAR vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+DEFINE VAR vss-workfile    as character no-undo init "$Workfile: alcdcl03.p $":u .
+DEFINE VAR vss-archive     as character no-undo init "$Archive: rep/alcdcl03.p $":u .
 DEFINE VAR vss-description as character no-undo init "продажи алкоголя Москва" .
 { cmp/vssrevis.i   }
 

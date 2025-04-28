@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0d3673848966, 2893, rls $
+$Author: DRuban $
+$Date: ѕн но€ 22 19:49:12 2021 +0300 $
+$Workfile: send-xpr.p $
+$Archive: str/send-xpr.p $
 
 ќтсылка на кассу параметров
 
@@ -32,11 +33,11 @@ define input parameter p-what-send as character no-undo.
 */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 0d3673848966, 2893, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн но€ 22 19:49:12 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: send-xpr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/send-xpr.p $":U .
 define variable vss-description as character no-undo init "ќтсылка на кассу параметров".
 { cmp/vssrevis.i }
 

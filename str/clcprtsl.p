@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9d317961b21e, 1143, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:55 2017 +0300 $
+$Workfile: clcprtsl.p $
+$Archive: str/clcprtsl.p $
 
 Расчет сумм, скидок и налогов по партии и строке в ценах документа
 
@@ -23,11 +24,11 @@ Eсли {2} = doc , то будут рассчитываться документарные суммы.
 */
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 9d317961b21e, 1143, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo initial "$Date: Thu Dec 14 02:13:55 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: clcprtsl.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/clcprtsl.p $":U .
 define variable vss-description as character no-undo initial "Документ пересортица":U .
 
 

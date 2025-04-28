@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8d6ad4ee6014, 1102, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: impgrptx.p $
+$Archive: utl/impgrptx.p $
 
 Создание или изменение группы товара.
 
@@ -26,11 +27,11 @@ define input parameter p-host-code      as integer      no-undo .
 define input parameter p-obj-type       as character    no-undo .
 define input parameter p-obj-code       as integer      no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8d6ad4ee6014, 1102, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: impgrptx.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/impgrptx.p $":U .
 define variable vss-description as character no-undo init "Создание или изменение группы товара.".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b51c2b536354, 3586, rls $
+$Author: ARostovtsev $
+$Date: 2023/12/28 12:56:36 $
+$Workfile: IResponse.cls $
+$Archive: ibs/th/skt/Commands/IResponse.cls $
 
 
 
@@ -15,7 +15,7 @@ Creation date: 01/30/15
 
 */
 
-
+block-level on error undo, throw.
 class ibs.th.skt.Commands.IResponse abstract: 
 
    /*------------------------------------------------------------------------------

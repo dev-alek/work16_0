@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
 
@@ -34,6 +35,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define buffer buf_parent_user-account for ub.user-account .
   define buffer buf_user-account        for ub.user-account .
   define buffer buf_place-attr          for ub.place-attr .
+  define buffer buf_rvs-doc-attr        for ub.rvs-doc-attr .
   
   define temp-table tt-rvs-doc like ub.c-rvs-doc
     field del-f as integer .
@@ -73,6 +75,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
   define variable v-POkMI-standart-vol    as decimal no-undo .
   define variable v-POkMI-vol             as decimal no-undo .
   define variable v-POkMI-water-vol       as decimal no-undo .
+  define variable v-ASI-POkMI-standart-dens   as decimal no-undo .
   define variable ii                      as integer no-undo .
   define variable v-is-sug                as logical no-undo .
   define variable v-dnst-mi               as character no-undo .
@@ -388,6 +391,10 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
             do:
               varmeasure-water-qnty = decimal(buf_rvs-line-attr.attr-value) .
             end.
+          when "asi-pomi-density" then
+            do:
+              v-ASI-POkMI-standart-dens = decimal(buf_rvs-line-attr.attr-value) .
+            end.
         end case .
       end.
       if v-wght = ? then v-wght = 0 .
@@ -478,6 +485,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
           sw:write-data-element ("calc-dnst" , string-mth(tt-rvs-line.density)) no-error .
           sw:write-data-element ("calc-dnst-fact" , string-mth(v-dnsty)) no-error .
           sw:write-data-element ("calc-dnst-discrepancy" , string-mth(v-test-asi-diff)) no-error .
+          sw:write-data-element ("calc-dnst-discrepancy-gram" , string-mth(v-test-asi-diff / 1000)) no-error .
         end .
         when "2"
         then do :
@@ -490,6 +498,8 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
           sw:write-data-element ("calc-dnst" , string-mth(tt-rvs-line.density)) no-error .
           sw:write-data-element ("calc-dnst-fact" , string-mth(v-POkMI-standart-dens)) no-error .
           sw:write-data-element ("calc-dnst-discrepancy" , string-mth(v-test-asi-diff)) no-error .
+          sw:write-data-element ("calc-dnst-above" , string-mth(v-ASI-POkMI-standart-dens)) no-error .
+          sw:write-data-element ("calc-dnst-discrepancy-gram" , string-mth(v-test-asi-diff / 1000)) no-error .
         end .
         when "3"
         then do :
@@ -502,12 +512,98 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
           sw:write-data-element ("calc-wght" , string-mth(tt-rvs-line.measure-cli-qnty)) no-error .
           sw:write-data-element ("calc-wght-fact" , string-mth(tt-rvs-line.state-measure-cli-qnty)) no-error .
           sw:write-data-element ("calc-wght-discrepancy" , string-mth(v-test-asi-diff)) no-error .
+          sw:write-data-element ("calc-wght-discrepancy-kilo" , string-mth(ABS(tt-rvs-line.state-measure-cli-qnty - tt-rvs-line.measure-cli-qnty))) no-error .
         end .
       end case .
       
       sw:end-element ("tank")  .
     end .
     sw:end-element ("tanks")  .
+    
+    sw:start-element ("comp-comm") .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-1"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("chairmen1", entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-2"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("chairmen2", entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-3"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("chairmen3", entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-4"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("chairmen4", entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-5"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("chairmen5", entry(1, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-1"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("jobtitle1", entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-2"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("jobtitle2", entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-3"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("jobtitle3", entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-4"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("jobtitle4", entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+      find first buf_rvs-doc-attr no-lock where buf_rvs-doc-attr.rvs-code = tt-rvs-doc.rvs-code
+                                            and buf_rvs-doc-attr.attr-code = "test-asi-commission-5"
+                                            no-error .
+      if available buf_rvs-doc-attr
+      and num-entries(buf_rvs-doc-attr.attr-value, {&delim-par}) = 2
+      then do :
+        sw:write-data-element ("jobtitle5", entry(2, buf_rvs-doc-attr.attr-value, {&delim-par})) no-error .
+      end .
+    sw:end-element ("comp-comm")  .
+    
     sw:end-element ("check-correct-doc")  .
     
     return .

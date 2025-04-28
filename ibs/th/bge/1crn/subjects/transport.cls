@@ -21,6 +21,7 @@ using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.transport_section from propath.
 using ibs.th.bge.1crn.subjects.transport_section_calibration-table from propath.
 using ibs.th.bge.1crn.subjects.transport from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

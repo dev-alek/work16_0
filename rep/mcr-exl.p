@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e47eaee10c88, 211, rls $
+$Author: SShalanin $
+$Date: Tue Jun 30 11:11:56 2015 +0400 $
+$Workfile: mcr-exl.p $
+$Archive: rep/mcr-exl.p $
 
 Запуск отчетов с выводом в Excel
 
@@ -15,15 +16,15 @@ Creation date: 06/02/15
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e47eaee10c88, 211, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Jun 30 11:11:56 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: mcr-exl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/mcr-exl.p $":U .
 define variable vss-description as character no-undo init "Запуск отчета с выводом в excel".
 { cmp/vssrevis.i }
 &scoped-define vssseq {&sequence}
-def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+def var vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: mcr-exl.p $ $Revision: e47eaee10c88, 211, rls $".
 
 { gbl/paramls.i  }
 

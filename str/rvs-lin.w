@@ -540,7 +540,7 @@ DEFINE FRAME Dialog-Frame
           SIZE 13 BY .88
      tt-rvs-line.izmer-density AT ROW 9.75 COL 79 COLON-ALIGNED WIDGET-ID 4
           FORMAT "9.9999"
-          LABEL "Плотность измер. для ПО к МИ (г/см3)"
+          LABEL "Плотность измер. для ПОкМИ (г/см3)"
           VIEW-AS FILL-IN 
           SIZE 13 BY .88
      b-density at row 9.75 col 97
@@ -5817,7 +5817,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           create tt-dens .
           assign
             tt-dens.ii = ikey
-            tt-dens.key_ = "P" + string(ikey)
+            tt-dens.key_ = "P" + string(ikey) + (if ikey = 1 then "(низ)" else "")
             tt-dens.density = decimal(entry(id, v-izm-denses-attr))
           .
         end .

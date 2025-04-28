@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : egais-marks-find.i
@@ -13,11 +14,11 @@
   ----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 461ee4ccdf1b, 1897, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jun 07 16:26:46 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: egais-marks-find.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/egais-marks-find.p $":U .
 define variable vss-description as character no-undo init "Библиотека для работы с марками".
 { str/marks.i    }
 { gbl/key-rec.i  }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3e1d8e184323, 969, rls $
+$Author: ASMorozov $
+$Date: Tue Apr 18 18:37:05 2017 +0300 $
+$Workfile: extgdsvalue.cls $
+$Archive: ibs/th/bge/egais/extgdsvalue.cls $
 
 Класс содержащий структуру для создания конкретного объекта содержащий связку товара с товаром ЕГАИС и ее свойтсва (egais-info).
 
@@ -17,6 +17,7 @@ Creation date: 15/03/16
 
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.egais.ExtGdsValue: 
   

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8d3a942e098f, 2071, rls $
+$Author: EShklyar $
+$Date: Fri Oct 18 13:05:47 2019 +0300 $
+$Workfile: g-shift.p $
+$Archive: rep/g-shift.p $
 
 запуск сменного отчета с пользовательским параметром
 
@@ -21,11 +22,11 @@ Creation date: 08/09/07
 define input parameter parparentproc as widget-handle no-undo .
 /*define input parameter custom-par    as character     no-undo .*/
 define variable custom-par as character no-undo .
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 8d3a942e098f, 2071, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Fri Oct 18 13:05:47 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: g-shift.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/g-shift.p $":U .
 define variable vss-description as character no-undo initial "запуск сменного отчета с пользовательским параметром":U .
 
 { cmp/str-glbl.i     }
@@ -47,4 +48,4 @@ run rep/d-report.w (
                 input no).
 
 
-/* $Workfile$   E n d */
+/* $Workfile: g-shift.p $   E n d */

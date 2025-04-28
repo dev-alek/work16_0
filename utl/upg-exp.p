@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: upg-exp.p $
+$Archive: utl/upg-exp.p $
 
 Экспорт в формате пакета новостей
 
@@ -32,11 +33,11 @@ define input-output parameter num-exp-rec   as   integer              no-undo . 
 define input-output parameter err-gen-pack  as   integer              no-undo . /* 0 - нет ошибок */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: upg-exp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/upg-exp.p $":U .
 define variable vss-description as character no-undo init "Экспорт в формате пакета новостей".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

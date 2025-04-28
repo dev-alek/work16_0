@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ink-lkp.p $
+$Archive: str/ink-lkp.p $
 
 ѕростой просмотр продажи
 
@@ -18,11 +19,11 @@ Creation date: 04/12/06
 define input parameter parparentproc as handle no-undo.
 define input parameter t-rid as recid no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ink-lkp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/ink-lkp.p $":U .
 define variable vss-description as character no-undo init "ѕростой просмотр продажи".
 { cmp/vssrevis.i }
 /* простой просмотр любой записи ink-doc */

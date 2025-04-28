@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bb5787071046, 1352, rls $
+$Author: SSlivenko $
+$Date: Fri May 18 13:28:25 2018 +0300 $
+$Workfile: chk-back.p $
+$Archive: str/chk-back.p $
 
 Проверка даты документа при закрытии его задним числом
 
@@ -21,11 +22,11 @@ Creation date: 07/23/08
 define input  parameter p-doc-code  as character no-undo .
 define input  parameter p-fact-date as date      no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: bb5787071046, 1352, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: Fri May 18 13:28:25 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: chk-back.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/chk-back.p $":U .
 define variable vss-description as character no-undo initial "Проверка даты документа при закрытии его задним числом".
 { cmp/vssrevis.i "substitute('&1|&2':u,p-doc-code,p-fact-date)" }
 { cmp/trg-def.i  }

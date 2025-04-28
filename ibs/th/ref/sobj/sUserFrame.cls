@@ -84,6 +84,7 @@ class ibs.th.ref.sobj.sUserFrame inherits UserControl:
    end.
    method public void my-report ( ): end.
    
+   method public void my-secected ( ): end. /* метод вызывается при переключение между закладками */
      
    
 end class.

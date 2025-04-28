@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -67,10 +68,10 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile ):
         delete buf_chk-gds.
     end.
     
-    for each buf_chk-gds-attr where 
-          buf_chk-gds-attr.doc-code =  ub.chk-doc.doc-code :
-        delete buf_chk-gds-attr.
-    end.
+/*    for each buf_chk-gds-attr where                         */
+/*          buf_chk-gds-attr.doc-code =  ub.chk-doc.doc-code :*/
+/*        delete buf_chk-gds-attr.                            */
+/*    end.                                                    */
     
     for each buf_marking-chk where
            buf_marking-chk.doc-code = ub.chk-doc.doc-code :
@@ -81,10 +82,10 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile ):
            buf_chk-pay.doc-code = ub.chk-doc.doc-code :
         delete buf_chk-pay.
     end.
-    for each buf_chk-pay-attr where
-           buf_chk-pay-attr.doc-code = ub.chk-doc.doc-code :
-        delete buf_chk-pay-attr .
-    end.
+/*    for each buf_chk-pay-attr where                         */
+/*           buf_chk-pay-attr.doc-code = ub.chk-doc.doc-code :*/
+/*        delete buf_chk-pay-attr .                           */
+/*    end.                                                    */
     for each buf_chk-discnt where
             buf_chk-discnt.doc-code = ub.chk-doc.doc-code :
         delete buf_chk-discnt.
@@ -93,14 +94,15 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile ):
             buf_chk-discnt-attr.doc-code = ub.chk-doc.doc-code :
         delete buf_chk-discnt-attr.
     end.
-    for each buf_chk-doc-attr where
-            buf_chk-doc-attr.doc-code = ub.chk-doc.doc-code :
-        delete buf_chk-doc-attr.
-    end.
+/*    for each buf_chk-doc-attr where                          */
+/*            buf_chk-doc-attr.doc-code = ub.chk-doc.doc-code :*/
+/*        delete buf_chk-doc-attr.                             */
+/*    end.                                                     */
     for each buf_chk-gds-pay where
             buf_chk-gds-pay.doc-code = ub.chk-doc.doc-code :
         delete buf_chk-gds-pay.
     end.
+    
     if g#oxml = yes
     then do:
       run str/calloxml.p (
@@ -117,4 +119,15 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile ):
                               , error-status :get-message ( 1 ) ).
       end.
     end.
+       run bge\send1cerp.p (?,
+                    this-procedure,
+                    this-procedure,
+                    "delChk-doc",
+                    (buffer chk-doc:handle),
+                    (buffer c-chk-doc:handle),
+                    ?) no-error.
+       if error-status:error 
+       then do:
+          message return-value view-as alert-box.
+       end.
   end.

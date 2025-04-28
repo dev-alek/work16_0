@@ -17,7 +17,7 @@ using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.map.mapstring.
 using ibs.th.gbl.TypeMap.
-
+block-level on error undo, throw.
 class ibs.th.skt.ControlledClients.marking.sts.cash inherits TypeMap: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
   define override public property vss-author      as character no-undo init "$Author:$":U get.

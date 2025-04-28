@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
 $Revision: $
-$Author$ Shalanin Sergey
-$Date$
-$Workfile$
-$Archive$
+$Author: EShklyar $ Shalanin Sergey
+$Date: Ср июл 08 17:09:06 2020 +0300 $
+$Workfile: r-akt-spis.p $
+$Archive: rep/r-akt-spis.p $
 
 акт списания нефтепродукта , отпущенного на технологические нужды АЗС/АЗК.
 
@@ -18,10 +19,10 @@ Creation date: 08/06/17
 
 
 define variable vss-revision    as character no-undo init "$Revision: ":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июл 08 17:09:06 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: r-akt-spis.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/r-akt-spis.p $":U .
 define variable vss-description as character no-undo init "акт списания нефтепродукта".
 { cmp/vssrevis.i }
 &scop f-l MonthNameRusCase

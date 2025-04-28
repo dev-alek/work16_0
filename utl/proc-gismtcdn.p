@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 $Revision:$
 $Author:$
@@ -30,6 +31,7 @@ define variable mParam     as character      no-undo.
 def buffer buf_code for ub.code.
 
 mParam = GetPARAMAsunc( 1).
+
 if mParam eq ? then do:
    run PutMesAsunc( "error   ѕолучение данных было прервано пользователем." ).
    { utl/proc-async.i proc_end}
@@ -54,7 +56,10 @@ if not avail buf_code then do:
 end.
 
 thGisMtCdn =  new GisMtCDN().
-thGisMtCdn:GetListCdn().
+case mParam:
+    when "1" then thGisMtCdn:GetListCdn().
+    when "2" then thGisMtCdn:UpdTimetCdn().
+end case.
 thGisMtCdn:DelCdnUpd(). /* удал€ем флаг, что работает обновление площадок */
 
 delete object thGisMtCdn.  

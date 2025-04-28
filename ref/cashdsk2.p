@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 79dbeab10a26, 2672, rls $
+$Author: Ostroukhov $
+$Date: Вт ноя 17 10:53:20 2020 +0300 $
+$Workfile: cashdsk2.p $
+$Archive: ref/cashdsk2.p $
 
 Изменение статуса вкл/выкл кассы
 
@@ -30,11 +31,11 @@ define input parameter par-recid as recid no-undo.
 define input-output parameter par-cash-on like ub.cash-desk.cash-on no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 79dbeab10a26, 2672, rls $":U .
+define variable vss-author      as character no-undo init "$Author: Ostroukhov $":U .
+define variable vss-date        as character no-undo init "$Date: Вт ноя 17 10:53:20 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cashdsk2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/cashdsk2.p $":U .
 define variable vss-description as character no-undo init "Изменение статуса вкл/выкл кассы".
 { cmp/vssrevis.i }
 

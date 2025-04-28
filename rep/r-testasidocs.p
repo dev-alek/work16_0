@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -62,14 +63,17 @@ DEFINE TEMP-TABLE tt-result
   /*  Данные замеров АСИ в резервуаре  */
   field level-total             as decimal    /*col14 Уровень, см  */
   field density                 as decimal    /*col15 Плотность по уровнемеру, г/см3  */
-  field temperature             as decimal    /*col16 Температура, С  */
-  field mass                    as decimal    /*col17 Масса, кг  */
+  field asi-pomi-density        as decimal    /*col16 Плотность с АСИ, приведенная к стандартной температуре, г/см3  */
+  field temperature             as decimal    /*col17 Температура, С  */
+  field mass                    as decimal    /*col18 Масса, кг  */
   /*  Результат расчета проверки  */
-  field diff-density            as decimal    /*col18 Расхождение значения по плотности НП (кг/м3)  */
-  field diff-mass               as decimal    /*col19 Расхождение в % по массе  */
+  field diff-density-gram       as decimal    /*col19 Расхождение значения по плотности НП (г/cм3)  */
+  field diff-density            as decimal    /*col20 Расхождение значения по плотности НП (кг/м3)  */
+  field diff-mass-kilo          as decimal    /*col21 Расхождение по массе  (кг)  */
+  field diff-mass               as decimal    /*col22 Расхождение в % по массе  */
   
   field test-asi-type           as character
-  field asi-type-name           as character  /*col20 Тип проверки  */
+  field asi-type-name           as character  /*col23 Тип проверки  */
   
   index pi 
     obj-type obj-code rvs-code gds-code pl-code
@@ -174,10 +178,12 @@ on error undo, return error return-value
 end .
 
 procedure fill-tt :
-  define variable v-test-asi-type as character no-undo .
-  define variable v-izmer-density as decimal no-undo .
-  define variable v-pomi-density as decimal no-undo .
-  define variable v-diff as decimal no-undo .
+  define variable v-test-asi-type    as character no-undo .
+  define variable v-izmer-density    as decimal no-undo .
+  define variable v-pomi-density     as decimal no-undo .
+  define variable v-temp-izm-vol     as decimal no-undo .
+  define variable v-asi-pomi-density as decimal no-undo .
+  define variable v-diff             as decimal no-undo .
   
   for first buf_doc-attr no-lock where buf_doc-attr.doc-code  = buf_rvs-doc.rvs-code
                                    and buf_doc-attr.attr-code = "test-asi-type"
@@ -200,31 +206,49 @@ procedure fill-tt :
                               and buf_place.pl-code  = buf_rvs-line.pl-code
   :
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                                      and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                                      and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                                      and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                                      and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                                      and buf_rvs-line-attr.attr-code = "izmer-density"
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "izmer-density"
     :
       assign v-izmer-density = decimal(buf_rvs-line-attr.attr-value) .
     end .
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                                      and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                                      and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                                      and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                                      and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                                      and buf_rvs-line-attr.attr-code = "pomi-density"
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "pomi-density"
     :
       assign v-pomi-density = decimal(buf_rvs-line-attr.attr-value) .
     end .
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                                      and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                                      and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                                      and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                                      and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                                      and buf_rvs-line-attr.attr-code = "test-asi-diff"
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "asi-pomi-density"
+    :
+      assign v-asi-pomi-density = decimal(buf_rvs-line-attr.attr-value) .
+    end .
+    for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "test-asi-diff"
     :
       assign v-diff = decimal(buf_rvs-line-attr.attr-value) .
+    end .
+    for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+    :
+      assign v-temp-izm-vol = decimal(buf_rvs-line-attr.attr-value) .
     end .
     
     create tt-result .
@@ -256,10 +280,13 @@ procedure fill-tt :
           
           tt-result.level-total       = ?
           tt-result.density           = buf_rvs-line.density
+          tt-result.asi-pomi-density  = ?
           tt-result.temperature       = ?
           tt-result.mass              = ?
           
+          tt-result.diff-density-gram = v-diff / 1000
           tt-result.diff-density      = v-diff
+          tt-result.diff-mass-kilo    = ?
           tt-result.diff-mass         = ?
                            
           tt-result.asi-type-name     = "Резервуар"
@@ -271,15 +298,18 @@ procedure fill-tt :
           tt-result.state-level-total = ?
           tt-result.izmer-density     = v-izmer-density
           tt-result.pomi-density      = v-pomi-density
-          tt-result.state-temperature = buf_rvs-line.state-temperature
+          tt-result.state-temperature = v-temp-izm-vol
           tt-result.state-mass        = ?
           
           tt-result.level-total       = ?
           tt-result.density           = buf_rvs-line.density
+          tt-result.asi-pomi-density  = v-asi-pomi-density
           tt-result.temperature       = buf_rvs-line.temperature
           tt-result.mass              = ?
           
+          tt-result.diff-density-gram = v-diff / 1000
           tt-result.diff-density      = v-diff
+          tt-result.diff-mass-kilo    = ?
           tt-result.diff-mass         = ?
           
           tt-result.asi-type-name     = "ТРК"
@@ -291,15 +321,18 @@ procedure fill-tt :
           tt-result.state-level-total = buf_rvs-line.state-level-total
           tt-result.izmer-density     = v-izmer-density
           tt-result.pomi-density      = v-pomi-density
-          tt-result.state-temperature = buf_rvs-line.state-temperature
+          tt-result.state-temperature = v-temp-izm-vol
           tt-result.state-mass        = buf_rvs-line.state-measure-cli-qnty
           
           tt-result.level-total       = buf_rvs-line.level-total
           tt-result.density           = buf_rvs-line.density
+          tt-result.asi-pomi-density  = ?
           tt-result.temperature       = buf_rvs-line.temperature
           tt-result.mass              = buf_rvs-line.measure-cli-qnty
           
+          tt-result.diff-density-gram = ?
           tt-result.diff-density      = ?
+          tt-result.diff-mass-kilo    = ABS(buf_rvs-line.state-measure-cli-qnty - buf_rvs-line.measure-cli-qnty)
           tt-result.diff-mass         = v-diff
                            
           tt-result.asi-type-name     = "Масса"
@@ -349,27 +382,30 @@ procedure print-report :
     '<td style="width: 120px;"></td>' skip
     '<td style="width: 120px;"></td>' skip
     '<td style="width: 120px;"></td>' skip
+    '<td style="width: 120px;"></td>' skip
+    '<td style="width: 120px;"></td>' skip
+    '<td style="width: 120px;"></td>' skip
     '</tr>' skip
   .
                         
  
   put stream OutStr-html unformatted
-    '<TR><TD colspan="19"></TD></TR>' skip
+    '<TR><TD colspan="23"></TD></TR>' skip
     '<TR>' skip
-    '<TD colspan="20" style="font-weight: bold;">Отчет Результат проверки корректности работы АСИ в резервуаре</TD>' skip
+    '<TD colspan="23" style="font-weight: bold;">Отчет Результат проверки корректности работы АСИ в резервуаре</TD>' skip
     '</TR>'skip
                                 
     '<TR>' skip
-    '<TD colspan="20">' + v-period + '</TD>' skip
+    '<TD colspan="23">' + v-period + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="20">Выбор объекта: ' + v-list-obj + '</TD>' skip
+    '<TD colspan="23">Выбор объекта: ' + v-list-obj + '</TD>' skip
     '</TR>'skip
 
 
     '<TR>' skip
-    '<TD colspan="20">' + v-print-date + '</TD>' skip
+    '<TD colspan="23">' + v-print-date + '</TD>' skip
     '</TR>'skip
 
     '</thead>' skip
@@ -388,8 +424,8 @@ procedure print-report :
     '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Марка НП</TH>' skip
     '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Номер резервура</TH>' skip
     '<TH text_wrap="true" colspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Фактические замеры комиссии</TH>' skip
-    '<TH text_wrap="true" colspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Данные замеров АСИ в резервуаре</TH>' skip
-    '<TH text_wrap="true" colspan="2" style="text-align: center; font-weight: bold; background-color: silver;">Результат расчета проверки</TH>' skip
+    '<TH text_wrap="true" colspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Данные замеров АСИ в резервуаре</TH>' skip
+    '<TH text_wrap="true" colspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Результат расчета проверки</TH>' skip
     '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Тип проверки</TH>' skip
     '</TR>'skip 
     
@@ -401,9 +437,12 @@ procedure print-report :
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Масса, кг</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Уровень, см</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Плотность по уровнемеру, г/см3</TH>' skip
+    '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Плотность с АСИ, приведенная к стандартной температуре, г/см3</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Температура, С</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Масса, кг</TH>' skip
+    '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Расхождение значения по плотности НП (г/см3)</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Расхождение значения по плотности НП (кг/м3)</TH>' skip
+    '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Расхождение по массе (кг)</TH>' skip
     '<TH text_wrap="true" rowspan="4" style="text-align: center; font-weight: bold; background-color: silver;">Расхождение в % по массе</TH>' skip
     '</TR>'skip  
     
@@ -437,6 +476,9 @@ procedure print-report :
     '<TH style="text-align: center; font-weight:bold; ">18</TH>'  skip
     '<TH style="text-align: center; font-weight:bold; ">19</TH>'  skip
     '<TH style="text-align: center; font-weight:bold; ">20</TH>'  skip
+    '<TH style="text-align: center; font-weight:bold; ">21</TH>'  skip
+    '<TH style="text-align: center; font-weight:bold; ">22</TH>'  skip
+    '<TH style="text-align: center; font-weight:bold; ">23</TH>'  skip
     '</TR>'skip    
   .
     
@@ -458,9 +500,12 @@ procedure print-report :
       '<TH num="#,##0" val="'    + fDec2Str(tt-result.state-mass, "->>>>>>>>>>>9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.state-mass, "->>>>>>>>>>>9"  ) + '</TH>'  skip
       '<TH num="#,##0.0" val="'  + fDec2Str(tt-result.level-total, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.level-total, "->>>>>>>>>>>9.9"  ) + '</TH>'  skip
       '<TH num="#0.0000" val="'  + fDec2Str(tt-result.density, "-9.9999") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.density, "-9.9999"  ) + '</TH>'  skip
+      '<TH num="#0.0000" val="'  + fDec2Str(tt-result.asi-pomi-density, "-9.9999") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.asi-pomi-density, "-9.9999"  ) + '</TH>'  skip
       '<TH num="#,##0.0" val="'  + fDec2Str(tt-result.temperature, "->>>>>>>>>>>9.9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.temperature, "->>>>>>>>>>>9.9"  ) + '</TH>'  skip
       '<TH num="#,##0" val="'    + fDec2Str(tt-result.mass, "->>>>>>>>>>>9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.mass, "->>>>>>>>>>>9"  ) + '</TH>'  skip
+      '<TH num="#0.0000" val="'  + fDec2Str(tt-result.diff-density-gram, "-9.9999") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-density-gram, "-9.9999"  ) + '</TH>'  skip
       '<TH num="#,##0.00" val="' + fDec2Str(tt-result.diff-density, "->>>9.99") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-density, "->>>9.99"  ) + '</TH>'  skip
+      '<TH num="#,##0" val="'    + fDec2Str(tt-result.diff-mass-kilo, "->>>>>>>>>>>9") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-mass-kilo, "->>>>>>>>>>>9"  ) + '</TH>'  skip
       '<TH num="#,##0.00" val="' + fDec2Str(tt-result.diff-mass, "->>>9.99") + '" style="text-align: center; font-weight: normal;">' + fDec2Str(tt-result.diff-mass, "->>>9.99"  ) + '</TH>'  skip
       '<TH text_wrap="true" style="text-align: center; font-weight: normal;">' + tt-result.asi-type-name + '</TH>' skip
       '</TR>'skip

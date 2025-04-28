@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: normloss.cls $
+$Archive: ibs/th/bge/1crn/subjects/normloss.cls $
 
 Структура данных normloss из 1С ERPRN
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.normloss inherits ibs.th.bge.1crn.subjects.asubject: 
@@ -116,8 +117,8 @@ class ibs.th.bge.1crn.subjects.normloss inherits ibs.th.bge.1crn.subjects.asubje
       when oil-grp = ?
       v-str = v-str + ",season" 
       when season_ = ?
-      v-str = v-str + ",value" 
-      when value_ = ?
+      /*v-str = v-str + ",value" 
+      when value_ = ?*/
       .
     v-str = trim (v-str, ",").
     if v-str > ''

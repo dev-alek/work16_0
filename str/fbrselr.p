@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 54c02665e029, 526, rls $
+$Author: SShalanin $
+$Date: Thu Mar 17 18:42:29 2016 +0400 $
+$Workfile: fbrselr.p $
+$Archive: str/fbrselr.p $
 
 Выбор рецепта для производства товара
 
@@ -34,11 +35,11 @@ define output parameter p-out-recipe-code   as character    no-undo.
 define output parameter p-recipe-found      as logical      no-undo.
 define output parameter p-no-need-good      as logical      no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 54c02665e029, 526, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Mar 17 18:42:29 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fbrselr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/fbrselr.p $":U .
 define variable vss-description as character no-undo init "Выбор рецепта для производства товара".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

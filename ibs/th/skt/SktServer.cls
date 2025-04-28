@@ -31,6 +31,7 @@ using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.SktServer: 
 
@@ -43,36 +44,43 @@ class ibs.th.skt.SktServer:
   define private variable clientControl as class     ClientControl no-undo.
   define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
-  define private variable req           as class     IRequest      no-undo.
-  define private variable resp          as class     IResponse     no-undo.
-  define private variable client_       as character no-undo.
+  
   define private variable hLog          as handle no-undo.
   define public property LogMsg as character no-undo
     get.
     set.
   define private variable logWrite as class   LogWrite no-undo.
 
-  define public property QueryParam as character no-undo
-    get.
-    set.
-
-  define public property Path as character no-undo
-    get.
-    set.
-
-  define public property ClientPar as character no-undo
-    get.
-    set.
+/*  define public property QueryParam as character no-undo*/
+/*    get.                                                */
+/*    set.                                                */
+/*                                                        */
+/*  define public property Path as character no-undo      */
+/*    get.                                                */
+/*    set.                                                */
+/*                                                        */
+/*  define public property ClientPar as character no-undo */
+/*    get.                                                */
+/*    set.                                                */
   
   /*------------------------------------------------------------------------------
    Purpose: При созаднии объекта SKTServer создадим комманды (т.е. объекты с набором комманд для конкретных клиентов) для всех клиентов сокет-сервера
    Notes:
   ------------------------------------------------------------------------------*/
+  define variable us-tmo           as integer   init 180 no-undo. /*тайм-аут в сек.*/
+  
   constructor SktServer (  ):
      this-object(?).
   end.
-  constructor SktServer (iLog as handle  ):
-	 hLog = iLog.	
+  
+  constructor SktServer (iLog as handle ,iUstmo as integer ):
+      this-object(iLog).
+      us-tmo = iUstmo.
+  end.  
+  
+  constructor SktServer (iLog as handle ):
+	 hLog = iLog.
+	 
     define variable conf-par   as character no-undo .  /* для чтения параметра конфигурации */
     define variable par-type   as character no-undo .  /* тип параметра конфигурации */
     define variable tsdCommand    as class TSDCommand.
@@ -125,75 +133,144 @@ class ibs.th.skt.SktServer:
   end constructor.
 
   
+  
+  
+  
   /*------------------------------------------------------------------------------
    Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
    Notes:
   ------------------------------------------------------------------------------*/
-  method public void RequestProcessing (content as longchar, hndlSocket as handle):
-    define variable vDelete as logical no-undo.
-    req = new SimpleRequest().
-    resp = new SimpleResponse().
-    req:Content = content.
-    req:HndlSocket = hndlSocket.
-    if QueryParam <> ""
-      then req:QueryPar = QueryParam.
-    identifyClients().
-    if client_ <> ? then 
-    do:
-      vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
-      if error-status:error then 
+   method public void RequestProcessing (HeadHttp as HeadHttp, content as longchar, hndlSocket as handle):
+      define variable req           as class     IRequest      no-undo.
+      define variable resp          as class     IResponse     no-undo.
+      define variable client_       as character no-undo.
+      define variable vDelete as logical no-undo.
+      req = new SimpleRequest(HeadHttp).
+      resp = new SimpleResponse().
+      req:Content = content.
+      req:HndlSocket = hndlSocket.
+      client_ = identifyClients(req).
+      if client_ <> ? then 
       do:
-        logWrite:LogStr = return-value.
-        vDelete = yes.
+         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
+         if error-status:error then 
+         do:
+            logWrite:LogStr = return-value.
+            vDelete = yes.
+         end.
       end.
-    end.
-    if vDelete
-    then do:
-       delete object req  no-error.
-       delete object resp no-error.
-       hndlSocket:disconnect ().
-    end.
+      
+      define variable v-err-msg as character no-undo .  
+      catch exAppErrors as class Progress.Lang.AppError :
+         v-err-msg = exAppErrors:ReturnValue .
+         if v-err-msg > "" 
+         then . 
+         else do :
+            v-err-msg = exAppErrors:GetMessage(1) .
+            if v-err-msg > "" 
+            then . 
+            else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+         end .
+         logWrite:LogStr = v-err-msg.
+         vDelete = yes.
+      end catch .
+      catch exProErrors as class Progress.Lang.ProError :
+         v-err-msg = exProErrors:GetMessage(1) . 
+         if v-err-msg > "" 
+         then . 
+         else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+         logWrite:LogStr = v-err-msg + exProErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      catch exAnyErrors as class Progress.Lang.Error:
+         v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+         logWrite:LogStr = v-err-msg + exAnyErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      finally:
+         if vDelete
+         then do:
+            delete object req no-error.
+            delete object resp no-error.
+            hndlSocket:disconnect ().
+         end.       
+      end finally.
   end.
   
   /*------------------------------------------------------------------------------
    Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
    Notes:
   ------------------------------------------------------------------------------*/
-  method public void RequestProcessing (content as memptr, hndlSocket as handle, lpar as character):
-    define variable vDelete as logical no-undo.
-    req = new SimpleRequest().
-    resp = new SimpleResponse().
-    req:ContentBuff = content.
-    req:HndlSocket = hndlSocket.
-    identifyClients().
-    client_ = "tsd".
-    if client_ <> ? then 
-    do:
-      vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
-      if error-status:error then 
+   method public void RequestProcessing (HeadHttp as HeadHttp, content as memptr, hndlSocket as handle, lpar as character):
+      define variable vDelete as logical no-undo.
+      define variable req           as class     IRequest      no-undo.
+      define variable resp          as class     IResponse     no-undo.
+      define variable client_       as character no-undo.
+      req = new SimpleRequest(HeadHttp).
+      resp = new SimpleResponse().
+      req:ContentBuff = content.
+      req:HndlSocket = hndlSocket.
+      client_ = identifyClients(req) no-error.
+      if    client_ eq ""
+         or client_ eq ?
+      then
+         client_ = "tsd".
+      if client_ <> ? then 
       do:
-        logWrite:LogStr = return-value.
-        vDelete = yes.
+         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
+         if error-status:error then 
+         do:
+            logWrite:LogStr = return-value.
+            vDelete = yes.
+         end.
       end.
-/*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
-    end.
-    if vDelete
-    then do:
-       delete object req no-error.
-       delete object resp no-error.
-       hndlSocket:disconnect ().
-    end.
-  end.
+    
+      define variable v-err-msg as character no-undo .  
+      catch exAppErrors as class Progress.Lang.AppError :
+         v-err-msg = exAppErrors:ReturnValue .
+         if v-err-msg > "" 
+         then . 
+         else do :
+            v-err-msg = exAppErrors:GetMessage(1) .
+            if v-err-msg > "" 
+            then . 
+            else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+         end .
+         logWrite:LogStr = v-err-msg.
+         vDelete = yes.
+      end catch .
+      catch exProErrors as class Progress.Lang.ProError :
+         v-err-msg = exProErrors:GetMessage(1) . 
+         if v-err-msg > "" 
+         then . 
+         else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+         logWrite:LogStr = v-err-msg + exProErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      catch exAnyErrors as class Progress.Lang.Error:
+         v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+         logWrite:LogStr = v-err-msg + exAnyErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      finally:
+         if vDelete
+         then do:
+            delete object req no-error.
+            delete object resp no-error.
+            hndlSocket:disconnect ().
+         end.       
+      end finally.
+   end.
 
-  method private void identifyClients ():
+  method private char identifyClients (req           as class     IRequest):
     define variable hRoot   as handle.
     define variable hDoc    as handle.
     def    var      mbuffer as memptr.
-
-    if ClientPar <> ""
+    define variable client_ as character no-undo.
+    if req:HeadHTTP:queryAdr <> ""
     then do:
-      client_ = ClientPar.
-      return.
+      client_ = entry(1,req:HeadHTTP:queryAdr,"/").
+      return client_.
     end.
     else
        client_ = "".
@@ -209,9 +286,11 @@ class ibs.th.skt.SktServer:
       set-size(mbuffer) = 0.
       set-size(mbuffer) = length(cast(req, ibs.th.skt.Commands.SimpleRequest):Content,'raw') + 2.
       put-string(mbuffer,1) = cast(req, ibs.th.skt.Commands.SimpleRequest):Content.
-      hDoc:load("memptr",mbuffer,no) no-error.
-      if error-status:error
-        then return error.
+      define variable loadok as logical no-undo.
+      loadok = hDoc:load("memptr",mbuffer,no) no-error.
+      if error-status:error or loadok ne yes
+      then
+         return error "Ошибка при разборе XML документа".
       hdoc:get-document-element(hRoot) no-error.
       assign
         client_ = hRoot:name no-error.
@@ -233,7 +312,7 @@ class ibs.th.skt.SktServer:
         client_ = "ticked".
       end.
     end.
-
+    return client_.
   end.
 
   method public logical checkEnd ():
@@ -248,6 +327,279 @@ class ibs.th.skt.SktServer:
     delete object clientControl no-error.
     
 	end destructor.
+	&scop CRLF chr(13) + chr(10)
+   &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
+	method public void connproc(hSocket as handle) :
+      def var n as int no-undo.
+      define variable v-header      as character no-undo.
+/*  define variable mbuffer       as memptr   no-undo.                        */
+      define variable mbuffer-out   as memptr   no-undo.
+      define variable mbuffer-in    as memptr   no-undo.
+      define variable mbuffer-hdr   as memptr   no-undo.
+/*  define variable us-tmp-etime  as INTEGER  no-undo.                        */
+      define variable v-bytes       as integer  no-undo.
+      define variable v-str         as char     no-undo init "".
+/*  define variable i             AS INT      NO-UNDO.                        */
+/*  define variable s             AS CHAR     no-undo.                        */
+      define variable resp-head     as longchar no-undo. /*ответ сокет-сервера*/
+/*  define variable lsocket       as logical  no-undo.                        */
+      define variable v-read        as logical  no-undo.
+      define variable v-content     as longchar no-undo.
+/*  define variable v-step        as integer  no-undo.                        */
+      define variable v-pos-buf     as integer  no-undo.
+/*  define variable v-cont-read   as integer  no-undo.                        */
+/*  define variable v-hdr-lenth   as integer  no-undo.                        */
+/*  define variable v-is-hdr-rcvs as logical  no-undo.                        */
+/*  def var offscont as int no-undo.                                                                          */
+      define variable HeadHttp as HeadHttp no-undo.
+  
+      fix-codepage(v-content) = "1251" .
+      fix-codepage(resp-head) = "1251" .
+      hSocket:set-socket-option('TCP-NODELAY', 'true').
+      hSocket:set-socket-option('SO-KEEPALIVE', 'true').
+      hSocket:set-socket-option('SO-REUSEADDR', 'true').
+  
+      assign 
+/*     S = '':U*/
+         v-content = '':U
+         v-header  = '':U
+/*         v-str     = ''*/
+         v-bytes   = 0
+/*    offscont = 0.*/
+         n         = 0
+         v-str     = ""
+/*     v-cont-length = 0*/
+/*     v-hd-line = ""*/
+/*     v-cont-type = ""*/
+/*     v-user-agent = ""*/
+      .
+    
+      resp-head = substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).  /* Возвращаемая по умолчанию ошибка */
+/*  contObj = new content ().*/
+      
+      ContBlock: 
+      do:
+
+  /* читаем сокет и разбираем полученую информацию. */
+/*    v-bytes = hSocket:get-bytes-available().*/
+/*    if v-bytes = 0 then leave ContBlock.*/
+
+
+/*    v-str = GET-STRING(mbuffer-in,1).*/
+    /*ждем окончание передачи шапки. Признак конца шапки - двойной перевод строки*/
+    
+         etime(yes).
+/*         assign        */
+/*            v-bytes = 0*/
+/*/*    offscont = 0.*/  */
+/*            n       = 0*/
+/*            v-str = "" */
+/*         .             */
+/*    v-cont-length = 0.*/
+/*    v-querypar = "".*/
+/*    v-path = "".    */
+         set-size (mbuffer-in) = 0.
+         set-size (mbuffer-out) = 0.
+/*    set-size (mbuffer) = 0.*/
+         mbuffer-out = ?.
+/*    mbuffer = ?.*/
+         mbuffer-in = ?.
+         set-size (mbuffer-hdr) = 33000. 
+    
+         dwhdr_:
+         do while etime < 5000 : /*5 сек на прием шапки*/
+      /* читаем сокет и разбираем полученую информацию. */
+            if n = v-bytes
+            then do:
+               n = 0.
+               v-bytes = hsocket:get-bytes-available().
+            end.
+            do while n < v-bytes :
+               n = n + 1.
+               v-pos-buf = v-pos-buf + 1.
+               v-read = hSocket:read(mbuffer-hdr, v-pos-buf, 1, 2) no-error .
+               if not v-read 
+               then 
+                  leave.
+               if v-pos-buf > 4
+               then 
+                  v-str = get-string (mbuffer-hdr, v-pos-buf - 3, 4).
+               if v-pos-buf > 32000
+               then 
+                  leave.
+               if v-str = {&HdEnd}
+               then do:
+                  v-header = get-string (mbuffer-hdr, 1).
+                  v-str = "".
+                  v-pos-buf = 0.
+                  logWrite:WriteFileToLog('REQUEST-HEADER:' + v-header ).
+                  HeadHttp = new HeadHttp(v-header).
+/*          run parseheader(input v-header).*/
+                  set-size (mbuffer-in) = 0.
+                  set-size (mbuffer-hdr) = 0.
+                  set-size (mbuffer-in) = HeadHttp:contentLength.
+                  leave dwhdr_.
+               end.
+            end.
+         end.
+         if not valid-object (HeadHttp)
+         then do:
+            resp-head =  substitute("HTTP/1.0 408 Request Timeout or bad request &1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            SET-SIZE(mbuffer-out) = 0.
+            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+            PUT-STRING(mbuffer-out,1) = resp-head.
+            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+            hsocket:disconnect ().
+            leave ContBlock.
+         end.
+         dw_:
+         do while    /*  HeadHttp:contentLength > 0 
+           and*/ HeadHttp:contentLength > v-pos-buf 
+           and etime < us-tmo * 1000 :
+   /* читаем сокет и разбираем полученую информацию. */
+            if n = v-bytes
+            then do:
+               n = 0.
+               v-bytes = hsocket:get-bytes-available().
+            end.
+            do while n < v-bytes :
+               assign
+                  n = n + 1
+                  v-pos-buf = v-pos-buf + 1
+               .
+               v-read = hSocket:read(mbuffer-in, v-pos-buf, 1, 2) no-error .
+               if not v-read 
+               then 
+                  leave.
+            end.
+         end.
+         if not (              mbuffer-in = ? 
+                  or get-size (mbuffer-in) = ? 
+                  or get-size (mbuffer-in) = 0) 
+            and not HeadHttp:contentType = 'raw'
+         then 
+            v-content = get-string (mbuffer-in, 1).
+ 
+/*         logWrite:WriteFileToLog('SOCKET-READ:' + v-content ).*/
+/*    RUN write-to-log('SOCKET-READ:' + v-str ).*/
+         if       (   v-content = '' 
+                   or v-content = ?) 
+            and (    HeadHttp:contentType <> "raw" 
+            and HeadHttp:queryReq = "")
+         then do:
+            resp-head =  substitute("HTTP/1.0 408 Request Timeout or bad request &1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            SET-SIZE(mbuffer-out) = 0.
+            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+            PUT-STRING(mbuffer-out,1) = resp-head.
+            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+            hsocket:disconnect ().
+            leave ContBlock.
+         end.
+ 
+ /* Запросы не в xml формате не обрабатываем */
+
+         if     HeadHttp:contentType ne 'text/xml':U 
+            and HeadHttp:contentType ne 'raw' 
+            and HeadHttp:queryReq    eq "" 
+         then do:
+  /* resp-head = "HTTP/1.1 501 Not Implemented ~nServer: 4GL ~nConnection: close ~n~n".*/
+            resp-head = substitute("HTTP/1.0 501 Not Implemented&1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            SET-SIZE(mbuffer-out) = 0.
+            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+            PUT-STRING(mbuffer-out,1) = resp-head.
+            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+            hsocket:disconnect ().
+            leave ContBlock.
+         end.
+         if     HeadHttp:contentLength = 0 
+            and not num-entries (HeadHttp:queryReq, "?") > 1 
+         then do:  /* Если запрос c нулевой длиной тела, то создаем ответ об успешном выполнении запроса */
+            resp-head = substitute("HTTP/1.0 411 No Content&1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            SET-SIZE(mbuffer-out) = 0.
+            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+            PUT-STRING(mbuffer-out,1) = resp-head.
+            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+            hsocket:disconnect ().
+            leave ContBlock.
+         end.
+      /*ожидаем полной передачи тела запроса*/
+/*                                                                                */
+/*      IF  LENGTH(v-content) < v-cont-length  THEN DO:                           */
+/*          ETIME (YES).                                                          */
+/*          DO WHILE LENGTH(v-content) < v-cont-length AND ETIME < us-tmo * 1000 :*/
+/*              v-bytes = hSocket:get-bytes-available().                          */
+/*              run socketRead(hSocket:handle, v-bytes, input-output mbuffer-in). */
+/*              PAUSE 1.                                                          */
+/*          END.                                                                  */
+/*      END.                                                                      */
+      
+         logWrite:WriteFileToLog('REQUEST-CONTENT:' + v-content).
+      /* тело запроса передано не полностью */
+         if (    
+/*          HeadHttp:contentLength > 0 and*/
+            HeadHttp:contentLength > v-pos-buf)  
+         then do:
+            resp-head =  substitute("HTTP/1.0 408 Request Timeout&1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            SET-SIZE(mbuffer-out) = 0.
+            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+            PUT-STRING(mbuffer-out,1) = resp-head.
+            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+            hsocket:disconnect ().
+            leave ContBlock.
+         end.
+      /*Если тело не пустое*/
+/*          SET-SIZE(mbuffer) = 0.                          */
+/*          SET-SIZE(mbuffer) = LENGTH(v-content,'RAW') + 2.*/
+/*          PUT-STRING(mbuffer,1) = v-content.              */
+
+/*         if v-querypar <> ""                                   */
+/*         then do:                                              */
+/*            if num-entries (v-querypar, "?") > 1               */
+/*            then do:                                           */
+/*               sktserv:ClientPar  = entry (1, v-querypar, "?").*/
+/*               sktserv:QueryParam = entry (2, v-querypar, "?").*/
+/*            end.                                               */
+/*            else do:                                           */
+/*               sktserv:ClientPar = v-querypar.                 */
+/*               sktserv:QueryParam = "".                        */
+/*            end.                                               */
+/*         end.                                                  */
+/*         else do:                                              */
+/*            sktserv:ClientPar = "".                            */
+/*            sktserv:QueryParam = "".                           */
+/*         end.                                                  */
+/*          message sktserv:ClientPar skip                       */
+/*                  sktserv:QueryParam                           */
+/*          view-as alert-box.                                   */
+         case true:
+            when HeadHttp:queryAdr <> ''
+            or
+            when HeadHttp:contentType = 'text/xml' 
+            then do:
+               RequestProcessing(HeadHttp, v-content, hsocket) no-error.
+               resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
+            end.
+            when HeadHttp:contentType = 'raw' 
+            then do:
+               RequestProcessing(HeadHttp,mbuffer-in, hsocket, HeadHttp:userAgent) no-error.
+               resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
+            end.
+             
+         end case.
+          
+         logWrite:LogStr = "".
+          
+          /*if error-status:error then do:
+            resp-head =  substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            RUN write-to-log(return-value).            
+          end.
+          else do:
+/*            resp-head = "OK".*/
+          end.*/
+          
+      end. /* ContBlock */
+      logWrite:WriteFileToLog('RESPONSE: ' + resp-head).
+   end.
 
 
 end class.

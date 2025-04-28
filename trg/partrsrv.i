@@ -42,6 +42,8 @@ create: Перваков Михаил Сергеевич
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
+{ trg/markchng.i }
+
 procedure partrsrv :
 
   define input parameter  p-chg-qnty      as decimal   no-undo .
@@ -804,23 +806,8 @@ procedure partrsrv :
                   free_marking-lines.prt-code   = ub.marking-lines.prt-code
                 .
               end .
-              if avail buf_trn-doc and buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
-              do:   /* если СПИСАНИЕ, то проверим предыдущий статус марки */
-                 find last ub.c-marking no-lock where
-                           ub.c-marking.mark = ub.marking-lines.mark
-                      use-index pi-2 no-error.
-                 if avail ub.c-marking and
-                    (ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB or
-                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB or
-                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB or
-                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB or
-                     ub.c-marking.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB) then
-                   ub.marking.sts = ub.c-marking.sts .
-                 else  
-                   ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB . 
-              end.
-              else
-                ub.marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+              ub.marking.sts = stsMarkWhenDeleteGoods(if avail buf_trn-doc then buf_trn-doc.doc-code else ?,
+                                                      ub.marking-lines.mark).
             end .
           end .
           delete ub.marking-lines.

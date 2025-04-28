@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2d6430604525, 1301, rls $
+$Author: EShklyar $
+$Date: Tue Apr 10 12:04:11 2018 +0300 $
+$Workfile: bgedocs.p $
+$Archive: bge/bgedocs.p $
 
 Ёкспорт документов производства (плоский)
 
@@ -49,11 +50,11 @@ define input parameter p-opened-docs    as logical    no-undo.
 define input parameter hedt             as handle     no-undo.
 define input parameter hcnt             as handle     no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2d6430604525, 1301, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Apr 10 12:04:11 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: bgedocs.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/bgedocs.p $":U .
 define variable vss-description as character no-undo init "Ёкспорт во ¬нешнюю Ѕухгалтерию документов и суммарного расхода по чекам".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5baf537283c9, 2487, rls $
+$Author: SSlivenko $
+$Date: Пт июн 26 16:47:04 2020 +0300 $
+$Workfile: fl-out.p $
+$Archive: str/fl-out.p $
 
 Переведение запроса в накладную с резервированием товара и запросом ГОТОВ
 
@@ -18,11 +19,11 @@ Creation date: 01/14/05
 define input  parameter parParentProc  as widget-handle no-undo.
 define input  parameter trn-code       like ub.trn-doc.doc-code no-undo.             /* номер документа */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 5baf537283c9, 2487, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Пт июн 26 16:47:04 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fl-out.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/fl-out.p $":U .
 define variable vss-description as character no-undo init "Переведение запроса в накладную с без резервированиея товара и запросом ГОТОВ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

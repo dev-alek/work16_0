@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 79dbeab10a26, 2672, rls $
+$Author: Ostroukhov $
+$Date: Вт ноя 17 10:53:20 2020 +0300 $
+$Workfile: dskshtop.p $
+$Archive: str/dskshtop.p $
 
 Проверка корректности открытия смены на объекте с точки зрения кассы и продаж
 
@@ -24,11 +25,11 @@ DEFINE INPUT PARAMETER p-shift-num like ub.shift-obj.shift-num no-undo.
 define input parameter p-shift-name like ub.shift-obj.shift-name no-undo.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 79dbeab10a26, 2672, rls $":u .
+define variable vss-author      as character no-undo init "$Author: Ostroukhov $":u .
+define variable vss-date        as character no-undo init "$Date: Вт ноя 17 10:53:20 2020 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: dskshtop.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/dskshtop.p $":u .
 define variable vss-description as character no-undo init "Проверка корректности открытия смены на объекте с точки зрения кассы и продаж" .
 { cmp/vssrevis.i }
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6fb4dee32451, 3338, rls $
+$Author: EShklyar $
+$Date: 2023/05/19 13:37:09 $
+$Workfile: g-indop_vol.p $
+$Archive: rep/g-indop_vol.p $
 
 Прием топлива с превышением предельно допустимого объема резервуара
 
@@ -18,11 +19,11 @@ Creation date: 08/09/07
 define input parameter parparentproc as widget-handle no-undo .
 /*define input parameter custom-par    as character     no-undo .*/
 define variable custom-par as character no-undo .
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 6fb4dee32451, 3338, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/05/19 13:37:09 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: g-indop_vol.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/g-indop_vol.p $":U .
 define variable vss-description as character no-undo initial "Прием топлива с превышением предельно допустимого объема резервуара":U .
 
 { cmp/str-glbl.i     }
@@ -46,4 +47,4 @@ run rep/d-report.w (
                 input no).
 
 
-/* $Workfile$   E n d */
+/* $Workfile: g-indop_vol.p $   E n d */

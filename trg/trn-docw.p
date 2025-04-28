@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision: c96af91888ad, 3081, rls $
@@ -134,6 +135,11 @@ define variable v-trdcattr-type            as   character              no-undo .
 define variable var-ok-assort-pol as logical   no-undo .
 define variable var-mess-assort-pol as character no-undo .
 define variable v-new-trn-doc       as logical   no-undo . /* true - документ создан, false - документ изменён */
+
+define variable v-fact-order           as decimal no-undo .
+define variable v-shift-end-fact-order as decimal no-undo .
+define variable v-day-end-fact-order   as decimal no-undo .
+define variable l-shift-on as logical no-undo .
 
 define buffer buf_goods       for ub.goods .
 define buffer buf_es_trn-doc  for ub.trn-doc.
@@ -408,6 +414,47 @@ end.
       ub.trn-doc.sys-time
       ub.trn-doc.sys-time-int
     }
+
+    /* и обновляем fact-order при изменении fact-date */
+    if old-doc.fact-order > 0 and old-doc.fact-date <> trn-doc.fact-date then
+    do:
+      run factord in this-procedure
+        (input  ub.trn-doc.fact-date   /* p-fact-date            */
+        ,input  ub.trn-doc.fact-time   /* p-fact-time            */
+        ,input  ub.trn-doc.fact-num    /* p-fact-num             */
+        ,input  ub.trn-doc.shift-date  /* p-shift-date           */
+        ,input  ub.trn-doc.shift-num   /* p-shift-num            */
+        ,input  l-shift-on             /* p-shift-on             */
+        ,output v-fact-order           /* p-fact-order           */
+        ,output v-shift-end-fact-order /* p-shift-end-fact-order */
+        ,output v-day-end-fact-order   /* p-day-end-fact-order   */
+        ) no-error .
+      if error-status :error
+      or v-fact-order = ?
+      or v-fact-order = 0
+      then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка при определении фактического номера складского документа" skip
+          "Документ" ub.trn-doc.doc-code skip
+          "fact-date"               ub.trn-doc.fact-date   skip
+          "fact-time"               ub.trn-doc.fact-time   skip
+          "fact-num"                ub.trn-doc.fact-num    skip
+          "shift-date"              ub.trn-doc.shift-date  skip
+          "shift-num"               ub.trn-doc.shift-num   skip
+          "v-fact-order"            v-fact-order           skip
+          "v-shift-end-fact-order"  v-shift-end-fact-order skip
+          "v-day-end-fact-order"    v-day-end-fact-order   skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        undo, return error return-value .
+      end.
+
+      assign
+        ub.trn-doc.fact-order = v-fact-order
+      .
+    end.
   end.
 
   if ub.trn-doc.status_ = {&cash-desk}
@@ -512,9 +559,9 @@ end.
         and ub.trn-doc.flag_   = true
         )
     then do:
-      assign
-        l-need-check-inv = true
-      .
+      find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = ub.trn-doc.doc-code and
+        ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
+      if not available (ub.inv-doc-attr) then l-need-check-inv = true .
     end.
 
     /* мы переключаемся из статуса разр + */
@@ -718,12 +765,6 @@ end.
       .
 
       /* определяем fact-order */
-      define variable v-fact-order           as decimal no-undo .
-      define variable v-shift-end-fact-order as decimal no-undo .
-      define variable v-day-end-fact-order   as decimal no-undo .
-
-      define variable l-shift-on as logical no-undo .
-
       { gbl/objat.i
         ub.trn-doc.obj-type
         ub.trn-doc.obj-code
@@ -903,6 +944,11 @@ end.
         assign
           v-inv-on-attr = "inv-on=" + (if l-new-inv-on then "true" else "false")
         .
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = ub.trn-doc.doc-code and
+          ub.inv-doc-attr.attr-code = "invMultDevice" and 
+          ub.inv-doc-attr.attr-value = string(true) no-error .
+        if available(ub.inv-doc-attr) then return .
+ 
         { gbl/gdsobjat.i
           buf_doc-line.obj-type
           buf_doc-line.obj-code

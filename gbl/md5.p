@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: md5.p $
+$Archive: gbl/md5.p $
 
 Определение контрольной суммы md5 для файла
 
@@ -159,11 +160,11 @@ MD5 ("123456789012345678901234567890123456789012345678901234567890123456
 define input  parameter p-file-name     as character no-undo .
 define output parameter p-md5-signature as character no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: md5.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: gbl/md5.p $":U .
 define variable vss-description as character no-undo initial "".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

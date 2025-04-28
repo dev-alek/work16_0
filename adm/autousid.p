@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1eba0946c2d7, 3078, rls $
+$Author: DRuban $
+$Date: Пт авг 05 19:16:25 2022 +0300 $
+$Workfile: autousid.p $
+$Archive: adm/autousid.p $
 
 Инициализация user-id для автоматических процессов работы
 
@@ -18,11 +19,11 @@ Creation date: 07/16/07
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:25 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: autousid.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/autousid.p $":U .
 define variable vss-description as character no-undo init "Инициализация user-id для автоматических процессов работы".
 { cmp/vssrevis.i }
 { adm/auto-def.i }

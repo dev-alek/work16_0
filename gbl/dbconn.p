@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 138b369dad6e, 2892, rls $
+$Author: DRuban $
+$Date: Пн ноя 22 19:49:12 2021 +0300 $
+$Workfile: dbconn.p $
+$Archive: gbl/dbconn.p $
 
 Процедура подключения к базе данных
 
@@ -21,11 +22,11 @@ define input        parameter p-user-login    as character no-undo .
 define input        parameter p-user-password as character no-undo .
 define input-output parameter p-connected     as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 138b369dad6e, 2892, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пн ноя 22 19:49:12 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: dbconn.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/dbconn.p $":U .
 define variable vss-description as character no-undo init "Процедура подключения к базе данных".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

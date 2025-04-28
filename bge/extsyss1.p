@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b4bfe3261567, 1895, rls $
+$Author: SSlivenko $
+$Date: Fri Jun 07 16:26:45 2019 +0300 $
+$Workfile: extsyss1.p $
+$Archive: bge/extsyss1.p $
 
 Сохранение ВНЕШНЕЙ СИСТЕМЫ типа спец
 
@@ -44,11 +45,11 @@ DEFINE INPUT PARAMETER TABLE FOR tt-ext-system-attr.
 
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b4bfe3261567, 1895, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jun 07 16:26:45 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: extsyss1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/extsyss1.p $":U .
 define variable vss-description as character no-undo init "Сохранение ВНЕШНЕЙ СИСТЕМЫ типа спец".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

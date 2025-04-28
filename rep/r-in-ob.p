@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: r-in-ob.p $
+$Archive: rep/r-in-ob.p $
 
 
 
@@ -155,4 +156,4 @@ DEFINE shared FRAME zapas
   Assign l-col-type="DECIMAL" l-col-len=14 l-col-format="->>>>>>>>>>>9.<<<"  l-col-lable={&TDEDT_Chg_Purch_Code-full}.  { rep/r-ob1cr.i cr2  26   oborot-{&bef-TDEDT_Chg_Purch_Code}    }
   Assign l-col-type="DECIMAL" l-col-len=14 l-col-format="->>>>>>>>>>>9.<<<"  l-col-lable="Расход-Возврат"            .  { rep/r-ob1cr.i cr2  27   oborot-r-v }
 
-  /* $Workfile$ e n d */
+  /* $Workfile: r-in-ob.p $ e n d */

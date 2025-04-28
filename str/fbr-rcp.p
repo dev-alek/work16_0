@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: deb925b3c67c, 1358, rls $
+$Author: SMMolotkov $
+$Date: Tue May 22 14:25:44 2018 +0300 $
+$Workfile: fbr-rcp.p $
+$Archive: str/fbr-rcp.p $
 
 Резервирование и расчет учетных цен товаров рецепта.
 
@@ -26,11 +27,11 @@ define input parameter p-recipe-code    as character        no-undo.  /* номер р
 define input parameter p-autofbr        as logical          no-undo.  /* раскрутка для ресторана, от продажи, на кухне */
 define input parameter p-have-store     as logical          no-undo.  /* при раскрутке остатки смотреть на складе кухни */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: deb925b3c67c, 1358, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue May 22 14:25:44 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fbr-rcp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/fbr-rcp.p $":U .
 define variable vss-description as character no-undo init "Резервирование и расчет учетных цен товаров рецепта.".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4',p-fbr-doc-recid,p-recipe-code,p-autofbr,p-have-store)" }
 { cmp/str-glbl.i }

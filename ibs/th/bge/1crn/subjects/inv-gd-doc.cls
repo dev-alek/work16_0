@@ -307,6 +307,11 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
       for each buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_doc-line.obj-type and buf_doc-pl.obj-code = buf_doc-line.obj-code
         and buf_doc-pl.out-code = buf_doc-line.doc-code and buf_doc-pl.gds-code = buf_gds.gds-code:
         
+        assign
+          dAddCliQnty = 0.0
+          dAddQnty = 0.0
+        .
+        
         find first bf_rvs-line no-lock where
           available (bf_rvs-doc) and
           bf_rvs-line.rvs-code = buf_trn-doc.out-code and

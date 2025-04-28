@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 05d5ec57b83c, 3284, rls $
+$Author: SSlivenko $
+$Date: 2023/03/29 08:47:58 $
+$Workfile: r-RVD-hist.p $
+$Archive: rep/r-RVD-hist.p $
 
 Запускалка отчета r-ctrlsh.p
 
@@ -16,11 +17,11 @@ Creation date: 11/12/10
 */
 define input parameter p-inv-RVD as logical no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 05d5ec57b83c, 3284, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/03/29 08:47:58 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-RVD-hist.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-RVD-hist.p $":U .
 define variable vss-description as character no-undo initial "Запускалка отчета r-inptl.p":U .
 
 { cmp/vssrevis.i }

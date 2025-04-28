@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7d87d3dadc23, 307, rls $
+$Author: EShklyar $
+$Date: Tue Dec 01 19:12:20 2015 +0300 $
+$Workfile: img-check.p $
+$Archive: utl/img-check.p $
 
 Утилита проверки фото товаров
 
@@ -22,11 +23,11 @@ DEFINE var v-ask AS logical NO-UNDO.
 /*    VIEW-AS FILL-IN SIZE 75 BY 1          */
 /*    LABEL "Исходная директория" NO-UNDO.  */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7d87d3dadc23, 307, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:12:20 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: img-check.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/img-check.p $":U .
 define variable vss-description as character no-undo init "Утилита проверки фото товаров".
 
 { cmp/vssrevis.i }

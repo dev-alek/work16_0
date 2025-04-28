@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 15ea7233baa8, 1928, rls $
+$Author: obrezanova $
+$Date: Fri Jul 12 15:10:05 2019 +0300 $
+$Workfile: filecryp.p $
+$Archive: utl/filecryp.p $
 
 шифрование файла
 
@@ -23,11 +24,11 @@ define input parameter p-pasword as character no-undo.
 define input parameter p-encrypt as logical   no-undo.
 define input parameter p-outfile as character no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 15ea7233baa8, 1928, rls $":U .
+define variable vss-author      as character no-undo init "$Author: obrezanova $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jul 12 15:10:05 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: filecryp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/filecryp.p $":U .
 define variable vss-description as character no-undo init "шифрование файла".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

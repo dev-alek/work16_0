@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -27,6 +28,7 @@ define variable vss-description as character no-undo init "Восстановление удален
 { cmp/trg-def.i }
 
 define variable v-obj-db-num as integer no-undo .
+define variable v-discnt as character no-undo .
 
 define buffer buf_c-chk-doc for ub.c-chk-doc.
 define buffer buf_c-chk-gds for ub.c-chk-gds.
@@ -38,13 +40,17 @@ define buffer buf2_c-chk-gds for ub.c-chk-gds.
 define buffer buf2_c-chk-pay for ub.c-chk-pay.
 define buffer buf2_c-chk-discnt for ub.c-chk-discnt.
 define buffer buf2_c-chk-doc-attr for ub.c-chk-doc-attr.
+define buffer buf_marking-chk for ub.marking-chk.
+define buffer buf_c-marking-chk for ub.c-marking-chk.
+define buffer buf2_c-marking-chk for ub.c-marking-chk.
 define buffer buf_chk-doc for ub.chk-doc.
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_chk-pay for ub.chk-pay.
 define buffer buf_chk-discnt for ub.chk-discnt.
 define buffer buf_chk-doc-attr for ub.chk-doc-attr.
-
-
+define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+define buffer buf_chk-pay-attr for ub.chk-pay-attr.
+define buffer buf_chk-discnt-attr for ub.chk-discnt-attr.
 
 
 main-block:
@@ -141,12 +147,122 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        buf2_c-chk-pay.chip-num = buf2_c-chk-doc.chip-num
        .
      end.
+     for each buf_c-marking-chk no-lock where
+             buf_c-marking-chk.doc-code = buf_c-chk-doc.doc-code 
+         and buf_c-marking-chk.chip-num = buf_c-chk-doc.chip-num
+     on error undo main-block, return error:
+       create buf_marking-chk.
+       buffer-copy buf_c-marking-chk to buf_marking-chk.
+       create buf2_c-marking-chk.
+       buffer-copy buf_c-marking-chk
+       except chip-num to buf2_c-marking-chk
+       assign
+       buf2_c-marking-chk.chip-num = buf2_c-chk-doc.chip-num
+       .
+     end.
+
+     chk-doc-attr_ :
      for each buf_c-chk-doc-attr no-lock where
             buf_c-chk-doc-attr.doc-code = buf_c-chk-doc.doc-code
         and buf_c-chk-doc-attr.chip-num = buf_c-chk-doc.chip-num
      on error undo main-block, return error:
+       if num-entries(buf_c-chk-doc-attr.attr-code, {&delim-par}) > 1
+       then do :
+         if entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}) begins "gds="
+         then do :
+           find first buf_chk-gds-attr exclusive-lock where buf_chk-gds-attr.attr-code = entry(2, buf_c-chk-doc-attr.attr-code, {&delim-par}) and
+           buf_chk-gds-attr.doc-code = buf_c-chk-doc-attr.doc-code and 
+           buf_chk-gds-attr.line-num = integer(entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "=")) no-error .
+           if not available (buf_chk-gds-attr) then do:
+           create buf_chk-gds-attr.
+           assign
+           buf_chk-gds-attr.attr-code = entry(2, buf_c-chk-doc-attr.attr-code, {&delim-par}) 
+           buf_chk-gds-attr.line-num = integer(entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "=")) 
+           buf_chk-gds-attr.attr-value = buf_c-chk-doc-attr.attr-value 
+           buf_chk-gds-attr.doc-code = buf_c-chk-doc-attr.doc-code
+           .
+           end.
+           else do:
+             buf_chk-gds-attr.attr-value = buf_c-chk-doc-attr.attr-value .
+           end.
+           create buf2_c-chk-doc-attr.
+           buffer-copy buf_c-chk-doc-attr
+           except chip-num to buf2_c-chk-doc-attr
+           assign
+           buf2_c-chk-doc-attr.chip-num = buf2_c-chk-doc.chip-num
+           .
+           next chk-doc-attr_ .
+         end .
+         if entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}) begins "pay="
+         then do :
+           find first buf_chk-pay-attr no-lock where buf_chk-pay-attr.attr-code = entry(2, buf_c-chk-doc-attr.attr-code, {&delim-par}) and
+           buf_chk-pay-attr.doc-code = buf_c-chk-doc-attr.doc-code and
+           buf_chk-pay-attr.line-num = integer(entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "=")) no-error .
+           if not available (buf_chk-pay-attr) then do:
+           create buf_chk-pay-attr.
+           buffer-copy buf_c-chk-doc-attr to buf_chk-pay-attr
+           assign
+           buf_chk-pay-attr.attr-code = entry(2, buf_c-chk-doc-attr.attr-code, {&delim-par})
+           buf_chk-pay-attr.line-num = integer(entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "="))
+           buf_chk-pay-attr.doc-code = buf_c-chk-doc-attr.doc-code
+           buf_chk-pay-attr.attr-value = buf_c-chk-doc-attr.attr-value
+           .
+           end.
+           create buf2_c-chk-doc-attr.
+           buffer-copy buf_c-chk-doc-attr
+           except chip-num to buf2_c-chk-doc-attr
+           assign
+           buf2_c-chk-doc-attr.chip-num = buf2_c-chk-doc.chip-num
+           .
+           next chk-doc-attr_ .
+         end .
+         if entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}) begins "discnt="
+         then do :
+           v-discnt = entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "=") .
+           create buf_chk-discnt-attr.
+           buffer-copy buf_c-chk-doc-attr to buf_chk-discnt-attr
+           assign
+           buf_chk-discnt-attr.attr-code = entry(2, buf_c-chk-doc-attr.attr-code, {&delim-par})
+           buf_chk-discnt-attr.line-num = integer(entry(1, v-discnt, {&delim-key}))
+           buf_chk-discnt-attr.record-type = integer(entry(2, v-discnt, {&delim-key}))
+           buf_chk-discnt-attr.discnt-id = integer(entry(3, v-discnt, {&delim-key}))
+           buf_chk-discnt-attr.object-line-num = integer(entry(4, v-discnt, {&delim-key}))
+           .
+           create buf2_c-chk-doc-attr.
+           buffer-copy buf_c-chk-doc-attr
+           except chip-num to buf2_c-chk-doc-attr
+           assign
+           buf2_c-chk-doc-attr.chip-num = buf2_c-chk-doc.chip-num
+           .
+           next chk-doc-attr_ .
+         end .
+       find first buf_chk-gds-attr exclusive-lock where buf_chk-gds-attr.attr-code = buf_c-chk-doc-attr.attr-code and
+         buf_chk-gds-attr.doc-code = buf_c-chk-doc-attr.doc-code and
+         buf_chk-pay-attr.line-num = integer(entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "=")) no-error .
+       if not available (buf_chk-gds-attr) then 
+       do:
+         create buf_chk-gds-attr.
+           assign
+           buf_chk-gds-attr.attr-code = entry(2, buf_c-chk-doc-attr.attr-code, {&delim-par})
+           buf_chk-pay-attr.line-num = integer(entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "="))
+           buf_chk-gds-attr.attr-value = buf_c-chk-doc-attr.attr-value
+           buf_chk-gds-attr.doc-code = buf_c-chk-doc-attr.doc-code
+           .
+       end.
+       else 
+       do:
+         buf_chk-gds-attr.attr-value = buf_c-chk-doc-attr.attr-value .
+       end.
+       end .
+       find first buf_chk-doc-attr exclusive-lock where buf_chk-doc-attr.attr-code = buf_c-chk-doc-attr.attr-code and
+       buf_chk-doc-attr.doc-code = buf_c-chk-doc-attr.doc-code no-error .
+       if not available (buf_chk-doc-attr) then do:
        create buf_chk-doc-attr.
        buffer-copy buf_c-chk-doc-attr to buf_chk-doc-attr.
+       end.
+       else do:
+         buf_chk-doc-attr.attr-value = buf_c-chk-doc-attr.attr-value .
+       end.
        create buf2_c-chk-doc-attr.
        buffer-copy buf_c-chk-doc-attr
        except chip-num to buf2_c-chk-doc-attr

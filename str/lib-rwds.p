@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 41853a5ca5bc, 1585, rls $
+$Author: ASMorozov $
+$Date: 2018/11/06 01:41:36 $
+$Workfile: lib-rwds.p $
+$Archive: str/lib-rwds.p $
 
 Библиотека процедур по работе с информационными таблицами trn-doc-sum doc-line-sum
 
@@ -32,11 +33,11 @@ CREATE1: Булгаков Андрей Николаевич
  *                                                                                                                       *
 \* ********************************************************************************************************************* */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: 41853a5ca5bc, 1585, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: ASMorozov $":U.
+define variable vss-date        as character no-undo initial "$Date: 2018/11/06 01:41:36 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: lib-rwds.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: str/lib-rwds.p $":U.
 define variable vss-description as character no-undo initial "Библиотека процедур по работе с информационными таблицами trn-doc-sum doc-line-sum":U.
 
 { cmp/vssrevis.i }
@@ -4152,4 +4153,4 @@ procedure lib-rwds_rcallfct :
 end procedure. /* lib-rwds_rcallfct */
 
 
-/* $Workfile$   E n d */
+/* $Workfile: lib-rwds.p $   E n d */

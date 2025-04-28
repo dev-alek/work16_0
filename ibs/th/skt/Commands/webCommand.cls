@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 43c09557cdee, 3584, rls $
+$Author: DRuban $
+$Date: 2023/12/28 12:56:36 $
+$Workfile: webCommand.cls $
+$Archive: ibs/th/skt/Commands/webCommand.cls $
 
 
 
@@ -19,6 +19,7 @@ using ibs.th.skt.*.
 using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.Commands.webCommand inherits ICommand: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

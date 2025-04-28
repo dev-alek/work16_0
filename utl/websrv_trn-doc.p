@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 288743b2d1c0, 2956, rls $
+$Author: VRukavishnikov $
+$Date: Ср апр 06 16:23:40 2022 +0300 $
+$Workfile: websrv_trn-doc.p $
+$Archive: utl/websrv_trn-doc.p $
 
 Импорт накладных из временной таблицы
 
@@ -29,11 +30,11 @@ define output parameter p-ok-doc as integer   no-undo .
 define output parameter ERROR_ as logical no-undo initial false .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 288743b2d1c0, 2956, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VRukavishnikov $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:40 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: websrv_trn-doc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/websrv_trn-doc.p $":U .
 define variable vss-description as character no-undo init "Импорт накладных из временной таблицы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

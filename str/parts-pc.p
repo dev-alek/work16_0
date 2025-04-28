@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 220955104cd9, 2417, rls $
+$Author: SSlivenko $
+$Date: 2020/06/10 18:13:46 $
+$Workfile: parts-pc.p $
+$Archive: str/parts-pc.p $
 
 Создание и заполнение документа смены типа партий
 
@@ -32,11 +33,11 @@ define input parameter par-shift-name as character no-undo.
 
 define variable chg-qnty      as   decimal no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 220955104cd9, 2417, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2020/06/10 18:13:46 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: parts-pc.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/parts-pc.p $":U .
 define variable vss-description as character no-undo initial "Создание и заполнение документа смены типа партий":U .
 
 { cmp/vssrevis.i }

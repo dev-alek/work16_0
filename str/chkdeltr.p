@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 120a810dadd3, 63, rls $
+$Author: ASMorozov $
+$Date: Thu Aug 28 16:27:54 2014 +0400 $
+$Workfile: chkdeltr.p $
+$Archive: str/chkdeltr.p $
 
 Проверка возможности удаления документа, закрытого до статуса {&fact}
 
@@ -25,11 +26,11 @@ define input  parameter p-doc-code      as character no-undo .
 define input  parameter p-phdoc-code    as character no-undo .
 define input  parameter p-file-name-err as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 120a810dadd3, 63, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Aug 28 16:27:54 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chkdeltr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/chkdeltr.p $":U .
 define variable vss-description as character no-undo init "Проверка возможности удаления документа, закрытого до статуса {&fact}".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -31,6 +31,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   { cmp/str-glbl.i class } /* &add-def, &update, &deletion, &shop, &attr-cash-book-id, &attr-oper-serv-id */
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
   {utl\gtin.i class}
+  define temp-table tt-marking like ub.marking
+    field mrc as integer  
+  .
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
   .
@@ -39,6 +42,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   define property Msg as character no-undo
     get. 
     set.
+
+/*  define stream myProt.*/
 
   method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
     define variable objImp    as class ibs.th.bge.1crn.subjects.mark no-undo.
@@ -83,15 +88,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       undo, throw new Progress.Lang.AppError(substitute("Загрузка &1 не предусмотрена",objImp:obj-load)) .
    vmark = repTegforDm(objImp:mark-code).
    vKM = GetCodeIdent(vmark).
-   find first marking where marking.mark begins vKM
-   exclusive-lock no-error.
-   if not available marking
-   then do:
-      create marking.
-      marking.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts).
-   end.
-   else 
-     
+
    if objImp:gds-code ne ?
    then do:
       find first buf_goods  where buf_goods.gds-code eq objImp:gds-code
@@ -115,68 +112,76 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             undo, throw new Progress.Lang.AppError(substitute("GTIN &1 не принадлежит товару &2 ", objImp:gtin , objImp:gds-code)) . 
       end.
    end.
-   assign
-      marking.mark         = vmark
-      marking.gds-code     = objImp:gds-code
-      marking.gds-ext-id   = objImp:GTIN
-      marking.mark-parent  = repTegforDm(objImp:mark-parent) when objImp:mark-parent ne ? 
-      marking.box-qnty     = objImp:qnty-box
-      marking.unit-ext     = objImp:unit-ext
-   .
-   if marking.gds-code eq 0
-   then 
-      marking.gds-code = ?.
-   if marking.mark-parent <> "" and
-      can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(marking.sts)) then
-   do:   /* если марка продана или возвращена, то разгруппируем упаковку */
-     for first parentMarking where
-               parentMarking.mark = marking.mark-parent
-         exclusive-lock:
-       parentMarking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
-     end.
-   end.
 
-   if marking.sts eq ? then
+   find first tt-marking where tt-marking.mark begins vKM
+   no-error.
+   if not available tt-marking then
+     create tt-marking.
+
+   assign
+      tt-marking.mark         = vmark
+      tt-marking.gds-code     = objImp:gds-code
+      tt-marking.gds-ext-id   = objImp:GTIN
+      tt-marking.mark-parent  = repTegforDm(objImp:mark-parent) when objImp:mark-parent ne ? 
+      tt-marking.box-qnty     = objImp:qnty-box
+      tt-marking.unit-ext     = objImp:unit-ext
+      tt-marking.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
+      tt-marking.mrc = objImp:mrc
+   .
+   if tt-marking.gds-code eq 0
+   then 
+      tt-marking.gds-code = ?.
+/*   if marking.mark-parent <> "" and                                                */
+/*      can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(tt-marking.sts)) then*/
+/*   do:   /* если марка продана или возвращена, то разгруппируем упаковку */        */
+/*     for first parentMarking where                                                 */
+/*               parentMarking.mark = marking.mark-parent                            */
+/*         exclusive-lock:                                                           */
+/*       parentMarking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.         */
+/*     end.                                                                          */
+/*   end.                                                                            */
+/*                                                                                   */
+   if tt-marking.sts eq ? then
       undo, throw new Progress.Lang.AppError(substitute("Не известный статус марки &1",objImp:stts)) .
    
-   if marking.sts ne objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+   if tt-marking.sts ne objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
    then do:
-   if    marking.box-qnty < 1
-      or marking.box-qnty eq ? 
+   if    tt-marking.box-qnty < 1
+      or tt-marking.box-qnty eq ? 
    then
       undo, throw new Progress.Lang.AppError(substitute("Значение qnty-box должно быть больше 0")) .
    define variable vgtin as character no-undo.
-   vgtin = getGtinByDM(marking.mark).
+   vgtin = getGtinByDM(tt-marking.mark).
    if vgtin eq ""
    then
       vgtin = ?.
    if vgtin ne ?
-      and marking.gds-ext-id ne vgtin
-      and marking.unit-ext <> "LEVEL2"  /* EXPSD-8372 */
+      and tt-marking.gds-ext-id ne vgtin
+      and tt-marking.unit-ext <> "LEVEL2"  /* EXPSD-8372 */
    then
-      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 марки не равен &2",getGtinByDM(marking.mark),marking.gds-ext-id)) .
-   if marking.gds-code ne getGdsCodeByGtin(marking.gds-ext-id)
+      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 марки не равен &2",getGtinByDM(tt-marking.mark),tt-marking.gds-ext-id)) .
+   if tt-marking.gds-code ne getGdsCodeByGtin(tt-marking.gds-ext-id)
    then
-      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 марки относится к товару &2, в файле товар &3",marking.gds-ext-id,getGdsCodeByGtin(marking.gds-ext-id),marking.gds-code)) .
+      undo, throw new Progress.Lang.AppError(substitute("Значение Gitn &1 марки относится к товару &2, в файле товар &3",tt-marking.gds-ext-id,getGdsCodeByGtin(tt-marking.gds-ext-id),tt-marking.gds-code)) .
    
-   if     objImp:mrc ne 0 
-      and objImp:mrc ne ?
-   then do:
-      find first marking-attr where marking-attr.mark      eq marking.mark
-                                and marking-attr.attr-code eq "MRC"
-         exclusive-lock no-error.
-      if not avail marking-attr
-      then do:
-         create marking-attr.
-         assign
-            marking-attr.mark =  marking.mark
-            marking-attr.attr-code = "MRC"
-                
-                                 no-error.
-      end.
-      marking-attr.attr-value = string(objImp:mrc).
-      release marking-attr no-error.
-   end.
+/*   if     objImp:mrc ne 0                                                 */
+/*      and objImp:mrc ne ?                                                 */
+/*   then do:                                                               */
+/*      find first marking-attr where marking-attr.mark      eq marking.mark*/
+/*                                and marking-attr.attr-code eq "MRC"       */
+/*         exclusive-lock no-error.                                         */
+/*      if not avail marking-attr                                           */
+/*      then do:                                                            */
+/*         create marking-attr.                                             */
+/*         assign                                                           */
+/*            marking-attr.mark =  marking.mark                             */
+/*            marking-attr.attr-code = "MRC"                                */
+/*                                                                          */
+/*                                 no-error.                                */
+/*      end.                                                                */
+/*      marking-attr.attr-value = string(objImp:mrc).                       */
+/*      release marking-attr no-error.                                      */
+/*   end.                                                                   */
    end.  
   v-retfl = true .
     define variable i as integer no-undo .
@@ -209,5 +214,191 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       return v-retfl .
     end finally .
   end method. /* end_of Excute */
+
+  method public logical WriteDB ():
+    
+    define variable vKM       as character no-undo.
+    define variable vGtin     as character no-undo.
+    define variable vGtinQnty as integer no-undo.
+    define buffer buf_marking       for ub.marking.  
+
+    for each tt-marking where
+             tt-marking.unit-ext = "UNIT"
+          or tt-marking.box-qnty = 1
+        : /* сначала копируем в БД потребительские упаковки */
+      copyMark2DB(buffer tt-marking, ?).
+    end.
+
+/*output stream myProt to c:\wrk\16_0\oxml_imp\oxml\heap\myprot.txt.*/
+    for each tt-marking where
+             tt-marking.unit-ext <> "UNIT"
+          or tt-marking.box-qnty > 1
+        by tt-marking.box-qnty
+        : /* потом копируем групповые упаковки */
+
+/*      ChekTypeMarkByDm(tt-marking.mark).        */
+      vGtin     = getGtinByDM(tt-marking.mark) .
+      vGtinQnty = getQntyCodeByGtin(vGtin).
+      MARK_CHILD:
+      for each buf_marking no-lock where
+               buf_marking.mark-parent = tt-marking.mark
+          break by buf_marking.mark     
+          :
+        if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) or
+           can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts)) then
+        do:
+          tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+        end.  
+        if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
+        do: /* меняем статус родетеля и всех потреб упаковок на Ошибка */
+          setStatusGroupMark(buffer tt-marking, objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB).
+          leave mark_CHIlD.
+        end.
+      end.
+        /* перенесено из trndocmv-1c.p (ТЗ 7700183344 помарочное движение п.3.1.5.) */
+      vKM = GetCodeIdent(tt-marking.mark).
+      find first buf_marking exclusive-lock where
+               buf_marking.mark begins vKM no-error.
+      if tt-marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and 
+         avail buf_marking and
+         (buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+          buf_marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB) then
+      do:  /* если это упаковка и разгруппирована или Серая зона, то анализируем статус марок внутри упаковки */
+        for each buf_marking no-lock where 
+                 buf_marking.mark-parent = tt-marking.mark
+             and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+        :  /* считаем марки в Ожидает приемку */
+            accum buf_marking.mark (count).
+        end.
+        if (accum count buf_marking.mark) >= vGtinQnty then
+        do:  /* если все марки внутри упаковки Ожидает приемку, значит пришел полный состав и меняем статус упаковки */
+          tt-marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.  
+        end.
+        else
+        do: /* иначе идем по маркам упаковки, если марка добавлена в чек или расходый док-т ее статус оставляем, а остальные меняем на Проверен*/
+          for each buf_marking exclusive-lock where 
+                   buf_marking.mark-parent = tt-marking.mark
+               and can-do(objSrv:Env:Marking:Sts:Mark:FreeStatuses,string(buf_marking.sts))
+          :
+            buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
+          end.
+          if tt-marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB then
+          do:  /* меняем статус с Серая зона на Разгруппирован */
+            tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+          end.  
+        end.
+      end.
+      if avail buf_marking and
+         (can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) or
+         can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts))) then
+      do:   /* если груп упаковка уже есть в БД и добавлена в чек или расходый док-т, то меняем статус всех потреб упаковок */
+        setStatusGroupMark(buffer tt-marking, buf_marking.sts).
+      end.  
+      copyMark2DB(buffer tt-marking, tt-marking.sts).
+      
+      /* если статус груп.упаковки РАЗГРОППИРОВАН, то меняем статус потреб.упаковок на Проверен, */
+      /* если она не добавлена в чек или расходый док-т */
+      if tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB 
+      then do:
+        for each buf_marking exclusive-lock where
+                 buf_marking.mark-parent = tt-marking.mark
+            :
+          if not (can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) or
+                  can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts))) then
+          do:  
+            buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
+          end.     
+        end.
+      end.
+      
+/*      for first buf_marking no-lock where                                                */
+/*                buf_marking.mark = tt-marking.mark:                                      */
+/*        put stream myProt unformatted                                                    */
+/*          buf_marking.mark " " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip*/
+/*        .                                                                                */
+/*      end.                                                                               */
+/*      for each buf_marking no-lock where                                                 */
+/*               buf_marking.mark-parent = tt-marking.mark:                                */
+/*        put stream myProt unformatted                                                    */
+/*          buf_marking.mark " " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip*/
+/*        .                                                                                */
+/*      end.                                                                               */
+    end.
+/*output stream myProt close.*/
+/*run gbl/inidebug.p.        */
+  end method.
+  
+  method private void copyMark2DB 
+    (buffer buf_tt-marking for tt-marking,
+     input iSts as integer /* статус марки, который надо установить */
+    ):
+    define variable vKM       as character no-undo.
+    define buffer buf_marking      for ub.marking.
+    define buffer buf_marking-attr for ub.marking-attr.
+    
+    vKM = GetCodeIdent(buf_tt-marking.mark).
+    find first buf_marking exclusive-lock where
+               buf_marking.mark begins vKM no-error.
+    if not avail buf_marking then 
+    do:
+      create buf_marking.
+      buf_marking.sts = buf_tt-marking.sts. 
+    end.
+    buffer-copy buf_tt-marking except sts to buf_marking no-error.
+    if error-status:error then
+    do:
+      undo, throw new Progress.Lang.AppError(substitute("Ошибка создания марки &1 товар &2",buf_tt-marking.mark,buf_tt-marking.gds-code)) .
+    end.
+    if iSts <> ? then /* если пришел определенный статус на вход, то ставим его */
+      buf_marking.sts = iSts.
+    else /* если пришел ?, то проверим, что марка НЕ добавлена в чек или расходый док-т, и тогда ставим статус поступивший от ИС «УРТ».  */
+      if not (can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) or
+              can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts)))
+      then buf_marking.sts = buf_tt-marking.sts.
+    validate buf_marking no-error.
+    if error-status:error then
+    do:
+      undo, throw new Progress.Lang.AppError(substitute("Ошибка создания марки &1 товар &2",buf_tt-marking.mark,buf_tt-marking.gds-code)) .
+    end.
+    if tt-marking.mrc ne 0 and 
+       tt-marking.mrc ne ? then
+    do:
+      find first buf_marking-attr where buf_marking-attr.mark      eq buf_marking.mark
+                                    and buf_marking-attr.attr-code eq "MRC"
+           exclusive-lock no-error.
+      if not avail buf_marking-attr
+      then do:
+        create buf_marking-attr.
+        assign
+          buf_marking-attr.mark =  buf_marking.mark
+          buf_marking-attr.attr-code = "MRC"
+        no-error.
+      end.
+      buf_marking-attr.attr-value = string(tt-marking.mrc).
+      release buf_marking-attr no-error.
+      if error-status:error then
+      do:
+        undo, throw new Progress.Lang.AppError(substitute("Ошибка создания марки &1 товар &2",buf_tt-marking.mark,buf_tt-marking.gds-code)) .
+      end.
+    end.
+  end method.    
+
+  method private void setStatusGroupMark 
+    (buffer buf_tt-marking for tt-marking,
+     input iStatus as integer):
+    
+    define buffer buf_marking for ub.marking.
+    
+    buf_tt-marking.sts = iStatus.
+    for each buf_marking where
+             buf_marking.mark-parent = tt-marking.mark
+        : /* идем по маркам упаковки меняем статус марки на статус групп. упаковки, если марка НЕ БЫЛА добавлена в чек или расходый док-т ее статус оставляем */
+      if not (can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) or
+              can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts))) then
+      do:  
+        buf_marking.sts = iStatus.
+      end.     
+    end.
+  end method.    
     
 end class.

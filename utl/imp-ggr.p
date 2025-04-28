@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8d6ad4ee6014, 1102, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: imp-ggr.p $
+$Archive: utl/imp-ggr.p $
 
 Импорт групп товаров
 
@@ -21,11 +22,11 @@ Output:
 
 DEFINE VARIABLE p-install as logical no-undo init false .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 8d6ad4ee6014, 1102, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Thu Dec 14 02:13:52 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: imp-ggr.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/imp-ggr.p $":U .
 define variable vss-description as character no-undo initial "Импорт групп товаров ".
 { cmp/vssrevis.i }
 

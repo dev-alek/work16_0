@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ccgrhisv.p $
+$Archive: ref/ccgrhisv.p $
 
 «аполнение временной таблицы дл€ показа изменений по таблицам истории групп клиентов
 
@@ -24,11 +25,11 @@ define output parameter p-description as character no-undo .
 define output parameter p-full-name-old as character no-undo case-sensitive.
 define output parameter p-full-name-new as character no-undo case-sensitive.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ccgrhisv.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/ccgrhisv.p $":U .
 define variable vss-description as character no-undo init "«аполнение временной таблицы дл€ показа изменений по таблицам истории групп клиентов".
 { cmp/vssrevis.i }
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 099a383cf864, 290, rls $
+$Author: PGridchina $
+$Date: Tue Dec 01 19:11:24 2015 +0300 $
+$Workfile: r-inrvs.p $
+$Archive: rep/r-inrvs.p $
 
 Приходная накладная по топливу
 
@@ -18,11 +19,11 @@ Creation date: 02/18/09
 
 */
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: 099a383cf864, 290, rls $":U .
+def var vss-author      as character no-undo init "$Author: PGridchina $":U .
+def var vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:24 2015 +0300 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: r-inrvs.p $":U .
+def var vss-archive     as character no-undo init "$Archive: rep/r-inrvs.p $":U .
 def var vss-description as character no-undo init "Приходная накладная по топливу".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

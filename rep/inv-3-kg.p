@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 053a3dce2430, 1077, rls $
+$Author: EShklyar $
+$Date: Fri Oct 06 18:38:00 2017 +0300 $
+$Workfile: inv-3-kg.p $
+$Archive: rep/inv-3-kg.p $
 
 Инвентаризационная опись и сличительная ведомость топлива в кг
 
@@ -31,11 +32,11 @@ define input parameter p-no-vat      as character     no-undo. /* используется д
 define input parameter p-grp         as character     no-undo. /* используется для печати только сумм по группам */
 define input parameter print-graft    as logical          no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: 053a3dce2430, 1077, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U.
+define variable vss-date        as character no-undo initial "$Date: Fri Oct 06 18:38:00 2017 +0300 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: inv-3-kg.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: rep/inv-3-kg.p $":U.
 define variable vss-description as character no-undo initial "Инвентаризационная опись и сличительная ведомость топлива в кг":U.
 
 { cmp/vssrevis.i     }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5baf537283c9, 2487, rls $
+$Author: SSlivenko $
+$Date: 2020/06/26 13:47:04 $
+$Workfile: fbr-gds.p $
+$Archive: str/fbr-gds.p $
 
 Резервирование одного товара в документе производства
 
@@ -31,11 +32,11 @@ define input parameter p-goods-recid    as recid            no-undo.   /* recid 
 define input parameter p-autofbr        as logical          no-undo.  /* раскрутка для ресторана, от продажи, на кухне */
 define input parameter p-have-store     as logical          no-undo.  /* при раскрутке остатки смотреть на складе кухни */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 5baf537283c9, 2487, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2020/06/26 13:47:04 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fbr-gds.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/fbr-gds.p $":U .
 define variable vss-description as character no-undo init "Резервирование одного товара в документе производства".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

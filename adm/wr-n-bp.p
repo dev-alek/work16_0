@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 784232a2254b, 2720, rls $
+$Author: SSlivenko $
+$Date: ѕн €нв 18 10:14:30 2021 +0300 $
+$Workfile: wr-n-bp.p $
+$Archive: adm/wr-n-bp.p $
 
 запись следующего по расписанию задани
 
@@ -21,11 +22,11 @@ define input parameter p-db-num        as character no-undo .
 define input parameter p-for-extsys    as character no-undo .
 define input parameter p-for-proc      as character no-undo . 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 784232a2254b, 2720, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: ѕн €нв 18 10:14:30 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: wr-n-bp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/wr-n-bp.p $":U .
 define variable vss-description as character no-undo init "запись следующего по расписанию задани€".
 { cmp/vssrevis.i }
 { adm/auto-def.i }
@@ -479,4 +480,4 @@ end.
 
 return.
 
-/* $Workfile$ end */
+/* $Workfile: wr-n-bp.p $ end */

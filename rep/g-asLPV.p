@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3c5534ed78f6, 202, rls $
+$Author: AShutilov $
+$Date: Mon Jun 08 18:12:53 2015 +0400 $
+$Workfile: g-asLPV.p $
+$Archive: rep/g-asLPV.p $
 
 Отчет об отчислениях в ЛПВ - запуск
 
@@ -18,11 +19,11 @@ Creation date: 23/05/15
 /* ***************************  Definitions  ************************** */
 define input parameter parparentproc as widget-handle no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 3c5534ed78f6, 202, rls $":U .
+define variable vss-author      as character no-undo init "$Author: AShutilov $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jun 08 18:12:53 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: g-asLPV.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rep/g-asLPV.p $":U .
 define variable vss-description as character no-undo init "Отчет об отчислениях в ЛПВ - запуск".
 { cmp/vssrevis.i }
 

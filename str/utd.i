@@ -1327,6 +1327,7 @@ function addMark returns logical
 &endif
 ( buffer utd-marking-lines for utd-marking-lines ):
    define buffer buf_utd-marking-line for utd-marking-lines.
+   define buffer buf_utd for ub.utd .
    for each marking where marking.mark-parent eq utd-marking-lines.mark no-lock:
       find first buf_utd-marking-line where buf_utd-marking-line.db-num    eq utd-marking-lines.db-num
                                         and buf_utd-marking-line.doc-id    eq utd-marking-lines.doc-id
@@ -1344,6 +1345,9 @@ function addMark returns logical
          end.
       end.
       else do:
+         find first buf_utd no-lock where buf_utd.db-num    eq utd-marking-lines.db-num
+                                      and buf_utd.doc-id    eq utd-marking-lines.doc-id
+                                      no-error .
          create buf_utd-marking-line.
          buffer-copy utd-marking-lines except doc-level mark sts gds-code to buf_utd-marking-line
          assign
@@ -1351,6 +1355,15 @@ function addMark returns logical
             buf_utd-marking-line.mark      = marking.mark
             buf_utd-marking-line.gds-code  = marking.Gds-code
 /*            buf_utd-marking-line.sts       = marking.sts*/
+            buf_utd-marking-line.sts      = if (available buf_utd and buf_utd.EDocType = objSrv:Env:Utd:EDocType:Mark_Collect:KeyIntDB)
+                                            then marking.sts
+                                            else
+                                            if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(marking.sts)) or
+                                                can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(marking.sts)) or
+                                                marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                                                marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                                             then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                                             else marking.sts
          .
          
       end.

@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: units.cls $
+$Archive: ibs/th/bge/1crn/subjects/units.cls $
 
 Структура данных units в 1С
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.units inherits ibs.th.bge.1crn.subjects.asubject: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
@@ -64,9 +65,9 @@ class ibs.th.bge.1crn.subjects.units inherits ibs.th.bge.1crn.subjects.asubject:
     def var v-str as char no-undo.
     
     assign
-      v-str = "okei-code" when okei-code = ?
+      /*v-str = "okei-code" when okei-code = ?*/
       v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",full-name" when full-name = ?
+      /*v-str = v-str + ",full-name" when full-name = ?*/
       v-str = v-str + ",type" when type_ = ?
     .
     v-str = trim (v-str, ",").

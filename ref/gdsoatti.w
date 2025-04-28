@@ -27,11 +27,11 @@ DEFINE TEMP-TABLE tt0-gds-obj-attr NO-UNDO LIKE ub.gds-obj-attr.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: gdsoatti.w $
+$Archive: ref/gdsoatti.w $
 
 Атрибуты товара на объекте
 
@@ -52,11 +52,11 @@ define output parameter p-updated AS LOGICAL no-undo.
 define INPUT-OUTPUT parameter table for tt0-gds-obj-attr.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gdsoatti.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/gdsoatti.w $":U .
 define variable vss-description as character no-undo init "Атрибуты товара на объекте ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -482,6 +482,27 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-exit Dialog-Frame
 ON CHOOSE OF B-exit IN FRAME Dialog-Frame /* Ввод */
 DO:
+  define buffer time_gds-obj-attr for ub.gds-obj-attr .
+  define variable v-now as datetime no-undo .
+/*  disable triggers for load of time_gds-obj-attr .*/
+  if available (temp-oattr) and temp-oattr.code = "dt-seasons" then do:
+    v-now = now .
+    find first time_gds-obj-attr exclusive-lock where time_gds-obj-attr.attr-code = "change-dt-seasons" and 
+    time_gds-obj-attr.gds-code = temp-oattr.gds-code and 
+    time_gds-obj-attr.obj-code = temp-oattr.obj-code and 
+    time_gds-obj-attr.obj-type = temp-oattr.obj-type no-error .
+    if not available (time_gds-obj-attr) then 
+    do:
+      create time_gds-obj-attr .
+      assign
+        time_gds-obj-attr.attr-code = "change-dt-seasons" 
+        time_gds-obj-attr.gds-code  = temp-oattr.gds-code  
+        time_gds-obj-attr.obj-code  = temp-oattr.obj-code 
+        time_gds-obj-attr.obj-type  = temp-oattr.obj-type
+        .
+    end.
+    time_gds-obj-attr.attr-value  = iso-date(v-now) .
+    end.  
    RUN proc-save IN THIS-PROCEDURE NO-ERROR.
   IF ERROR-STATUS:ERROR THEN DO:
      RETURN NO-APPLY.

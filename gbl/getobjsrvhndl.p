@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3950c9e6675a, 2392, rls $
+$Author: ASMorozov $
+$Date: Ср июн 10 21:13:44 2020 +0300 $
+$Workfile: getobjsrvhndl.p $
+$Archive: gbl/getobjsrvhndl.p $
 
 Библиотека для объектов
 

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 
 $Revision$
@@ -1676,7 +1677,10 @@ procedure proc-01-gds :
     define variable v-line-type as character no-undo .
     define variable v-dt-season as integer no-undo .
     define variable v-VAT-pc like ub.chk-gds.VAT-pc no-undo .
+    define variable v-promo as integer no-undo .
+    define variable v-promo-sum as decimal no-undo .
     define buffer buf_chk-gds for tt-chk-gds.
+    define buffer buf2_chk-gds for tt-chk-gds.
     define buffer buf_chk-gds-attr for tt-chk-gds-attr.
     define buffer buf_bar-code for ub.bar-code . 
     
@@ -1947,6 +1951,11 @@ procedure proc-01-gds :
                     when "CHBrutto":U then do:
                         assign
                             v-src-tot-doc = decimal(buf_temp-temp.field-value)
+                            no-error .                            
+                    end.
+                    when "CSPromo":U then do:
+                        assign
+                            v-promo = decimal(buf_temp-temp.field-value)
                             no-error .
                     end.
                     /*when "cstax":U then do:
@@ -1970,6 +1979,10 @@ procedure proc-01-gds :
             if error-status:error then do:
                 {&error-in-file-format}
             end.
+            /* для промо сумма в чеке другая */
+            if v-promo = 1 then do:
+                sum-from-check = Round(price-from-check * curr-string-qnty,2).
+            end.    
             if cstype_ = 18 then do: /*регистрация карты*/
             FIND FIRST buf_chk-doc.   
             
@@ -2257,8 +2270,7 @@ procedure proc-01-gds :
                 buf_chk-doc.src-tot-doc = v-src-tot-doc .
                 buf_chk-gds.VAT-pc = vCSTaxValue  .
                 buf_chk-gds.VAT-sum-rubl = vCSTValue .
-                 
-            
+                        
             if p-pos-type = {&cd-type-autotank}
             and buf_chk-gds.VAT-pc = 0
             and buf_chk-gds.VAT-sum-rubl = 0
@@ -2354,6 +2366,7 @@ procedure proc-01-gds :
                         else 0)
                         accum-src-for-sub-d = accum-src-for-sub-d + buf_chk-gds.src-qnty
                         .
+                        
                 end.
                 
                 buf_chk-doc.doc-num2 = doc-num2_. /* "№ заказа" */
@@ -2404,6 +2417,25 @@ procedure proc-01-gds :
                     run proc-magia-discnt in this-procedure (v-d-pcnt-manual, v-d-sum-manual, integer({&discnt-t-manual})) no-error .
                 end.
             end.
+            if v-promo <> 0 then do:
+                find first buf_chk-gds-attr exclusive-lock where
+                           buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                       and buf_chk-gds-attr.line-num = buf_chk-gds.line-num
+                       and buf_chk-gds-attr.attr-code = "CSPromo"
+                no-wait no-error.
+                if locked buf_chk-gds-attr then .
+                else do:
+                   if not available buf_chk-gds-attr 
+                   then             
+                   create buf_chk-gds-attr.                
+                   assign
+                      buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                      buf_chk-gds-attr.line-num = buf_chk-gds.line-num
+                      buf_chk-gds-attr.attr-code = "CSPromo"
+                      buf_chk-gds-attr.attr-value =  string(v-promo)
+                      .   
+                end.                                                                                                     
+            end.              
         end. /* if not exist */
     end.
     
@@ -2802,7 +2834,7 @@ procedure proc-end-chk :
              END.
           END.
         
-          FOR EACH tt-chk-discnt WHERE tt-chk-doc.doc-code = tt-chk-discnt.doc-code:   
+          FOR EACH tt-chk-discnt WHERE tt-chk-doc.doc-code = tt-chk-discnt.doc-code:                           
               CREATE ub.chk-discnt.
               buffer-copy tt-chk-discnt to ub.chk-discnt.  
                          
@@ -3212,6 +3244,9 @@ procedure proc-disc :
     define variable disc-sign_ as logical no-undo .
     define variable local-netto-for-sub-d as decimal no-undo .
     define buffer buf_chk-gds for tt-chk-gds.
+    define buffer buf2_chk-gds for tt-chk-gds.
+    define buffer buf_chk-gds-attr for tt-chk-gds-attr.
+    define buffer buf2_chk-gds-attr for tt-chk-gds-attr.
     define buffer buf_chk-doc for tt-chk-doc.
     define buffer buf_chk-discnt for tt-chk-discnt.
     define buffer buf2_chk-discnt for tt-chk-discnt.
@@ -3324,7 +3359,53 @@ procedure proc-disc :
                             )).
                         return.
                         
-                    end.
+                    end.                    
+                    /* для промо проверяем, если это новый вид промо, то сумму иначе учитываем */
+                    if disc-reason_ = 15 /*and buf_chk-doc.chk-type = integer({&rcpt-sale})*/ then do:                        
+                        find first buf_chk-gds-attr 
+                            where buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
+                            and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num
+                            and buf_chk-gds-attr.attr-code = "CSPromo"
+                            and can-do("1,6", buf_chk-gds-attr.attr-value) 
+                            no-error.                                                        
+                        if avail buf_chk-gds-attr                             
+                        then do:  
+                           find first buf2_chk-gds-attr 
+                                where buf2_chk-gds-attr.doc-code  = buf_chk-gds.doc-code                            
+                                  and buf2_chk-gds-attr.attr-code = "CSPromo" 
+                                  and can-do("2,4,5", buf2_chk-gds-attr.attr-value)
+                            no-error.
+                           if avail buf2_chk-gds-attr
+                           then do:
+                              find first buf2_chk-gds  
+                                   where buf2_chk-gds.doc-code  = buf2_chk-gds.doc-code
+                                     and buf2_chk-gds.line-num  = buf2_chk-gds-attr.line-num
+                                     no-error.
+                              if avail buf2_chk-gds then  
+                                 disc-sum_ = disc-sum_ + buf2_chk-gds.src-sum.                                                                 
+                           end. 
+                           /* создаем атрибут с суммой скидки на строке товара в чеке */
+                           find first buf2_chk-gds-attr exclusive-lock where
+                                      buf2_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                  and buf2_chk-gds-attr.line-num = buf_chk-gds.line-num
+                                  and buf2_chk-gds-attr.attr-code = "CSPromoSum"
+                                  no-wait no-error.
+                           if locked buf2_chk-gds-attr then .
+                           else do:        
+                              if not available buf2_chk-gds-attr 
+                              then       
+                              create buf2_chk-gds-attr.                               
+                              assign
+                                 buf2_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                 buf2_chk-gds-attr.line-num = buf_chk-gds.line-num
+                                 buf2_chk-gds-attr.attr-code = "CSPromoSum"
+                                 buf2_chk-gds-attr.attr-value =  string(-1 * disc-sum_)
+                                 .                                
+                              disc-sum_ = 0.
+                              disc-pcnt_ = 0.
+                           end.                               
+                        end.                                                                                                      
+                    end.                                                         
                 end.
                 else if not (disc-mode_ = 'C':U or disc-mode_ = 'P':U) then do:
                     assign
@@ -3358,7 +3439,7 @@ procedure proc-disc :
                         assign
                             local-netto-for-sub-d = local-netto-for-sub-d + (if v-is-petrol-check then 0
                             else (buf_chk-gds.src-price - buf_chk-gds.src-discnt) * buf_chk-gds.src-qnty)
-                            .
+                            .                        
                     end.
                     else  do:
                         assign
@@ -3368,17 +3449,19 @@ procedure proc-disc :
                             then
                             ((buf_chk-gds.src-price - buf_chk-gds.src-discnt) * buf_chk-gds.src-qnty)
                             else 0)
-                            .
+                            .                            
                     end.
                 end.
             end.
             else do:
-                local-netto-for-sub-d = netto-for-sub-d.
+                local-netto-for-sub-d = netto-for-sub-d.            
             end.
+
             if disc-reason_ = 15 then do:
                 disc-promo-id_ = disc-d-card.
-                disc-d-card  = '':U.
-            end.    
+                disc-d-card  = '':U.                  
+            end.
+                
             create buf_chk-discnt.
             assign
                 buf_chk-discnt.doc-code = buf_chk-doc.doc-code
@@ -3450,7 +3533,8 @@ procedure proc-disc :
                     then lnd-spl
                     else (if available buf_chk-gds then buf_chk-gds.line-num else 0)
                     ).
-            end.                                  
+            end.                                                                        
+                                
             if disc-promo-id_ <> "" then do:
                 create buf_chk-discnt-attr .
                 assign
@@ -3475,21 +3559,24 @@ procedure proc-disc :
                     buf_chk-discnt-attr.record-type = buf_chk-discnt.record-type
                     .
             end.    
-            if buf_chk-discnt.record-type <> 10 then netto-for-sub-d =  netto-for-sub-d - buf_chk-discnt.discnt-value-abs
+            if buf_chk-discnt.record-type <> 10  /* and disc-promo-id_ <> "56"*/
+            then netto-for-sub-d =  netto-for-sub-d - buf_chk-discnt.discnt-value-abs
                 .
+                
             if available buf_chk-gds  and buf_chk-discnt.record-type <> 10 then
-                assign
-                buf_chk-gds.src-discnt =  (if buf_chk-discnt.line-type <> integer({&discnt-sub-total})
+            do:                                            
+              if buf_chk-discnt.line-type <> integer({&discnt-sub-total})
                 and buf_chk-discnt.value-type = integer({&discnt-v-pcnt})
                 and buf_chk-discnt.discnt-value-pcnt = 100
-                then buf_chk-gds.src-price
-                    else (buf_chk-gds.src-discnt + (if buf_chk-discnt.line-type <> integer({&discnt-sub-total})
-                    then buf_chk-discnt.discnt-value-abs / buf_chk-gds.src-qnty
-                        else 0)
-                        )
-                        )
-                        .
-                    
+              then do:
+                 buf_chk-gds.src-discnt = buf_chk-gds.src-price.                                 
+              end.
+              else if buf_chk-discnt.line-type <> integer({&discnt-sub-total})
+              then do: 
+                 buf_chk-gds.src-discnt = buf_chk-gds.src-discnt + buf_chk-discnt.discnt-value-abs / buf_chk-gds.src-qnty.                                    
+              end.                               
+            end.       
+            
             assign
                 buf_chk-discnt.discnt-type = if disc-reason_ > 0 or disc-type_ > 0
                 then convert-discount(disc-reason_, disc-type_, buf_chk-discnt.line-type)
@@ -3504,7 +3591,7 @@ procedure proc-disc :
                         AND buf2_chk-discnt.line-type = integer({&discnt-sub-total})
                         and buf2_chk-discnt.line-num >= buf_chk-discnt.object-line-num:
                     assign
-                        buf2_chk-discnt.object-sum = buf2_chk-discnt.object-sum - buf_chk-discnt.discnt-value-abs.
+                        buf2_chk-discnt.object-sum = buf2_chk-discnt.object-sum - buf_chk-discnt.discnt-value-abs.                     
                 end.
             end.
         end. /*if exist*/
@@ -5202,7 +5289,8 @@ procedure proc-promo :
     define buffer buf_chk-doc for tt-chk-doc.    
     define buffer buf_chk-discnt for tt-chk-discnt.
     define buffer buf_chk-discnt-attr for tt-chk-discnt-attr.
-    define variable local-netto-for-sub-d as decimal no-undo .
+    define variable local-netto-for-sub-d as decimal no-undo .                        
+                
     /* run gbl\inidebug.p. */
     do
         on error undo, return error
@@ -5238,7 +5326,7 @@ procedure proc-promo :
                 delete buf_temp-temp.
             end.
             
-            FIND FIRST buf_chk-doc NO-ERROR.               
+            FIND FIRST buf_chk-doc NO-ERROR.                                       
             
             find first buf_chk-discnt-attr exclusive-lock where 
                 buf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and
@@ -5258,8 +5346,7 @@ procedure proc-promo :
                     buf_chk-discnt-attr.attr-code       = "promo-id"
                     buf_chk-discnt-attr.attr-value      = Promo-Id
                     var-discnt-id                      = var-discnt-id + 1.
-                .         
-                
+                .                         
             end.   
             find first buf_chk-discnt exclusive-lock where   
                        buf_chk-discnt.doc-code = buf_chk-discnt-attr.doc-code
@@ -5267,7 +5354,7 @@ procedure proc-promo :
                    and buf_chk-discnt.discnt-id = buf_chk-discnt-attr.discnt-id no-error.
             if available buf_chk-discnt then 
             do:
-                buf_chk-discnt.object-sum = buf_chk-discnt.object-sum + promo-count.
+                buf_chk-discnt.object-sum = buf_chk-discnt.object-sum + promo-count.                
             end.    
             else do:
                 create buf_chk-discnt.
@@ -5316,6 +5403,7 @@ procedure proc-promo :
                     buf_chk-discnt.chk-time = buf_chk-doc.chk-time
                     .
                 var-discnt-id = var-discnt-id + 1.
+                                
             end.
         end. /*if exist*/
     end.

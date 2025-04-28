@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: prclose.p $
+$Archive: utl/prclose.p $
 
 Утилита Закрытие всех новых переоценок по всем неудаленным объектам.
 
@@ -18,11 +19,11 @@ Creation date: 12/14/01 10:43
 */
 define input  parameter parParentProc as handle  no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: prclose.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/prclose.p $":U .
 define variable vss-description as character no-undo init " Закрытие всех новых переоценок по всем неудаленным объектам.   ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -68,4 +69,4 @@ find first buf_sys-ctrl no-lock no-error .
   end.
  Message "Процесс закрытия переоценок по базе данных № " buf_sys-ctrl.db-num " завершен !" view-as alert-box information .
 
-/* $Workfile$ e n d */
+/* $Workfile: prclose.p $ e n d */

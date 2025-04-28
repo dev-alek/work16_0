@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c40b85de8d6c, 956, rls $
+$Author: SSlivenko $
+$Date: Thu Feb 16 15:19:57 2017 +0300 $
+$Workfile: AdapteeWebSrv-TrnDoc.p $
+$Archive: ibs/th/skt/Adapters/AdapteeWebSrv-TrnDoc.p $
 
 
 

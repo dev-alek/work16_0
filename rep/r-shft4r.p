@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bdfe88c223c8, 373, rls $
+$Author: SShalanin $
+$Date: Mon Dec 28 19:14:17 2015 +0300 $
+$Workfile: r-shft4r.p $
+$Archive: rep/r-shft4r.p $
 
 печать сменного отчета (ЮКОС лист 4 сбор данных - услуги)
 
@@ -23,11 +24,11 @@ DEFINE INPUT PARAMETER pshift-date1  like ub.shift-obj.shift-date no-undo.
 DEFINE INPUT PARAMETER pshift-num1   like ub.shift-obj.shift-num no-undo.
 define input parameter p-previous-shift-date as   date                    no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: bdfe88c223c8, 373, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Dec 28 19:14:17 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: r-shft4r.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: rep/r-shft4r.p $":U .
 define variable vss-description as character no-undo initial "печать сменного отчета (ЮКОС лист 4 сбор данных - услуги)":U .
 
 { cmp/str-glbl.i                      }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 709fd28fa30d, 1490, rls $
+$Author: SMMolotkov $
+$Date: Thu Aug 30 10:41:46 2018 +0300 $
+$Workfile: promoschedsub.cls $
+$Archive: ibs/th/ref/promo/promoschedsub.cls $
  
 Сущность Заголовок расписания промоакций.
 
@@ -18,15 +18,16 @@ Creation date: 11/07/18
 using Progress.Lang.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
+block-level on error undo, throw.
 
 
 
 class ibs.th.ref.promo.PromoSchedSub implements ithsub: 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 709fd28fa30d, 1490, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo initial "$Date: Thu Aug 30 10:41:46 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: promoschedsub.cls $":U .
+define variable vss-archive     as character no-undo initial "$Archive: ibs/th/ref/promo/promoschedsub.cls $":U .
 define variable vss-description as character no-undo initial "Сущность Заголовок расписания промоакций.". 
   
   { cmp/str-glbl.i class}
