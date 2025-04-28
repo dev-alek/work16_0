@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: assortment-matrix.cls $
+$Archive: ibs/th/bge/1crn/subjects/assortment-matrix.cls $
 
 Структура данных assortment-matrix в 1С
 
@@ -18,6 +18,7 @@ Creation date: 21/11/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.enum-assortment-stg.
 using ibs.th.bge.1crn.subjects.subjects from propath.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.assortment-matrix inherits ibs.th.bge.1crn.subjects.asubject:

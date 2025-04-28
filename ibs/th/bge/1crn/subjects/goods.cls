@@ -12,6 +12,7 @@
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.goods_barcode from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

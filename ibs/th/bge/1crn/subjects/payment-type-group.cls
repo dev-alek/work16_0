@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: payment-type-group.cls $
+$Archive: ibs/th/bge/1crn/subjects/payment-type-group.cls $
 
 Структура данных payment-type-group в 1С
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 USING Progress.Lang.*.
+block-level on error undo, throw.
 
 CLASS ibs.th.bge.1crn.subjects.payment-type-group inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 870fbceb5a42, 3029, rls $
+$Author: Ostroukhov $
+$Date: ѕт апр 29 17:03:42 2022 +0300 $
+$Workfile: cash-doc.cls $
+$Archive: ibs/th/bge/1crn/subjects/cash-doc.cls $
 
 Ёкспорт сообщени€ с накладаной в 1— ERPRN cash-doc
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
 

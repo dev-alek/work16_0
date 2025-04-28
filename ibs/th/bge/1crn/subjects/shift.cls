@@ -17,6 +17,7 @@ Creation date: 02/11/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.shift implements iexpsubject:

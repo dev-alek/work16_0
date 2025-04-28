@@ -19,6 +19,7 @@ Creation date: 26/04/2024
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.tank-imp_cal-tbl from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.tank-imp_belt-tbl inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

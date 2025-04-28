@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: cashiers.cls $
+$Archive: ibs/th/bge/1crn/subjects/cashiers.cls $
 
 Структура данных cashiers в 1С
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 USING Progress.Lang.*.
+block-level on error undo, throw.
 
 CLASS ibs.th.bge.1crn.subjects.cashiers inherits ibs.th.bge.1crn.subjects.asubject: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

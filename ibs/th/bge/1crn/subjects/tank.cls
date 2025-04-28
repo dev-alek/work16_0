@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.str.placelib from propath .
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
 

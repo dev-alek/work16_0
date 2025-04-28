@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.trn-gd-doc from propath.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.asubject: 

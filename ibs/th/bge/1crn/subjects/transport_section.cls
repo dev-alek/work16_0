@@ -1,11 +1,11 @@
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ebbc39e4356e, 3439, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:32 $
+$Workfile: transport_section.cls $
+$Archive: ibs/th/bge/1crn/subjects/transport_section.cls $
 
 Структура данных transport_section в 1С
 
@@ -21,6 +21,7 @@ using ibs.th.bge.1crn.subjects.subjects from propath.
 using ibs.th.bge.1crn.subjects.transport_section from propath.
 using ibs.th.bge.1crn.subjects.transport_section_calibration-table from propath.
 using ibs.th.bge.1crn.subjects.transport from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.transport_section inherits ibs.th.bge.1crn.subjects.asubject:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

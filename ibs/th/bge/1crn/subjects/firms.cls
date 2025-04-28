@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: firms.cls $
+$Archive: ibs/th/bge/1crn/subjects/firms.cls $
 
 Структура данных firms (фирмы; *На АЗС/АЗК выгружается только своя организация) из 1С
 
@@ -16,6 +16,7 @@ Creation date: 02/10/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.firms inherits ibs.th.bge.1crn.subjects.asubject:

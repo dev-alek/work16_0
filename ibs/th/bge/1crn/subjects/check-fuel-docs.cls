@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
 

@@ -18,6 +18,7 @@ Creation date: 03/11/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.enum-chk-type.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 /*block-level on error undo, throw.*/
 
 class ibs.th.bge.1crn.subjects.check implements iexpsubject:

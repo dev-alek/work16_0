@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: trn-prt.cls $
+$Archive: ibs/th/bge/1crn/subjects/trn-prt.cls $
 
 Структура данных prts накладной из 1С ERPRN
 
@@ -16,6 +16,7 @@ Creation date: 26/09/17
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubject: 
