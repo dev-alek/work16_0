@@ -34,13 +34,13 @@ define buffer buf_c-chk-gds for ub.c-chk-gds.
 define buffer buf_c-chk-pay for ub.c-chk-pay.
 define buffer buf_c-chk-discnt for ub.c-chk-discnt.
 define buffer buf_c-chk-doc-attr for ub.c-chk-doc-attr.
-define buffer buf_c-marking for ub.c-marking.
 define buffer buf2_c-chk-doc for ub.c-chk-doc.
 define buffer buf2_c-chk-gds for ub.c-chk-gds.
 define buffer buf2_c-chk-pay for ub.c-chk-pay.
 define buffer buf2_c-chk-discnt for ub.c-chk-discnt.
 define buffer buf2_c-chk-doc-attr for ub.c-chk-doc-attr.
-define buffer buf2_c-marking for ub.c-marking.
+/*define buffer buf_c-marking for ub.c-marking.
+define buffer buf2_c-marking for ub.c-marking. */
 define buffer buf_chk-doc for ub.chk-doc.
 define buffer buf_chk-gds for ub.chk-gds.
 define buffer buf_chk-pay for ub.chk-pay.
@@ -50,7 +50,7 @@ define buffer buf_chk-gds-attr for ub.chk-gds-attr.
 define buffer buf_chk-pay-attr for ub.chk-pay-attr.
 define buffer buf_chk-discnt-attr for ub.chk-discnt-attr.
 define buffer buf_marking-chk for ub.marking-chk.
-
+define buffer buf_c-marking-chk for ub.c-marking-chk.
 
 main-block:
 do
@@ -146,19 +146,20 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
        buf2_c-chk-pay.chip-num = buf2_c-chk-doc.chip-num
        .
      end.
-     for each buf_c-marking no-lock where
-            /*buf_c-marking.doc-code = buf_c-chk-doc.doc-code and*/
-         buf_c-marking.chip-num = buf_c-chk-doc.chip-num
+     for each buf_c-marking-chk no-lock where
+             buf_c-marking-chk.doc-code = buf_c-chk-doc.doc-code 
+         and buf_c-marking.chip-num = buf_c-chk-doc.chip-num
      on error undo main-block, return error:
        create buf_marking-chk.
-       buffer-copy buf_c-marking to buf_marking-chk.
-       create buf2_c-marking.
+       buffer-copy buf_c-marking-chk to buf_marking-chk.
+/*       create buf2_c-marking.
        buffer-copy buf_c-marking
-       except chip-num to buf2_c-marking
+       except chip-num to buf2_c-marking*/
        assign
-       buf2_c-marking.chip-num = buf2_c-chk-doc.chip-num
+       buf_c-marking-chk.chip-num = buf2_c-chk-doc.chip-num
        .
      end.
+
      chk-doc-attr_ :
      for each buf_c-chk-doc-attr no-lock where
             buf_c-chk-doc-attr.doc-code = buf_c-chk-doc.doc-code

@@ -46,7 +46,7 @@ define buffer buf_c-chk-gds      for ub.c-chk-gds.
 define buffer buf_c-chk-pay      for ub.c-chk-pay.
 define buffer buf_c-chk-discnt   for ub.c-chk-discnt.
 define buffer buf_c-chk-doc-attr for ub.c-chk-doc-attr.
-define buffer buf_c-marking-chk  for ub.c-marking.
+define buffer buf_c-marking-chk  for ub.c-marking-chk.
 
 define buffer last_c-chk-doc     for ub.c-chk-doc.
 define buffer buf_chk-gds        for ub.chk-gds.
@@ -162,6 +162,7 @@ do
         if not v-create then 
         do:
             /*сначала сотрем*/
+            MESSAGE "сначала сотрем" VIEW-AS ALERT-BOX.
             for each buf_c-chk-gds where
                 buf_c-chk-gds.doc-code = buf_chk-doc.doc-code
                 AND buf_c-chk-gds.chip-num = p-chip-num:
@@ -183,6 +184,12 @@ do
                 AND buf_c-chk-doc-attr.chip-num = p-chip-num:
                 delete buf_c-chk-doc-attr.
             END.
+            for each buf_c-marking-chk where
+                buf_c-marking-chk.doc-code = buf_chk-doc.doc-code
+                AND buf_c-marking-chk.chip-num = p-chip-num:
+                delete buf_c-marking-chk.
+            END.
+            
         end.
         for each buf_chk-gds no-lock where
             buf_chk-gds.doc-code = buf_chk-doc.doc-code
@@ -251,7 +258,7 @@ do
       buf_c-marking-chk.chip-num = p-chip-num
       buf_c-marking-chk.corr-user-db-num = g#db-num
       .
-    end.
+    end. 
     for each buf_chk-gds-attr no-lock where
             buf_chk-gds-attr.doc-code = buf_chk-doc.doc-code
     on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
