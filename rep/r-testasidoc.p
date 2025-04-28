@@ -201,7 +201,7 @@ on error undo, return error return-value
 
 /*печать*/
   run get-report-num (output v-report-id).
-    
+  
   v-file-name-rep-htm = session:temp-directory + string(v-report-id) + ".html".   
                         
   output stream OutStr-html to value(v-file-name-rep-htm) convert target 'UTF-8'.
@@ -234,12 +234,12 @@ on error undo, return error return-value
     '<td style="width: 70px;"></td>' skip
     '<td style="width: 85px;"></td>' skip
     '<td style="width: 85px;"></td>' skip
-    '<td style="width: 70px;"></td>' skip
-    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 85px;"></td>' skip
+    '<td style="width: 85px;"></td>' skip
     '<td style="width: 70px;"></td>' skip
     '<td style="width: 70px;"></td>' skip
     '<td style="width: 85px;"></td>' skip
-    '<td style="width: 70px;"></td>' skip
+    '<td style="width: 100px;"></td>' skip
     '<td style="width: 110px;"></td>' skip
     '<td style="width: 110px;"></td>' skip
     '<td style="width: 110px;"></td>' skip
@@ -251,7 +251,7 @@ on error undo, return error return-value
   run put-empty-string .
   
   put stream OutStr-html unformatted
-    '<tr>' skip
+    '<tr class="nowrap">' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td style="text-align: center;">АЗС/АЗК</td>' skip
@@ -261,8 +261,7 @@ on error undo, return error return-value
     '<td></td>' skip
     '<td></td>' skip
     '<td style="text-align: center;">Дата:</td>' skip
-    '<td colspan="2" style="text-align: center;">' + get-DD-Month-YYYY(buf_rvs-doc.sys-date) + '</td>' skip
-    '<td></td>' skip
+    '<td colspan="3" style="text-align: center;">' + get-DD-Month-YYYY(buf_rvs-doc.sys-date) + '</td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
@@ -562,7 +561,7 @@ on error undo, return error return-value
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.loc1 + '</td>' skip
-      '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.main-mi-name + '</td>' skip
+      '<td colspan="2" style="text-align: left; border: 1px solid black;">' + tt-result.main-mi-name + '</td>' skip
       '<td></td>' skip
       '<td></td>' skip
       '<td></td>' skip
@@ -604,8 +603,7 @@ on error undo, return error return-value
     '<td colspan="2" style="text-align: center; border: 1px solid black;">Номер резервуара</td>' skip
     '<td colspan="2" style="text-align: center; border: 1px solid black;">По плотности</td>' skip
     '<td colspan="2" style="text-align: center; border: 1px solid black;">По уровню</td>' skip
-    '<td colspan="2" style="text-align: center; border: 1px solid black;">По температуре</td>' skip
-    '<td></td>' skip
+    '<td colspan="3" style="text-align: center; border: 1px solid black;">По температуре</td>' skip
     '<td></td>' skip
     '<td></td>' skip
     '<td></td>' skip
@@ -621,10 +619,9 @@ on error undo, return error return-value
     put stream OutStr-html unformatted
       '<tr>' skip
       '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.loc1 + '</td>' skip
-      '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.dens-mi-name + '</td>' skip
-      '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.level-mi-name + '</td>' skip
-      '<td colspan="2" style="text-align: center; border: 1px solid black;">' + tt-result.temp-mi-name + '</td>' skip
-      '<td></td>' skip
+      '<td colspan="2" style="text-align: left; border: 1px solid black;">' + tt-result.dens-mi-name + '</td>' skip
+      '<td colspan="2" style="text-align: left; border: 1px solid black;">' + tt-result.level-mi-name + '</td>' skip
+      '<td colspan="3" style="text-align: left; border: 1px solid black;">' + tt-result.temp-mi-name + '</td>' skip
       '<td></td>' skip
       '<td></td>' skip
       '<td></td>' skip
