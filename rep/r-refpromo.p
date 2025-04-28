@@ -262,7 +262,7 @@ end.
 procedure report:
 define variable is-petrolium         as logical   no-undo.
 define variable is-pieces            as logical   no-undo.
-  
+define variable v-sum-r              as decimal   no-undo.  
   /* чеки приема по топливу по промоакции */
   for each  buf_chk-gds no-lock where 
     buf_chk-gds.doc-code = buf_chk-doc.doc-code and 
@@ -337,9 +337,11 @@ define variable is-pieces            as logical   no-undo.
                          tt-info.src-promo-qnty = 0 
                          tt-info.discnt = buf_chk-gds.src-discnt
                          .
-                         
+                  v-sum-r =  Round(tt-info.src-promo-qnty * vPromoPrice, 2).
+                  if v-sum-r < tt-info.src-promo-qnty * vPromoPrice     
+                  then v-sum-r = v-sum-r + 0.01. 
                   assign
-                     tt-info.src-sum = (tt-info.src-price - tt-info.discnt) * tt-info.src-qnty + tt-info.src-promo-qnty * vPromoPrice   
+                     tt-info.src-sum = Round((tt-info.src-price - tt-info.discnt) * tt-info.src-qnty, 2) + v-sum-r   
                      tt-info.src-sum-no-disc = tt-info.src-price * (tt-info.src-qnty + tt-info.src-promo-qnty)
                      tt-info.src-sum-disc = tt-info.src-sum-no-disc - tt-info.src-sum
                      .
@@ -382,6 +384,8 @@ define variable is-pieces            as logical   no-undo.
 end procedure .
 
 procedure report-itog:
+    define variable v-sum-r as decimal no-undo.
+    
     for each tt-info:
         for each buf_chk-doc no-lock where 
                  buf_chk-doc.obj-code = tt-info.obj-code 
@@ -417,8 +421,10 @@ procedure report-itog:
                      tt-info.ret-promo-qnty = 0 
                      tt-info.ret-discnt = buf_chk-gds.src-discnt
                      .
+              v-sum-r = Round(tt-info.ret-promo-qnty * vPromoPrice,2).
+              if v-sum-r < tt-info.ret-promo-qnty * vPromoPrice then v-sum-r = v-sum-r + 0.01.       
               assign
-                 tt-info.ret-src-sum = (tt-info.ret-src-price - tt-info.ret-discnt) * tt-info.ret-src-qnty + tt-info.ret-promo-qnty * vPromoPrice                        
+                 tt-info.ret-src-sum = ROUND((tt-info.ret-src-price - tt-info.ret-discnt),2) * tt-info.ret-src-qnty + v-sum-r                        
                  .
               
               /* кассир */

@@ -79,6 +79,7 @@ define buffer buf_chk-gds-pay  for ub.chk-gds-pay.
 define buffer buf_chk-discnt  for ub.chk-discnt .
 define buffer buf_chk-discnt2  for ub.chk-discnt .
 define buffer buf_chk-gds  for ub.chk-gds.
+define buffer buf_chk-gds-attr for ub.chk-gds-attr.
 define buffer buf_cash-pay  for ub.cash-pay.
 define buffer bf_t-10      for t-10 .
 define buffer buf_goods    for goods .
@@ -95,6 +96,8 @@ define variable pol5  as decimal   no-undo .
 define variable pol6  as decimal   no-undo .
 define variable pol7  as decimal   no-undo .
 define variable pol8  as decimal   no-undo.
+define variable v-sum-promo as decimal   no-undo.
+define variable v-sum-promo-d as decimal   no-undo.
 
 &scop All-sym sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym8
 &scop All-Pol pol1 pol2 pol3 pol4 pol5 pol6 pol7 pol8
@@ -160,20 +163,34 @@ on error undo, return error
                     end.     /* */
                     bf_t-10.discnt-name = 'Без скидки'   .
             end.
-            t-10.sum-netto = t-10.sum-netto + buf_chk-gds-pay.tot-r-b.  /* сумма нетто */
-            t-10.qnty = t-10.qnty + buf_chk-gds-pay.eff-doc-qnty.
-            t-10.sum-brutto = t-10.sum-brutto + buf_chk-gds.src-sum * (buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty) .
-            /* t-10.sum-brutto = t-10.sum-brutto + buf_chk-gds.src-sum . */
-            bf_t-10.sum-netto = bf_t-10.sum-netto + buf_chk-gds-pay.tot-r-b.  /* сумма нетто */
-            bf_t-10.qnty = bf_t-10.qnty + buf_chk-gds-pay.eff-doc-qnty.
-            bf_t-10.sum-brutto = bf_t-10.sum-brutto + buf_chk-gds.src-sum * (buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty) .
+            
+            /* ищем спец. скидку по промо НП */
+            v-sum-promo = 0.               
+            for each buf_chk-gds-attr no-lock where                 
+                     buf_chk-gds-attr.doc-code = buf_chk-gds-pay.doc-code   
+                 and buf_chk-gds-attr.line-num  = buf_chk-gds-pay.line-num                                                    
+                 and buf_chk-gds-attr.attr-code = "CSPromoSum"
+               :
+               v-sum-promo = v-sum-promo + dec(buf_chk-gds-attr.attr-value) no-error.
+            end.
+            
+            assign  
+                t-10.sum-netto = t-10.sum-netto + buf_chk-gds-pay.tot-r-b  /* сумма нетто */
+                t-10.qnty = t-10.qnty + buf_chk-gds-pay.eff-doc-qnty
+                t-10.sum-brutto = t-10.sum-brutto + buf_chk-gds.src-sum * (buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty) + v-sum-promo
+                /* t-10.sum-brutto = t-10.sum-brutto + buf_chk-gds.src-sum . */
+                bf_t-10.sum-netto = bf_t-10.sum-netto + buf_chk-gds-pay.tot-r-b  /* сумма нетто */
+                bf_t-10.qnty = bf_t-10.qnty + buf_chk-gds-pay.eff-doc-qnty
+                bf_t-10.sum-brutto = bf_t-10.sum-brutto + buf_chk-gds.src-sum * (buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty) 
+                .
 
            for each buf_chk-discnt no-lock where (buf_chk-discnt.doc-code       = buf_chk-gds-pay.doc-code
                                               and buf_chk-discnt.object-line-num = buf_chk-gds-pay.line-num
                                               and buf_chk-discnt.record-type     = 0
-                                              and not can-find(buf_chk-discnt2 where buf_chk-discnt2.doc-code        = buf_chk-gds-pay.doc-code
-                                                                                 and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
-                                                                                 and buf_chk-discnt2.record-type     = 1)
+                                              and not can-find(first buf_chk-discnt2 no-lock 
+                                                               where buf_chk-discnt2.doc-code = buf_chk-gds-pay.doc-code
+                                                                 and buf_chk-discnt2.object-line-num = buf_chk-gds-pay.line-num
+                                                                 and buf_chk-discnt2.record-type     = 1)
                                               )
                                               or
                                               (   buf_chk-discnt.doc-code        = buf_chk-gds-pay.doc-code
@@ -187,30 +204,37 @@ on error undo, return error
                                 and t-10.discnt-type = buf_chk-discnt.discnt-type
               no-lock no-error.
               if not available t-10 then do:
-              create t-10.
+                create t-10.
                 assign  t-10.gds-code = buf_goods.gds-code
                       t-10.gds-name = buf_goods.gds-name
-                      t-10.pay-code = buf_chk-gds-pay.pay-code .
-                      t-10.discnt-type = buf_chk-discnt.discnt-type .
-                      t-10.discnt-name = entry(lookup(string(buf_chk-discnt.discnt-type),{&discnt-type-list}), {&discnt-type-list-full} ) .
+                      t-10.pay-code = buf_chk-gds-pay.pay-code 
+                      t-10.discnt-type = buf_chk-discnt.discnt-type 
+                      t-10.discnt-name = entry(lookup(string(buf_chk-discnt.discnt-type),{&discnt-type-list}), {&discnt-type-list-full} ) 
+                      .
                       for first  buf_cash-pay fields (obj-name) where buf_cash-pay.cdpay-code = buf_chk-gds-pay.pay-code no-lock:
                           t-10.pay-name = buf_cash-pay.obj-name.
-                      end.     /* */
-    /*                 message  t-10.discnt-name skip lookup(string(buf_chk-discnt.discnt-type),{&discnt-type-list}) skip   entry(lookup(string(buf_chk-discnt.discnt-type),{&discnt-type-list}), {&discnt-type-list-full} )
-                      view-as alert-box. */
+                      end.     /* */    
               end.
-              t-10.sum-netto = t-10.sum-netto + buf_chk-gds-pay.tot-r-b.  /* сумма нетто */
-              t-10.qnty = t-10.qnty + buf_chk-gds-pay.eff-doc-qnty.
-              t-10.sum-brutto = t-10.sum-brutto + buf_chk-discnt.object-sum.
-              /*t-10.discount-sum = t-10.discount-sum + buf_chk-discnt.discnt-value-abs. */
-              t-10.discount-sum = t-10.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty).
-              /*  делаем запись без скидки */
-              bf_t-10.sum-netto = bf_t-10.sum-netto - buf_chk-gds-pay.tot-r-b.  /* сумма нетто */
-              bf_t-10.qnty = bf_t-10.qnty - buf_chk-gds-pay.eff-doc-qnty.
-              bf_t-10.sum-brutto = bf_t-10.sum-brutto - buf_chk-discnt.object-sum.
 
-
-             /* message      buf_chk-gds-pay.eff-doc-qnty    buf_chk-gds.doc-qnty    buf_chk-discnt.discnt-value-abs view-as alert-box.  */
+              v-sum-promo-d = if buf_chk-discnt.promo-id > "" then v-sum-promo else 0.
+              
+              assign
+                  t-10.sum-netto = t-10.sum-netto + buf_chk-gds-pay.tot-r-b  /* сумма нетто */
+                  t-10.qnty = t-10.qnty + buf_chk-gds-pay.eff-doc-qnty
+                  t-10.sum-brutto = t-10.sum-brutto + buf_chk-discnt.object-sum + v-sum-promo-d
+                  /*t-10.discount-sum = t-10.discount-sum + buf_chk-discnt.discnt-value-abs. */
+                  t-10.discount-sum = t-10.discount-sum + (buf_chk-discnt.discnt-value-abs * buf_chk-gds-pay.eff-doc-qnty /  buf_chk-gds.doc-qnty) + v-sum-promo-d
+                  /*  делаем запись без скидки */
+                  bf_t-10.sum-netto = bf_t-10.sum-netto - buf_chk-gds-pay.tot-r-b  /* сумма нетто */
+                  bf_t-10.qnty = bf_t-10.qnty - buf_chk-gds-pay.eff-doc-qnty
+                  bf_t-10.sum-brutto = bf_t-10.sum-brutto - buf_chk-discnt.object-sum
+                  .
+             if bf_t-10.qnty < 0 then 
+             assign     
+                bf_t-10.sum-netto = 0  /* сумма нетто */
+                bf_t-10.qnty = 0
+                bf_t-10.sum-brutto = 0
+                .
             end.
           end.
       end.

@@ -77,6 +77,377 @@ on delete of this-procedure do:
   .
 end.
 
+/* Проверка, что в чеке есть промоакция по НП */
+function ChkGdsPromo returns logical
+    (input iDocCode as character)
+    : 
+    define buffer buf_chk-gds for ub.chk-gds.
+    define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+    define variable vPromo as logical no-undo.
+    
+    vPromo = no.
+    cspr:
+    for each buf_chk-gds no-lock where                 
+                 buf_chk-gds.doc-code = iDocCode,
+           first buf_chk-gds-attr no-lock where                 
+                 buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+             and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+             and buf_chk-gds-attr.attr-code = "CSPromo":
+       vPromo = yes.
+       leave cspr.          
+    end.          
+    
+    return vPromo.
+end.
+        
+/* округление вверх */
+function RoundUp return decimal
+    (input iQnty as decimal,
+     input iPrice as decimal):
+         
+    def var vSum  as decimal no-undo.     
+    def var vSumR as decimal no-undo.
+    
+    vSum = ABSOLUTE(iQnty) * iPrice.
+    vSumR = Round(vSum,2).
+    if vSumR < vSum then vSumR = vSumR + 0.01.
+    if iQnty < 0 then vSumR = - vSumR.
+                                 
+    return vSumR.     
+end function.   
+
+function GetPromoSum returns decimal
+    (input iDocCode as character)
+    :
+    define buffer buf_chk-doc for ub.chk-doc.
+    define buffer buf2_chk-doc for ub.chk-doc. 
+    define buffer buf_chk-gds for ub.chk-gds.
+    define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+    define buffer buf2_chk-gds for ub.chk-gds.
+    define buffer buf2_chk-gds-attr for ub.chk-gds-attr.    
+    define variable v-price-base as decimal no-undo.
+    define variable v-doc-qnty as decimal no-undo.
+    define variable v-sum-base as decimal no-undo.    
+    define variable v-sum-all as decimal no-undo.    
+    define variable v-sum-promo as decimal no-undo.     
+    define variable v-sum-chk as decimal no-undo.       
+    
+    /* считаем скидку по промо НП без округления */
+    assign
+       v-price-base = 0 
+       v-doc-qnty = 0
+       v-sum-all = 0
+       v-sum-chk = 0   
+       v-sum-promo = 0
+       .
+    for each buf_chk-gds no-lock where                 
+             buf_chk-gds.doc-code = iDocCode,
+       first buf_chk-gds-attr no-lock where                 
+             buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+         and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+         and buf_chk-gds-attr.attr-code = "CSPromoSum"         
+       :
+       v-sum-promo = Dec(buf_chk-gds-attr.attr-value).        
+    end.
+    if v-sum-promo = 0 then do:   
+        for each buf_chk-gds no-lock where                 
+                 buf_chk-gds.doc-code = iDocCode,
+           first buf_chk-gds-attr no-lock where                 
+                 buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+             and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+             and buf_chk-gds-attr.attr-code = "CSPromo"
+             and can-do("1,6", buf_chk-gds-attr.attr-value)        
+           :    
+           assign                
+             v-price-base = buf_chk-gds.price-base
+             v-doc-qnty   = buf_chk-gds.doc-qnty
+             v-sum-base = buf_chk-gds.sum-base
+             .        
+        end.
+        for each buf_chk-gds no-lock where                 
+                 buf_chk-gds.doc-code = iDocCode,
+           first buf_chk-gds-attr no-lock where                 
+                 buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+             and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+             and buf_chk-gds-attr.attr-code = "CSPromo"
+             and can-do("2,4,5,7", buf_chk-gds-attr.attr-value)          
+           :
+           /* если не отработал верхний цикл, 
+           ** надо найти цену из чека продажи */
+           if v-price-base = 0 then do:
+              find first buf_chk-doc no-lock where    
+                         buf_chk-doc.doc-code = iDocCode
+                  no-error. 
+              if avail buf_chk-doc and 
+                 buf_chk-doc.chk-type = int({&rcpt-return}) and 
+                 buf_chk-doc.doc-num2 > ""  and 
+                 num-entries(buf_chk-doc.doc-num2,":") = 2
+              then 
+              for first buf2_chk-doc no-lock where 
+                        buf2_chk-doc.obj-code = buf_chk-doc.obj-code 
+                    and buf2_chk-doc.obj-type = buf_chk-doc.obj-type
+                    and buf2_chk-doc.chk-type = int({&rcpt-sale})
+                    and buf2_chk-doc.chk-num = int(entry(1,buf_chk-doc.doc-num2,":"))
+                    and buf2_chk-doc.z-number = int(entry(2, buf_chk-doc.doc-num2,":"))
+                    :
+                for each buf2_chk-gds no-lock where                 
+                         buf2_chk-gds.doc-code = buf2_chk-doc.doc-code,
+                   first buf2_chk-gds-attr no-lock where                 
+                         buf2_chk-gds-attr.doc-code = buf2_chk-gds.doc-code
+                     and buf2_chk-gds-attr.line-num  = buf2_chk-gds.line-num                                      
+                     and buf2_chk-gds-attr.attr-code = "CSPromo"
+                     and can-do("1,6", buf2_chk-gds-attr.attr-value)        
+                   :    
+                    v-price-base = buf2_chk-gds.price-base.
+                end.    
+              
+              end.      
+               
+           end.                   
+           if buf_chk-gds.sum-base = ? or buf_chk-gds.src-qnty = 0 then do:
+               assign
+                  v-sum-all = (buf_chk-gds.src-qnty + v-doc-qnty ) * v-price-base 
+                  v-sum-chk = v-sum-base + RoundUp(buf_chk-gds.src-qnty, buf_chk-gds.src-price)
+                  .                   
+           end.
+           else do:
+              assign                
+              v-sum-all = (buf_chk-gds.doc-qnty + v-doc-qnty ) * v-price-base          
+              v-sum-chk = v-sum-base + buf_chk-gds.sum-base
+              .                
+           end.           
+        end.
+        
+        v-sum-promo = Round(v-sum-all, 2) - Round(v-sum-chk, 2).   
+    end.   
+    
+    return v-sum-promo.
+end function.    
+
+function ChkPromoPrice returns logical
+    (input iDocCode as character,
+     input iLineNum as integer)
+    : 
+   define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+   define variable v-is-promo as logical no-undo.
+   
+   v-is-promo = no.
+   find first buf_chk-gds-attr no-lock where                 
+              buf_chk-gds-attr.doc-code = iDocCode
+          and buf_chk-gds-attr.line-num  = iLineNum                                      
+          and buf_chk-gds-attr.attr-code = "CSPromo"
+      no-error.
+   if avail buf_chk-gds-attr 
+     and can-do("2,4,5,7", buf_chk-gds-attr.attr-value)                 
+   then v-is-promo = yes.
+   
+   return v-is-promo.
+end function.     
+
+/* создаем скидки для возвратного чека */
+function SetPromoDisc return logical
+ (input iDocCode as character,
+     input iLineNum as integer
+    /* , input-output var-discnt-id as integer*/ )
+    :
+   
+   define buffer buf_chk-doc for ub.chk-doc.
+   define buffer buf2_chk-doc for ub.chk-doc.
+   define buffer buf_chk-gds for ub.chk-gds.   
+   define buffer buf2_chk-gds for ub.chk-gds.
+   define buffer buf_chk-gds-attr for ub.chk-gds-attr.   
+   define buffer buf2_chk-gds-attr for ub.chk-gds-attr.
+   define buffer buf_chk-discnt for ub.chk-discnt.
+   define buffer buf2_chk-discnt for ub.chk-discnt.
+   define buffer buf_chk-discnt-attr for ub.chk-discnt-attr.
+   define buffer buf2_chk-discnt-attr for ub.chk-discnt-attr.
+   
+   define variable v-promo-sum as decimal no-undo.
+   define variable v-disc-promo-id as character no-undo.   
+   define variable var-discnt-id as integer no-undo.   
+              
+   find first buf_chk-gds-attr no-lock where                 
+              buf_chk-gds-attr.doc-code = iDocCode
+          and buf_chk-gds-attr.line-num  = iLineNum                                      
+          and buf_chk-gds-attr.attr-code = "CSPromo"
+      no-error.
+      
+   if avail buf_chk-gds-attr      
+     then do:
+     find first buf_chk-discnt no-lock where 
+                buf_chk-discnt.doc-code = buf_chk-gds-attr.doc-code
+            and buf_chk-discnt.line-num = buf_chk-gds-attr.line-num
+            and buf_chk-discnt.record-type = 0
+            and buf_chk-discnt.promo-id > ""
+            no-error.
+     if not avail buf_chk-discnt then do:                                        
+   
+        find first buf_chk-doc no-lock where                 
+                   buf_chk-doc.doc-code = iDocCode         
+           no-error.                  
+        find first buf_chk-gds no-lock where                 
+                   buf_chk-gds.doc-code = iDocCode
+              and  buf_chk-gds.line-num = iLineNum
+           no-error.   
+                  
+        find first buf_chk-discnt-attr no-lock where 
+                buf_chk-discnt-attr.doc-code = iDocCode and
+                buf_chk-discnt-attr.record-type = 5 and 
+                buf_chk-discnt-attr.line-num = 0 and
+                buf_chk-discnt-attr.attr-code = "promo-id" 
+        no-error .
+        if avail buf_chk-discnt-attr 
+           then v-disc-promo-id = buf_chk-discnt-attr.attr-value.
+        /* найти чек продажи и взять код акции из него */   
+        else do:
+           for first buf2_chk-doc no-lock where 
+                     buf2_chk-doc.obj-code = buf_chk-doc.obj-code 
+                 and buf2_chk-doc.obj-type = buf_chk-doc.obj-type
+                 and buf2_chk-doc.chk-type = int({&rcpt-sale})
+                 and buf2_chk-doc.chk-num = int(entry(1,buf_chk-doc.doc-num2,":"))
+                 and buf2_chk-doc.z-number = int(entry(2, buf_chk-doc.doc-num2,":"))
+               :
+               find first buf_chk-discnt-attr no-lock where 
+                          buf_chk-discnt-attr.doc-code =  buf2_chk-doc.doc-code and
+                          buf_chk-discnt-attr.record-type = 5 and 
+                          buf_chk-discnt-attr.line-num = 0 and
+                          buf_chk-discnt-attr.attr-code = "promo-id" 
+               no-error .
+               if avail buf_chk-discnt-attr 
+               then do:
+                  v-disc-promo-id = buf_chk-discnt-attr.attr-value.
+                   
+                  find first buf2_chk-discnt no-lock where 
+                    buf2_chk-discnt.doc-code = iDocCode and
+                    buf2_chk-discnt.record-type = 5 and 
+                    buf2_chk-discnt.line-num = 0 and
+                    buf2_chk-discnt.promo-id =  v-disc-promo-id 
+                  no-error.
+                  if not avail buf2_chk-discnt 
+                  then do:
+                      for each buf_chk-discnt no-lock where 
+                               buf_chk-discnt.doc-code = buf_chk-gds-attr.doc-code            
+                           and buf_chk-discnt.record-type = 5:
+                           var-discnt-id  = var-discnt-id + 1.     
+                      end. 
+        
+                      create buf2_chk-discnt.
+                      assign
+                        buf2_chk-discnt.doc-code = iDocCode 
+                        buf2_chk-discnt.record-type = 5 
+                        buf2_chk-discnt.line-num = 0
+                        buf2_chk-discnt.promo-id = v-disc-promo-id                        
+                        buf2_chk-discnt.object-sum = 0 /* кол-во срабатыв. акции */
+                        buf2_chk-discnt.discnt-id = (var-discnt-id + 1)
+                        var-discnt-id = 0                                     
+                        buf2_chk-discnt.object-line-num = 0                              
+                        buf2_chk-discnt.pay-desk = buf_chk-doc.pay-desk
+                        buf2_chk-discnt.obj-code = buf_chk-doc.obj-code
+                        buf2_chk-discnt.obj-type = buf_chk-doc.obj-type
+                        buf2_chk-discnt.chk-date = buf_chk-doc.chk-date
+                        buf2_chk-discnt.shift-date = buf_chk-doc.shift-date
+                        buf2_chk-discnt.shift-num = buf_chk-doc.shift-num
+                        buf2_chk-discnt.chk-time = buf_chk-doc.chk-time
+                        .
+                  end.
+                  if avail buf2_chk-discnt 
+                  then do:                      
+                     create buf2_chk-discnt-attr.
+                     assign
+                        buf2_chk-discnt-attr.doc-code = iDocCode
+                        buf2_chk-discnt-attr.discnt-id = buf2_chk-discnt.discnt-id
+                        buf2_chk-discnt-attr.record-type     = 5 
+                        buf2_chk-discnt-attr.line-num        = 0                     
+                        buf2_chk-discnt-attr.object-line-num = 0
+                        buf2_chk-discnt-attr.attr-code       = "promo-id"
+                        buf2_chk-discnt-attr.attr-value      = v-disc-promo-id 
+                        .
+                  end.
+               end.             
+           end.              
+        end.         
+                  
+        if can-do("1,6,7", buf_chk-gds-attr.attr-value)              
+        then do: 
+           v-promo-sum = GetPromoSum(iDocCode).
+           find first buf2_chk-gds-attr no-lock where                 
+                      buf2_chk-gds-attr.doc-code = iDocCode
+                  and buf2_chk-gds-attr.line-num  = iLineNum                                      
+                  and buf2_chk-gds-attr.attr-code = "CSPromoSum"
+              no-error.
+           if not avail buf2_chk-gds-attr then do:
+               create buf2_chk-gds-attr.
+               assign
+                  buf2_chk-gds-attr.doc-code = iDocCode
+                  buf2_chk-gds-attr.line-num  = iLineNum                                      
+                  buf2_chk-gds-attr.attr-code = "CSPromoSum"
+                  buf2_chk-gds-attr.attr-value = string(Round(v-promo-sum,2))
+                  .
+           end.                  
+        end.
+        else v-promo-sum = 0.
+        
+        for each buf_chk-discnt no-lock where 
+                buf_chk-discnt.doc-code = buf_chk-gds-attr.doc-code            
+            and buf_chk-discnt.record-type = 0:
+           var-discnt-id  = var-discnt-id + 1.     
+        end.        
+        
+        create buf_chk-discnt.
+        assign 
+            buf_chk-discnt.doc-code = iDocCode
+            buf_chk-discnt.line-num = iLineNum
+            buf_chk-discnt.record-type = 0
+            buf_chk-discnt.discnt-id = (var-discnt-id + 1)
+            buf_chk-discnt.time-oper = buf_chk-gds.time-oper
+            buf_chk-discnt.line-type = integer({&discnt-gds})
+            buf_chk-discnt.line-sign = no
+            buf_chk-discnt.pass-discnt = integer({&discnt-p-auto})
+            buf_chk-discnt.value-type = integer({&discnt-v-abs})                
+            buf_chk-discnt.src-d-card = buf_chk-gds.src-d-card                
+            buf_chk-discnt.d-card = buf_chk-gds.d-card                                
+            buf_chk-discnt.discnt-value-abs = 0
+            buf_chk-discnt.discnt-value-pcnt = 0
+            buf_chk-discnt.object-line-num = iLineNum
+            buf_chk-discnt.pay-desk = buf_chk-doc.pay-desk
+            buf_chk-discnt.obj-code = buf_chk-doc.obj-code
+            buf_chk-discnt.obj-type = buf_chk-doc.obj-type 
+            buf_chk-discnt.chk-date = buf_chk-doc.chk-date 
+            buf_chk-discnt.chk-time = buf_chk-doc.chk-time
+            buf_chk-discnt.shift-date = buf_chk-doc.shift-date
+            buf_chk-discnt.shift-num = buf_chk-doc.shift-num
+            buf_chk-discnt.object-qnty = buf_chk-gds.src-qnty
+            buf_chk-discnt.object-sum = buf_chk-gds.src-sum
+            var-discnt-id = var-discnt-id + 1            
+            buf_chk-discnt.promo-id = v-disc-promo-id  
+            buf_chk-discnt.discnt-type = integer({&discnt-t-promo})           
+            .
+        
+        find first buf_chk-discnt-attr no-lock where 
+                   buf_chk-discnt-attr.attr-code = "promo-id"            
+               and buf_chk-discnt-attr.discnt-id = buf_chk-discnt.discnt-id
+               and buf_chk-discnt-attr.doc-code = buf_chk-discnt.doc-code
+               and buf_chk-discnt-attr.line-num = buf_chk-discnt.line-num
+               no-error.
+        if not avail buf_chk-discnt-attr then 
+        do:        
+            create buf_chk-discnt-attr .
+            assign
+                buf_chk-discnt-attr.attr-code = "promo-id"
+                buf_chk-discnt-attr.attr-value = buf_chk-discnt.promo-id
+                buf_chk-discnt-attr.discnt-id = buf_chk-discnt.discnt-id
+                buf_chk-discnt-attr.doc-code = buf_chk-discnt.doc-code
+                buf_chk-discnt-attr.line-num = buf_chk-discnt.line-num
+                buf_chk-discnt-attr.object-line-num = buf_chk-discnt.object-line-num
+                buf_chk-discnt-attr.record-type = buf_chk-discnt.record-type
+                . 
+         end.                 
+     end.                   
+   end.
+       
+   return yes.
+end function.        
+
 procedure libchkvl_get-dc-mask-array :
 define input parameter p-host-code like ub.sysconf.host-code no-undo .
 define input parameter p-obj-type  like ub.clients.obj-type no-undo .
@@ -1247,6 +1618,7 @@ DEFINE VARIABLE NoExchRate                 as   logical init FALSE    no-undo .
 DEFINE VARIABLE r-bar-code                 like ub.bar-code.b-code       no-undo .
 define variable v-fttwd as logical no-undo .
 define variable v-pos-type-int               as integer                 no-undo .
+define variable v-is-petrol-promo            as logical                 no-undo .
 
 define variable v-value-character as character no-undo .
 define variable v-value-date as date no-undo .
@@ -1256,8 +1628,9 @@ define variable v-value-logical AS LOGICAL no-undo .
 define variable v-param-type as character no-undo .
 define variable mask_s-c as character no-undo .
 define variable v-tth as handle no-undo .
-
+define variable vSumRound as decimal no-undo.
 define variable iii as integer no-undo .
+define variable v-promo-sum as decimal no-undo.
 
 define buffer buf_chk-discnt for ub.chk-discnt.
 define buffer for-gds for ub.chk-gds.
@@ -1283,6 +1656,7 @@ define buffer buf_goods for ub.goods.
 define buffer buf_gds-prt for ub.gds-prt.
 define buffer buf_units for ub.units.
 define buffer buf_marking-chk for ub.marking-chk .
+define buffer buf_chk-gds-attr for ub.chk-gds-attr .
 
 &glob display-message  if valid-handle({&prefix}p-log-handle) then run write-log-and-file in {&prefix}p-log-handle ( ~
               input 1 ~
@@ -1887,7 +2261,7 @@ delete object v-tth no-error.
         or
         buf_chk-doc.src-d-pcnt <> 0.0 ) AND
         p-sub-d = 0 and not v-is-petrol-check
-    then do:
+    then do:        
       /*тогда запишем скидку процентную*/
       create buf0_chk-discnt.
       assign
@@ -1915,7 +2289,7 @@ delete object v-tth no-error.
       buf0_chk-discnt.chk-time = buf_chk-doc.chk-time
       var-discnt-id = var-discnt-id + 1
       var-pcnt-discnt = recid(buf0_chk-discnt)
-      .
+      .      
     end.
   end. /*if (buf_chk-doc.src-d-card <> ? and buf_chk-doc.src-d-card <> "":U)*/
   if {&prefix}pos-type <> {&cd-type-IPC-Servispl} then do:
@@ -2408,7 +2782,9 @@ if avail buf_bar-code then do:
                     "строка" + {&space-char} + string(buf_chk-gds.LINE-NUM) + {&space-char} +
                     "код = ?" + "@":u
         .
+         
         v-price-from-check = buf_chk-gds.SRC-PRICE * abs( buf_chk-gds.src-qnty ) .
+                              
         assign
         buf_chk-gds.b-code = ( if v-b-c <> ? then v-b-c else 0)
         buf_chk-gds.is-error = (if buf_chk-gds.is-error = ? then no else buf_chk-gds.is-error) or iserr
@@ -2441,6 +2817,7 @@ if avail buf_bar-code then do:
                             then buf_goods.gds-type
                             else "":U)
         .
+                         
         if buf_chk-doc.chk-type <> integer({&income-corr})
         and buf_chk-doc.chk-type <> integer({&expense-corr})
         then do :                    
@@ -2480,11 +2857,23 @@ if avail buf_bar-code then do:
                                                     ( v-price-from-check / abs( buf_chk-gds.doc-qnty ) - buf_chk-gds.price-base ) )
                                                   )
                                             ))
-                                    )
-          buf_chk-gds.sum-base = buf_chk-gds.doc-qnty * buf_chk-gds.price-base
+                                    )          
+          
+          .                           
+          
+          /* при акционной цене другое округление */          
+          if ChkPromoPrice(buf_chk-gds.doc-code, buf_chk-gds.line-num )               
+          then assign 
+                 vSumRound = RoundUp(buf_chk-gds.doc-qnty, buf_chk-gds.price-base)
+                 buf_chk-gds.discnt = 0
+                 .
+          else vSumRound = buf_chk-gds.doc-qnty * buf_chk-gds.price-base.
+                                         
+          assign
+          buf_chk-gds.sum-base = vSumRound           
           buf_chk-doc.tot-doc = buf_chk-doc.tot-doc + (if v-is-petrol-check
                                                 or v-is-inventory
-                                                then 0 else  buf_chk-gds.price-base * buf_chk-gds.doc-qnty)
+                                                then 0 else  buf_chk-gds.sum-base)
           buf_chk-doc.discnt = buf_chk-doc.discnt + (if buf_chk-gds.write-off-code <> ?
                                               and buf_chk-gds.write-off-code > 0
                                               then 0
@@ -2511,7 +2900,12 @@ if avail buf_bar-code then do:
             {&prefix}view-log = yes
             .
           end.
-          if buf_chk-gds.discnt <> 0
+          
+          /* если возвратный чек, то надо вручную создать скидки */
+          if buf_chk-doc.chk-type = integer({&rcpt-return}) then 
+             SetPromoDisc(buf_chk-gds.doc-code, buf_chk-gds.line-num /*, input-output var-discnt-id*/ ).
+               
+          if buf_chk-gds.discnt <> 0 or ChkPromoPrice(buf_chk-gds.doc-code, buf_chk-gds.line-num )
           then do:
             _chk-discnt-gds:
             for each buf0_chk-discnt where
@@ -2519,7 +2913,8 @@ if avail buf_bar-code then do:
                       buf0_chk-discnt.line-num = buf_chk-gds.line-num and
                       buf0_chk-discnt.record-type = 0 and
                       buf0_chk-discnt.object-line-num = buf_chk-gds.line-num:
-              if not buf0_chk-discnt.line-type = integer({&discnt-gds}) then next _chk-discnt-gds.
+              if not buf0_chk-discnt.line-type = integer({&discnt-gds}) then next _chk-discnt-gds.              
+              
               create buf_chk-discnt.
               buffer-copy buf0_chk-discnt to buf_chk-discnt
               assign
@@ -2529,9 +2924,10 @@ if avail buf_bar-code then do:
                                                 then buf0_chk-discnt.discnt-value-abs / buf0_chk-discnt.object-sum * 100
                                                 else 0
               buf0_chk-discnt.d-card       = if buf0_chk-discnt.d-card = ? or buf0_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf0_chk-discnt.d-card
-              buf_chk-discnt.d-card       = if buf_chk-discnt.d-card = ? or buf_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf_chk-discnt.d-card  
-              .
-
+              buf_chk-discnt.d-card       = if buf_chk-discnt.d-card = ? or buf_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf_chk-discnt.d-card
+              /*buf0_chk-discnt.discnt-id = (var-discnt-id + 1)
+              var-discnt-id = var-discnt-id + 1*/  
+              .              
             end.
           end.
         end. /* if buf_chk-gds.src-qnty <> 0 t*/
@@ -2561,7 +2957,7 @@ if avail buf_bar-code then do:
         buf_chk-doc.netto = buf_chk-doc.netto + ( buf_chk-gds.price-base * buf_chk-gds.doc-qnty ) - buf_chk-gds.src-discnt
         buf_chk-doc.doc-qnty = buf_chk-doc.doc-qnty + buf_chk-gds.doc-qnty
         .
-        if buf_chk-gds.src-discnt <> 0 then do:
+        if buf_chk-gds.src-discnt <> 0 then do:                        
           create buf0_chk-discnt.
           assign
           buf0_chk-discnt.doc-code = buf_chk-doc.doc-code
@@ -2592,7 +2988,7 @@ if avail buf_bar-code then do:
           buf_chk-gds.discnt = buf_chk-gds.src-discnt / abs( buf_chk-gds.doc-qnty )
           buf_chk-gds.src-discnt = buf_chk-gds.src-discnt / buf_chk-gds.src-qnty
           var-discnt-id = var-discnt-id + 1
-          .
+          .          
         end.
       end. /*строка группы*/
     end CASE. /*buf_chk-gds.grp-code*/
@@ -2890,6 +3286,13 @@ if avail buf_bar-code then do:
           then do:
             v-excsum = v-excsum - buf_chk-gds.doc-qnty. /* все равно применяем скидку, так как другого товара нету */
           end.
+          
+          if ChkPromoPrice(buf_chk-gds.doc-code, buf_chk-gds.line-num)               
+          then 
+             var-gds-for-discnt = RoundUp(buf_chk-gds.doc-qnty, (buf_chk-gds.price-base - buf_chk-gds.discnt) ).
+          else     
+             var-gds-for-discnt = (buf_chk-gds.price-base - buf_chk-gds.discnt) * buf_chk-gds.doc-qnty.
+                 
           assign
           str-dec = if buf0_chk-discnt.object-sum <> 0
                     then (if buf0_chk-discnt.discnt-value-pcnt = 100
@@ -2897,8 +3300,7 @@ if avail buf_bar-code then do:
                           then (buf_chk-gds.price-base - buf_chk-gds.discnt)
                           else (buf_chk-gds.price-base - buf_chk-gds.discnt) * (buf0_chk-discnt.discnt-value-abs / buf0_chk-discnt.object-sum - v-excsum)
                           )
-                    else 0
-          var-gds-for-discnt = (buf_chk-gds.price-base - buf_chk-gds.discnt) * buf_chk-gds.doc-qnty
+                    else 0          
           /*
           buf_chk-gds.discnt = buf_chk-gds.discnt + round(str-dec, 2)
           t-gds.discnt-sum = t-gds.discnt-sum + buf_chk-gds.doc-qnty * round(str-dec, 2)
@@ -2908,7 +3310,7 @@ if avail buf_bar-code then do:
           buf_chk-gds.discnt = buf_chk-gds.discnt + str-dec
           t-gds.discnt-sum = t-gds.discnt-sum + buf_chk-gds.doc-qnty * str-dec
           .
-
+                
           create buf_chk-discnt.
           buffer-copy buf0_chk-discnt to buf_chk-discnt
           assign
@@ -2925,6 +3327,7 @@ if avail buf_bar-code then do:
                                                   )
                                             else 0
           .
+       
         end. /*for each buf_chk-gds*/
       /*end. /*if lookup({&amount}, for-chk-type)  = 0 and shop.discaloc*/*/
       if abs(v-discnt-sum - buf0_chk-discnt.DISCNT-VALUE-ABS) > 0.0000000001 then do:
@@ -3004,7 +3407,7 @@ if avail buf_bar-code then do:
           buf0_chk-discnt.object-line-num = buf_chk-gds.line-num
           buf0_chk-discnt.d-card      = if buf0_chk-discnt.d-card = ? or buf0_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf0_chk-discnt.d-card
           buf_chk-discnt.d-card      = if buf_chk-discnt.d-card = ? or buf_chk-discnt.d-card = "" then buf_chk-gds.d-card else buf_chk-discnt.d-card
-          .
+          .          
         END . /* FOR EACH buf_chk-gds WHERE*/
         assign
         buf_chk-doc.discnt = buf_chk-doc.discnt + ( netto-for-tot-d-pcnt / 100 * ( buf_chk-discnt.discnt-value-pcnt ) )
@@ -3538,7 +3941,14 @@ if avail buf_bar-code then do:
       end. /*else do: not v-is-z-rep*/
     end. /*not v-is-petrol-check and not annu and not inventory*/
   end. /*if not v-is-annu-check*/
+  
+  if ChkGdsPromo(buf_chk-doc.doc-code) then
+     v-promo-sum = GetPromoSum(buf_chk-doc.doc-code).
+  else v-promo-sum = 0.   
+  
   assign
+  buf_chk-doc.tot-doc = buf_chk-doc.tot-doc + v-promo-sum
+  buf_chk-doc.discnt = buf_chk-doc.discnt + v-promo-sum 
   buf_chk-doc.d-pcnt = if buf_chk-doc.tot-doc = 0
                     then 0
                     else ( buf_chk-doc.discnt / buf_chk-doc.tot-doc * 100 )

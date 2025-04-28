@@ -1110,7 +1110,7 @@ procedure print-total .
               if pay-line = no then "" else string(pol14,"->>>>>>>>>>>9.99"),
               if pay-line = no or pol15 = 0 then "" else string(pol15,"->>>>>>>>>>>9.99"),
               if pay-line = no or pol16 = 0 then "" else string(pol16,"->>>>>>>>>>>9.99"),
-              if main-line = no or pol17 = 0 then "" else string(pol17,"->>>>>>>>>>>9.99"),
+              if /*main-line = no or*/ pol17 = 0 then "" else string(pol17,"->>>>>>>>>>>9.99"),
               if main-line = no then "" else string(pol19,"->>>>>>>>>>>9.99")
               ).
 

@@ -760,7 +760,10 @@ procedure proc-report:
 
       /*тип платежа*/
       opl-chr = ''.
-      for EACH  chk-gds-pay where chk-gds-pay.doc-code = chk-gds.doc-code and chk-gds-pay.b-code = chk-gds.b-code no-lock :
+      for EACH  chk-gds-pay where chk-gds-pay.doc-code = chk-gds.doc-code 
+                           /* and chk-gds-pay.b-code = chk-gds.b-code*/
+                              and chk-gds-pay.line-num = chk-gds.line-num 
+      no-lock :
          /* MESSAGE chk-pay.tot-sum VIEW-AS ALERT-BOX. */
          find first cash-pay where cash-pay.cdpay-code = chk-gds-pay.pay-code no-lock no-error.
          IF AVAILABLE cash-pay THEN opl-chr = cash-pay.obj-name.

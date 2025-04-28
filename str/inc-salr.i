@@ -432,6 +432,7 @@ on error undo, return error return-value
       /*обработка товаров*/
       _buf_chk-gds:
       FOR EACH buf_chk-gds WHERE buf_chk-gds.doc-code = X_chk-doc.doc-code
+      by buf_chk-gds.price-base 
       on error undo _one-check, LEAVE _one-check
       on stop undo _one-check, leave _one-check
       :
@@ -1065,6 +1066,7 @@ find first t-gds
           if t-gds.doc-qnty = 0 AND
               t-gds.price-sum = 0 AND
               t-gds.discnt-sum = 0 then NEXT.
+              
           /* ищем строку для товара в накладных */
           FIND FIRST buf_doc-line WHERE buf_doc-line.doc-code = t-gds.doc-code
                                 and buf_doc-line.artic = t-gds.artic
