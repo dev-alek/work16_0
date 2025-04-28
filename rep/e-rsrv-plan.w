@@ -264,7 +264,7 @@ DEFINE VARIABLE text-googs          AS CHARACTER FORMAT "X(256)":U INITIAL "Това
   VIEW-AS FILL-IN 
   SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE text-period_list2   AS CHARACTER FORMAT "X(256)":U INITIAL "Период продажа для анализа:" 
+DEFINE VARIABLE text-period_list2   AS CHARACTER FORMAT "X(256)":U INITIAL "Период продаж для анализа:" 
   VIEW-AS FILL-IN 
   SIZE 27.5 BY 1
   FONT 1 NO-UNDO.
@@ -720,7 +720,8 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
     if post-grp_recids <> "" then
     do:
       Assign
-        text-cliname = ''.
+        text-cliname = ''
+        customer-name = "".
       v-nn = num-entries( post-grp_recids ) .
       DO ii = 1 TO v-nn :
         FIND cli-post WHERE recid( cli-post ) = int(entry( ii, post-grp_recids )) NO-LOCK.

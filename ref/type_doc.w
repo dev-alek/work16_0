@@ -125,7 +125,7 @@ DEFINE BROWSE br-coll
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-coll d-type-tmp _STRUCTURED
   QUERY br-coll NO-LOCK DISPLAY
       (IF ( CAN-DO (rid-list, string( recid( tt-typeDoc ) ) ) ) THEN ("*") ELSE (" ")) COLUMN-LABEL "*" FORMAT "X(1)":U
-      tt-typeDoc.typeName column-label "Наименование" FORMAT "X(20)":U WIDTH 50 
+      tt-typeDoc.typeName column-label "Наименование" FORMAT "X(30)":U WIDTH 50 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH SEPARATORS SIZE 54.5 BY 19.46
