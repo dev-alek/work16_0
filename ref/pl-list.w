@@ -53,6 +53,7 @@ define variable vss-description as character no-undo init "справочник складских 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/library.i  }
+{ ref/gds-attr.i }
 { cmp/showinf.i  }
 { gbl/flt-def.i  }
 { gbl/fltfield.i }
@@ -82,6 +83,10 @@ define variable v_is-ptrl           as character no-undo.
 define variable par-type            as character no-undo.
 define variable v-chk-act-host-code as integer   no-undo .
 define variable glog                as logical   no-undo .
+define variable v-is-test-asi       as logical   no-undo init no .
+
+define buffer buf_pl-gds for ub.pl-gds .
+
 define temp-table tt-place-attr
   field pl-code         like place.pl-code
   field place-type      as character
@@ -996,6 +1001,13 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
+  if num-entries(p-mode, {&delim-par}) = 2
+  then do :
+    assign
+      v-is-test-asi = (entry(2, p-mode, {&delim-par}) = "test-asi")
+      p-mode = entry(1, p-mode, {&delim-par})
+    .
+  end .
   { gbl/getcntxt.i get }
 
   { gbl/conf-rd.i "'is-ptrl':U"
@@ -1194,6 +1206,29 @@ PROCEDURE OpenBr :
               end.
           end case.
         end.
+        
+        if v-is-test-asi
+        then do :
+          find first buf_pl-gds no-lock where buf_pl-gds.pl-code = tt-place-attr.pl-code no-error .
+          if not available buf_pl-gds
+          then do :
+            delete tt-place-attr .
+          end .
+          else do :
+            &scop proc-name gds-attr-value
+            {&run_proc_attr-lib}
+              (input  buf_pl-gds.gds-code
+              ,input  {&attr-fuel-type}
+              ,output v-value
+              ,output par-type) no-error.
+            if v-value = "lgas"
+            or v-value = "metan"
+            or v-value = "propan"
+            then do :
+              delete tt-place-attr .
+            end .
+          end .
+        end . /* v-is-test-asi */
       end.
     end.
   end.
@@ -1255,6 +1290,29 @@ PROCEDURE OpenBr :
               end.
           end case.
         end.
+        
+        if v-is-test-asi
+        then do :
+          find first buf_pl-gds no-lock where buf_pl-gds.pl-code = tt-place-attr.pl-code no-error .
+          if not available buf_pl-gds
+          then do :
+            delete tt-place-attr .
+          end .
+          else do :
+            &scop proc-name gds-attr-value
+            {&run_proc_attr-lib}
+              (input  buf_pl-gds.gds-code
+              ,input  {&attr-fuel-type}
+              ,output v-value
+              ,output par-type) no-error.
+            if v-value = "lgas"
+            or v-value = "metan"
+            or v-value = "propan"
+            then do :
+              delete tt-place-attr .
+            end .
+          end .
+        end . /* v-is-test-asi */
       end.
     end.
   end.

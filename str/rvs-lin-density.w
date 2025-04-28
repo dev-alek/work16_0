@@ -108,7 +108,7 @@ define button b-fill-empty
 define query br-dens for tt-dens .
 define browse br-dens query br-dens exclusive-lock
   display
-    tt-dens.key_        label "Уровень " format "X(4)"
+    tt-dens.key_        label "Уровень " format "X(8)"
     tt-dens.density     label "Значение,г/см3" format "9.9999"
   enable
     tt-dens.density
@@ -418,7 +418,7 @@ procedure fill-tt :
               create tt-dens .
               assign
                 tt-dens.ii = ii
-                tt-dens.key_ = "P" + string(ii)
+                tt-dens.key_ = "P" + string(ii) + (if ii = 1 then "(низ)" else "")
               .        
             end .
           end .
@@ -431,7 +431,7 @@ procedure fill-tt :
               create tt-dens .
               assign
                 tt-dens.ii = 1
-                tt-dens.key_ = "P1"
+                tt-dens.key_ = "P1(низ)"
               .        
             end .
           end .
@@ -443,14 +443,14 @@ procedure fill-tt :
               create tt-dens .
               assign
                 tt-dens.ii = ii
-                tt-dens.key_ = "P" + string(ii)
+                tt-dens.key_ = "P" + string(ii) + (if ii = 1 then "(низ)" else "")
               .        
             end .
           end .
         end .
         when 1 /* 1 - Неавтоматизированное СИ */
         then do :
-          find first tt-dens where tt-dens.key_ = "P1" no-error .
+          find first tt-dens where tt-dens.key_ begins "P1" no-error .
           if available tt-dens
           then do :
             empty temp-table tt-dens .
@@ -502,13 +502,13 @@ procedure fill-tt :
             create tt-dens .
             assign
               tt-dens.ii = ii
-              tt-dens.key_ = "P" + string(ii)
+              tt-dens.key_ = "P" + string(ii) + (if ii = 1 then "(низ)" else "")
             .        
           end .
         end .
         when 1 /* 1 - Неавтоматизированное СИ */
         then do :
-          find first tt-dens where tt-dens.key_ = "P1" no-error .
+          find first tt-dens where tt-dens.key_ begins "P1" no-error .
           if available tt-dens
           then do :
             empty temp-table tt-dens .

@@ -25,11 +25,8 @@
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-
-define input parameter p-title as character no-undo .
-define input parameter p-labels as character no-undo .
-define input parameter p-values as character no-undo .
-
+define input-output parameter p-FIO as character no-undo .
+define input-output parameter p-position as character no-undo .
 /* Local Variable Definitions ---                                       */
 
 /* _UIB-CODE-BLOCK-END */
@@ -47,8 +44,8 @@ define input parameter p-values as character no-undo .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS RECT-1 Btn_OK 
-&Scoped-Define DISPLAYED-OBJECTS FILL-IN-1 FILL-IN-2 FILL-IN-3 FILL-IN-4
+&Scoped-Define ENABLED-OBJECTS f-FIO f-position B-OK B-Cancel 
+&Scoped-Define DISPLAYED-OBJECTS f-FIO f-position 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -63,50 +60,41 @@ define input parameter p-values as character no-undo .
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON Btn_OK AUTO-GO 
-     LABEL "OK" 
+DEFINE BUTTON B-Cancel AUTO-END-KEY 
+     LABEL "Отмена" 
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
-DEFINE VARIABLE FILL-IN-1 AS DECIMAL FORMAT "->>>>9.9999":U INITIAL 0 
-     LABEL "Fill 1" 
-     VIEW-AS FILL-IN 
-     SIZE 8 BY 1 NO-UNDO.
+DEFINE BUTTON B-OK AUTO-GO 
+     LABEL "Ввод" 
+     SIZE 15 BY 1.14
+     BGCOLOR 8 .
 
-DEFINE VARIABLE FILL-IN-2 AS DECIMAL FORMAT "->>>>9.9999":U INITIAL 0 
-     LABEL "Fill 1" 
+DEFINE VARIABLE f-FIO AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 8 BY 1 NO-UNDO.
+     SIZE 88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE FILL-IN-3 AS DECIMAL FORMAT "->>>>9.9999":U INITIAL 0 
-     LABEL "Fill 1" 
+DEFINE VARIABLE f-position AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 8 BY 1 NO-UNDO.
-     
-DEFINE VARIABLE FILL-IN-4 AS DECIMAL FORMAT "->>>>9.99":U INITIAL 0 
-     LABEL "Fill 1" 
-     VIEW-AS FILL-IN 
-     SIZE 8 BY 1 NO-UNDO.
-
-DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 85 BY 7.5.
+     SIZE 88 BY 1 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     FILL-IN-1 AT ROW 2 COL 70 COLON-ALIGNED WIDGET-ID 2
-     FILL-IN-2 AT ROW 3.5 COL 70 COLON-ALIGNED WIDGET-ID 4
-     FILL-IN-3 AT ROW 5 COL 70 COLON-ALIGNED WIDGET-ID 6
-     FILL-IN-4 AT ROW 6.5 COL 70 COLON-ALIGNED WIDGET-ID 6
-     Btn_OK AT ROW 9 COL 65
-     RECT-1 AT ROW 1 COL 2 WIDGET-ID 8
-     SPACE(1) SKIP(1)
+     f-FIO AT ROW 2 COL 1 COLON-ALIGNED NO-LABEL WIDGET-ID 6
+     f-position AT ROW 4 COL 1 COLON-ALIGNED NO-LABEL WIDGET-ID 10
+     B-OK AT ROW 5.1 COL 2.8
+     B-Cancel AT ROW 5.1 COL 17.8
+     "ФИО" VIEW-AS TEXT
+          SIZE 8 BY .62 AT ROW 1.2 COL 3 WIDGET-ID 2
+     "Должность" VIEW-AS TEXT
+          SIZE 12.2 BY .62 AT ROW 3.2 COL 3 WIDGET-ID 8
+     SPACE(77.79) SKIP(2.48)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "<insert dialog title>"
-         DEFAULT-BUTTON Btn_OK WIDGET-ID 100.
+         TITLE " "
+         DEFAULT-BUTTON B-OK CANCEL-BUTTON B-Cancel WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -130,26 +118,6 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-/* SETTINGS FOR FILL-IN FILL-IN-1 IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
-ASSIGN 
-       FILL-IN-1:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-/* SETTINGS FOR FILL-IN FILL-IN-2 IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
-ASSIGN 
-       FILL-IN-2:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-/* SETTINGS FOR FILL-IN FILL-IN-3 IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
-ASSIGN 
-       FILL-IN-3:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-
-/* SETTINGS FOR FILL-IN FILL-IN-4 IN FRAME Dialog-Frame
-   NO-ENABLE                                                            */
-ASSIGN 
-       FILL-IN-4:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
-       
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -170,6 +138,23 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME B-OK
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-OK Dialog-Frame
+ON CHOOSE OF B-OK IN FRAME Dialog-Frame /* Ввод */
+DO:
+  assign
+    f-FIO
+    f-position
+    p-FIO = f-FIO
+    p-position = f-position
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Dialog-Frame 
@@ -187,23 +172,10 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  Frame Dialog-Frame:title = p-title .
-  FILL-IN-1 = decimal(entry(1, p-values)) no-error .
-  FILL-IN-1:label = entry(1, p-labels, "|") no-error .
-  FILL-IN-2 = decimal(entry(2, p-values)) no-error .
-  FILL-IN-2:label = entry(2, p-labels, "|") no-error .
-  FILL-IN-3 = decimal(entry(3, p-values)) no-error .
-  FILL-IN-3:label = entry(3, p-labels, "|") no-error .
-  FILL-IN-4 = decimal(entry(4, p-values)) no-error .
-  FILL-IN-4:label = entry(4, p-labels, "|") no-error .
-  
-  if p-title = "Результат расчета проверки корректности работы АСИ по массе НП"
-  then do :
-    FILL-IN-1:format = "->>>>>>>>>>9.9" .
-    FILL-IN-2:format = "->>>>>>>>>>9.9" .
-    FILL-IN-3:format = "->>>>>>>>>>9.9" .
-  end .
-  
+  assign
+    f-FIO = p-FIO
+    f-position = p-position
+  .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -243,9 +215,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY FILL-IN-1 FILL-IN-2 FILL-IN-3 FILL-IN-4 
+  DISPLAY f-FIO f-position 
       WITH FRAME Dialog-Frame.
-  ENABLE RECT-1 Btn_OK 
+  ENABLE f-FIO f-position B-OK B-Cancel 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

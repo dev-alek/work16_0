@@ -112,7 +112,7 @@ define button b-fill-empty
 define query br-temp for tt-temps-tab .
 define browse br-temp query br-temp exclusive-lock
   display
-    tt-temps-tab.key_         label "Уровень " format "X(4)"
+    tt-temps-tab.key_         label "Уровень " format "X(8)"
     tt-temps-tab.temperature  label "Значение,°C" format "->>9.9"
   enable
     tt-temps-tab.temperature

@@ -713,7 +713,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
       end .
       if not buf_place.is-meas
       then do :
-        return substitute('NMS! Проверка корректности работы АСИ в резервуаре НП возможна только по измеряемым резервуарам. Выбранный резервуар неизмеряемый и не может быть добавлен в документ!', c-value).
+        return substitute('NMS! Проверка корректности работы АСИ в резервуаре НП возможна только по измеряемым резервуарам. Выбранный резервуар &1 неизмеряемый и не может быть добавлен в документ!', p-pl-code).
       end .
       /* Для виртуального резервуара */
       run placelib_get-attr(input {&place-virtual}
@@ -725,7 +725,7 @@ procedure lib-rvs_crrvslin : /* create-rvs-line */
       is-vir = if (v-ok and logical(v-value)) then true else false.
       if is-vir
       then do :
-        return substitute('VIR! Проверка корректности работы АСИ в резервуаре НП не возможна по виртуальным резервуарам. Выбранный резервуар виртуальный и не может быть добавлен в документ!', c-value).
+        return substitute('VIR! Проверка корректности работы АСИ в резервуаре НП не возможна по виртуальным резервуарам. Выбранный резервуар &1 виртуальный и не может быть добавлен в документ!', p-pl-code).
       end .
       
       find first buf_rvs-line no-lock

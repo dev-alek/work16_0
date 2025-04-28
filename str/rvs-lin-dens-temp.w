@@ -113,7 +113,7 @@ define button b-fill-empty
 define query br-dens-temp for tt-dens-temp .
 define browse br-dens-temp query br-dens-temp exclusive-lock
   display
-    tt-dens-temp.key_        label "Уровень " format "X(4)"
+    tt-dens-temp.key_        label "Уровень " format "X(8)"
     tt-dens-temp.density     label "Значение,г/см3" format "9.9999"
     tt-dens-temp.temperature label "t измер. р,°C" format "->>9.9"
   enable
@@ -506,7 +506,7 @@ procedure fill-tt :
       case p-place-type :
         when 1
         then do :
-          find first tt-dens-temp where tt-dens-temp.key_ = "P1" no-error .
+          find first tt-dens-temp where tt-dens-temp.key_ begins "P1" no-error .
           if available tt-dens-temp
           then do :
             empty temp-table tt-dens-temp .
@@ -543,7 +543,7 @@ procedure fill-tt :
         end .
         when 2
         then do :
-          find first tt-dens-temp where tt-dens-temp.key_ = "P1" no-error .
+          find first tt-dens-temp where tt-dens-temp.key_ begins "P1" no-error .
           if available tt-dens-temp
           then do :
             empty temp-table tt-dens-temp .

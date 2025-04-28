@@ -53,6 +53,11 @@ define variable vss-description as character no-undo initial "Обработка документ
 { str/placelib.i      }
 { gbl/db-attr.i       }
 { gbl/ptrlprop.i def  }
+{ gbl/cur-time.i }
+{ str/get-pokmi-dll-version.i }
+{ str/calibrationbelt.i }
+
+define stream outstream.
 
 define buffer r-doc             for ub.rvs-doc.
 define buffer cur_shift-obj     for ub.shift-obj.
@@ -83,56 +88,15 @@ define variable isMeasurement     as logical   no-undo init no.
 
 &scop label-clmn_1-br-line  '*'
 &scop sort-clmn_1-br-line   get-mark (buffer ub.rvs-line)
-&scop label-clmn_2-br-line  'Артикул'
-&scop sort-clmn_2-br-line   ub.goods.artic
+&scop label-clmn_2-br-line  'Номер резервуара'
+&scop sort-clmn_2-br-line   place.loc1
 &scop label-clmn_3-br-line  'Название'
 &scop sort-clmn_3-br-line   ub.goods.gds-name
 &scop label-clmn_4-br-line  'Скл.место'
 &scop sort-clmn_4-br-line   ub.rvs-line.pl-code
-&scop label-clmn_5-br-line  'Номер резервуара'
-&scop sort-clmn_5-br-line   place.loc1
-&scop label-clmn_6-br-line  'Факт остаток'
-&scop sort-clmn_6-br-line   ub.rvs-line.state-measure-qnty
-&scop label-clmn_7-br-line  'Измер. остаток'
-&scop sort-clmn_7-br-line   ub.rvs-line.measure-qnty
-&scop label-clmn_8-br-line  'Учет'
-&scop sort-clmn_8-br-line   ub.rvs-line.system-qnty
-&scop label-clmn_9-br-line  'Первонач.учет'
-&scop sort-clmn_9-br-line   ub.rvs-line.orig-system-qnty
-&scop label-clmn_10-br-line 'Факт в!трубопроводе'
-&scop sort-clmn_10-br-line  ub.rvs-line.state-add-qnty
-&scop label-clmn_11-br-line 'Отклонение(факт)'
-&scop sort-clmn_11-br-line  deviation-fact(buffer ub.rvs-line)
-&scop label-clmn_12-br-line 'Отклонение(измер)'
-&scop sort-clmn_12-br-line  deviation-measure(buffer ub.rvs-line)
-&scop label-clmn_13-br-line 'Допустимое!отклонение'
-&scop sort-clmn_13-br-line  ub.rvs-line.tolerance
-&scop label-clmn_14-br-line 'Факт брутто'
-&scop sort-clmn_14-br-line  ub.rvs-line.state-brutto-qnty
-&scop sort-clmn_15-br-line  ub.rvs-line.brutto-qnty
-&scop sort-clmn_16-br-line  ub.rvs-line.state-density
-&scop sort-clmn_17-br-line  ub.rvs-line.density
-&scop sort-clmn_18-br-line  ub.rvs-line.state-measure-cli-qnty
-&scop sort-clmn_19-br-line  ub.rvs-line.measure-cli-qnty
-&scop sort-clmn_20-br-line  ub.rvs-line.system-cli-qnty
-&scop sort-clmn_21-br-line  ub.rvs-line.orig-system-cli-qnty
-&scop sort-clmn_22-br-line  ub.rvs-line.state-brutto-cli-qnty
-&scop sort-clmn_23-br-line  ub.rvs-line.brutto-cli-qnty
-&scop sort-clmn_24-br-line  ub.rvs-line.state-mh-qnty
-&scop sort-clmn_25-br-line  ub.rvs-line.meas-mh-qnty
-&scop sort-clmn_26-br-line  ub.rvs-line.state-am-qnty
-&scop sort-clmn_27-br-line  ub.rvs-line.meas-am-qnty
-&scop sort-clmn_28-br-line  ub.rvs-line.state-cf-qnty
-&scop sort-clmn_29-br-line  ub.rvs-line.meas-cf-qnty
-&scop sort-clmn_30-br-line  ub.rvs-line.state-level-total
-&scop sort-clmn_31-br-line  ub.rvs-line.level-total
-&scop sort-clmn_32-br-line  ub.rvs-line.state-level-petrol
-&scop sort-clmn_33-br-line  ub.rvs-line.level-petrol
-&scop sort-clmn_34-br-line  ub.rvs-line.state-level-water
-&scop sort-clmn_35-br-line  ub.rvs-line.level-water
-&scop sort-clmn_36-br-line  ub.rvs-line.state-temperature
-&scop sort-clmn_37-br-line  ub.rvs-line.temperature
-&scop enabled-clmn          {&sort-clmn_37-br-line}
+&scop label-clmn_5-br-line  'Бар-код'
+&scop sort-clmn_5-br-line   ub.goods.gds-code
+
 
 /* ***********************  control definitions  ********************** */
 define variable rvs-line-rec      as recid     no-undo.
@@ -163,6 +127,7 @@ define variable vTimeAutoSkip     as integer  no-undo.
 
 define buffer cli-buf      for ub.clients.
 define buffer del-rvs-line for ub.rvs-line.
+define buffer calc_r-line  for ub.rvs-line.
 
 define button b-help
   label "Помощь":U
@@ -204,6 +169,10 @@ define button b-notes
 define button b-meas
   label "Измерение"
   size 10 by 1.
+  
+define button b-commission
+  label "Состав комиссии":U
+  size 20 by 1.
 
 define menu m-meas
   menu-item m-meas-1 label "Всех резервуаров в документе" accelerator "alt-1"
@@ -251,51 +220,18 @@ define query {&browse-name}      for ub.rvs-line, ub.goods, ub.place scrolling.
 define browse {&browse-name} query {&browse-name} no-lock display
   {&sort-clmn_1-br-line}  column-label {&label-clmn_1-br-line}  format "x(1)"
   {&sort-clmn_2-br-line}  column-label {&label-clmn_2-br-line}
-      {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(15)"
-      {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  FORMAT "99999999999":U
-      {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}
-      {&sort-clmn_6-br-line}  column-label {&label-clmn_6-br-line}
-      {&sort-clmn_7-br-line}  column-label {&label-clmn_7-br-line}
-      {&sort-clmn_8-br-line}  column-label {&label-clmn_8-br-line}
-      {&sort-clmn_9-br-line}  column-label {&label-clmn_9-br-line}
-      {&sort-clmn_10-br-line} column-label {&label-clmn_10-br-line} format "->>,>>>,>>>.<<<"
-      {&sort-clmn_11-br-line} column-label {&label-clmn_11-br-line} format "->>,>>>,>>>.<<<"
-      {&sort-clmn_12-br-line} column-label {&label-clmn_12-br-line}
-      {&sort-clmn_13-br-line} column-label {&label-clmn_13-br-line}
-      {&sort-clmn_14-br-line} column-label {&label-clmn_14-br-line}
-      {&sort-clmn_15-br-line}
-      {&sort-clmn_16-br-line}
-      {&sort-clmn_17-br-line}
-      {&sort-clmn_18-br-line}
-      {&sort-clmn_19-br-line}
-      {&sort-clmn_20-br-line}
-      {&sort-clmn_21-br-line}
-      {&sort-clmn_22-br-line}
-      {&sort-clmn_23-br-line}
-      {&sort-clmn_24-br-line}
-      {&sort-clmn_25-br-line}
-      {&sort-clmn_26-br-line}
-      {&sort-clmn_27-br-line}
-      {&sort-clmn_28-br-line}
-      {&sort-clmn_29-br-line}
-      {&sort-clmn_30-br-line}
-      {&sort-clmn_31-br-line}
-      {&sort-clmn_32-br-line} format "->>,>>>,>>>.<<<"
-      {&sort-clmn_33-br-line}
-      {&sort-clmn_34-br-line}
-      {&sort-clmn_35-br-line}
-      {&sort-clmn_36-br-line}
-      {&sort-clmn_37-br-line}
-      enable {&enabled-clmn}
-    with size 98.75 by 9 separators.
+  {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(256)" width 29
+  {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  FORMAT "999999999":U width 12
+  {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}  FORMAT "9999999999":U width 12
+with size 75.25 by 9 separators.
 
 
 /* ************************  frame definitions  *********************** */
 define frame {&frame-name}
   b-exit              at row 1  col 1
   b-notes             at row 1  col 11
-  b-history           at row 1  col 71
-  b-help              at row 1  col 81
+  b-history           at row 1  col 39
+  b-help              at row 1  col 49
   "Объект:"                         at row 2 col 10
   r-doc.obj-code                    at row 2 col 16   colon-aligned no-label       view-as text size 7    by 1
   r-doc.obj-type                    at row 2 col 23   colon-aligned no-label       view-as text size 7.13 by 1
@@ -316,6 +252,7 @@ define frame {&frame-name}
   b-meas              at row 8  col 24
   b-lkp               at row 8  col 34
   b-chg               at row 8  col 44
+  b-commission        at row 4  col 1
   {&browse-name}      at row 9  col 1
   space(0) skip(0)
   with view-as dialog-box side-labels three-d scrollable keep-tab-order.
@@ -324,19 +261,11 @@ define frame {&frame-name}
 
 assign
   frame {&frame-name}:scrollable                                = false
-  {&browse-name}     :num-locked-columns in frame {&frame-name} = 5
   b-meas             :popup-menu in frame {&frame-name}         = menu m-meas:handle
   b-meas             :menu-mouse                                = 1.
 
 
 /* ************************  control triggers  ************************ */
-{ gbl/mv-clmn.i
- &ext-col      = 35
- &frame-name   = "{&frame-name}"
- &browse-name  = "{&browse-name}"
- &table-name   = "ub.rvs-line"
- &start-column = 6
-}
 
 { gbl/f2.i {&browse-name} " " " " parparentproc }
 
@@ -486,7 +415,7 @@ do :
   ,input "b-sel,b-mark"
   ,input r-doc.obj-type
   ,input r-doc.obj-code
-  ,input {&g___object}
+  ,input {&g___object} + {&delim-par} + "test-asi"
   ,input-output place-list).
   
   do ii = 1 to num-entries(place-list) :
@@ -554,6 +483,16 @@ do :
                  
 end .
 
+on choose of b-commission in frame {&frame-name} /* Состав комиссии */
+do:
+
+  do on stop undo, return no-apply :
+    run str/test-asi-commission.w (input r-doc.rvs-code,
+                                   input pardoc-mode)
+                                   .
+  end. /* on stop */
+end.
+
 on choose of b-chg in frame {&frame-name} /* Измен */
 do:
 
@@ -617,8 +556,8 @@ end.
 &browse-name = {&browse-name}
 &frame-name  = {&frame-name}
 &table-name = "ub.rvs-line"
-&ext-col = 37
-&start-column  = 5
+&ext-col = 5
+&start-column  = 1
 &label-clmn_1  = "{&label-clmn_1-br-line}"
 &sort-clmn_1   = "{&sort-clmn_1-br-line}"
 &label-clmn_2  = "{&label-clmn_2-br-line}"
@@ -629,47 +568,6 @@ end.
 &sort-clmn_4   = "{&sort-clmn_4-br-line}"
 &label-clmn_5  = "{&label-clmn_5-br-line}"
 &sort-clmn_5   = "{&sort-clmn_5-br-line}"
-&label-clmn_6  = "{&label-clmn_6-br-line}"
-&sort-clmn_6   = "{&sort-clmn_6-br-line}"
-&label-clmn_7  = "{&label-clmn_7-br-line}"
-&sort-clmn_7   = "{&sort-clmn_7-br-line}"
-&label-clmn_8  = "{&label-clmn_8-br-line}"
-&sort-clmn_8   = "{&sort-clmn_8-br-line}"
-&label-clmn_9  = "{&label-clmn_9-br-line}"
-&sort-clmn_9   = "{&sort-clmn_9-br-line}"
-&label-clmn_10 = "{&label-clmn_10-br-line}"
-&sort-clmn_10  = "{&sort-clmn_10-br-line}"
-&label-clmn_11 = "{&label-clmn_11-br-line}"
-&sort-clmn_11  = "{&sort-clmn_11-br-line}"
-&label-clmn_12 = "{&label-clmn_12-br-line}"
-&sort-clmn_12  = "{&sort-clmn_12-br-line}"
-&label-clmn_13 = "{&label-clmn_13-br-line}"
-&sort-clmn_13  = "{&sort-clmn_13-br-line}"
-&label-clmn_14 = "{&label-clmn_14-br-line}"
-&sort-clmn_14  = "{&sort-clmn_14-br-line}"
-&sort-clmn_15  = "{&sort-clmn_15-br-line}"
-&sort-clmn_16  = "{&sort-clmn_16-br-line}"
-&sort-clmn_17  = "{&sort-clmn_17-br-line}"
-&sort-clmn_18  = "{&sort-clmn_18-br-line}"
-&sort-clmn_19  = "{&sort-clmn_19-br-line}"
-&sort-clmn_20  = "{&sort-clmn_20-br-line}"
-&sort-clmn_21  = "{&sort-clmn_21-br-line}"
-&sort-clmn_22  = "{&sort-clmn_22-br-line}"
-&sort-clmn_23  = "{&sort-clmn_23-br-line}"
-&sort-clmn_24  = "{&sort-clmn_24-br-line}"
-&sort-clmn_25  = "{&sort-clmn_25-br-line}"
-&sort-clmn_26  = "{&sort-clmn_26-br-line}"
-&sort-clmn_27  = "{&sort-clmn_27-br-line}"
-&sort-clmn_28  = "{&sort-clmn_28-br-line}"
-&sort-clmn_29  = "{&sort-clmn_29-br-line}"
-&sort-clmn_30  = "{&sort-clmn_30-br-line}"
-&sort-clmn_31  = "{&sort-clmn_31-br-line}"
-&sort-clmn_32  = "{&sort-clmn_32-br-line}"
-&sort-clmn_33  = "{&sort-clmn_33-br-line}"
-&sort-clmn_34  = "{&sort-clmn_34-br-line}"
-&sort-clmn_35  = "{&sort-clmn_35-br-line}"
-&sort-clmn_36  = "{&sort-clmn_36-br-line}"
-&sort-clmn_37  = "{&sort-clmn_37-br-line}"
 &open-query           = "{&open-query-{&browse-name}} by ~{&sort-clmn_~{&clmn_num~}~} ."
 &open-query-otherwise = "{&open-query-{&browse-name}-default}"
 &re-move-clmn         = "yes"
@@ -699,7 +597,7 @@ do on error   undo main-block, leave main-block
   on end-key undo main-block, leave main-block
   on stop    undo main-block, leave main-block:
    
-  do ii = 1 to 37:
+  do ii = 1 to 5:
     bcol[ii] = {&browse-name}:get-browse-column(ii).
   end.
 
@@ -739,8 +637,7 @@ procedure ui-on :
     frame {&frame-name}:title = "(" + substring (ub.clients.obj-name, 1, 35) +
        ") :   ДОКУМЕНТ проверки корректности работы АСИ в резервуаре - " + r-doc.status_ + " № " + r-doc.rvs-code + "      - " + pardoc-mode.
   disable all with frame {&frame-name}.
-  enable b-exit b-help b-lkp {&browse-name} b-history b-notes with frame {&frame-name}.
-  assign {&enabled-clmn}:read-only in browse {&browse-name} = yes.
+  enable b-exit b-help b-lkp {&browse-name} b-history b-notes b-commission with frame {&frame-name}.
   if r-doc.status_ = {&g___new} and
     (pardoc-mode = {&add-def} or
     pardoc-mode = {&update}        ) then 
@@ -753,7 +650,7 @@ procedure ui-on :
     with frame {&frame-name}.
     if not isMeasurement then
         enable
-          b-add b-del b-chg  b-meas
+          b-add b-del b-chg  b-meas 
         with frame {&frame-name}.
   end.
   
@@ -1140,6 +1037,12 @@ procedure mode-on :
                 run waitfram-hide in this-procedure.
                 undo tr, return error.
               end.
+              if par_test-asi-type = "test-asi_dens-pump"
+              then do :
+                for each calc_r-line no-lock where calc_r-line.rvs-code = r-doc.rvs-code :
+                  run pomi-calc .
+                end .
+              end .
             end.
           end.
           assign 
@@ -1163,6 +1066,17 @@ procedure mode-on :
               message "Документ уже закрыт. Изменение невозможно.".
               undo tr, return error.
             end.
+            find first buf_doc-attr no-lock where buf_doc-attr.doc-code = r-doc.rvs-code
+                                              and buf_doc-attr.attr-code = "test-asi-type"
+                                              no-error .
+            if not available buf_doc-attr
+            or (available buf_doc-attr and not (buf_doc-attr.attr-value > ""))
+            then do :
+              find r-doc where recid (r-doc) = par_test-asi-rec no-lock.
+              message "Неизвестный тип проверки корректности работы АСИ. Изменение невозможно.".
+              undo tr, return error.
+            end .
+            assign par_test-asi-type = buf_doc-attr.attr-value .
             find r-doc where recid (r-doc) = par_test-asi-rec exclusive.
           end.
         end. /* transaction */
@@ -1298,7 +1212,7 @@ procedure proc_m-meas-3 :
       tt-meas.loc1     = meas-place.loc1
     .
     run waitfram-show in this-procedure ( input ("Делаем сверку по резервуару " + meas-place.loc1) ).
-    disable b-add b-chg b-del b-meas with frame {&frame-name}.
+    disable b-add b-chg b-del b-meas b-commission with frame {&frame-name}.
     isMeasurement = yes.
     tr:
     do transaction on error undo tr, retry tr :
@@ -1401,6 +1315,13 @@ procedure proc_m-meas-3 :
         undo tr, retry tr.
       end.
       
+      if par_test-asi-type = "test-asi_dens-pump"
+      then do :
+        for first calc_r-line no-lock where rowid(calc_r-line) = rowid(ub.rvs-line) :
+          run pomi-calc .
+        end .
+      end .
+      
 /*      run waitfram-show in this-procedure ( input "Пересчитывем шапку" ).*/
 /*      { str/rvsclcln.i "recid( ub.rvs-line )" no-error }                 */
 /*      if error-status :error then                                        */
@@ -1481,7 +1402,7 @@ procedure proc_m-meas-1:
   if can-find( first bf_r-line where bf_r-line.rvs-code = r-doc.rvs-code ) then 
   do:
     isMeasurement = yes.
-    disable b-add b-chg b-del b-meas with frame {&frame-name}.
+    disable b-add b-chg b-del b-meas b-commission with frame {&frame-name}.
     run waitfram-show in this-procedure ( input "Делаем сверку по всем резервуарам" ).
     tr:
     do transaction on error undo tr, retry tr :
@@ -1599,6 +1520,13 @@ procedure proc_m-meas-1:
           undo tr, retry tr.
         end.
         
+        if par_test-asi-type = "test-asi_dens-pump"
+        then do :
+          for first calc_r-line no-lock where rowid(calc_r-line) = rowid(ub.rvs-line) :
+            run pomi-calc .
+          end .
+        end .
+        
         find first tt-meas exclusive-lock no-error.
         delete tt-meas.
       end.
@@ -1627,4 +1555,649 @@ procedure proc_m-meas-1:
     return error.
 end procedure.
 
+procedure pomi-calc:
+
+define variable v-mm as com-handle.
+define variable v-proc as character no-undo.
+define variable v-mm57 as com-handle.
+define variable v-pokmi-dll-version as character no-undo .
+
+define variable v-code            as character no-undo.
+define variable ii                as integer   no-undo.
+
+define variable place-ratio-error as decimal no-undo.
+define variable dens-prov         as decimal no-undo format "9.9999999999":U.
+
+define variable CalibTable        as character no-undo initial "".
+define variable CalibBelt         as character no-undo initial "".
+define variable ToolType          as integer no-undo.
+define variable LevelToolType          as integer no-undo.
+define variable A_LevelMeasurementTool  as decimal no-undo.
+define variable DeltaAbs_H              as decimal no-undo.
+define variable DeltaAbs_H_Water        as decimal no-undo.
+define variable DeltaAbs_R              as decimal no-undo.
+define variable DeltaAbs_Tv             as decimal no-undo.
+define variable DeltaAbs_Tr             as decimal no-undo.
+define variable DeltaOtn_N              as decimal no-undo.
+define variable DeltaOtn_K              as decimal no-undo.
+define variable A_Reservoir             as decimal no-undo init 0.0000125 .
+define variable DeadZone_Reservoir      as decimal no-undo.
+define variable DeltaOtn_H              as decimal no-undo.
+define variable DeltaOtn_H_Water        as decimal no-undo.
+define variable DeltaOtn_R              as decimal no-undo.
+define variable ToolAutomationLevel_H   as integer no-undo.
+define variable ToolAutomationLevel_H_Water as integer no-undo.
+define variable ToolAutomationLevel_R   as integer no-undo.
+define variable ToolAutomationLevel_Tv  as integer no-undo.
+define variable ToolAutomationLevel_Tr  as integer no-undo.
+define variable DeltaAbs_H_CalcType     as integer no-undo.
+define variable DeltaAbs_H_Water_CalcType   as integer no-undo.
+define variable temp-for-pomi           as integer no-undo.
+define variable error-string            as character no-undo.
+define variable v-is-meas               as logical no-undo.
+define variable v-mm-density            as decimal no-undo.
+define variable place-ponton            as logical no-undo .
+define variable place-ponton-mass       as decimal no-undo .
+define variable place-ponton-height     as decimal no-undo .
+define variable v-POkMI-result   as character no-undo.
+define variable v-value          as character no-undo.
+define variable v-ok             as logical no-undo .
+
+define variable place-diameter    as decimal no-undo .
+define variable pl-dens-sr-izm    as integer no-undo .
+define variable pl-level-sr-izm   as integer no-undo .
+define variable pl-temp-sr-izm    as integer no-undo .
+define variable place-type        as integer no-undo.
+define variable place-SI          as integer no-undo.
+
+define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
+
+define buffer buf_sr-izmerenia for sr-izmerenia .
+define buffer dens_sr-izmerenia for sr-izmerenia .
+define buffer temp_sr-izmerenia for sr-izmerenia .
+define buffer level_sr-izmerenia for sr-izmerenia .
+define buffer temp-dens_sr-izmerenia for sr-izmerenia .
+define buffer buf_place     for ub.place.
+
+define buffer water1_pl-level  for ub.pl-level .
+define buffer water2_pl-level  for ub.pl-level .
+define buffer total1_pl-level  for ub.pl-level .
+define buffer total2_pl-level  for ub.pl-level .
+define buffer buf_pl-level-attr for ub.pl-level-attr .
+
+define buffer bf_goods for ub.goods .
+define buffer bf_place for ub.place .
+
+
+  _trpomi :
+    do on error undo, return :
+    
+    if calc_r-line.density = ? or calc_r-line.density = 0 then do :
+      message
+        "Заполнены не все поля, необходимые" skip
+        "для работы библиотеки ПО МИ"        skip
+        "Введите плотность измер.для ПО МИ"
+      view-as alert-box error.
+      undo _trpomi, return "need-data" .
+    end.
+    if calc_r-line.level-total = ? or calc_r-line.level-total = 0 then do :
+      message
+        "Заполнены не все поля, необходимые" skip
+        "для работы библиотеки ПО МИ"        skip
+        "Введите факт. общий уровень"
+      view-as alert-box error.
+      undo _trpomi, return "need-data" .
+    end.
+    if calc_r-line.level-water = ? then do :
+      message
+        "Заполнены не все поля, необходимые" skip
+        "для работы библиотеки ПО МИ"        skip
+        "Введите факт. уровень воды"
+      view-as alert-box error.
+      undo _trpomi, return "need-data" .
+    end.
+    if calc_r-line.temperature = ?
+    then do :
+      message
+        "Заполнены не все поля, необходимые" skip
+        "для работы библиотеки ПО МИ"        skip
+        "Введите температуру"
+      view-as alert-box error.
+      undo _trpomi, return "need-data" .
+    end.
+    
+    /*данные по резервуару для ПО МИ*/
+    do ii = 1 to num-entries({&list-place-attr},','):
+      v-code = entry(ii,{&list-place-attr}) .
+      run placelib_get-attr  ( input v-code
+                              ,input calc_r-line.obj-code
+                              ,input calc_r-line.obj-type
+                              ,input calc_r-line.pl-code
+                              ,output v-value
+                              ,output v-ok      ) no-error.
+      case v-code :
+        when {&place-type} then do :
+          if v-ok then place-type = integer(v-value) .
+        end.
+        when {&place-SI} then do :
+          if v-ok then place-si = integer(v-value) .
+        end.
+        when {&place-diameter} then do :
+          if v-ok then place-diameter = decimal(v-value) .
+        end.
+/*        when {&place-ratio-error} then do :                  */
+/*          if v-ok then place-ratio-error = decimal(v-value) .*/
+/*        end.                                                 */
+        when {&place-dens-prov} then do :
+          if v-ok then dens-prov = decimal(v-value) .
+        end.
+        when {&place-temp-coef} then do :
+          if v-ok then A_Reservoir = decimal(v-value) .
+        end.
+        when {&place-dead-high} then do :
+          if v-ok then DeadZone_Reservoir = decimal(v-value) .
+        end.
+        when {&place-ponton} then do :
+          if v-ok then place-ponton = logical(v-value) .
+        end.
+        when {&place-ponton-mass} then do :
+          if v-ok then place-ponton-mass = decimal(v-value) .
+        end.
+        when {&place-ponton-height} then do :
+          if v-ok then place-ponton-height = decimal(v-value) .
+        end.
+      end case.
+    end.
+    /*..........................................*/
+
+    /*градуировочная таблица резервуара для ПО МИ*/
+/*    for last pl-level no-lock                                                                                                */
+/*        where pl-level.pl-code  = calc_r-line.pl-code                                                                        */
+/*          and pl-level.obj-code = calc_r-line.obj-code                                                                       */
+/*          and pl-level.obj-type = calc_r-line.obj-type by pl-level.pl-level                                                  */
+/*          :                                                                                                                  */
+/*          CalibTable = Substitute("&1=&2","1",(pl-level.pl-qnty / (pl-level.pl-level))) .                                    */
+/*    end.                                                                                                                     */
+/*    for each  pl-level no-lock                                                                                               */
+/*        where pl-level.pl-code  = calc_r-line.pl-code                                                                        */
+/*          and pl-level.obj-code = calc_r-line.obj-code                                                                       */
+/*          and pl-level.obj-type = calc_r-line.obj-type by pl-level.pl-level                                                  */
+/*          :                                                                                                                  */
+/*          if CalibTable = "" then CalibTable = Substitute("&1=&2",(pl-level.pl-level ),pl-level.pl-qnty ) .                  */
+/*                            else CalibTable = CalibTable + ";" + Substitute("&1=&2",(pl-level.pl-level ),pl-level.pl-qnty ) .*/
+/*    end.                                                                                                                     */
+/*                                                                                                                             */
+/*    CalibTable = CalibTable + ";" + fill({&space-char},(2048 - length(CalibTable))).                                         */
+    
+    if calc_r-line.level-water > 0
+    then do :
+      find last water1_pl-level no-lock where water1_pl-level.pl-code  = calc_r-line.pl-code
+                                          and water1_pl-level.obj-code = calc_r-line.obj-code
+                                          and water1_pl-level.obj-type = calc_r-line.obj-type
+                                          and water1_pl-level.pl-level <= calc_r-line.level-water
+                                          no-error .
+      if available water1_pl-level 
+      and water1_pl-level.pl-level <> calc_r-line.level-water
+      then do :
+        find first water2_pl-level no-lock where water2_pl-level.pl-code  = calc_r-line.pl-code
+                                            and water2_pl-level.obj-code = calc_r-line.obj-code
+                                            and water2_pl-level.obj-type = calc_r-line.obj-type
+                                            and water2_pl-level.pl-level >= calc_r-line.level-water
+                                            no-error .
+      end .
+    end .  
+    find last total1_pl-level no-lock where total1_pl-level.pl-code  = calc_r-line.pl-code
+                                        and total1_pl-level.obj-code = calc_r-line.obj-code
+                                        and total1_pl-level.obj-type = calc_r-line.obj-type
+                                        and total1_pl-level.pl-level <= calc_r-line.level-total
+                                        no-error . 
+    if not available total1_pl-level
+    then do :
+      find first bf_goods no-lock where bf_goods.gds-code = calc_r-line.gds-code no-error .
+      find first bf_place no-lock where bf_place.pl-code = calc_r-line.pl-code no-error .
+      message 
+        substitute( 'Для резервуара &1 (&2 &3) не заполнена градуировочная таблица. Запуск ПОкМИ невозможен.'
+                   ,(if available bf_place then bf_place.loc1 else "?")
+                   ,(if available bf_goods then string(bf_goods.gds-code) else "?")
+                   ,(if available bf_goods then bf_goods.gds-name else "?") )
+      view-as alert-box .
+      undo _trpomi, return "need-data" .
+    end .
+    DeltaOtn_K = ? .                                    
+    for first buf_pl-level-attr no-lock where buf_pl-level-attr.pl-code  = total1_pl-level.pl-code
+                                          and buf_pl-level-attr.obj-code = total1_pl-level.obj-code
+                                          and buf_pl-level-attr.obj-type = total1_pl-level.obj-type
+                                          and buf_pl-level-attr.pl-level = total1_pl-level.pl-level
+                                          and buf_pl-level-attr.attr-code = "tarir-delta"
+                                          :      
+      DeltaOtn_K = decimal(buf_pl-level-attr.attr-value) . 
+    end .   
+    if DeltaOtn_K = ? then DeltaOtn_K = 0.25 .                              
+    find first total2_pl-level no-lock where total2_pl-level.pl-code  = calc_r-line.pl-code
+                                        and total2_pl-level.obj-code = calc_r-line.obj-code
+                                        and total2_pl-level.obj-type = calc_r-line.obj-type
+                                        and total2_pl-level.pl-level > calc_r-line.level-total
+                                        no-error .   
+    if not available total2_pl-level
+    then do :
+      find first bf_goods no-lock where bf_goods.gds-code = calc_r-line.gds-code no-error .
+      find first bf_place no-lock where bf_place.pl-code = calc_r-line.pl-code no-error .
+      message 
+        substitute( 'Для резервуара &1 (&2 &3) не заполнена градуировочная таблица. Запуск ПОкМИ невозможен.'
+                   ,(if available bf_place then bf_place.loc1 else "?")
+                   ,(if available bf_goods then string(bf_goods.gds-code) else "?")
+                   ,(if available bf_goods then bf_goods.gds-name else "?") )
+      view-as alert-box .
+      undo _trpomi, return "need-data" .
+    end .                                    
+    if available water1_pl-level
+    then do :
+      CalibTable = Substitute("&1=&2", water1_pl-level.pl-level, (water1_pl-level.pl-qnty / 1000)) + {&new-line} .
+    end . 
+    if available water2_pl-level
+    then do :
+      CalibTable = CalibTable + Substitute("&1=&2", water2_pl-level.pl-level, (water2_pl-level.pl-qnty / 1000)) + {&new-line} .
+    end .  
+    CalibTable = CalibTable + Substitute("&1=&2", total1_pl-level.pl-level, (total1_pl-level.pl-qnty / 1000)) + {&new-line} . 
+    CalibTable = CalibTable + Substitute("&1=&2", total2_pl-level.pl-level, (total2_pl-level.pl-qnty / 1000)) .
+
+    /*..........................................*/
+
+    /*данные по средству измерения резервуара для ПО МИ*/
+
+    if place-si = 0
+    or place-si = ?
+    then do :
+      message
+        substitute ("Для складского места &1 не заданно средство измерения",calc_r-line.pl-code)
+      view-as alert-box error.
+      undo _trpomi, return "need-data" .
+    end.
+    else do :
+      find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
+      if not available buf_sr-izmerenia then do :
+        message
+        "Ошибка работы с библиотекой ПО МИ"
+        substitute( 'Не найдено средство измерения с кодом &1', place-si ) skip
+        view-as alert-box error.
+        undo _trpomi, return "need-data" .
+      end.
+      else do :
+        assign
+          ToolType               = buf_sr-izmerenia.sr-type-id
+          A_LevelMeasurementTool = buf_sr-izmerenia.sr-temp-line
+          ToolAutomationLevel_H  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+          ToolAutomationLevel_H_Water = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+          DeltaAbs_H             = buf_sr-izmerenia.sr-abs-err-neft-water
+          DeltaAbs_H_Water       = buf_sr-izmerenia.sr-abs-err-water
+          ToolAutomationLevel_R  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+          DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+          ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+          DeltaAbs_Tv            = buf_sr-izmerenia.sr-abs-err-temp-vol
+          ToolAutomationLevel_Tr = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+          DeltaAbs_Tr            = buf_sr-izmerenia.sr-abs-err-temp-dens
+          DeltaOtn_N             = 0.05
+          DeltaOtn_H             = buf_sr-izmerenia.sr-relative-err-neft-water
+          DeltaOtn_H_Water       = buf_sr-izmerenia.sr-relative-err-water
+          DeltaOtn_R             = buf_sr-izmerenia.sr-relative-err-dens
+          DeltaAbs_H_CalcType    = buf_sr-izmerenia.sr-type-level-measuring + 1
+          DeltaAbs_H_Water_CalcType = buf_sr-izmerenia.sr-type-level-measuring + 1
+        .
+      end.
+    end.
+    
+    assign      
+      LevelToolType = buf_sr-izmerenia.sr-type-level-measuring 
+      ToolAutomationLevel_H  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+      ToolAutomationLevel_H_Water = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+      DeltaAbs_H_CalcType = buf_sr-izmerenia.sr-type-level-measuring + 1
+      DeltaAbs_H_Water_CalcType = buf_sr-izmerenia.sr-type-level-measuring + 1
+      ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+      ToolAutomationLevel_Tr = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+      ToolAutomationLevel_R = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
+    .
+    
+    if DeltaAbs_H       = ? then DeltaAbs_H = 0 .
+    if DeltaAbs_H_Water = ? then DeltaAbs_H_Water = 0 .
+    if DeltaAbs_R       = ? then DeltaAbs_R = 0 .
+    if DeltaAbs_Tv      = ? then DeltaAbs_Tv = 0 .
+    if DeltaAbs_Tr      = ? then DeltaAbs_Tr = 0 .
+    if DeltaOtn_N       = ? then DeltaOtn_N = 0 .
+    if DeltaOtn_H       = ? then DeltaOtn_H = 0 .
+    if DeltaOtn_H_Water = ? then DeltaOtn_H_Water = 0 .
+    if DeltaOtn_R       = ? then DeltaOtn_R = 0 .
+    if LevelToolType    = ? then LevelToolType = 0 .
+    if ToolType         = ? then ToolType = 0 .
+    if A_LevelMeasurementTool      = ? then A_LevelMeasurementTool = 0 .
+    if ToolAutomationLevel_Tr      = ? then ToolAutomationLevel_Tr =0.
+    if ToolAutomationLevel_H       = ? then ToolAutomationLevel_H = 0.
+    if ToolAutomationLevel_H_Water = ? then ToolAutomationLevel_H_Water = 0.
+    if ToolAutomationLevel_Tv      = ? then ToolAutomationLevel_Tv = 0.
+    if ToolAutomationLevel_R       = ? then ToolAutomationLevel_R = 0.
+    if DeltaAbs_H_CalcType         = ? then DeltaAbs_H_CalcType = 0.
+    if DeltaAbs_H_Water_CalcType   = ? then DeltaAbs_H_Water_CalcType = 0.
+    
+    if calc_r-line.state-level-water = 0
+    then do :
+      ToolAutomationLevel_H_Water = 0 .
+      DeltaAbs_H_Water_CalcType = 0 .
+      DeltaAbs_H_Water = 0 .
+    end .
+    
+    /*..........................................*/
+    
+    v-pokmi-dll-version = get-pokmi-dll-version() .
+    if v-pokmi-dll-version = "error"
+    then do :
+      release object v-mm no-error.
+      v-mm = ?.
+      message
+        substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) skip
+      view-as alert-box error.
+      undo _trpomi, return "pomi-error" .
+    end .
+    
+    if LevelToolType > 0
+    then do :
+      RELEASE OBJECT v-mm57 NO-ERROR.
+      v-mm57 = ?.
+
+      CREATE value("ADMM.CMethodOfMetering57") v-mm57 no-error.
+      IF ERROR-STATUS:ERROR
+      OR NOT VALID-HANDLE(v-mm57)
+      THEN DO:
+        RELEASE OBJECT v-mm57 NO-ERROR.
+        v-mm57 = ?.
+        message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) view-as alert-box .
+        undo _trpomi, return "pomi-error"  .
+      END.
+      ELSE DO :
+        assign
+          v-mm57:H        = calc_r-line.state-level-total * 10
+          v-mm57:ToolType = LevelToolType
+        .
+        OUTPUT stream outstream to value ("pomi.log") append.
+        PUT STREAM outstream unformatted
+                    "    " SKIP
+                    "    " SKIP
+                    cur-time-string()           FORMAT "x(16)"    SKIP
+                    'Процедура             "Rosneft.MethodOfMetering57"'       SKIP
+                    'Версия dll: '            v-pokmi-dll-version   skip
+                    'CODE_PL                = ' calc_r-line.pl-code                           SKIP
+                    'H                      = ' v-mm57:H                  SKIP
+                    'ToolType               = ' v-mm57:ToolType                                      SKIP
+                        SKIP SKIP 
+        .
+        output stream outstream close.
+        
+        v-mm57:Exec() no-error.
+        if v-mm57:Result <> 0 then do :
+          error-string = v-mm57:ResultDetail .
+          output stream outstream to value ("pomi.log")  append.
+          put stream outstream error-string format "X(1024)" skip.
+          RELEASE OBJECT v-mm57 NO-ERROR.
+          v-mm57 = ?.
+          output stream outstream close.
+          message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
+          undo _trpomi, return "pomi-error" .
+        end.
+        else do :
+          DeltaAbs_H = v-mm57:DeltaAbs_H .
+          OUTPUT stream outstream to value ("pomi.log")  append.
+          PUT STREAM outstream unformatted
+              "v-mm:DeltaAbs_H = " v-mm57:DeltaAbs_H  SKIP
+          .
+          OUTPUT stream outstream close.
+          RELEASE OBJECT v-mm57 NO-ERROR.
+          v-mm57 = ?.
+        end .
+      end .
+    end .
+    /*..........................................*/
+
+    { gbl/ptrlprop.i
+      run
+      calc_r-line.obj-type
+      calc_r-line.obj-code
+    }
+    if not error-status :error then do:
+      if ptrlprop-temp-for-pomi = 1 then temp-for-pomi = 15 .
+                                    else temp-for-pomi = 20 .
+    end.
+    /*метод применяемый к данному типу резервуара и */
+    find first buf_place no-lock
+         where buf_place.obj-code = calc_r-line.obj-code
+           and buf_place.obj-type = calc_r-line.obj-type
+           and buf_place.pl-code  = calc_r-line.pl-code no-error.
+    if buf_place.is-meas  = yes then do :
+      if place-type = 1 then do :
+        v-proc = "ADMM.CMethodOfMetering13" .
+/*        DeltaOtn_K = 0.20 .*/
+      end.
+      else do :
+        v-proc = "ADMM.CMethodOfMetering6" .
+/*        DeltaOtn_K = place-ratio-error .*/
+      end.
+    end.
+    else do :
+      if place-type = 1 then do :
+        v-proc = "ADMM.CMethodOfMetering13" .
+/*        DeltaOtn_K = 0.20 .*/
+      end.
+      else do :
+        v-proc = "ADMM.CMethodOfMetering6" .
+/*        DeltaOtn_K = place-ratio-error .*/
+      end.
+    end.
+    /*..............................................*/
+
+
+    RELEASE OBJECT v-mm NO-ERROR.
+    v-mm = ?.
+
+    CREATE value(v-proc) v-mm no-error.
+    IF ERROR-STATUS:ERROR
+    OR NOT VALID-HANDLE(v-mm)
+    THEN DO:
+      message
+      "Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ "
+      view-as alert-box error.
+      enable
+        calc_r-line.state-density
+/*        calc_r-line.state-measure-qnty*/
+      with frame Dialog-Frame.
+      RELEASE OBJECT v-mm NO-ERROR.
+      v-mm = ?.
+      undo _trpomi, return "pomi-error" .
+    END.
+    ELSE DO :
+      ASSIGN
+        v-mm:H                      = calc_r-line.level-total * 10
+        v-mm:H_water                = calc_r-line.level-water * 10 when calc_r-line.level-water <> ?
+        v-mm:CalibrationTable       = CalibTable
+        v-mm:Tr                     = calc_r-line.temperature
+        v-mm:Tv                     = calc_r-line.temperature 
+        v-mm:R                      = ( calc_r-line.density * 1000 )
+        v-mm:Tcy                    = temp-for-pomi
+        v-mm:ToolType               = ToolType
+        v-mm:DeltaOtn_K             = DeltaOtn_K
+        v-mm:DeadZone_Reservoir     = DeadZone_Reservoir
+        v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool
+        v-mm:DeltaAbs_H             = DeltaAbs_H
+        v-mm:DeltaAbs_H_Water       = DeltaAbs_H_Water
+        v-mm:DeltaAbs_R             = DeltaAbs_R
+        v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
+        v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
+        v-mm:DeltaOtn_H             = DeltaOtn_H
+        v-mm:DeltaOtn_H_Water       = DeltaOtn_H_Water
+        v-mm:DeltaOtn_R             = DeltaOtn_R
+        v-mm:DeltaOtn_N             = DeltaOtn_N
+      .
+/*      v-mm:Set_A_Reservoir(replace(string(A_Reservoir), ".", ",")).*/
+
+      OUTPUT stream outstream to value ("pomi.log") append.
+              PUT STREAM outstream unformatted
+              "    " SKIP
+              "    " SKIP
+              cur-time-string()           FORMAT "x(16)"    SKIP
+              'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
+              'Версия dll: '              v-pokmi-dll-version                           SKIP
+              'CODE_PL                     = ' calc_r-line.pl-code                      SKIP
+              'H                           = ' v-mm:H                                   SKIP
+              'H_water                     = ' v-mm:H_water                             SKIP
+              'CalibrationTable            = ' v-mm:CalibrationTable                    SKIP
+      .
+      if v-pokmi-dll-version = "1.0.5.6"
+      then do :
+        CalibBelt = getCalibrationBelt(
+            calc_r-line.obj-type, 
+            calc_r-line.obj-code,
+            calc_r-line.pl-code,
+            calc_r-line.state-level-total,
+            if calc_r-line.state-level-water <> ? then calc_r-line.state-level-water else 0
+        ).
+        assign
+          v-mm:CalibrationBelt        = CalibBelt
+          v-mm:ToolAutomationLevel_H  = ToolAutomationLevel_H
+          v-mm:ToolAutomationLevel_H_Water = ToolAutomationLevel_H_Water
+          v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
+          v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
+          v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
+          v-mm:DeltaAbs_H_CalcType    = DeltaAbs_H_CalcType
+          v-mm:DeltaAbs_H_Water_CalcType = DeltaAbs_H_Water_CalcType
+          
+          v-mm:A_LevelMeasurementTool = 0
+        .
+        v-mm:Set_A_LevelMeasurementTool(replace(string(A_LevelMeasurementTool), ".", ",")) no-error .
+        if string(v-mm:A_LevelMeasurementTool) = ".0000000000"
+        then do :
+          v-mm:Set_A_LevelMeasurementTool(string(A_LevelMeasurementTool)) no-error .
+        end .
+        PUT STREAM outstream unformatted
+          'DeltaOtn_N            = ' v-mm:DeltaOtn_N                SKIP
+          'CalibrationBelt             = ' v-mm:CalibrationBelt           SKIP
+          'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP
+          'ToolAutomationLevel_H_Water = ' ToolAutomationLevel_H_Water    SKIP
+          'ToolAutomationLevel_R       = ' v-mm:ToolAutomationLevel_R     SKIP
+          'ToolAutomationLevel_Tv      = ' v-mm:ToolAutomationLevel_Tv    SKIP
+          'ToolAutomationLevel_Tr      = ' v-mm:ToolAutomationLevel_Tr    SKIP
+          'DeltaAbs_H_CalcType         = ' v-mm:DeltaAbs_H_CalcType       SKIP
+          'DeltaAbs_H_Water_CalcType   = ' v-mm:DeltaAbs_H_Water_CalcType SKIP
+          
+        .
+      end .
+      
+      PUT STREAM outstream unformatted
+              'Tr                          = ' v-mm:Tr                                  SKIP
+              'Tv                          = ' v-mm:Tv                                  SKIP
+              'R                           = ' v-mm:R                                   SKIP
+              'Tcy                         = ' v-mm:Tcy                                 SKIP
+              'ToolType                    = ' v-mm:ToolType                            SKIP
+              'DeadZone_Reservoir          = ' v-mm:DeadZone_Reservoir                  SKIP
+              'DeltaOtn_K                  = ' v-mm:DeltaOtn_K                          SKIP
+              'A_Reservoir                 = ' v-mm:A_Reservoir                         SKIP
+              'A_LevelMeasurementTool      = ' v-mm:A_LevelMeasurementTool              skip
+              'DeltaAbs_H                  = ' v-mm:DeltaAbs_H                          SKIP
+              'DeltaAbs_H_Water            = ' v-mm:DeltaAbs_H_Water                    SKIP
+              'DeltaAbs_R                  = ' v-mm:DeltaAbs_R                          SKIP
+              'DeltaAbs_Tv                 = ' v-mm:DeltaAbs_Tv                         SKIP
+              'DeltaAbs_Tr                 = ' v-mm:DeltaAbs_Tr                         SKIP
+              'DeltaOtn_H                  = ' v-mm:DeltaOtn_H                          SKIP
+              'DeltaOtn_H_Water            = ' v-mm:DeltaOtn_H_Water                    SKIP
+              'DeltaOtn_R                  = ' v-mm:DeltaOtn_R                          SKIP
+              'DeltaOtn_N                  = ' v-mm:DeltaOtn_N                          SKIP
+      .
+      
+      if place-type = 1
+      and place-ponton
+      then do :
+        v-mm:Rprov = ( dens-prov * 1000 ) .
+        v-mm:Mpokr = place-ponton-mass .
+        v-mm:CoverFloatingHeight = place-ponton-height .
+        put stream outstream unformatted
+          "Rprov                  = " v-mm:Rprov                    skip
+          "Mpokr                  = " v-mm:Mpokr                    skip
+          "CoverFloatingHeight    = " v-mm:CoverFloatingHeight      skip
+        .
+      end.
+      
+      output stream outstream close.
+      v-mm:Exec() .
+      if v-mm:Result <> 0 then do :
+        error-string = substitute("~nРезервуар: &1.~n", if avail buf_place then buf_place.loc1 else "") 
+                     + replace(v-mm:ResultDetail,";0x","~n0x") .
+        output stream outstream to value ("pomi.log")  append.
+        put stream outstream error-string format "X(1024)" skip.
+        message
+        substitute('Ошибка работы библиотеки ПО МИ. &1',error-string)
+        view-as alert-box error.
+        RELEASE OBJECT v-mm NO-ERROR.
+        v-mm = ?.
+        output stream outstream close.
+        undo _trpomi, return "pomi-error" .
+      end.
+      else do :
+        
+        find first rvs-line-attr exclusive-lock
+              where rvs-line-attr.obj-code  = calc_r-line.obj-code
+                and rvs-line-attr.obj-type  = calc_r-line.obj-type
+                and rvs-line-attr.gds-code  = calc_r-line.gds-code
+                and rvs-line-attr.pl-code   = calc_r-line.pl-code
+                and rvs-line-attr.rvs-code  = calc_r-line.rvs-code
+                and rvs-line-attr.attr-code = "asi-pomi-density" no-error.
+        if available rvs-line-attr then do :
+          rvs-line-attr.attr-value = string(v-mm:Rcy / 1000) .
+        end.
+        else do :
+          create rvs-line-attr.
+          assign
+            rvs-line-attr.obj-code  = calc_r-line.obj-code
+            rvs-line-attr.obj-type  = calc_r-line.obj-type
+            rvs-line-attr.gds-code  = calc_r-line.gds-code
+            rvs-line-attr.pl-code   = calc_r-line.pl-code
+            rvs-line-attr.rvs-code  = calc_r-line.rvs-code
+            rvs-line-attr.attr-code = "asi-pomi-density"
+            rvs-line-attr.attr-value = string(v-mm:Rcy / 1000)
+          .
+        end.
+        
+        assign
+          v-POkMI-result =
+            "MM:V_total             = " + v-mm:V_total     + {&new-line} +
+            "MM:V_water             = " + v-mm:V_water     + {&new-line} +
+            "MM:DeltaV              = " + v-mm:DeltaV     + {&new-line} +
+            "MM:Vcy                 = " + v-mm:Vcy     + {&new-line} +
+            "MM:Rcy                 = " + v-mm:Rcy          + {&new-line} +
+            (if v-pokmi-dll-version <> "1.0.5.6" then 
+              "MM:Mcy                 = " + v-mm:Mcy + {&new-line}
+             else "") +
+            "MM:V_product           = " + v-mm:V_product  + {&new-line} +
+            "MM:V                   = " + v-mm:V  + {&new-line} + 
+            "MM:Rv                  = " + v-mm:Rv  + {&new-line} +
+            "MM:M                   = " + v-mm:M  + {&new-line} +
+            "MM:CTL_base_alt        = " + v-mm:CTL_base_alt  + {&new-line} +
+            "MM:CPL_base_alt        = " + v-mm:CPL_base_alt + {&new-line} +
+            "MM:CTPL_base_alt       = " + v-mm:CTPL_base_alt  + {&new-line} +
+            "MM:Fp_base_alt         = " + v-mm:Fp_base_alt  + {&new-line} +
+            "MM:CTL_obs_base        = " + v-mm:CTL_obs_base + {&new-line} +
+            "MM:CPL_obs_base        = " + v-mm:CPL_obs_base  + {&new-line} +
+            "MM:CTPL_obs_base       = " + v-mm:CTPL_obs_base  + {&new-line} +
+            "MM:Fp_obs_base         = " + v-mm:Fp_obs_base  + {&new-line} +
+            "MM:DeltaOtn_Vcy        = " + v-mm:DeltaOtn_Vcy  + {&new-line} +
+            "MM:DeltaOtn_Vm         = " + v-mm:DeltaOtn_Vm  + {&new-line} +
+            "MM:DeltaOtn_M          = " + v-mm:DeltaOtn_M  + {&new-line} +
+            "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion
+        .
+        OUTPUT stream outstream to value ("pomi.log")  append.
+        PUT STREAM outstream unformatted v-POkMI-result skip .
+        OUTPUT stream outstream close.
+        
+        RELEASE OBJECT v-mm NO-ERROR.
+        v-mm = ?.
+        
+      end.
+    END.
+  end.
+
+end procedure .
 
