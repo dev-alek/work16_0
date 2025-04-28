@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7e2ce28b2302, 3222, rls $
+$Author: SSlivenko $
+$Date: 2022/12/27 12:54:29 $
+$Workfile: oxmloutx.p $
+$Archive: bge/oxmloutx.p $
 
 Экспорт в файл OpenXML
 
@@ -27,11 +27,11 @@ define input parameter p-parent-handle      as widget-handle    no-undo.
 define input parameter p-log-handle         as handle           no-undo.
 define input parameter p-parameter-string   as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7e2ce28b2302, 3222, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:29 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: oxmloutx.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: bge/oxmloutx.p $":U .
 define variable vss-description as character no-undo init "Экспорт в файл OpenXML".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -230,10 +230,32 @@ on error undo, return error
         ).
       end.
       when "one-pack":U then do:
-        run write-log in p-log-handle (
-              input 2
-              ,input substitute("Отправка одного пакета данных в ВС &1 пакет номер &2", buf_ext-system.esys-name, v-esps-pack-num )
-        ).
+        find first buf_esys-pck-sent no-lock
+          where buf_esys-pck-sent.esys-id = buf_ext-system.esys-id
+            and buf_esys-pck-sent.db-num = buf_ext-system.db-num
+            and buf_esys-pck-sent.esps-pack-num = v-esps-pack-num
+          no-error
+        .
+        if buf_esys-pck-sent.esps-rcvd = no or
+           can-find(first buf_esys-route no-lock where
+                          buf_esys-route.esys-id = buf_esys-pck-sent.esys-id
+                      and buf_esys-route.db-num = buf_esys-pck-sent.db-num
+                      and buf_esys-route.esr-cr-db-num = g#db-num
+                      and Buf_esys-route.esr-last-pack = buf_esys-pck-sent.esps-pack-num
+                   )
+        then do:
+          run write-log in p-log-handle (
+                input 2
+               ,input substitute("Отправка одного пакета данных в ВС &1 пакет номер &2", buf_ext-system.esys-name, v-esps-pack-num )
+          ).
+        end.
+        else do:
+          run write-log in p-log-handle (
+                input 2
+               ,input substitute("Отправить пакет N &1 для ВС N &2 нельзя. Получено подтверждение о его приеме и данные удалены. Дата и время подтверждения: &3 &4.", v-esps-pack-num, buf_ext-system.esys-id, buf_esys-pck-sent.esps-rcvdDate, buf_esys-pck-sent.esps-rcvdTime )
+          ).
+          return.
+        end.
       end.
       when "one-esys-unconf":U
       or
