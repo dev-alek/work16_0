@@ -149,7 +149,7 @@ MarkType = ObjSrv:Env:Marking:Types.
  
 define variable mImp2CdH as handle no-undo.
 run str/imp2cdgeth.p(output mImp2CdH).
-
+define variable s-gds-code as integer no-undo init 0 .
 define variable lns-cnt as integer no-undo .
 define variable line-rec as recid no-undo .
 /* ********************  Preprocessor Definitions  ******************** */
@@ -480,8 +480,20 @@ end.
     then
        undo, return error
                 (merror-code + " Товар " + p-GdsObj:code_) .
+
+    find first ub.goods-attr no-lock where ub.goods-attr.gds-code  = v-gds-code 
+                             and ub.goods-attr.attr-code = "emrc-type"
+                             and ub.goods-attr.attr-value = mEMRC no-error.
+    if not available ub.goods-attr then s-gds-code = v-gds-code.
+
     RUN gds-attr-write (v-nbc, {&attr-emrc-type}, mEMRC).  
+
+    find first ub.goods no-lock where ub.goods.gds-code = s-gds-code no-error.
+	  if available ub.goods then do:  
+	     run fill-g-list in mImp2CdH ( input ub.goods.gds-code, input ?, input ?).
+          end.
   end.
+
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-emrc-type}, output v-attr-del).     
   end.
