@@ -31,8 +31,20 @@ Output:
 /* ***************************  Definitions  ************************** */
 /* Parameters Definitions ---                                           */
 define input parameter parparentproc    as handle           no-undo .
-define input parameter p-user-id        as character        no-undo .
-define input parameter p-obj-list       as character        no-undo .
+define input parameter Date-Start  as date           no-undo .
+define input parameter Date-End    as date           no-undo .
+/* define input parameter p-user-id        as character        no-undo . */
+/* define input parameter p-obj-list       as character        no-undo . */
+{rep/tt-user.i} 
+define input parameter table for tt-user-account BIND. 
+define input parameter table for tt-objects BIND.  
+
+
+
+
+
+
+/*input  table  tt-user-account BY-REFERENCE.*/
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision$":U .
@@ -59,7 +71,6 @@ FUNCTION get-unique-key RETURNS CHARACTER
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 define BUFFER bf_c-user-log for ub.c-user-log .
 define variable v-user-table-name as character no-undo .
@@ -89,8 +100,9 @@ run get-report-num in parParentProc (
 
 v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + "_hist" + ".html". /*формирование имя файла для часть1*/        
 
-for each bf_c-user-log no-lock where bf_c-user-log.corr-date >= x-Date-Start
-  and bf_c-user-log.corr-date <= x-Date-End by bf_c-user-log.head-table :
+
+for each bf_c-user-log no-lock where bf_c-user-log.corr-date >= Date-Start
+  and bf_c-user-log.corr-date <= Date-End by bf_c-user-log.head-table :
   v-table = bf_c-user-log.head-table .
             
   if v-table begins "c-" and v-table <> {&table_c-usr-hist} and v-table <> {&table_c-plc-hist} then 
@@ -138,7 +150,8 @@ for each bf_c-user-log no-lock where bf_c-user-log.corr-date >= x-Date-Start
     .
   end .
 end.  
-if p-obj-list <> "-1" and p-obj-list <> "" then 
+
+/* if p-obj-list <> "-1" and p-obj-list <> "" then 
 do:
   for each tt-usr-hist:
     if lookup (tt-usr-hist.table_, p-obj-list, ",") = 0 then 
@@ -146,8 +159,9 @@ do:
       delete tt-usr-hist .
     end.  
   end.
-end.   
-if p-user-id <> "" and p-user-id <> "-1" then 
+end.    
+
+ if p-user-id <> "" and p-user-id <> "-1" then 
 do:
   for each tt-usr-hist:
     if lookup (tt-usr-hist.corr-user-name, p-user-id, ",") = 0 then 
@@ -155,7 +169,39 @@ do:
       delete tt-usr-hist .
     end.  
   end.  
-end.   
+end.    */
+
+
+
+
+/* ------   */
+
+do:
+  for each tt-usr-hist:
+/*    message tt-usr-hist.corr-user-name view-as alert-box. */
+    find first tt-user-account where tt-user-account.user-id_ = tt-usr-hist.corr-user-name no-error.
+        if not AVAILABLE tt-user-account then 
+         do:
+            delete tt-usr-hist .
+         end.  
+  end.
+end.    
+
+/*do:
+  for each tt-usr-hist:
+
+  find first tt-objects where tt-objects.table_ = tt-usr-hist.table_ no-error.
+    do:
+      delete tt-usr-hist .
+    end.  
+  end.
+end.     */
+
+
+
+
+
+
             
 run PROC-print-list in this-procedure.
 
@@ -208,7 +254,7 @@ PROCEDURE proc-print-list :
  
     put stream OutStr-html unformatted
       '<tr>' skip
-      '<td colspan="9" style="text-align: center;">История действий пользователя за период с ' + string(x-date-start,"99.99.99") + ' по ' + string(x-date-end,"99.99.99") + ' </td>' skip
+      '<td colspan="9" style="text-align: center;">История действий пользователя за период с ' + string(date-start,"99.99.99") + ' по ' + string(date-end,"99.99.99") + ' </td>' skip
       '</tr>' skip   
       '</thead>' skip .
     
