@@ -402,58 +402,58 @@ procedure tp-chklv:
   /* ТП при проверке уровня наполнения с помощью контрольного вентиля АЦ
   Таблица 10 Нормы тех.потерь СУГ при проверке уровня наполнения АЦ
   Температура (С)	     Массовая доля пропана (%)	Коэффициент
-  от -40 до -20 (вкл)	от 0 до 50 (вкл)	2,300
-  от -40 до -20 (вкл)	от 50 до 60 (вкл)	2,570
-  от -40 до -20 (вкл)	Более 60		    3,140
-  от -20 до 0 (вкл)	от 0 до 50 (вкл)	3,690
-  от -20 до 0 (вкл)	от 50 до 60 (вкл)	4,070
-  от -20 до 0 (вкл)	Более 60		    4,980
-  от 0 до 20 (вкл)	от 0 до 50 (вкл)	6,090
-  от 0 до 20 (вкл)	от 50 до 60 (вкл)	6,770
-  от 0 до 20 (вкл)	Более 60		    8,400
-  более 20		от 0 до 50 (вкл)	    9,150
-  более 20		от 50 до 60 (вкл)	    10,100
-  более 20		Более 60	        	12,530 */
+  от -40 до -20 (вкл)	от 0 до 50 (вкл)	0,940
+  от -40 до -20 (вкл)	от 50 до 60 (вкл)	1,050
+  от -40 до -20 (вкл)	Более 60		1,280
+  от -20 до 0 (вкл)	от 0 до 50 (вкл)	1,510
+  от -20 до 0 (вкл)	от 50 до 60 (вкл)	1,660
+  от -20 до 0 (вкл)	Более 60	        2,040
+  от 0 до 20 (вкл)	от 0 до 50 (вкл)	2,500
+  от 0 до 20 (вкл)	от 50 до 60 (вкл)	2,780
+  от 0 до 20 (вкл)	Более 60		3,450
+  более 20		от 0 до 50 (вкл)	3,760
+  более 20		от 50 до 60 (вкл)       4,160
+  более 20		Более 60	       	5,160 */
   DEFINE INPUT  PARAMETER  sug-temp  AS INTEGER NO-UNDO .
   DEFINE INPUT  PARAMETER  mass-prop AS INTEGER NO-UNDO .
   DEFINE OUTPUT PARAMETER  ktp       AS DECIMAL NO-UNDO .
   DO:
     if     sug-temp >  -40 and sug-temp <= -20  
       and mass-prop >   0 and mass-prop <= 50
-      then ktp = 2.300   .
+      then ktp = 0.940   .
     if  sug-temp >  -40 and sug-temp <= -20  
       and mass-prop >  50 and mass-prop <= 60
-      then ktp = 2.570   .
+      then ktp = 1.050   .
     if  sug-temp >  -40 and sug-temp <= -20  
       and mass-prop >  60 
-      then ktp = 3.140   .
+      then ktp = 1.280   .
     if  sug-temp >  -20 and sug-temp <=   0  
       and mass-prop >   0 and mass-prop <= 50
-      then ktp = 3.690         .
+      then ktp = 1.510         .
     if  sug-temp >  -20 and sug-temp <=   0  
       and mass-prop >  50 and mass-prop <= 60
-      then ktp = 4.070   .
+      then ktp = 1.660   .
     if  sug-temp >  -20 and sug-temp <=   0  
       and mass-prop >  60
-      then ktp = 4.980   .
+      then ktp = 2.040  .
     if  sug-temp >   0 and sug-temp <=  20  
       and mass-prop >  0 and mass-prop <= 50
-      then ktp = 6.090    .
+      then ktp = 2.500    .
     if  sug-temp >    0 and sug-temp <=  20  
       and mass-prop >  50 and mass-prop <= 60
-      then ktp = 6.770   .
+      then ktp = 2.780   .
     if  sug-temp >    0 and sug-temp <=  20  
       and mass-prop >  60
-      then ktp = 8.400   .
+      then ktp = 3.450   .
     if  sug-temp >   20 
       and mass-prop >   0 and mass-prop <= 50
-      then ktp = 9.150 .
+      then ktp = 3.760 .
     if  sug-temp >   20 
       and mass-prop >  50 and mass-prop <= 60
-      then ktp = 10.100  .
+      then ktp = 4.160  .
     if  sug-temp  > 20 
       and mass-prop > 60
-      then ktp = 12.530  .       
+      then ktp = 5.160  .       
   END.                                             
 END PROCEDURE.
 
