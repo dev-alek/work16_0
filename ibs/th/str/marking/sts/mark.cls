@@ -92,7 +92,7 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
     Ungrouped  = crProp(20,"Ungrouped","Разгруппирован").
     
     GrayZone  = crProp(21,"GrayZone","Серая зона").
-    OutOfInventory  = crProp(22,"Retired","Выбыл в инвентаризацию").
+    OutOfInventory  = crProp(22,"Retired","Выбыл при инвентаризации марок").
     Returned   = crProp(23,"Returned","Возвращен поставщику").
     
     
