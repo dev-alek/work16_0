@@ -59,6 +59,11 @@ class ibs.th.adm.upd.analisdf final:
     define public variable mFileDf   as character no-undo.
     define public variable mUpdateTo as integer   no-undo.
     
+    &scoped-define TABLE_ATTR AREA,LABEL,DESCRIPTION,DUMP-NAME,TABLE-TRIGGER,CAN-CREATE,CAN-DELETE,CAN-READ,CAN-WRITE,CAN-DUMP,CAN-LOAD
+    &scoped-define FIELD_ATTR DESCRIPTION,FORMAT,INITIAL,LABEL,POSITION,MAX-WIDTH,COLUMN-LABEL,DECIMALS,HELP,ORDER,MANDATORY,NULL-ALLOWED,CASE-SENSITIVE,NOT-CASE-SENSITIVE,VIEW-AS,FORMAT-SA,HELP-SA,LABEL-SA,COLUMN-LABEL-SA,CAN-READ,CAN-WRITE,VALEXP,VALMSG,VALMSG-SA,EXTENT,INITIAL-SA
+    &scoped-define INDEX_ATTR AREA,DESCRIPTION,UNIQUE,PRIMARY,INDEX-FIELD,WORD,inactive
+    &scoped-define SEQUENCE_ATTR INITIAL,INCREMENT,CYCLE-ON-LIMIT,MIN-VAL,MAX-VAL
+    
    constructor public analisdf (  ):
       obsrvdbObj = new observupd ().
     
@@ -346,9 +351,12 @@ define temp-table {&prefixtt}INDEX
       define variable vOptionalWhere as character no-undo.
       define variable vMode          as character no-undo.
       define variable vtarget        as character no-undo.
+      define variable vStr           as character no-undo.
+      define variable vStr1          as character no-undo.
       
       define variable vSdvig         as integer no-undo.
       define variable VPrimary       as logical no-undo.
+      define variable vFilePos       as integer no-undo.
       
       iStr = trim (replace (istr,"  "," ")).
       if istr eq "" then return no.
@@ -526,11 +534,10 @@ define temp-table {&prefixtt}INDEX
          end.
       end.             
       else do: /* can-do("add,update,drop", vStrTmp) */
-         if    mBufferName eq "table" and can-do("AREA,LABEL,DESCRIPTION,DUMP-NAME,TABLE-TRIGGER,CAN-CREATE,CAN-DELETE,CAN-READ,CAN-WRITE,CAN-DUMP,CAN-LOAD",trim(vMode,'"'))
-            or mBufferName eq "field" and can-do("DESCRIPTION,FORMAT,INITIAL,LABEL,POSITION,MAX-WIDTH,COLUMN-LABEL,DECIMALS,HELP,ORDER,MANDATORY,NULL-ALLOWED,CASE-SENSITIVE,~
-NOT-CASE-SENSITIVE,VIEW-AS,FORMAT-SA,HELP-SA,LABEL-SA,COLUMN-LABEL-SA,CAN-READ,CAN-WRITE,VALEXP,VALMSG,VALMSG-SA,EXTENT,INITIAL-SA",trim(vMode,'"'))
-            or mBufferName eq "INDEX" and can-do("AREA,DESCRIPTION,UNIQUE,PRIMARY,INDEX-FIELD,WORD,inactive",trim(vMode,'"'))          
-            or mBufferName eq "SEQUENCE" and can-do("INITIAL,INCREMENT,CYCLE-ON-LIMIT,MIN-VAL,MAX-VAL",trim(vMode,'"'))
+         if    mBufferName eq "table" and can-do("{&TABLE_ATTR}",trim(vMode,'"'))
+            or mBufferName eq "field" and can-do("{&FIELD_ATTR}",trim(vMode,'"'))
+            or mBufferName eq "INDEX" and can-do("{&INDEX_ATTR}",trim(vMode,'"'))          
+            or mBufferName eq "SEQUENCE" and can-do("{&SEQUENCE_ATTR}",trim(vMode,'"'))
          then do:
                if     ActiveIndexAll
                   and mBufferName eq "INDEX" and can-do("inactive",trim(vMode,'"'))
@@ -557,6 +564,26 @@ NOT-CASE-SENSITIVE,VIEW-AS,FORMAT-SA,HELP-SA,LABEL-SA,COLUMN-LABEL-SA,CAN-READ,C
                                                                   else "")
                                                                 + trim (substring (istr,length(vMode) + 2)) 
                                                                 ,{&delim-par} ).
+               if trim(vMode,'"') = "DESCRIPTION" then
+               do: /* обработка для DESCRIPTION многострочного значения */
+                 BLOCK_DESC:
+                 repeat:
+                   vFilePos = seek(sReadfile).
+                   import stream sReadfile unformatted vStr.
+                   vStr1 = entry(1, trim(vStr), " ").
+                   if mBufferName eq "table" and can-do("{&TABLE_ATTR}",trim(vStr1,'"'))
+                      or mBufferName eq "field" and can-do("{&FIELD_ATTR}",trim(vStr1,'"'))
+                      or mBufferName eq "INDEX" and can-do("{&INDEX_ATTR}",trim(vStr1,'"')) then
+                   do:
+                     seek stream sReadfile to vFilePos.
+                     leave BLOCK_DESC.   
+                   end.
+                   else
+                   do:
+                     vval = vval + "~n" + vStr.
+                   end.
+                 end. 
+               end.
                mBuffer:buffer-field(vFieldName):BUFFER-VALUE () = vval   no-error.  
                 
                if mBuffer:buffer-field(vFieldName):BUFFER-VALUE () eq "" 
@@ -904,6 +931,43 @@ method private logical CheckOneTable(iTable as  handle):
       return oOkl.
    end finally.   
 end method.
+
+/*------------------------------------------------------------------------
+  Method      : DeleteFieldsForHeadTable
+  Parameters  : iTableName    - имя таблицы, у которой удаляем лишние поля и индексы
+  Purpose     : Удаление всех индексов кроме pi и 
+                полей в таблице не из индекса pi 
+  Author(s)   : Ростовцев Александр
+  Created     : 18.04.2025
+  Notes       : Метод удаляет все индексы кроме pi и 
+                удаляет поля из таблицы не из индекса pi  
+                для головной таблице истории
+  ----------------------------------------------------------------------*/
+method private void DeleteFieldsForHeadTable(iTableName as character):
+   
+   define variable vIndex as character no-undo.
+   define variable vField as character no-undo.
+
+   for each {&prefixtt}Index where 
+             {&prefixtt}Index.{&prefixfil}table = iTableName
+         and {&prefixtt}Index.{&prefixfil}Name  <> "~"pi~"":  
+     delete {&prefixtt}Index.  
+   end.
+   for first {&prefixtt}Index where 
+             {&prefixtt}Index.{&prefixfil}table = iTableName
+         and {&prefixtt}Index.{&prefixfil}Name  = "~"pi~"":  
+     vIndex = replace({&prefixtt}Index.{&prefixfil}INDEX-FIELD,{&delim-par},",").
+     for each {&prefixtt}FIELD where 
+              {&prefixtt}FIELD.{&prefixfil}table = iTableName:
+       vField = substitute("&1 ASCENDING",{&prefixtt}FIELD.{&prefixfil}Name).
+       if not can-do(vIndex, vField) then
+       do:
+         delete {&prefixtt}FIELD.
+       end.
+     end.
+   end.
+end method.
+
 method private void ChangeTable(OldName as character, NewName as character ):
    for each {&prefixtt}FIELD where {&prefixtt}FIELD.{&prefixfil}table eq oldName:
       {&prefixtt}FIELD.{&prefixfil}table = newName.
@@ -916,9 +980,61 @@ end method.
 method private void ChangeAreahist(iTableName as character ):
    
    for each {&prefixtt}Index where {&prefixtt}Index.{&prefixfil}table eq iTableName :
-      {&prefixtt}Index.{&prefixfil}area = replace({&prefixtt}Index.{&prefixfil}area, '"Primary_index"' , '"History_Index"').
+      {&prefixtt}Index.{&prefixfil}area = '"History_Index"'.
    end. 
 end method.
+
+method private void addIndexHeadHist(iTableName as character ):
+   define buffer buf_{&prefixtt}Index for {&prefixtt}Index.
+
+   for each {&prefixtt}Index where {&prefixtt}Index.{&prefixfil}localIndex ne 0  :
+   /* По идее здесь должен быть pi */
+      create buf_{&prefixtt}Index.
+      buffer-copy {&prefixtt}Index except {&prefixfil}PRIMARY {&prefixfil}UNIQUE {&prefixfil}localIndex  {&prefixfil}Name to buf_{&prefixtt}Index
+      assign
+        buf_{&prefixtt}Index.{&prefixfil}Name = '"sub"'
+      .
+      assign 
+         buf_{&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"subject" ASCENDING'
+                                                      + {&delim-par} + buf_{&prefixtt}Index.{&prefixfil}INDEX-FIELD 
+                                                      + {&delim-par} + '"corr-date" ASCENDING'
+                                                      + {&delim-par} + '"corr-time" ASCENDING'
+                                                      + {&delim-par} + '"corr-user-db-num" ASCENDING'
+                                                     
+             {&prefixtt}Index.{&prefixfil}INDEX-FIELD =     {&prefixtt}Index.{&prefixfil}INDEX-FIELD 
+                                                      + {&delim-par} + '"chip-num" ASCENDING'
+                                                      + {&delim-par} + '"corr-user-db-num" ASCENDING'
+                                                      + {&delim-par} + '"subject" ASCENDING'
+      .
+   end.
+   create {&prefixtt}Index.
+   assign
+      {&prefixtt}Index.{&prefixfil}mode        = "ADD"
+      {&prefixtt}Index.{&prefixfil}Table       = iTableName
+      {&prefixtt}Index.{&prefixfil}Name        = '"chip-num"'
+      {&prefixtt}Index.{&prefixfil}AREA        = '"History_Index"'
+      {&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"chip-num" ASCENDING'
+   .
+
+   create {&prefixtt}Index.
+   assign
+      {&prefixtt}Index.{&prefixfil}mode        = "ADD"
+      {&prefixtt}Index.{&prefixfil}Table       = iTableName
+      {&prefixtt}Index.{&prefixfil}Name        = '"corr-user-db-num"'
+      {&prefixtt}Index.{&prefixfil}AREA        = '"History_Index"'
+      {&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"corr-user-db-num" ASCENDING'
+   .
+   
+   create {&prefixtt}Index.
+   assign
+      {&prefixtt}Index.{&prefixfil}mode        = "ADD"
+      {&prefixtt}Index.{&prefixfil}Table       = iTableName
+      {&prefixtt}Index.{&prefixfil}Name        = '"user-name"'
+      {&prefixtt}Index.{&prefixfil}AREA        = '"History_Index"'
+      {&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"corr-user-name" ASCENDING' + {&delim-par} + '"corr-user-db-num" ASCENDING'
+   .
+end method.
+
 method private void addindexHist(iTableName as character ):
    define buffer buf_{&prefixtt}Index for {&prefixtt}Index.
    
@@ -961,7 +1077,8 @@ method private void addindexHist(iTableName as character ):
       {&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"corr-user-name" ASCENDING' + {&delim-par} + '"corr-user-db-num" ASCENDING'
    .
 end method.
-method private void addFieldHist(iTableName as character ):
+
+method private void addFieldHist(iTableName as character, iIsHead as logical ):
    define variable vORDER    as integer no-undo.
    define variable vPOSITION as integer no-undo. 
    for each {&prefixtt}FIELD where {&prefixtt}FIELD.{&prefixfil}table eq iTableName:
@@ -986,6 +1103,7 @@ method private void addFieldHist(iTableName as character ):
       {&prefixtt}FIELD.{&prefixfil}Data-Type  = "integer"
       {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"->,>>>,>>9"'
       {&prefixtt}FIELD.{&prefixfil}INITIAL    = '"0"'
+      {&prefixtt}FIELD.{&prefixfil}LABEL       = '"Уникальный код"'
       {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
       {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = "4"
       {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
@@ -1007,6 +1125,7 @@ method private void addFieldHist(iTableName as character ):
       {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
       {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"99/99/99"'
       {&prefixtt}FIELD.{&prefixfil}INITIAL    = '?'
+      {&prefixtt}FIELD.{&prefixfil}LABEL       = '"Дата действия"'
       {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '4'
    .
 
@@ -1024,6 +1143,7 @@ method private void addFieldHist(iTableName as character ):
       {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
       {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"->,>>>,>>9"'
       {&prefixtt}FIELD.{&prefixfil}INITIAL    = '"0"'
+      {&prefixtt}FIELD.{&prefixfil}LABEL       = '"Время действия"'
       {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '4'
    .
   
@@ -1041,6 +1161,7 @@ method private void addFieldHist(iTableName as character ):
       {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
       {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"->,>>>,>>9"'
       {&prefixtt}FIELD.{&prefixfil}INITIAL    = '"0"'
+      {&prefixtt}FIELD.{&prefixfil}LABEL       = '"ДБ создания"'
       {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '4'
       {&prefixtt}FIELD.{&prefixfil}MANDATORY  = "{&logicalfield}"
    .
@@ -1059,6 +1180,7 @@ method private void addFieldHist(iTableName as character ):
       {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
       {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"x(8)"'
       {&prefixtt}FIELD.{&prefixfil}INITIAL    = '""'
+      {&prefixtt}FIELD.{&prefixfil}LABEL       = '"Изменил"'
       {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '16'
   .
   
@@ -1081,23 +1203,98 @@ method private void addFieldHist(iTableName as character ):
       {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH   = '4'
    .
 
-/*ADD FIELD "is-del" OF "c-promo-schedule-week" AS logical*/
-   create {&prefixtt}FIELD.
-   assign
-      vORDER                                  = vORDER + 10
-      vPOSITION                               = vPOSITION + 1
-      {&prefixtt}FIELD.{&prefixfil}localIndex = 1
-      {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
-      {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
-      {&prefixtt}FIELD.{&prefixfil}Name       = '"is-del"'
-      {&prefixtt}FIELD.{&prefixfil}Data-Type  = "logical"
-      {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
-      {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER) 
-      {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"yes/no"'
-      {&prefixtt}FIELD.{&prefixfil}INITIAL    = '"no"'
-      {&prefixtt}FIELD.{&prefixfil}LABEL      = '""'
-      {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '16'
-   .
+   if iIsHead then
+   do:
+    /*ADD FIELD "subject" OF "<iTableName>" AS CHARACTER*/
+       create {&prefixtt}FIELD.
+       assign
+          vORDER                                  = vORDER + 10
+          vPOSITION                               = vPOSITION + 1
+          {&prefixtt}FIELD.{&prefixfil}localIndex = 1
+          {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
+          {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
+          {&prefixtt}FIELD.{&prefixfil}Name       = '"subject"'
+          {&prefixtt}FIELD.{&prefixfil}Data-Type  = "character"
+          {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+          {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER) 
+          {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"X(8)"'
+          {&prefixtt}FIELD.{&prefixfil}INITIAL    = '""'
+          {&prefixtt}FIELD.{&prefixfil}LABEL      = '"Предмет изменения"'
+          {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '16'
+       .
+
+    /*ADD FIELD "is-news" OF "<iTableName>" AS logical*/
+       create {&prefixtt}FIELD.
+       assign
+          vORDER                                  = vORDER + 10
+          vPOSITION                               = vPOSITION + 1
+          {&prefixtt}FIELD.{&prefixfil}localIndex = 1
+          {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
+          {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
+          {&prefixtt}FIELD.{&prefixfil}Name       = '"is-news"'
+          {&prefixtt}FIELD.{&prefixfil}Data-Type  = "logical"
+          {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+          {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER) 
+          {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"yes/no"'
+          {&prefixtt}FIELD.{&prefixfil}INITIAL    = '"no"'
+          {&prefixtt}FIELD.{&prefixfil}LABEL      = '"Прием по новостям"'
+          {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '1'
+       .
+       
+    /*ADD FIELD "source-type" OF "<iTableName>" AS character*/
+       create {&prefixtt}FIELD.
+       assign
+          vORDER                                  = vORDER + 10
+          vPOSITION                               = vPOSITION + 1
+          {&prefixtt}FIELD.{&prefixfil}localIndex = 1
+          {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
+          {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
+          {&prefixtt}FIELD.{&prefixfil}Name       = '"source-type"'
+          {&prefixtt}FIELD.{&prefixfil}Data-Type  = "character"
+          {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+          {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER) 
+          {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"X(8)"'
+          {&prefixtt}FIELD.{&prefixfil}INITIAL    = '""'
+          {&prefixtt}FIELD.{&prefixfil}LABEL      = '"Источник изменения"'
+          {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '16'
+       .
+    /*ADD FIELD "source-reа" OF "<iTableName>" AS character*/
+       create {&prefixtt}FIELD.
+       assign
+          vORDER                                  = vORDER + 10
+          vPOSITION                               = vPOSITION + 1
+          {&prefixtt}FIELD.{&prefixfil}localIndex = 1
+          {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
+          {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
+          {&prefixtt}FIELD.{&prefixfil}Name       = '"source-ref"'
+          {&prefixtt}FIELD.{&prefixfil}Data-Type  = "character"
+          {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+          {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER) 
+          {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"X(8)"'
+          {&prefixtt}FIELD.{&prefixfil}INITIAL    = '""'
+          {&prefixtt}FIELD.{&prefixfil}LABEL      = '"Ссылка на источник"'
+          {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '16'
+       .
+   end.    
+   else do:
+    /*ADD FIELD "is-del" OF "c-promo-schedule-week" AS logical*/
+       create {&prefixtt}FIELD.
+       assign
+          vORDER                                  = vORDER + 10
+          vPOSITION                               = vPOSITION + 1
+          {&prefixtt}FIELD.{&prefixfil}localIndex = 1
+          {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
+          {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
+          {&prefixtt}FIELD.{&prefixfil}Name       = '"is-del"'
+          {&prefixtt}FIELD.{&prefixfil}Data-Type  = "logical"
+          {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+          {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER) 
+          {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"yes/no"'
+          {&prefixtt}FIELD.{&prefixfil}INITIAL    = '"no"'
+          {&prefixtt}FIELD.{&prefixfil}LABEL      = '""'
+          {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '16'
+       .
+   end.
       
 end method.
 
@@ -1116,9 +1313,9 @@ method public void crtablehist(iTableName as character ):
       vnewNameno = "c-" + trim({&prefixtt}TABLE.{&prefixfil}Name,'"').
       vnewName = '"' + vnewNameno + '"'.
       ChangeTable({&prefixtt}TABLE.{&prefixfil}Name,vnewName).
-      {&prefixtt}TABLE.{&prefixfil}Area = replace({&prefixtt}TABLE.{&prefixfil}Area, '"Primary_data"' , '"History"').
+      {&prefixtt}TABLE.{&prefixfil}Area = '"History"'.
       ChangeAreahist (vnewName).
-      addFieldHist (vnewName).
+      addFieldHist (vnewName, false).
       addIndexHist (vnewName).
       {&prefixtt}TABLE.{&prefixfil}Name     = vnewName.
       {&prefixtt}TABLE.{&prefixfil}DUMP-NAME = '"' + lc(vnewNameno) + '"'.
@@ -1136,6 +1333,73 @@ method public void crtablehist(iTableName as character ):
    message "c-" + iTableName + ".df" search("c-" + iTableName + ".df")
    view-as alert-box. 
  end method.
+
+/*------------------------------------------------------------------------
+  Method      : crTableHeadHist
+  Parameters  : iTableName    - имя таблицы, для которой генерируем новую таблицу
+                iTableHead    - имя новой головной таблицы
+                iSequenceName - имя последовательности (Sequence) для истории
+                iFileTrigger  - имя файла триггера для новой таблицы без суффикса
+                                (например: для "cordh" будет прописано "trg\cordhd.p" и 
+                                "trg\cordhц.p")
+  Purpose     : Генерация головной таблицы для истории 
+  Author(s)   : Ростовцев Александр
+  Created     : 18.04.2025
+  Notes       : Метод генерирует df-файл головной таблицы истории
+  ----------------------------------------------------------------------*/
+method public void crTableHeadHist
+   ( iTableName    as character
+   , iTableHead    as character
+   , iSequenceName as character
+   , iFileTrigger  as character):
+   
+   empty temp-table {&prefixtt}TABLE.
+   empty temp-table {&prefixtt}FIELD.
+   empty temp-table {&prefixtt}Index.
+   empty temp-table {&prefixtt}SEQUENCE.
+   run prodict/dump_df.p   (iTableName,
+                            iTableName + ".df",
+                            "").
+   readDF(iTableName + ".df").
+   define variable vnewName   as character no-undo.
+   define variable vnewNameno as character no-undo.
+   for each {&prefixtt}TABLE where not ( {&prefixtt}TABLE.{&prefixfil}Name begins "c-") :
+/*      run gbl/inidebug.p.*/
+      vnewNameno = trim(iTableHead).
+      vnewName = '"' + vnewNameno + '"'.
+      DeleteFieldsForHeadTable({&prefixtt}TABLE.{&prefixfil}Name).
+      ChangeTable({&prefixtt}TABLE.{&prefixfil}Name,vnewName).
+      {&prefixtt}TABLE.{&prefixfil}Area = '"History"'.
+      ChangeAreahist (vnewName).
+      if iFileTrigger <> "" then
+      do:
+        {&prefixtt}TABLE.{&prefixfil}TABLE-TRIGGER = substitute(
+          "~"DELETE~" OVERRIDE PROCEDURE ~"trg\&1d.p~" CRC ~"?~"~
+&2~"WRITE~" OVERRIDE PROCEDURE ~"trg\&1w.p~" CRC ~"?~"",
+          iFileTrigger, {&delim-par}).  
+      end.
+      else
+      do:
+        {&prefixtt}TABLE.{&prefixfil}TABLE-TRIGGER = "". 
+      end. 
+      addFieldHist (vnewName, true).
+      addIndexHeadHist (vnewName).
+      {&prefixtt}TABLE.{&prefixfil}Name     = vnewName.
+      {&prefixtt}TABLE.{&prefixfil}DUMP-NAME = '"' + lc(vnewNameno) + '"'.
+      create {&prefixtt}SEQUENCE.
+      assign
+         {&prefixtt}SEQUENCE.{&prefixfil}mode           = "add"
+         {&prefixtt}SEQUENCE.{&prefixfil}Name           = trim(iSequenceName)
+         {&prefixtt}SEQUENCE.{&prefixfil}INITIAL        = '0'
+         {&prefixtt}SEQUENCE.{&prefixfil}INCREMENT      = '1'
+         {&prefixtt}SEQUENCE.{&prefixfil}CYCLE-ON-LIMIT = 'no'
+      .
+      
+   end.
+   dumpTable (iTableHead + ".df"). 
+   message iTableHead + ".df" search(iTableHead + ".df")
+   view-as alert-box. 
+end method.
  
  method public void putmes (input itext as char):
     if not silent 
