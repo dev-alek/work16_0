@@ -1044,8 +1044,22 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       input close.
       startStep("Начало конвертации справочника.").
       if iprotocol > ""
-      then
-         os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
+      then do:
+         define variable vfileDbInit as character no-undo.
+         vfileDbInit = "exe/DBInit_" + replace (iprotocol,".","_") +  ".exe".
+         if (search(vfileDbInit)) eq ?
+         then do:
+            define variable vMesForTsd as character no-undo.
+             vMesForTsd = "Не найден файл " + vfileDbInit + " для версии протокола " + iprotocol.
+             writeSockError (hndlsocket, vMesForTsd,  iprotocol).
+             logWrite:LogStr = vMesForTsd.
+             ErrStatus = true.
+             return error . 
+             
+          end. 
+          else
+             os-copy value(search(vfileDbInit)) value ("DBInit.exe").
+      end.
       else
          os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
       if is-ProcArch64 
@@ -1056,7 +1070,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
       end.    
     
-      os-command silent value( 'DBInit.exe Dict 30 31 >>DBInitDict.txt') .
+      os-command silent value( 'DBInit.exe Dict 30 31 >DBInitDict.txt') .
+      logWrite:WriteFileToLog("DBInitDict.txt").
       if search ("dictionaries.s3db") = ? 
       then do:
         logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
