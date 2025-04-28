@@ -2441,7 +2441,7 @@ PROCEDURE scan-mark :
                 X_marking-line.gds-name    = GdsName(X_marking-line.gds-code) 
                     .
             
-                X_marking-line.box-qnty = getQntyUTDByDM(v-marking) .
+                X_marking-line.box-qnty = getQntyCodeByGtin(getGtinByDM(v-marking)) .
                 X_marking.unit-ext  = getLevelMotpByDM(v-marking) .
                 
                 assign

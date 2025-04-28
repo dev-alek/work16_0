@@ -310,8 +310,14 @@ procedure partcopy :
           for first buf_marking exclusive-lock where buf_marking.mark = buf_orig_ml.mark 
             and not (buf_marking.sts = oMarkSts:MarkError:KeyIntDB and available (buf_trn-doc) and buf_trn-doc.ext-doc-type = {&TDEDT_inv}):
             
-            if not can-do({&NOT_CHANGE_MARKING_STS},string(buf_marking.sts)) then
+            if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB and
+               not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) and
+               not can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts)) 
+            then do:
               buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
+              validate buf_marking.
+            end.
 /*            if buf_marking.mark-parent <> ""                                                                      */
 /*            and buf_marking.unit-ext = "UNIT"                                                                     */
 /*            then do :                                                                                             */
@@ -336,7 +342,6 @@ procedure partcopy :
 /*                assign buf_marking-pack.sts = v-parent-mark-sts .                                                 */
 /*              end.                                                                                                */
 /*            end.                                                                                                  */
-              validate buf_marking.
           end .
 
         end .

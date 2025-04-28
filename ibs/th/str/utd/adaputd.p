@@ -98,6 +98,7 @@ do:
   
   define variable vunit     as int no-undo.
   define variable vunitCode as character no-undo.
+  define variable vCount     as int no-undo.
    
   { gbl/objsrv.i  }
   
@@ -222,10 +223,12 @@ do:
           and buf_utd-marking-lines.doc-level = 1
           no-lock:
              v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
-             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB).
-             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB).
-             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB).
-             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB).
+             do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait):
+               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait))).  
+             end.
+             do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Doc_Status):
+               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Doc_Status))).  
+             end.
         end.      
       end.
       

@@ -2166,8 +2166,11 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                first buf_marking exclusive-lock where buf_marking.mark = bf_utd-marking-lines.mark:
                   case bf_utd-marking-lines.sts:
                      when Marking:Checked_:KeyIntDB then 
-                        do:
-                           if buf_marking.sts <> Marking:MarkError:KeyIntDB and buf_marking.sts <> Marking:Ungrouped:KeyIntDB then
+                        do: /*todo*/
+                           if buf_marking.sts <> Marking:MarkError:KeyIntDB and buf_marking.sts <> Marking:Ungrouped:KeyIntDB and
+                              not (can-do(Marking:Sale_Return_Wait,string(buf_marking.sts)) or
+                                   can-do(Marking:Doc_Status,string(buf_marking.sts))) 
+                           then
                               buf_marking.sts = Marking:Checked_:KeyIntDB .
                         end.
                      when Marking:MarkError:KeyIntDB or 
