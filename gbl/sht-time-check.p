@@ -76,8 +76,8 @@ if p-start-date >= p-end-date AND p-start-time >= p-end-time then
     return error "Новое время открытия смены должно быть меньше закрытия".
 
 assign
-    new-start-timestamp = int(p-shift-date) * 60 * 60 * 60 * 24 + p-start-time
-    new-end-timestamp = int(p-shift-date) * 60 * 60 * 60 * 24 + p-end-time
+    new-start-timestamp = int(bf_curr-shift-obj.open-date) * 60 * 60 * 60 * 24 + p-start-time
+    new-end-timestamp = int(if bf_curr-shift-obj.close-date <> ? then bf_curr-shift-obj.close-date else p-shift-date) * 60 * 60 * 60 * 24 + p-end-time
     prev-timestamp = int(bf_prev-shift-obj.close-date) * 60 * 60 * 60 * 24 + bf_prev-shift-obj.close-time when available bf_prev-shift-obj
     next-timestamp = int(bf_next-shift-obj.open-date) * 60 * 60 * 60 * 24 + bf_next-shift-obj.open-time when available bf_next-shift-obj
 .
