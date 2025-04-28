@@ -2153,7 +2153,15 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
                     message
                       substitute( "По результатам слива Газовоза фактическое кол-во товара изменяется на &1 (&2),", infoSectionObj:FactQnty, buf_goods.unit-base ) skip
                       substitute( "фактическая плотность на &1.", infoSectionObj:FactDensity ) skip
-                      view-as alert-box information .
+                      view-as alert-box information
+                    .
+                    run save-action in this-procedure
+                      ( input "hard":U
+                      ) no-error .
+                    if error-status :error then do:
+                      message return-value view-as alert-box error .
+                      undo block_tr, return error .
+                    end.
                   end.
                 end.
                 
