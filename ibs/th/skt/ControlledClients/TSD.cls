@@ -710,21 +710,21 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           priceSale = if available buf_price-all and buf_price-all.price-sale > -1 and buf_price-all.price-sale < 1 then replace (priceSale, ".", "0" + CurrDecSeparatorTH) else replace (priceSale, ".", CurrDecSeparatorTH)
           cliBaseRate = if buf_bar-code.cli-base-rate > -1 and buf_bar-code.cli-base-rate < 1 then replace (cliBaseRate, ".", "0" + CurrDecSeparatorTH) else replace (cliBaseRate, ".", CurrDecSeparatorTH)
           .
-        create TempBCode.
-              
-        assign
-          TempBCode.gds-code = buf_goods.gds-code
-          TempBCode.b-str = full-b-code
-          TempBCode.priceSale = (if available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value) then "-" else "") + priceSale
-          TempBCode.unit-cli = buf_bar-code.unit-cli
-          TempBCode.cliBaseRate = cliBaseRate 
-        no-error.
-        
-        if error-status:error 
-        then do:
-          delete TempBCode.
-          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибка передачи бар-кода &1 в ТСД.", full-b-code).
-        end.
+/*        create TempBCode.                                                                                                             */
+/*                                                                                                                                      */
+/*        assign                                                                                                                        */
+/*          TempBCode.gds-code = buf_goods.gds-code                                                                                     */
+/*          TempBCode.b-str = full-b-code                                                                                               */
+/*          TempBCode.priceSale = (if available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value) then "-" else "") + priceSale*/
+/*          TempBCode.unit-cli = buf_bar-code.unit-cli                                                                                  */
+/*          TempBCode.cliBaseRate = cliBaseRate                                                                                         */
+/*        no-error.                                                                                                                     */
+/*                                                                                                                                      */
+/*        if error-status:error                                                                                                         */
+/*        then do:                                                                                                                      */
+/*          delete TempBCode.                                                                                                           */
+/*          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибка передачи бар-кода &1 в ТСД.", full-b-code).          */
+/*        end.                                                                                                                          */
         
         for each buf_prod-bc no-lock where buf_prod-bc.b-code = buf_bar-code.b-code and buf_prod-bc.bc-on = yes:
         
