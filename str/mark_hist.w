@@ -158,7 +158,7 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
 &Scoped-Define ENABLED-OBJECTS b-exit b-hist B-1 v-mark v-mark-2  f-last-change emission_Date ~
 Btn_rn br-mark Btn_pn 
 &Scoped-Define DISPLAYED-OBJECTS v-mark v-mark-2 f-status f-GTIN  f-last-change f-gds-code ~
-f-gds-name f-obj-code f-obj-type mrc produced_Date emission_Date online-check f-rn ~
+f-gds-name f-obj-code f-obj-type mrc produced_Date emission_Date online-check f-online-result f-rn ~
 f-unit f-unit-2 f-loc-key f-pn 
 
 /* Custom List Definitions                                              */
@@ -304,10 +304,23 @@ DEFINE VARIABLE v-mark-2 AS CHARACTER FORMAT "X(255)"
      VIEW-AS FILL-IN 
      SIZE 44 BY 1.
 
+DEFINE VARIABLE f-online-result AS INTEGER FORMAT "-9":U INITIAL ? 
+     VIEW-AS COMBO-BOX INNER-LINES 4
+     LIST-ITEM-PAIRS "",-1,
+                     "Запрет продажи",0,
+                     "Продажа разрешена",1,
+                     "Необходимо проверить сроки годности",2
+     DROP-DOWN-LIST
+     SIZE 39.2 BY 1 NO-UNDO.
+
 DEFINE VARIABLE online-check AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-    SIZE 10 BY .81 NO-UNDO.
+    SIZE 5 BY .81 NO-UNDO.
+
+DEFINE RECTANGLE RECT-1
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 26 BY 2.14.
 
 
 { gbl/objsrv.i }
@@ -343,35 +356,41 @@ DEFINE BROWSE br-mark
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-mark
-     b-exit AT ROW 1 COL 1.38
-     B-1 AT ROW 1 COL 11.5 WIDGET-ID 248
-     v-mark AT ROW 1.08 COL 27.5 COLON-ALIGNED WIDGET-ID 34
-     b-hist AT ROW 1.08 COL 106
-     v-mark-2 AT ROW 2.33 COL 10.5 COLON-ALIGNED WIDGET-ID 252
-     f-GTIN AT ROW 2.33 COL 62 COLON-ALIGNED WIDGET-ID 220
-     f-status AT ROW 3.52 COL 10.5 COLON-ALIGNED NO-LABEL WIDGET-ID 218
-     f-last-change AT ROW 3.52 COL 62 COLON-ALIGNED WIDGET-ID 268
-     f-gds-code AT ROW 4.75 COL 10.5 COLON-ALIGNED WIDGET-ID 224
-     f-gds-name AT ROW 4.75 COL 62 COLON-ALIGNED WIDGET-ID 222
-     f-obj-code AT ROW 6 COL 10.5 COLON-ALIGNED WIDGET-ID 256
-     f-obj-type AT ROW 6 COL 18.75 COLON-ALIGNED NO-LABEL WIDGET-ID 258
-     mrc AT ROW 6 COL 107 RIGHT-ALIGNED WIDGET-ID 266
-     produced_Date AT ROW 7.25 COL 107 RIGHT-ALIGNED WIDGET-ID 262
-     emission_Date AT ROW 8.5 COL 107 RIGHT-ALIGNED WIDGET-ID 264
-     online-check AT ROW 8.84 COL 44.4 WIDGET-ID 274
-     f-rn AT ROW 10.25 COL 10.5 COLON-ALIGNED WIDGET-ID 246
-     Btn_rn AT ROW 10.25 COL 34.13 WIDGET-ID 250
-     f-unit AT ROW 10.25 COL 81.13 COLON-ALIGNED WIDGET-ID 226
-     f-unit-2 AT ROW 10.25 COL 107 RIGHT-ALIGNED WIDGET-ID 254
-     br-mark AT ROW 11.25 COL 3.5 WIDGET-ID 200
-     f-loc-key AT ROW 24.2 COL 21 COLON-ALIGNED WIDGET-ID 260
-     f-pn AT ROW 24.2 COL 81 COLON-ALIGNED WIDGET-ID 244
-     Btn_pn AT ROW 24.5 COL 104.75 WIDGET-ID 68
-     "Игнорировать результат online-проверки:" VIEW-AS TEXT
-          SIZE 40 BY .62 AT ROW 8.86 COL 4 WIDGET-ID 276
+     b-exit AT ROW 1 COL 1.4
+     B-1 AT ROW 1 COL 11.6 WIDGET-ID 248
+     v-mark AT ROW 1.1 COL 27.6 COLON-ALIGNED WIDGET-ID 34
+     b-hist AT ROW 1.1 COL 106
+     f-GTIN AT ROW 2.19 COL 67 COLON-ALIGNED WIDGET-ID 220
+     v-mark-2 AT ROW 2.24 COL 10.6 COLON-ALIGNED WIDGET-ID 252
+     f-last-change AT ROW 3.38 COL 67 COLON-ALIGNED WIDGET-ID 268
+     f-status AT ROW 3.43 COL 10.6 COLON-ALIGNED NO-LABEL WIDGET-ID 218
+     f-gds-name AT ROW 4.57 COL 67 COLON-ALIGNED WIDGET-ID 222
+     f-gds-code AT ROW 4.62 COL 10.6 COLON-ALIGNED WIDGET-ID 224
+     mrc AT ROW 5.67 COL 82 RIGHT-ALIGNED WIDGET-ID 266
+     f-obj-code AT ROW 5.76 COL 10.6 COLON-ALIGNED WIDGET-ID 256
+     f-obj-type AT ROW 5.76 COL 18.8 COLON-ALIGNED NO-LABEL WIDGET-ID 258
+     produced_Date AT ROW 6.76 COL 82 RIGHT-ALIGNED WIDGET-ID 262
+     emission_Date AT ROW 7.91 COL 82 RIGHT-ALIGNED WIDGET-ID 264
+     online-check AT ROW 8.95 COL 22.4 WIDGET-ID 274
+     f-online-result AT ROW 9.05 COL 67 COLON-ALIGNED NO-LABEL WIDGET-ID 278
+     f-rn AT ROW 10.24 COL 10.6 COLON-ALIGNED WIDGET-ID 246
+     Btn_rn AT ROW 10.24 COL 34.2 WIDGET-ID 250
+     f-unit AT ROW 10.24 COL 81.2 COLON-ALIGNED WIDGET-ID 226
+     f-unit-2 AT ROW 10.24 COL 107.2 RIGHT-ALIGNED WIDGET-ID 254
+     br-mark AT ROW 11.24 COL 3.4 WIDGET-ID 200
+     f-loc-key AT ROW 24.19 COL 21 COLON-ALIGNED WIDGET-ID 260
+     f-pn AT ROW 24.19 COL 81 COLON-ALIGNED WIDGET-ID 244
+     Btn_pn AT ROW 24.52 COL 104.8 WIDGET-ID 68
+     "Результат online-проверки ГИС МТ:" VIEW-AS TEXT
+          SIZE 36 BY .62 AT ROW 9.24 COL 35 WIDGET-ID 288
+     "online-проверки:" VIEW-AS TEXT
+          SIZE 17 BY .71 AT ROW 9 COL 4.8 WIDGET-ID 284
+     "Игнорировать результат" VIEW-AS TEXT
+          SIZE 22 BY .71 AT ROW 8.29 COL 4.8 WIDGET-ID 276
      "Статус:" VIEW-AS TEXT
           SIZE 8 BY .62 AT ROW 3.76 COL 4.4 WIDGET-ID 272
-     SPACE(0.87) SKIP(0.32)
+     RECT-1 AT ROW 7.91 COL 3.8 WIDGET-ID 286
+     SPACE(80.20) SKIP(15.45)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Движение марки":L.
@@ -462,6 +481,19 @@ END .
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME f-online-result
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-online-results d-mark
+ON value-changed OF f-online-result IN FRAME d-mark
+DO:
+   assign 
+     f-online-result
+   .
+END .
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Btn_pn
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_pn d-mark
 ON CHOOSE OF Btn_pn IN FRAME d-mark
@@ -516,6 +548,17 @@ DO:
         assign
           b_marking.sts = f-status
           b_marking.last-change = now 
+        .      
+      end.
+    end.
+
+    if buf_marking.online-result <> (if f-online-result = -1 then ? else f-online-result) then do:
+      message "У марки был изменен результат online-проверки ГИС МТ.~nСохранить?" view-as alert-box question buttons yes-no 
+        update isSaveResult as logical.
+      if isSaveResult then do:
+        find first b_marking where rowid(b_marking) = rowid(buf_marking) exclusive-lock.
+        assign
+          b_marking.online-result = if f-online-result = -1 then ? else f-online-result 
         .      
       end.
     end.
@@ -752,14 +795,14 @@ PROCEDURE enable_mark :
     with frame {&frame-name} .
 
   if available (buf_marking) then do:
-    display f-status with frame {&frame-name} .
+    display f-status f-online-result with frame {&frame-name} .
     if canEditStatus then
       enable f-status with frame {&frame-name} .
     if canEditOnlineCheck then
-      enable online-check with frame {&frame-name} .
+      enable online-check f-online-result with frame {&frame-name} .
   end.
   else do:
-    hide f-status in frame {&frame-name} .
+    hide f-status f-online-result in frame {&frame-name} .
   end.
   if available (buf_marking) and buf_marking.sts = Marking:MarkError:KeyIntDB then do:
     f-status:fgcolor in frame {&frame-name} = 12.
@@ -858,7 +901,7 @@ PROCEDURE enable_UI :
     v-mark-2
     f-loc-key
     with frame {&frame-name} .    
-  hide f-status in frame {&frame-name} .   
+  hide f-status f-online-result in frame {&frame-name} .   
     
 END PROCEDURE.
 
@@ -915,6 +958,7 @@ PROCEDURE init-temp :
     if available (buf_marking) then 
     do:
       f-status = buf_marking.sts .
+      f-online-result = if buf_marking.online-result = ? then -1 else buf_marking.online-result.
       f-last-change = buf_marking.last-change .
       /*соответствие товаров*/
       f-gds-code = string(buf_marking.gds-code) .
@@ -991,6 +1035,7 @@ PROCEDURE init-temp :
       mrc  = "" .
       emission_Date = "" .
       produced_Date = "" .
+      f-online-result = -1.
     end.  
   end.   
   else do:
@@ -1010,6 +1055,7 @@ PROCEDURE init-temp :
       mrc  = "" .
       emission_Date = "" .
       produced_Date = "" .      
+      f-online-result = -1.
   end. 
   end.  
   else do:
@@ -1030,6 +1076,7 @@ PROCEDURE init-temp :
       mrc  = "" .
       emission_Date = "" .
       produced_Date = "" .      
+      f-online-result = -1.
   end.      
   {&OPEN-QUERY-br-mark}
 END PROCEDURE.

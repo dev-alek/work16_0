@@ -175,6 +175,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE listStatusesForReturn AS CHARACTER NO-UNDO.    
     DEFINE VARIABLE vAccMarkCheck AS CHARACTER NO-UNDO.
     DEFINE VARIABLE vAccMarkCheckOff AS CHARACTER NO-UNDO.  
+    DEFINE VARIABLE vCheckLocalMark  AS LOGICAl NO-UNDO INIT FALSE. /* признак запуска offline-проверки */
 
     ASSIGN
       mCheckSts = 1
@@ -313,6 +314,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
           RETURN.
         END.
         
+        FIND FIRST buf_marking EXCLUSIVE-LOCK WHERE buf_marking.mark BEGINS mark-short NO-WAIT NO-ERROR.
         IF action = cashSts:SaleLock:NameProp THEN 
         DO:
            mCheckGisMT    = 0. 
@@ -326,13 +328,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            IF mCheckSts = 0 OR 
               mCheckSts = 3 /* faund = false */
            THEN DO:
+              /* если марки нет в ГИС МТ или не прошла проверку в ГИС МТ, то ее создадим ниже, но продавать нельзя */
               vAccMarkCheck = vAccMarkCheck + "Снимите с продажи и передайте товар управляющему/старшему смены".
-              /* если марки нет в ГИС МТ, то не сохраняем ее, а сразу выходим */
-              IF mCheckSts = 3 THEN DO:
-                 vLC = getJson(0, vAccMarkCheck, mark).
-                 sendContent(vLC).
-                 RETURN.
-              END.   
            END.
            /* Если прошло более 72ч с момента аварии ГИС МТ */
            IF mCheckSts = 4 THEN DO:
@@ -342,15 +339,28 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            END.     
            /* если марку не удалось проверить онлайн */
            IF (mCheckSts = 2 AND mCheckGisMT <> 1) OR mCheckGisMT = 2 THEN DO:
-              vAccMarkCheckOff = ChekLocalMark(mark-short).
-              if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" then 
-              vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
-              else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
+              /* проверим значение online-result марки (? - если марки в ТН нет)*/
+              dbgPrint("marking.log", SUBSTITUTE("Считываем online-result: &1.", 
+                                                IF NOT AVAIL buf_marking THEN "marking не найдена"
+                                                ELSE STRING(buf_marking.online-result))).
+              IF AVAIL buf_marking AND buf_marking.online-result = 0 
+              THEN DO:
+                  vAccMarkCheck = "Выполнить текущую онлайн-проверку не удалось. Продажа заблокирована по результату ранее выполненной проверки. Снимите с продажи и передайте товар управляющему/старшему смены".
+                  vLC = getJson(0, vAccMarkCheck, mark).
+                  sendContent(vLC).
+                  RETURN.
+              END.
+              ELSE DO:
+                  vAccMarkCheckOff = ChekLocalMark(mark-short).
+                  vCheckLocalMark = TRUE.
+                  if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" then 
+                  vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
+                  else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
+              END.
               
            END.                 
         END.
   
-        FIND FIRST buf_marking EXCLUSIVE-LOCK WHERE buf_marking.mark BEGINS mark-short NO-WAIT NO-ERROR.
         IF NOT AVAILABLE (buf_marking) THEN 
         DO:      /* марка не найдена в БД TH */
           IF LOCKED buf_marking THEN DO:
@@ -362,8 +372,13 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
             WHEN cashSts:SaleLock:NameProp THEN
             DO:
               createMark(mark-short, buffer buf_marking).
-              /* если марка не прошла проверку в ГИС МТ, то ее создаем, но продавать нельзя */
-              IF mCheckSts = 0 THEN DO:
+              IF NOT vCheckLocalMark 
+              THEN DO:   /* online-result устанавливаем, если offline-проверка не запускалась */
+                setOnlineResult(BUFFER buf_marking).
+              END.
+              IF mCheckSts = 0 OR 
+                 mCheckSts = 3 /* faund = false */
+              THEN DO:
                  vLC = getJson(0, vAccMarkCheck, mark).
                  sendContent(vLC).
                  RETURN.
@@ -397,8 +412,12 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         END.
         ELSE 
         DO:      /* марка найдена */
+          IF  action = cashSts:SaleLock:NameProp /* если продажа */ 
+          AND NOT vCheckLocalMark THEN           /* и offline-проверка не запускалась, то устанавливаем online-result */
+            setOnlineResult(BUFFER buf_marking).
+
           IF action = cashSts:SaleLock:NameProp AND 
-             mCheckSts = 0 
+             (mCheckSts = 0 OR mCheckSts = 3) 
           THEN DO:
                  vLC = getJson(0, vAccMarkCheck, mark).
                  sendContent(vLC).
@@ -2499,6 +2518,23 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     END.                 
     
     RETURN mCheckSts.
+  END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:  устанавливает online-result 
+  ------------------------------------------------------------------------------*/
+  METHOD PRIVATE VOID setOnlineResult(buffer buf_marking for ub.marking):
+   
+    IF mCheckSts = 0 OR mCheckSts = 3    /* Оборот запрещен ошибки errorcode (1, …11) */
+    THEN
+      buf_marking.online-result = 0.  
+    ELSE IF mCheckSts = 2 AND mCheckGisMT = 1  /* нет срока годности, а проверка его включена */
+    THEN  
+      buf_marking.online-result = 2.
+    ELSE IF mCheckSts = 1 AND mCheckGisMT = 1  /* Оборот разрешен */
+    THEN
+      buf_marking.online-result = 1.
   END METHOD.
       
 	/*------------------------------------------------------------------------------

@@ -24,6 +24,12 @@ function getStsName returns character (iSts as int ):
   return thMarkSts:GetLabel(iSts).
 end.
 
+function getOnlineResultName returns character (iOnlineResult as int ):
+  define variable vNames as character no-undo
+    init "Запрет продажи,Продажа разрешена,Необходимо проверить сроки годности".   
+  return if iOnlineResult = ? then "null" else entry(iOnlineResult + 1, vNames).
+end.
+
 function formatLogicalValue returns character (iValue as character ):
   return if iValue = "" then ? else string(logical(iValue),"Да/Нет").
 end.
@@ -32,7 +38,7 @@ function getAttributeName returns character (iCode as character ):
   return 
     if iCode = "notOnlineCheck" 
       then "Игнорировать результат online-проверки"
-      else "Значениеа атрибута".
+      else "Значение атрибута".
 end.
 
 &glob tt_name temp-changes
@@ -81,11 +87,12 @@ procedure getMarking:
         v-mess = "Неверная ссылка на марку в таблице c-marking".
         return error  v-mess .
     end.
-    &scop fields-name-list "sts,last-change"
+    &scop fields-name-list "sts,last-change,online-result"
     define variable v-label-param as character no-undo .
     v-label-param =
           "sts"   + {&delim-par} + "Статус" + {&delim-par} + "getStsName" + {&delim-flf}
-        + "last-change" + {&delim-par} + "Изменен" + {&delim-par} + "".
+        + "last-change" + {&delim-par} + "Изменен" + {&delim-par} + "" + {&delim-flf}
+        + "online-result" + {&delim-par} + "Результат ГИС МТ" + {&delim-par} + "getOnlineResultName".
     run proc-full-temp-changes in this-procedure (
                                                  input current_c-marking.action = integer({&hn-create})
                                                 ,input current_c-marking.action = integer({&hn-delete})
