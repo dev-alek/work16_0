@@ -68,6 +68,7 @@ define variable nameGoods       as character no-undo .
 define variable kk              as integer   no-undo .
 define variable jj              as integer   no-undo .
 define variable ff              as integer   no-undo .
+define variable vv              as integer   no-undo .
 
 define temp-table tt-chk-gds like ub.c-chk-gds .
 define temp-table tt-chk-pay like ub.c-chk-pay .
@@ -556,7 +557,7 @@ procedure primtReport:
     '<TD text_wrap="true" style="text-align: center;">' + namePNPO + '</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">' + ub.clients.obj-name + '</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.pay-desk) + '</TD>' skip
-    '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.shift-name) + '</TD>' skip
+    '<TD text_wrap="true" style="text-align: center;">' + if buf_c-chk-doc.shift-num = 0 then "" + '</TD>' else string(buf_c-chk-doc.shift-name) + '</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">' + if buf_c-chk-doc.src-shift-date <> ? then STRING(buf_c-chk-doc.src-shift-date,"99.99.9999") + '</TD>' else ""  + '</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">' + ENTRY(LOOKUP(string(buf_c-chk-doc.chk-type), {&CHK_CODE_LIST}),{&CHK_NAME_LIST}) + '</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.office) + '</TD>' skip
@@ -568,27 +569,31 @@ procedure primtReport:
     '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.corr-date,"99.99.9999") + '</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.corr-time,"HH:MM") + '</TD>' skip
     .
-  ii = 0 .
+
+        vv = 0 .
 
   for each ub.shift-obj no-lock where ub.shift-obj.obj-code = buf_c-chk-doc.obj-code and ub.shift-obj.obj-type = buf_c-chk-doc.obj-type and 
+    ub.shift-obj.status_ <> {&sht-expected} and 
     (ub.shift-obj.open-date < buf_c-chk-doc.corr-date or ub.shift-obj.open-date = buf_c-chk-doc.corr-date) and
-    if ub.shift-obj.close-date <> ? then (ub.shift-obj.close-date > buf_c-chk-doc.corr-date or ub.shift-obj.close-date = buf_c-chk-doc.corr-date) 
-    else ub.shift-obj.close-date = ? :
-    if ub.shift-obj.open-date = buf_c-chk-doc.corr-date and ub.shift-obj.open-time > buf_c-chk-doc.corr-time then next .
-    if ub.shift-obj.close-date = buf_c-chk-doc.corr-date and ub.shift-obj.close-time < buf_c-chk-doc.corr-time then next .
-
-    put stream OutStr-html unformatted
-      '<TD text_wrap="true" style="text-align: center;">' + string(ub.shift-obj.shift-date,"99.99.9999") + " " + string(ub.shift-obj.shift-name) + '</TD>' skip
-      .
-    ii = 1 .  
-    leave .
+    if ub.shift-obj.close-date <> ? then (ub.shift-obj.close-date > buf_c-chk-doc.corr-date or ub.shift-obj.close-date = buf_c-chk-doc.corr-date or ub.shift-obj.status_ = {&sht-current}) 
+    else ub.shift-obj.close-date = ?:
+      if ub.shift-obj.status_ <> {&sht-current} then do:
+      if ub.shift-obj.open-date = buf_c-chk-doc.corr-date and ub.shift-obj.open-time > buf_c-chk-doc.corr-time then next .
+      if ub.shift-obj.close-date = buf_c-chk-doc.corr-date and ub.shift-obj.close-time < buf_c-chk-doc.corr-time then next .
+      end.
+      put stream OutStr-html unformatted
+        '<TD text_wrap="true" style="text-align: center;">' + string(ub.shift-obj.shift-date,"99.99.9999") + " " + string(ub.shift-obj.shift-name) + '</TD>' skip
+        .
+      vv = 1 .  
+      leave .
   end.
-  if ii = 0 then 
+  if vv = 0 then 
   do:
     put stream OutStr-html unformatted
       '<TD text_wrap="true" style="text-align: center;"></TD>' skip
       .
   end.
+
 
   ii = 0 .
   kk = 0 .
@@ -614,7 +619,7 @@ procedure primtReport:
     create tt-chk-pay .
     buffer-copy buf_chk-pay to tt-chk-pay .
   end .
-  /*run gbl/inidebug.p.*/
+
   for each tt-chk-pay:
     namePay = namePay + ", " + get-pay(tt-chk-pay.pay-code, tt-chk-pay.curr-code, output varcurr-name) .
   end.
@@ -656,7 +661,7 @@ procedure primtReport:
           '<TD text_wrap="true" style="text-align: center;">' + namePNPO + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center;">' + ub.clients.obj-name + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.pay-desk) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.shift-name) + '</TD>' skip
+          '<TD text_wrap="true" style="text-align: center;">' + if buf_c-chk-doc.shift-num = 0 then "" + '</TD>' else string(buf_c-chk-doc.shift-name) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center;">' + if buf_c-chk-doc.src-shift-date <> ? then STRING(buf_c-chk-doc.src-shift-date,"99.99.9999") + '</TD>' else ""  + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center;">' + ENTRY(LOOKUP(string(buf_c-chk-doc.chk-type), {&CHK_CODE_LIST}),{&CHK_NAME_LIST}) + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.office) + '</TD>' skip
@@ -668,22 +673,23 @@ procedure primtReport:
           '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.corr-date,"99.99.9999") + '</TD>' skip
           '<TD text_wrap="true" style="text-align: center;">' + string(buf_c-chk-doc.corr-time,"HH:MM") + '</TD>' skip
           .
-        ii = 0 .
 
-        for each ub.shift-obj no-lock where ub.shift-obj.obj-code = buf_c-chk-doc.obj-code and ub.shift-obj.obj-type = buf_c-chk-doc.obj-type and 
-          (ub.shift-obj.open-date < buf_c-chk-doc.corr-date or ub.shift-obj.open-date = buf_c-chk-doc.corr-date) and
-          if ub.shift-obj.close-date <> ? then (ub.shift-obj.close-date > buf_c-chk-doc.corr-date or ub.shift-obj.close-date = buf_c-chk-doc.corr-date) 
-          else ub.shift-obj.close-date = ? :
-          if ub.shift-obj.open-date = buf_c-chk-doc.corr-date and ub.shift-obj.open-time > buf_c-chk-doc.corr-time then next .
-          if ub.shift-obj.close-date = buf_c-chk-doc.corr-date and ub.shift-obj.close-time < buf_c-chk-doc.corr-time then next .
+        vv = 0 .
+
+    for each ub.shift-obj no-lock where ub.shift-obj.obj-code = buf_c-chk-doc.obj-code and ub.shift-obj.obj-type = buf_c-chk-doc.obj-type and 
+      (ub.shift-obj.open-date < buf_c-chk-doc.corr-date or ub.shift-obj.open-date = buf_c-chk-doc.corr-date) and
+      ub.shift-obj.status_ <> {&sht-expected} and
+      if ub.shift-obj.close-date <> ? then (ub.shift-obj.close-date > buf_c-chk-doc.corr-date or ub.shift-obj.close-date = buf_c-chk-doc.corr-date) else ub.shift-obj.close-date = ?:
+      if ub.shift-obj.open-date = buf_c-chk-doc.corr-date and ub.shift-obj.open-time > buf_c-chk-doc.corr-time then next .
+      if ub.shift-obj.close-date = buf_c-chk-doc.corr-date and ub.shift-obj.close-time < buf_c-chk-doc.corr-time then next .
 
           put stream OutStr-html unformatted
             '<TD text_wrap="true" style="text-align: center;">' + string(ub.shift-obj.shift-date,"99.99.9999") + " " + string(ub.shift-obj.shift-name) + '</TD>' skip
             .
-          ii = 1 .  
+          vv = 1 .  
           leave .
         end.
-        if ii = 0 then 
+        if vv = 0 then 
         do:
           put stream OutStr-html unformatted
             '<TD text_wrap="true" style="text-align: center;"></TD>' skip
