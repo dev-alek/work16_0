@@ -137,7 +137,10 @@ define variable vEmptying            as decimal   no-undo .
 define variable vRefund              as decimal   no-undo .
 define variable vCtrlvalve           as decimal   no-undo .
 define variable pol14                as decimal   no-undo .
-    
+define variable vneftbaza            as character no-undo .
+define variable vautopred            as character no-undo .    
+define variable v-neftbaza           as character no-undo .
+define variable v-autopred           as character no-undo .  
 define stream Out-Stream.
 define stream OutStr-html.
 
@@ -239,9 +242,15 @@ do
       v-obj-type = buf_trn-doc.cli-type
       .
     run clients-write(INPUT v-obj-code,INPUT v-obj-type,OUTPUT v-producer) no-error .
- /* end. */   
-  /*Водитель-экспедитор*/
-  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-fio-driver},OUTPUT v-driver) no-error .
+    /* end. */   
+    /*Водитель-экспедитор*/
+    run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-fio-driver},OUTPUT v-driver) no-error .
+    /* Грузоотправитель */
+    run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-ptbobj},OUTPUT v-neftbaza) no-error .
+    run clients-write(INPUT integer(entry(2,v-neftbaza,';')), INPUT (entry(1,v-neftbaza,';')), OUTPUT vneftbaza) .
+    /* Перевозчик */
+    run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-autoent},OUTPUT v-autopred) no-error .
+    run clients-write(INPUT integer(entry(2,v-autopred,';')), INPUT (entry(1,v-autopred,';')), OUTPUT vautopred) no-error .
   /* Государственный номер АЦ */
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-car-num},OUTPUT v-number-car) no-error .  
   /*Дата прибытия*/   
@@ -472,6 +481,26 @@ do
     '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
 
+    '<TR>' skip
+    '<TD colspan="5" style="">1.1. Наименование грузоотправителя:</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + vneftbaza + '</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '</TR>'skip
+    
+     '<TR>' skip
+    '<TD colspan="5" style="">1.2. Наименование перевозчика:</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + vautopred + '</TD>' skip
+    '</TR>'skip
+
+    '<TR>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '</TR>'skip
+    
     '<TR>' skip
     '<TD colspan="5" style="">2. Марка СУГ:</TD>' skip
     '<TD colspan="9" style="text-align: center;">' + v-mark-sug + '</TD>' skip

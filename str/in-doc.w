@@ -635,8 +635,8 @@ DEFINE BUTTON b-notes
      SIZE 11.5 BY 1.
 
 DEFINE BUTTON b-calc-tp
-     LABEL "Расчет ТП" 
-     SIZE 11 BY 1.
+     LABEL "ТП поставки" 
+     SIZE 12 BY 1.
 
 DEFINE BUTTON b-parts
      LABEL "Па&рт":L
@@ -1400,7 +1400,7 @@ END.
 
 &Scoped-define SELF-NAME b-calc-tp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-calc-tp d-in-doc
-ON CHOOSE OF b-calc-tp IN FRAME d-in-doc /* Расчет ТП */
+ON CHOOSE OF b-calc-tp IN FRAME d-in-doc /* ТП поставки */
 DO:
   run str/in-laddsugtp.w (
     input ParParentproc, 
