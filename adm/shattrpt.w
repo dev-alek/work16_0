@@ -1553,7 +1553,7 @@ hide dop-info sec-fields in frame {&frame-name} .
       end.  
   
       run cur-time in this-procedure ( output v-date, output v-time).
-      v-time-hour = integer(v-time) / 3600.
+      v-time-hour = truncate(integer(v-time) / 3600, 0).
       v-time-min  = (integer(v-time) - (v-time-hour * 3600)) / 60 .
   
       run sys-time_get-comp-user-name in this-procedure
