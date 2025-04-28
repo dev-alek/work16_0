@@ -279,6 +279,7 @@ if p-grp = "no" then do:
     sym4     (if rep-tipe = "invent-gold" OR rep-tipe = "sl-gold" then temp-str.tb-code else temp-str.b-code)   @ temp-str.b-code
     sym5     temp-str.OKEI
     sym6     temp-str.unit-base
+    &if "{1}" = "sl"                 &then sym7  temp-str.a-qnty &endif  
 /*    &if "{1}" = "invent"                  &then sym8    temp-str.price-befor   &endif*/
 /*    &if "{1}" = "invent-gold"             &then sym8 sym11   temp-str.price-befor temp-str.Price-after  &endif*/
     &if "{1}" = "sl" or "{1}" = "sl-gold" &then sym14 temp-str.UBL                &endif                      
