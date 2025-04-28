@@ -10,6 +10,7 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.ptrl.par.ptrlpropproc: 

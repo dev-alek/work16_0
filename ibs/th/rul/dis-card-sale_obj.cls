@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: dis-card-sale_obj.cls $
+$Archive: ibs/th/rul/dis-card-sale_obj.cls $
 
 Класс Суммы по ДК по одной продаже
 
@@ -18,7 +18,7 @@ Creation date: 03/04/07
 class Ibs.Th.Rul.Dis-card-sale_obj:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: dis-card-sale_obj.cls $ $Revision: aea5316774be, 0, rls $".
   define protected variable v_pp as widget-handle no-undo. /*parparentproc*/
   define protected variable v_ph as handle no-undo.        /*p-parent-handle*/
   define protected variable v_lh as widget-handle no-undo. /*p-log-handle*/
@@ -448,4 +448,4 @@ method public logical esys-add-dump (
   end.
   return yes.
 end method.
-end class.
+end class.block-level on error undo, throw.

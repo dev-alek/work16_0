@@ -24,7 +24,7 @@ using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 using ibs.th.str.clients.*.
 using ibs.th.ref.* from propath.
-
+block-level on error undo, throw.
 
 class ibs.th.gbl.storage.normloss: 
   

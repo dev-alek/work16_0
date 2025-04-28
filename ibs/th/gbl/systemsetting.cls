@@ -14,6 +14,7 @@
   */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 class ibs.th.gbl.systemsetting inherits   ibs.th.gbl.sys.objth :
    define override public property vss-revision    as character no-undo init "$Revision:$":U get .

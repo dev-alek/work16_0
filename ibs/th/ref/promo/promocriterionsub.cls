@@ -19,7 +19,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 USING ibs.th.ref.promo.*.
-
+block-level on error undo, throw.
 
 class ibs.th.ref.promo.PromoCriterionSub implements ithsub: 
 define variable vss-revision    as character no-undo initial "$Revision$":U .

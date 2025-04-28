@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fe417850d298, 1024, rls $
+$Author: ASMorozov $
+$Date: Wed Aug 23 16:58:40 2017 +0300 $
+$Workfile: WayBill.cls $
+$Archive: ibs/th/bge/egais/WayBill.cls $
 
 Библиотека работы с накладной ЕГАИС.
 
@@ -18,6 +18,7 @@ Creation date: 11/11/15
 using ibs.th.bge.egais.*.
 using Ibs.Th.Gbl.ProgressBar.
 using Ibs.Th.ref.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.egais.WayBill inherits EGAISUTM:
 

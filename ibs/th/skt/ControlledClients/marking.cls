@@ -21,6 +21,7 @@ USING ibs.th.skt.Adapters.LogWrite.
 USING ibs.th.gbl.propmap.
 USING ibs.th.gbl.sys.objsrv.
 USING ibs.th.gbl.sys.objth.
+block-level on error undo, throw.
 /*using ibs.th.skt.ControlledClients.GisMtCDN.*/
 
 CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc: 

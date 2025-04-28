@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: dis-tot_.cls $
+$Archive: ibs/th/rul/dis-tot_.cls $
 
 Класс ИТОГИ ПО ДК ПО ОБЪЕКТУ dt-code = 0
 
@@ -19,7 +19,7 @@ Creation date: 01/28/07
 class Ibs.Th.Rul.Dis-tot_:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: dis-tot_.cls $ $Revision: aea5316774be, 0, rls $".
   define protected variable v_pp as widget-handle no-undo. /*parparentproc*/
   define protected variable v_ph as handle no-undo.        /*p-parent-handle*/
   define protected variable v_lh as widget-handle no-undo. /*p-log-handle*/
@@ -739,4 +739,4 @@ class Ibs.Th.Rul.Dis-tot_:
   method public override character ToString( ):
     return substitute("ДК &1 глобальный итог срез &2", d-card, dt-code ).
   end method.
-end class.
+end class.block-level on error undo, throw.

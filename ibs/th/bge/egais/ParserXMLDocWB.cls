@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: cf23547cff3d, 1066, rls $
+$Author: ASMorozov $
+$Date: Fri Oct 06 18:34:34 2017 +0300 $
+$Workfile: ParserXMLDocWB.cls $
+$Archive: ibs/th/bge/egais/ParserXMLDocWB.cls $
 
 Парсинг ЕГАИС.
 
@@ -16,6 +16,7 @@ Creation date: 11/11/15
 */
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.egais.ParserXMLDocWB:
 

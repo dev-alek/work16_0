@@ -1,6 +1,6 @@
 /*
 
-$Revision$
+$Revision: 41634926db53, 2860, rls $
 $Author: $
 $Date: $
 $Workfile: $
@@ -14,7 +14,7 @@ Author: Molotkov Sergey
 Creation date: 04/12/17
 
 */
-
+block-level on error undo, throw.
 enum ibs.th.bge.1crn.enum-dnst-ms-type:
   define enum
     enare15 = 1 /* ареометр калиброванный при 15 градусах */
@@ -25,3 +25,4 @@ enum ibs.th.bge.1crn.enum-dnst-ms-type:
     enchannelno = 6 /* канал измерения плотности (без поточного плотномера) */
   .
 end enum .
+

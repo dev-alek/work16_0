@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 03fdc2c69603, 3168, rls $
+$Author: SSlivenko $
+$Date: 2022/12/27 12:54:23 $
+$Workfile: impdoc-reason.cls $
+$Archive: ibs/th/bge/1crn/import/impdoc-reason.cls $
 
 Класс импорта данных imposnovcorr из 1С
 
@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 using ibs.th.gbl.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impdoc-reason implements ibs.th.bge.1crn.import.iimpsubject: 
   

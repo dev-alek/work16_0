@@ -19,6 +19,7 @@ using Progress.Lang.*.
 using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.Commands.markingcmd inherits ICommand: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

@@ -22,6 +22,7 @@ using ibs.th.gbl.sys.env.ini.
 using ibs.th.gbl.lib.
 using ibs.th.gbl.systemsetting.
 using ibs.th.gbl.sys.SystemAux.
+block-level on error undo, throw.
 
 class ibs.th.gbl.sys.objsrv:
   &glob GlobObjSrvClass yes

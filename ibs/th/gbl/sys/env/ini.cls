@@ -15,7 +15,7 @@
 using Progress.Lang.*.
 using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.sys.env.ini.section.val.
-
+block-level on error undo, throw.
 class ibs.th.gbl.sys.env.ini  inherits objth: 
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .
   define override public property vss-author      as character no-undo init "$Author:$":U get.

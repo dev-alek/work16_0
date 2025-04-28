@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1d6ea42ddaad, 1178, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:20:27 2017 +0300 $
+$Workfile: placelib.cls $
+$Archive: ibs/th/str/placelib.cls $
 
 
 
@@ -16,7 +16,7 @@ Creation date: 01/30/15
 */
 
 using Progress.Lang.*.
-
+block-level on error undo, throw.
 
 class ibs.th.str.placelib: 
 

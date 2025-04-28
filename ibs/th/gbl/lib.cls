@@ -17,6 +17,7 @@ using ibs.th.gbl.sys.objth.
 using ibs.th.str.marking.handlers.tree.
 using ibs.th.gbl.keyrec.
 using Ibs.Th.Gbl.gbl-print.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.lib inherits objth:

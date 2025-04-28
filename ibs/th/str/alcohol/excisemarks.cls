@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 293e7f90d120, 2437, rls $
+$Author: ASMorozov $
+$Date: Ср июн 10 21:13:47 2020 +0300 $
+$Workfile: excisemarks.cls $
+$Archive: ibs/th/str/alcohol/excisemarks.cls $
 
 Класс работы с акцизными марками.
 
@@ -21,7 +21,7 @@ Creation date: 01/30/15
 using Progress.Lang.*.
 using ibs.th.str.alcohol.*.
 using ibs.th.gbl.*.
-
+block-level on error undo, throw.
 class ibs.th.str.alcohol.excisemarks : 
 
     { cmp/str-glbl.i class}

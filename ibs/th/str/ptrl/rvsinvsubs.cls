@@ -13,7 +13,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.collection.asubjects.
 using ibs.th.str.ptrl.*.
 using ibs.th.gbl.storage.*.
-
+block-level on error undo, throw.
 
 class ibs.th.str.ptrl.rvsinvsubs inherits asubjects: 
 

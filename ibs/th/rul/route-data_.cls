@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 84dd6171ad45, 3327, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: route-data_.cls $
+$Archive: ibs/th/rul/route-data_.cls $
 
 Класс  Данные для экспорта/импорта
 
@@ -27,7 +27,7 @@ class Ibs.Th.Rul.route-data_
     define override public property vss-description as character no-undo init "Класс  Данные для экспорта/импорта" get.
    
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: route-data_.cls $ $Revision: 84dd6171ad45, 3327, rls $".
   { rul/tempcxml.i }
   { gbl/tmpreldf.i class }
 &scop route-export 1
@@ -1137,4 +1137,4 @@ class Ibs.Th.Rul.route-data_
         objSetError:setError(iTxt).
    end.
       
-end class.
+end class.block-level on error undo, throw.

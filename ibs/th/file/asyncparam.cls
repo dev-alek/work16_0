@@ -10,6 +10,7 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 class ibs.th.file.asyncparam: 
     define public property nameParam as character  no-undo

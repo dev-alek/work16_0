@@ -12,7 +12,7 @@
 using Progress.Lang.*.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.TypeMap.
-
+block-level on error undo, throw.
 /*block-level on error undo, throw.*/
 
 class ibs.th.str.cash.CashDevice inherits TypeMap:

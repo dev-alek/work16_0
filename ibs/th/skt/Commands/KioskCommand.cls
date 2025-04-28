@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 43c09557cdee, 3584, rls $
+$Author: DRuban $
+$Date: 2023/12/28 12:56:36 $
+$Workfile: KioskCommand.cls $
+$Archive: ibs/th/skt/Commands/KioskCommand.cls $
 
 
 
@@ -18,6 +18,7 @@ Creation date: 01/30/15
 using Progress.Lang.*.
 using ibs.th.skt.Adapters.*.
 using ibs.th.skt.Commands.*.
+block-level on error undo, throw.
 
 &scop CRLF chr(13) + chr(10)
 &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)

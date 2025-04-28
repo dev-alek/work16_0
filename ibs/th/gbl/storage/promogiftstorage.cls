@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e455fc319afd, 3602, rls $
+$Author: ARostovtsev $
+$Date: 2023/12/28 12:56:37 $
+$Workfile: promogiftstorage.cls $
+$Archive: ibs/th/gbl/storage/promogiftstorage.cls $
  
 Storage Gift Action
 
@@ -21,13 +21,13 @@ using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 using ibs.th.ref.promo.*.
 
-
+block-level on error undo, throw.
 class ibs.th.gbl.storage.promoGiftstorage: 
-  define variable vss-revision    as character no-undo initial "$Revision$":U .
-  define variable vss-author      as character no-undo initial "$Author$":U .
-  define variable vss-date        as character no-undo initial "$Date$":U .
-  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-  define variable vss-archive     as character no-undo initial "$Archive$":U . 
+  define variable vss-revision    as character no-undo initial "$Revision: e455fc319afd, 3602, rls $":U .
+  define variable vss-author      as character no-undo initial "$Author: ARostovtsev $":U .
+  define variable vss-date        as character no-undo initial "$Date: 2023/12/28 12:56:37 $":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile: promogiftstorage.cls $":U .
+  define variable vss-archive     as character no-undo initial "$Archive: ibs/th/gbl/storage/promogiftstorage.cls $":U . 
   define variable vss-description as character no-undo initial "Storage Gift Action". 
 
   

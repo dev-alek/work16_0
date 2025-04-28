@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7162739bf0ea, 3555, rls $
+$Author: ARostovtsev $
+$Date: 2023/11/27 08:31:18 $
+$Workfile: trnutd.p $
+$Archive: ibs/th/str/utd/trnutd.p $
 
 Импорт накладных из временной таблицы все надо переделать.
 
@@ -31,11 +32,11 @@ define input  PARAMETER TABLE FOR  tt-excisemarks.
 define output parameter p-msg    as character no-undo .
 define output parameter p-ok-doc as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7162739bf0ea, 3555, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ARostovtsev $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/11/27 08:31:18 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: trnutd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ibs/th/str/utd/trnutd.p $":U .
 define variable vss-description as character no-undo init "Импорт накладных из временной таблицы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b187afc25aab, 810, rls $
+$Author: ASMorozov $
+$Date: Mon Sep 26 12:45:42 2016 +0300 $
+$Workfile: listmanager.cls $
+$Archive: ibs/th/gbl/listmanager.cls $
 
 Работа со списком данных произвольного количества элементов
 
@@ -16,6 +16,7 @@ Creation date: 10/09/16
 */
 
 using ibs.th.gbl.*.
+block-level on error undo, throw.
 
 class ibs.th.gbl.listmanager :
 

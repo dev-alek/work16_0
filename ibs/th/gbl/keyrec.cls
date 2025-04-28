@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: keyrec.cls $
+$Archive: ibs/th/gbl/keyrec.cls $
 
 
 
@@ -16,6 +16,7 @@ Creation date: 01/30/15
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.keyrec inherits ibs.th.gbl.sys.objth: 

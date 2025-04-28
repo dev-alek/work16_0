@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f4eb1c45dbd4, 240, rls $
+$Author: ASMorozov $
+$Date: Mon Aug 31 16:26:51 2015 +0400 $
+$Workfile: GetLogStrProc.p $
+$Archive: ibs/th/skt/Adapters/GetLogStrProc.p $
 
 
 

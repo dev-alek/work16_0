@@ -15,6 +15,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.map.mapstring.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.propmap inherits objth:

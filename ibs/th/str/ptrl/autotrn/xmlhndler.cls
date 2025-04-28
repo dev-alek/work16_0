@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7685cb2d18a9, 2983, rls $
+$Author: SSlivenko $
+$Date: Ср апр 06 16:23:43 2022 +0300 $
+$Workfile: xmlhndler.cls $
+$Archive: ibs/th/str/ptrl/autotrn/xmlhndler.cls $
 
 Класс работы с секциями по топливу.
 
@@ -16,7 +16,7 @@ Creation date: 08/15/2015
 */ 
 
 using progress.lang.*.
-
+block-level on error undo, throw.
 class ibs.th.str.ptrl.autotrn.xmlhndler : 
 
 

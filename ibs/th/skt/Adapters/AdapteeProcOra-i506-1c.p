@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0d5da778db5d, 1549, rls $
+$Author: ASMorozov $
+$Date: Wed Oct 17 22:18:22 2018 +0300 $
+$Workfile: AdapteeProcOra-i506-1c.p $
+$Archive: ibs/th/skt/Adapters/AdapteeProcOra-i506-1c.p $
 
 
 

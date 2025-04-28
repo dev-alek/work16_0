@@ -12,8 +12,10 @@ Creation date: 31 июля 2019 г.
 
 */
 
-using System.Runtime.InteropServices.ComTypes.IMoniker from assembly.
 
+
+using System.Runtime.InteropServices.ComTypes.IMoniker from assembly.
+block-level on error undo, throw.
 {cmp/str-glbl.i }
 { ibs\th\ref\code\codefrmpar.i }
 

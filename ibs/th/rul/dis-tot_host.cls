@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: dis-tot_host.cls $
+$Archive: ibs/th/rul/dis-tot_host.cls $
 
  Î‡ÒÒ »“Œ√» œŒ ƒ  œŒ Œ¡⁄≈ “” dt-code = 0
 
@@ -19,7 +19,7 @@ Creation date: 01/28/07
 class Ibs.Th.Rul.Dis-tot_host:
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: dis-tot_host.cls $ $Revision: aea5316774be, 0, rls $".
   define protected variable v_pp as widget-handle no-undo. /*parparentproc*/
   define protected variable v_ph as handle no-undo.        /*p-parent-handle*/
   define protected variable v_lh as widget-handle no-undo. /*p-log-handle*/
@@ -735,4 +735,4 @@ class Ibs.Th.Rul.Dis-tot_host:
   method public override character ToString( ):
     return substitute("&1 ÙËÏ‡ &2 ÒÂÁ &3", d-card , host-code, dt-code ).
   end method.
-end class.
+end class.block-level on error undo, throw.

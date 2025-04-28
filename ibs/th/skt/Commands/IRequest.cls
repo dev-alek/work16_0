@@ -17,6 +17,7 @@ Creation date: 01/30/15
 
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.HeadHttp from propath.
+block-level on error undo, throw.
 
 class ibs.th.skt.Commands.IRequest abstract:  
 

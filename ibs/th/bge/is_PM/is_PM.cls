@@ -10,7 +10,7 @@
   ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
-
+block-level on error undo, throw.
 
 class ibs.th.bge.is_PM.is_PM: 
   

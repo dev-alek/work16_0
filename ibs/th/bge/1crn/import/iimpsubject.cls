@@ -10,6 +10,7 @@
  ----------------------------------------------------------------------*/
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 interface ibs.th.bge.1crn.import.iimpsubject: 

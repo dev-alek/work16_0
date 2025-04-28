@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2bd1eb1a030d, 1125, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:54 2017 +0300 $
+$Workfile: impcli-grps.cls $
+$Archive: ibs/th/bge/1crn/import/impcli-grps.cls $
 
 Класс ипорта данных cli-grps (группы контрагентов) из 1С
 
@@ -17,6 +17,7 @@ Creation date: 02/10/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impcli-grps implements ibs.th.bge.1crn.import.iimpsubject: 
   

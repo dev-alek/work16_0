@@ -13,7 +13,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.TypeMap.
 
-/*block-level on error undo, throw.*/
+block-level on error undo, throw.
 
 class ibs.th.str.cash.CashSection inherits TypeMap:
    define override public property vss-revision    as character no-undo init "$Revision:$":U get .

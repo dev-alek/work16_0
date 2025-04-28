@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2d29ce84a063, 3279, rls $
+$Author: VSpiridonov $
+$Date: 2023/02/22 07:38:42 $
+$Workfile: ggoattr.cls $
+$Archive: ibs/th/gbl/ggoattr.cls $
 
 
 
@@ -16,6 +16,7 @@ Creation date: 01/30/15
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.ggoattr: 

@@ -11,6 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impprice-doc implements ibs.th.bge.1crn.import.iimpsubject: 
   

@@ -22,6 +22,7 @@ using ibs.th.skt.Commands.*.
 using ibs.th.skt.ControlledClients.*.
 using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
+block-level on error undo, throw.
 
 &scop CRLF chr(10) + chr(13)
 &scop HdEnd chr(10) + chr(13)  + chr(10) + chr(13)

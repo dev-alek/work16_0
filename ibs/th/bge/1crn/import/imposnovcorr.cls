@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8e367956df47, 2164, rls $
+$Author: EShklyar $
+$Date: Wed Dec 25 15:23:56 2019 +0300 $
+$Workfile: imposnovcorr.cls $
+$Archive: ibs/th/bge/1crn/import/imposnovcorr.cls $
 
 Класс импорта данных imposnovcorr из 1С
 
@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.gbl.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.imposnovcorr implements ibs.th.bge.1crn.import.iimpsubject: 
   

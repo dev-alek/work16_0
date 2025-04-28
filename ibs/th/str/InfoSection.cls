@@ -17,6 +17,7 @@ Creation date: 09/29/2015
 
 using Progress.Lang.*.
 using ibs.th.str.*.
+block-level on error undo, throw.
 
 class ibs.th.str.InfoSection:
   &global-define list-shape "Без горловины,Квадратная/прямоугольная,Эллиптическая,Круглая"

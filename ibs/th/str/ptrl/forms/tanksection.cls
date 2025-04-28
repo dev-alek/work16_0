@@ -16,7 +16,7 @@ using OpenEdge.Core.* from propath.
 using System.Windows.Forms.* from assembly.
 using ibs.th.str.ptrl.forms.* from propath.
 using ibs.th.gbl.gbl-var from propath.
-
+block-level on error undo, throw.
 &global-define list-shape "Без горловины,Квадратная/прямоугольная,Эллиптическая,Круглая"
 &global-define list-shape-num 4
 

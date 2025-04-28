@@ -11,7 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.str.ptrl.*.
-
+block-level on error undo, throw.
 
 class ibs.th.gbl.storage.rvsinvstr: 
   

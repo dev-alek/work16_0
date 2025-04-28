@@ -12,6 +12,7 @@
 using Progress.Lang.*.
 using ibs.th.ref.*.
 using ibs.th.gbl.storage.* from propath.
+block-level on error undo, throw.
 
 
 class ibs.th.ref.normwastsub: 

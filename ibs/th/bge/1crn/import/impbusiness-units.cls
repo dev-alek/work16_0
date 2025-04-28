@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 07b627212def, 1105, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: impbusiness-units.cls $
+$Archive: ibs/th/bge/1crn/import/impbusiness-units.cls $
 
 Класс ипорта данных business-units из 1С
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impbusiness-units implements ibs.th.bge.1crn.import.iimpsubject: 
   

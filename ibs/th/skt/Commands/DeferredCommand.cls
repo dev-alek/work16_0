@@ -11,6 +11,7 @@
 
 using Progress.Lang.*.
 using ibs.th.skt.Commands.*.
+block-level on error undo, throw.
 
 
 class ibs.th.skt.Commands.DeferredCommand inherits ICommand: 

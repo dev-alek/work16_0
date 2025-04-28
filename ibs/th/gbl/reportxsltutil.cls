@@ -11,6 +11,7 @@
 
 USING Progress.Lang.*.
 using ibs.th.gbl.*.
+block-level on error undo, throw.
 
 
 

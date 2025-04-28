@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: eebbd9e2b4b7, 2528, test $
+$Author: SSlivenko $
+$Date: Вт авг 04 12:57:18 2020 +0300 $
+$Workfile: vsdsub.cls $
+$Archive: ibs/th/str/mercury/vsdsub.cls $
 
 Сущность TH ВСД
 
@@ -22,7 +22,7 @@ using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 using ibs.th.str.clients.*.
 using ibs.th.str.mercury.*.
-
+block-level on error undo, throw.
 class ibs.th.str.mercury.vsdsub implements ithsub: 
   
   { cmp/str-glbl.i class}

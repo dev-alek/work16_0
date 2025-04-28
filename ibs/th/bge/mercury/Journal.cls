@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 041f4b857fac, 2369, rls $
+$Author: SSlivenko $
+$Date: Ср июн 10 21:13:42 2020 +0300 $
+$Workfile: Journal.cls $
+$Archive: ibs/th/bge/mercury/Journal.cls $
 
 Класс журнала работы с Меркурием
 
@@ -18,7 +18,7 @@ Creation date: 05/03/18
 
 using Progress.Lang.*.
 using ibs.th.bge.mercury.*.
-
+block-level on error undo, throw.
 class ibs.th.bge.mercury.Journal :
 {cmp/str-glbl.i class}
 

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3950c9e6675a, 2392, rls $
+$Author: ASMorozov $
+$Date: Ñð èþí 10 21:13:44 2020 +0300 $
+$Workfile: thsubject.cls $
+$Archive: ibs/th/gbl/thsubject.cls $
 
 
 
@@ -18,6 +18,7 @@ Creation date: 19/01/18
 
 using Progress.Lang.*.
 using ibs.th.str.doc.trn.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.thsubject: 

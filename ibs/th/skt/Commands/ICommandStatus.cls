@@ -12,6 +12,7 @@
 using Progress.Lang.*.
 using ibs.th.gbl.TypeMap.
 using ibs.th.gbl.propmap.
+block-level on error undo, throw.
 
 class ibs.th.skt.Commands.ICommandStatus inherits TypeMap:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

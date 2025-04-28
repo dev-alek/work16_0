@@ -1,11 +1,11 @@
  
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: abb76b092f5a, 2370, rls $
+$Author: SSlivenko $
+$Date: Ср июн 10 21:13:42 2020 +0300 $
+$Workfile: ParserXMLGds.cls $
+$Archive: ibs/th/bge/mercury/ParserXMLGds.cls $
 
 Парсинг товаров из Меркурия
 
@@ -17,7 +17,7 @@ Creation date: 10/10/08
 
 using Progress.Lang.*.
 using ibs.th.bge.mercury.*.
-
+block-level on error undo, throw.
 class ibs.th.bge.mercury.ParserXMLGds:
   { str/temp_merq.i}
     

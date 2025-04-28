@@ -20,7 +20,7 @@ using ibs.th.str.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.ref.*.
 using ibs.th.gbl.ptrl.par.*.
-
+block-level on error undo, throw.
 
 
 class ibs.th.str.InfoSectionsTotal: 

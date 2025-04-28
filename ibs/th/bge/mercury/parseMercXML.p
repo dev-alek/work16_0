@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d6a01d2b837a, 2559, rls $
+$Author: SSlivenko $
+$Date: Вт авг 11 18:31:46 2020 +0300 $
+$Workfile: parseMercXML.p $
+$Archive: ibs/th/bge/mercury/parseMercXML.p $
 
 Парсер ВСД
 
@@ -21,7 +21,7 @@ using ibs.th.str.gds.*.
 using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.str.clients.*.
-
+block-level on error undo, throw.
 define input parameter p-vsdId as int64 no-undo .
 
 define variable v-appId as character no-undo .

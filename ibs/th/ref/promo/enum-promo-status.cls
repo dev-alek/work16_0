@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 18f7b619da54, 1481, rls $
+$Author: DARuban $
+$Date: Thu Aug 30 10:41:44 2018 +0300 $
+$Workfile: enum-promo-status.cls $
+$Archive: ibs/th/ref/promo/enum-promo-status.cls $
 
 статусы промо-акций
 
@@ -14,7 +14,7 @@ Author: Molotkov Sergey
 Creation date: 11/07/18
 
 */
-
+block-level on error undo, throw.
 enum ibs.th.ref.promo.enum-promo-status:
   define enum
     ensetting   = 0 /* выполняется настройка */

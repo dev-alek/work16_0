@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 189a413f5bcf, 825, rls $
+$Author: ASMorozov $
+$Date: Thu Sep 29 16:06:21 2016 +0300 $
+$Workfile: extFormF1value.cls $
+$Archive: ibs/th/bge/egais/extFormF1value.cls $
 
 Класс содержащий структуру для создания конкретного объекта содержащий связку справки 1 и товара ЕГАИС и ее свойтсва (egais-info).
 
@@ -16,6 +16,7 @@ Creation date: 15/03/16
 */
 
 using Progress.Lang.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.egais.ExtFormF1Value: 

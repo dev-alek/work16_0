@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0c3870f45d2b, 1121, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:54 2017 +0300 $
+$Workfile: imppayment-type-group.cls $
+$Archive: ibs/th/bge/1crn/import/imppayment-type-group.cls $
 
 Класс ипорта данных payment-type-group из 1С
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.imppayment-type-group implements ibs.th.bge.1crn.import.iimpsubject: 
   

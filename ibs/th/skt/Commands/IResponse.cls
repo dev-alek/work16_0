@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b51c2b536354, 3586, rls $
+$Author: ARostovtsev $
+$Date: 2023/12/28 12:56:36 $
+$Workfile: IResponse.cls $
+$Archive: ibs/th/skt/Commands/IResponse.cls $
 
 
 
@@ -83,4 +83,4 @@ class ibs.th.skt.Commands.IResponse abstract:
 	end destructor.
  
     
-end class.
+end class.block-level on error undo, throw.

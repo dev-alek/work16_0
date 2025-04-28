@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: cb37b650f92a, 1185, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:20:27 2017 +0300 $
+$Workfile: typl-ad.cls $
+$Archive: ibs/th/ref/typl-ad.cls $
 
 
 
@@ -17,6 +17,7 @@ Creation date: 01/11/17
 
 using Progress.Lang.*.
 using ibs.th.gbl.gbl-var.
+block-level on error undo, throw.
 
       
 class ibs.th.ref.typl-ad: 

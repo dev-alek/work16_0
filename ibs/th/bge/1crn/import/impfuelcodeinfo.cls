@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.gbl.*.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impfuelcodeinfo implements ibs.th.bge.1crn.import.iimpsubject: 
   

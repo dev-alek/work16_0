@@ -24,6 +24,7 @@ using ibs.th.str.utd.handlers.introduce.
 using ibs.th.gbl.env.prmtrs.edo.
 using ibs.th.gbl.sys.objsrv.
 using ibs.th.str.marking.sts.*.
+block-level on error undo, throw.
 
 class ibs.th.skt.ControlledClients.TSD inherits objth: 
      define override public property vss-revision    as character no-undo init "$Revision:$":U get .

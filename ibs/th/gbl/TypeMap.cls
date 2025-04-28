@@ -16,6 +16,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.propmap.
 using ibs.th.gbl.map.mapstring.
 using ibs.th.gbl.sys.objth.
+block-level on error undo, throw.
 
 
 class Ibs.Th.Gbl.TypeMap inherits objth abstract:

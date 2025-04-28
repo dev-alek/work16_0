@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 38e7c64866ed, 3182, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:25 $
+$Workfile: asubjects.cls $
+$Archive: ibs/th/gbl/collection/asubjects.cls $
 
 абстрактный класс на основе интерфейса коллекций
 
@@ -17,6 +17,7 @@ Creation date: 26/09/17
 
 using Progress.Lang.*.
 using ibs.th.gbl.collection.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.collection.asubjects implements isubjects:

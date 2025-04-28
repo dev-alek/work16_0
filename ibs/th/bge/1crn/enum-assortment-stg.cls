@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b638ac123670, 1142, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:55 2017 +0300 $
+$Workfile: enum-assortment-stg.cls $
+$Archive: ibs/th/bge/1crn/enum-assortment-stg.cls $
 
 коды этапов ввозда-вывода в ассортимент согласно протоколу взаимодействия с 1С
 
@@ -14,7 +14,7 @@ Author: Molotkov Sergey
 Creation date: 21/11/17
 
 */
-
+block-level on error undo, throw.
 enum ibs.th.bge.1crn.enum-assortment-stg:
   define enum
     enactive =  1 /* ввод в ассортимент                           (Разрешены продажи и закупки), ИЖТ основная */
@@ -24,3 +24,4 @@ enum ibs.th.bge.1crn.enum-assortment-stg:
     enarchive    =  5 /* перенос в архив/отказ                    (Запрещены продажи и закупки),              */
   .
 end enum .
+

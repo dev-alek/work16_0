@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 64ee1a69159c, 2047, rls $
+$Author: SSlivenko $
+$Date: Fri Oct 18 11:00:57 2019 +0300 $
+$Workfile: progressbar.cls $
+$Archive: ibs/th/gbl/progressbar.cls $
 
 Класс визуализация прогресс бара
 
@@ -16,6 +16,7 @@ Creation date: 10/09/07
 Пример использовани
 
   using Ibs.Th.Gbl.ProgressBar.
+block-level on error undo, throw.
   define variable v-i as integer no-undo .
   define variable v-prg as class ProgressBar no-undo .
 
@@ -45,7 +46,7 @@ CLASS Ibs.Th.Gbl.ProgressBar
   &scop frame-name progressbar
   { cmp/str-glbl.i class }
   &scoped-define vssseq {&sequence}
-  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+  define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: progressbar.cls $ $Revision: 64ee1a69159c, 2047, rls $".
 
     define protected variable v-stepvalue         as int64      no-undo.
     define protected variable v-prc               as character  no-undo.

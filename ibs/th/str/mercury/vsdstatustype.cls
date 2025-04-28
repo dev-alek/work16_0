@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 41c4ffaaf087, 1404, rls $
+$Author: DARuban $
+$Date: Thu Jun 28 15:24:34 2018 +0300 $
+$Workfile: vsdstatustype.cls $
+$Archive: ibs/th/str/mercury/vsdstatustype.cls $
 
 Константы для меркурия
 
@@ -17,7 +17,7 @@ Creation date: 04/23/18
 
 */
 using Progress.Lang.*.
-
+block-level on error undo, throw.
 
 class ibs.th.str.mercury.vsdstatustype: 
   

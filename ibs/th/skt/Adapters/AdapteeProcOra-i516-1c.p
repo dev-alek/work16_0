@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 315b966a6a9b, 3487, rls $
+$Author: BelovaMM $
+$Date: 2023/10/16 15:13:36 $
+$Workfile: AdapteeProcOra-i516-1c.p $
+$Archive: ibs/th/skt/Adapters/AdapteeProcOra-i516-1c.p $
 
 
 
@@ -26,11 +27,11 @@ Creation date: 01/30/15
 using ibs.th.skt.*.
 using ibs.th.skt.Adapters.*.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 315b966a6a9b, 3487, rls $":U .
+define variable vss-author      as character no-undo init "$Author: BelovaMM $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:36 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: AdapteeProcOra-i516-1c.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ibs/th/skt/Adapters/AdapteeProcOra-i516-1c.p $":U .
 define variable vss-description as character no-undo init "Импорт накладных из временной таблицы".
 
 { cmp/vssrevis.i }

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 883344aa0109, 3480, rls $
+$Author: SSlivenko $
+$Date: 2023/10/16 15:13:35 $
+$Workfile: mercury.cls $
+$Archive: ibs/th/bge/mercury/mercury.cls $
 
 Класс работы с ВСД
 
@@ -21,7 +21,7 @@ using ibs.th.str.gds.*.
 using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.str.clients.*.
-
+block-level on error undo, throw.
 
 
 class ibs.th.bge.mercury.mercury:

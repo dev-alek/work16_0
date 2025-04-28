@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: eebbd9e2b4b7, 2528, test $
+$Author: SSlivenko $
+$Date: ¬т авг 04 12:57:18 2020 +0300 $
+$Workfile: gdsmercstr.cls $
+$Archive: ibs/th/gbl/storage/gdsmercstr.cls $
 
 Связка товара Mercury с товаром TH 
 Модуль взаимодействия сущностей TH с базой данных
@@ -21,6 +21,7 @@ using Progress.Lang.*.
 using ibs.th.str.mercury.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
+block-level on error undo, throw.
 
 
 class ibs.th.gbl.storage.gdsmercstr: 

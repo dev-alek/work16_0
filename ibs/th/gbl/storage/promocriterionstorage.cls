@@ -20,7 +20,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.storage.*.
 using ibs.th.gbl.*.
 using ibs.th.ref.promo.*.
-
+block-level on error undo, throw.
 
 class ibs.th.gbl.storage.promoCriterionstorage: 
   define variable vss-revision    as character no-undo initial "$Revision$":U .

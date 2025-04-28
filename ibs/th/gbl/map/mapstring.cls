@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 05c544fec1e9, 3625, test $
+$Author: DRuban $
+$Date: 2024/01/12 08:26:16 $
+$Workfile: mapstring.cls $
+$Archive: ibs/th/gbl/map/mapstring.cls $
 
 карта по строковому ключу. содержит коллекцию объектов и предоставляет объекты по строковому ключу.
 
@@ -19,6 +19,7 @@ using Progress.Lang.*.
 using ibs.th.gbl.collection.*.
 using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.map.mapstringgbl.
+block-level on error undo, throw.
 
 class ibs.th.gbl.map.mapstring inherits ibs.th.gbl.sys.objth:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

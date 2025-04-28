@@ -14,7 +14,7 @@ using Progress.Windows.Form.
 using ibs.th.str.*.
 using ibs.th.str.ptrl.forms.* from propath.
 using System.Windows.Forms.* from assembly.
-
+block-level on error undo, throw.
 
 class ibs.th.str.ptrl.forms.tanksections inherits Form: 
   

@@ -15,7 +15,7 @@ using ibs.th.gbl.map.mapstring.
 using ibs.th.gbl.sys.objth.
 using ibs.th.gbl.sys.objsrv.
 using ibs.th.gbl.TypeMap.
-
+block-level on error undo, throw.
 
 class ibs.th.str.utd.sts.th inherits TypeMap:
   define override public property vss-revision    as character no-undo init "$Revision:$":U get .

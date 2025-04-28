@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 03fdc2c69603, 3168, rls $
+$Author: SSlivenko $
+$Date: 2022/12/27 12:54:23 $
+$Workfile: impcontracts.cls $
+$Archive: ibs/th/bge/1crn/import/impcontracts.cls $
 
 Класс ипорта данных impcontracts из 1С
 
@@ -20,6 +20,7 @@ using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.gbl.*.
 USING ibs.th.trg.newbcod from propath.
 USING ibs.th.gbl.curdburt from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimpsubject: 
   

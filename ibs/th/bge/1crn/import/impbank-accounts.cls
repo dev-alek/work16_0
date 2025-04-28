@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 85f4fca521d5, 2938, rls $
+$Author: EShklyar $
+$Date: Сб дек 04 14:19:40 2021 +0300 $
+$Workfile: impbank-accounts.cls $
+$Archive: ibs/th/bge/1crn/import/impbank-accounts.cls $
 
 Класс ипорта данных impbank-accounts из 1С
 
@@ -19,6 +19,7 @@ using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.trg.newbcod from propath.
 USING ibs.th.gbl.curdburt from propath.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impbank-accounts implements ibs.th.bge.1crn.import.iimpsubject: 
   

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2550f54dfb91, 910, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 08 12:57:11 2016 +0300 $
+$Workfile: EGAISUTM.cls $
+$Archive: ibs/th/bge/egais/EGAISUTM.cls $
 
 Класс работы с УТМ
 
@@ -17,6 +17,7 @@ Creation date: 11/11/15
 
 using Progress.Lang.*.
 using ibs.th.bge.egais.*.
+block-level on error undo, throw.
 
 
 class ibs.th.bge.egais.EGAISUTM inherits EGAISImpl:

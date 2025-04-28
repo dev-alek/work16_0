@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2d29ce84a063, 3279, rls $
+$Author: VSpiridonov $
+$Date: 2023/02/22 07:38:42 $
+$Workfile: impgood-grps.cls $
+$Archive: ibs/th/bge/1crn/import/impgood-grps.cls $
 
 Класс ипорта данных good-grps из 1С
 
@@ -18,6 +18,7 @@ Creation date: 26/09/17
 using Progress.Lang.*.
 using ibs.th.bge.1crn.subjects.*.
 USING ibs.th.gbl.ggoattr FROM PROPATH.
+block-level on error undo, throw.
 
 class ibs.th.bge.1crn.import.impgood-grps implements ibs.th.bge.1crn.import.iimpsubject: 
   
