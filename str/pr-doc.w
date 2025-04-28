@@ -156,7 +156,7 @@ define query br-list for ub.price-list except, ub.bar-code, ub.goods, ub.gds-prt
       else ~
         {&property}
 &scop label-clmn_2-br-list  'Код'
-&scop clmn_2-br-list ub.bar-code.b-code
+&scop clmn_2-br-list ub.bar-code.b-code 
 &scop label-clmn_3-br-list  'Артикул'
 &scop clmn_3-br-list ub.price-list.artic
 &scop label-clmn_4-br-list  'Название'
@@ -207,7 +207,7 @@ define query br-list for ub.price-list except, ub.bar-code, ub.goods, ub.gds-prt
 &scop disp-list ~
 {&clmn_15-br-list}  @ tt-col     column-label {&label-clmn_15-br-list} format "*/" ~
 {&clmn_1-br-list}   @ calc-dtl   column-label {&label-clmn_1-br-list}  format "x(3)" ~
-{&clmn_2-br-list}                column-label {&label-clmn_2-br-list}  ~
+{&clmn_2-br-list}                column-label {&label-clmn_2-br-list}  format ">>>>>>>>>>>>>>>>9" ~
 {&clmn_3-br-list}                column-label {&label-clmn_3-br-list}  format "x(16)" ~
 {&clmn_4-br-list}   @ calc-name  column-label {&label-clmn_4-br-list}  format "x(47)" ~
 {&clmn_5-br-list}                column-label {&label-clmn_5-br-list}  ~
