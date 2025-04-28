@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 579765cb4320, 2677, rls $
+$Author: DRuban $
+$Date: Вт ноя 17 10:53:21 2020 +0300 $
+$Workfile: del-pers.p $
+$Archive: gbl/del-pers.p $
 
 Удаление всех persistent процедур
 
@@ -15,11 +16,11 @@ Creation date: 09/20/02
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 579765cb4320, 2677, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Вт ноя 17 10:53:21 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: del-pers.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/del-pers.p $":U .
 define variable vss-description as character no-undo init "Удаление всех persistent процедур".
 { cmp/vssrevis.i }
 define stream LogStream.

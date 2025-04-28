@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: comp_dbg.p $
+$Archive: gbl/comp_dbg.p $
 
 Создать dbg файл для программы из другой сессии открыть просмотр файла и встать на определённую строку файла
 
@@ -24,11 +25,11 @@ define input  parameter p-proc-line         as character no-undo .
 define input  parameter p-db-connect-string as character no-undo .
 define output parameter p-dbg-file          as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: comp_dbg.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/comp_dbg.p $":U .
 define variable vss-description as character no-undo init "Создать dbg файл для программы из другой сессии".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

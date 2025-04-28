@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 618b89371265, 2255, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:24:01 2019 +0300 $
+$Workfile: version.p $
+$Archive: gbl/version.p $
 
 Показывает информацию о версии IBS Trade House
 

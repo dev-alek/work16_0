@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e16321fb6673, 2638, rls $
+$Author: ASMorozov $
+$Date: Пн окт 19 09:22:03 2020 +0300 $
+$Workfile: library2.p $
+$Archive: gbl/library2.p $
 
 Библиотека процедур
 
@@ -22,11 +23,11 @@ using ibs.th.gbl.*.
 using ibs.th.gbl.gbl-var.
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: e16321fb6673, 2638, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo initial "$Date: Пн окт 19 09:22:03 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: library2.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: gbl/library2.p $":U .
 define variable vss-description as character no-undo initial "Библиотека  процедур".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

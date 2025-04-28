@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: fileattr.p $
+$Archive: gbl/fileattr.p $
 
 Изменить атрибуты файла
 
@@ -18,11 +19,11 @@ Creation date: 12/13/05
 define input  parameter p-file-name     as character no-undo .
 define input  parameter p-attrib-action as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fileattr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/fileattr.p $":U .
 define variable vss-description as character no-undo init "Изменить атрибуты файла".
 { cmp/vssrevis.i }
 

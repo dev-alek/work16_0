@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1f78fe327cdf, 1091, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:52 2017 +0300 $
+$Workfile: getvers.p $
+$Archive: gbl/getvers.p $
 
 Получить имя текущей версии
 

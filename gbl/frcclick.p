@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: frcclick.p $
+$Archive: gbl/frcclick.p $
 
 Имитировать нажатие мыши
 
@@ -22,11 +23,11 @@ define input parameter wh-1 as widget-handle.
 /*если no - то меню привязано к левой кнопке мыши если yes то к правой*/
 define input parameter l-r as logical.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: frcclick.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/frcclick.p $":U .
 define variable vss-description as character no-undo init "Имитировать нажатие мыши".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

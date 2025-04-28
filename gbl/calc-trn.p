@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: calc-trn.p $
+$Archive: gbl/calc-trn.p $
 
 Пересчет накладных по ее RECID без shared переменных.
 
@@ -19,11 +20,11 @@ create Суслов А.
 define input parameter parparentproc AS WIDGET-HANDLE NO-UNDO.
 define input parameter parrec-doc as recid no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: 2014/01/27 14:27:46 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: calc-trn.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: gbl/calc-trn.p $":U .
 define variable vss-description as character no-undo initial "Пересчет накладных по ее RECID без shared переменных.":U .
 
 { cmp/vssrevis.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 618b89371265, 2255, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:24:01 2019 +0300 $
+$Workfile: vertag.p $
+$Archive: gbl/vertag.p $
 
 Получить версию и тэг системы
 
@@ -30,11 +31,11 @@ define output parameter p-file-time       as integer          no-undo.
 define output parameter o-Release         as integer          no-undo init ?.
 define output parameter o-patch           as integer          no-undo init ?.
 define output parameter o-branch          as integer          no-undo init ?.
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 618b89371265, 2255, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Dec 25 15:24:01 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: vertag.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/vertag.p $":U .
 define variable vss-description as character no-undo init "Получить версию и тэг системы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

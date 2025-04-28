@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6eb2e10e43c1, 3410, rls $
+$Author: DRuban $
+$Date: 2023/08/17 10:18:56 $
+$Workfile: get-gbl.p $
+$Archive: gbl/get-gbl.p $
 
 Получение глобальных переменных в статический объект gbl-var
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 56df01381172, 3646, test $
+$Author: EShklyar $
+$Date: 2024/01/25 16:33:00 $
+$Workfile: sys-main.p $
+$Archive: gbl/sys-main.p $
 
 Головной модуль системы
 
@@ -21,11 +22,11 @@ Creation date: 07/16/07
 define input  parameter p-user-login    as character no-undo .
 define input  parameter p-user-password as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 56df01381172, 3646, test $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2024/01/25 16:33:00 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sys-main.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/sys-main.p $":U .
 define variable vss-description as character no-undo init "Головной модуль системы".
 { cmp/vssrevis.i }
 { cmp/trg-def.i new }

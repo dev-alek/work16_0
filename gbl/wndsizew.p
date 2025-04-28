@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: wndsizew.p $
+$Archive: gbl/wndsizew.p $
 
 Запись пользовательских параметров настройки интерфейса
 
@@ -24,11 +25,11 @@ define input  parameter p-window-name as character no-undo .
 define input  parameter p-attr-code   as character no-undo .
 define input  parameter p-attr-value  as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: wndsizew.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/wndsizew.p $":U .
 define variable vss-description as character no-undo init "Запись пользовательских параметров настройки интерфейса".
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4':u,p-user-id,p-window-name,p-attr-code,p-attr-value)" }
 { cmp/trg-def.i  }

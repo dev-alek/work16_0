@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: filecanr.p $
+$Archive: gbl/filecanr.p $
 
 Проверка возможности записи в файл
 
@@ -18,11 +19,11 @@ Creation date: 03/25/03
 define input  parameter p-file-name as character no-undo .
 define output parameter p-can-write as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: filecanr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/filecanr.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 define stream slog .

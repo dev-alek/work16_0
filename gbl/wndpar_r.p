@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: wndpar_r.p $
+$Archive: gbl/wndpar_r.p $
 
 Чтение пользовательских параметров настройки интерфейса
 
@@ -24,11 +25,11 @@ define input  parameter p-param-code    as character no-undo .
 define output parameter p-param-value   as logical   no-undo .
 define output parameter p-default-value as logical   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: wndpar_r.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/wndpar_r.p $":U .
 define variable vss-description as character no-undo init "Чтение пользовательских параметров настройки интерфейса".
 { cmp/vssrevis.i "substitute('&1|&2|&3':U,p-db-num,p-user-id,p-param-code)" }
 { cmp/str-glbl.i }

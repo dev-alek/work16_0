@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: lockshpr.p $
+$Archive: gbl/lockshpr.p $
 
 Программа разделяемой или монопольной блокировки ресурса
 
@@ -42,11 +43,11 @@ define input  parameter p-CharKey_Three  like ub.batchprocess.CharKey_Three no-u
 define input  parameter p-lock-type      as character no-undo .
 define parameter buffer lock_batchprocess for ub.batchprocess .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: lockshpr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: gbl/lockshpr.p $":U .
 define variable vss-description as character no-undo init "Программа блокировки ресурсов".
 { cmp/vssrevis.i "substitute('&1|&2':u,substitute('&1|&2|&3|&4|&5':u,p-process-key,p-Key#_One,p-Key#_Two,p-Key#_Three,p-CharKey_One),substitute('&1|&2|&3':u,p-CharKey_Two,p-CharKey_Three,p-lock-type))" }
 { cmp/trg-def.i  }
