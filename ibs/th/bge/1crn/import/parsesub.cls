@@ -373,10 +373,11 @@ class ibs.th.bge.1crn.import.parsesub:
     
     iNum = 3.
     GetChildren(hRoot, 1).
-        
-    delete object hDoc.
-    delete object hRoot.
-    return result.
+    return result.      
+    finally :
+       delete object hDoc  no-error.
+       delete object hRoot no-error.
+    end finally .
   end method.
   method public logical Parse1CRNSub (input inFileMem as memptr):
     define variable result as logical no-undo.
@@ -392,9 +393,11 @@ class ibs.th.bge.1crn.import.parsesub:
     iNum = 3.
     GetChildren(hRoot, 1).
         
-    delete object hDoc.
-    delete object hRoot.
     return result.
+    finally :
+       delete object hDoc  no-error.
+       delete object hRoot no-error.
+    end finally .
   end method.
   
   method private void GetChildren (
@@ -1549,10 +1552,12 @@ class ibs.th.bge.1crn.import.parsesub:
     end.
     if valid-object (subjectObj)
       then subjectObj:SetProp( hParent:name, "").
-    delete object hNoderef.
-    /* между закрывающим и следующим закрывающим тегами может не быть ни одного ELEMENT,
+    finally :
+      delete object hNoderef no-error.
+      /* между закрывающим и следующим закрывающим тегами может не быть ни одного ELEMENT,
        и тогда hText не будет определён */
-    if valid-object(hText) then delete object hText.
+       if valid-object(hText) then delete object hText.
+    end finally .
   end method.
   
 	/*------------------------------------------------------------------------------
