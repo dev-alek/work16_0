@@ -210,6 +210,7 @@ class ibs.th.ref.sobj.dreport inherits Form :
       resources:ApplyResources(this-object:tabControl1, "tabControl1").
       this-object:tabControl1:Controls:Add(this-object:tabObject).
       this-object:tabControl1:Controls:Add(this-object:tabContin).
+      this-object:tabControl1:Selected:Subscribe(this-object:tabControl1_Selected).
       this-object:tabControl1:Name = "tabControl1".
       this-object:tabControl1:SelectedIndex = 0.
       /*  */
@@ -463,15 +464,26 @@ class ibs.th.ref.sobj.dreport inherits Form :
    end method.
 
 	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	method private void TogExcel_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
-		VALUE-CHANGED_TOG-Excel().
-		return.
+     Purpose:
+     Notes:
+    ------------------------------------------------------------------------------*/
+    @VisualDesigner.
+    method private void TogExcel_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
+        VALUE-CHANGED_TOG-Excel().
+        return.
 
-	end method.
+    end method.
+    
+    /*------------------------------------------------------------------------------
+     Purpose:
+     Notes:
+    ------------------------------------------------------------------------------*/
+    @VisualDesigner.
+    method private void tabControl1_Selected( input sender as System.Object, input e as System.EventArgs ):
+        mUserframe:my-secected().
+        return.
+
+    end method.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
