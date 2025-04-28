@@ -328,23 +328,6 @@ do: // объекты
     v-promo-objs:AddItem (v-promo-obj) .
     if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-obj-type, v-obj-code):IsBanRecipes then v-ban-recipes = true .
 end . // end_of объекты
-
-        find first buf_PromoAttr exclusive-lock  where
-        buf_PromoAttr.attr-code = "charge-BL" and
-        buf_promoAttr.tablename = "PromoPay" and
-        v-promo-action:ID = int64(entry(1,buf_PromoAttr.p-key,{&delim-key})) and 
-        v-db-num = integer(entry(2,buf_PromoAttr.p-key,{&delim-key})) no-error .
-        if not available (buf_PromoAttr) then do:
-    create buf_promoAttr.
-    assign
-      buf_promoAttr.attr-code  = "charge-BL"
-      buf_promoAttr.tablename  = "PromoPay"
-      buf_promoAttr.p-key      = string(v-promo-action:ID) + {&delim-key} + 
-                          string(v-db-num) 
-    no-error .
-        end. 
-        buf_PromoAttr.attr-value  = if objImp:prohibition-charge-BL = 1 then string(true) else string(false) 
-        .
         
 if valid-object (v-schedule) then do: // schedule - расписание
 
@@ -679,6 +662,22 @@ end. // end_of_gifts
     
     v-storage:insertDB(v-promo-action) .
 
+        find first buf_PromoAttr exclusive-lock  where
+        buf_PromoAttr.attr-code = "charge-BL" and
+        buf_promoAttr.tablename = "PromoPay" and
+        v-promo-action:ID = int64(entry(1,buf_PromoAttr.p-key,{&delim-key})) and 
+        v-db-num = integer(entry(2,buf_PromoAttr.p-key,{&delim-key})) no-error .
+        if not available (buf_PromoAttr) then do:
+    create buf_promoAttr.
+    assign
+      buf_promoAttr.attr-code  = "charge-BL"
+      buf_promoAttr.tablename  = "PromoPay"
+      buf_promoAttr.p-key      = string(v-promo-action:ID) + {&delim-key} + 
+                          string(v-db-num) 
+    no-error .
+        end. 
+        buf_PromoAttr.attr-value  = if objImp:prohibition-charge-BL = 1 then string(true) else string(false) 
+        .
     define variable mDelCd as logical no-undo.
     mDelCd =
               (v-promo-action:changeDate <> ? 
