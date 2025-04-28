@@ -140,65 +140,127 @@ class ibs.th.skt.SktServer:
    Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
    Notes:
   ------------------------------------------------------------------------------*/
-  method public void RequestProcessing (HeadHttp as HeadHttp, content as longchar, hndlSocket as handle):
-    define variable req           as class     IRequest      no-undo.
-    define variable resp          as class     IResponse     no-undo.
-    define variable client_       as character no-undo.
-    define variable vDelete as logical no-undo.
-    req = new SimpleRequest(HeadHttp).
-    resp = new SimpleResponse().
-    req:Content = content.
-    req:HndlSocket = hndlSocket.
-    client_ = identifyClients(req).
-    if client_ <> ? then 
-    do:
-      vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
-      if error-status:error then 
+   method public void RequestProcessing (HeadHttp as HeadHttp, content as longchar, hndlSocket as handle):
+      define variable req           as class     IRequest      no-undo.
+      define variable resp          as class     IResponse     no-undo.
+      define variable client_       as character no-undo.
+      define variable vDelete as logical no-undo.
+      req = new SimpleRequest(HeadHttp).
+      resp = new SimpleResponse().
+      req:Content = content.
+      req:HndlSocket = hndlSocket.
+      client_ = identifyClients(req).
+      if client_ <> ? then 
       do:
-        logWrite:LogStr = return-value.
-        vDelete = yes.
+         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
+         if error-status:error then 
+         do:
+            logWrite:LogStr = return-value.
+            vDelete = yes.
+         end.
       end.
-    end.
-    if vDelete
-    then do:
-       delete object req  no-error.
-       delete object resp no-error.
-       hndlSocket:disconnect ().
-    end.
+      
+      define variable v-err-msg as character no-undo .  
+      catch exAppErrors as class Progress.Lang.AppError :
+         v-err-msg = exAppErrors:ReturnValue .
+         if v-err-msg > "" 
+         then . 
+         else do :
+            v-err-msg = exAppErrors:GetMessage(1) .
+            if v-err-msg > "" 
+            then . 
+            else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+         end .
+         logWrite:LogStr = v-err-msg.
+         vDelete = yes.
+      end catch .
+      catch exProErrors as class Progress.Lang.ProError :
+         v-err-msg = exProErrors:GetMessage(1) . 
+         if v-err-msg > "" 
+         then . 
+         else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+         logWrite:LogStr = v-err-msg + exProErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      catch exAnyErrors as class Progress.Lang.Error:
+         v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+         logWrite:LogStr = v-err-msg + exAnyErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      finally:
+         if vDelete
+         then do:
+            delete object req no-error.
+            delete object resp no-error.
+            hndlSocket:disconnect ().
+         end.       
+      end finally.
   end.
   
   /*------------------------------------------------------------------------------
    Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
    Notes:
   ------------------------------------------------------------------------------*/
-  method public void RequestProcessing (HeadHttp as HeadHttp, content as memptr, hndlSocket as handle, lpar as character):
-    define variable vDelete as logical no-undo.
-    define variable req           as class     IRequest      no-undo.
-    define variable resp          as class     IResponse     no-undo.
-    define variable client_       as character no-undo.
-    req = new SimpleRequest(HeadHttp).
-    resp = new SimpleResponse().
-    req:ContentBuff = content.
-    req:HndlSocket = hndlSocket.
-    client_ = identifyClients(req).
-    client_ = "tsd".
-    if client_ <> ? then 
-    do:
-      vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
-      if error-status:error then 
+   method public void RequestProcessing (HeadHttp as HeadHttp, content as memptr, hndlSocket as handle, lpar as character):
+      define variable vDelete as logical no-undo.
+      define variable req           as class     IRequest      no-undo.
+      define variable resp          as class     IResponse     no-undo.
+      define variable client_       as character no-undo.
+      req = new SimpleRequest(HeadHttp).
+      resp = new SimpleResponse().
+      req:ContentBuff = content.
+      req:HndlSocket = hndlSocket.
+      client_ = identifyClients(req) no-error.
+      if    client_ eq ""
+         or client_ eq ?
+      then
+         client_ = "tsd".
+      if client_ <> ? then 
       do:
-        logWrite:LogStr = return-value.
-        vDelete = yes.
+         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
+         if error-status:error then 
+         do:
+            logWrite:LogStr = return-value.
+            vDelete = yes.
+         end.
       end.
-/*      return ? /*cast(resp, ibs.th.skt.Commands.SimpleResponse):Content*/.*/
-    end.
-    if vDelete
-    then do:
-       delete object req no-error.
-       delete object resp no-error.
-       hndlSocket:disconnect ().
-    end.
-  end.
+    
+      define variable v-err-msg as character no-undo .  
+      catch exAppErrors as class Progress.Lang.AppError :
+         v-err-msg = exAppErrors:ReturnValue .
+         if v-err-msg > "" 
+         then . 
+         else do :
+            v-err-msg = exAppErrors:GetMessage(1) .
+            if v-err-msg > "" 
+            then . 
+            else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+         end .
+         logWrite:LogStr = v-err-msg.
+         vDelete = yes.
+      end catch .
+      catch exProErrors as class Progress.Lang.ProError :
+         v-err-msg = exProErrors:GetMessage(1) . 
+         if v-err-msg > "" 
+         then . 
+         else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+         logWrite:LogStr = v-err-msg + exProErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      catch exAnyErrors as class Progress.Lang.Error:
+         v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+         logWrite:LogStr = v-err-msg + exAnyErrors:CallStack.
+         vDelete = yes.
+      end catch .
+      finally:
+         if vDelete
+         then do:
+            delete object req no-error.
+            delete object resp no-error.
+            hndlSocket:disconnect ().
+         end.       
+      end finally.
+   end.
 
   method private char identifyClients (req           as class     IRequest):
     define variable hRoot   as handle.
@@ -224,9 +286,11 @@ class ibs.th.skt.SktServer:
       set-size(mbuffer) = 0.
       set-size(mbuffer) = length(cast(req, ibs.th.skt.Commands.SimpleRequest):Content,'raw') + 2.
       put-string(mbuffer,1) = cast(req, ibs.th.skt.Commands.SimpleRequest):Content.
-      hDoc:load("memptr",mbuffer,no) no-error.
-      if error-status:error
-        then return error.
+      define variable loadok as logical no-undo.
+      loadok = hDoc:load("memptr",mbuffer,no) no-error.
+      if error-status:error or loadok ne yes
+      then
+         return error "Ошибка при разборе XML документа".
       hdoc:get-document-element(hRoot) no-error.
       assign
         client_ = hRoot:name no-error.
