@@ -1,4 +1,4 @@
-"651"
+"652"
 "menu-group"
 "all" "Полное меню"            "Показать полное меню"                           ""            "cmp/btn-all.bmp"                "chk-usr-numa-no"     "int,m__menu-all-exe"
 "menu-group"
@@ -463,6 +463,7 @@ m-i "Все Наличные"                                           "int,m__fd_casha-al
 m-i "Удаленные фин.документы"                                "int,m__cfd_exe"                                               "m__fda_del-fin"           "m_fina_pays"              "chk-db-num-0"                                                    "object"  "chk-is-off"                                                                     "all,off"                                  ""  ""
 r-l "?"                                                      "?"                                                            "?"                        "m_all_doc"                "chk-db-num-0"                                                    "object"  "chk-is-off,chk-is-str,chk-is-shp,chk-is-res"                                    "all,off,str,shp,res"                      ""  ""
 m-i "Электронный документооборот"                            "int,m-utd-exe"                                                "m-utd"                    "m_all_doc"                ""                                                                "object"  "chk-is-off,chk-is-str,chk-is-shp,chk-is-res"                                    "all,off,str,shp,res"                      ""  ""
+m-i "Сбор марок"                                             "int,m-mark_collect-exe"                                       "m-mark_collect"           "m_all_doc"                ""                                                                "object"  "chk-is-off,chk-is-str,chk-is-shp,chk-is-res"                                    "all,off,str,shp,res"                      ""  ""
 
 m-i "Путевые листы"                                          "int,m_tsheets-all-exe"                                        "m_tsheets-all"            "m_all_doc"                "chk-is-ptrl"                                                     "object"  "chk-is-off,chk-is-shp"                                                          "all,off,shp"                              ""  ""
 s-m "&Касса"                                                 "?"                                                            "m_cash"                   ""                         "chk-obj-type-shop,chk-obj-active"                                "object"  "chk-is-shp,chk-is-res"                                                          "all,shp,res"                              ""  ""

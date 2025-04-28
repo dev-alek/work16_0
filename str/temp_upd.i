@@ -33,6 +33,9 @@ define temp-table tt-utd like ub.utd
   field orig-code   as character
   field GrayZone    as logical
   field obj-name    as character
+  field is-initial  as character
+  field scan-qnty   as decimal
+  field free-qnty   as decimal
   .
 
 define temp-table tt-sert-utd
@@ -61,6 +64,7 @@ define temp-table tt-utd-lines like ub.utd-lines
   field gds-name  as character
   field TaxRate_  as character
   field fact-qnty as decimal
+  field free-qnty as decimal
   field sts_err   as logical
   field DelivCodeMis   as logical
   field UnitCli   as character

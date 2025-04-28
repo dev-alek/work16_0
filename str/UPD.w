@@ -2945,9 +2945,10 @@ PROCEDURE init-sort :
             display f-date-to. 
         end.
         
-        if buf_utd.EDocType = EdocType:LK_RECEIPT:KeyIntDB
+        if buf_utd.EDocType = EdocType:LK_RECEIPT:KeyIntDB /* Вывод из оборота */
+        or buf_utd.EDocType = EdocType:Mark_Collect:KeyIntDB /* Сбор марок */
         then do :
-          mQuery:get-next (). /* Вывод из оборота */
+          mQuery:get-next (). 
           next .
         end .
         if vGdsCode  ne 0
@@ -3154,8 +3155,9 @@ PROCEDURE init-temp :
     Edoc_Type = "Все" + {&comma-char} + '0':U .
   
     do ii = 1 to EdocType:mapType:GetItemByLab(ii):
-      if EdocType:CurrProp = EdocType:LK_RECEIPT
-      then next . /* Вывод из оборота */
+      if EdocType:CurrProp = EdocType:LK_RECEIPT /* Вывод из оборота */
+      or EdocType:CurrProp = EdocType:Mark_Collect /* Сбор марок */
+      then next . 
         Edoc_type = Edoc_type + {&comma-char} + EdocType:CurrProp:Label_ + {&comma-char} + string(EdocType:CurrProp:KeyIntDB) .
     end.
 

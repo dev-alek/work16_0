@@ -37,6 +37,7 @@ class ibs.th.str.utd.edoctype inherits TypeMap:
 /*  define public property  AKTNoMark  as class propmap no-undo get.  protected set.*/
   define public property  EDoc         as class propmap no-undo get.  protected set.
   define public property  LK_RECEIPT   as class propmap no-undo get.  protected set.
+  define public property  Mark_Collect as class propmap no-undo get.  protected set.
 
   constructor public edoctype ():
     super().
@@ -49,6 +50,7 @@ class ibs.th.str.utd.edoctype inherits TypeMap:
 /*    AKTNoMark = crProp(8, "aktnomark", "Акт приема немаркированной продукции").*/
     EDoc      = crProp(7, "EDoc", "еУПД").
     LK_RECEIPT = crProp(9, "LK_RECEIPT", "Вывод из оборота").
+    Mark_Collect = crProp(10, "Mark_Collect", "Сбор марок").
   end.
 
 

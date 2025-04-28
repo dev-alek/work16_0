@@ -12739,7 +12739,18 @@ procedure m-utd-exe :
     release object vconnect no-error.
   end.
 
-end procedure. /* m-docs-pricelists-exe */
+end procedure. /* m-utd-exe */
+
+procedure m-mark_collect-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    define variable v-rec-list as character no-undo .
+    run str/Mark_Collect-docs.w ( parparentproc, "", output v-rec-list) .
+  end.
+
+end procedure. /* m-mark_collect-exe */
 
 procedure m-docs-pricelists-exe :
 define variable v-ok as logical   no-undo .
