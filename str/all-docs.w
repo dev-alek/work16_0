@@ -5309,6 +5309,7 @@ case t-doc.doc-type :
   when {&inventory} then do:
       case t-doc.ext-doc-type :
           when {&TDEDT_Inv} then do:
+              if t-doc.status_ = {&permitted} then run proc-check-inv .
               run str/inv-doc.w
                 (input parparentproc,
                  input-output pardoc-rec,
@@ -5867,7 +5868,10 @@ do while varnext-prev <> ?:
         ub.inv-doc-attr.doc-code = t-doc.doc-code and
         ub.inv-doc-attr.attr-value = string(true) no-error .
         if available (ub.inv-doc-attr) then run str/inv-doc-err.w  (input parparentproc, input-output pardoc-rec, input vardoc-mode, input {&inventory}, input no, input-output varnext-prev, input t-doc.ext-doc-type, input paris-hold, input-output varline-rec, input br-handle, input bf-handle) .
-        else run str/inv-doc.w  (input parparentproc, input-output pardoc-rec, input vardoc-mode, input {&inventory}, input no, input-output varnext-prev, input t-doc.ext-doc-type, input paris-hold, input-output varline-rec, input br-handle, input bf-handle) .
+        else do:
+          if t-doc.status_ = {&permitted} then run proc-check-inv .
+          run str/inv-doc.w  (input parparentproc, input-output pardoc-rec, input vardoc-mode, input {&inventory}, input no, input-output varnext-prev, input t-doc.ext-doc-type, input paris-hold, input-output varline-rec, input br-handle, input bf-handle) .
+        end.
       end.
       else do:
         if t-doc.ext-doc-type = {&TDEDT_Peresort} then do:
@@ -8570,6 +8574,137 @@ on error undo, return error
     .
 end.
 end procedure. /* get-browse-buffer-handle */
+
+procedure proc-check-inv : /* проверка товаров в инвентаризации на кол-во = 0 и было ли движение товара */
+    define buffer buf_trn-doc  for ub.trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_parts    for ub.parts .
+    define buffer buf_goods    for ub.goods .
+    do
+        on error undo, return error return-value
+        :
+        EMPTY TEMP-TABLE tt-gds-line-err .
+
+        for each buf_doc-line no-lock where buf_doc-line.doc-code = t-doc.doc-code 
+            and (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty) = 0 and buf_doc-line.doc-qnty > 0:
+            /* Проверка, если кол-во было = 0, посмотреть было ли движение у товара на объекте */
+
+            find first buf_parts where buf_parts.obj-code = t-doc.obj-code and
+                buf_parts.obj-type = t-doc.obj-type and buf_parts.artic = buf_doc-line.artic and
+                buf_parts.prod-code = buf_doc-line.prod-code and buf_parts.prod-type = buf_doc-line.prod-type and
+                buf_parts.out-code <> t-doc.doc-code no-error .
+                if not available (buf_parts) then
+            do:
+                find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
+                    buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type no-error .
+                create tt-gds-line-err .
+                assign
+                    tt-gds-line-err.artic       = buf_doc-line.artic
+                    tt-gds-line-err.prod-code   = buf_doc-line.prod-code
+                    tt-gds-line-err.prod-type   = buf_doc-line.prod-type
+                    tt-gds-line-err.qnty-tsd    = buf_doc-line.doc-qnty
+                    tt-gds-line-err.date-report = today
+                    tt-gds-line-err.time-report = time .
+                tt-gds-line-err.gds-name = if available (buf_goods) then buf_goods.gds-name else '' .
+            
+            end.
+        end.
+        if can-find (tt-gds-line-err) then 
+        do:
+            define variable v-name-txt as character no-undo .
+            v-name-txt = session:temp-directory + '/' + 'errors-inv' + ".txt".
+            
+            if search(v-name-txt) <> ? then
+            do:
+                os-delete value(v-name-txt ).
+            end.
+            output to value(v-name-txt) .
+            for each tt-gds-line-err:
+                export string (tt-gds-line-err.date-report,"99/99/9999") string (tt-gds-line-err.time-report,"HH:MM:SS") "Ошибка при загрузке в инвентаризацию товара: " string (tt-gds-line-err.gds-name) 
+                    "Артикул: " string (tt-gds-line-err.artic) "кол-во: " string (tt-gds-line-err.qnty-tsd) .
+            end.
+            output close .
+        
+       
+            message "Не все товары загружены в документ инвентаризации " + t-doc.doc-code + "!" skip 
+                "Список незагруженных товаров выведен в файл " + v-name-txt + "" skip
+                view-as alert-box.
+        
+            run rep/errors-inv.p (
+                input parparentproc,
+                input table tt-gds-line-err) no-error.
+    
+        end.
+    end. /* do */
+end procedure. /*  proc-check-inv */
+
+procedure proc-close-inv : /* проверка товаров в инвентаризации на кол-во = 0 и было ли движение товара */
+    define output parameter v-show-err-message as logical no-undo .
+    define buffer buf_trn-doc  for ub.trn-doc .
+    define buffer buf_doc-line for ub.doc-line .
+    define buffer buf_parts    for ub.parts .
+    define buffer buf_goods    for ub.goods .
+
+    do
+        on error undo, return error return-value
+        :
+        v-show-err-message = true .
+
+        EMPTY TEMP-TABLE tt-gds-line-err .
+
+        for each buf_doc-line no-lock where buf_doc-line.doc-code = t-doc.doc-code 
+            and (buf_doc-line.doc-qnty - buf_doc-line.fact-qnty) = 0 and buf_doc-line.doc-qnty > 0:
+            /* Проверка, если кол-во было = 0, посмотреть было ли движение у товара на объекте */
+
+            find first buf_parts where buf_parts.obj-code = t-doc.obj-code and
+                buf_parts.obj-type = t-doc.obj-type and buf_parts.artic = buf_doc-line.artic and
+                buf_parts.prod-code = buf_doc-line.prod-code and buf_parts.prod-type = buf_doc-line.prod-type and
+                buf_parts.out-code <> t-doc.doc-code no-error .
+                if not available (buf_parts) then 
+            do:
+                find first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
+                    buf_goods.prod-code = buf_doc-line.prod-code and buf_goods.prod-type = buf_doc-line.prod-type no-error .
+                create tt-gds-line-err .
+                assign
+                    tt-gds-line-err.artic       = buf_doc-line.artic
+                    tt-gds-line-err.prod-code   = buf_doc-line.prod-code
+                    tt-gds-line-err.prod-type   = buf_doc-line.prod-type
+                    tt-gds-line-err.qnty-tsd    = buf_doc-line.doc-qnty
+                    tt-gds-line-err.date-report = today
+                    tt-gds-line-err.time-report = time .
+                tt-gds-line-err.gds-name = if available (buf_goods) then buf_goods.gds-name else '' .
+            
+            end.    
+        end.
+        if can-find (tt-gds-line-err) then 
+        do:
+            define variable v-name-txt as character no-undo .
+            v-name-txt = session:temp-directory + '/' + 'errors-inv' + ".txt".
+            
+            if search(v-name-txt) <> ? then
+            do:
+                os-delete value(v-name-txt ).
+            end.
+            output to value(v-name-txt) .
+            for each tt-gds-line-err:
+                export string (tt-gds-line-err.date-report,"99/99/9999") string (tt-gds-line-err.time-report,"HH:MM:SS") "Ошибка при загрузке в инвентаризацию товара: " string (tt-gds-line-err.gds-name) 
+                    "Артикул: " string (tt-gds-line-err.artic) "кол-во: " string (tt-gds-line-err.qnty-tsd) .
+            end.
+            output close .
+        
+       
+            message "Не все товары загружены в документ инвентаризации " + t-doc.doc-code + "!" skip 
+                "Список незагруженных товаров выведен в файл " + v-name-txt + "" skip
+                "Вы уверены, что хотите закрыть документ инвентаризации до «факта»?"
+                view-as alert-box question buttons yes-no update v-show-err-message .
+            if not v-show-err-message then do:
+            run rep/errors-inv.p (
+                input parparentproc,
+                input table tt-gds-line-err) no-error.
+            end.
+        end.
+    end. /* do */
+end procedure. /*  proc-close-inv */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE get-mark-list W-Win
 PROCEDURE get-mark-list :

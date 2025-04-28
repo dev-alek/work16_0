@@ -89,7 +89,7 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
   DO:
     define buffer bf_inv-doc-attr for ub.inv-doc-attr .
     define buffer curr_inv-doc-attr for ub.inv-doc-attr .
-    
+    define variable p-ok as logical no-undo .
     define variable ii      as integer   no-undo .
     define variable docCode as character no-undo .
     
@@ -289,7 +289,11 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
           return no-apply.
         end.
       end.
-               
+    if t-doc.status_ = {&permitted} then do:
+        run proc-close-inv (output p-ok).      
+        if not p-ok then return no-apply .  
+     
+    end.
     end .
 
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
