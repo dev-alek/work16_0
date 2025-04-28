@@ -486,7 +486,7 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.artic) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-name) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.ostatokToday) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.ostatokGoods) + '</td>' skip    
+    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + if tt-zakaz.tempSale = 0 then "-" else string(tt-zakaz.ostatokGoods) + '</td>' skip    
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volTemp) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
