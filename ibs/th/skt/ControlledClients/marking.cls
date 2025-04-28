@@ -1859,7 +1859,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                      "ttlocal-mark.reqId: " ttlocal-mark.reqId     SKIP
                      "ttlocal-mark.reqTimestamp: " ttlocal-mark.reqTimestamp     SKIP                     
                      "ttlocal-mark.inst: " ttlocal-mark.inst SKIP
-                     "ttlocal-mark.ver: " ttlocal-mark.ver SKIP
+                     "ttlocal-mark.version: " ttlocal-mark.version SKIP
                      "ttlocal-mark.description: " ttlocal-mark.description       SKIP              
                      "ttlocal-mark.code: " ttlocal-mark.code       SKIP                     
                      .                        
@@ -2362,7 +2362,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
                           SEARCH ("exe/curl.exe"), /*1*/                                                                  
                           QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
-                          QUOTER(gismt-OflineAdress + "/cis/check?cis=" + vMarkShort), /*3*/
+                          QUOTER(gismt-OflineAdress + "/cis/outCheck?cis=" + vMarkShort), /*3*/
                           vFileResOf,             /*4*/                      
                           vFileResOfErr,          /*5*/                      
                           TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
