@@ -735,6 +735,15 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
       END.
       Display text-cliname with frame Dialog-Frame .
     end.
+    else 
+    do:
+      if v-cli-code <> ? and v-cli-code <> 0 then 
+      do:
+        find cli-post where cli-post.obj-code = v-cli-code and
+          cli-post.obj-type = v-cli-type no-lock .
+        post-grp_recids = string(recid (cli-post)) .
+      end.
+    end.
     find first bf_contract where bf_contract.host-code = v-cntxt-host-code-obj and
       bf_contract.cli-type  = v-cli-type and
       bf_contract.cli-code  = v-cli-code no-lock no-error.
@@ -1096,6 +1105,14 @@ ON RETURN OF Date-order IN FRAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Date-order Dialog-Frame
 ON TAB OF Date-order IN FRAME Dialog-Frame
   DO:
+    date(Date-order:screen-value) no-error.
+    if error-status:error then 
+    do:
+      message "Ошибка ввода даты"
+        view-as alert-box.  
+      display Date-order with frame Dialog-Frame .
+      return no-apply .          
+    end.    
     if string(Date-order) <> Date-order:screen-value then 
     do:
       if date(Date-order:screen-value) < today then 
