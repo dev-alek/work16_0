@@ -117,7 +117,8 @@ define variable v-num-pasport        as character no-undo .
 define variable v-dids               as date      no-undo .
 define variable v-nids               as character no-undo .
 define variable v-number-car         as character no-undo .
-define variable v-date-income        as date      no-undo .
+define variable v-date-income        as character no-undo .
+define variable v-date-incomeD       as date      no-undo .
 define variable ii                   as integer   no-undo .
 define variable reason-code          as logical   no-undo .
 define variable gate-valve           as logical   no-undo .
@@ -222,7 +223,7 @@ do
         
     
   /*Название поставщика*/
-  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-ptbobj},OUTPUT v-attr-value) no-error .
+/*  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-ptbobj},OUTPUT v-attr-value) no-error .
   if v-attr-value <> "" then 
   do: 
     assign
@@ -232,32 +233,34 @@ do
     run clients-write(INPUT v-obj-code,INPUT v-obj-type,OUTPUT v-producer) no-error .
   end.
   else 
-  do:
+  do: */
     assign
       v-obj-code = buf_trn-doc.cli-code
       v-obj-type = buf_trn-doc.cli-type
       .
     run clients-write(INPUT v-obj-code,INPUT v-obj-type,OUTPUT v-producer) no-error .
-  end.    
+ /* end. */   
   /*Водитель-экспедитор*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-fio-driver},OUTPUT v-driver) no-error .
   /* Государственный номер АЦ */
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-car-num},OUTPUT v-number-car) no-error .  
-  /*Дата прибытия*/                                        
-  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-date-income},OUTPUT v-date-income) no-error .
+  /*Дата прибытия*/   
+  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-date-income},OUTPUT v-date-incomeD) no-error .
+  if v-date-incomeD <> ? then v-date-income = string(v-date-incomeD,"99.99.99") . 
+  else v-date-income = "" .
   /*Время прибытия*/                                        
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-income},OUTPUT v-time-income) no-error .
-  v-hour-income = integer(substring(v-time-income, 1, 2)) no-error.
-  v-min-income = integer(substring(v-time-income, 4, 2)) no-error.
+ /* v-hour-income = integer(substring(v-time-income, 1, 2)) no-error.
+  v-min-income = integer(substring(v-time-income, 4, 2)) no-error. */
   /*Время начала слива*/
-  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-start},OUTPUT v-time-income) no-error .
-  v-time-start = integer(substring(v-time-income, 1, 2)) no-error.
-  v-min-start = integer(substring(v-time-income, 4, 2)) no-error.
+/*  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-start},OUTPUT v-time-income) no-error .
+ /* v-time-start = integer(substring(v-time-income, 1, 2)) no-error.
+  v-min-start = integer(substring(v-time-income, 4, 2)) no-error. */
   /*Время окнчания слива*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-end},OUTPUT v-time-income) no-error .
-  v-time-end = integer(substring(v-time-income, 1, 2)) no-error.
-  v-min-end = integer(substring(v-time-income, 4, 2)) no-error.
-
+ /* v-time-end = integer(substring(v-time-income, 1, 2)) no-error.
+  v-min-end = integer(substring(v-time-income, 4, 2)) no-error. */
+*/
   /*Техническое состояние*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-condition},OUTPUT v-condition) no-error .
   /*Пломбы от, дата свидетельства о поверке*/
@@ -285,7 +288,7 @@ do
   /*Менеджер*/
   run person-write(INPUT buf_trn-doc.boss, OUTPUT v-meneger, output v-manager-position) no-error .
   /*Оператор*/
-  run person-write(INPUT buf_trn-doc.wrkr, OUTPUT v-fio, output v-fio-position) no-error .
+  run person-write(INPUT buf_trn-doc.creid, OUTPUT v-fio, output v-fio-position) no-error .
   if v-fio = "?" then v-fio = "" .
   /*Автопредприятие*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-autoent},OUTPUT v-attr-value) no-error .
@@ -417,15 +420,15 @@ do
     '<TR>' skip
     '<TD colspan="5" style=""></TD>' skip
     '<TD colspan="4"></TD>' skip
-    '<TD colspan="5" style="text-align: center; border-top: 1px solid black;">руководителя АГЗС (председателя комиссии)</TD>' skip
+    '<TD colspan="5" style="text-align: center; border-top: 1px solid black;">должность, Ф.И.О. руководителя АГЗС</TD>' skip
     '</TR>'skip
 
-    '<TR>' skip
+  /*  '<TR>' skip
     '<TD colspan="5" style=""></TD>' skip
     '<TD colspan="4"></TD>' skip
     '<TD colspan="5" style="text-align: center;">' + string(v-DD-Month-YYYY) + '</TD>' skip
     '</TR>'skip
-
+*/
     '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
                             
     '<TR><TD colspan="14" style="font-weight: bold; text-align: center;">АКТ</TD></TR>' skip
@@ -442,7 +445,7 @@ do
                     
     '<TR>' skip
     '<TD colspan="5" style=""></TD>' skip
-    '<TD colspan="9" style="height: 14px; border-top: 1px solid black; text-align: center;">должность, фамилия, И.О., работника АГЗС (членов комиссии)</TD></TR>' skip
+    '<TD colspan="9" style="height: 14px; border-top: 1px solid black; text-align: center;">должность, Ф.И.О.(полностью), работника АГЗС (членов комиссии)</TD></TR>' skip
                     
     '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
                     
@@ -511,8 +514,16 @@ do
     '</TR>'skip
                                 
     '<TR>' skip
-    '<TD colspan="5" style="">6. Дата и время прибытия АЦ</TD>' skip
-    '<TD colspan="9" style="text-align: center;">' + if v-date-income <> ? then string (v-date-income,"99.99.99") else "" + ", "+ string(v-hour-income,"99") + ":" + string(v-min-income,"99") + '</TD>' skip
+    '<TD colspan="5" style="">6. Дата и время прибытия АЦ</TD>' skip .
+    if v-time-income <> '' and v-date-income <> '' then do:
+    put stream OutStr-html unformatted
+    '<TD colspan="9" style="text-align: center;">' + string (v-date-income) + ", " + string(v-time-income) + '</TD>' skip .
+    end.
+    else do:
+    put stream OutStr-html unformatted
+    '<TD colspan="9" style="text-align: center;">' + string (v-date-income) + " " + string(v-time-income) + '</TD>' skip .
+    end.
+    put stream OutStr-html unformatted
     '</TR>'skip
 
     '<TR>' skip
@@ -1094,7 +1105,7 @@ put stream OutStr-html unformatted
   '<TR>' skip
   '<TD colspan="3"></TD>'
   '<TD colspan="2" style=""></TD>' skip
-  '<TD text_wrap="true" colspan="7" style="border-top: 1px solid black; text-align: center;">должность, Ф.И.О. водителя АЦ</TD>'
+  '<TD text_wrap="true" colspan="7" style="border-top: 1px solid black; text-align: center;">Ф.И.О. водителя АЦ, подпись</TD>'
   '<TD colspan="2"></TD>'
   '</TR>'skip
   .
@@ -1132,16 +1143,18 @@ end.
 
 procedure person-write:
     
-  DEFINE input PARAMETER   p-obj-code      as integer      no-undo .
+  DEFINE input PARAMETER   p-obj-code      as character    no-undo .
   DEFINE OUTPUT PARAMETER  p-obj-name      as character    no-undo .
-  define OUTPUT PARAMETER  p-position      as CHARACTER       NO-UNDO .
+  define OUTPUT PARAMETER  p-position      as CHARACTER    NO-UNDO .
   define variable v-name as character no-undo . 
   define buffer buf_user-account for ub.user-account .    
   
-  run rep/get-psn.p(input p-obj-code, output p-obj-name ).
-  find first buf_user-account no-lock where buf_user-account.psn-code = p-obj-code no-error .
-  if available (buf_user-account) then  
+  /*run rep/get-psn.p(input p-obj-code, output p-obj-name ).*/
+  find first buf_user-account no-lock where buf_user-account.user-id = p-obj-code no-error .
+  if available (buf_user-account) then do: 
     p-position = buf_user-account.position .
+    p-obj-name = buf_user-account.last-name + " " + buf_user-account.first-name + " " + buf_user-account.second-name .
+  end.  
                                           
 end. 
 
