@@ -35,10 +35,10 @@ run bgelib-tag-open in this-procedure ( input 2, input "PromoAction"
           v-promo-action:db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key})) 
           no-error.
         if available (ub.PromoAttr) then do:
-          if logical(ub.PromoAttr.attr-value) = true then change-BL = 0 .
-          else change-BL = 1 .
+          if logical(ub.PromoAttr.attr-value) = true then change-BL = 1 .
+          else change-BL = 0 .
         end.
-        else change-BL = 1 . 
+        else change-BL = 0 . 
 run bgelib-tag-put in this-procedure ( input 3, input "PAName":U
   , input string(v-promo-action:NameAction), input 1 ).
 run bgelib-tag-put in this-procedure ( input 3, input "PAType":U
