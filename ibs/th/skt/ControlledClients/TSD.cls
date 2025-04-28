@@ -1916,7 +1916,12 @@ end.
       
       pos = 0.
       for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
-
+        
+        myflagsDocLine:unSetAllFlags().
+        myflagsDocLine:isMarkOn            = logical(GetAttrUtdlinesEx (buf_utd-l.db-num,buf_utd-l.doc-id,buf_utd-l.lineNum,"MarkUtdLine","no")).
+        myflagsDocLine:isVarietalVolumeOn  = logical(GetAttrUtdlinesEx (buf_utd-l.db-num,buf_utd-l.doc-id,buf_utd-l.lineNum,"ArticUtdLine","no")).
+        myflagsDocLine:isNotEditManualQnty = not (myflagsDocLine:isMarkOn).
+        
         find first buf_goods no-lock where buf_goods.gds-code = buf_utd-l.gds-code no-error.
         if not available (buf_goods)
         then do: 
@@ -1951,18 +1956,13 @@ end.
         vErrorLine = available buf_utd-err.  
         for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id and buf_utd-m-l.LineNum = buf_utd-l.LineNum no-lock
           :
-          
-          myflagsDocLine:unSetAllFlags().
-          myflagsDocLine:isMarkOn            = logical(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"MarkUtdLine","no")).
-          myflagsDocLine:isVarietalVolumeOn  = logical(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"ArticUtdLine","no")).
-          myflagsDocLine:isNotEditManualQnty = not (myflagsDocLine:isMarkOn).
           define variable vMark as logical no-undo.
           vMark = isMark(buf_utd-m-l.mark).
           if vMark 
           then do:
              find first buf_m no-lock where buf_m.mark = buf_utd-m-l.mark no-error.
           end.
-          if vErrorLine then 
+          if vErrorLine and false then 
           do:
             v-sts = "NotCorrect".
           end.
@@ -2218,7 +2218,7 @@ end.
         string (buf_utd.obj-code) + {&delimiteFld} + buf_utd.obj-type + {&delimiteFld} + 
         {&delimiteFld} + {&delimiteFld}
         +
-        string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (if buf_utd.Timestamp = ? then now else buf_utd.Timestamp))) + {&delimiteFld} 
+        string (FactSum) + {&delimiteFld} + string (iso-date (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate)) + {&delimiteFld} 
         + string(myflagsDoc:FlagsToInt) + {&delimiterLine}).
       
       tsdstreamopenapp("MT_documents.txt"). 
