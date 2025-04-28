@@ -178,11 +178,12 @@ on error undo, return error return-value
 end .
 
 procedure fill-tt :
-  define variable v-test-asi-type as character no-undo .
-  define variable v-izmer-density as decimal no-undo .
-  define variable v-pomi-density as decimal no-undo .
+  define variable v-test-asi-type    as character no-undo .
+  define variable v-izmer-density    as decimal no-undo .
+  define variable v-pomi-density     as decimal no-undo .
+  define variable v-temp-izm-vol     as decimal no-undo .
   define variable v-asi-pomi-density as decimal no-undo .
-  define variable v-diff as decimal no-undo .
+  define variable v-diff             as decimal no-undo .
   
   for first buf_doc-attr no-lock where buf_doc-attr.doc-code  = buf_rvs-doc.rvs-code
                                    and buf_doc-attr.attr-code = "test-asi-type"
@@ -205,40 +206,49 @@ procedure fill-tt :
                               and buf_place.pl-code  = buf_rvs-line.pl-code
   :
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                                      and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                                      and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                                      and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                                      and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                                      and buf_rvs-line-attr.attr-code = "izmer-density"
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "izmer-density"
     :
       assign v-izmer-density = decimal(buf_rvs-line-attr.attr-value) .
     end .
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                                      and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                                      and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                                      and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                                      and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                                      and buf_rvs-line-attr.attr-code = "pomi-density"
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "pomi-density"
     :
       assign v-pomi-density = decimal(buf_rvs-line-attr.attr-value) .
     end .
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                                      and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                                      and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                                      and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                                      and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                                      and buf_rvs-line-attr.attr-code = "asi-pomi-density"
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "asi-pomi-density"
     :
       assign v-asi-pomi-density = decimal(buf_rvs-line-attr.attr-value) .
     end .
     for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
-                                      and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
-                                      and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
-                                      and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
-                                      and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
-                                      and buf_rvs-line-attr.attr-code = "test-asi-diff"
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "test-asi-diff"
     :
       assign v-diff = decimal(buf_rvs-line-attr.attr-value) .
+    end .
+    for first buf_rvs-line-attr no-lock where buf_rvs-line-attr.obj-code  = buf_rvs-line.obj-code
+                                          and buf_rvs-line-attr.obj-type  = buf_rvs-line.obj-type
+                                          and buf_rvs-line-attr.gds-code  = buf_rvs-line.gds-code
+                                          and buf_rvs-line-attr.pl-code   = buf_rvs-line.pl-code
+                                          and buf_rvs-line-attr.rvs-code  = buf_rvs-line.rvs-code
+                                          and buf_rvs-line-attr.attr-code = "temp-izm-vol"
+    :
+      assign v-temp-izm-vol = decimal(buf_rvs-line-attr.attr-value) .
     end .
     
     create tt-result .
@@ -288,7 +298,7 @@ procedure fill-tt :
           tt-result.state-level-total = ?
           tt-result.izmer-density     = v-izmer-density
           tt-result.pomi-density      = v-pomi-density
-          tt-result.state-temperature = buf_rvs-line.state-temperature
+          tt-result.state-temperature = v-temp-izm-vol
           tt-result.state-mass        = ?
           
           tt-result.level-total       = ?
@@ -311,7 +321,7 @@ procedure fill-tt :
           tt-result.state-level-total = buf_rvs-line.state-level-total
           tt-result.izmer-density     = v-izmer-density
           tt-result.pomi-density      = v-pomi-density
-          tt-result.state-temperature = buf_rvs-line.state-temperature
+          tt-result.state-temperature = v-temp-izm-vol
           tt-result.state-mass        = buf_rvs-line.state-measure-cli-qnty
           
           tt-result.level-total       = buf_rvs-line.level-total
