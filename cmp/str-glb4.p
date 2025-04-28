@@ -1636,6 +1636,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 ,{&bef-trdcattr-autoent}~
 ,{&bef-trdcattr-car-num}~
 ,{&bef-trdcattr-fio-driver}~
+,{&bef-trdcattr-date-income}~
 ,{&bef-trdcattr-hour-income}~
 ,{&bef-trdcattr-inspection-cert}~
 ,{&bef-trdcattr-condition}~

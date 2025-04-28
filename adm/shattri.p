@@ -3175,7 +3175,7 @@ end.
 
       v-prop-code = "{&bef-attr-petrol_dop-info}" .
 &scop ptype character
-&scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj':U
+&scop prop-value 'autoent,car-num,time-income,fio-driver,ptbobj,date-income':U
 &scop prop-code  entry(v-ii,v-prop-code)
 
       do v-ii = 1 to num-entries(v-prop-code):

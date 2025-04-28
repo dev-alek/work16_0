@@ -1341,7 +1341,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   define buffer buf_doc-attr for ub.doc-attr.
   
-  
+
   
   { str/tdat-val.i
      p-doc-code
@@ -1744,7 +1744,7 @@ find first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-code .
         for each thbjattr_thbj-attr :
             if thbjattr_thbj-attr.prop-code = 'dop-info' then v-dop-info =  thbjattr_thbj-attr.property-value-character .
         end.
-  
+
       for each tt-upd-attr-fuel no-lock where lookup (tt-upd-attr-fuel.code, v-dop-info) > 0:
       case tt-upd-attr-fuel.code:
         when {&trdcattr-ptbobj} then do:
@@ -2013,7 +2013,7 @@ PROCEDURE save-attr :
         end.
         when {&trdcattr-date-income} then do:
             assign
-              v-attr-value = string(f-date-income) when string(f-date-pour) <> "".
+              v-attr-value = string(f-date-income) when string(f-date-income) <> "".
         end.
         when {&trdcattr-time-income} then do:
             assign

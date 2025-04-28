@@ -50,8 +50,8 @@ define stream out-stream.
 { rep/html-conv.i }
 { str/is-sug.i }
 { str/placelib.i }
-{ rep/spr-sug.i  
-}    
+{ rep/spr-sug.i  }
+    
 define variable is-petrolium         as logical   no-undo.
 define variable is-pieces            as logical   no-undo.
 define variable v-doc-code           like ub.trn-doc.doc-code no-undo .
@@ -117,6 +117,7 @@ define variable v-nids               as character no-undo .
 define variable v-number-car         as character no-undo .
 define variable v-date-income        as date      no-undo .
 define variable ii                   as integer   no-undo .
+define variable reason-code          as logical   no-undo .
 
 define variable v-volue-AC           as decimal   no-undo .
 define variable v-value              as character no-undo.
@@ -244,6 +245,15 @@ do
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-income},OUTPUT v-time-income) no-error .
   v-hour-income = integer(substring(v-time-income, 1, 2)) no-error.
   v-min-income = integer(substring(v-time-income, 4, 2)) no-error.
+  /*Время начала слива*/
+  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-start},OUTPUT v-time-income) no-error .
+  v-time-start = integer(substring(v-time-income, 1, 2)) no-error.
+  v-min-start = integer(substring(v-time-income, 4, 2)) no-error.
+  /*Время окнчания слива*/
+  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-end},OUTPUT v-time-income) no-error .
+  v-time-end = integer(substring(v-time-income, 1, 2)) no-error.
+  v-min-end = integer(substring(v-time-income, 4, 2)) no-error.
+
   /*Техническое состояние*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-condition},OUTPUT v-condition) no-error .
   /*Пломбы от, дата свидетельства о поверке*/
@@ -272,6 +282,7 @@ do
   run person-write(INPUT buf_trn-doc.boss, OUTPUT v-meneger, output v-manager-position) no-error .
   /*Оператор*/
   run person-write(INPUT buf_trn-doc.wrkr, OUTPUT v-fio, output v-fio-position) no-error .
+  if v-fio = "?" then v-fio = "" .
   /*Автопредприятие*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-autoent},OUTPUT v-attr-value) no-error .
   if v-attr-value <> "" then 
@@ -354,25 +365,24 @@ do
     '<thead>' skip
     .
   put stream OutStr-html unformatted
-    '<tr>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
-    '<td style="width: 64px;"></td>' skip
+    '<tr class="set_columns">' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
+    '<td style="width: 80px;"></td>' skip
     '</tr>' skip
     .
-                        
- 
+      
   put stream OutStr-html unformatted
     '<TR><TD colspan="14"></TD></TR>' skip
                             
@@ -394,22 +404,10 @@ do
     '<TD colspan="5" style="text-align: center;">УТВЕРЖДАЮ</TD>' skip
     '</TR>'skip
 
-    /*    '<TR>' skip                                                                                                  */
-    /*    '<TD colspan="5" style="height: 14px;"></TD>' skip                                                           */
-    /*    '<TD colspan="4"></TD>' skip                                                                                 */
-    /*    '<TD colspan="5" style="text-align: center;">' + v-manager-position + '</TD>' skip                           */
-    /*    '</TR>'skip                                                                                                  */
-    /*                                                                                                                 */
-    /*    '<TR>' skip                                                                                                  */
-    /*    '<TD colspan="5" style=""></TD>' skip                                                                        */
-    /*    '<TD colspan="4"></TD>' skip                                                                                 */
-    /*    '<TD colspan="5" style="text-align: center; border-top: 1px solid black;">Должность, Фамилия, И.О.</TD>' skip*/
-    /*    '</TR>'skip                                                                                                  */
-
     '<TR>' skip
     '<TD colspan="5" style="height: 14px;"></TD>' skip
     '<TD colspan="4"></TD>' skip
-    '<TD colspan="5" style="text-align: center;">' + v-meneger + '</TD>' skip
+    '<TD colspan="5" style="text-align: center;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
@@ -435,23 +433,23 @@ do
     '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
                             
     '<TR>' skip
-    '<TD colspan="3" style="">Составлен о том, что</TD>' skip
-    '<TD colspan="11" style="height: 14px; text-align: center;">' + v-fio-position + "   " + v-fio + '</TD></TR>' skip
+    '<TD colspan="5" style="">Составлен о том, что</TD>' skip
+    '<TD colspan="9" style="height: 14px; text-align: center;">' + v-fio-position + "   " + v-fio + '</TD></TR>' skip
                     
     '<TR>' skip
-    '<TD colspan="3" style=""></TD>' skip
-    '<TD colspan="11" style="height: 14px; border-top: 1px solid black; text-align: center;">должность, фамилия, И.О., работника АГЗС (членов комиссии)</TD></TR>' skip
+    '<TD colspan="5" style=""></TD>' skip
+    '<TD colspan="9" style="height: 14px; border-top: 1px solid black; text-align: center;">должность, фамилия, И.О., работника АГЗС (членов комиссии)</TD></TR>' skip
                     
     '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
                     
     '<TR>' skip
-    '<TD colspan="3" style="">В присутствии водителя АЦ</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + v-driver + '</TD>' skip
+    '<TD colspan="5" style="">В присутствии водителя АЦ</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + v-driver + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style=""></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;">Ф.И.О.</TD>' skip
+    '<TD colspan="5" style=""></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;">Ф.И.О.</TD>' skip
     '</TR>'skip
                     
     '<TR><TD colspan="14" style="">составили настоящий акт о нижеследующем:</TD></TR>' skip
@@ -459,100 +457,100 @@ do
     '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
                     
     '<TR>' skip
-    '<TD colspan="3" style="">1. Наименование поставщика:</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + v-producer + '</TD>' skip
+    '<TD colspan="5" style="">1. Наименование поставщика:</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + v-producer + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="height: 14px;"></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="">2. Марка СУГ:</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + v-mark-sug + '</TD>' skip
+    '<TD colspan="5" style="">2. Марка СУГ:</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + v-mark-sug + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="height: 14px;"></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="">3. Паспорт кач. №, дата:</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + v-num-pasport + " от " + string (v-date-pasport,"99.99.99") + '</TD>' skip
+    '<TD colspan="5" style="">3. Паспорт кач. №, дата:</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + v-num-pasport + " от " + if v-date-pasport <> ? then string (v-date-pasport,"99.99.99") else "" + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="height: 14px;"></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="">4. ТТН №, дата составления:</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + v-nids + " от " + string (v-dids,"99.99.99") + '</TD>' skip
+    '<TD colspan="5" style="">4. ТТН №, дата составления:</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + v-nids + " от " + string (v-dids,"99.99.99") + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="height: 14px;"></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="">5. Гос. регистр. знаки АЦ:</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + v-number-car + '</TD>' skip
+    '<TD colspan="5" style="">5. Гос. регистр. знаки АЦ:</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + v-number-car + '</TD>' skip
     '</TR>'skip
     
     '<TR>' skip
-    '<TD colspan="3" style="height: 14px;"></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
                                 
     '<TR>' skip
-    '<TD colspan="3" style="">6. Дата и время прибытия АЦ</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + string (v-date-income,"99.99.99") + ", "+ string(v-hour-income,"99") + ":" + string(v-min-income,"99") + '</TD>' skip
+    '<TD colspan="5" style="">6. Дата и время прибытия АЦ</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + if v-date-income <> ? then string (v-date-income,"99.99.99") else "" + ", "+ string(v-hour-income,"99") + ":" + string(v-min-income,"99") + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="height: 14px;"></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="">7. Объем АЦ, (геометр, л)</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + string(v-volue-AC) + '</TD>' skip
+    '<TD colspan="5" style="">7. Объем АЦ, (геометр, л)</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + string(v-volue-AC) + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style="height: 14px;"></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+    '<TD colspan="5" style="height: 14px;"></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '</TR>'skip
                         
     '<TR>' skip
-    '<TD colspan="3" style="">8. Техническое состояние АЦ</TD>' skip
-    '<TD colspan="11" style="text-align: center;">' + v-condition + '</TD>' skip
+    '<TD colspan="5" style="">8. Техническое состояние АЦ</TD>' skip
+    '<TD colspan="9" style="text-align: center;">' + v-condition + '</TD>' skip
     '</TR>'skip
 
     '<TR>' skip
-    '<TD colspan="3" style=""></TD>' skip
-    '<TD colspan="11" style="border-top: 1px solid black; text-align: center;">исправное, неисправное (с указанием конкретных замечаний)</TD>' skip
+    '<TD colspan="5" style=""></TD>' skip
+    '<TD colspan="9" style="border-top: 1px solid black; text-align: center;">исправное, неисправное (с указанием конкретных замечаний)</TD>' skip
     '</TR>'skip
                     
     '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
                     
     '<TR>' skip
-    '<TD colspan="3">9. Пломбы от ' + v-DD-Month-YYYY-cert + '</TD>' skip
+    '<TD colspan="4">9. Пломбы от ' + v-DD-Month-YYYY-cert + '</TD>' skip
     '<TD style="text-align: right;">c № </TD>' skip
-    '<TD colspan="3">' + string(v-seals-condition) + '</TD>' skip
+    '<TD colspan="3" style="text-align: center;">' + string(v-seals-condition) + '</TD>' skip
     '<TD></TD>' skip
-    '<TD colspan="6">' + string(v-seals-condition-2) + '</TD>' skip
+    '<TD colspan="5" style="text-align: center;">' + string(v-seals-condition-2) + '</TD>' skip
     '</TR>'skip
     '<TR>' skip
-    '<TD colspan="3"></TD>' skip
+    '<TD colspan="4"></TD>' skip
     '<TD></TD>' skip
     '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
     '<TD></TD>' skip
-    '<TD colspan="6" style="border-top: 1px solid black; text-align: center;">нарушены (не нарушены)</TD>' skip
+    '<TD colspan="5" style="border-top: 1px solid black; text-align: center;">нарушены (не нарушены)</TD>' skip
     '</TR>'skip
         
     '<TR>' skip
@@ -654,7 +652,7 @@ do
           tt-petrol.date-TH     = string(buf_trn-doc.doc-date,"99/99/9999")
           tt-petrol.num-AC      = v-car-num
           tt-petrol.num-section = v-InfoSectionsTotal:SectionNum
-          .
+          tt-petrol.weight-TH   = buf_doc-line.cli-qnty .
           
         assign
           tt-petrol.weight-AC = v-fact-qnty-after - v-fact-qnty-before .
@@ -663,101 +661,122 @@ do
           buf_rvs-doc.rvs-type = {&rvs-before-doc} no-error .
         if available (buf_rvs-doc) then 
         do:
-          find first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
-            buf_rvs-line.gds-code = buf_goods.gds-code no-error .
-          if available (buf_rvs-line) then 
-          do:
-            tt-petrol.before-measure-cli-qnty = buf_rvs-line.measure-cli-qnty .
+          for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
+            buf_rvs-line.gds-code = buf_goods.gds-code:
+                        
+            if check-RVD(buf_rvs-line.obj-code, buf_rvs-line.obj-type, buf_rvs-line.pl-code) then tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
+            else tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
+
           end.
         end. 
         find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_trn-doc.doc-code and
           buf_rvs-doc.rvs-type = {&rvs-after-doc} no-error .
         if available (buf_rvs-doc) then 
         do:
-          find first buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
-            buf_rvs-line.gds-code = buf_goods.gds-code no-error .
-          if available (buf_rvs-line) then 
-          do:
-            tt-petrol.after-measure-cli-qnty = buf_rvs-line.measure-cli-qnty .
-            tt-petrol.after-temp = buf_rvs-line.temperature .
-        
-            tt-petrol.vol-TH = tt-petrol.after-measure-cli-qnty - tt-petrol.before-measure-cli-qnty .
-            for first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
-              and buf_doc-line-attr.gds-code = buf_goods.gds-code
-              and buf_doc-line-attr.attr-code = "propan-perc":
-              tt-petrol.masDol = decimal (buf_doc-line-attr.attr-value) .                                    
-            end.
-  
-            if buf_trn-doc.reason-code = 99 then 
-            do:
-              { str/tdat-val.i
+          for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
+            buf_rvs-line.gds-code = buf_goods.gds-code :
+            ii = ii + 1 .
+            if check-RVD(buf_rvs-line.obj-code, buf_rvs-line.obj-type, buf_rvs-line.pl-code) then tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
+            else tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
+
+            tt-petrol.after-temp = tt-petrol.after-temp + buf_rvs-line.temperature .
+          end.
+          tt-petrol.after-temp = tt-petrol.after-temp / ii .
+          tt-petrol.vol-TH = tt-petrol.after-measure-cli-qnty - tt-petrol.before-measure-cli-qnty .
+          for first buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = buf_trn-doc.doc-code
+            and buf_doc-line-attr.gds-code = buf_goods.gds-code
+            and buf_doc-line-attr.attr-code = "propan-perc":
+            tt-petrol.masDol = decimal (buf_doc-line-attr.attr-value) .                                    
+          end.
+
+          run doc-line-value(buf_trn-doc.doc-code, "blowdown", ub.goods.gds-code, output vBlowdown) .
+          run doc-line-value(buf_trn-doc.doc-code, "fittings", ub.goods.gds-code, output vFittings) .
+          run doc-line-value(buf_trn-doc.doc-code, "emptying", ub.goods.gds-code, output vEmptying) .
+          run doc-line-value(buf_trn-doc.doc-code, "refund", ub.goods.gds-code, output vRefund) .
+          run doc-line-value(buf_trn-doc.doc-code, "ctrlvalve", ub.goods.gds-code, output vCtrlvalve) .
+          
+ 
+          define variable massa-sug as character no-undo .
+          define variable teh-loss as character no-undo .
+          define variable err-allow as character no-undo .
+          
+            { str/tdat-val.i
      buf_trn-doc.doc-code
      {&sugtpattr-teh-loss}
-     varvalue
+     teh-loss
      vartype
      no-error
   }
-              
+              { str/tdat-val.i
+     buf_trn-doc.doc-code
+     {&sugtpattr-err-allow}
+     err-allow
+     vartype
+     no-error
+  }
+              { str/tdat-val.i
+     buf_trn-doc.doc-code
+     {&sugtpattr-err-allow}
+     massa-sug
+     vartype
+     no-error
+  }  
 
+  if buf_trn-doc.reason-code = 99 and (teh-loss <> "" or err-allow <> "" or massa-sug <> "") then reason-code = true .
+            tt-petrol.pol8 = decimal (teh-loss) + vBlowdown + vFittings + vEmptying + vRefund + vCtrlvalve .
+            tt-petrol.pol9 = tt-petrol.weight-TH - tt-petrol.vol-TH .
             
-              run doc-line-value(buf_trn-doc.doc-code, "blowdown", ub.goods.gds-code, output vBlowdown) .
-              run doc-line-value(buf_trn-doc.doc-code, "fittings", ub.goods.gds-code, output vFittings) .
-              run doc-line-value(buf_trn-doc.doc-code, "emptying", ub.goods.gds-code, output vEmptying) .
-              run doc-line-value(buf_trn-doc.doc-code, "refund", ub.goods.gds-code, output vRefund) .
-              run doc-line-value(buf_trn-doc.doc-code, "ctrlvalve", ub.goods.gds-code, output vCtrlvalve) .
-      
-              tt-petrol.pol8 = decimal (varvalue) + vBlowdown + vFittings + vEmptying + vRefund + vCtrlvalve .
-              tt-petrol.pol9 = tt-petrol.weight-AC - tt-petrol.vol-TH .
-              tt-petrol.pol10 = sqrt(exp((tt-petrol.after-measure-cli-qnty * 0.65), 2) + exp((tt-petrol.before-measure-cli-qnty * 0.65), 2)) / 100 .
-              tt-petrol.pol11 = tt-petrol.pol9 - tt-petrol.pol8 - tt-petrol.pol10 .
-              pol14 = tt-petrol.pol10 .
-            end.      
+
+            tt-petrol.pol10 = (sqrt(exp((tt-petrol.after-measure-cli-qnty * 0.65), 2) + exp((tt-petrol.before-measure-cli-qnty * 0.65), 2)) / 100) +  decimal (err-allow).
+            tt-petrol.pol11 = tt-petrol.pol9 - tt-petrol.pol8 - tt-petrol.pol10 .
+            pol14 = sqrt(exp((tt-petrol.after-measure-cli-qnty * 0.65), 2) + exp((tt-petrol.before-measure-cli-qnty * 0.65), 2)) / 100 .
+ 
               
-          end.      
-        end.   
-        if tt-petrol.num-AC <> "" then 
-        do:
-          for first ub.auto-tank no-lock where ub.auto-tank.auto-num = tt-petrol.num-AC and
-            ub.auto-tank.status_ = {&current-status}:
-            assign
-              tt-petrol.name-AC        = ub.auto-tank.name
-              tt-petrol.btutto-qnty-AC = ub.auto-tank.brutto-qnty
-              .
-          end.  
-          if tt-petrol.name-AC <> "" then v-num-ac = tt-petrol.name-AC + "," .
-          v-num-ac = v-num-ac + tt-petrol.num-AC .
-          if tt-petrol.btutto-qnty-AC <> ? then v-num-ac = v-num-ac + "," + string(tt-petrol.btutto-qnty-AC) .
-        end. 
-
-        for first buf_doc-pl no-lock where buf_doc-pl.out-code = buf_doc-line.doc-code
-          and buf_doc-pl.gds-code = buf_goods.gds-code:
-          for first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code:
-
-            run placelib_get-attr  ( input {&place-twice-code}
-              ,input ub.place.obj-code
-              ,input ub.place.obj-type
-              ,input ub.place.pl-code
-              ,output v-value
-              ,output v-ok      ) no-error.
-            if v-value <> "" then  tt-petrol.num-pl = string(ub.place.loc1) + "," + v-value .
-            else tt-petrol.num-pl = string(ub.place.loc1) .
-          
-            run placelib_get-attr  ( input {&place-com-tanks}
-              ,input ub.place.obj-code
-              ,input ub.place.obj-type
-              ,input ub.place.pl-code
-              ,output v-value
-              ,output v-ok      ) no-error.
-            if v-ok
-              and v-value > ""
-              then 
-            do :
-              tt-petrol.num-pl = tt-petrol.num-pl + "," + v-value .
-            end .
-          end.
+        end.      
+      end.   
+      if tt-petrol.num-AC <> "" then 
+      do:
+        for first ub.auto-tank no-lock where ub.auto-tank.auto-num = tt-petrol.num-AC and
+          ub.auto-tank.status_ = {&current-status}:
+          assign
+            tt-petrol.name-AC        = ub.auto-tank.name
+            tt-petrol.btutto-qnty-AC = ub.auto-tank.brutto-qnty
+            .
         end.  
+        if tt-petrol.name-AC <> "" then v-num-ac = tt-petrol.name-AC + "," .
+        v-num-ac = v-num-ac + tt-petrol.num-AC .
+        if tt-petrol.btutto-qnty-AC <> ? then v-num-ac = v-num-ac + "," + string(tt-petrol.btutto-qnty-AC) .
+      end. 
 
-      end.
+      for first buf_doc-pl no-lock where buf_doc-pl.out-code = buf_doc-line.doc-code
+        and buf_doc-pl.gds-code = buf_goods.gds-code:
+        for first ub.place no-lock where ub.place.pl-code = buf_doc-pl.pl-code:
+
+          run placelib_get-attr  ( input {&place-twice-code}
+            ,input ub.place.obj-code
+            ,input ub.place.obj-type
+            ,input ub.place.pl-code
+            ,output v-value
+            ,output v-ok      ) no-error.
+          if v-value <> "" then  tt-petrol.num-pl = string(ub.place.loc1) + "," + v-value .
+          else tt-petrol.num-pl = string(ub.place.loc1) .
+          
+          run placelib_get-attr  ( input {&place-com-tanks}
+            ,input ub.place.obj-code
+            ,input ub.place.obj-type
+            ,input ub.place.pl-code
+            ,output v-value
+            ,output v-ok      ) no-error.
+          if v-ok
+            and v-value > ""
+            then 
+          do :
+            tt-petrol.num-pl = tt-petrol.num-pl + "," + v-value .
+          end .
+        end.
+      end.  
+
+
     end.
   end.    /*      if is-petrolium        */
 end.    /*        for each buf_doc-line     */
@@ -778,84 +797,109 @@ put stream OutStr-html unformatted
   '<TR><TD text_wrap="true" colspan="14" style="">12. Время: начала ' + string((v-time-start),"99") + ':' + string ((v-min-start),"99") + '  окончания ' + string ((v-time-end),"99") + ':' + string ((v-min-end),"99") + ' слива.</TD></TR>' skip
 
   '<TR>' skip
-  '<TD colspan="9" style="">13. Суммарные расчётные нормативные технологические потери при текущем сливе СУГ:</TD>' skip
-  '<TD colspan="3" style="text-align: center;">' + string(vBlowdown + vEmptying + vFittings + vCtrlvalve + vRefund,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD text_wrap="true" colspan="9" style="">13. Суммарные расчётные нормативные технологические потери при текущем сливе СУГ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vBlowdown + vEmptying + vFittings + vCtrlvalve + vRefund,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
   '<TD colspan="2" style="text-align: right;">из них:</TD>' skip
   '</TR>'skip
 
   '<TR>' skip
   '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip              
     
   '<TR>' skip
-  '<TD colspan="9" style="">13.1. при продувке резинотканевых рукавов для удаления воздуха:</TD>' skip
-  '<TD colspan="5" style="text-align: center;">' + string(vBlowdown,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.1. при продувке резинотканевых рукавов для удаления воздуха:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vBlowdown,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 
   '<TR>' skip
-  '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip      
 
   '<TR>' skip
-  '<TD colspan="9" style="">13.2. при продувке СУГ участка арматуры между запорными устройствами резинотканевых рукавов и АЦ для удаления воздуха:</TD>' skip
-  '<TD colspan="5" style="text-align: center;">' + string(vFittings,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.2. при продувке СУГ участка арматуры между запорными устройствами резинотканевых рукавов и АЦ для удаления воздуха:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vFittings,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 
   '<TR>' skip
-  '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip   
     
   '<TR>' skip
-  '<TD colspan="9" style="">13.3. при опорожнении резинотканевых рукавов по окончании налива (слива) АЦ:</TD>' skip
-  '<TD colspan="5" style="text-align: center;">' + string(vEmptying,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.3. при опорожнении резинотканевых рукавов по окончании налива (слива) АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vEmptying,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 
   '<TR>' skip
-  '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip   
     
   '<TR>' skip
-  '<TD colspan="9" style="">13.4. при возврате АЦ:</TD>' skip
-  '<TD colspan="5" style="text-align: center;">' + string(vRefund,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.4. при возврате АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vRefund,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 
   '<TR>' skip
-  '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip   
     
   '<TR>' skip
-  '<TD colspan="9" style="">13.5. при проверке уровня наполнения с помощью контрольного вентиля АЦ:</TD>' skip
-  '<TD colspan="5" style="text-align: center;">' + string(vCtrlvalve,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD></TD>' skip
+  '<TD text_wrap="true" colspan="8" style="">13.5. при проверке уровня наполнения с помощью контрольного вентиля АЦ:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(vCtrlvalve,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 
   '<TR>' skip
-  '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD></TD>' skip
+  '<TD colspan="8" style="height: 14px;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip     
     
   '<TR>' skip
-  '<TD colspan="9" style="">14. Допустимая погрешность измерения на АГЗС:</TD>' skip
-  '<TD colspan="5" style="text-align: center;">' + string(pol14,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD text_wrap="true" colspan="9" style="">14. Допустимая погрешность измерения на АГЗС:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(pol14,"->>>>>>>>>>>>>>>>>9.999") + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 
   '<TR>' skip
   '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip  
     
   '<TR>' skip
-  '<TD colspan="9" style="">15. Количество подключений/переподключений рукавов АЦ, осуществленный в ходе приема СУГ в резервуар АГЗС:</TD>' skip
-  '<TD colspan="5" style="text-align: center;">' + string(getNunHoses(buf_trn-doc.doc-code)) + '</TD>' skip
+  '<TD text_wrap="true" colspan="9" style="">15. Количество подключений/переподключений рукавов АЦ, осуществленный в ходе приема СУГ в резервуар АГЗС:</TD>' skip
+  '<TD text_wrap="true" colspan="3" style="text-align: center;">' + string(getNunHoses(buf_trn-doc.doc-code)) + '</TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip
 
   '<TR>' skip
   '<TD colspan="9" style="height: 14px;"></TD>' skip
-  '<TD colspan="5" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="3" style="border-top: 1px solid black; text-align: center;"></TD>' skip
+  '<TD colspan="2" style="text-align: right;"></TD>' skip
   '</TR>'skip  
                 
   '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
@@ -863,28 +907,28 @@ put stream OutStr-html unformatted
   '<TR>' skip
   '<TD colspan="3"></TD>'
   '<TD colspan="2" style="">Подпись (и)</TD>' skip
-  '<TD colspan="7" style="text-align: center;">' + v-fio-position + " " + v-fio + '</TD>'
+  '<TD text_wrap="true" colspan="7" style="text-align: center;">' + v-fio-position + " " + v-fio + '</TD>'
   '<TD colspan="2"></TD>'
   '</TR>'skip
                     
   '<TR>' skip
   '<TD colspan="3"></TD>'
   '<TD colspan="2" style=""></TD>' skip
-  '<TD colspan="7" style="border-top: 1px solid black; text-align: center;">должность, Ф.И.О. работника АЗС/АЗК (членов комиссии)</TD>'
+  '<TD text_wrap="true" colspan="7" style="border-top: 1px solid black; text-align: center;">должность, Ф.И.О. работника АЗС/АЗК (членов комиссии)</TD>'
   '<TD colspan="2"></TD>'
   '</TR>'skip
                     
   '<TR>' skip
   '<TD colspan="3"></TD>'
   '<TD colspan="2" style="height: 14px;"></TD>' skip
-  '<TD colspan="7" style="text-align: center;">' + v-driver + '</TD>'
+  '<TD text_wrap="true" colspan="7" style="text-align: center;">' + v-driver + '</TD>'
   '<TD colspan="2"></TD>'
   '</TR>'skip
                     
   '<TR>' skip
   '<TD colspan="3"></TD>'
   '<TD colspan="2" style=""></TD>' skip
-  '<TD colspan="7" style="border-top: 1px solid black; text-align: center;">должность, Ф.И.О. водителя АЦ</TD>'
+  '<TD text_wrap="true" colspan="7" style="border-top: 1px solid black; text-align: center;">должность, Ф.И.О. водителя АЦ</TD>'
   '<TD colspan="2"></TD>'
   '</TR>'skip
   .
@@ -926,15 +970,12 @@ procedure person-write:
   DEFINE OUTPUT PARAMETER  p-obj-name      as character    no-undo .
   define OUTPUT PARAMETER  p-position      as CHARACTER       NO-UNDO .
   define variable v-name as character no-undo . 
-  define buffer buf_person for ub.person .    
-  find first buf_person no-lock where buf_person.psn-code = p-obj-code no-error .
-  if AVAILABLE buf_person then 
-  do:
-    run rep/get-psn.p(input buf_person.psn-code, output v-name ).
-    p-obj-name = v-name + '  ' + buf_person.name1 + ' ':U + buf_person.name2.
-    p-position = buf_person.position .
-        
-  end.       
+  define buffer buf_user-account for ub.user-account .    
+  
+  run rep/get-psn.p(input p-obj-code, output p-obj-name ).
+  find first buf_user-account no-lock where buf_user-account.psn-code = p-obj-code no-error .
+  if available (buf_user-account) then  
+    p-position = buf_user-account.position .
                                           
 end. 
 
@@ -1006,9 +1047,9 @@ procedure print-table1:
     
   put stream OutStr-html unformatted
     '<TR>' skip
-    '<TD text_wrap="true" style="text-align: center;">Масса СУГ по ТТН, кг</TD>' skip
-    '<TD text_wrap="true" style="text-align: center;">Масса СУГ в резервуарах до слива, кг</TD>' skip
-    '<TD text_wrap="true" style="text-align: center;">Масса СУГ в резервуарах после слива, кг</TD>' skip
+    '<TD text_wrap="true" colspan="2" style="text-align: center;">Масса СУГ по ТТН, кг</TD>' skip
+    '<TD text_wrap="true" colspan="2" style="text-align: center;">Масса СУГ в резервуарах до слива, кг</TD>' skip
+    '<TD text_wrap="true" colspan="2" style="text-align: center;">Масса СУГ в резервуарах после слива, кг</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Количество СУГ, слитого в резервуары, кг</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Температура слива СУГ, °С</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">Массовая доля пропана в смеси, %</TD>' skip
@@ -1020,9 +1061,9 @@ procedure print-table1:
     '</TR>'skip       
                     
     '<TR>' skip
-    '<TD style="text-align: center;">1</TD>' skip
-    '<TD style="text-align: center;">2</TD>' skip
-    '<TD style="text-align: center;">3</TD>' skip
+    '<TD colspan="2" style="text-align: center;">1</TD>' skip
+    '<TD colspan="2" style="text-align: center;">2</TD>' skip
+    '<TD colspan="2" style="text-align: center;">3</TD>' skip
     '<TD style="text-align: center;">4</TD>' skip
     '<TD style="text-align: center;">5</TD>' skip
     '<TD style="text-align: center;">6</TD>' skip
@@ -1036,17 +1077,17 @@ procedure print-table1:
   for each tt-petrol:
     put stream OutStr-html unformatted
       '<TR>' skip
-      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-AC,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD colspan="2" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD colspan="2" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD colspan="2" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.after-temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.after-temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.masDol,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.masDol,"->>>>>>>>>>>9.99",2) + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-pl) + '</TD>' skip
-      '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol9,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.pol9,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol10,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.pol10,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol11,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.pol11,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</TD>' skip
+      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol9,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol9,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</TD>' skip
+      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol10,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol10,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</TD>' skip
+      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol11,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol11,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</TD>' skip
       '</TR>'skip     
       .
   end.
