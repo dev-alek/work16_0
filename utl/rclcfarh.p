@@ -65,6 +65,8 @@ on write  of arh-fin-doc-schet-tax-nal     override do: end.
 on write  of arh-fin-doc-schet-tax-obj     override do: end.
 on write  of arh-fin-ob-contr              override do: end.
 on write  of arh-fin-ob-contr-obj          override do: end.
+
+if parlist-arh = "" then parlist-arh = "all" .
 run del-for-one-firm  (input parhost-code, input parlist-arh) no-error.
 if error-status:error then do:
   message return-value error-status:get-message(1) error-status:get-message(2) view-as alert-box error.
