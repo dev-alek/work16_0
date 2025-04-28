@@ -1764,14 +1764,14 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
           and ub.marking-lines.obj-code = t-doc.obj-code
           and ub.marking-lines.out-code = t-doc.doc-code
           and ub.marking-lines.gds-code = ub.goods.gds-code:
-          if v-is-return
-          then do :
-            create tt-marking-lines.
-            buffer-copy ub.marking-lines to tt-marking-lines.
-            tt-marking-lines.box-qnty = 1 .
-            tt-marking-lines.unit = "шт" .
-          end .
-          else do :
+/*          if v-is-return                                     */
+/*          then do :                                          */
+/*            create tt-marking-lines.                         */
+/*            buffer-copy ub.marking-lines to tt-marking-lines.*/
+/*            tt-marking-lines.box-qnty = 1 .                  */
+/*            tt-marking-lines.unit = "шт" .                   */
+/*          end .                                              */
+/*          else do :                                          */
             find first ub.marking no-lock where ub.marking.mark begins ub.marking-lines.mark and ub.marking.sts <> ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB no-error.
             if available (ub.marking)
               then 
@@ -1804,8 +1804,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                   tt-marking-lines.mark-parent = ub.marking.mark-parent.
               end.
             end.
-          end .
-
+/*          end .*/
         end.
       end.
 

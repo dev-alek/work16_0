@@ -47,6 +47,7 @@ define variable vss-description as character no-undo init "ѕроверка кодов маркир
 { gbl/getcntxt.i def }
 { gbl/prn-lib.i }
 { gbl/waitfram.i }
+{ str/trdcalib.i }
 { cmp/mrk-strf.i }
 { gbl/color.i }
 { str/temp_upd.i }
@@ -86,6 +87,7 @@ define variable jj          as integer   no-undo .
 define variable v-qnty-mark as integer   no-undo .
 define variable mark-parent as character no-undo .
 define variable v-edoc-type as logical   no-undo .
+define variable mIsRasVneshReturn as logical no-undo init false.
 /*define variable upd_mark    as logical   no-undo init true.*/
 define temp-table tt-gray-marking-lines like tt-marking-lines .
 
@@ -103,6 +105,9 @@ define variable v-scan-str  as character no-undo.
 define variable v-manual    as logical   no-undo .
 DEFINE VARIABLE v-timedelay as integer   no-undo .
 define variable vMarkBrow2 as character no-undo.
+
+define variable varvalue as character no-undo.
+define variable vartype  as character no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -1701,7 +1706,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       if utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB then v-edoc-type = yes .
 /*      find first ub.utd-attr no-lock where ub.utd-attr.doc-id = utd.doc-id and ub.utd-attr.db-num = utd.db-num and ub.utd-attr.attr-code = "MarkUtd" no-error .*/
 /*      if available (ub.utd-attr) then upd_mark = logical(ub.utd-attr.attr-value) .                                                                             */
-   end.   
+   end. 
+
+   /* определим, €вл€етс€ ли преданные док-т расодом внешним дл€ возврата поставщику */
+   if num-entries(p-doc,{&delim-par}) > 1 then
+   do:
+     { str/tdat-val.i
+       trim(entry(2,entry(1,p-doc,{&delim-par}),':'))
+       {&trdcattr-is-return}
+       varvalue
+       vartype
+       no-error
+     }
+     mIsRasVneshReturn = (varvalue = "yes").
+   end. 
+     
     run init-temp in this-procedure .
     run enable_UI in this-procedure .
     apply "entry" to v-mark in FRAME {&FRAME-NAME}.
@@ -2121,21 +2140,19 @@ FUNCTION getStatusName RETURNS CHARACTER
       Purpose:  
         Notes:  
     ------------------------------------------------------------------------------*/
+    define variable vExtDocType as character no-undo.
     define buffer c-marking for ub.c-marking.
 
+    vExtDocType = if num-entries(p-doc,{&delim-par}) > 1 then entry(2,p-doc,{&delim-par}) else ?.
     if p-sts-loc = marking:Reserved:KeyIntDB and 
-       num-entries(p-doc,{&delim-par}) > 1 and entry(2,p-doc,{&delim-par}) = {&TDEDT_Spi_Vnesh} then
+       (vExtDocType = {&TDEDT_Spi_Vnesh} or vExtDocType = {&TDEDT_Ras_Perem} or mIsRasVneshReturn) then
     do:
       find last c-marking no-lock where
                 c-marking.mark = p-mark
            use-index pi-2 no-error.
-      ChekTypeMarkByDm(p-mark).
       if not avail c-marking or
          c-marking.sts = marking:Checked_:KeyIntDB or 
-         c-marking.sts = marking:FreeZone:KeyIntDB or
-         (c-marking.sts = marking:ReturnLock:KeyIntDB and 
-          mTypeMark <> "" and 
-          EDOParSec:GetIsSaleReturnForType(mTypeMark)) then 
+         c-marking.sts = marking:FreeZone:KeyIntDB then 
         return StatusTHName(p-sts-glob).
       else
         return substitute("&1_&2",StatusTHName(p-sts-loc),StatusTHName(c-marking.sts)).
