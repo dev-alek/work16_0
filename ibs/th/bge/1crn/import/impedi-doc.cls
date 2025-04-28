@@ -656,8 +656,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   end .
                   if v-gray-zone
                   then do :
-                     find current marking exclusive-lock.
-                     marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB .
+                     MarkChangeSts(marking.mark, 
+                                   objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB, 
+                                   "", 
+                                   no).                                                         
                   end .
                 end .
                 else do :
@@ -670,9 +672,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
               end .
               if v-err-childs
               then do :
-                 find current marking exclusive-lock.
-                 marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
-                 marking.comment = errMSG .
+                 MarkChangeSts(marking.mark, 
+                               objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB, 
+                               errMSG, 
+                               yes).                  
+                 if marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+                 then 
                  AddUtdErr(idb-num,
                            idoc-id,
                            if available bf_utd-marking-lines 
@@ -727,8 +732,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   end .
                   if v-gray-zone
                   then do :
-                     find current marking exclusive-lock.
-                     marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB .
+                     MarkChangeSts(marking.mark, 
+                                   objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB, 
+                                   "", 
+                                   no).                      
                   end .
                 end .
                 else do :
@@ -740,10 +747,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                 end .
               end .
               if v-err-childs
-              then do :
-                 find current marking exclusive-lock.
-                 marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
-                 marking.comment = errMSG .
+              then do :                                  
+                 MarkChangeSts(marking.mark, 
+                               objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB, 
+                               errMSG, 
+                               yes).
+                 if marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+                 then              
                  AddUtdErr(idb-num,
                            idoc-id,
                            if available bf_utd-marking-lines 
@@ -757,16 +767,22 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
         end .
         else do :
            if vAllQnty <> vQnty and GrayZoneQnty <> 100
-           then do:
-              find current marking exclusive-lock.
+           then do:              
               if vAllQnty - vQnty <= GrayZoneQnty
               then do :
-                marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB .
+                 MarkChangeSts(marking.mark, 
+                               objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB, 
+                               "", 
+                               no).                     
               end .
               else do :
                 errMSG = "В блоке " + string(vQnty) + " пачек." .
-                marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB .
-                marking.comment = errMSG .
+                MarkChangeSts(marking.mark, 
+                               objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB, 
+                               errMSG, 
+                               yes).                
+                if marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+                then
                 AddUtdErr(idb-num,
                           idoc-id,
                           if available bf_utd-marking-lines 
@@ -780,4 +796,30 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
         end.
      end.
   end.
+  
+  method public void MarkChangeSts(imark as char, ists as int, ierrMSG as char, ichld as log):     
+     define buffer buf_marking for ub.marking.
+     define buffer chld_marking for ub.marking.
+     
+     do transaction
+     on error undo, return:
+         find first buf_marking where buf_marking.mark eq imark
+         exclusive-lock no-error no-wait.
+         if available buf_marking and
+            buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+         then do:             
+            buf_marking.sts = ists.
+            if ierrMSG > "" then  
+               buf_marking.comment = ierrMSG.  
+            if ichld then                
+            for each chld_marking exclusive-lock where 
+                     chld_marking.mark-parent = buf_marking.mark:
+                chld_marking.sts = ists.         
+            end.               
+         end.                        
+     end.    
+  end method.
+  
 end class.
+
+     
