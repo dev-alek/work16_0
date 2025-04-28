@@ -2042,35 +2042,33 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
               end.
     
               if v-rvs-qnty-after <> ?
-                and v-rvs-qnty-after <> 0
+              and v-rvs-qnty-after <> 0
+              and not v-com-tanks-not-filled
               then do:
-                if not v-com-tanks-not-filled
-                then do :
-                  if v-rvs-qnty-after - v-rvs-qnty-before <= 0
-                    or v-rvs-qnty-after - v-rvs-qnty-before = ?
-                  then do:
-                    message
-                      substitute( "Ошибка по результатам сверки." ) skip
-                      substitute( "Место хранения: &1 .", p-pl-code ) skip
-                      substitute( "Количество залитого топлива: &1 (&2).", v-rvs-qnty-after - v-rvs-qnty-before, buf_goods.unit-base ) skip
-                      substitute( "Объем в сверке до: &1 ", v-rvs-qnty-before ) skip
-                      substitute( "Объем в сверке после: &1 ", v-rvs-qnty-after ) skip
-                      view-as alert-box .
-                    undo block_tr, return error .
-                  end.
-                  if v-rvs-cli-qnty-after - v-rvs-cli-qnty-before <= 0
-                    or v-rvs-cli-qnty-after - v-rvs-cli-qnty-before = ?
-                  then do:
-                    message
-                      substitute( "Ошибка по результатам сверки." ) skip
-                      substitute( "Место хранения: &1 .", p-pl-code ) skip
-                      substitute( "Количество залитого топлива: &1 (&2).", v-rvs-cli-qnty-after - v-rvs-cli-qnty-before, buf_goods.unit-cli ) skip
-                      substitute( "Масса в сверке до: &1 ", v-rvs-cli-qnty-before ) skip
-                      substitute( "Масса в сверке после: &1 ", v-rvs-cli-qnty-after ) skip
-                      view-as alert-box .
-                    undo block_tr, return error .
-                  end.
-                end .
+                if v-rvs-qnty-after - v-rvs-qnty-before <= 0
+                  or v-rvs-qnty-after - v-rvs-qnty-before = ?
+                then do:
+                  message
+                    substitute( "Ошибка по результатам сверки." ) skip
+                    substitute( "Место хранения: &1 .", p-pl-code ) skip
+                    substitute( "Количество залитого топлива: &1 (&2).", v-rvs-qnty-after - v-rvs-qnty-before, buf_goods.unit-base ) skip
+                    substitute( "Объем в сверке до: &1 ", v-rvs-qnty-before ) skip
+                    substitute( "Объем в сверке после: &1 ", v-rvs-qnty-after ) skip
+                    view-as alert-box .
+                  undo block_tr, return error .
+                end.
+                if v-rvs-cli-qnty-after - v-rvs-cli-qnty-before <= 0
+                  or v-rvs-cli-qnty-after - v-rvs-cli-qnty-before = ?
+                then do:
+                  message
+                    substitute( "Ошибка по результатам сверки." ) skip
+                    substitute( "Место хранения: &1 .", p-pl-code ) skip
+                    substitute( "Количество залитого топлива: &1 (&2).", v-rvs-cli-qnty-after - v-rvs-cli-qnty-before, buf_goods.unit-cli ) skip
+                    substitute( "Масса в сверке до: &1 ", v-rvs-cli-qnty-before ) skip
+                    substitute( "Масса в сверке после: &1 ", v-rvs-cli-qnty-after ) skip
+                    view-as alert-box .
+                  undo block_tr, return error .
+                end.
     
                 if not is-sug(buf_goods.gds-code)
                 then do :
