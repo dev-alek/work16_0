@@ -289,11 +289,11 @@ for each gds-list:
   /*    end.*/
   end.
 
-  if pDelDayGoods and tt-zakaz.qntyDayGoods = 0 then 
-  do: 
-    delete tt-zakaz . 
-    next . 
-  end.
+/*  if pDelDayGoods and tt-zakaz.qntyDayGoods = 0 then*/
+/*  do:                                               */
+/*    delete tt-zakaz .                               */
+/*    next .                                          */
+/*  end.                                              */
   /*  if gds-list.gds-code = 158037 then run gbl/inidebug.p.*/
 
   if tt-zakaz.qntyDayGoods <> 0 then tt-zakaz.tempSale = round-maxDec(tt-zakaz.volSale / tt-zakaz.qntyDayGoods) . /* “пр */
@@ -306,12 +306,13 @@ for each gds-list:
       else tt-zakaz.volTemp = round-maxInt(tt-zakaz.tempSale * vDaySale - tt-zakaz.ostatokDay) .
     end.
     else tt-zakaz.volTemp = round-maxInt(tt-zakaz.tempSale * vDaySale - tt-zakaz.ostatokToday). /* Vз */
-    if tt-zakaz.qntyDaySale <> 0 then do:   
-    tt-zakaz.volMinZapas = round-maxInt(tt-zakaz.volTemp + tt-zakaz.minZapas) . /* Vзм */
-    tt-zakaz.garantZapas = pGarantDay * tt-zakaz.tempSale . /* G */
-    tt-zakaz.volMinGarant = round-maxInt(tt-zakaz.volTemp + tt-zakaz.minZapas + tt-zakaz.garantZapas) . /* Vзг */
+    if tt-zakaz.qntyDaySale <> 0 then 
+    do:   
+      tt-zakaz.volMinZapas = round-maxInt(tt-zakaz.volTemp + tt-zakaz.minZapas) . /* Vзм */
+      tt-zakaz.garantZapas = pGarantDay * tt-zakaz.tempSale . /* G */
+      tt-zakaz.volMinGarant = round-maxInt(tt-zakaz.volTemp + tt-zakaz.minZapas + tt-zakaz.garantZapas) . /* Vзг */
 
-    if tt-zakaz.tempSale <> 0 then tt-zakaz.ostatokGoods = round-minInt(tt-zakaz.ostatokToday / tt-zakaz.tempSale) . /* ќд */
+      if tt-zakaz.tempSale <> 0 then tt-zakaz.ostatokGoods = round-minInt(tt-zakaz.ostatokToday / tt-zakaz.tempSale) . /* ќд */
     end.
     else tt-zakaz.volTemp = 0 .
   end.
@@ -477,44 +478,46 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
       '</tr>' skip      
       .
   end.
-  if tt-zakaz.qntyDayGoods = 0 or tt-zakaz.qntyDaySale = 0 then do:
-  put stream OutStr-html unformatted
-    '       <tr>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-code) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.artic) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-name) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + if tt-zakaz.tempSale = 0 then "-" + '</td>' else string(tt-zakaz.ostatokGoods) + '</td>' skip    
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volTemp) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
-    /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokDay) + '</td>' skip */
-    /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip*/
-    /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip   */
-    '       </tr>' skip
-    . 
+  if tt-zakaz.qntyDayGoods = 0 or tt-zakaz.qntyDaySale = 0 then 
+  do:
+    put stream OutStr-html unformatted
+      '       <tr>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-code) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.artic) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-name) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + if tt-zakaz.tempSale = 0 then "-" + '</td>' else string(tt-zakaz.ostatokGoods) + '</td>' skip    
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volTemp) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
+      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
+      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokDay) + '</td>' skip */
+      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip*/
+      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip   */
+      '       </tr>' skip
+      . 
   end.
-  else do:
-  put stream OutStr-html unformatted
-    '       <tr>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-code) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.artic) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-name) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokGoods) + '</td>' skip    
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volTemp) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
-    '         <td text_wrap="true" style="text-align: center;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
-    /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokDay) + '</td>' skip */
-    /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip*/
-    /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip   */
-    '       </tr>' skip
-    . 
-end.
+  else 
+  do:
+    put stream OutStr-html unformatted
+      '       <tr>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-code) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.artic) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-name) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokGoods) + '</td>' skip    
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volTemp) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
+      '         <td text_wrap="true" style="text-align: center;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
+      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokDay) + '</td>' skip */
+      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip*/
+      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip   */
+      '       </tr>' skip
+      . 
+  end.
 end.
 
 run prn-lib-reportviewer-report-name in this-procedure (
@@ -692,104 +695,123 @@ procedure ost-gds-day :
     define input parameter p-ost-today as decimal no-undo .
     
     define variable vOst as decimal no-undo .
-    define buffer p_goods    for ub.goods .
-    define buffer p-doc-line for ub.doc-line .
-
+    define buffer p_goods     for ub.goods .
+    define buffer p-doc-line  for ub.doc-line .
+    define buffer pc-gds-obj  for ub.c-gds-obj .
+    define buffer pc-gds-obj2 for ub.c-gds-obj .
+    
     find first p_goods no-lock where p_goods.gds-code = p-gds-code no-error .
     if error-status :error then return error .
 
-    create temp-gds-qnty.
-    assign
-      temp-gds-qnty.day      = today
-      temp-gds-qnty.ost      = p-ost-today
-      temp-gds-qnty.gds-code = p-gds-code
-      .
-    vOst = p-ost-today .   
-
-    for each p-doc-line no-lock where
-      p-doc-line.obj-type    = p-obj-type
-      and p-doc-line.obj-code    = p-obj-code
-      and p-doc-line.artic       = p_goods.artic
-      and p-doc-line.prod-type   = p_goods.prod-type
-      and p-doc-line.prod-code   = p_goods.prod-code
-      and p-doc-line.status_     = {&fact}
-      and p-doc-line.fact-order >= v-fact-orderStart 
-      break by p-doc-line.fact-order desc:
-      for first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-line.doc-code and
-        buf_trn-doc.obj-code = p-doc-line.obj-code and
-        buf_trn-doc.obj-type = p-doc-line.obj-type:
-        find first temp-gds-qnty where temp-gds-qnty.day = buf_trn-doc.fact-date and 
-          temp-gds-qnty.gds-code = p_goods.gds-code no-error .
-        if not available (temp-gds-qnty) then 
-        do:
-          create temp-gds-qnty .
-          assign
-            temp-gds-qnty.day      = buf_trn-doc.fact-date
-            temp-gds-qnty.gds-code = p_goods.gds-code
-            .
-        end.
-          
-        case p-doc-line.ext-doc-type:
-          /* разбивка по типам документов */
-          /* приход */
-          when   {&tdedt_pri_vnesh}  or
-          when   {&tdedt_pri_prvo  }     then
-            do:
-              assign 
-                temp-gds-qnty.ost = vOst  -  p-doc-line.fact-qnty.
-            end.
-
-          /* расход */
-          when  {&tdedt_spi_vnesh}      then 
-            assign 
-              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.
-          when  {&tdedt_spi_prvo}       then 
-            assign 
-              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.
-          when  {&tdedt_ras_prvo}       then 
-            assign 
-              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.
-          when  {&tdedt_ras_perem}      then 
-            assign 
-              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.
-          when  {&tdedt_vozvrat_perem}  then 
-            assign 
-              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.
-          when  {&tdedt_ras_vnesh}      then 
-            assign 
-              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.
-          when  {&tdedt_vozvrat_vnesh}  then 
-            assign 
-              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.
-          when  {&tdedt_ras_vnesh_kass}     then 
-            assign 
-              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.
-          when  {&tdedt_vozvrat_vnesh_kass} then 
-            assign 
-              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.
-        end case.
-        vOst = temp-gds-qnty.ost .
-      end.
-    end.
-
-    /* второй  проход по таблице - рассчитывает остаток по дн€м  */
-    do periodDate = vDateStart to vDateEnd:
-      find first temp-gds-qnty no-lock where temp-gds-qnty.day = periodDate and temp-gds-qnty.gds-code = p-gds-code  no-error .
-      if not available (temp-gds-qnty) then 
+    do periodDate = vDateStart to vDateEnd:   
+      create temp-gds-qnty .                                                        
+      assign
+        temp-gds-qnty.day      = periodDate
+        temp-gds-qnty.gds-code = p_goods.gds-code  
+        .
+      find first pc-gds-obj no-lock where pc-gds-obj.gds-code = p_goods.gds-code and
+        pc-gds-obj.obj-code = p-obj-code and
+        pc-gds-obj.obj-type = p-obj-type and
+        pc-gds-obj.corr-date = periodDate no-error .
+      if not available (pc-gds-obj) then 
       do:
-        find first buf_temp-gds-qnty no-lock where buf_temp-gds-qnty.day > periodDate and
-          buf_temp-gds-qnty.gds-code = p-gds-code no-error .
-        if available (buf_temp-gds-qnty) then 
-        do:
-          create temp-gds-qnty .
-          assign
-            temp-gds-qnty.day      = periodDate
-            temp-gds-qnty.gds-code = p-gds-code
-            temp-gds-qnty.ost      = buf_temp-gds-qnty.ost
-            .
-        end.
+        find last pc-gds-obj2 no-lock where pc-gds-obj2.gds-code = p_goods.gds-code and
+          pc-gds-obj2.obj-code = p-obj-code and
+          pc-gds-obj2.obj-type = p-obj-type and
+          pc-gds-obj2.corr-date < periodDate no-error .
+        if available (pc-gds-obj2) then temp-gds-qnty.ost = pc-gds-obj2.fact-qnty .
       end.
-    end.
-  end. /* do */
+      else temp-gds-qnty.ost = pc-gds-obj.fact-qnty .
+    end.  
+  end.  
+
+/*    vOst = p-ost-today .*/
+
+/*    for each pc no-lock where                                                           */
+/*      p-doc-line.obj-type    = p-obj-type                                               */
+/*      and p-doc-line.obj-code    = p-obj-code                                           */
+/*      and p-doc-line.artic       = p_goods.artic                                        */
+/*      and p-doc-line.prod-type   = p_goods.prod-type                                    */
+/*      and p-doc-line.prod-code   = p_goods.prod-code                                    */
+/*      and p-doc-line.status_     = {&fact}                                              */
+/*      and p-doc-line.fact-order >= v-fact-orderStart                                    */
+/*/*      break by p-doc-line.fact-order desc*/                                           */
+/*        :                                                                               */
+/*      for first buf_trn-doc no-lock where buf_trn-doc.doc-code = p-doc-line.doc-code and*/
+/*        buf_trn-doc.obj-code = p-doc-line.obj-code and                                  */
+/*        buf_trn-doc.obj-type = p-doc-line.obj-type:                                     */
+/*        find first temp-gds-qnty where temp-gds-qnty.day = buf_trn-doc.fact-date and    */
+/*          temp-gds-qnty.gds-code = p_goods.gds-code no-error .                          */
+/*        if not available (temp-gds-qnty) then                                           */
+/*        do:                                                                             */
+/*          create temp-gds-qnty .                                                        */
+/*          assign                                                                        */
+/*            temp-gds-qnty.day      = buf_trn-doc.fact-date                              */
+/*            temp-gds-qnty.gds-code = p_goods.gds-code                                   */
+/*            .                                                                           */
+/*        end.                                                                            */
+/*                                                                                        */
+/*        case p-doc-line.ext-doc-type:                                                   */
+/*          /* разбивка по типам документов */                                            */
+/*          /* приход */                                                                  */
+/*          when   {&tdedt_pri_vnesh}  or                                                 */
+/*          when   {&tdedt_pri_prvo  }     then                                           */
+/*            do:                                                                         */
+/*              assign                                                                    */
+/*                temp-gds-qnty.ost = vOst  +  p-doc-line.fact-qnty.                      */
+/*            end.                                                                        */
+/*                                                                                        */
+/*          /* расход */                                                                  */
+/*          when  {&tdedt_spi_vnesh}      then                                            */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_spi_prvo}       then                                            */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_ras_prvo}       then                                            */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_ras_perem}      then                                            */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_vozvrat_perem}  then                                            */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_ras_vnesh}      then                                            */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_vozvrat_vnesh}  then                                            */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_ras_vnesh_kass}     then                                        */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst - p-doc-line.fact-qnty.                          */
+/*          when  {&tdedt_vozvrat_vnesh_kass} then                                        */
+/*            assign                                                                      */
+/*              temp-gds-qnty.ost = vOst + p-doc-line.fact-qnty.                          */
+/*        end case.                                                                       */
+/*        vOst = temp-gds-qnty.ost .                                                      */
+/*      end.                                                                              */
+/*    end.                                                                                */
+
+/*    /* второй  проход по таблице - рассчитывает остаток по дн€м  */                                                            */
+/*    do periodDate = vDateStart to vDateEnd:                                                                                    */
+/*      find first temp-gds-qnty no-lock where temp-gds-qnty.day = periodDate and temp-gds-qnty.gds-code = p-gds-code  no-error .*/
+/*      if not available (temp-gds-qnty) then                                                                                    */
+/*      do:                                                                                                                      */
+/*        find first buf_temp-gds-qnty no-lock where buf_temp-gds-qnty.day > periodDate and                                      */
+/*          buf_temp-gds-qnty.gds-code = p-gds-code no-error .                                                                   */
+/*        if available (buf_temp-gds-qnty) then                                                                                  */
+/*        do:                                                                                                                    */
+/*          create temp-gds-qnty .                                                                                               */
+/*          assign                                                                                                               */
+/*            temp-gds-qnty.day      = periodDate                                                                                */
+/*            temp-gds-qnty.gds-code = p-gds-code                                                                                */
+/*            temp-gds-qnty.ost      = buf_temp-gds-qnty.ost                                                                     */
+/*            .                                                                                                                  */
+/*        end.                                                                                                                   */
+/*      end.                                                                                                                     */
+/*    end.                                                                                                                       */
+/*end. /* do */*/
 end procedure. /* qnty-lib-create-tt */
 

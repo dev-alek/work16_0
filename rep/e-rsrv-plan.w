@@ -345,8 +345,8 @@ DEFINE BROWSE br_date
 DEFINE FRAME Dialog-Frame
   b-exit AT ROW 1 COL 1 WIDGET-ID 4
   Btn_OK AT ROW 1 COL 11 WIDGET-ID 10
-/*  B-lkp AT ROW 1 COL 73.5 WIDGET-ID 8 */
-/*  B-Help AT ROW 1 COL 83.5 WIDGET-ID 6*/
+  /*  B-lkp AT ROW 1 COL 73.5 WIDGET-ID 8 */
+  /*  B-Help AT ROW 1 COL 83.5 WIDGET-ID 6*/
   i-exit AT ROW 1.08 COL 11.13 WIDGET-ID 12 NO-TAB-STOP 
   BUTTON-1 AT ROW 2.5 COL 2 WIDGET-ID 14
   BUTTON-2 AT ROW 2.5 COL 17 WIDGET-ID 16
@@ -591,6 +591,7 @@ ON LEAVE OF Date-End IN FRAME Dialog-Frame /* по */
       message "Дата окончания периода продаж должна быть меньше текущей"
         view-as alert-box.
       display Date-End with frame Dialog-Frame .
+      return no-apply .
     end.  
     Assign  Date-End no-error.
     display Date-End with frame Dialog-Frame .
@@ -610,6 +611,7 @@ ON LEAVE OF Date-Start IN FRAME Dialog-Frame /* с */
       message "Дата начала периода продаж должна быть меньше текущей"
         view-as alert-box.
       display Date-Start with frame Dialog-Frame .
+      return no-apply .
     end.  
     Assign  Date-Start no-error.
     display Date-Start with frame Dialog-Frame .
@@ -720,7 +722,7 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
     if post-grp_recids <> "" then
     do:
       Assign
-        text-cliname = ''
+        text-cliname  = ''
         customer-name = "".
       v-nn = num-entries( post-grp_recids ) .
       DO ii = 1 TO v-nn :
@@ -1061,6 +1063,7 @@ ON CHOOSE OF b-date IN FRAME Dialog-Frame /* b-date */
       message "Дата заказа должна быть равна или больше текущей"
         view-as alert-box.
       display Date-order with frame Dialog-Frame .
+      return no-apply .
     end.   
     assign Date-order .
   END.
@@ -1089,7 +1092,7 @@ ON TAB OF Date-order IN FRAME Dialog-Frame
         message "Дата заказа должна быть равна или больше текущей"
           view-as alert-box.
         display Date-order with frame Dialog-Frame .
-        return .
+        return no-apply.
       end. 
       assign Date-order .
       display Date-order with frame Dialog-Frame .
@@ -1120,6 +1123,7 @@ ON CHOOSE OF b-date-Start IN FRAME Dialog-Frame /* b-date-Start */
       message "Дата начала периода продаж должна быть меньше текущей"
         view-as alert-box.
       display Date-Start with frame Dialog-Frame .
+      return no-apply .
     end.   
   END.
 
@@ -1145,6 +1149,7 @@ ON CHOOSE OF b-date-End IN FRAME Dialog-Frame /* b-date-End */
       message "Дата окончания периода продаж должна быть меньше текущей"
         view-as alert-box.
       display Date-End with frame Dialog-Frame .
+      return no-apply .
     end.   
   END.
 
@@ -1166,11 +1171,12 @@ ON RETURN OF Date-End IN FRAME Dialog-Frame
 ON TAB OF Date-End IN FRAME Dialog-Frame
   DO:
     date(Date-End:screen-value) no-error.
-    if error-status:error then do:
-        message "Ошибка ввода даты"
-          view-as alert-box.      
+    if error-status:error then 
+    do:
+      message "Ошибка ввода даты"
+        view-as alert-box.      
       display Date-End with frame Dialog-Frame .
-          return no-apply .  
+      return no-apply .  
     end.
     if string(Date-End) <> Date-End:screen-value then 
     do:
@@ -1185,7 +1191,7 @@ ON TAB OF Date-End IN FRAME Dialog-Frame
         message "Дата окончания периода продаж должна быть меньше текущей"
           view-as alert-box.
         display Date-End with frame Dialog-Frame .
-        return .
+        return no-apply.
       end. 
       assign Date-End .
       display Date-End with frame Dialog-Frame .
@@ -1211,11 +1217,12 @@ ON RETURN OF Date-Start IN FRAME Dialog-Frame
 ON TAB OF Date-Start IN FRAME Dialog-Frame
   DO:
     date(Date-Start:screen-value) no-error.
-    if error-status:error then do:
-        message "Ошибка ввода даты"
-          view-as alert-box.     
+    if error-status:error then 
+    do:
+      message "Ошибка ввода даты"
+        view-as alert-box.     
       display Date-Start with frame Dialog-Frame .
-                return no-apply . 
+      return no-apply . 
     end.
     if string(Date-Start) <> Date-Start:screen-value then 
     do:
@@ -1230,7 +1237,7 @@ ON TAB OF Date-Start IN FRAME Dialog-Frame
         message "Дата начала периода продаж должна быть меньше текущей"
           view-as alert-box.
         display Date-Start with frame Dialog-Frame .
-        return .
+        return no-apply.
       end. 
       assign Date-Start .
       display Date-Start with frame Dialog-Frame .
