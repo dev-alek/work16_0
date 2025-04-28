@@ -567,9 +567,8 @@ define variable vss-description as character no-undo init "$Печать сменного отче
       and ub.rvs-line-pump.pl-code  = temp-rvs-line.pl-code
       :
             
-        
       for each ub.pl-gds-pump no-lock where ub.pl-gds-pump.pump-code = ub.rvs-line-pump.pump-code
-        and ub.pl-gds-pump.gds-code = ub.rvs-line-pump.gds-code
+        /*and ub.pl-gds-pump.gds-code = ub.rvs-line-pump.gds-code*/
         and ub.pl-gds-pump.pl-code = ub.rvs-line-pump.pl-code
         :
         find first temp-line-pump where temp-line-pump.gds-code = rvs-line-pump.gds-code and temp-line-pump.pl-code = rvs-line-pump.pl-code and temp-line-pump.loc1 
