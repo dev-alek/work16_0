@@ -178,7 +178,6 @@ run factord-end-day in this-procedure ( input vdateEnd
   , output v-fact-orderEnd
   ).  
   
-       
 /* —бор данных */
 for each gds-list:
   find first tt-zakaz no-lock where tt-zakaz.gds-code = gds-list.gds-code no-error .
@@ -238,6 +237,8 @@ for each gds-list:
         tt-zakaz.qntyDayGoods = tt-zakaz.qntyDayGoods + 1 .
       end.
     end.
+    else tt-zakaz.qntyDayGoods = tt-dateZakaz.dateEnd - tt-dateZakaz.dateStart + 1.
+    
     for each tt-typeDocChoose:
       for each buf_doc-line no-lock 
         where buf_doc-line.ext-doc-type = tt-typeDocChoose.type-code and
@@ -294,13 +295,9 @@ for each gds-list:
   end.
   /*  if gds-list.gds-code = 158037 then run gbl/inidebug.p.*/
 
-  if tt-zakaz.qntyDayGoods <> 0 then 
+  if tt-zakaz.qntyDayGoods <> 0 then tt-zakaz.tempSale = round-maxDec(tt-zakaz.volSale / tt-zakaz.qntyDayGoods) . /* “пр */
+  if tt-zakaz.qntyDayGoods <> 0 then
   do:
-    if pDelDayGoods then tt-zakaz.tempSale = round-maxDec(tt-zakaz.volSale / tt-zakaz.qntyDayGoods) . /* “пр */
-    else tt-zakaz.tempSale = round-maxDec(tt-zakaz.volSale / tt-zakaz.qntyDay) .    
-  end.
-  if tt-zakaz.qntyDayGoods <> 0 then 
-  do:    
     if tt-zakaz.ostatokToday > -1 then 
     do:
       tt-zakaz.ostatokDay = tt-zakaz.ostatokToday - (integer(pDateOrder - date(today)) * tt-zakaz.tempSale) . /* ќст */
@@ -309,7 +306,7 @@ for each gds-list:
     end.
     else tt-zakaz.volTemp = round-maxInt(tt-zakaz.tempSale * vDaySale - tt-zakaz.ostatokToday). /* Vз */
     if tt-zakaz.qntyDaySale <> 0 then do:   
-      tt-zakaz.volMinZapas = round-maxInt(tt-zakaz.volTemp + tt-zakaz.minZapas) . /* Vзм */
+    tt-zakaz.volMinZapas = round-maxInt(tt-zakaz.volTemp + tt-zakaz.minZapas) . /* Vзм */
     tt-zakaz.garantZapas = pGarantDay * tt-zakaz.tempSale . /* G */
     tt-zakaz.volMinGarant = round-maxInt(tt-zakaz.volTemp + tt-zakaz.minZapas + tt-zakaz.garantZapas) . /* Vзг */
 
@@ -485,8 +482,8 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-code) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.artic) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-name) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.ostatokToday) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + if tt-zakaz.tempSale = 0 then "-" else string(tt-zakaz.ostatokGoods) + '</td>' skip    
+    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
+    '         <td text_wrap="true" style="text-align: center; color:#808080;">' + if tt-zakaz.tempSale = 0 then "-" + '</td>' else string(tt-zakaz.ostatokGoods) + '</td>' skip    
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volTemp) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
@@ -504,7 +501,7 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
     '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-code) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.artic) + '</td>' skip
     '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-name) + '</td>' skip
-    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokToday) + '</td>' skip
+    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
     '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokGoods) + '</td>' skip    
     '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
     '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volTemp) + '</td>' skip

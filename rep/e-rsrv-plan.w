@@ -147,15 +147,15 @@ DEFINE BUTTON b-exit AUTO-END-KEY
   SIZE 10 BY 1
   BGCOLOR 8 .
 
-DEFINE BUTTON B-Help 
-  LABEL "Помо&щь" 
-  SIZE 10 BY 1
-  BGCOLOR 8 .
+/*DEFINE BUTTON B-Help*/
+/*  LABEL "Помо&щь"   */
+/*  SIZE 10 BY 1      */
+/*  BGCOLOR 8 .       */
 
-DEFINE BUTTON B-lkp 
-  LABEL "&Просмотр" 
-  SIZE 10 BY 1
-  BGCOLOR 8 .
+/*DEFINE BUTTON B-lkp*/
+/*  LABEL "&Просмотр"*/
+/*  SIZE 10 BY 1     */
+/*  BGCOLOR 8 .      */
 
 DEFINE BUTTON b-type-doc 
   IMAGE-UP FILE "btn-down-arrow":U
@@ -345,8 +345,8 @@ DEFINE BROWSE br_date
 DEFINE FRAME Dialog-Frame
   b-exit AT ROW 1 COL 1 WIDGET-ID 4
   Btn_OK AT ROW 1 COL 11 WIDGET-ID 10
-  B-lkp AT ROW 1 COL 73.5 WIDGET-ID 8
-  B-Help AT ROW 1 COL 83.5 WIDGET-ID 6
+/*  B-lkp AT ROW 1 COL 73.5 WIDGET-ID 8 */
+/*  B-Help AT ROW 1 COL 83.5 WIDGET-ID 6*/
   i-exit AT ROW 1.08 COL 11.13 WIDGET-ID 12 NO-TAB-STOP 
   BUTTON-1 AT ROW 2.5 COL 2 WIDGET-ID 14
   BUTTON-2 AT ROW 2.5 COL 17 WIDGET-ID 16
@@ -1316,7 +1316,7 @@ PROCEDURE enable_UI :
     customer-name text-googs text-typedoc_list-2 f-typedoc-desc SelectGood 
     t-daygoods Goods-Editor F-button-1 F-button-2 text-cliname
     WITH FRAME Dialog-Frame.
-  ENABLE b-exit Btn_OK B-lkp B-Help i-exit BUTTON-1 RECT-5 RECT-6 BUTTON-2 
+  ENABLE b-exit Btn_OK i-exit BUTTON-1 RECT-5 RECT-6 BUTTON-2 
     RECT-7 Date-order b-date rs_period Date-Start Date-End RADIO-SET-1 
     br_date garant_day b-clients customer-name SelectGood b-type-doc f-typedoc-desc
     t-daygoods Goods-Editor F-button-1 F-button-2 b-date-End b-date-Start
