@@ -571,6 +571,17 @@ end.
         v-barcode = cast (v-barcodes:SubjectObjCurr, goods_barcode).
 
 
+         find first buf_units no-lock where buf_units.unit-name = v-barcode:unit-code no-error.
+         if not available buf_units
+         then do :
+         undo, return error ("Ќет единицы измерени€ " + v-barcode:unit-code) .
+         end.
+
+         if lookup( {&petrolium}, buf_units.type ) > 0 and length(v-barcode:bcode) > 2 then do:
+         undo, return error substitute( 'ƒл€ топливной ед. измерени€ невозможно создать баркод  &1 .', v-barcode:bcode ).
+         end.
+
+
          if length (v-barcode:bcode) <= 2
          then do :
               next ii_ .
