@@ -122,17 +122,17 @@ DEFINE BUTTON b-save AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-err-allow AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-err-allow AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL ? 
      LABEL "Допустимые погрешности всех не финальных сливов" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-massa-sug AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-massa-sug AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL ? 
      LABEL "Суммарная масса всех не финальных сливов СУГ" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-teh-loss AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL 0 
+DEFINE VARIABLE f-teh-loss AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL ?
      LABEL "Технологические потери всех не финальных сливов" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -201,12 +201,23 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON GO OF FRAME Dialog-Frame /* Расчет технологических потерь */
 DO: 
-  assign frame {&frame-name}  
-    f-massa-sug
-    f-teh-loss
-    f-err-allow
-  .
-  run save-attr.
+  if p-mode <> {&lookup} then
+  do: 
+    assign frame {&frame-name}  
+      f-massa-sug
+      f-teh-loss
+      f-err-allow
+    .
+    if f-massa-sug = ? or
+       f-teh-loss  = ? or
+       f-err-allow = ? then
+    do:
+      message "Данные не заполнены. Сохранение невозможно." 
+        view-as alert-box error title "Ошибка".
+      return no-apply. 
+    end.
+    run save-attr.
+  end.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -249,7 +260,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      vartype
      no-error
   }
-  f-massa-sug = dec(varvalue).
+  f-massa-sug = if varvalue = "" then ? else dec(varvalue).
   
   { str/tdat-val.i
      p-doc-code
@@ -258,7 +269,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      vartype
      no-error
   }
-  f-teh-loss = dec(varvalue).
+  f-teh-loss = if varvalue = "" then ? else dec(varvalue).
   
   { str/tdat-val.i
      p-doc-code
@@ -267,7 +278,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      vartype
      no-error
   }
-  f-err-allow = dec(varvalue).
+  f-err-allow = if varvalue = "" then ? else dec(varvalue).
   f-num-hoses = getNunHoses().
   
   RUN enable_UI.
@@ -478,7 +489,7 @@ FUNCTION getNunHoses RETURNS INTEGER
              and buf_doc-line-attr.gds-code  = buf_goods.gds-code
              and buf_doc-line-attr.attr-code = "connect-hoses"
            no-lock:
-         vNumHoses = if buf_doc-line-attr.attr-value = "yes" then 0 else 1.
+         vNumHoses = if buf_doc-line-attr.attr-value = "yes" then 1 else 1. /* согласно ТЗ ver. 1.1 всегда выводим 1 */ 
        end.         
      end.
   end. 

@@ -3082,6 +3082,9 @@ do on error undo main-block, leave main-block :
     view b-calc-tp in frame d-in-doc .
     enable b-calc-tp with frame d-in-doc .
   end.
+  else do:
+    hide b-calc-tp in frame d-in-doc .
+  end.
   
   IF mImagePh THEN
   DO:
@@ -6709,6 +6712,7 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE select-reason d-in-doc
 PROCEDURE select-reason :
 define variable j-rsn-code like ub.trn-reason.reason-code no-undo.
+define variable vDeleted as logical no-undo.
 
   assign j-rsn-code = ( input frame {&FRAME-NAME} t-doc.reason-code ).
   run str/trn-reas.w ( input ParParentProc, input {&choose}, input-output j-rsn-code ).
@@ -6717,6 +6721,29 @@ define variable j-rsn-code like ub.trn-reason.reason-code no-undo.
     assign  rsn-name          = ub.trn-reason.reason-name
             t-doc.reason-code = ub.trn-reason.reason-code.
     display t-doc.reason-code rsn-name with frame {&FRAME-NAME}.
+
+    if trn-type = {&is-lgas} and t-doc.reason-code <> 99 then
+    do:       
+      /* для СУГ, если основание не "Финальный слив СУГ" чистим данные ТП */
+      { str/tdat-del.i
+        t-doc.doc-code
+        {&sugtpattr-massa-sug}
+        vDeleted
+        no-error
+      } 
+      { str/tdat-del.i
+        t-doc.doc-code
+        {&sugtpattr-teh-loss}
+        vDeleted
+        no-error
+      } 
+      { str/tdat-del.i
+        t-doc.doc-code
+        {&sugtpattr-err-allow}
+        vDeleted
+        no-error
+      }
+    end.
   end.
 
 END PROCEDURE.
@@ -6768,7 +6795,7 @@ if lookup( fnc, "enable" ) > 0 then do:
   end.
 
   enable b-print b-exit b-help b-lkp {&browse-name} b-history a-n-c b-notes b-attr b-arch b-live b-cnt b-contr-lkp with frame {&frame-name}.
-  hide loc-art b-calc-tp in frame {&frame-name} loc-name loc-code in frame {&frame-name}.
+  hide loc-art in frame {&frame-name} loc-name loc-code in frame {&frame-name}.
 
   assign ub.goods.gds-name:resizable in browse {&browse-name} = yes
          ub.goods.gds-name:width-chars in browse {&browse-name} = 30  .
@@ -7262,6 +7289,7 @@ end.
   then 
 do:*/
 b-in-attr-fuel:sensitive = true.
+b-calc-tp:sensitive = true.
 /*end.*/
 if num-results('{&browse-name}') > 0 then do:
    if {&browse-name}:refresh() then.
