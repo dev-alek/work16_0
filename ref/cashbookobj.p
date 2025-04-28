@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 60b130be275a, 2121, rls $
+$Author: SSlivenko $
+$Date: Wed Dec 25 15:23:53 2019 +0300 $
+$Workfile: cashbookobj.p $
+$Archive: ref/cashbookobj.p $
 
 Платежные агенты/операторы
 

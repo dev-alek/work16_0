@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: a8e2cf75ddf6, 2506, rls $
+$Author: EShklyar $
+$Date: Ср июл 08 17:09:06 2020 +0300 $
+$Workfile: p-licsu.p $
+$Archive: ref/p-licsu.p $
 
 Печать Лицензии на поставку алкогольной продукции
 
@@ -19,11 +20,11 @@ define input parameter parparentproc    as widget-handle no-undo.
 define input parameter p-cli-type       like ub.alc-supp-lic.cli-type no-undo.
 define input parameter p-cli-code       like ub.alc-supp-lic.cli-code no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: a8e2cf75ddf6, 2506, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июл 08 17:09:06 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: p-licsu.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/p-licsu.p $":U .
 define variable vss-description as character no-undo init "Печать Лицензии на поставку алкогольной продукции".
 { cmp/vssrevis.i }
 { cmp/r-pril.i new }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 74e644abf59e, 1135, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:13:54 2017 +0300 $
+$Workfile: gdsgrp01.p $
+$Archive: ref/gdsgrp01.p $
 
 Проверка и создание группы товара
 
@@ -40,11 +41,11 @@ define input parameter p-base         as decimal no-undo .
 /*метод округления + {&space-char} + string(база, "->>>>9.99":U)*/
 define output parameter p-rid as recid no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 74e644abf59e, 1135, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:54 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gdsgrp01.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/gdsgrp01.p $":U .
 define variable vss-description as character no-undo init "Проверка и создание группы товара".
 { cmp/vssrevis.i }
 

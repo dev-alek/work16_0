@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f5e72f13272f, 2363, rls $
+$Author: druban $
+$Date: Ср июн 10 21:13:42 2020 +0300 $
+$Workfile: nxtgdsi.p $
+$Archive: ref/nxtgdsi.p $
 
 Импорт из файла следующего товара в карточку товара
 
@@ -59,11 +60,11 @@ define input-output parameter i-service as logical no-undo .
 define input-output parameter i-gds-code like ub.goods.gds-code no-undo .
 define input-output parameter i-mark as integer  no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f5e72f13272f, 2363, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:42 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: nxtgdsi.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/nxtgdsi.p $":U .
 define variable vss-description as character no-undo init "Импорт из файла следующего товара в карточку товара".
 
 { cmp/vssrevis.i }

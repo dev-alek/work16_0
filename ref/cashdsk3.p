@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8e9f7b2574c4, 2516, test $
+$Author: DRuban $
+$Date: Вт авг 04 12:57:16 2020 +0300 $
+$Workfile: cashdsk3.p $
+$Archive: ref/cashdsk3.p $
 
 Процедура удаления кассы
 
@@ -27,11 +28,11 @@ Creation date: 09/19/05
 
 define input parameter p-doc-rec as recid no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8e9f7b2574c4, 2516, test $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 04 12:57:16 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cashdsk3.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/cashdsk3.p $":U .
 define variable vss-description as character no-undo init "Процедура удаления кассы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

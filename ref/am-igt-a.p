@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: am-igt-a.p $
+$Archive: ref/am-igt-a.p $
 
 Процедура, запускаемая в автоматическом режиме,
 производит удаление и ввод товара в АМ
@@ -17,11 +18,11 @@ Creation date: 24/03/2011
 */
 
 /* VSS  Definitions --- */
-DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision$":U.
-DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author$":U.
-DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date$":U.
-DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile$":U.
-DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive$":U.
+DEFINE VARIABLE vss-revision    AS CHARACTER NO-UNDO INITIAL "$Revision: aea5316774be, 0, rls $":U.
+DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INITIAL "$Author: expertek $":U.
+DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INITIAL "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U.
+DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INITIAL "$Workfile: am-igt-a.p $":U.
+DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INITIAL "$Archive: ref/am-igt-a.p $":U.
 DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INITIAL "$Ввод и вывод товара в АМ":U.
 
 /* Parameters Definitions --- */

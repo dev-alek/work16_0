@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b1f216c91d59, 3334, rls $
+$Author: SSlivenko $
+$Date: 2023/05/19 13:37:09 $
+$Workfile: gds-ref.p $
+$Archive: ref/gds-ref.p $
 
 Справочник товаров и товаров на объекте
 
@@ -49,11 +50,11 @@ define input  parameter p-obj-code    like ub.clients.obj-code no-undo .
 define input  parameter p-other       as character no-undo .
 define output parameter rid-list      as character no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: b1f216c91d59, 3334, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2023/05/19 13:37:09 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: gds-ref.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: ref/gds-ref.p $":U .
 define variable vss-description as character no-undo initial "Справочник товаров и товаров на объекте".
 { cmp/vssrevis.i "substitute('&1|&2':u,substitute('&1|&2|&3|&4|&5|&6':u,parparentproc,bttns,p-stat,p-list,p-cond,p-rec),substitute('&1|&2|&3|&4|&5|&6':u,p-grp,p-cli-type,p-cli-code,p-obj-type,p-obj-code,p-other))" }
 { cmp/str-glbl.i }

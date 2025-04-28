@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: da70ce2a1328, 1072, rls $
+$Author: SMMolotkov $
+$Date: Fri Oct 06 18:35:13 2017 +0300 $
+$Workfile: dtaxgdss.p $
+$Archive: ref/dtaxgdss.p $
 
 «аполнение полей временной таблицы tt-tax
 
@@ -26,11 +27,11 @@ DEFINE INPUT PARAMETER par-copy as recid no-undo.
 define input parameter parhost-code like ub.sysconf.host-code no-undo .
 define input parameter parobj-type like ub.clients.obj-type no-undo .
 define input parameter parobj-code like ub.clients.obj-code no-undo .
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: da70ce2a1328, 1072, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Oct 06 18:35:13 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: dtaxgdss.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/dtaxgdss.p $":U .
 define variable vss-description as character no-undo init "«аполнение полей временной таблицы tt-tax дл€ показа в карточке товара".
 { cmp/vssrevis.i }
 

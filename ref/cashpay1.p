@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b9071463af06, 3465, rls $
+$Author: VSpiridonov $
+$Date: 2023/10/16 15:13:34 $
+$Workfile: cashpay1.p $
+$Archive: ref/cashpay1.p $
 
 —охранение изменений в типе кассовых платежей
 
@@ -65,11 +66,11 @@ define input parameter par-slip-file-name like ub.cash-pay.slip-file-name no-und
 define input parameter par-register       like ub.cash-pay.register no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b9071463af06, 3465, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:34 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cashpay1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/cashpay1.p $":U .
 define variable vss-description as character no-undo init "—охранение изменений в типе кассовых платежей".
 { cmp/vssrevis.i }
 

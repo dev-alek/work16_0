@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 { ibs\th\ref\cashbookost.i } 
 define input-output  parameter table for tt-cashBookOst bind.
 define input  parameter iSummMax as decimal no-undo.

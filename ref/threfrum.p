@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7fbc324f82b3, 2414, rls $
+$Author: druban $
+$Date: Ср июн 10 21:13:45 2020 +0300 $
+$Workfile: threfrum.p $
+$Archive: ref/threfrum.p $
 
 Вызов процедур RUM для обработки операции со справчониками
 
@@ -27,11 +28,11 @@ define input  parameter p-uniq-key-rec as character no-undo .
 define input  parameter p-doc-code as character no-undo .
 define input  parameter p-save        as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 7fbc324f82b3, 2414, rls $":u .
+define variable vss-author      as character no-undo init "$Author: druban $":u .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:45 2020 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: threfrum.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: ref/threfrum.p $":u .
 define variable vss-description as character no-undo init "Вызов процедур RUM для обработки операции со справочниками" .
 { cmp/vssrevis.i "substitute('&1|&2|&3':u
                               ,p-process

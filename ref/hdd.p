@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c188d6f80d33, 2331, rls $
+$Author: druban $
+$Date: Ñð èþí 10 21:13:32 2020 +0300 $
+$Workfile: hdd.p $
+$Archive: ref/hdd.p $
 
 
 
@@ -16,11 +17,11 @@ Creation date: 21/06/18
 */
  
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c188d6f80d33, 2331, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Ñð èþí 10 21:13:32 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: hdd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/hdd.p $":U .
 define variable vss-description as character no-undo init "".
 
 /*block-level on error undo, throw.*/

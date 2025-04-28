@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0ed05d970e58, 3225, rls $
+$Author: DRuban $
+$Date: 2022/12/27 12:54:29 $
+$Workfile: gds-atr1.p $
+$Archive: ref/gds-atr1.p $
 
 Сохранение изменений атрибутов товара
 
@@ -25,11 +26,11 @@ define input parameter p-gds-code        like ub.goods-attr.gds-code no-undo .
 DEFINE INPUT PARAMETER TABLE FOR tt0-goods-attr.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 0ed05d970e58, 3225, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:29 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gds-atr1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/gds-atr1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменеий атрибутов товара".
 { cmp/vssrevis.i "substitute('&1':u,p-gds-code)" }
 { cmp/str-glbl.i }

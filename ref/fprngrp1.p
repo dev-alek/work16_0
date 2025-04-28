@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: fprngrp1.p $
+$Archive: ref/fprngrp1.p $
 
 Сохранение изменений связки принтер кухни-группа товаров
 
@@ -34,11 +35,11 @@ define input parameter p-obj-code like ub.fbr-prn-grp.obj-code no-undo .
 define input parameter p-node-code like ub.fbr-prn-grp.node-code no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fprngrp1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/fprngrp1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений связки принтер кухни-группа товаров".
 { cmp/vssrevis.i }
 

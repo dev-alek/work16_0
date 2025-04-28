@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c5e125f9f735, 902, rls $
+$Author: EShklyar $
+$Date: Tue Dec 06 17:15:45 2016 +0300 $
+$Workfile: func-xyz.p $
+$Archive: ref/func-xyz.p $
 
 Проведение XYZ анализа
 
@@ -25,11 +26,11 @@ define input-output  parameter table for    temp-oborot.
 define input-output  parameter table for    temp-xyz.
 define output        parameter table for    temp-goods.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c5e125f9f735, 902, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 06 17:15:45 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: func-xyz.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/func-xyz.p $":U .
 define variable vss-description as character no-undo init "Проведение XYZ анализа".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7e2ad33a7a6f, 2391, rls $
+$Author: EShklyar $
+$Date: 2020/06/10 18:13:43 $
+$Workfile: extclas1.p $
+$Archive: ref/extclas1.p $
 
 Сохранение записи во внешнем классификаторе
 
@@ -30,11 +31,11 @@ define input parameter        p-CharKey_Three as character no-undo .
 define input parameter        p-nonunique as integer no-undo .
 define input parameter        p-uniq-key-rec as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7e2ad33a7a6f, 2391, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2020/06/10 18:13:43 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: extclas1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/extclas1.p $":U .
 define variable vss-description as character no-undo init "Сохранение записи во внешнем классификаторе".
 { cmp/vssrevis.i }
 

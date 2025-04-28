@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: fe7a405e2efa, 1410, rls $
+$Author: SMMolotkov $
+$Date: Thu Jun 28 15:24:34 2018 +0300 $
+$Workfile: in-stpl1.p $
+$Archive: ref/in-stpl1.p $
 
 утилита закачки стоплиста по формату СИБНЕФТЬ
 
@@ -30,11 +31,11 @@ define variable p-stop-list-code as character no-undo .
 define variable p-mode as character no-undo .
 define buffer buf_cli-person for ub.clients.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: fe7a405e2efa, 1410, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Jun 28 15:24:34 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: in-stpl1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/in-stpl1.p $":U .
 define variable vss-description as character no-undo init "Утилита закачки стоплистов по формату СИБНЕФТЬ".
 { cmp/vssrevis.i }
 

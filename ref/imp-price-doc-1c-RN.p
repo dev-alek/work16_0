@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : imp-price-doc-1c-RN.p
@@ -23,11 +24,11 @@ define variable vt-obj-code as integer   no-undo .
 define variable v-host-code as integer   no-undo .
 define variable v-grp-full-name as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f669785c8aa5, 1477, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Jul 25 17:54:04 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-price-doc-1c-RN.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/imp-price-doc-1c-RN.p $":U .
 define variable vss-description as character no-undo init "Загрузка переоценки из ERP 1C RN".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

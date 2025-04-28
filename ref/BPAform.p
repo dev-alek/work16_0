@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter iChange as character no-undo.
 define input  parameter i-id as integer  no-undo.
 /*session:error-stack-trace=yes.*/

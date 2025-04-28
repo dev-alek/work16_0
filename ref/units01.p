@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ce1e41b5e8d1, 1173, rls $
+$Author: EShklyar $
+$Date: Thu Dec 14 02:20:27 2017 +0300 $
+$Workfile: units01.p $
+$Archive: ref/units01.p $
 
 Сохранение изменений в карточке единицы измерени
 
@@ -30,11 +31,11 @@ define input parameter        p-long-name      like ub.units.long-name no-undo .
 define input parameter        p-type           like ub.units.type no-undo .
 define input parameter        p-unit-name      like ub.units.unit-name  no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: ce1e41b5e8d1, 1173, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:20:27 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: units01.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/units01.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений в карточке единицы измерени".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1e1fd253f7ac, 1111, rls $
+$Author: ASMorozov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: country1.p $
+$Archive: ref/country1.p $
 
 Сохранение изменений в карточке страны
 
@@ -29,11 +30,11 @@ define input parameter p-num-code        like ub.country.num-code no-undo .
 define input parameter p-short-name      like ub.country.short-name no-undo .
 define input parameter p-long-name       like ub.country.long-name no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1e1fd253f7ac, 1111, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: country1.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/country1.p $":U .
 define variable vss-description as character no-undo init "Сохранение изменений в карточке страны".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
