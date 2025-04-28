@@ -213,6 +213,126 @@ on error undo, return error
     end case.       /* case p-in-string */
 end.
 end . /* xmlchar-encode */
+/*==========================================================================*/
+{&CommentStartNoClass}
+method private character  xmlchar-encode-1c (input  p-in-string          as character):
+define variable p-out-string as character no-undo.
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+
+procedure xmlchar-encode-1c :
+define input parameter p-in-string      as character        no-undo.
+define output parameter p-out-string    as character        no-undo.
+{utl\comment.i} */ 
+    define variable v-position      as integer      no-undo.
+    define variable v-current-char  as character    no-undo.
+do
+on error undo, return error
+:
+    assign
+        p-out-string = "":U
+    .
+    case p-in-string
+    :
+        when ?
+        then do:
+            assign
+                p-out-string = "?":U
+            .
+        end.        /* when ? */
+        otherwise do:
+            do v-position = 1 to length( p-in-string )
+            :
+                assign
+                    v-current-char = substring( p-in-string, v-position, 1 )
+                .      
+                case v-current-char
+                :
+                    when chr(1)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(1) */
+                    when chr(2)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(2) */
+                    when chr(3)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(3) */
+                    when chr(4)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(4) */
+                    when chr(5)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(5) */
+                    when chr(6)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(6) */
+                    when chr(7)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(7) */
+                    when chr(8)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(8) */
+                    when chr(9)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(9) */
+                    when chr(29)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(29) */
+                    when chr(10)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(10) */
+                    when chr(13)
+                    then do:
+                        assign
+                            p-out-string = p-out-string + " ":U
+                        .
+                    end.        /* when chr(13) */
+                    otherwise do:
+                        assign
+                            p-out-string = p-out-string + v-current-char
+                        .
+                    end.        /* otherwise */
+                end case.       /* case v-current-char */
+            end.        /* v-position = 1 to length( p-in-string ) */
+        end.        /* otherwise */
+    end case.       /* case p-in-string */
+end.
+{&CommentStartNoClass}
+return p-out-string.
+{utl\comment.i} */
+end . /* xmlchar-encode */
 
 /*==========================================================================*/
 {&CommentStartNoClass}
