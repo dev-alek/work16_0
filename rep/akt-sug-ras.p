@@ -665,8 +665,9 @@ do
           for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
             buf_rvs-line.gds-code = buf_goods.gds-code:
                         
-            if get-input-type(recid(buf_rvs-doc)) <> 'à' then tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
-            else tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
+/*            if get-input-type(recid(buf_rvs-doc)) <> 'à' then tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .*/
+/*            else                                                                                                                                                           */
+            tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
 
           end.
         end. 
@@ -678,14 +679,14 @@ do
             buf_rvs-line.gds-code = buf_goods.gds-code :
             ii = ii + 1 .
 
-            if get-input-type(recid(buf_rvs-doc)) <> 'à' then do:
+/*            if get-input-type(recid(buf_rvs-doc)) <> 'à' then do:                                                      */
+/*            tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .*/
+/*            tt-petrol.after-temp = tt-petrol.after-temp + buf_rvs-line.state-temperature .                             */
+/*            end.                                                                                                       */
+/*            else do:                                                                                                   */
             tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
             tt-petrol.after-temp = tt-petrol.after-temp + buf_rvs-line.state-temperature .
-            end.
-            else do:
-            tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
-            tt-petrol.after-temp = tt-petrol.after-temp + buf_rvs-line.temperature .
-            end.
+/*            end.*/
           end.
           tt-petrol.after-temp = tt-petrol.after-temp / ii .
           tt-petrol.vol-TH = tt-petrol.after-measure-cli-qnty - tt-petrol.before-measure-cli-qnty .

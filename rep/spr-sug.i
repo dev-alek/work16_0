@@ -1,111 +1,116 @@
 
 FUNCTION get-input-type RETURNS CHARACTER
-    ( p-rec as recid ) :
-    def buffer loc-rvs-doc for ub.rvs-doc  .
-    define buffer loc-rvs-line for ub.rvs-line .
-    define buffer loc-rvs-line-attr for ub.rvs-line-attr .
-    define variable v-doc-input-type as character no-undo .
-    define variable v-input-type-list as character no-undo .
+  ( p-rec as recid ) :
+  def    buffer loc-rvs-doc       for ub.rvs-doc  .
+  define buffer loc-rvs-line      for ub.rvs-line .
+  define buffer loc-rvs-line-attr for ub.rvs-line-attr .
+  define variable v-doc-input-type  as character no-undo .
+  define variable v-input-type-list as character no-undo .
     
-    find first loc-rvs-doc no-lock where  recid ( loc-rvs-doc ) = p-rec no-error  .
+  find first loc-rvs-doc no-lock where  recid ( loc-rvs-doc ) = p-rec no-error  .
+  for each loc-rvs-line no-lock where loc-rvs-line.rvs-code = loc-rvs-doc.rvs-code :
+    find first loc-rvs-line-attr no-lock
+      where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+      and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+      and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+      and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+      and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+      and loc-rvs-line-attr.attr-code = 'input-type'
+      no-error.
+    if available loc-rvs-line-attr
+      then 
+    do :
+      v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
+    end.
+  end.
+  if trim(v-input-type-list) = ""
+    then 
+  do :
     for each loc-rvs-line no-lock where loc-rvs-line.rvs-code = loc-rvs-doc.rvs-code :
       find first loc-rvs-line-attr no-lock
-            where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
-            and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
-            and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
-            and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
-            and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
-            and loc-rvs-line-attr.attr-code = 'input-type'
-            no-error.
+        where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+        and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+        and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+        and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+        and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+        and loc-rvs-line-attr.attr-code = 'input-type-p'
+        no-error.
       if available loc-rvs-line-attr
-      then do :
+        then 
+      do :
+        v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
+      end.
+      find first loc-rvs-line-attr no-lock
+        where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+        and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+        and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+        and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+        and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+        and loc-rvs-line-attr.attr-code = 'input-type-t'
+        no-error.
+      if available loc-rvs-line-attr
+        then 
+      do :
+        v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
+      end.
+      find first loc-rvs-line-attr no-lock
+        where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
+        and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
+        and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
+        and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
+        and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
+        and loc-rvs-line-attr.attr-code = 'input-type-l'
+        no-error.
+      if available loc-rvs-line-attr
+        then 
+      do :
         v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
       end.
     end.
-    if trim(v-input-type-list) = ""
-    then do :
-      for each loc-rvs-line no-lock where loc-rvs-line.rvs-code = loc-rvs-doc.rvs-code :
-        find first loc-rvs-line-attr no-lock
-              where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
-              and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
-              and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
-              and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
-              and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
-              and loc-rvs-line-attr.attr-code = 'input-type-p'
-              no-error.
-        if available loc-rvs-line-attr
-        then do :
-          v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
-        end.
-        find first loc-rvs-line-attr no-lock
-              where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
-              and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
-              and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
-              and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
-              and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
-              and loc-rvs-line-attr.attr-code = 'input-type-t'
-              no-error.
-        if available loc-rvs-line-attr
-        then do :
-          v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
-        end.
-        find first loc-rvs-line-attr no-lock
-              where loc-rvs-line-attr.obj-code  = loc-rvs-line.obj-code
-              and loc-rvs-line-attr.obj-type  = loc-rvs-line.obj-type
-              and loc-rvs-line-attr.gds-code  = loc-rvs-line.gds-code
-              and loc-rvs-line-attr.pl-code   = loc-rvs-line.pl-code
-              and loc-rvs-line-attr.rvs-code  = loc-rvs-line.rvs-code
-              and loc-rvs-line-attr.attr-code = 'input-type-l'
-              no-error.
-        if available loc-rvs-line-attr
-        then do :
-          v-input-type-list = v-input-type-list + ',' + loc-rvs-line-attr.attr-value .
-        end.
-      end.
-    end .
+  end .
     
-    if can-do(v-input-type-list, 'а')
+  if can-do(v-input-type-list, 'а')
     and not can-do(v-input-type-list, 'ф')
     and not can-do(v-input-type-list, 'ак')
     and not can-do(v-input-type-list, 'фк')
     and not can-do(v-input-type-list, 'п') 
     then v-doc-input-type = 'а'.
     
-    if can-do(v-input-type-list, 'ф')
+  if can-do(v-input-type-list, 'ф')
     and not can-do(v-input-type-list, 'а')
     and not can-do(v-input-type-list, 'ак')
     and not can-do(v-input-type-list, 'фк')
     and not can-do(v-input-type-list, 'п') 
     then v-doc-input-type = 'ф'.
     
-    if  not can-do(v-input-type-list, 'ф')
+  if  not can-do(v-input-type-list, 'ф')
     and can-do(v-input-type-list, 'ак')
     and not can-do(v-input-type-list, 'п') 
     then v-doc-input-type = 'ак'.
     
-    if ((can-do(v-input-type-list, 'ф')
+  if ((can-do(v-input-type-list, 'ф')
     or can-do(v-input-type-list, 'п')) 
     and can-do(v-input-type-list, 'а'))
     or can-do(v-input-type-list, 'фк')
     then v-doc-input-type = 'фк'.
     
-    if can-do(v-input-type-list, 'р')
+  if can-do(v-input-type-list, 'р')
     and not can-do(v-input-type-list, 'а')
     and not can-do(v-input-type-list, 'ф')
     and not can-do(v-input-type-list, 'к')
     and not can-do(v-input-type-list, 'п') 
     then v-doc-input-type = 'р'.
     
-    if v-doc-input-type = 'а'
+  if v-doc-input-type = 'а'
     and can-do(v-input-type-list, 'р') 
     then v-doc-input-type = 'ак'.
     
-    if v-doc-input-type = 'ф'
+  if v-doc-input-type = 'ф'
     and can-do(v-input-type-list, 'р') 
     then v-doc-input-type = 'фк'.
     
-    if v-doc-input-type = ? then v-doc-input-type = '' .
-    return v-doc-input-type .
+  if v-doc-input-type = ? then v-doc-input-type = '' .
+  return v-doc-input-type .
 END FUNCTION.
 
 FUNCTION getNunHoses RETURNS integer /*Получение кол-ва рукавов*/
@@ -169,8 +174,8 @@ function tempRas RETURNS decimal /*температура*/
   (doc-code as character,
   gds-code as integer):
      
-  define variable v-temp as decimal no-undo .
-  define variable ii     as integer no-undo .
+  define variable v-temp as decimal   no-undo .
+  define variable ii     as integer   no-undo .
   define variable is-rvd as character no-undo .
   define buffer buf_rvs-line for ub.rvs-line .
   define buffer buf_rvs-doc  for ub.rvs-doc .
@@ -178,7 +183,7 @@ function tempRas RETURNS decimal /*температура*/
   
   for each buf_rvs-doc no-lock where buf_rvs-doc.out-code = doc-code and
     buf_rvs-doc.rvs-type = {&rvs-after-doc} :
-      is-rvd = get-input-type(recid(buf_rvs-doc)) .
+    is-rvd = get-input-type(recid(buf_rvs-doc)) .
     
     for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
       buf_rvs-line.gds-code = gds-code:
@@ -230,20 +235,42 @@ end function.
 function volumeGF RETURNS decimal /*Объем слитой ЖФ СУГ*/
   (doc-code as character,
   gds-code as integer):
-  define buffer buf_doc-line for ub.doc-line .
-  define buffer buf_goods    for ub.goods .
 
-  define variable volue as decimal no-undo .
+  define buffer buf_goods    for ub.goods .
+  define buffer buf_rvs-doc  for ub.rvs-doc .
+  define buffer buf_rvs-line for ub.rvs-line .
+
+  define variable volue     as decimal no-undo .
+  define variable beforeVol as decimal no-undo .
+  define variable afterVol  as decimal no-undo .
 
   find first buf_goods no-lock where buf_goods.gds-code = gds-code no-error .
   if available (buf_goods) then 
   do:
-    for each buf_doc-line no-lock where buf_doc-line.doc-code = doc-code and
-      buf_doc-line.artic = buf_goods.artic and buf_doc-line.prod-code = buf_goods.prod-code and
-      buf_doc-line.prod-type = buf_goods.prod-type:
-      volue = volue + buf_doc-line.fact-qnty . 
-    end.  
-  end. 
+    find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = doc-code and
+      buf_rvs-doc.rvs-type = {&rvs-before-doc} no-error .
+    if available (buf_rvs-doc) then 
+    do:
+      for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
+        buf_rvs-line.gds-code = buf_goods.gds-code:
+                        
+        beforeVol = beforeVol + buf_rvs-line.state-brutto-qnty .
+
+      end.
+    end. 
+    find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = doc-code and
+      buf_rvs-doc.rvs-type = {&rvs-after-doc} no-error .
+    if available (buf_rvs-doc) then 
+    do:
+      for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
+        buf_rvs-line.gds-code = buf_goods.gds-code :
+
+        afterVol = afterVol + buf_rvs-line.state-brutto-qnty .
+
+      end.
+    end.
+  end.
+  volue = (afterVol - beforeVol) / 1000 .
   return volue .
 end function. 
 
@@ -645,13 +672,7 @@ procedure spr-sug:
       ub.goods.prod-type = buf_doc-line.prod-type no-error .
     for first buf_doc-pl no-lock where buf_doc-pl.out-code = buf_doc-line.doc-code and
       buf_doc-pl.gds-code = ub.goods.gds-code:
-/*      find first ub.place-attr where ub.place-attr.attr-code = "place-rvd-tmp"       */
-/*        and ub.place-attr.pl-code = buf_doc-pl.pl-code                               */
-/*        and ub.place-attr.obj-code = buf_doc-line.obj-code                           */
-/*        and ub.place-attr.obj-type = buf_doc-line.obj-type no-error .                */
-/*      if available (ub.place-attr) then is-rvd = logical (ub.place-attr.attr-value) .*/
-/*      else is-rvd = false .                                                          */
-      
+
       vTemp = tempRas(doc-code, ub.goods.gds-code) . /*Температура*/
       vMasDol = masRas(doc-code, ub.goods.gds-code) . /*масса*/
       vVolue = volumeGF(doc-code, ub.goods.gds-code) . /*объем*/
