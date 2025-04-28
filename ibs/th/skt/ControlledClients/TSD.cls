@@ -439,9 +439,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       end.
       
       FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then myflagsDoc:setFlagsToInt(1). /* Было решено сделать флаг 1 всегда для инвентаризаций на АКС от 22.04.2025 */
       
       find first buf_user-login where buf_user-login.user-id = buf_trn-doc.user-name  no-lock no-error.
-
+      
       tsdstreamopenapp("MT_documents.txt"). 
         put stream tsdstream unformatted buf_trn-doc.doc-code + {&delimiteFld} + 
         docType + {&delimiteFld} + "false" + {&delimiteFld} + buf_trn-doc.status_ + string (buf_trn-doc.flag, "+/-") + {&delimiteFld} + 
@@ -452,8 +453,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         ) +
         string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))) + {&delimiteFld} 
         + string(myflagsDoc:FlagsToInt) + {&delimiterLine}.
-      tsdstreamclose().
       
+      tsdstreamclose().
+
       
 /*      SomeStr = SomeStr + cHeader + cLine + cMarkLine.*/
     end.
@@ -804,9 +806,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable myflagsDoc     as class flagsdoc     no-undo.
 
     find first TempTrnDoc.
-
+    if TempTrnDoc.ext-doc-code = {&TDEDT_Inv} then TempTrnDoc.Flags_ = 1 .
     myflagsDoc = new flagsdoc ().
-    
     myflagsDoc:setFlagsToInt(TempTrnDoc.Flags_).
     
     find first buf_trn-doc exclusive-lock where buf_trn-doc.doc-code = TempTrnDoc.ext-doc-code
@@ -2004,7 +2005,7 @@ end.
               end. 
           end.
 
-/* Прием марок с ТСД */          
+      
           tsdstreamopenapp("MT_MarkLines.txt").
           jj = jj + 1.
           define variable vqnty as decimal no-undo.

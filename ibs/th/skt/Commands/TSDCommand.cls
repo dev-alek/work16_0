@@ -265,8 +265,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        startStep('Начало загрузки документов в ТСД.').
        os-delete "documents_new.s3db".
        vpid = runProc('DBInit.exe Doc 30 31 >DBInitDoc.txt'  + {&new-line} + 'rename documents.s3db documents_new.s3db').
-       
        resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
+       resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
+       resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
        resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
     end.
     else if vStatus eq "step2"
