@@ -1819,8 +1819,9 @@ PROCEDURE CrCheckMark :
       buf_marking.obj-type = v-cntxt-obj-type
       buf_marking.obj-code = v-cntxt-obj-code
       buf_marking.gds-code = buf_goods.gds-code
-      buf_marking.unit     = buf_goods.unit-base
+/*      buf_marking.unit     = buf_goods.unit-base*/
       buf_marking.gds-ext-id = v-GTIN
+      buf_marking.unit-ext = (if v-GTIN-qnty = 1 then "UNIT" else if v-GTIN-qnty > 1 then "LEVEL1" else "")
     .
     create buf_utd-marking-lines .
     assign
