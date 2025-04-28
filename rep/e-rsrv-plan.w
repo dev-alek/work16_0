@@ -1165,6 +1165,13 @@ ON RETURN OF Date-End IN FRAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Date-End Dialog-Frame
 ON TAB OF Date-End IN FRAME Dialog-Frame
   DO:
+    date(Date-End:screen-value) no-error.
+    if error-status:error then do:
+        message "Ошибка ввода даты"
+          view-as alert-box.      
+      display Date-End with frame Dialog-Frame .
+          return no-apply .  
+    end.
     if string(Date-End) <> Date-End:screen-value then 
     do:
       if date(Date-End:screen-value) < Date-Start then 
@@ -1183,6 +1190,7 @@ ON TAB OF Date-End IN FRAME Dialog-Frame
       assign Date-End .
       display Date-End with frame Dialog-Frame .
     end.
+
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1202,6 +1210,13 @@ ON RETURN OF Date-Start IN FRAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Date-Start Dialog-Frame
 ON TAB OF Date-Start IN FRAME Dialog-Frame
   DO:
+    date(Date-Start:screen-value) no-error.
+    if error-status:error then do:
+        message "Ошибка ввода даты"
+          view-as alert-box.     
+      display Date-Start with frame Dialog-Frame .
+                return no-apply . 
+    end.
     if string(Date-Start) <> Date-Start:screen-value then 
     do:
       if Date-End < date(Date-Start:screen-value) then 

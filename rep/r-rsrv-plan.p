@@ -177,7 +177,7 @@ run day-begin-fact-order in this-procedure ( input vdateStart
 run factord-end-day in this-procedure ( input vdateEnd
   , output v-fact-orderEnd
   ).  
-  
+
 /* —бор данных */
 for each gds-list:
   find first tt-zakaz no-lock where tt-zakaz.gds-code = gds-list.gds-code no-error .
@@ -241,7 +241,8 @@ for each gds-list:
     
     for each tt-typeDocChoose:
       for each buf_doc-line no-lock 
-        where buf_doc-line.ext-doc-type = tt-typeDocChoose.type-code and
+        where 
+        buf_doc-line.ext-doc-type = tt-typeDocChoose.type-code and
         buf_doc-line.obj-code = v-cntxt-obj-code and
         buf_doc-line.obj-type = v-cntxt-obj-type and
         buf_doc-line.artic = gds-list.artic and
@@ -271,14 +272,14 @@ for each gds-list:
           when  {&tdedt_vozvrat_perem}  then 
             tt-zakaz.volSale = tt-zakaz.volSale - buf_doc-line.fact-qnty .
           when  {&tdedt_ras_vnesh}      then 
-            tt-zakaz.volSale = tt-zakaz.volSale - buf_doc-line.fact-qnty .
+            tt-zakaz.volSale = tt-zakaz.volSale + buf_doc-line.fact-qnty .
           when  {&tdedt_vozvrat_vnesh}  then 
             tt-zakaz.volSale = tt-zakaz.volSale - buf_doc-line.fact-qnty .
           when  {&tdedt_ras_vnesh_kass}     then 
             tt-zakaz.volSale = tt-zakaz.volSale + buf_doc-line.fact-qnty .
           when  {&tdedt_vozvrat_vnesh_kass} then 
             tt-zakaz.volSale = tt-zakaz.volSale - buf_doc-line.fact-qnty .
-          when  {&manufacturing} then 
+          when  {&TDEDT_Spi_Vnesh} then 
             tt-zakaz.volSale = tt-zakaz.volSale - buf_doc-line.fact-qnty .
         end case.            
 

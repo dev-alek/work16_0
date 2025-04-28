@@ -299,7 +299,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      
   doc-ext-doc-type-list = {&TDEDT_Ras_Vnesh_Kass} + {&slash-char} + "расход внешний касса" + {&comma-char} + 
     {&TDEDT_Vozvrat_Vnesh_Kass} + {&slash-char} + "возврат внешний касса" + {&comma-char} + 
-    {&manufacturing} + {&slash-char} + "расход производство" + {&comma-char} + 
+    {&tdedt_spi_prvo} + {&slash-char} + "расход производство" + {&comma-char} + 
     {&TDEDT_Spi_Vnesh} + {&slash-char} + {&TDEDT_Spi_Vnesh-full} + {&comma-char} + 
     {&TDEDT_Ras_Vnesh} + {&slash-char} + {&TDEDT_Ras_Vnesh-full} + {&comma-char} + 
     {&TDEDT_Vozvrat_Vnesh} + {&slash-char} + {&TDEDT_Vozvrat_Vnesh-full} + {&comma-char} + 
