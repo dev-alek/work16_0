@@ -316,6 +316,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
 	@VisualDesigner.
    method private void bMenuItem( input sender as System.Object, input e as System.EventArgs ):
       mCodeTrg:runMenu(cast (sender,System.Windows.Forms.ToolStripMenuItem):name).
+      mCodeTrg:getQuery("code").
       bindCode:RefreshAll().
       return.
 

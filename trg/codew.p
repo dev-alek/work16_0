@@ -74,7 +74,13 @@ do:
    end.
 end.
 
-
+if old-{&main-tbl}.code ne new-{&main-tbl}.code
+then do:
+   for each buf_code where buf_code.parent eq old-{&main-tbl}.parent + {&delim-par} + old-{&main-tbl}.code  
+      exclusive-lock:
+      buf_code.parent = new-{&main-tbl}.parent + {&delim-par} + new-{&main-tbl}.code.
+   end.
+end.
 if new-{&main-tbl}.parent begins "MarkType" then
 do:
     vErrorMsg = "".
