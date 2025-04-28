@@ -67,7 +67,7 @@ class ibs.th.skt.ControlledClients.atdclient :
                                     bclients.obj-code).
        
       req:Content.
-      case req:QueryPar:
+      case req:HeadHTTP:QueryPar:
         when "GetObj"       
         then 
           vLC = vExp:GetNObjectTable().

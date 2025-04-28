@@ -51,13 +51,13 @@ define shared     variable g#auto-user-id as character no-undo .
 define shared     variable g#auto-user-login as character no-undo .
 define shared     variable g#auto-user-password as character no-undo .
 
-define variable v-header      as character no-undo.
-define variable v-hd-line     as character no-undo.
-define variable v-cont-length as integer   no-undo.
-define variable v-cont-type   as character no-undo.
-define variable v-user-agent  as character no-undo.
-define variable v-querypar    as character no-undo.
-define variable v-path        as character no-undo.
+/*define variable v-header      as character no-undo.*/
+/*define variable v-hd-line     as character no-undo.*/
+/*define variable v-cont-length as integer   no-undo.*/
+/*define variable v-cont-type   as character no-undo.*/
+/*define variable v-user-agent  as character no-undo.*/
+/*define variable v-querypar    as character no-undo.*/
+/*define variable v-path        as character no-undo.*/
 define variable mWork         as logical no-undo.
 
 { cmp/trg-def.i new }
@@ -117,16 +117,15 @@ else do:
 end.
 /* v-connect-param = SUBSTITUTE('-H &1 -S &2',ENTRY(1,p-param,':':U),ENTRY(2,p-param,':':U)). */
 
-DEFINE VARIABLE hDoc  AS HANDLE.
-DEFINE VARIABLE hRoot AS HANDLE.
-DEFINE VARIABLE hRow  AS HANDLE.
+/*DEFINE VARIABLE hDoc  AS HANDLE.    */
+/*DEFINE VARIABLE hRoot AS HANDLE.    */
+/*DEFINE VARIABLE hRow  AS HANDLE.    */
+/*                                    */
+/*DEFINE VARIABLE hDoc-out  AS HANDLE.*/
+/*DEFINE VARIABLE hRoot-out AS HANDLE.*/
+/*DEFINE VARIABLE hRow-out  AS HANDLE.*/
 
-DEFINE VARIABLE hDoc-out  AS HANDLE.
-DEFINE VARIABLE hRoot-out AS HANDLE.
-DEFINE VARIABLE hRow-out  AS HANDLE.
 
-&scop CRLF chr(13) + chr(10)
-&scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -369,7 +368,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
 
   logWrite = new LogWrite().          
-  sktserv  = new SktServer(this-procedure).
+  sktserv  = new SktServer(this-procedure,us-tmo).
   apply 'choose':U to Btn-st.
   mWork = yes.
   subscribe "write-to-log" anywhere run-procedure "write-to-log-event".
@@ -436,238 +435,241 @@ PROCEDURE connproc :
   Notes:
 ------------------------------------------------------------------------------*/
   define input parameter hSocket as handle no-undo.
-
-  define variable mbuffer       as memptr   no-undo.
-  define variable contObj       as class    content no-undo.
-  define variable mbuffer-out   as memptr   no-undo.
-  define variable mbuffer-in    as memptr   no-undo.
-  define variable mbuffer-hdr   as memptr   no-undo.
-  define variable us-tmp-etime  as INTEGER  no-undo.
-  define variable v-bytes       as integer  no-undo.
-  define variable v-str         as char     no-undo init "".
-  define variable i             AS INT      NO-UNDO.
-  define variable s             AS CHAR     no-undo.
-  define variable resp-head     AS longchar NO-UNDO. /*ответ сокет-сервера*/
-  define variable lsocket       as logical  no-undo.
-  define variable v-read        as logical  no-undo.
-  define variable v-content     as longchar no-undo.
-  define variable v-step        as integer  no-undo.
-  define variable v-pos-buf     as integer  no-undo.
-  define variable v-cont-read   as integer  no-undo.
-  define variable v-hdr-lenth   as integer  no-undo.
-  define variable v-is-hdr-rcvs as logical  no-undo.
+  sktserv:connproc(hSocket).
+/*  define variable mbuffer       as memptr   no-undo.                                                                                                                   */
+/*  define variable contObj       as class    content no-undo.                                                                                                           */
+/*  define variable mbuffer-out   as memptr   no-undo.                                                                                                                   */
+/*  define variable mbuffer-in    as memptr   no-undo.                                                                                                                   */
+/*  define variable mbuffer-hdr   as memptr   no-undo.                                                                                                                   */
+/*  define variable us-tmp-etime  as INTEGER  no-undo.                                                                                                                   */
+/*  define variable v-bytes       as integer  no-undo.                                                                                                                   */
+/*  define variable v-str         as char     no-undo init "".                                                                                                           */
+/*  define variable i             AS INT      NO-UNDO.                                                                                                                   */
+/*  define variable s             AS CHAR     no-undo.                                                                                                                   */
+/*  define variable resp-head     AS longchar NO-UNDO. /*ответ сокет-сервера*/                                                                                           */
+/*  define variable lsocket       as logical  no-undo.                                                                                                                   */
+/*  define variable v-read        as logical  no-undo.                                                                                                                   */
+/*  define variable v-content     as longchar no-undo.                                                                                                                   */
+/*  define variable v-step        as integer  no-undo.                                                                                                                   */
+/*  define variable v-pos-buf     as integer  no-undo.                                                                                                                   */
+/*  define variable v-cont-read   as integer  no-undo.                                                                                                                   */
+/*  define variable v-hdr-lenth   as integer  no-undo.                                                                                                                   */
+/*  define variable v-is-hdr-rcvs as logical  no-undo.                                                                                                                   */
+/*                                                                                                                                                                       */
+/*                                                                                                                                                                       */
+/*  fix-codepage(v-content) = "1251" .                                                                                                                                   */
+/*  fix-codepage(resp-head) = "1251" .                                                                                                                                   */
+/*  hSocket:SET-SOCKET-OPTION('TCP-NODELAY', 'true').                                                                                                                    */
+/*  hSocket:SET-SOCKET-OPTION('SO-KEEPALIVE', 'true').                                                                                                                   */
+/*  hSocket:SET-SOCKET-OPTION('SO-REUSEADDR', 'true').                                                                                                                   */
+/*                                                                                                                                                                       */
+/*  SET-SIZE(mbuffer-out) = 0.                                                                                                                                           */
+/*  ASSIGN S = '':U                                                                                                                                                      */
+/*  v-content = '':U                                                                                                                                                     */
+/*  v-header = '':U.                                                                                                                                                     */
+/*  v-cont-length = 0 .                                                                                                                                                  */
+/*  v-hd-line = "" .                                                                                                                                                     */
+/*  v-cont-type = "".                                                                                                                                                    */
+/*  v-user-agent = "".                                                                                                                                                   */
+/*                                                                                                                                                                       */
+/*  v-str = '':U.                                                                                                                                                        */
+/*  resp-head = substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).  /* ¬озвращаема€ по умолчанию ошибка */                                          */
+/*  contObj = new content ().                                                                                                                                            */
+/*  def var n as int no-undo.                                                                                                                                            */
+/*  ContBlock: DO:                                                                                                                                                       */
+/*                                                                                                                                                                       */
+/*  /* читаем сокет и разбираем полученую информацию. */                                                                                                                 */
+/*/*    v-bytes = hSocket:get-bytes-available().*/                                                                                                                       */
+/*/*    if v-bytes = 0 then leave ContBlock.*/                                                                                                                           */
+/*                                                                                                                                                                       */
+/*                                                                                                                                                                       */
+/*/*    v-str = GET-STRING(mbuffer-in,1).*/                                                                                                                              */
+/*    /*ждем окончание передачи шапки. ѕризнак конца шапки - двойной перевод строки*/                                                                                    */
+/*    def var offscont as int no-undo.                                                                                                                                   */
+/*    etime(yes).                                                                                                                                                        */
+/*    v-bytes = 0 .                                                                                                                                                      */
+/*    offscont = 0.                                                                                                                                                      */
+/*    n = 0.                                                                                                                                                             */
+/*    v-str = "".                                                                                                                                                        */
+/*    v-cont-length = 0.                                                                                                                                                 */
+/*    v-querypar = "".                                                                                                                                                   */
+/*    v-path = "".                                                                                                                                                       */
+/*    set-size (mbuffer-in) = 0.                                                                                                                                         */
+/*    set-size (mbuffer-out) = 0.                                                                                                                                        */
+/*    set-size (mbuffer) = 0.                                                                                                                                            */
+/*    mbuffer-out = ?.                                                                                                                                                   */
+/*    mbuffer = ?.                                                                                                                                                       */
+/*    mbuffer-in = ?.                                                                                                                                                    */
+/*    set-size (mbuffer-hdr) = 33000.                                                                                                                                    */
+/*                                                                                                                                                                       */
+/*    dwhdr_:                                                                                                                                                            */
+/*    DO WHILE ETIME < 5000 : /*5 сек на прием шапки*/                                                                                                                   */
+/*      /* читаем сокет и разбираем полученую информацию. */                                                                                                             */
+/*      if n = v-bytes                                                                                                                                                   */
+/*      then do:                                                                                                                                                         */
+/*        n = 0.                                                                                                                                                         */
+/*        v-bytes = hsocket:get-bytes-available().                                                                                                                       */
+/*      end.                                                                                                                                                             */
+/*      do while n < v-bytes :                                                                                                                                           */
+/*        n = n + 1.                                                                                                                                                     */
+/*        v-pos-buf = v-pos-buf + 1.                                                                                                                                     */
+/*        v-read = hSocket:read(mbuffer-hdr, v-pos-buf, 1, 2) no-error .                                                                                                 */
+/*        if not v-read                                                                                                                                                  */
+/*          then leave.                                                                                                                                                  */
+/*        if v-pos-buf > 4                                                                                                                                               */
+/*          then v-str = get-string (mbuffer-hdr, v-pos-buf - 3, 4).                                                                                                     */
+/*        if v-pos-buf > 32000                                                                                                                                           */
+/*          then leave.                                                                                                                                                  */
+/*        if v-str = {&HdEnd}                                                                                                                                            */
+/*        then do:                                                                                                                                                       */
+/*          v-header = get-string (mbuffer-hdr, 1).                                                                                                                      */
+/*          v-str = "".                                                                                                                                                  */
+/*          v-pos-buf = 0.                                                                                                                                               */
+/*          run parseheader(input v-header).                                                                                                                             */
+/*          set-size (mbuffer-in) = 0.                                                                                                                                   */
+/*          set-size (mbuffer-hdr) = 0.                                                                                                                                  */
+/*          set-size (mbuffer-in) = v-cont-length.                                                                                                                       */
+/*          leave dwhdr_.                                                                                                                                                */
+/*        end.                                                                                                                                                           */
+/*      end.                                                                                                                                                             */
+/*    END.                                                                                                                                                               */
+/*                                                                                                                                                                       */
+/*    dw_:                                                                                                                                                               */
+/*    DO WHILE (v-cont-length > 0 and v-cont-length > v-pos-buf) and ETIME < us-tmo * 1000 :                                                                             */
+/*      /* читаем сокет и разбираем полученую информацию. */                                                                                                             */
+/*      if n = v-bytes                                                                                                                                                   */
+/*      then do:                                                                                                                                                         */
+/*        n = 0.                                                                                                                                                         */
+/*        v-bytes = hsocket:get-bytes-available().                                                                                                                       */
+/*      end.                                                                                                                                                             */
+/*      do while n < v-bytes :                                                                                                                                           */
+/*        n = n + 1.                                                                                                                                                     */
+/*        v-pos-buf = v-pos-buf + 1.                                                                                                                                     */
+/*        v-read = hSocket:read(mbuffer-in, v-pos-buf, 1, 2) no-error .                                                                                                  */
+/*        if not v-read                                                                                                                                                  */
+/*          then leave.                                                                                                                                                  */
+/*      end.                                                                                                                                                             */
+/*    END.                                                                                                                                                               */
+/*    if not (mbuffer-in = ? or get-size (mbuffer-in) = ? or get-size(mbuffer-in) = 0) and not v-cont-type = 'raw'                                                       */
+/*      then v-content = get-string (mbuffer-in, 1).                                                                                                                     */
+/*                                                                                                                                                                       */
+/*    RUN write-to-log-file('SOCKET-READ:' + v-content ).                                                                                                                */
+/*/*    RUN write-to-log('SOCKET-READ:' + v-str ).*/                                                                                                                     */
+/*    if ((v-content = '' or v-content = ?) and (v-cont-type <> "raw" and v-querypar = "")) or v-header = "" then do:                                                    */
+/*      resp-head =  substitute("HTTP/1.0 408 Request Timeout or bad request &1Server: 4GL&2",{&CRLF},{&HdEnd}).                                                         */
+/*      SET-SIZE(mbuffer-out) = 0.                                                                                                                                       */
+/*      SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.                                                                                                             */
+/*      PUT-STRING(mbuffer-out,1) = resp-head.                                                                                                                           */
+/*      lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.                                                                                       */
+/*      hsocket:disconnect ().                                                                                                                                           */
+/*      LEAVE ContBlock.                                                                                                                                                 */
+/*    end.                                                                                                                                                               */
+/*                                                                                                                                                                       */
+/*    /* «апросы не в xml формате не обрабатываем */                                                                                                                     */
+/*                                                                                                                                                                       */
+/*    if v-cont-type <> 'text/xml':U and v-cont-type <> 'raw' and v-querypar = "" then do:                                                                               */
+/*     /* resp-head = "HTTP/1.1 501 Not Implemented ~nServer: 4GL ~nConnection: close ~n~n".*/                                                                           */
+/*      resp-head = substitute("HTTP/1.0 501 Not Implemented&1Server: 4GL&2",{&CRLF},{&HdEnd}).                                                                          */
+/*      SET-SIZE(mbuffer-out) = 0.                                                                                                                                       */
+/*      SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.                                                                                                             */
+/*      PUT-STRING(mbuffer-out,1) = resp-head.                                                                                                                           */
+/*      lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.                                                                                       */
+/*      hsocket:disconnect ().                                                                                                                                           */
+/*      LEAVE ContBlock.                                                                                                                                                 */
+/*    end.                                                                                                                                                               */
+/*      IF v-cont-length = 0 and not num-entries (v-querypar, "?") > 1 THEN DO:  /* ≈сли запрос c нулевой длиной тела, то создаем ответ об успешном выполнении запроса */*/
+/*        resp-head = substitute("HTTP/1.0 411 No Content&1Server: 4GL&2",{&CRLF},{&HdEnd}).                                                                             */
+/*        SET-SIZE(mbuffer-out) = 0.                                                                                                                                     */
+/*        SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.                                                                                                           */
+/*        PUT-STRING(mbuffer-out,1) = resp-head.                                                                                                                         */
+/*        lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.                                                                                     */
+/*        hsocket:disconnect ().                                                                                                                                         */
+/*        LEAVE ContBlock.                                                                                                                                               */
+/*      END.                                                                                                                                                             */
+/*      /*ожидаем полной передачи тела запроса*/                                                                                                                         */
+/*/*                                                                                */                                                                                   */
+/*/*      IF  LENGTH(v-content) < v-cont-length  THEN DO:                           */                                                                                   */
+/*/*          ETIME (YES).                                                          */                                                                                   */
+/*/*          DO WHILE LENGTH(v-content) < v-cont-length AND ETIME < us-tmo * 1000 :*/                                                                                   */
+/*/*              v-bytes = hSocket:get-bytes-available().                          */                                                                                   */
+/*/*              run socketRead(hSocket:handle, v-bytes, input-output mbuffer-in). */                                                                                   */
+/*/*              PAUSE 1.                                                          */                                                                                   */
+/*/*          END.                                                                  */                                                                                   */
+/*/*      END.                                                                      */                                                                                   */
+/*                                                                                                                                                                       */
+/*      RUN write-to-log-file('REQUEST-CONTENT:' + v-content ).                                                                                                          */
+/*      /* тело запроса передано не полностью */                                                                                                                         */
+/*      IF (v-cont-length > 0 AND v-pos-buf < v-cont-length)  THEN DO:                                                                                                   */
+/*        resp-head =  substitute("HTTP/1.0 408 Request Timeout&1Server: 4GL&2",{&CRLF},{&HdEnd}).                                                                       */
+/*        SET-SIZE(mbuffer-out) = 0.                                                                                                                                     */
+/*        SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.                                                                                                           */
+/*        PUT-STRING(mbuffer-out,1) = resp-head.                                                                                                                         */
+/*        lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.                                                                                     */
+/*        hsocket:disconnect ().                                                                                                                                         */
+/*        LEAVE ContBlock.                                                                                                                                               */
+/*      END.                                                                                                                                                             */
+/*      ELSE DO: /*≈сли тело не пустое*/                                                                                                                                 */
+/*          SET-SIZE(mbuffer) = 0.                                                                                                                                       */
+/*          SET-SIZE(mbuffer) = LENGTH(v-content,'RAW') + 2.                                                                                                             */
+/*          PUT-STRING(mbuffer,1) = v-content.                                                                                                                           */
+/*                                                                                                                                                                       */
+/*          case v-path:                                                                                                                                                 */
+/*          when "AuthMarking" then do:                                                                                                                                  */
+/*            sktserv:ClientPar = v-path.                                                                                                                                */
+/*            sktserv:QueryParam = entry (2, v-querypar, "?").                                                                                                           */
+/*          end.                                                                                                                                                         */
+/*          otherwise do:                                                                                                                                                */
+/*            if v-querypar <> ""                                                                                                                                        */
+/*            then do:                                                                                                                                                   */
+/*              if num-entries (v-querypar, "?") > 1                                                                                                                     */
+/*              then do:                                                                                                                                                 */
+/*                sktserv:ClientPar  = entry (1, v-querypar, "?").                                                                                                       */
+/*                sktserv:QueryParam = entry (2, v-querypar, "?").                                                                                                       */
+/*              end.                                                                                                                                                     */
+/*              else do:                                                                                                                                                 */
+/*                 sktserv:ClientPar = v-querypar.                                                                                                                       */
+/*                 sktserv:QueryParam = "".                                                                                                                              */
+/*               end.                                                                                                                                                    */
+/*            end.                                                                                                                                                       */
+/*            else do:                                                                                                                                                   */
+/*               sktserv:ClientPar = "".                                                                                                                                 */
+/*               sktserv:QueryParam = "".                                                                                                                                */
+/*            end.                                                                                                                                                       */
+/*          end.                                                                                                                                                         */
+/*          end.                                                                                                                                                         */
+/*          message sktserv:ClientPar skip                                                                                                                               */
+/*                  sktserv:QueryParam                                                                                                                                   */
+/*          view-as alert-box.                                                                                                                                           */
+/*          case true:                                                                                                                                                   */
+/*          when sktserv:ClientPar <> '' then do:                                                                                                                        */
+/*            sktserv:RequestProcessing(v-content, hsocket) no-error.                                                                                                    */
+/*            resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".                                                                                       */
+/*          end.                                                                                                                                                         */
+/*          when v-cont-type = 'raw' then do:                                                                                                                            */
+/*            sktserv:RequestProcessing(mbuffer-in, hsocket, v-user-agent) no-error.                                                                                     */
+/*            resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".                                                                                       */
+/*          end.                                                                                                                                                         */
+/*          when v-cont-type = 'text/xml' then do:                                                                                                                       */
+/*            sktserv:RequestProcessing(v-content, hsocket) no-error.                                                                                                    */
+/*            resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".                                                                                       */
+/*          end.                                                                                                                                                         */
+/*          end case.                                                                                                                                                    */
+/*                                                                                                                                                                       */
+/*          logWrite:LogStr = "".                                                                                                                                        */
+/*                                                                                                                                                                       */
+/*          /*if error-status:error then do:                                                                                                                             */
+/*            resp-head =  substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).                                                                       */
+/*            RUN write-to-log(return-value).                                                                                                                            */
+/*          end.                                                                                                                                                         */
+/*          else do:                                                                                                                                                     */
+/*/*            resp-head = "OK".*/                                                                                                                                      */
+/*          end.*/                                                                                                                                                       */
+/*                                                                                                                                                                       */
+/*      END.                                                                                                                                                             */
+/*  end. /* ContBlock */                                                                                                                                                 */
+/*  RUN write-to-log('RESPONSE: ' + resp-head).                                                                                                                          */
+/*                                                                                                                                                                       */
   
-  
-  fix-codepage(v-content) = "1251" .
-  fix-codepage(resp-head) = "1251" .
-  hSocket:SET-SOCKET-OPTION('TCP-NODELAY', 'true').
-  hSocket:SET-SOCKET-OPTION('SO-KEEPALIVE', 'true').
-  hSocket:SET-SOCKET-OPTION('SO-REUSEADDR', 'true').
-  
-  SET-SIZE(mbuffer-out) = 0.
-  ASSIGN S = '':U
-  v-content = '':U
-  v-header = '':U.
-  v-cont-length = 0 .
-  v-hd-line = "" .
-  v-cont-type = "".
-  v-user-agent = "".
-  
-  v-str = '':U.
-  resp-head = substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).  /* ¬озвращаема€ по умолчанию ошибка */
-  contObj = new content ().
-  def var n as int no-undo.
-  ContBlock: DO:
-
-  /* читаем сокет и разбираем полученую информацию. */
-/*    v-bytes = hSocket:get-bytes-available().*/
-/*    if v-bytes = 0 then leave ContBlock.*/
-
-
-/*    v-str = GET-STRING(mbuffer-in,1).*/
-    /*ждем окончание передачи шапки. ѕризнак конца шапки - двойной перевод строки*/
-    def var offscont as int no-undo.
-    etime(yes).
-    v-bytes = 0 .
-    offscont = 0.
-    n = 0.
-    v-str = "".
-    v-cont-length = 0.
-    v-querypar = "".
-    v-path = "".
-    set-size (mbuffer-in) = 0.
-    set-size (mbuffer-out) = 0.
-    set-size (mbuffer) = 0.
-    mbuffer-out = ?.
-    mbuffer = ?.
-    mbuffer-in = ?.
-    set-size (mbuffer-hdr) = 33000. 
-    
-    dwhdr_:
-    DO WHILE ETIME < 5000 : /*5 сек на прием шапки*/
-      /* читаем сокет и разбираем полученую информацию. */
-      if n = v-bytes
-      then do:
-        n = 0.
-        v-bytes = hsocket:get-bytes-available().
-      end.
-      do while n < v-bytes :
-        n = n + 1.
-        v-pos-buf = v-pos-buf + 1.
-        v-read = hSocket:read(mbuffer-hdr, v-pos-buf, 1, 2) no-error .
-        if not v-read 
-          then leave.
-        if v-pos-buf > 4
-          then v-str = get-string (mbuffer-hdr, v-pos-buf - 3, 4).
-        if v-pos-buf > 32000
-          then leave.
-        if v-str = {&HdEnd}
-        then do:
-          v-header = get-string (mbuffer-hdr, 1).
-          v-str = "".
-          v-pos-buf = 0.
-          run parseheader(input v-header).
-          set-size (mbuffer-in) = 0.
-          set-size (mbuffer-hdr) = 0.
-          set-size (mbuffer-in) = v-cont-length.
-          leave dwhdr_.
-        end.
-      end.
-    END.
-    
-    dw_:
-    DO WHILE (v-cont-length > 0 and v-cont-length > v-pos-buf) and ETIME < us-tmo * 1000 :
-      /* читаем сокет и разбираем полученую информацию. */
-      if n = v-bytes
-      then do:
-        n = 0.
-        v-bytes = hsocket:get-bytes-available().
-      end.
-      do while n < v-bytes :
-        n = n + 1.
-        v-pos-buf = v-pos-buf + 1.
-        v-read = hSocket:read(mbuffer-in, v-pos-buf, 1, 2) no-error .
-        if not v-read 
-          then leave.
-      end.
-    END.
-    if not (mbuffer-in = ? or get-size (mbuffer-in) = ? or get-size(mbuffer-in) = 0) and not v-cont-type = 'raw'
-      then v-content = get-string (mbuffer-in, 1).
-    
-    RUN write-to-log-file('SOCKET-READ:' + v-content ).
-/*    RUN write-to-log-event('SOCKET-READ:' + v-str ).*/
-    if ((v-content = '' or v-content = ?) and (v-cont-type <> "raw" and v-querypar = "")) or v-header = "" then do:
-      resp-head =  substitute("HTTP/1.0 408 Request Timeout or bad request &1Server: 4GL&2",{&CRLF},{&HdEnd}).
-      SET-SIZE(mbuffer-out) = 0.
-      SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.
-      PUT-STRING(mbuffer-out,1) = resp-head.
-      lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.
-      hsocket:disconnect ().
-      LEAVE ContBlock.
-    end.
-    
-    /* «апросы не в xml формате не обрабатываем */
-
-    if v-cont-type <> 'text/xml':U and v-cont-type <> 'raw' and v-querypar = "" then do:
-     /* resp-head = "HTTP/1.1 501 Not Implemented ~nServer: 4GL ~nConnection: close ~n~n".*/
-      resp-head = substitute("HTTP/1.0 501 Not Implemented&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-      SET-SIZE(mbuffer-out) = 0.
-      SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.
-      PUT-STRING(mbuffer-out,1) = resp-head.
-      lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.
-      hsocket:disconnect ().
-      LEAVE ContBlock.
-    end.
-      IF v-cont-length = 0 and not num-entries (v-querypar, "?") > 1 THEN DO:  /* ≈сли запрос c нулевой длиной тела, то создаем ответ об успешном выполнении запроса */
-        resp-head = substitute("HTTP/1.0 411 No Content&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-        SET-SIZE(mbuffer-out) = 0.
-        SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.
-        PUT-STRING(mbuffer-out,1) = resp-head.
-        lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.
-        hsocket:disconnect ().
-        LEAVE ContBlock.
-      END.
-      /*ожидаем полной передачи тела запроса*/
-/*                                                                                */
-/*      IF  LENGTH(v-content) < v-cont-length  THEN DO:                           */
-/*          ETIME (YES).                                                          */
-/*          DO WHILE LENGTH(v-content) < v-cont-length AND ETIME < us-tmo * 1000 :*/
-/*              v-bytes = hSocket:get-bytes-available().                          */
-/*              run socketRead(hSocket:handle, v-bytes, input-output mbuffer-in). */
-/*              PAUSE 1.                                                          */
-/*          END.                                                                  */
-/*      END.                                                                      */
-      
-      RUN write-to-log-file('REQUEST-CONTENT:' + v-content ).
-      /* тело запроса передано не полностью */
-      IF (v-cont-length > 0 AND v-pos-buf < v-cont-length)  THEN DO:
-        resp-head =  substitute("HTTP/1.0 408 Request Timeout&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-        SET-SIZE(mbuffer-out) = 0.
-        SET-SIZE(mbuffer-out) = LENGTH(resp-head,'RAW') + 2.
-        PUT-STRING(mbuffer-out,1) = resp-head.
-        lsocket = hsocket:WRITE(mbuffer-out,1,LENGTH(resp-head,'RAW':U)) no-error.
-        hsocket:disconnect ().
-        LEAVE ContBlock.
-      END.
-      ELSE DO: /*≈сли тело не пустое*/
-          SET-SIZE(mbuffer) = 0.
-          SET-SIZE(mbuffer) = LENGTH(v-content,'RAW') + 2.
-          PUT-STRING(mbuffer,1) = v-content.
-
-          case v-path:
-          when "AuthMarking" then do:
-            sktserv:ClientPar = v-path. 
-            sktserv:QueryParam = entry (2, v-querypar, "?").            
-          end.
-          otherwise do:
-            if v-querypar <> ""
-            then do:
-              if num-entries (v-querypar, "?") > 1
-              then do:
-                sktserv:ClientPar  = entry (1, v-querypar, "?"). 
-                sktserv:QueryParam = entry (2, v-querypar, "?").
-              end.
-              else do:
-                 sktserv:ClientPar = v-querypar.
-                 sktserv:QueryParam = "".
-               end.
-            end.
-            else do:
-               sktserv:ClientPar = "".
-               sktserv:QueryParam = "".
-            end.
-          end.
-          end.
-          case true:
-          when sktserv:ClientPar <> '' then do:
-            sktserv:RequestProcessing(v-content, hsocket) no-error.
-            resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
-          end.
-          when v-cont-type = 'raw' then do:
-            sktserv:RequestProcessing(mbuffer-in, hsocket, v-user-agent) no-error.
-            resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
-          end.
-          when v-cont-type = 'text/xml' then do:
-            sktserv:RequestProcessing(v-content, hsocket) no-error.
-            resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
-          end.
-          end case.
-          
-          logWrite:LogStr = "".
-          
-          /*if error-status:error then do:
-            resp-head =  substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            RUN write-to-log-event(return-value).            
-          end.
-          else do:
-/*            resp-head = "OK".*/
-          end.*/
-          
-      END.
-  end. /* ContBlock */
-  RUN write-to-log-event('RESPONSE: ' + resp-head).
-  
-    
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -745,7 +747,7 @@ v-srv-connected = YES.
 /* IF VALID-HANDLE(hServerSocket) AND hServerSocket:CONNECTED() THEN */
 RUN write-to-log-event(substitute('«апущен сокет-сервер с параметрами: &1 ',v-connect-param)).
 btn-st:LABEL IN FRAME {&FRAME-NAME} = '—топ'.
-sktserv  = new SktServer(this-procedure).
+sktserv  = new SktServer(this-procedure, us-tmo).
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -798,10 +800,13 @@ end.
 else do:
    def var varfile-str as longchar no-undo.
    
-   str = cur-time-string-msec() + {&tabulation} + "‘айл: " +  itext + {&new-line}.
-   auto-log:insert-string(str) NO-ERROR.
-   auto-log:insert-file(search(itext)) no-error.
-   RUN write-to-log-file(str).
+   if  itext ne "filewrireLog.txt"
+   then do:
+      str = cur-time-string-sec() + {&tabulation} + "‘айл: " +  itext + {&new-line}.
+      auto-log:insert-string(str) NO-ERROR.
+      auto-log:insert-file(search(itext)) no-error.
+      RUN write-to-log-file(str).
+   end.
    copy-lob
       file itext
       to object varfile-str
@@ -829,53 +834,6 @@ no-error
 .
 
 END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _Procedure parseheader C-Win
-procedure parseheader:
-  
-  define input parameter p-header as character no-undo.
-  define variable n as integer no-undo.
-  define variable idxQuerypar as integer no-undo.
-
-  def var i as int no-undo.
-  RUN write-to-log-event('REQUEST-HEADER:' + p-header ).
-  /*разбор шапки*/
-  n = 2.
-  if num-entries (p-header, "/") > 1
-  then do:
-    v-querypar = right-trim (right-trim  (entry(n, p-header, "/"), "HTTP"), " ").
-  end.
-  if v-querypar = "AuthMarking"
-  then do:
-    /* нельз€ использовать entry, т.к. в коде марки может быть слеш "/" */
-    assign
-      v-path = v-querypar
-      idxQuerypar = index(p-header,"/")
-      idxQuerypar = index(p-header,"/",idxQuerypar + 1)
-      v-querypar = right-trim (substring(p-header, idxQuerypar + 1, r-index(p-header,"HTTP") - idxQuerypar - 1), " ")
-      n = 3
-    .
-  end.
-  
-  p-header = replace (p-header,";",{&CRLF}).
-  DO i = 1 TO NUM-ENTRIES(p-header,{&CRLF}):
-      v-hd-line = trim(ENTRY(i,p-header,{&CRLF})).
-      IF  v-hd-line  BEGINS "Content-Length"  THEN  do:
-          v-cont-length = INT(trim(SUBSTRING(v-hd-line,16,LENGTH(v-hd-line)))).
-      END.
-      IF  v-hd-line  BEGINS "content-type:"  THEN  do:
-          v-cont-type = trim(SUBSTRING(v-hd-line,14,LENGTH(v-hd-line))).
-      END.
-      IF  v-hd-line  BEGINS "user-agent:"  THEN  do:
-          v-user-agent = trim(SUBSTRING(v-hd-line,13,LENGTH(v-hd-line))).
-      END.
-  END.
-    
-end procedure.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

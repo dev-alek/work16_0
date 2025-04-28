@@ -15,7 +15,17 @@ Creation date: 01/30/15
 
 */
 using ibs.th.skt.Commands.*.
+using ibs.th.skt.HeadHttp from propath.
 
 class ibs.th.skt.Commands.SimpleRequest inherits IRequest: 
+    
+   constructor public SimpleRequest (iHeadHTTP as HeadHttp  ):
+      super ().
+      HeadHTTP = iHeadHTTP.
+   end constructor.
+
+	destructor public SimpleRequest ( ):
+      delete object HeadHTTP.
+	end destructor.
 
 end class.

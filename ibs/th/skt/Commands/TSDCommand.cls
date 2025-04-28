@@ -175,7 +175,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     tsd:IsMarkOn = if entry (5, list-par, "?") = "true" then true else false
     no-error.
     
-    os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
+    if req:HeadHTTP:getValue("TSD-protocol") > ""
+    then
+       os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
+    else
+       os-copy value(search("exe/DBInit_1_5.exe"))   value ("DBInit.exe").       
+         
     
     if is-ProcArch64 
     then do:
@@ -221,7 +226,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        tsd:getWB().
        endStep('Завершена выгрузка накладных').
        startStep('Начало выгрузки ЭДО.').
-       tsd:getUTDDoc().
+       tsd:getUTDDoc(req:HeadHTTP:getValue("TSD-protocol")).
        endStep('Завершена выгрузка ЭДО').
        startStep('Начало загрузки документов в ТСД.').
        os-delete "documents_new.s3db".
@@ -247,12 +252,20 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          then
             leave block-size.
       end.
-      set-size (mbuffer1) = 0.
-      set-size (mbuffer1) = vsize.
-      input from value (file-info:file-name) binary no-convert.
-      import mbuffer1.
-      input close.
-    
+      if vsize eq ?
+      then do:
+         set-size (mbuffer1) = 0.
+         logWrite:WriteFileToLog("DBInitDoc.txt").
+         logWrite:LogStr = "Не удалость произвести выгрузку".
+      end.
+      else do:
+         set-size (mbuffer1) = 0.
+         set-size (mbuffer1) = vsize.
+         input from value (file-info:file-name) binary no-convert.
+         import mbuffer1.
+         input close.
+      end.
+      
       if logWrite:LogStr = ""
       then tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1)).
       else tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&1&5&2",{&CRLF},{&HdEnd},get-size(mbuffer1), "При обмене возникли ошибки.",logWrite:LogStr). 
@@ -292,6 +305,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define buffer buf_prod-bc   for ub.prod-bc.
     define buffer buf_place     for ub.place.
     define buffer bfTempDocLine for TempDocLine.
+    
+    if req:HeadHTTP:queryAdr eq "tsd/doc"
+    then do:
+       Execute_ (req,resp,req:HeadHTTP:userAgent).
+       return.
+    end.
     
     
     logWrite = new logWrite().
@@ -344,7 +363,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           tsd:WriteGoods().
           endStep('Завершено кеширование справочника товаров.').
           startStep('Начало кеширования справочника штрих-кодов.').
-          tsd:WriteBarcodes().
+          tsd:WriteBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
           endStep('Завершено кеширование справочника штрих-кодов.').
           str = 'dictionaries'.
         end.
@@ -372,7 +391,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
       when "TH_barcodes" then 
         do:
-          tsd:WriteBarcodes().
+          tsd:WriteBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
         end.
       when "WAYBILL" then 
         do:
@@ -396,7 +415,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               if not available buf_bar-code then do:
                 logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
-                writeSock("").
+                writeSock("",req:HeadHTTP:getValue("TSD-protocol")).
               end.
               
             end.
@@ -474,11 +493,11 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
 
     if ErrStatus then 
     do:
-      writeSock("").
+      writeSock("",req:HeadHTTP:getValue("TSD-protocol")).
       if ErrStatus = true then undo.
     end.
     else do:
-      writeSock(str).
+      writeSock(str,req:HeadHTTP:getValue("TSD-protocol")).
       if ErrStatus = true then undo.
     end.
     
@@ -719,7 +738,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               do:
                 logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
-                writeSock("").
+                writeSock("","").
               end.
               
             end.
@@ -900,7 +919,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method private logical writeSock ( arg as character ):
+  method private logical writeSock ( arg as character, iprotocol as char ):
     
     define variable mbuffer       as memptr   no-undo.
     define variable mbuffer1      as memptr   no-undo.
@@ -929,7 +948,11 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       then assign is-ProcArch64 = true.
       input close.
       startStep("Начало конвертации справочника.").
-      os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
+      if iprotocol > ""
+      then
+         os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
+      else
+         os-copy value(search("exe/DBInit_1_5.exe"))   value ("DBInit.exe").       
       if is-ProcArch64 
       then do:
          os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
@@ -973,7 +996,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       then assign is-ProcArch64 = true.
     input close.
 
-    os-copy value(search("exe/DBInit.exe")) value ("DBInit.exe").    
+    if req:HeadHTTP:getValue("TSD-protocol") > ""
+      then
+         os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
+      else
+         os-copy value(search("exe/DBInit_1_5.exe"))   value ("DBInit.exe").       
+        
     
     if is-ProcArch64 
     then do:

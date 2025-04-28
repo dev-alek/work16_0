@@ -16,6 +16,7 @@ Creation date: 01/30/15
 */
 
 using ibs.th.skt.ControlledClients.*.
+using ibs.th.skt.HeadHttp from propath.
 
 class ibs.th.skt.Commands.IRequest abstract:  
 
@@ -27,16 +28,17 @@ define public property Content as longchar no-undo
     get.
     set.
 
-  define public property QueryPar as character no-undo 
-    get.
-    set.
-
-  define public property ContentObj as class content no-undo 
-    get.
-    set.
-
   define public property HndlSocket as handle no-undo 
     get.
     set.
+    
+  define public property HeadHTTP as HeadHTTP no-undo 
+    get.
+    set.
+  define public property queryPar as character  no-undo 
+  get:
+     return if valid-object (HeadHTTP) then HeadHTTP:queryPar else "".
+  end.  
+ 
   
 end class.

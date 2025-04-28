@@ -54,7 +54,7 @@ class ibs.th.skt.ClientControl:
     if not available (ttCommands) then 
     do:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
-      return error.
+      return true.
     end.
     do transaction:
        cast(ttCommands.objCommand, ibs.th.skt.Commands.ICommand):Execute_(req, resp)no-error.
@@ -91,7 +91,7 @@ class ibs.th.skt.ClientControl:
     if not available (ttCommands) then 
     do:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
-      return error .
+      return true .
     end.
     do transaction:
        cast(ttCommands.objCommand, ibs.th.skt.Commands.TSDCommand):Execute_(req, resp, lpar) no-error.
