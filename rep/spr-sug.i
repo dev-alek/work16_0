@@ -705,8 +705,9 @@ procedure spr-sug:
       vEmptying = ktp * numHoses . /*Значение технологических потерь при опорожнении резинотканевых рукавов по окончании налива (слива) АЦ*/
       run tp-ret(vTemp, output ktp) .
 
-      if not(own-supp) or (GNS > ""  and clear-ac) then vRefund = ktp * vVolue . /* зависел ои нефтебазы и зачищена или нет*/
-      else vRefund = 0 .
+/*      if not(own-supp) or (GNS > ""  and clear-ac) then vRefund = ktp * vVolue . /* зависел ои нефтебазы и зачищена или нет*/*/
+/*      else vRefund = 0 .                                                                                                     */
+      vRefund = ktp * vVolue .
       run tp-chklv(vTemp, vMasDol, output ktp) .
       if reason-code = 99 and valve then vCtrlvalve = ktp .
       else vCtrlvalve = 0 .

@@ -516,6 +516,9 @@ procedure lib-trn4_int-clos :
   define variable varperc-exptype    as character no-undo .
   define variable varchg-inv         as logical   no-undo .
   define variable varvalue           as character no-undo .
+  DEFINE VARIABLE varvalue_massa-sug as character no-undo .
+  DEFINE VARIABLE varvalue_teh-loss  as character no-undo .
+  DEFINE VARIABLE varvalue_err-allow as character no-undo .
   define variable vartype            as character no-undo .
   define variable skip-all           as logical   no-undo initial no .
   define variable skip-zero          as logical   no-undo initial no .
@@ -1550,17 +1553,30 @@ define variable v-codident as character no-undo.
             { str/tdat-val.i
               buf_trn-doc.doc-code
               {&sugtpattr-massa-sug}
-              varvalue
+              varvalue_massa-sug
               vartype
               no-error
             }
-            varvalue = if varvalue = "" then
-              "Не заполнены данные для расчета технологических потерь.~n"
-              else "".
+            { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&sugtpattr-teh-loss}
+              varvalue_teh-loss
+              vartype
+              no-error
+            }
+             { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&sugtpattr-err-allow}
+              varvalue_err-allow
+              vartype
+              no-error
+            }       
+            if varvalue_err-allow = '' or varvalue_teh-loss = '' or varvalue_massa-sug = '' then                
+            varvalue = "Не заполнены данные для расчета технологических потерь.~n" .
+              else varvalue = "".
           end.
           message varvalue
-                  "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
-                  "Вы уверены ?"
+                  "Закрыть накладную № " buf_trn-doc.doc-code " до статуса ФАКТ?" skip (2)
                   view-as alert-box question buttons OK-Cancel title "Вопрос" update varlog.
         end.
         if not varlog then  return error.
