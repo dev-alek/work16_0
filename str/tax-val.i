@@ -348,19 +348,27 @@ procedure tax-val :
         if buf_tt-tax.tax-code = rdtaxcdvalue then do:
           ASSIGN
           buf_tt-tax.rate-code   = if (is-petrolium  and not is-pieces) and buf_goods.gds-type = {&gds-goods}
-                                then integer(buf_prod-bc.b-str)
+                                then integer(buf_prod-bc.b-str) 
                                 else buf_bar-code.b-code
           buf_tt-tax.rate-value  = parroad-tax
-          buf_tt-tax.tax-rate-gds-rc  = ?.
+          buf_tt-tax.tax-rate-gds-rc  = ?
+          NO-ERROR.
         end.
         if buf_tt-tax.tax-code = exctaxcdvalue then do:
           ASSIGN
           buf_tt-tax.rate-code   = if (is-petrolium  and not is-pieces) and buf_goods.gds-type = {&gds-goods}
-                                then integer(buf_prod-bc.b-str)
+                                then integer(buf_prod-bc.b-str) 
                                 else buf_bar-code.b-code
           buf_tt-tax.rate-value  = parexcise
-          buf_tt-tax.tax-rate-gds-rc  = ?.
+          buf_tt-tax.tax-rate-gds-rc  = ?
+          NO-ERROR.
         end.
+
+        /* if error-status:error then do:
+        assign varmes = "~n" + "Ошибка при сохранении " + buf_prod-bc.b-str . 
+            {&return-error}
+        end.*/
+
       end. /* individual*/
     end. /*for each buf_tt-tax*/
   end.
