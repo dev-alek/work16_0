@@ -1,4 +1,4 @@
-"652"
+"653"
 "menu-group"
 "all" "Полное меню"            "Показать полное меню"                           ""            "cmp/btn-all.bmp"                "chk-usr-numa-no"     "int,m__menu-all-exe"
 "menu-group"
