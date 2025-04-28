@@ -657,6 +657,7 @@ do
         assign
           tt-petrol.weight-AC = v-fact-qnty-after - v-fact-qnty-before .
         .  
+
         find first buf_rvs-doc no-lock where buf_rvs-doc.out-code = buf_trn-doc.doc-code and
           buf_rvs-doc.rvs-type = {&rvs-before-doc} no-error .
         if available (buf_rvs-doc) then 
@@ -664,8 +665,8 @@ do
           for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
             buf_rvs-line.gds-code = buf_goods.gds-code:
                         
-            if check-RVD(buf_rvs-line.obj-code, buf_rvs-line.obj-type, buf_rvs-line.pl-code) then tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
-            else tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
+            if get-input-type(recid(buf_rvs-doc)) <> 'à' then tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
+            else tt-petrol.before-measure-cli-qnty = tt-petrol.before-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
 
           end.
         end. 
@@ -676,10 +677,15 @@ do
           for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
             buf_rvs-line.gds-code = buf_goods.gds-code :
             ii = ii + 1 .
-            if check-RVD(buf_rvs-line.obj-code, buf_rvs-line.obj-type, buf_rvs-line.pl-code) then tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
-            else tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
 
+            if get-input-type(recid(buf_rvs-doc)) <> 'à' then do:
+            tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.state-measure-cli-qnty .
+            tt-petrol.after-temp = tt-petrol.after-temp + buf_rvs-line.state-temperature .
+            end.
+            else do:
+            tt-petrol.after-measure-cli-qnty = tt-petrol.after-measure-cli-qnty + buf_rvs-line.measure-cli-qnty .
             tt-petrol.after-temp = tt-petrol.after-temp + buf_rvs-line.temperature .
+            end.
           end.
           tt-petrol.after-temp = tt-petrol.after-temp / ii .
           tt-petrol.vol-TH = tt-petrol.after-measure-cli-qnty - tt-petrol.before-measure-cli-qnty .
@@ -730,7 +736,7 @@ do
             tt-petrol.pol10 = (sqrt(exp((tt-petrol.after-measure-cli-qnty * 0.65), 2) + exp((tt-petrol.before-measure-cli-qnty * 0.65), 2)) / 100) +  decimal (err-allow).
             tt-petrol.pol11 = tt-petrol.pol9 - tt-petrol.pol8 - tt-petrol.pol10 .
             pol14 = sqrt(exp((tt-petrol.after-measure-cli-qnty * 0.65), 2) + exp((tt-petrol.before-measure-cli-qnty * 0.65), 2)) / 100 .
- 
+            if tt-petrol.pol11 < 0 then tt-petrol.pol11 = 0 .
               
         end.      
       end.   

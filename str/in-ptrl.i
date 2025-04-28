@@ -1889,8 +1889,8 @@ define variable vss-include-info{&vssseq} as character format "X(65)":U no-undo 
             infoSectionsTotal:InfoSectionCurr:TankVolPomiRvs = ? .
             infoSectionsTotal:InfoSectionCurr:AvgTempRvs = ? .
           end.
-        end .
         infoSectionsTotal:SaveDB().
+        end .
         
         run placelib_get-attr(input {&place-virtual}
                              ,input t-doc.obj-code
