@@ -430,7 +430,7 @@ procedure tp-emp:
   DO:
     if     sug-temp  > -40 AND sug-temp  <= -20
       and mass-prop >   0 and mass-prop <=  50
-      and length    >   0 and length    <=   7
+      and length    >=   0 and length    <=   7
       then ktp = 7.081    .
     if     sug-temp  >  -40 AND sug-temp  <= -20
       and mass-prop >    0 and mass-prop <=  50
@@ -438,7 +438,7 @@ procedure tp-emp:
       then ktp = 9.441   .        
     if     sug-temp  >  -40 AND sug-temp  <= -20
       and mass-prop >   50 and mass-prop <=  60
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 7.087   .       
     if     sug-temp  >  -40 AND sug-temp  <= -20
       and mass-prop >   50 and mass-prop <=  60
@@ -446,7 +446,7 @@ procedure tp-emp:
       then ktp = 9.449  .       
     if     sug-temp  >  -40 AND sug-temp  <= -20
       and mass-prop >   60 
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 7.099          .
     if     sug-temp  >  -40 AND sug-temp  <= -20
       and mass-prop >   60
@@ -454,7 +454,7 @@ procedure tp-emp:
       then ktp = 9.466    .
     if     sug-temp  >  -20 AND sug-temp  <=   0
       and mass-prop >    0 and mass-prop <=  50
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.793   .
     if     sug-temp  >  -20 AND sug-temp  <=   0
       and mass-prop >    0 and mass-prop <=  50
@@ -462,7 +462,7 @@ procedure tp-emp:
       then ktp = 9.057  .
     if     sug-temp  >  -20 AND sug-temp  <=   0
       and mass-prop >   50 and mass-prop <=  60
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.801   .              
     if     sug-temp  >  -20 AND sug-temp  <=   0
       and mass-prop >   50 and mass-prop <=  60
@@ -470,7 +470,7 @@ procedure tp-emp:
       then ktp = 9.068  .               
     if     sug-temp  >  -20 AND sug-temp  <=   0
       and mass-prop >   60 
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.822   .                
     if     sug-temp  >  -20 AND sug-temp  <=   0
       and mass-prop >   60
@@ -478,7 +478,7 @@ procedure tp-emp:
       then ktp = 9.095    .                  
     if     sug-temp  >    0 AND sug-temp  <=  20
       and mass-prop >    0 and mass-prop <=  50
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.550    .
     if     sug-temp  >    0 AND sug-temp  <=  20
       and mass-prop >    0 and mass-prop <=  50
@@ -486,7 +486,7 @@ procedure tp-emp:
       then ktp = 8.734   .    
     if     sug-temp  >   0 AND sug-temp  <=  20
       and mass-prop >   50 and mass-prop <=  60
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.566 .   
     if     sug-temp  >    0 AND sug-temp  <=  20
       and mass-prop >   50 and mass-prop <=  60
@@ -494,7 +494,7 @@ procedure tp-emp:
       then ktp = 8.755  .      
     if    sug-temp  >     0 AND sug-temp  <=  20
       and mass-prop >   60 
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.605 .         
     if    sug-temp   >    0 AND sug-temp  <=  20
       and mass-prop >   60
@@ -502,7 +502,7 @@ procedure tp-emp:
       then ktp = 8.807  .            
     if    sug-temp   >   20 
       and mass-prop >    0 and mass-prop <=  50
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.294  .                   
     if    sug-temp   >   20 
       and mass-prop >   50 and mass-prop <=  60
@@ -514,11 +514,11 @@ procedure tp-emp:
       then ktp = 8.423   .          
     if    sug-temp   >   20 
       and mass-prop >   60
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.377    .              
     if    sug-temp   >   20 
       and mass-prop <=  60
-      and length    >    0 and length    >    7
+      and length    >=    0 and length    >    7
       then ktp = 8.502   .                     
   END.                                             
 END PROCEDURE. 
