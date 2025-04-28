@@ -927,6 +927,7 @@ DO:
 
     if is-petrolium = yes
       and is-pieces = no
+      and not is-gas(buf_goods.gds-code)
     then do:
       if { str/valddnst.i chk ub.doc-line.doc-density "buf_goods.unit-base = buf_goods.unit-cli" } <> true then do:
         message
@@ -3455,7 +3456,9 @@ define variable d_fact-qnty     as decimal no-undo initial 0.00 .
       end.
     end.
 
-    if buf_goods.unit-base <> buf_goods.unit-cli then do:
+    if buf_goods.unit-base <> buf_goods.unit-cli
+    and not is-gas(buf_goods.gds-code)
+    then do:
       assign
         d_density = d_cli-doc-qnty / d_doc-qnty
       .
