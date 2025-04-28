@@ -72,7 +72,11 @@ on error undo, return error
    ASSIGN
       v-file-version = INTEGER(v-out-string)
    .
-   IF v-file-version <= p-base-version
+   IF v-file-version = p-base-version
+   THEN DO:
+      RETURN.
+   END.
+   else IF v-file-version < p-base-version
    THEN DO:
       RETURN SUBSTITUTE( "В файле более старая версия &1, текущая &2" , v-file-version, p-base-version) .
    END.
