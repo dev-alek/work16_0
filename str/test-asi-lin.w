@@ -4489,7 +4489,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           create tt-dens .
           assign
             tt-dens.ii = ikey
-            tt-dens.key_ = "P" + string(ikey)
+            tt-dens.key_ = "P" + string(ikey) + (if ikey = 1 then "(низ)" else "")
             tt-dens.density = decimal(entry(id, v-izm-denses-attr))
           .
         end .
