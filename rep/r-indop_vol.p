@@ -36,7 +36,8 @@ def var vss-description as character no-undo init "ПРИЕМ ТОПЛИВА С ПРЕВЫШЕНИЕМ П
 { str/is-gas.i }
 { str/trdcalib.i }
 { str/placelib.i }
-
+{ rep/c-temp-place.i }
+{ rep/c-place-attr.i }
 define variable var-report-num      as character no-undo .
 define variable v-file-name-rep-htm as character no-undo .
 define variable is-petrol           as logical   no-undo .
@@ -107,6 +108,9 @@ define variable v-attr-type     as character no-undo.
 define variable v-curr-grp-name as character no-undo .
 define variable v-host-code     like ub.clients.host-code no-undo .
 define variable v-obj-list      as character no-undo .
+
+define variable curr-date as date no-undo .
+define variable curr-time as integer no-undo .
    
 do on error undo, return error return-value:
 
@@ -343,6 +347,9 @@ procedure proc-report:
       find first ub.goods no-lock where ub.goods.gds-code = tt-report.gds-code no-error .
       if available (ub.goods) then tt-report.gds-name = ub.goods.gds-name .
   
+
+  /* Объем резервуара история */
+  tt-report.max-vol-pl = get_max-qnty(tt-report.obj-code, tt-report.obj-type, tt-report.pl-code, buf_trn-doc.fact-date, buf_trn-doc.fact-time) . /*Объем резервуа-ра 100%, л*/
       find first ub.place no-lock where ub.place.obj-code = tt-report.obj-code and
          ub.place.obj-type = tt-report.obj-type and
          ub.place.pl-code = tt-report.pl-code no-error .
@@ -357,7 +364,7 @@ procedure proc-report:
             ,output v-ok      ) no-error.
          if v-ok and v-value <> "" then tt-report.loc1 = ub.place.loc1 + "(" + v-value + ")".
          else tt-report.loc1       = ub.place.loc1 . /*№ резервуара*/
-         tt-report.max-vol-pl = ub.place.max-qnty . /*Объем резервуа-ра 100%, л*/
+/*         tt-report.max-vol-pl = ub.place.max-qnty . /*Объем резервуа-ра 100%, л*/*/
             
       end. 
       /*Накладная, номер*/

@@ -40,6 +40,68 @@ procedure c-place_get-attr :
 
 end procedure. 
 
+FUNCTION get_max-qnty returns decimal (
+  input obj-code as integer, 
+  input obj-type as character,
+  input pl-code as integer,
+  input endDate as date,
+  input endTime as integer ):
+
+  define buffer bf_c-place     for ub.c-place .
+  define buffer buf_c-place    for ub.c-place .
+  define buffer bf_place       for ub.place .
+  define buffer curr_c-place   for c-place .
+  define buffer buf_c-plc-hist for ub.c-plc-hist .
+  define variable ii      as integer no-undo init 0.
+  define variable is-max-qnty as logical no-undo .
+  define variable is-true as logical no-undo .
+  
+  find last curr_c-place no-lock where curr_c-place.pl-code = pl-code and
+    curr_c-place.obj-code = obj-code and
+    curr_c-place.obj-type = obj-type and
+    ((curr_c-place.corr-date = endDate and 
+    curr_c-place.corr-time < endTime) or 
+    curr_c-place.corr-date < endDate) no-error .
+  if available (curr_c-place) then 
+  do:
+    find first buf_c-plc-hist no-lock where
+      buf_c-plc-hist.obj-type = obj-type
+      AND buf_c-plc-hist.obj-code = obj-code
+      AND buf_c-plc-hist.pl-code = pl-code
+      AND buf_c-plc-hist.subject  = "place" 
+      and buf_c-plc-hist.chip-num = curr_c-place.chip-num no-error .
+    if available (buf_c-plc-hist) then 
+    do:
+&scop fields-name-list  "max-qnty"
+
+      define variable v-label-param as character no-undo .
+
+      v-label-param =
+        "max-qnty" + {&delim-par} + "Максимальное количество" + {&delim-par} + "" .
+      run proc-full-temp-changes in this-procedure (
+        input buf_c-plc-hist.action = integer({&hn-create})
+        ,input buf_c-plc-hist.action = integer({&hn-delete})
+        ,input  buffer curr_c-place:handle
+        ,input  {&table_place}
+        ,input  {&fields-name-list}
+        ,input  v-label-param).
+
+    end.
+  end.
+  for each with-action:
+    return decimal(with-action.v_new) .
+  end.
+  if available (curr_c-place) then 
+  do:
+    return curr_c-place.max-qnty .
+  end.  
+  find first bf_place no-lock where bf_place.pl-code = pl-code and                   
+    bf_place.obj-code = obj-code and                                                 
+    bf_place.obj-type = obj-type no-error .                                          
+  return bf_place.max-qnty . 
+
+end function. 
+
 FUNCTION get_meas returns logical (
   input obj-code as integer, 
   input obj-type as character,
