@@ -87,7 +87,7 @@ define VARIABLE v-manager-position   as character no-undo .
 define VARIABLE v-fio-position       as character no-undo .
 define VARIABLE v-num-print-prob     as character no-undo .
 define VARIABLE v-time-income        as character no-undo .
-define VARIABLE v-hour-income        as integer   no-undo .
+define VARIABLE v-hour-income        as character no-undo .
 define VARIABLE v-min-income         as integer   no-undo .
 define variable v-DD-Month-YYYY      as character no-undo .
 define variable v-DD-Month-YYYY-cert as character no-undo.
@@ -250,17 +250,16 @@ do
   else v-date-income = "" .
   /*Время прибытия*/                                        
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-income},OUTPUT v-time-income) no-error .
- /* v-hour-income = integer(substring(v-time-income, 1, 2)) no-error.
-  v-min-income = integer(substring(v-time-income, 4, 2)) no-error. */
+  v-hour-income = v-time-income no-error.
   /*Время начала слива*/
-/*  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-start},OUTPUT v-time-income) no-error .
- /* v-time-start = integer(substring(v-time-income, 1, 2)) no-error.
-  v-min-start = integer(substring(v-time-income, 4, 2)) no-error. */
+  run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-start},OUTPUT v-time-income) no-error .
+  v-time-start = integer(substring(v-time-income, 1, 2)) no-error.
+  v-min-start = integer(substring(v-time-income, 4, 2)) no-error. 
   /*Время окнчания слива*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-time-end},OUTPUT v-time-income) no-error .
- /* v-time-end = integer(substring(v-time-income, 1, 2)) no-error.
-  v-min-end = integer(substring(v-time-income, 4, 2)) no-error. */
-*/
+  v-time-end = integer(substring(v-time-income, 1, 2)) no-error.
+  v-min-end = integer(substring(v-time-income, 4, 2)) no-error. 
+
   /*Техническое состояние*/
   run doc-attr-write(INPUT buf_trn-doc.doc-code,INPUT {&trdcattr-condition},OUTPUT v-condition) no-error .
   /*Пломбы от, дата свидетельства о поверке*/
@@ -515,13 +514,13 @@ do
                                 
     '<TR>' skip
     '<TD colspan="5" style="">6. Дата и время прибытия АЦ</TD>' skip .
-    if v-time-income <> '' and v-date-income <> '' then do:
+    if v-hour-income <> '' and v-date-income <> '' then do:
     put stream OutStr-html unformatted
-    '<TD colspan="9" style="text-align: center;">' + string (v-date-income) + ", " + string(v-time-income) + '</TD>' skip .
+    '<TD colspan="9" style="text-align: center;">' + string (v-date-income) + ", " + string(v-hour-income) + '</TD>' skip .
     end.
     else do:
     put stream OutStr-html unformatted
-    '<TD colspan="9" style="text-align: center;">' + string (v-date-income) + " " + string(v-time-income) + '</TD>' skip .
+    '<TD colspan="9" style="text-align: center;">' + string (v-date-income) + " " + string(v-hour-income) + '</TD>' skip .
     end.
     put stream OutStr-html unformatted
     '</TR>'skip
