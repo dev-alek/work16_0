@@ -62,11 +62,10 @@ method override public void CrContentToSW (insw as handle):
   if available c-chk-doc
     then 
   do:
-/*    do ii = 1 to num-entries(c-chk-doc.office):                                                                   */
-/*      office = office + "," +  ENTRY(LOOKUP(entry(ii,c-chk-doc.office), {&OFFICE_NAME_LIST}),{&OFFICE_CODE_LIST}).*/
-/*    end.                                                                                                          */
-/*                                                                                                                  */
-/*    office = trim(office,",").                                                                                    */
+    do ii = 1 to num-entries(c-chk-doc.office):
+    if ENTRY(ii,c-chk-doc.office) <> "" then office = office + "," + ENTRY(ii,c-chk-doc.office)  .
+    end.
+    office = trim(office,",") .
     
     insw:start-element ({&tag-check-del}) .
     insw:start-element ({&tag-checks}) .
@@ -76,8 +75,8 @@ method override public void CrContentToSW (insw as handle):
     insw:write-data-element (  "shift-date":U,        if c-chk-doc.shift-date eq ? then "" else string(c-chk-doc.shift-date)   ).
     insw:write-data-element (  "chk-type":U,       string(c-chk-doc.chk-type)).
     insw:start-element ("condition-check":U) .
-    do ii = 1 to num-entries(c-chk-doc.office):
-    insw:write-data-element (  "condition-type":U,   ENTRY(LOOKUP(entry(ii,c-chk-doc.office), {&OFFICE_NAME_LIST}),{&OFFICE_CODE_LIST})  ).
+    do ii = 1 to num-entries(office):
+    insw:write-data-element (  "condition-type":U,   ENTRY(LOOKUP(entry(ii,office), {&OFFICE_NAME_LIST}),{&OFFICE_CODE_LIST})  ).
     end.
     insw:end-element ("condition-check":U) .
     insw:write-data-element (  "chk-num":U,       string(c-chk-doc.chk-num)   ).
