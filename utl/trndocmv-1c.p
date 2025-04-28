@@ -463,7 +463,9 @@ on error undo, return error return-value
                                         and orig_parts.prod-code = buf_doc-line.prod-code
                                         no-error .
         if not available orig_parts
-        then do :                                
+        then do :      
+          if index(buf_trn-doc.doc-code, "*") > 0
+          then
           find first orig_parts no-lock where orig_parts.out-code  = replace(buf_trn-doc.doc-code, "*", "-")
                                           and orig_parts.part-code = TempDocPart.part-id
                                           and orig_parts.obj-type  = buf_trn-doc.obj-type
@@ -478,7 +480,9 @@ on error undo, return error return-value
           end .
         end .
         if not available orig_parts
-        then do :                                
+        then do :
+          if index(buf_trn-doc.doc-code, "*") > 0
+          then
           find first orig_parts no-lock where orig_parts.out-code = replace(buf_trn-doc.doc-code, "*", "-")
                                           and orig_parts.obj-type  = buf_trn-doc.obj-type
                                           and orig_parts.obj-code  = buf_trn-doc.obj-code
