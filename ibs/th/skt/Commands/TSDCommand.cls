@@ -549,6 +549,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        repeat:  
          create TempTrnLineMT.
          import TempTrnLineMT no-error.
+         if TempTrnLineMT.goodsid = 0 then TempTrnLineMT.NotDict = true .
+         else TempTrnLineMT.NotDict = false .
        end. 
        input close.
     end.
@@ -616,8 +618,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         TempTrnDoc.Status_      = TempTrnDocMT.Status_
         TempTrnDoc.Flags_       = TempTrnDocMT.Flags_
         .
-        if (TempTrnDocMT.ClientID = 0 and TempTrnDocMT.ClientType = "") then TempTrnDoc.ManualTSD = yes .
-      .
+
       myflagsDoc:setFlagsToInt(TempTrnDocMT.Flags_).
        
       define variable cFactQntyDec as decimal no-undo .
@@ -656,6 +657,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               TempDocLine.price-rubl   = ?
               TempDocLine.RowSum       = ?
               TempDocLine.PartIDTH     = TempTrnLineMT.PartIDTH
+              TempDocLine.NotDict      = TempTrnLineMT.NotDict
               .
           end.
           else do:
@@ -677,6 +679,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
             TempDocLine.price-rubl   = decimal(cPriceRubl)
             TempDocLine.RowSum       = RowSum
             TempDocLine.PartIDTH = string (TempTrnLineMT.PartIDTH)
+            TempDocLine.NotDict      = TempTrnLineMT.NotDict
             .
         end.
       end.

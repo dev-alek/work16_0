@@ -35,7 +35,6 @@ define temp-table TempTrnDoc no-undo
   field ps           as character
   field Status_      as character
   field Flags_       as integer
-  field ManualTSD    as logical
   index pi line-num ext-doc-code .
 
 define temp-table TempTrnDocMT no-undo
@@ -67,6 +66,7 @@ define temp-table TempDocLine no-undo
   field aclMarksList as character
   field PartIDTH     as character
   field Flags_       as integer
+  field NotDict      as logical
   index pi
   line-num
   gds-code
@@ -103,6 +103,7 @@ define temp-table TempTrnLineMT no-undo
   field FactQnty  as character
   field AlcCode   as character
   field PartIDTH  as character
+  field NotDict   as logical
   .
 
 define temp-table TempMarkLine no-undo

@@ -1257,7 +1257,8 @@ method public void createTempGoods(mark_ as logical):
       TempDocLineTSD.prod-type = ub.goods.prod-type
       .
   end.
-  if TempTrnDoc.manualTSD then 
+
+  if TempDocLine.NotDict then 
   TempDocLineTSD.fact-qnty = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty * ub.bar-code.cli-base-rate .
   else TempDocLineTSD.fact-qnty = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty .
   end.
