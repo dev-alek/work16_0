@@ -522,7 +522,8 @@ procedure processTrn :
   define variable v-user-name           as character no-undo .
   define variable v-car-num             as character no-undo .
   define variable v-driver-name         as character no-undo .
-  define variable v-sep                 as character no-undo init "¿÷ ·ÂÁ —›œ" .
+/*  define variable v-sep                 as character no-undo init "¿÷ ·ÂÁ —›œ" .*/
+  define variable v-sep                 as character no-undo init "" .
   define variable v-place-num           as character no-undo .
   define variable v-hour-pour           as integer   no-undo .
   define variable v-min-pour            as integer   no-undo .
@@ -662,25 +663,25 @@ procedure processTrn :
     no-error
   }
   
-  find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = v-car-num
-                                          and sep_auto-tank-attr.attr-code = "auto-sep"
-                                          no-error.
-  if available sep_auto-tank-attr
-  and logical(sep_auto-tank-attr.attr-value)
-  then do :
-    if iACType = 3
-    then do :
-      return .
-    end .
-    v-sep = "¿÷ Ò —›œ" .
-  end .
-  else do :
-    if iACType = 2
-    then do :
-      return .
-    end .
-    v-sep = "¿÷ ·ÂÁ —›œ" .
-  end .
+/*  find first sep_auto-tank-attr no-lock where sep_auto-tank-attr.auto-num = v-car-num  */
+/*                                          and sep_auto-tank-attr.attr-code = "auto-sep"*/
+/*                                          no-error.                                    */
+/*  if available sep_auto-tank-attr                                                      */
+/*  and logical(sep_auto-tank-attr.attr-value)                                           */
+/*  then do :                                                                            */
+/*    if iACType = 3                                                                     */
+/*    then do :                                                                          */
+/*      return .                                                                         */
+/*    end .                                                                              */
+/*    v-sep = "¿÷ Ò —›œ" .                                                               */
+/*  end .                                                                                */
+/*  else do :                                                                            */
+/*    if iACType = 2                                                                     */
+/*    then do :                                                                          */
+/*      return .                                                                         */
+/*    end .                                                                              */
+/*    v-sep = "¿÷ ·ÂÁ —›œ" .                                                             */
+/*  end .                                                                                */
   
   { str/tdat-val.i
     p-doc-code
@@ -813,6 +814,45 @@ procedure processTrn :
             v-infoSectionsTotal:IsKPrvs = yes .
           end .
         end .
+        
+        if v-sep = ""
+        then do :
+          if v-InfoSection:TankDensity > 0
+          then do :
+            if not v-InfoSection:IsKP
+            then do :
+              v-sep = "¿÷ ·ÂÁ —›œ" .
+            end .
+            else do :
+              if trim(v-InfoSection:AukKey) > ""
+              or v-InfoSection:alarm-SGDKK
+              then do :
+                v-sep = "¿÷ Ò —›œ" .
+              end .
+              else do :
+                v-sep = "¿÷ ·ÂÁ —›œ" .
+              end .
+            end .
+          end .
+          else do :
+            if v-InfoSection:KPnoMeas
+            then do :
+              v-sep = "¿÷ ·ÂÁ —›œ" .
+            end .
+            else do :
+              v-sep = "¿÷ Ò —›œ" .
+            end .
+          end .
+          if v-sep = "¿÷ Ò —›œ" 
+          and iACType = 3
+          then
+            return .
+          if v-sep = "¿÷ ·ÂÁ —›œ" 
+          and iACType = 2
+          then
+            return .
+        end .
+        
       end .
     end .
     
