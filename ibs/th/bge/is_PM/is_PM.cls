@@ -2735,6 +2735,7 @@ class ibs.th.bge.is_PM.is_PM:
     define buffer buf_goods for ub.goods .
     define buffer buf_clients-attr for ub.clients-attr .
     define buffer buf_shift-obj for ub.shift-obj .
+    define buffer buf_goods-attr for ub.goods-attr .
     
     run write-to-log in p-parent-handle (" START BOOK-END UTC " + utc-time() ) .
       
@@ -3020,6 +3021,23 @@ class ibs.th.bge.is_PM.is_PM:
       tt-result.loss-own-needs = tt-result.wght-fact-end - tt-result.wght-doc-end .
     end .
     /* END Расчет расхода на прочие нужды */
+    
+    /* Метан (КПГ) BTS-1056 */
+    for each tt-result,
+    first buf_goods-attr no-lock where buf_goods-attr.gds-code = tt-result.gds-code
+                                   and buf_goods-attr.attr-code = {&attr-fuel-type}
+    :
+      if buf_goods-attr.attr-value = {&attr-fuel-type_metan}
+      then do :
+        assign
+          tt-result.wght-doc-start = 0
+          tt-result.wght-fact-start = 0
+          tt-result.wght-doc-end = 0
+          tt-result.wght-fact-end = 0
+          tt-result.Delivery-ned-izl = 0
+        .
+      end .
+    end .
     
     for each tt-result,
     first buf_goods no-lock where buf_goods.gds-code = tt-result.gds-code
