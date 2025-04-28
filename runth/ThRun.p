@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 89f1b7b46375, 2926, rls $
+$Author: DRuban $
+$Date: Пн ноя 22 19:49:14 2021 +0300 $
+$Workfile: ThRun.p $
+$Archive: runth/ThRun.p $
 
 
 Автор: Рубан Дмитрий Андреевич
