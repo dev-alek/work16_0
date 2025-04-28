@@ -481,6 +481,7 @@ class ibs.th.ref.sobj.dreport inherits Form :
     @VisualDesigner.
     method private void tabControl1_Selected( input sender as System.Object, input e as System.EventArgs ):
         mUserframe:my-secected().
+       
         return.
 
     end method.

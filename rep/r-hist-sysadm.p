@@ -175,7 +175,7 @@ end.    */
 
 do:
   for each tt-usr-hist:
-    /* message tt-usr-hist.corr-user-name view-as alert-box. */
+
     find first tt-user-account where tt-user-account.user-id_ = tt-usr-hist.corr-user-name no-error.
         if not AVAILABLE tt-user-account then 
          do:

@@ -184,7 +184,7 @@ METHOD public void mark_table():
 END.
 
 METHOD public void my_report():
-    message 'rep/r-hist-sysadm.p' view-as alert-box.
+    /*message 'rep/r-hist-sysadm.p' view-as alert-box. */
     
     find first tt-user-account where tt-user-account.flg = yes no-error. /* если нет помеченных записей, то все, 
                                                                             если есть помеченные, то отправляем только их*/

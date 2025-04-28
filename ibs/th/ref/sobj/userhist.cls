@@ -18,7 +18,6 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame: 
     
     DEFINE PRIVATE VARIABLE bindingSource1 AS Progress.Data.BindingSource NO-UNDO.
-    DEFINE PRIVATE VARIABLE button1 AS System.Windows.Forms.Button NO-UNDO.
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE dataGridView1 AS System.Windows.Forms.DataGridView NO-UNDO.
     DEFINE PRIVATE VARIABLE dataGridView150 AS System.Windows.Forms.DataGridView NO-UNDO.
@@ -27,6 +26,7 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
     DEFINE PRIVATE VARIABLE label1 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE label2 AS System.Windows.Forms.Label NO-UNDO.
     DEFINE PRIVATE VARIABLE nameDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
+    DEFINE PRIVATE VARIABLE splitContainer1 AS System.Windows.Forms.SplitContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE users AS Progress.Data.BindingSource NO-UNDO.
     DEFINE PRIVATE VARIABLE usernameDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
     DEFINE PRIVATE VARIABLE useridDataGridViewTextBoxColumn AS System.Windows.Forms.DataGridViewTextBoxColumn NO-UNDO.
@@ -55,24 +55,6 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
  
     END CONSTRUCTOR.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	METHOD PRIVATE VOID button1_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-		usertableObj:init_tt().
-	
-    bindingSource1:handle:query-open.
-    bindingSource1:RefreshAll() .
-    
-    users:handle:query-open.
-    users:RefreshAll() .
-    
-		RETURN.
-                 
-    
-	END METHOD.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -108,89 +90,96 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
         THIS-OBJECT:components = NEW System.ComponentModel.Container().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE dataGridViewCellStyle13 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-        dataGridViewCellStyle13 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        DEFINE VARIABLE dataGridViewCellStyle1 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle1 = NEW System.Windows.Forms.DataGridViewCellStyle().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE dataGridViewCellStyle14 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-        dataGridViewCellStyle14 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        DEFINE VARIABLE dataGridViewCellStyle2 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle2 = NEW System.Windows.Forms.DataGridViewCellStyle().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE dataGridViewCellStyle15 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-        dataGridViewCellStyle15 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        DEFINE VARIABLE dataGridViewCellStyle3 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle3 = NEW System.Windows.Forms.DataGridViewCellStyle().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE tableDesc5 AS Progress.Data.TableDesc NO-UNDO.
-        tableDesc5 = NEW Progress.Data.TableDesc("tt-user-account").
+        DEFINE VARIABLE tableDesc1 AS Progress.Data.TableDesc NO-UNDO.
+        tableDesc1 = NEW Progress.Data.TableDesc("tt-user-account").
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE tableDesc6 AS Progress.Data.TableDesc NO-UNDO.
-        tableDesc6 = NEW Progress.Data.TableDesc("tt-objects").
+        DEFINE VARIABLE tableDesc2 AS Progress.Data.TableDesc NO-UNDO.
+        tableDesc2 = NEW Progress.Data.TableDesc("tt-objects").
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE dataGridViewCellStyle16 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-        dataGridViewCellStyle16 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        DEFINE VARIABLE dataGridViewCellStyle4 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle4 = NEW System.Windows.Forms.DataGridViewCellStyle().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE dataGridViewCellStyle17 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-        dataGridViewCellStyle17 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        DEFINE VARIABLE dataGridViewCellStyle5 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle5 = NEW System.Windows.Forms.DataGridViewCellStyle().
         @VisualDesigner.FormMember (NeedsInitialize="true").
-        DEFINE VARIABLE dataGridViewCellStyle18 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
-        dataGridViewCellStyle18 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        DEFINE VARIABLE dataGridViewCellStyle6 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle6 = NEW System.Windows.Forms.DataGridViewCellStyle().
         THIS-OBJECT:dataGridView1 = NEW System.Windows.Forms.DataGridView().
         THIS-OBJECT:users = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
         THIS-OBJECT:bindingSource1 = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
         THIS-OBJECT:dataGridView150 = NEW System.Windows.Forms.DataGridView().
-        THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:button1 = NEW System.Windows.Forms.Button().
+        THIS-OBJECT:splitContainer1 = NEW System.Windows.Forms.SplitContainer().
+        THIS-OBJECT:flg = NEW System.Windows.Forms.DataGridViewCheckBoxColumn().
         THIS-OBJECT:useridDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
         THIS-OBJECT:usernameDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
         THIS-OBJECT:dbnumDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:flg = NEW System.Windows.Forms.DataGridViewCheckBoxColumn().
-        THIS-OBJECT:nameDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+        THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
+        THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
         THIS-OBJECT:dataGridViewCheckBoxColumn1 = NEW System.Windows.Forms.DataGridViewCheckBoxColumn().
+        THIS-OBJECT:nameDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
         CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
         CAST(THIS-OBJECT:users, System.ComponentModel.ISupportInitialize):BeginInit().
         CAST(THIS-OBJECT:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
         CAST(THIS-OBJECT:dataGridView150, System.ComponentModel.ISupportInitialize):BeginInit().
+        CAST(THIS-OBJECT:splitContainer1, System.ComponentModel.ISupportInitialize):BeginInit().
+        THIS-OBJECT:splitContainer1:Panel1:SuspendLayout().
+        THIS-OBJECT:splitContainer1:Panel2:SuspendLayout().
+        THIS-OBJECT:splitContainer1:SuspendLayout().
         THIS-OBJECT:SuspendLayout().
         /*  */
         /* dataGridView1 */
         /*  */
         THIS-OBJECT:dataGridView1:AccessibleDescription = "".
         THIS-OBJECT:dataGridView1:AccessibleName = "".
+        DEFINE VARIABLE nestedvar0 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+        nestedvar0 = CAST(Progress.Util.EnumHelper:Or(CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+        THIS-OBJECT:dataGridView1:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
         THIS-OBJECT:dataGridView1:AutoGenerateColumns = FALSE.
-        dataGridViewCellStyle13:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
-        dataGridViewCellStyle13:BackColor = System.Drawing.SystemColors:Control.
-        dataGridViewCellStyle13:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        dataGridViewCellStyle13:ForeColor = System.Drawing.SystemColors:WindowText.
-        dataGridViewCellStyle13:SelectionBackColor = System.Drawing.SystemColors:Highlight.
-        dataGridViewCellStyle13:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
-        dataGridViewCellStyle13:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
-        THIS-OBJECT:dataGridView1:ColumnHeadersDefaultCellStyle = dataGridViewCellStyle13.
+        dataGridViewCellStyle1:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
+        dataGridViewCellStyle1:BackColor = System.Drawing.SystemColors:Control.
+        dataGridViewCellStyle1:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        dataGridViewCellStyle1:ForeColor = System.Drawing.SystemColors:WindowText.
+        dataGridViewCellStyle1:SelectionBackColor = System.Drawing.SystemColors:Highlight.
+        dataGridViewCellStyle1:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
+        dataGridViewCellStyle1:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
+        THIS-OBJECT:dataGridView1:ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1.
         THIS-OBJECT:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         DEFINE VARIABLE arrayvar0 AS System.Windows.Forms.DataGridViewColumn EXTENT 4 NO-UNDO.
-        arrayvar0[1] = THIS-OBJECT:useridDataGridViewTextBoxColumn.
-        arrayvar0[2] = THIS-OBJECT:usernameDataGridViewTextBoxColumn.
-        arrayvar0[3] = THIS-OBJECT:dbnumDataGridViewTextBoxColumn.
-        arrayvar0[4] = THIS-OBJECT:flg.
+        arrayvar0[1] = THIS-OBJECT:flg.
+        arrayvar0[2] = THIS-OBJECT:useridDataGridViewTextBoxColumn.
+        arrayvar0[3] = THIS-OBJECT:usernameDataGridViewTextBoxColumn.
+        arrayvar0[4] = THIS-OBJECT:dbnumDataGridViewTextBoxColumn.
         THIS-OBJECT:dataGridView1:Columns:AddRange(arrayvar0).
         THIS-OBJECT:dataGridView1:DataSource = THIS-OBJECT:users.
-        dataGridViewCellStyle14:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
-        dataGridViewCellStyle14:BackColor = System.Drawing.SystemColors:Window.
-        dataGridViewCellStyle14:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        dataGridViewCellStyle14:ForeColor = System.Drawing.SystemColors:ControlText.
-        dataGridViewCellStyle14:SelectionBackColor = System.Drawing.SystemColors:Highlight.
-        dataGridViewCellStyle14:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
-        dataGridViewCellStyle14:WrapMode = System.Windows.Forms.DataGridViewTriState:False.
-        THIS-OBJECT:dataGridView1:DefaultCellStyle = dataGridViewCellStyle14.
-        THIS-OBJECT:dataGridView1:Location = NEW System.Drawing.Point(23, 32).
+        dataGridViewCellStyle2:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
+        dataGridViewCellStyle2:BackColor = System.Drawing.SystemColors:Window.
+        dataGridViewCellStyle2:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        dataGridViewCellStyle2:ForeColor = System.Drawing.SystemColors:ControlText.
+        dataGridViewCellStyle2:SelectionBackColor = System.Drawing.SystemColors:Highlight.
+        dataGridViewCellStyle2:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
+        dataGridViewCellStyle2:WrapMode = System.Windows.Forms.DataGridViewTriState:False.
+        THIS-OBJECT:dataGridView1:DefaultCellStyle = dataGridViewCellStyle2.
+        THIS-OBJECT:dataGridView1:Location = NEW System.Drawing.Point(3, 32).
         THIS-OBJECT:dataGridView1:Name = "dataGridView1".
-        dataGridViewCellStyle15:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
-        dataGridViewCellStyle15:BackColor = System.Drawing.SystemColors:Control.
-        dataGridViewCellStyle15:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        dataGridViewCellStyle15:ForeColor = System.Drawing.SystemColors:WindowText.
-        dataGridViewCellStyle15:SelectionBackColor = System.Drawing.SystemColors:Highlight.
-        dataGridViewCellStyle15:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
-        dataGridViewCellStyle15:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
-        THIS-OBJECT:dataGridView1:RowHeadersDefaultCellStyle = dataGridViewCellStyle15.
-        THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(420, 202).
+        dataGridViewCellStyle3:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
+        dataGridViewCellStyle3:BackColor = System.Drawing.SystemColors:Control.
+        dataGridViewCellStyle3:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        dataGridViewCellStyle3:ForeColor = System.Drawing.SystemColors:WindowText.
+        dataGridViewCellStyle3:SelectionBackColor = System.Drawing.SystemColors:Highlight.
+        dataGridViewCellStyle3:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
+        dataGridViewCellStyle3:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
+        THIS-OBJECT:dataGridView1:RowHeadersDefaultCellStyle = dataGridViewCellStyle3.
+        THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(1088, 279).
         THIS-OBJECT:dataGridView1:TabIndex = 0.
         THIS-OBJECT:dataGridView1:CellContentClick:Subscribe(THIS-OBJECT:dataGridView1_CellContentClick).
         /*  */
@@ -202,15 +191,15 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         DEFINE VARIABLE arrayvar1 AS "Progress.Data.TableDesc[]" NO-UNDO.
         arrayvar1 = NEW "Progress.Data.TableDesc[]"(0).
-        tableDesc5:ChildTables = arrayvar1.
+        tableDesc1:ChildTables = arrayvar1.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         DEFINE VARIABLE arrayvar2 AS Progress.Data.ColumnPropDesc EXTENT 4 NO-UNDO.
         arrayvar2[1] = NEW Progress.Data.ColumnPropDesc("user-id_", "ID", Progress.Data.DataType:CHARACTER).
         arrayvar2[2] = NEW Progress.Data.ColumnPropDesc("user_name", "Имя пользователя", Progress.Data.DataType:CHARACTER).
         arrayvar2[3] = NEW Progress.Data.ColumnPropDesc("db-num", "БД ", Progress.Data.DataType:INTEGER).
         arrayvar2[4] = NEW Progress.Data.ColumnPropDesc("flg", " * ", Progress.Data.DataType:LOGICAL).
-        tableDesc5:Columns = arrayvar2.
-        THIS-OBJECT:users:TableSchema = tableDesc5.
+        tableDesc1:Columns = arrayvar2.
+        THIS-OBJECT:users:TableSchema = tableDesc1.
         /*  */
         /* bindingSource1 */
         /*  */
@@ -220,85 +209,84 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         DEFINE VARIABLE arrayvar3 AS "Progress.Data.TableDesc[]" NO-UNDO.
         arrayvar3 = NEW "Progress.Data.TableDesc[]"(0).
-        tableDesc6:ChildTables = arrayvar3.
+        tableDesc2:ChildTables = arrayvar3.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         DEFINE VARIABLE arrayvar4 AS Progress.Data.ColumnPropDesc EXTENT 2 NO-UNDO.
         arrayvar4[1] = NEW Progress.Data.ColumnPropDesc("name_", "", Progress.Data.DataType:CHARACTER).
         arrayvar4[2] = NEW Progress.Data.ColumnPropDesc("flg", "***", Progress.Data.DataType:LOGICAL).
-        tableDesc6:Columns = arrayvar4.
-        THIS-OBJECT:bindingSource1:TableSchema = tableDesc6.
+        tableDesc2:Columns = arrayvar4.
+        THIS-OBJECT:bindingSource1:TableSchema = tableDesc2.
         /*  */
         /* dataGridView150 */
         /*  */
+        DEFINE VARIABLE nestedvar1 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+        nestedvar1 = CAST(Progress.Util.EnumHelper:Or(CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+        THIS-OBJECT:dataGridView150:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
         THIS-OBJECT:dataGridView150:AutoGenerateColumns = FALSE.
-        dataGridViewCellStyle16:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
-        dataGridViewCellStyle16:BackColor = System.Drawing.SystemColors:Control.
-        dataGridViewCellStyle16:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        dataGridViewCellStyle16:ForeColor = System.Drawing.SystemColors:WindowText.
-        dataGridViewCellStyle16:SelectionBackColor = System.Drawing.SystemColors:Highlight.
-        dataGridViewCellStyle16:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
-        dataGridViewCellStyle16:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
-        THIS-OBJECT:dataGridView150:ColumnHeadersDefaultCellStyle = dataGridViewCellStyle16.
+        dataGridViewCellStyle4:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
+        dataGridViewCellStyle4:BackColor = System.Drawing.SystemColors:Control.
+        dataGridViewCellStyle4:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        dataGridViewCellStyle4:ForeColor = System.Drawing.SystemColors:WindowText.
+        dataGridViewCellStyle4:SelectionBackColor = System.Drawing.SystemColors:Highlight.
+        dataGridViewCellStyle4:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
+        dataGridViewCellStyle4:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
+        THIS-OBJECT:dataGridView150:ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4.
         THIS-OBJECT:dataGridView150:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
         @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
         DEFINE VARIABLE arrayvar5 AS System.Windows.Forms.DataGridViewColumn EXTENT 2 NO-UNDO.
-        arrayvar5[1] = THIS-OBJECT:nameDataGridViewTextBoxColumn.
-        arrayvar5[2] = THIS-OBJECT:dataGridViewCheckBoxColumn1.
+        arrayvar5[1] = THIS-OBJECT:dataGridViewCheckBoxColumn1.
+        arrayvar5[2] = THIS-OBJECT:nameDataGridViewTextBoxColumn.
         THIS-OBJECT:dataGridView150:Columns:AddRange(arrayvar5).
         THIS-OBJECT:dataGridView150:DataSource = THIS-OBJECT:bindingSource1.
-        dataGridViewCellStyle17:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
-        dataGridViewCellStyle17:BackColor = System.Drawing.SystemColors:Window.
-        dataGridViewCellStyle17:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        dataGridViewCellStyle17:ForeColor = System.Drawing.SystemColors:ControlText.
-        dataGridViewCellStyle17:SelectionBackColor = System.Drawing.SystemColors:Highlight.
-        dataGridViewCellStyle17:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
-        dataGridViewCellStyle17:WrapMode = System.Windows.Forms.DataGridViewTriState:False.
-        THIS-OBJECT:dataGridView150:DefaultCellStyle = dataGridViewCellStyle17.
-        THIS-OBJECT:dataGridView150:Location = NEW System.Drawing.Point(23, 266).
+        dataGridViewCellStyle5:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
+        dataGridViewCellStyle5:BackColor = System.Drawing.SystemColors:Window.
+        dataGridViewCellStyle5:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        dataGridViewCellStyle5:ForeColor = System.Drawing.SystemColors:ControlText.
+        dataGridViewCellStyle5:SelectionBackColor = System.Drawing.SystemColors:Highlight.
+        dataGridViewCellStyle5:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
+        dataGridViewCellStyle5:WrapMode = System.Windows.Forms.DataGridViewTriState:False.
+        THIS-OBJECT:dataGridView150:DefaultCellStyle = dataGridViewCellStyle5.
+        THIS-OBJECT:dataGridView150:Location = NEW System.Drawing.Point(3, 26).
         THIS-OBJECT:dataGridView150:Name = "dataGridView150".
-        dataGridViewCellStyle18:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
-        dataGridViewCellStyle18:BackColor = System.Drawing.SystemColors:Control.
-        dataGridViewCellStyle18:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-        dataGridViewCellStyle18:ForeColor = System.Drawing.SystemColors:WindowText.
-        dataGridViewCellStyle18:SelectionBackColor = System.Drawing.SystemColors:Highlight.
-        dataGridViewCellStyle18:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
-        dataGridViewCellStyle18:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
-        THIS-OBJECT:dataGridView150:RowHeadersDefaultCellStyle = dataGridViewCellStyle18.
-        THIS-OBJECT:dataGridView150:Size = NEW System.Drawing.Size(420, 216).
+        dataGridViewCellStyle6:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
+        dataGridViewCellStyle6:BackColor = System.Drawing.SystemColors:Control.
+        dataGridViewCellStyle6:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        dataGridViewCellStyle6:ForeColor = System.Drawing.SystemColors:WindowText.
+        dataGridViewCellStyle6:SelectionBackColor = System.Drawing.SystemColors:Highlight.
+        dataGridViewCellStyle6:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
+        dataGridViewCellStyle6:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
+        THIS-OBJECT:dataGridView150:RowHeadersDefaultCellStyle = dataGridViewCellStyle6.
+        THIS-OBJECT:dataGridView150:Size = NEW System.Drawing.Size(1088, 281).
         THIS-OBJECT:dataGridView150:TabIndex = 1.
         THIS-OBJECT:dataGridView150:CellContentClick:Subscribe(THIS-OBJECT:dataGridView2_CellContentClick).
         /*  */
-        /* label1 */
+        /* splitContainer1 */
         /*  */
-        THIS-OBJECT:label1:Location = NEW System.Drawing.Point(23, 6).
-        THIS-OBJECT:label1:Name = "label1".
-        THIS-OBJECT:label1:Size = NEW System.Drawing.Size(220, 23).
-        THIS-OBJECT:label1:TabIndex = 2.
-        THIS-OBJECT:label1:Text = "Пользователи:".
-        THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label1:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:label1:Click:Subscribe(THIS-OBJECT:label1_Click).
+        THIS-OBJECT:splitContainer1:Dock = System.Windows.Forms.DockStyle:Fill.
+        THIS-OBJECT:splitContainer1:Location = NEW System.Drawing.Point(0, 0).
+        THIS-OBJECT:splitContainer1:Name = "splitContainer1".
+        THIS-OBJECT:splitContainer1:Orientation = System.Windows.Forms.Orientation:Horizontal.
         /*  */
-        /* label2 */
+        /* splitContainer1.Panel1 */
         /*  */
-        THIS-OBJECT:label2:Location = NEW System.Drawing.Point(23, 240).
-        THIS-OBJECT:label2:Name = "label2".
-        THIS-OBJECT:label2:Size = NEW System.Drawing.Size(100, 23).
-        THIS-OBJECT:label2:TabIndex = 3.
-        THIS-OBJECT:label2:Text = "Типы событий:".
-        THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label2:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:label1).
+        THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:dataGridView1).
+        THIS-OBJECT:splitContainer1:Panel1:Paint:Subscribe(THIS-OBJECT:Panel1_Paint_1).
         /*  */
-        /* button1 */
+        /* splitContainer1.Panel2 */
         /*  */
-        THIS-OBJECT:button1:Location = NEW System.Drawing.Point(455, 32).
-        THIS-OBJECT:button1:Name = "button1".
-        THIS-OBJECT:button1:Size = NEW System.Drawing.Size(46, 50).
-        THIS-OBJECT:button1:TabIndex = 4.
-        THIS-OBJECT:button1:Text = "button1".
-        THIS-OBJECT:button1:UseCompatibleTextRendering = TRUE.
-        THIS-OBJECT:button1:UseVisualStyleBackColor = TRUE.
-        THIS-OBJECT:button1:Click:Subscribe(THIS-OBJECT:button1_Click).
+        THIS-OBJECT:splitContainer1:Panel2:Controls:Add(THIS-OBJECT:label2).
+        THIS-OBJECT:splitContainer1:Panel2:Controls:Add(THIS-OBJECT:dataGridView150).
+        THIS-OBJECT:splitContainer1:Size = NEW System.Drawing.Size(1094, 628).
+        THIS-OBJECT:splitContainer1:SplitterDistance = 314.
+        THIS-OBJECT:splitContainer1:TabIndex = 4.
+        /*  */
+        /* flg */
+        /*  */
+        THIS-OBJECT:flg:DataPropertyName = "flg".
+        THIS-OBJECT:flg:HeaderText = "".
+        THIS-OBJECT:flg:Name = "flg".
+        THIS-OBJECT:flg:Width = 50.
         /*  */
         /* useridDataGridViewTextBoxColumn */
         /*  */
@@ -309,11 +297,11 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         /*  */
         /* usernameDataGridViewTextBoxColumn */
         /*  */
+        THIS-OBJECT:usernameDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:Fill.
         THIS-OBJECT:usernameDataGridViewTextBoxColumn:DataPropertyName = "user_name".
         THIS-OBJECT:usernameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(200).
         THIS-OBJECT:usernameDataGridViewTextBoxColumn:HeaderText = " Имя пользователя".
         THIS-OBJECT:usernameDataGridViewTextBoxColumn:Name = "usernameDataGridViewTextBoxColumn".
-        THIS-OBJECT:usernameDataGridViewTextBoxColumn:Width = 290.
         /*  */
         /* dbnumDataGridViewTextBoxColumn */
         /*  */
@@ -321,19 +309,25 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         THIS-OBJECT:dbnumDataGridViewTextBoxColumn:HeaderText = " БД ".
         THIS-OBJECT:dbnumDataGridViewTextBoxColumn:Name = "dbnumDataGridViewTextBoxColumn".
         /*  */
-        /* flg */
+        /* label1 */
         /*  */
-        THIS-OBJECT:flg:DataPropertyName = "flg".
-        THIS-OBJECT:flg:HeaderText = "".
-        THIS-OBJECT:flg:Name = "flg".
-        THIS-OBJECT:flg:Width = 50.
+        THIS-OBJECT:label1:Location = NEW System.Drawing.Point(23, 0).
+        THIS-OBJECT:label1:Name = "label1".
+        THIS-OBJECT:label1:Size = NEW System.Drawing.Size(282, 29).
+        THIS-OBJECT:label1:TabIndex = 3.
+        THIS-OBJECT:label1:Text = "Пользователи:".
+        THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        THIS-OBJECT:label1:UseCompatibleTextRendering = TRUE.
         /*  */
-        /* nameDataGridViewTextBoxColumn */
+        /* label2 */
         /*  */
-        THIS-OBJECT:nameDataGridViewTextBoxColumn:DataPropertyName = "name_".
-        THIS-OBJECT:nameDataGridViewTextBoxColumn:HeaderText = "Типы событий".
-        THIS-OBJECT:nameDataGridViewTextBoxColumn:Name = "nameDataGridViewTextBoxColumn".
-        THIS-OBJECT:nameDataGridViewTextBoxColumn:Width = 450.
+        THIS-OBJECT:label2:Location = NEW System.Drawing.Point(23, 0).
+        THIS-OBJECT:label2:Name = "label2".
+        THIS-OBJECT:label2:Size = NEW System.Drawing.Size(153, 23).
+        THIS-OBJECT:label2:TabIndex = 4.
+        THIS-OBJECT:label2:Text = "Типы событий:".
+        THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        THIS-OBJECT:label2:UseCompatibleTextRendering = TRUE.
         /*  */
         /* dataGridViewCheckBoxColumn1 */
         /*  */
@@ -342,37 +336,34 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         THIS-OBJECT:dataGridViewCheckBoxColumn1:Name = "dataGridViewCheckBoxColumn1".
         THIS-OBJECT:dataGridViewCheckBoxColumn1:Width = 50.
         /*  */
+        /* nameDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:nameDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:Fill.
+        THIS-OBJECT:nameDataGridViewTextBoxColumn:DataPropertyName = "name_".
+        THIS-OBJECT:nameDataGridViewTextBoxColumn:HeaderText = "Типы событий".
+        THIS-OBJECT:nameDataGridViewTextBoxColumn:Name = "nameDataGridViewTextBoxColumn".
+        /*  */
         /* userhist */
         /*  */
         THIS-OBJECT:AutoScaleDimensions = NEW System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:button1).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:label2).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:label1).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:dataGridView150).
-        THIS-OBJECT:Controls:Add(THIS-OBJECT:dataGridView1).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:splitContainer1).
         THIS-OBJECT:Name = "userhist".
-        THIS-OBJECT:Size = NEW System.Drawing.Size(517, 506).
+        THIS-OBJECT:Size = NEW System.Drawing.Size(1094, 628).
         THIS-OBJECT:Load:Subscribe(THIS-OBJECT:userhist_Load).
         CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
         CAST(THIS-OBJECT:users, System.ComponentModel.ISupportInitialize):EndInit().
         CAST(THIS-OBJECT:bindingSource1, System.ComponentModel.ISupportInitialize):EndInit().
         CAST(THIS-OBJECT:dataGridView150, System.ComponentModel.ISupportInitialize):EndInit().
+        THIS-OBJECT:splitContainer1:Panel1:ResumeLayout(FALSE).
+        THIS-OBJECT:splitContainer1:Panel2:ResumeLayout(FALSE).
+        CAST(THIS-OBJECT:splitContainer1, System.ComponentModel.ISupportInitialize):EndInit().
+        THIS-OBJECT:splitContainer1:ResumeLayout(FALSE).
         THIS-OBJECT:ResumeLayout(FALSE).
         CATCH e AS Progress.Lang.Error:
             UNDO, THROW e.
         END CATCH.
     END METHOD.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	@VisualDesigner.
-	METHOD PRIVATE VOID label1_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
-		
-		RETURN.
-
-	END METHOD.
 	
 	
 
@@ -381,6 +372,36 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
     usertableObj:my_report().
       
    END METHOD.
+
+    METHOD OVERRIDE PUBLIC VOID my-secected(  ):
+        
+    usertableObj:init_tt().
+    bindingSource1:handle:query-open.
+    bindingSource1:RefreshAll() .
+    
+    users:handle:query-open.
+    users:RefreshAll() .
+    
+        
+        
+
+    END METHOD.
+
+
+
+
+
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	METHOD PRIVATE VOID Panel1_Paint_1( INPUT sender AS System.Object, INPUT e AS System.Windows.Forms.PaintEventArgs ):
+		
+		RETURN.
+
+	END METHOD.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
