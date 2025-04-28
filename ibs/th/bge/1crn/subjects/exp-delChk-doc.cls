@@ -121,15 +121,19 @@ method override public void CrContentToSW (insw as handle):
     end.
     insw:end-element ("chk-gds") .
     insw:write-data-element (  "netto":U,       string (c-chk-doc.tot-doc)   ).
-    insw:start-element ("chk-pays") .
-    for each c-chk-pay no-lock where c-chk-pay.doc-code = c-chk-doc.doc-code and c-chk-pay.chip-num = 1:
-      insw:start-element ("chk-pay") .
-      
-      insw:write-data-element (  "pay-code":U,       string(c-chk-pay.pay-code)   ).
 
-      insw:end-element ("chk-pay") .
+    find first c-chk-pay no-lock where c-chk-pay.doc-code = c-chk-doc.doc-code and c-chk-pay.chip-num = 1  no-error .
+    if available (c-chk-pay) then 
+      do:
+      insw:start-element ("chk-pays") .
+        for each c-chk-pay no-lock where c-chk-pay.doc-code = c-chk-doc.doc-code and c-chk-pay.chip-num = 1:
+          insw:start-element ("chk-pay") .
+          insw:write-data-element (  "pay-code":U,       string(c-chk-pay.pay-code)   ).
+          insw:end-element ("chk-pay") .
+        end.
+      insw:end-element ("chk-pays") .
     end.
-    insw:end-element ("chk-pays") .
+
     insw:end-element ({&tag-check}) .       
     insw:end-element ({&tag-checks}) .
     insw:end-element ({&tag-check-del}) .
