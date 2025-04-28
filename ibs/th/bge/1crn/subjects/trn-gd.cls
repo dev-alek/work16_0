@@ -119,11 +119,11 @@ class ibs.th.bge.1crn.subjects.trn-gd inherits ibs.th.bge.1crn.subjects.asubject
     def var v-str as char no-undo.
     
     assign
-      v-str = "line-num" when line-num = ?
+/*      v-str = "line-num" when line-num = ? */
       v-str = v-str + ",gd-code" when gd-code = ?
       v-str = v-str + ",unit-code" when unit-code = ?
       v-str = v-str + ",qnty-ttn" when qnty-fact = ?
-      v-str = v-str + ",sum" when sum = ?
+/*      v-str = v-str + ",sum" when sum = ? */
     .
     v-str = trim (v-str, ",").
     if v-str > ''

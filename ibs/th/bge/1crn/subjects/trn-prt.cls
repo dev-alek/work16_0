@@ -119,7 +119,7 @@ class ibs.th.bge.1crn.subjects.trn-prt inherits ibs.th.bge.1crn.subjects.asubjec
 /*      v-str = "gd-line-num" when gd-line-num = ?*/
 /*      v-str = v-str + ",prt-id" when prt-id = ?*/
       v-str = v-str + ",qnty-ttn" when qnty-fact = ?
-      v-str = v-str + ",sum" when sum = ?
+/*      v-str = v-str + ",sum" when sum = ? */
 /*      v-str = v-str + ",qnty" when qnty = ?*/
     .
     v-str = trim (v-str, ",").

@@ -146,12 +146,12 @@ class ibs.th.bge.1crn.subjects.trn-fuel-doc-in inherits ibs.th.bge.1crn.subjects
     def var v-str as char no-undo.
     
     assign
-      v-str = "doc-code" when doc-code = ?
-      v-str = v-str + ",doc-num" when doc-num = ?
-      v-str = v-str + ",doc-date" when doc-date = ?
+      /* v-str = "doc-code" when doc-code = ? */
+      /* v-str = v-str + ",doc-num" when doc-num = ? */
+      /* v-str = v-str + ",doc-date" when doc-date = ? */
       v-str = v-str + ",doc-type" when doc-type = ?
-      v-str = v-str + ",shift-date" when shift-date = ?
-      v-str = v-str + ",shift-num" when shift-num = ?
+      /* v-str = v-str + ",shift-date" when shift-date = ?*/
+      /* v-str = v-str + ",shift-num" when shift-num = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''

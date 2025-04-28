@@ -96,11 +96,11 @@ class ibs.th.bge.1crn.subjects.trn-gd-fuel inherits ibs.th.bge.1crn.subjects.asu
     def var v-str as char no-undo.
     
     assign
-      v-str = "line-num" when line-num = ?
+      /* v-str = "line-num" when line-num = ? */
       v-str = v-str + ",gd-code" when gd-code = ?
-      v-str = v-str + ",cap-fact" when cap-fact = ?
-      v-str = v-str + ",wght-fact" when wght-fact = ?
-      v-str = v-str + ",sum" when sum = ?
+      /* v-str = v-str + ",cap-fact" when cap-fact = ? */
+      /* v-str = v-str + ",wght-fact" when wght-fact = ? */
+      /* v-str = v-str + ",sum" when sum = ? */
     .
     v-str = trim (v-str, ",").
     if v-str > ''
