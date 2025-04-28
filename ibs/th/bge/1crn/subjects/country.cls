@@ -84,9 +84,9 @@ class ibs.th.bge.1crn.subjects.country inherits ibs.th.bge.1crn.subjects.asubjec
     assign
       v-str = "code" when code_ = ?
     /*  v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",full-name" when full-name = ?*/
+      v-str = v-str + ",full-name" when full-name = ?
       v-str = v-str + ",alfa2" when alfa2 = ?
-      v-str = v-str + ",alfa3" when alfa2 = ?
+      v-str = v-str + ",alfa3" when alfa3 = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''
