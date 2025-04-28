@@ -2213,6 +2213,16 @@ DO:
 
 END.
 
+find first user-login where user-login.user-id = ibs.th.gbl.gbl-var:g#userid 
+                        and user-login.db-num  = ibs.th.gbl.gbl-var:g#db-num  
+                        no-lock no-error.
+  if user-login.user-administrator = no then do: 
+    menu-item m-gds:sensitive   in menu M-prt = no.
+    menu-item m-prt-1:sensitive in menu M-prt = no.
+    menu-item m-prt-2:sensitive in menu M-prt = no.
+  end.
+
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
