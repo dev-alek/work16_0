@@ -7699,7 +7699,7 @@ procedure proc-m_to-inv :
       end.
     end.
     list-trn = trim(list-trn,",").
-run gbl/inidebug.p.
+
     if isManual then run itogInvDocManual(list-trn, output pardoc-rec).
     else run itogInvDoc(trnDocCode, list-trn, output pardoc-rec).
     mark-list = "" .
