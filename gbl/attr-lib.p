@@ -12200,6 +12200,20 @@ end procedure.
 &scop manual-edit-attr-dop-alt-name-o  1
 &scop batch-edit-attr-dop-alt-name-o  1
 
+/* дата/время изменения сезона */
+
+&glob type-attr-change-dt-seasons {&type-char}
+&glob format-attr-change-dt-seasons  "X(50)"
+&glob label-attr-change-dt-seasons   "дата/время изменения сезон"
+&glob tooltip-attr-change-dt-seasons   "дата/время изменения сезон"
+&glob user-can-edit-attr-change-dt-seasons  false
+&glob output-display-attr-change-dt-seasons  false
+&glob other-attr-change-dt-seasons  ""
+&glob news-attr-change-dt-seasons true
+&glob copy-attr-change-dt-seasons  false
+&scop manual-edit-attr-change-dt-seasons 2
+&scop batch-edit-attr-change-dt-seasons  2
+
 /* Сезон топлива */
 
 &glob type-attr-dt-seasons {&type-char}
@@ -12316,7 +12330,8 @@ do
       {&attr-temp-full-code}
       &scop attr-code attr-dt-seasons
       {&attr-temp-full-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-temp-full-code}
        /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара на объекте &1", p-code ).
@@ -12380,7 +12395,8 @@ do
       {&attr-temp-code}
       &scop attr-code attr-dt-seasons
       {&attr-temp-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
@@ -13081,7 +13097,8 @@ procedure gdsoattr-copy :
       {&attr-copy-code}
       &scop attr-code attr-dt-seasons
       {&attr-copy-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:
@@ -13211,7 +13228,8 @@ do
       {&attr-batch-edit-code}
       &scop attr-code attr-dt-seasons
       {&attr-batch-edit-code}
-
+      &scop attr-code attr-change-dt-seasons
+      {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров на объекте */
       otherwise do:

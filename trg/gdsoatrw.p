@@ -223,7 +223,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                              , error-status :get-message ( 1 ) ).
     end.
   end.
-/*  run gbl/inidebug.p.  */
+  if available (ub.gds-obj-attr) and ub.gds-obj-attr.attr-code = "dt-seasons" then 
+  do:
     run bge\send1cerp.p (?,
       this-procedure,
       this-procedure,
@@ -231,9 +232,10 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
       (buffer ub.gds-obj-attr:handle),
       ?,
       ?) no-error.  
-       if error-status:error 
-       then do:
-          message return-value view-as alert-box.
-       end.
-  
+    if error-status:error 
+      then 
+    do:
+      message return-value view-as alert-box.
+    end.
+  end.  
 end.

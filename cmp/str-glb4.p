@@ -983,6 +983,8 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 /* Сезон ДТ */
 { cmp/cr-prep.i 1 attr-dt-seasons       dt-seasons      " " dt-seasons     }
 
+/* Дата/время изменения Сезон ДТ */
+{ cmp/cr-prep.i 1 attr-change-dt-seasons       change-dt-seasons      " " change-dt-seasons     }
 /* сюда добавлять новые названия атрибутов товаров на объекте */
 
 
@@ -1008,6 +1010,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define cd-attr-l
 ,{&bef-attr-normal-wastage-o}~
 ,{&bef-attr-dop-alt-name-o}~
 ,{&bef-attr-dt-seasons}~
+,{&bef-attr-change-dt-seasons}~
 ':u
 run filwrlib_append-new-line in this-procedure ( input "&global-define gdsoattr-list {&gdsoattr-list}" ).
 
