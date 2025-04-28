@@ -1004,6 +1004,28 @@ PROCEDURE save_update :
                           ).
           return.
         end.  
+        vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, no, output vRunedOffLineCheck) no-error.
+        if error-status:error then
+        do:
+            run dispmessage (
+              substitute("ћарка не может быть списана,~nт.к. возникла ошибка при проверке: &1.",error-status:get-message(1))
+              ).
+            return.
+        end.
+        if vStatusCheckMark = 2 then
+        do:
+            run dispmessage (
+              "ѕроверка марки не выполнена, марка не может быть добавлена в документ."
+              ).
+            return.
+        end.
+        if vStatusCheckMark = 0 then
+        do:
+            run dispmessage (
+              "ѕроверка марки дала отрицательный результат, марка не может быть добавлена в документ."
+              ).
+            return.
+        end.
       end.
       when {&TDEDT_Ras_Perem} then
       do:
