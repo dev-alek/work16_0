@@ -122,17 +122,17 @@ DEFINE BUTTON b-save AUTO-GO
      SIZE 10 BY 1
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-err-allow AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL ? 
+DEFINE VARIABLE f-err-allow AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL ? 
      LABEL "Допустимые погрешности всех не финальных сливов" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-massa-sug AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL ? 
+DEFINE VARIABLE f-massa-sug AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL ? 
      LABEL "Суммарная масса всех не финальных сливов СУГ" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-teh-loss AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL ?
+DEFINE VARIABLE f-teh-loss AS DECIMAL FORMAT "->>>,>>>,>>9.999":U INITIAL ?
      LABEL "Технологические потери всех не финальных сливов" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.

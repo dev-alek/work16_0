@@ -736,7 +736,7 @@ do
   }
               { str/tdat-val.i
      buf_trn-doc.doc-code
-     {&sugtpattr-err-allow}
+     {&sugtpattr-massa-sug}
      massa-sug
      vartype
      no-error
@@ -744,7 +744,7 @@ do
 
   if buf_trn-doc.reason-code = 99 and (teh-loss <> "" or err-allow <> "" or massa-sug <> "") then reason-code = true .
             tt-petrol.pol8 = decimal (teh-loss) + vBlowdown + vFittings + vEmptying + vRefund + vCtrlvalve .
-            tt-petrol.pol9 = tt-petrol.weight-TH - tt-petrol.vol-TH .
+  if buf_trn-doc.reason-code = 99 then tt-petrol.pol9 = tt-petrol.weight-TH - tt-petrol.vol-TH - decimal(massa-sug).
             
 
             tt-petrol.pol10 = (sqrt(exp((tt-petrol.after-measure-cli-qnty * 0.65), 2) + exp((tt-petrol.before-measure-cli-qnty * 0.65), 2)) / 100) +  decimal (err-allow).
@@ -1256,13 +1256,13 @@ procedure print-table1:
     put stream OutStr-html unformatted
       '<TR>' skip
       '<TD colspan="2" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>>9.999",3) + '</TD>' skip
-      '<TD colspan="2" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD colspan="2" text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.9",1) + '</TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.after-temp,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.after-temp,"->>>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD colspan="2" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.before-measure-cli-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD colspan="2" text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.after-measure-cli-qnty,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>>9.999",3) + '</TD>' skip
+      '<TD text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-petrol.after-temp,"->>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.after-temp,"->>>>>>>>>>>9",0) + '</TD>' skip
       '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.masDol,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.masDol,"->>>>>>>>>>>9.99",2) + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + string(tt-petrol.num-pl) + '</TD>' skip
-      '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.99",2) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.99",2) + '</TD>' else "" + '</TD>' skip
+      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol8,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</TD>' skip
       '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol9,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol9,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</TD>' skip
       '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol10,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol10,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</TD>' skip
       '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.pol11,"->>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + if reason-code then fnc-convert-dot-to-colon(tt-petrol.pol11,"->>>>>>>>>>>9.999",3) + '</TD>' else "" + '</TD>' skip
