@@ -123,17 +123,17 @@ DEFINE BUTTON b-save AUTO-GO
      BGCOLOR 8 .
 
 DEFINE VARIABLE f-err-allow AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL 0 
-     LABEL "Допустимые погрешности предыдущих станций" 
+     LABEL "Допустимые погрешности всех не финальных сливов" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-massa-sug AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL 0 
-     LABEL "Масса слитого СУГ на промежуточных станциях АГЗС" 
+     LABEL "Суммарная масса всех не финальных сливов СУГ" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-teh-loss AS DECIMAL FORMAT "->>>,>>>,>>9.99":U INITIAL 0 
-     LABEL "Технологические потери предыдущих станций" 
+     LABEL "Технологические потери всех не финальных сливов" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
