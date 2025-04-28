@@ -254,7 +254,7 @@ function volumeGF RETURNS decimal /*־בתול סכטעמי ֶװ ׁ׃ֳ*/
       for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
         buf_rvs-line.gds-code = buf_goods.gds-code:
                         
-        beforeVol = beforeVol + buf_rvs-line.state-brutto-qnty .
+        beforeVol = beforeVol + buf_rvs-line.state-measure-tc-qnty .
 
       end.
     end. 
@@ -265,7 +265,7 @@ function volumeGF RETURNS decimal /*־בתול סכטעמי ֶװ ׁ׃ֳ*/
       for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
         buf_rvs-line.gds-code = buf_goods.gds-code :
 
-        afterVol = afterVol + buf_rvs-line.state-brutto-qnty .
+        afterVol = afterVol + buf_rvs-line.state-measure-tc-qnty .
 
       end.
     end.
