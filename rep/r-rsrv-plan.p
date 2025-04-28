@@ -68,7 +68,7 @@ define variable v-fact-orderStart   as decimal   no-undo .
 define variable v-fact-orderEnd     as decimal   no-undo .
 define variable periodDate          as date      no-undo .
 define variable qntyPeriod          as integer   no-undo .
-
+define variable periodDay           as integer   no-undo .
 define stream OutStr-html.
 
 define buffer buf_goods           for ub.goods .
@@ -360,16 +360,19 @@ put stream OutStr-html unformatted
   .
 put stream OutStr-html unformatted
   '<tr class="set_columns">' skip
-  '<td style="width: 100px;"></td>' skip
   '<td style="width: 120px;"></td>' skip
-  '<td style="width: 140px;"></td>' skip
-  '<td style="width: 90px;"></td>' skip
-  '<td style="width: 90px;"></td>' skip
-  '<td style="width: 140px;"></td>' skip
   '<td style="width: 120px;"></td>' skip
-  '<td style="width: 100px;"></td>' skip
+  '<td style="width: 200px;"></td>' skip
   '<td style="width: 120px;"></td>' skip
-  '<td style="width: 100px;"></td>' skip
+  '<td style="width: 120px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
+  '<td style="width: 150px;"></td>' skip
   '</tr>' skip
   .
 
@@ -377,17 +380,20 @@ find first bf_clients no-lock where bf_clients.obj-code = v-cntxt-obj-code and
   bf_clients.obj-type = v-cntxt-obj-type no-error .
 
 put stream OutStr-html unformatted
-  '<tr>' skip
-  '<td colspan="10" style="text-align: center; font-weight:bold;">Отчет по планированию заказов</td>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="13" style="text-align: left; font-weight:bold;">Отчет по планированию заказа товаров Магазина и готовой продукции Кафе</td>' skip
   '</tr>' skip
-  '<tr>' skip
-  '<td colspan="10" style="text-align: left;">на ' + string(pDateOrder,"99/99/9999") + '</td>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;">на ' + string(pDateOrder,"99/99/9999") + '</td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Остаток товара, шт (О)</b> Количество товара на остатке в штуках на текущий момент (4).</td>' skip
   '</tr>' skip
-  '<tr>' skip
-  '<td colspan="10" style="text-align: left;">объект: ' + bf_clients.obj-name + '</td>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;">объект: ' + bf_clients.obj-name + '</td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Продажи за период, шт (Vпр)</b> Количество продаж товара (с учетом возвратов) за выбранный период (5).</td>' skip
   '</tr>' skip
-  '<tr>' skip
-  '<td colspan="10" style="text-align: left;">контрагент: ' + buf_clients.obj-name + '</td>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;">контрагент: ' + buf_clients.obj-name + '</td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Среднесуточные продажи за период, шт (Тпр)</b> Среднесуточное количество проданного товара за выбранный период времени Тпр = Vпр / P, где Р – период продаж в днях (6).</td>' skip
   '</tr>' skip
   .
 for each tt-typeDocChoose:
@@ -395,56 +401,114 @@ for each tt-typeDocChoose:
 end.
 vDocType = trim (vDocType,", ") .
 put stream OutStr-html unformatted
-  '<tr>' skip
-  '<td colspan="10" style="text-align: left;">по документам: ' + vDocType + '</td>' skip
-  '</tr>' skip 
-  '<tr>' skip
-  '<td colspan="10" style="text-align: left;">заказ формируется на : ' + string(vDaySale) + ' дней(дня), с учетом гарантийного запаса на ' + string(pGarantDay) + ' дней(дня)</td>' skip
-  '</tr>' skip .
+  /*  '<tr>' skip
+    '<td colspan="5" style="text-align: left;">по документам: ' + vDocType + '</td>' skip
+      '<td colspan="8" style="text-align: left;">на ' + string(pDateOrder,"99/99/9999") + '</td>' skip
+    '</tr>' skip */ 
   
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;">заказ формируется на : ' + string(vDaySale) + ' дней(дня), с учетом гарантийного запаса на ' + string(pGarantDay) + ' дней(дня)</td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Рекомендованный объем заказа с учетом минимального и гарантийного запасов, шт (Vзг)</b> Vзг = Vз + М + G  (7).</td>' skip
+  '</tr>' skip .
+
 for each tt-dateZakaz:
+  periodDay = periodDay + (tt-dateZakaz.dateEnd - tt-dateZakaz.dateStart + 1) .
   v-period = v-period + ", " + "c " + string(tt-dateZakaz.dateStart,"99/99/9999") + " по " + string (tt-dateZakaz.dateEnd,"99/99/9999") .
 end.
 v-period = trim (v-period,", ") .
   
 put stream OutStr-html unformatted   
-  '<tr>' skip
-  '<td colspan="10" style="text-align: left;">период анализа : ' + v-period + '</td>' skip
-  '</tr>' skip .
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;">период анализа : ' + string(periodDay) + ' дней(дня) ' + v-period + '</td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Запас товара, в днях (Од)</b> Количество дней, на которое должно хватить остатков товара на текущий момент с учетом среднесуточных продаж за период Од = О / Тпр (8).</td>' skip
+  '</tr>' skip 
+  '<tr style="font-size:11px;">' skip
+  .
   
 if pDelDayGoods then 
 do:
   put stream OutStr-html unformatted   
-    '<tr>' skip
-    '<td colspan="10" style="text-align: left;">исключены дни, когда товара не было на остатках</td>' skip
-    '</tr>' skip .
+    '<td colspan="5" text_wrap="true" style="text-align: left;">исключены дни, когда товара не было на остатках</td>' skip
+    .
 end.  
-  
+else 
+do:
+  put stream OutStr-html unformatted   
+    '<td colspan="5" style="text-align: left;"></td>' skip
+    .
+end.
+put stream OutStr-html unformatted   
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Расчетный объем заказа с учетом темпа продаж, шт (Vз)</b> Vз = Тпр * Q - Ост, где Q – период, на который формируется заказ в днях,</td>' skip
+  '</tr>' skip 
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;">если Ост < 0, то при расчете Ост не учитывается. Ост – Остаток товара на день заказа: Ост = О - (Dз-D) * Тпр, где Dз – дата заказа, D – текущая дата (9).</td>' skip
+  '</tr>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><strong>Расчетный объем заказа с учетом минимального запаса,шт (Vзм)</strong> Vзм = Vз + М  (10).</td>' skip
+  '</tr>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Минимальный запас, шт (М)</b> Количество товара, необходимое для выкладки (11). </td>' skip
+  '</tr>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Гарантийный запас, шт (G)</b> G = S * Тпр, где   S – гарантийный запас в днях (12).</td>' skip
+  '</tr>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Товар участвует в промоакции</b> Участие товара в промоакции в статусе «Активная» в ТН на момент формирования отчета. </td>' skip
+  '</tr>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;">Информация справочная, необходимо учитывать при подтверждении заказа (13).</td>' skip
+  '</tr>' skip
+  '<tr height:15px;  style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left;"></td>' skip
+  '</tr>' skip
+  '<tr style="font-size:11px;">' skip
+  '<td colspan="5" text_wrap="true" style="text-align: left;"></td>' skip
+  '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>* При расчете не учитываются сроки годности и движение рецептурных товаров</b></td>' skip
+  '</tr>' skip
+  .  
 put stream OutStr-html unformatted   
   '<tr>' skip
-  '<td colspan="10" style="text-align: left; font-weight:bold;"><br></td>' skip
+  '<td colspan="10" text_wrap="true" style="text-align: left; font-weight:bold;"><br></td>' skip
   '</tr>' skip
   '<tr>' skip
-  '<td colspan="10" style="text-align: left; font-weight:bold;"><br></td>' skip
+  '<td colspan="10" text_wrap="true" style="text-align: left; font-weight:bold;"><br></td>' skip
   '</tr>' skip
   '</thead>' skip
   .
 
 put stream OutStr-html unformatted
   '     <tbody>' skip
-  '       <tr>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver; height: 30px">Код</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Артикул</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Название товара</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Остаток товара, шт.</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Остаток товара в днях</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Темп продаж за указанный период</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Расчетный объем заказа с учетом темпа продаж</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Расчетный объем заказа с учетом минимального запаса</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Рекомендованный объем заказа с учетом минимального и гарантийного запасов</th>' skip
-  '         <th style="text-align: center; font-weight:bold; background-color: silver;">Товар участвует в промоакции</th>' skip
+  '       <tr style="font-size:11px;">' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver; height: 30px">Код ТН</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Артикул ТН</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Наименование товара</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Остаток товара, шт.<br>(О)</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Продажи за период, шт.<br>(Vпр)</th>' skip 
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Среднесуточные продажи за период, шт.<br>(Тпр)</th>' skip  
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; font-size:12px; background-color: silver;">Рекомендованный объем заказа с учетом минимального и гарантийного запасов, шт.<br>(Vзг)</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Запас товара, в днях<br>(Од)</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Расчетный объем заказа с учетом темпа продаж, шт.<br>(Vз)</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Расчетный объем заказа с учетом минимального запаса, шт.<br>(Vзм)</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Минимальный запас, шт.<br>(М)</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Гарантийный запас, шт.<br>(G)</th>' skip
+  '         <th text_wrap="true" style="text-align: center; font-weight:bold; background-color: silver;">Товар участвует в промоакции</th>' skip
   '       </tr>' skip
-  '       <tr>' skip
+  '       <tr style="font-size:11px;">' skip
+  '         <th style="text-align: center;  font-weight:bold; background-color: silver;"></th>' skip
+  '         <th style="text-align: center;  font-weight:bold; background-color: silver;"></th>' skip
+  '         <th style="text-align: center;  font-weight:bold; background-color: silver;"></th>' skip
+  '         <th colspan="3" style="text-align: center;  font-weight:bold; background-color: silver;">ФАКТИЧЕСКИЕ ДАННЫЕ</th>' skip
+  '         <th style="text-align: center;  font-weight:bold; background-color: silver;">ЗАКАЗ</th>' skip
+  '         <th colspan="6" style="text-align: center;  font-weight:bold; background-color: silver;">СПРАВОЧНАЯ ИНФОРМАЦИЯ</th>' skip
+  '       </tr>' skip
+  '       <tr style="font-size:11px;">' skip
   '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">1</th>' skip
   '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">2</th>' skip
   '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">3</th>' skip
@@ -455,6 +519,9 @@ put stream OutStr-html unformatted
   '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">8</th>' skip
   '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">9</th>' skip
   '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">10</th>' skip
+  '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">11</th>' skip
+  '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">12</th>' skip
+  '         <th num="" style="text-align: center;  font-weight:bold; background-color: silver;">13</th>' skip
   '       </tr>' skip
   . 
 
@@ -466,48 +533,49 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
   if first-of (tt-zakaz.contract) then 
   do:
     put stream OutStr-html unformatted
-      '<tr>' skip
-      '<td colspan="10" style="text-align: left; font-weight:bold;"><br>' + if tt-zakaz.contract = "" then '   БЕЗ ДОГОВОРА' else '   ' + tt-zakaz.contract + '<br></td>' skip
+      '<tr style="font-size:11px;">' skip
+      '<td colspan="13" style="text-align: left; font-weight:bold;"><br>' + if tt-zakaz.contract = "" then '   БЕЗ ДОГОВОРА</td>' else '   ' + tt-zakaz.contract + '<br></td>' skip
       '</tr>' skip      
       .
   end.
   if tt-zakaz.qntyDayGoods = 0 or tt-zakaz.qntyDaySale = 0 then 
   do:
+    
     put stream OutStr-html unformatted
-      '       <tr>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-code) + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.artic) + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.gds-name) + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + if tt-zakaz.tempSale = 0 and tt-zakaz.ostatokDay <> 0 then "-" + '</td>' else string(tt-zakaz.ostatokGoods) + '</td>' skip    
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volTemp) + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
-      '         <td text_wrap="true" style="text-align: center; color:#808080;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
-      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokDay) + '</td>' skip */
-      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip*/
-      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip   */
+      '       <tr style="font-size:11px;">' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-code) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.artic) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-name) + '</td>' skip
+      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>>>9.999",3) + '"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.999",3) + '</td>' skip
+      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '</td>' skip
+      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '</TD>' skip
+      '         <td text_wrap="true" style="text-align: center; font-weight:bold; font-size:12px;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
+      '         <td text_wrap="true" style="text-align: center;">' + if tt-zakaz.tempSale = 0 and tt-zakaz.ostatokDay <> 0 then "-" + '</td>' else string(tt-zakaz.ostatokGoods) + '</td>' skip    
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volTemp) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + if tt-zakaz.minZapas > tt-zakaz.ostatokToday then string(tt-zakaz.minZapas) + '</td>' else string(tt-zakaz.volMinZapas) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
       '       </tr>' skip
       . 
   end.
   else 
   do:
     put stream OutStr-html unformatted
-      '       <tr>' skip
+      '       <tr style="font-size:11px;">' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-code) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.artic) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-name) + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.99") + '</td>' skip
+      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>>>9.999",3) + '"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.999",3) + '</td>' skip
+      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '</td>' skip
+      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '</TD>' skip
+      '         <td text_wrap="true" style="text-align: center; font-weight:bold; font-size:12px;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokGoods) + '</td>' skip    
-      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.tempSale,"->>>>>>>>>>>9.9") + '</TD>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volTemp) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
-      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip
+      '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
-      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokDay) + '</td>' skip */
-      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garantZapas) + '</td>' skip*/
-      /*    '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip   */
       '       </tr>' skip
       . 
   end.

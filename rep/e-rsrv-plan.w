@@ -100,9 +100,9 @@ text-cliname
 RADIO-SET-1 sale_day garant_day b-clients customer-name ~
 SelectGood Goods-Editor text-client text-dogovor text-googs ~
 text-sale-list1 text-cliname
-&Scoped-define page-2 Date-Start Date-End text-typedoc_list-2 f-typedoc-desc ~
+&Scoped-define page-2 Date-Start Date-End ~
 rs_period text-period_list2 br_date bt-not-sel-all bt-not-sel-desel-all t-daygoods ~
-b-type-doc b-date-Start b-date-End
+b-date-Start b-date-End
 
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
@@ -317,9 +317,9 @@ DEFINE RECTANGLE RECT-7
   SIZE 93 BY 7.25.
 
 DEFINE VARIABLE t-daygoods AS LOGICAL INITIAL true 
-  LABEL "Исключить дни без товара" 
+  LABEL "Исключить дни без товара на остатке" 
   VIEW-AS TOGGLE-BOX
-  SIZE 30 BY .83
+  SIZE 40 BY .83
   FONT 1 NO-UNDO.
 
 /* Query definitions                                                    */
@@ -385,7 +385,7 @@ DEFINE FRAME Dialog-Frame
   SPACE(1.24) SKIP(0.57)
   WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
   SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-  TITLE "Отчет по планированию заказа" WIDGET-ID 100.
+  TITLE "Отчет по планированию заказа товаров Магазина и готовой продукции Кафе" WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -1322,6 +1322,7 @@ end.
 f-typedoc-desc = trim(f-typedoc-desc,", ") .
 display f-typedoc-desc with frame Dialog-Frame .
 RUN enable_UI.
+
 apply  "CHOOSE":U   to  button-1 in frame {&frame-name} .
 WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -1363,15 +1364,16 @@ PROCEDURE enable_UI :
   ------------------------------------------------------------------------------*/
   DISPLAY Date-order rs_period text-sale-list1 text-period_list2 Date-Start 
     Date-End RADIO-SET-1 sale_day garant_day text-client text-dogovor 
-    customer-name text-googs text-typedoc_list-2 f-typedoc-desc SelectGood 
+    customer-name text-googs SelectGood 
     t-daygoods Goods-Editor F-button-1 F-button-2 text-cliname
     WITH FRAME Dialog-Frame.
   ENABLE b-exit Btn_OK i-exit BUTTON-1 RECT-5 RECT-6 BUTTON-2 
     RECT-7 Date-order b-date rs_period Date-Start Date-End RADIO-SET-1 
-    br_date garant_day b-clients customer-name SelectGood b-type-doc f-typedoc-desc
+    br_date garant_day b-clients customer-name SelectGood 
     t-daygoods Goods-Editor F-button-1 F-button-2 b-date-End b-date-Start
     WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
+  hide b-type-doc text-typedoc_list-2 f-typedoc-desc in frame Dialog-Frame .
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
 
