@@ -7537,6 +7537,16 @@ procedure proc-m_to-inv :
         end.
         list-trn = t-doc.doc-code .
       end.
+      message "ѕосле создани€ итогового документа по инвентаризации " + list-trn + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
+        "¬нести изменени€ в полученный документ инвентаризации можно будет только вручную." skip
+        "ѕродолжить?"
+        view-as alert-box QUESTION buttons YES-NO update glog.
+      if not glog then 
+      do:
+        mark-list = "" .
+        run UI-on in this-procedure ( input "open" ).
+        return .
+      end.
     end.
     else 
     do:
@@ -7633,7 +7643,7 @@ procedure proc-m_to-inv :
       do:
         list-trn <> trim(misTrnDoc,",") .
         message "ѕо инвентаризации " + trnDocCode + " есть другие загруженные документы." skip
-          "ѕри продолжении они будут заблокированы." skip
+          "ѕри продолжении они будут проигнорированы." skip
           "ѕродолжить?"
           view-as alert-box QUESTION buttons YES-NO update glog.
         if not glog then 
@@ -7643,6 +7653,16 @@ procedure proc-m_to-inv :
           return .
         end.
       end.
+        message "ѕосле создани€ итогового документа по инвентаризации " + trnDocCode + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
+          "¬нести изменени€ в полученный документ инвентаризации можно будет только вручную." skip
+          "ѕродолжить?"
+          view-as alert-box QUESTION buttons YES-NO update glog.
+        if not glog then 
+        do:
+          mark-list = "" .
+          run UI-on in this-procedure ( input "open" ).
+          return .
+        end.
       end.
     end.
     list-trn = trim(list-trn,",").
