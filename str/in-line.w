@@ -2680,6 +2680,7 @@ do:
       return no-apply.
   end.            
 
+  disable b-rvs-af with frame {&frame-name} .
   run action-rvs-line in this-procedure
       ( input {&update}
       ,input "meas":U
@@ -2688,6 +2689,7 @@ do:
       ) no-error .
   if error-status :error then 
   do:
+    enable b-rvs-af with frame {&frame-name} .
     return.
   end.
 
@@ -2743,6 +2745,7 @@ do:
         no-error.
     if error-status :error then 
     do:
+      enable b-rvs-af with frame {&frame-name} .
       return no-apply .
     end.
      
@@ -2755,6 +2758,7 @@ do:
        else do:
          message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
            view-as alert-box.
+         enable b-rvs-af with frame {&frame-name} .
          return no-apply.
        end.
      end.
@@ -2768,6 +2772,7 @@ do:
   run display-measure in this-procedure
     no-error .
 
+  enable b-rvs-af with frame {&frame-name} .
   if b-save :sensitive in frame {&frame-name} then do:
     apply "ENTRY":U to b-save in frame {&frame-name} .
   end.
@@ -2917,7 +2922,7 @@ end.
 on choose of menu-item m-rvs-bf-3 in menu m-rvs-bf
 do:
   { gbl/stdbtn.i b-rvs-bf }
-  
+  disable b-rvs-af with frame {&frame-name} .
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "edit":U
@@ -2925,6 +2930,7 @@ do:
      ,output var-code-temp
     ) no-error .
   if error-status :error then do:
+    enable b-rvs-af with frame {&frame-name} .
     return no-apply .
   end.
   
@@ -2999,12 +3005,13 @@ do:
       end.
       else 
       do:
+         enable b-rvs-af with frame {&frame-name} .
          return no-apply .   
       end.
    end.
   run display-measure in this-procedure
     no-error .
-
+  enable b-rvs-af with frame {&frame-name} .
 end.
 
 on choose of menu-item m-rvs-af-3 in menu m-rvs-af
