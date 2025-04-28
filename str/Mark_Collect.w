@@ -84,6 +84,7 @@ define buffer buf_marking-lines  for ub.marking-lines .
 define buffer buf_utd  for ub.utd .
 define buffer buf_utd-attr for ub.utd-attr .
 define buffer buf_utd-lines  for ub.utd-lines .
+define buffer buf_utd-lines-attr  for ub.utd-lines-attr .
 define buffer buf_utd-marking-lines  for ub.utd-marking-lines .
 define buffer bf_fbr-line  for ub.fbr-line.
 define buffer buf_recipe   for ub.recipe .
@@ -944,7 +945,8 @@ DO:
   run waitfram-show in this-procedure (input "∆ƒ»“≈...") .
   
   for each bf_utd-lines no-lock where bf_utd-lines.db-num = buf_utd.db-num
-                                  and bf_utd-lines.doc-id = buf_utd.doc-id
+                                  and bf_utd-lines.doc-id = buf_utd.doc-id,
+  first buf_goods no-lock where buf_goods.gds-code = bf_utd-lines.gds-code
   :
     for each bf_marking no-lock where bf_marking.gds-code = bf_utd-lines.gds-code :
       if not can-find (first bf_utd-marking-lines where bf_utd-marking-lines.db-num  = bf_utd-lines.db-num
@@ -1006,12 +1008,48 @@ DO:
                           input "2"
                           ).
     end .
+    
+    find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
+                                     and buf_gds-obj.obj-code  = v-cntxt-obj-code
+                                     and buf_gds-obj.artic     = buf_goods.artic
+                                     and buf_gds-obj.prod-type = buf_goods.prod-type
+                                     and buf_gds-obj.prod-code = buf_goods.prod-code
+                                     no-error .
+    find first X_utd-lines no-lock where bf_utd-lines.doc-id = X_utd-lines.doc-id
+                                     and bf_utd-lines.db-num = X_utd-lines.db-num
+                                     and bf_utd-lines.LineNum = X_utd-lines.LineNum
+                                     no-error . 
+    find first buf_utd-lines-attr exclusive-lock where buf_utd-lines-attr.doc-id = bf_utd-lines.doc-id
+                                                   and buf_utd-lines-attr.db-num = bf_utd-lines.db-num
+                                                   and buf_utd-lines-attr.LineNum = bf_utd-lines.LineNum 
+                                                   and buf_utd-lines-attr.attr-code = "comfimed-free-qnty"
+                                                   no-error .
+    if not available buf_utd-lines-attr
+    then do :
+      create buf_utd-lines-attr .
+      assign
+        buf_utd-lines-attr.doc-id = bf_utd-lines.doc-id   
+        buf_utd-lines-attr.db-num = bf_utd-lines.db-num   
+        buf_utd-lines-attr.LineNum = bf_utd-lines.LineNum 
+        buf_utd-lines-attr.attr-code = "comfimed-free-qnty"
+      .
+    end .
+    if available buf_gds-obj
+    then do : 
+      assign buf_utd-lines-attr.attr-value = string(buf_gds-obj.free-qnty) .
+    end .
+    else
+    if available X_utd-lines
+    then do :
+      assign buf_utd-lines-attr.attr-value = string(X_utd-lines.free-qnty) .
+    end .
   end .
   
   if is-initial-set
   then do :
     for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num  = buf_utd.db-num
-                                            and bf_utd-marking-lines.doc-id  = buf_utd.doc-id,
+                                            and bf_utd-marking-lines.doc-id  = buf_utd.doc-id
+                                            and bf_utd-marking-lines.site   <> "only-send",
     first bf_marking no-lock where bf_marking.mark = bf_utd-marking-lines.mark
     :
       if bf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB
@@ -1145,19 +1183,22 @@ ON ROW-DISPLAY OF br-utd-lines IN FRAME Dialog-Frame
 DO:
   if available X_utd-lines
   then do :
-    find first buf_goods no-lock where buf_goods.gds-code = X_utd-lines.gds-code .
-    find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
-                                     and buf_gds-obj.obj-code  = v-cntxt-obj-code
-                                     and buf_gds-obj.artic     = buf_goods.artic
-                                     and buf_gds-obj.prod-type = buf_goods.prod-type
-                                     and buf_gds-obj.prod-code = buf_goods.prod-code
-                                     no-error .
-    if available buf_gds-obj
+    if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB
     then do :
-      if buf_gds-obj.free-qnty <> X_utd-lines.free-qnty
+      find first buf_goods no-lock where buf_goods.gds-code = X_utd-lines.gds-code .
+      find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
+                                       and buf_gds-obj.obj-code  = v-cntxt-obj-code
+                                       and buf_gds-obj.artic     = buf_goods.artic
+                                       and buf_gds-obj.prod-type = buf_goods.prod-type
+                                       and buf_gds-obj.prod-code = buf_goods.prod-code
+                                       no-error .
+      if available buf_gds-obj
       then do :
-        assign X_utd-lines.free-qnty = buf_gds-obj.free-qnty .
-        br-utd-lines:refresh() .
+        if buf_gds-obj.free-qnty <> X_utd-lines.free-qnty
+        then do :
+          assign X_utd-lines.free-qnty = buf_gds-obj.free-qnty .
+  /*        br-utd-lines:refresh() .*/
+        end .
       end .
     end .
     if X_utd-lines.Quantity < X_utd-lines.free-qnty
@@ -1417,15 +1458,29 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                             no-error . 
     buffer-copy buf_utd-lines to X_utd-lines .
     assign X_utd-lines.GdsName = buf_goods.gds-name .
-    find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
-                                     and buf_gds-obj.obj-code  = v-cntxt-obj-code
-                                     and buf_gds-obj.artic     = buf_goods.artic
-                                     and buf_gds-obj.prod-type = buf_goods.prod-type
-                                     and buf_gds-obj.prod-code = buf_goods.prod-code
-                                     no-error .
-    if available buf_gds-obj
+    if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
     then do :
-      assign X_utd-lines.free-qnty = buf_gds-obj.free-qnty .
+      find first buf_utd-lines-attr no-lock where buf_utd-lines-attr.doc-id = buf_utd-lines.doc-id
+                                              and buf_utd-lines-attr.db-num = buf_utd-lines.db-num
+                                              and buf_utd-lines-attr.LineNum = buf_utd-lines.LineNum 
+                                              and buf_utd-lines-attr.attr-code = "comfimed-free-qnty"
+                                              no-error .
+      if available buf_utd-lines-attr
+      then do :
+        assign X_utd-lines.free-qnty = decimal(buf_utd-lines-attr.attr-value) .
+      end .
+    end .
+    else do :
+      find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
+                                       and buf_gds-obj.obj-code  = v-cntxt-obj-code
+                                       and buf_gds-obj.artic     = buf_goods.artic
+                                       and buf_gds-obj.prod-type = buf_goods.prod-type
+                                       and buf_gds-obj.prod-code = buf_goods.prod-code
+                                       no-error .
+      if available buf_gds-obj
+      then do :
+        assign X_utd-lines.free-qnty = buf_gds-obj.free-qnty .
+      end .
     end .
     
     for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.doc-id   = buf_utd-lines.doc-id
@@ -1523,6 +1578,7 @@ PROCEDURE CrCheckMark :
 
   define buffer buf_marking-child for ub.marking .
   define buffer buf_marking-parent for ub.marking .
+  define buffer buf_utd-marking-lines-child for ub.utd-marking-lines .
   
   define variable v-par-type as character no-undo.
   define variable v-par-val  as character no-undo.
@@ -1530,7 +1586,8 @@ PROCEDURE CrCheckMark :
   define variable v-num-recipes as integer no-undo .
   define variable v-GTIN as character no-undo .
   define variable v-GTIN-qnty as decimal no-undo .
-  define variable v-mark-child-qnty as decimal no-undo .
+  define variable v-GTIN-child as character no-undo .
+  define variable v-GTIN-qnty-child as decimal no-undo .
   define variable v-free-qnty as decimal no-undo .
   define variable v-old-sts as integer no-undo .
   
@@ -1609,7 +1666,7 @@ PROCEDURE CrCheckMark :
   
   find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
                                              and buf_utd-marking-lines.doc-id = buf_utd.doc-id
-                                             and v-mark-short begins buf_utd-marking-lines.mark
+                                             and buf_utd-marking-lines.mark begins v-mark-short
                                              no-error.
   if available buf_utd-marking-lines
   then do :
@@ -1684,9 +1741,21 @@ PROCEDURE CrCheckMark :
     .
   end .
   assign
-    buf_utd-lines.Quantity  = buf_utd-lines.Quantity + v-GTIN-qnty
+    buf_utd-lines.Quantity = buf_utd-lines.Quantity + v-GTIN-qnty
 /*    buf_utd-lines.qnty-mark = buf_utd-lines.qnty-mark + 1*/
   .
+  for each buf_marking-child no-lock where buf_marking-child.mark-parent begins v-mark-short,
+  first buf_utd-marking-lines-child no-lock where buf_utd-marking-lines-child.mark = buf_marking-child.mark
+                                              and buf_utd-marking-lines-child.db-num  = buf_utd-lines.db-num
+                                              and buf_utd-marking-lines-child.doc-id  = buf_utd-lines.doc-id
+                                              and buf_utd-marking-lines-child.LineNum = buf_utd-lines.LineNum
+  :
+    assign
+      v-GTIN-child = getGtinByDM(buf_marking-child.mark)
+      v-GTIN-qnty-child = getQntyCodeByGtin(v-GTIN-child)
+      buf_utd-lines.Quantity = buf_utd-lines.Quantity - v-GTIN-qnty-child
+    .
+  end .
   
   find first tt-utd-lines exclusive-lock where tt-utd-lines.db-num    = buf_utd.db-num
                                            and tt-utd-lines.doc-id    = buf_utd.doc-id

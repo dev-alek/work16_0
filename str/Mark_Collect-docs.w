@@ -98,6 +98,7 @@ define variable EdocType  as class ibs.th.str.utd.edoctype no-undo .
 
 define buffer buf_utd     for ub.utd .  
 define buffer buf_clients for ub.clients .
+define buffer buf_utd-lines-attr    for ub.utd-lines-attr .
 
 def    var      Marking   as class mark                    no-undo .
 
@@ -1049,11 +1050,23 @@ PROCEDURE init-id :
               vGtinQnty = getQntyCodeByGtin(vGtin) .
               X_utd.scan-qnty = X_utd.scan-qnty + vGtinQnty .
             end .
-            for first buf_gds-obj no-lock where buf_gds-obj.obj-type = buf_utd.obj-type
-                                            and buf_gds-obj.obj-code = buf_utd.obj-code
-                                            and buf_gds-obj.gds-code = buf_utd-lines.gds-code
-            :
-              X_utd.free-qnty = X_utd.free-qnty + buf_gds-obj.free-qnty .
+            if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
+            then do :
+              for first buf_utd-lines-attr no-lock where buf_utd-lines-attr.doc-id = buf_utd-lines.doc-id
+                                                     and buf_utd-lines-attr.db-num = buf_utd-lines.db-num
+                                                     and buf_utd-lines-attr.LineNum = buf_utd-lines.LineNum 
+                                                     and buf_utd-lines-attr.attr-code = "comfimed-free-qnty"
+              :
+                X_utd.free-qnty = X_utd.free-qnty + decimal(buf_utd-lines-attr.attr-value) .
+              end .
+            end .
+            else do :
+              for first buf_gds-obj no-lock where buf_gds-obj.obj-type = buf_utd.obj-type
+                                              and buf_gds-obj.obj-code = buf_utd.obj-code
+                                              and buf_gds-obj.gds-code = buf_utd-lines.gds-code
+              :
+                X_utd.free-qnty = X_utd.free-qnty + buf_gds-obj.free-qnty .
+              end .
             end .
           end .                                         
         end.
@@ -1144,11 +1157,23 @@ PROCEDURE init-sort :
             vGtinQnty = getQntyCodeByGtin(vGtin) .
             X_utd.scan-qnty = X_utd.scan-qnty + vGtinQnty .
           end .
-          for first buf_gds-obj no-lock where buf_gds-obj.obj-type = buf_utd.obj-type
-                                          and buf_gds-obj.obj-code = buf_utd.obj-code
-                                          and buf_gds-obj.gds-code = buf_utd-lines.gds-code
-          :
-            X_utd.free-qnty = X_utd.free-qnty + buf_gds-obj.free-qnty .
+          if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
+          then do :
+            for first buf_utd-lines-attr no-lock where buf_utd-lines-attr.doc-id = buf_utd-lines.doc-id
+                                                   and buf_utd-lines-attr.db-num = buf_utd-lines.db-num
+                                                   and buf_utd-lines-attr.LineNum = buf_utd-lines.LineNum 
+                                                   and buf_utd-lines-attr.attr-code = "comfimed-free-qnty"
+            :
+              X_utd.free-qnty = X_utd.free-qnty + decimal(buf_utd-lines-attr.attr-value) .
+            end .
+          end .
+          else do :
+            for first buf_gds-obj no-lock where buf_gds-obj.obj-type = buf_utd.obj-type
+                                            and buf_gds-obj.obj-code = buf_utd.obj-code
+                                            and buf_gds-obj.gds-code = buf_utd-lines.gds-code
+            :
+              X_utd.free-qnty = X_utd.free-qnty + buf_gds-obj.free-qnty .
+            end .
           end .
         end . 
         mQuery:get-next ().
