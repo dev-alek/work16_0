@@ -993,6 +993,18 @@ PROCEDURE save_update :
       end.
 
       case t_doc.ext-doc-type:
+      when {&TDEDT_Ras_Vnesh} then
+      do:  /* Расход внешний. НЕ возврат */
+        if not v-is-return and 
+           marking.sts <> thMarkSts:FreeZone:KeyIntDB and
+           marking.sts <> thMarkSts:Checked_:KeyIntDB then 
+        do:
+          run dispmessage (substitute("Марка в статусе <&1> не может быть добавлена в документ внешнего расхода.",
+                           thMarkSts:GetLabel(marking.sts))
+                          ).
+          return.
+        end.  
+      end.
       when {&TDEDT_Ras_Perem} then
       do:
         if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
