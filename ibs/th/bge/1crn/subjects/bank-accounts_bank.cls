@@ -91,8 +91,8 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
     def var v-str as char no-undo.
     
     assign
-      v-str = v-str + ",bank-name" 
-      when bank-name = ?
+      /*v-str = v-str + ",bank-name" 
+      when bank-name = ?*/
       v-str = v-str + ",bik" 
       when bik = ?
       /*v-str = v-str + ",bank-city" 

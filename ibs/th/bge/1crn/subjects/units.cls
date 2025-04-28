@@ -65,7 +65,7 @@ class ibs.th.bge.1crn.subjects.units inherits ibs.th.bge.1crn.subjects.asubject:
     def var v-str as char no-undo.
     
     assign
-      v-str = "okei-code" when okei-code = ?
+      /*v-str = "okei-code" when okei-code = ?*/
       v-str = v-str + ",name" when name_ = ?
       /*v-str = v-str + ",full-name" when full-name = ?*/
       v-str = v-str + ",type" when type_ = ?
