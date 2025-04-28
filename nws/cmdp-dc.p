@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8f531171ff56, 1872, rls $
+$Author: SSlivenko $
+$Date: Thu May 16 15:50:49 2019 +0300 $
+$Workfile: cmdp-dc.p $
+$Archive: nws/cmdp-dc.p $
 
 Обработка команды изменения данных по ДК по документу
 
@@ -33,11 +34,11 @@ define input  parameter p-sign     as integer no-undo .
 define input  parameter cre-pay    as integer no-undo .
 define input  parameter p-cmd-name as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8f531171ff56, 1872, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Thu May 16 15:50:49 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cmdp-dc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/cmdp-dc.p $":U .
 define variable vss-description as character no-undo init "Обработка команды изменения данных по ДК по документу".
 { cmp/vssrevis.i "substitute('&1|&2|&3':u,p-counter)" }
 { cmp/trg-def.i  }

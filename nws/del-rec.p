@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: del-rec.p $
+$Archive: nws/del-rec.p $
 
 удаление записи в базе данных
 
@@ -18,11 +19,11 @@ Creation date: 08/23/05
 define input parameter p-del-key-rec as character no-undo .
 define input parameter p-find-msg    as logical   no-undo . /* обязательно ли должна существовать записть? */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: del-rec.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/del-rec.p $":U .
 define variable vss-description as character no-undo init "удаление записи в базе данных".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -109,4 +110,4 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
 
 end.
 
-/* $Workfile$ end */
+/* $Workfile: del-rec.p $ end */

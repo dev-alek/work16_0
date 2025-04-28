@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f63859adafce, 2420, rls $
+$Author: ASMorozov $
+$Date: Ср июн 10 21:13:46 2020 +0300 $
+$Workfile: cmdchgutd.p $
+$Archive: nws/cmdchgutd.p $
 
 Комманда на изменения статуса UTD/УТД
 
@@ -17,11 +18,11 @@ Creation date: 15/03/2020
 
 define parameter buffer buf_utd for ub.utd.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f63859adafce, 2420, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Ср июн 10 21:13:46 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cmdchgutd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/cmdchgutd.p $":U .
 define variable vss-description as character no-undo init "Запросить информацию обо всех товарах по указанному объекту".
 { cmp/vssrevis.i "substitute('&1|&2|&3':u,buf_utd.db-num,buf_utd.doc-id,buf_utd.sts)" }
 { cmp/trg-def.i  }

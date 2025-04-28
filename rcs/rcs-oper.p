@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: rcs-oper.p $
+$Archive: rcs/rcs-oper.p $
 
 Ёкспорт документов по архивам
 
@@ -41,11 +42,11 @@ define input parameter sLogFile          as character               no-undo.
 define input parameter hEDT              as handle                  no-undo.
 define input parameter hCNT              as handle                  no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rcs-oper.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rcs/rcs-oper.p $":U .
 define variable vss-description as character no-undo init "Ёкспорт документов по архивам".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

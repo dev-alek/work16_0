@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 4988c214daa5, 1646, rls $
+$Author: EShklyar $
+$Date: Mon Nov 19 15:15:35 2018 +0300 $
+$Workfile: cmd-del.p $
+$Archive: nws/cmd-del.p $
 
 создание маршрутизации с командой на удаление записи
 
@@ -21,11 +22,11 @@ define input parameter p-tbl-name   as character no-undo .
 define input parameter p-tbl-handle as handle    no-undo .
 define input parameter p-db-list    as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 4988c214daa5, 1646, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Nov 19 15:15:35 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cmd-del.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/cmd-del.p $":U .
 define variable vss-description as character no-undo init "создание маршрутизации с командой на удаление записи".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -129,4 +130,4 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   end.
 end.
 
-/* $Workfile$ end */
+/* $Workfile: cmd-del.p $ end */

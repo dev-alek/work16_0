@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: cmdnw2es.p $
+$Archive: nws/cmdnw2es.p $
 
 Обработка команды отсылки настроек машины правил (для объекта TH)
 
@@ -25,11 +26,11 @@ define input parameter p-uniq-gate-rec as character no-undo . /*gate ьаршрутизац
 define input parameter p-esys-uniq-gate-rec as character no-undo . /*gate ьаршрутизации в esys*/
 define input parameter p-counter  as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cmdnw2es.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: nws/cmdnw2es.p $":U .
 define variable vss-description as character no-undo init "Обработка команды отсылки настроек машины правил (для объекта TH)".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
