@@ -109,10 +109,10 @@ class ibs.th.bge.1crn.subjects.good-grps inherits ibs.th.bge.1crn.subjects.asubj
       /*      v-str = v-str + ",upper-code" when upper-code = ?*/
       v-str = v-str + ",name" 
       when name_ = ?
-      v-str = v-str + ",rn-code" 
+      /* v-str = v-str + ",rn-code" 
       when rn-code = ?
       v-str = v-str + ",r-mat" 
-      when r-mat = ?
+      when r-mat = ? */
       .
     v-str = trim (v-str, ",").
     if v-str > ''
