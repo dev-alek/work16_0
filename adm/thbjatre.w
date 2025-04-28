@@ -1122,10 +1122,21 @@ define variable v-recids as character no-undo .
 define variable v-firm-code as integer no-undo .
 define buffer buf_clients for ub.clients.
 define buffer buf_sysconf for ub.sysconf.
+define buffer buf_db      for ub.db.
 add-region = ''.
 case p-region:
   when {&db} then do:
-
+     run adm\dbs.w(  input parParentProc
+                   , input "b-sel":U
+                   , output v-recids
+          ).
+     if v-recids = '' then return.
+     find first buf_db no-lock
+                       where recid(buf_db) = integer(entry(1, v-recids)).
+     assign
+        v-add-obj-type = {&db}
+        v-add-obj-code = buf_db.db-num
+     .
   end.
   when {&cmp} then do:
       run adm/sconfs.w (

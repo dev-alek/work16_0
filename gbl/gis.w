@@ -415,22 +415,17 @@ PROCEDURE enable_UI :
       VIEW FRAME Dialog-Frame.
   end.
   else do:
-      DISPLAY OflineAdress OflineLogin OflinePswd 
+      DISPLAY OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
+              cdnAdress registrationKey adressPort login password
+              dopParam waitTime Proxytext
           WITH FRAME Dialog-Frame.
       
-      ENABLE B-exit B-quit OflineAdress OflineLogin OflinePswd  
+      ENABLE B-exit B-quit OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
+              cdnAdress registrationKey adressPort login password
+              dopParam waitTime  
           WITH FRAME Dialog-Frame.
       VIEW FRAME Dialog-Frame.
       assign
-         gisAdress:VISIBLE = false 
-         cdnTurnOn:VISIBLE = false 
-         cdnAdress:VISIBLE = false 
-         registrationKey:VISIBLE = false
-         adressPort:VISIBLE = false
-         login:VISIBLE = false
-         password:VISIBLE = false 
-         dopParam:VISIBLE = false 
-         waitTime:VISIBLE = false 
          maxTime:VISIBLE = false
          timeFalStart:VISIBLE = false 
          banDate:VISIBLE = false 
@@ -438,10 +433,7 @@ PROCEDURE enable_UI :
          cdnRepeat:VISIBLE = false 
          crashSituat:VISIBLE = false 
          cdnChange:VISIBLE = false
-         Proxytext:VISIBLE = false
          UpdateRequest:VISIBLE = false
-         rect-1:VISIBLE = false
-         rect-2:VISIBLE = false
          
       .
       
@@ -493,76 +485,76 @@ FOR EACH temp-thbj-attr
   :
     if p-obj-type ne {&db}
     then do:
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_adressPort} THEN DO:
-           adressPort = temp-thbj-attr.property-value-character.
-           display adressPort with frame {&frame-name} .
-        END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_dopParam} THEN DO:
-           dopParam = temp-thbj-attr.property-value-character.
-           display dopParam with frame {&frame-name} .
-        END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_gisAdress} THEN DO:
-           gisAdress = temp-thbj-attr.property-value-character.
-           display gisAdress with frame {&frame-name} .
-        END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_proxyLogin} THEN DO:
-           login = temp-thbj-attr.property-value-character.
-           display login with frame {&frame-name} .
-        END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_proxyPswd} THEN DO:
-           password = temp-thbj-attr.property-value-character.
-           display password with frame {&frame-name} .
-        END.
         IF temp-thbj-attr.prop-code = {&attr-gisMT_maxTime} THEN DO:
            maxTime = temp-thbj-attr.property-value-integer.
            display maxTime with frame {&frame-name} .
         END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_regKey} THEN DO:
-           registrationKey = temp-thbj-attr.property-value-character.
-           display registrationKey with frame {&frame-name} .
-        END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_timeFalStart} THEN DO:
+        else IF temp-thbj-attr.prop-code = {&attr-gisMT_timeFalStart} THEN DO:
            timeFalStart = temp-thbj-attr.property-value-integer.
            display timeFalStart with frame {&frame-name} .
         END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_waitTime} THEN DO:
-           waitTime = temp-thbj-attr.property-value-decimal.
-           display waitTime with frame {&frame-name} .
-        END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_crashSituat} THEN DO:
+        else IF temp-thbj-attr.prop-code = {&attr-gisMT_crashSituat} THEN DO:
            crashSituat = temp-thbj-attr.property-value-logical.
            display crashSituat with frame {&frame-name} .
         END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_banDate} THEN DO:
+        else IF temp-thbj-attr.prop-code = {&attr-gisMT_banDate} THEN DO:
            banDate = temp-thbj-attr.property-value-integer.
            display banDate with frame {&frame-name} .
         END. 
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnTurnOn} THEN DO:
-           cdnTurnOn = temp-thbj-attr.property-value-logical.
-           display cdnTurnOn with frame {&frame-name} .
-        END.    
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnAdress} THEN DO:
-           cdnAdress = temp-thbj-attr.property-value-character.
-           display cdnAdress with frame {&frame-name} .
-        END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnRepeat} THEN DO:
+        else IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnRepeat} THEN DO:
            cdnRepeat = temp-thbj-attr.property-value-logical.
            display cdnRepeat with frame {&frame-name} .
         END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnChange} THEN DO:
+        else IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnChange} THEN DO:
            cdnChange = temp-thbj-attr.property-value-logical.
            display cdnChange with frame {&frame-name} .
         END. 
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnTimeUpdate} THEN DO:
+        else IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnTimeUpdate} THEN DO:
            cdnTimeUpdate = temp-thbj-attr.property-value-integer.
            display cdnTimeUpdate with frame {&frame-name} .
         END.
-        IF temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} THEN DO:
+        else IF temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} THEN DO:
            UpdateRequest = temp-thbj-attr.property-value-logical.
            display UpdateRequest with frame {&frame-name} .
         END.
-    end.    
-    IF temp-thbj-attr.prop-code = {&attr-gisMT_OflineAdress} THEN DO:
+    end.
+    IF temp-thbj-attr.prop-code = {&attr-gisMT_adressPort} THEN DO:
+        adressPort = temp-thbj-attr.property-value-character.
+        display adressPort with frame {&frame-name} .
+     END.
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_dopParam} THEN DO:
+        dopParam = temp-thbj-attr.property-value-character.
+        display dopParam with frame {&frame-name} .
+     END.
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_gisAdress} THEN DO:
+        gisAdress = temp-thbj-attr.property-value-character.
+        display gisAdress with frame {&frame-name} .
+     END.
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_proxyLogin} THEN DO:
+        login = temp-thbj-attr.property-value-character.
+        display login with frame {&frame-name} .
+     END.
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_proxyPswd} THEN DO:
+        password = temp-thbj-attr.property-value-character.
+        display password with frame {&frame-name} .
+     END.
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_regKey} THEN DO:
+        registrationKey = temp-thbj-attr.property-value-character.
+        display registrationKey with frame {&frame-name} .
+     END.
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_waitTime} THEN DO:
+        waitTime = temp-thbj-attr.property-value-decimal.
+        display waitTime with frame {&frame-name} .
+     END.
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnTurnOn} THEN DO:
+        cdnTurnOn = temp-thbj-attr.property-value-logical.
+        display cdnTurnOn with frame {&frame-name} .
+     END.    
+     else IF temp-thbj-attr.prop-code = {&attr-gisMT_cdnAdress} THEN DO:
+        cdnAdress = temp-thbj-attr.property-value-character.
+        display cdnAdress with frame {&frame-name} .
+     END.
+    else IF temp-thbj-attr.prop-code = {&attr-gisMT_OflineAdress} THEN DO:
        OflineAdress = temp-thbj-attr.property-value-character.
        display OflineAdress with frame {&frame-name} .
     END.
@@ -578,17 +570,15 @@ FOR EACH temp-thbj-attr
     then      
        delete temp-thbj-attr.
 END.
-   if p-obj-type ne {&db}
-   then do:
-       if cdnTurnOn then do:
-           disable gisAdress with frame {&frame-name} .
-           enable cdnAdress with frame {&frame-name} .
-       end.    
-       else do:
-           enable gisAdress with frame {&frame-name} .
-           disable cdnAdress with frame {&frame-name} .
-       end.    
-    end.
+   if cdnTurnOn then do:
+      disable gisAdress with frame {&frame-name} .
+      enable cdnAdress with frame {&frame-name} .
+   end.    
+   else do:
+      enable gisAdress with frame {&frame-name} .
+      disable cdnAdress with frame {&frame-name} .
+   end.    
+    
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -652,67 +642,103 @@ ASSIGN FRAME {&FRAME-NAME}
     OflineLogin
     OflinePswd 
     .
-    if p-obj-type ne {&db}
-    then do:
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_adressPort} .
-        temp-thbj-attr.property-value-character = adressPort.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_adressPort} no-error.
+    if available temp-thbj-attr
+    then
+      temp-thbj-attr.property-value-character = adressPort.
     
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_dopParam} .
-        temp-thbj-attr.property-value-character = dopParam.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_dopParam} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = dopParam.
         
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_gisAdress} .
-        temp-thbj-attr.property-value-character = gisAdress.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_gisAdress} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = gisAdress.
         
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_proxyLogin} .
-        temp-thbj-attr.property-value-character = login.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_proxyLogin} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = login.
     
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_proxyPswd} .
-        temp-thbj-attr.property-value-character = password.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_proxyPswd} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = password.
         
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_maxTime} .
-        temp-thbj-attr.property-value-integer = maxTime.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_maxTime} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-integer = maxTime.
     
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_regKey} .
-        temp-thbj-attr.property-value-character = registrationKey.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_regKey} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = registrationKey.
     
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_timeFalStart} .
-        temp-thbj-attr.property-value-integer = timeFalStart.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_timeFalStart} no-error.
+    if available temp-thbj-attr
+    then
+      temp-thbj-attr.property-value-integer = timeFalStart.
         
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_waitTime} .
-        temp-thbj-attr.property-value-decimal = waitTime.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_waitTime} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-decimal = waitTime.
         
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_crashSituat} .
-        temp-thbj-attr.property-value-logical = crashSituat.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_crashSituat} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-logical = crashSituat.
     
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_banDate} .
-        temp-thbj-attr.property-value-integer = banDate.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_banDate} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-integer = banDate.
         
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnTurnOn} .
-        temp-thbj-attr.property-value-logical = cdnTurnOn.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnTurnOn} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-logical = cdnTurnOn.
                
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnAdress} .
-        temp-thbj-attr.property-value-character = cdnAdress.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnAdress} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = cdnAdress.
            
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnRepeat} .
-        temp-thbj-attr.property-value-logical = cdnRepeat.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnRepeat} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-logical = cdnRepeat.
            
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnChange} .
-        temp-thbj-attr.property-value-logical = cdnChange.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnChange} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-logical = cdnChange.
             
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnTimeUpdate} .
-        temp-thbj-attr.property-value-integer = cdnTimeUpdate.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_cdnTimeUpdate} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-integer = cdnTimeUpdate.
         
-        find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} .
-        temp-thbj-attr.property-value-logical = UpdateRequest.    
-    end.  
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflineAdress} .
-    temp-thbj-attr.property-value-character = OflineAdress.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_UpdateRequest} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-logical = UpdateRequest.    
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflineAdress} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = OflineAdress.
     
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflineLogin} .
-    temp-thbj-attr.property-value-character = OflineLogin.
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflineLogin} no-error.
+    if available temp-thbj-attr
+    then
+       temp-thbj-attr.property-value-character = OflineLogin.
     
-    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} .
-    if OflinePswd eq "" or (replace(OflinePswd,"*","") ne "" and OflinePswd ne ?)
+    find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} no-error.
+    if available temp-thbj-attr 
+       and (OflinePswd eq "" or (replace(OflinePswd,"*","") ne "" and OflinePswd ne ?))
     then
        temp-thbj-attr.property-value-character = OflinePswd.
     
