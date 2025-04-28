@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision$
@@ -26,7 +25,7 @@ Creation date: 10/08/06
 using Ibs.Th.Rul.Dis-card_.
 using Ibs.Th.Rul.Dis-card-sale_obj.
 using Ibs.Th.Rul.Route-data_.
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

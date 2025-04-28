@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 $Revision:$
 $Author:$

@@ -1,4 +1,4 @@
-block-level on error undo, throw.
+
 
 /*------------------------------------------------------------------------
     File        : 000002116.p
@@ -28,7 +28,7 @@ using ibs.th.bge.1crn.subjects.trn-gd-doc from propath.
 using ibs.th.bge.1crn.subjects.inv-gd-doc from propath.
 using ibs.th.bge.1crn.subjects.iexpsubject from propath.
 using ibs.th.bge.1crn.subjects.peres-gd-doc from propath.
-
+block-level on error undo, throw.
 /*---------------------------&end-using-class&---------------------------------*/
 
 

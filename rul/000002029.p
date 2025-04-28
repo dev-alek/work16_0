@@ -1,4 +1,4 @@
-block-level on error undo, throw.
+
 /*
 
 $Revision$
@@ -30,6 +30,7 @@ Creation date: 05/26/08
 
 /*---------------------------&start-using-class&-------------------------------*/
 using Ibs.Th.Rul.Route-data_.
+block-level on error undo, throw.
 
 
 /*---------------------------&end-using-class&---------------------------------*/

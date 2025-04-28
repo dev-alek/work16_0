@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision$
@@ -54,7 +53,7 @@ using Ibs.Th.Rul.Dis-card_.
 using Ibs.Th.Rul.Dis-tot_.
 using Ibs.Th.Rul.Dis-tot_host.
 using Ibs.Th.Rul.Gds-dtl_obj.
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

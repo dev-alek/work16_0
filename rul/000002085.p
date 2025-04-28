@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision$
@@ -56,7 +55,7 @@ using Ibs.Th.Rul.Dis-tot_host.
 using Ibs.Th.Rul.Discount_host.
 using Ibs.Th.Rul.Dis-tot_obj.
 using Ibs.Th.Rul.Discount_obj.
-
+block-level on error undo, throw.
 
 
 /*---------------------------&end-using-class&---------------------------------*/

@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision: e470dcf1e011, 295, rls $
@@ -17,7 +16,7 @@ Creation date: 03/03/06
 Дата создания: 08/20/01
 */
 using Ibs.Th.Rul.Route-data_.
-
+block-level on error undo, throw.
 define input parameter parParentProc        as widget-handle no-undo.
 define input parameter t-action             as character no-undo .
 define input parameter p-deliv-type-code    as integer   no-undo .

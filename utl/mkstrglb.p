@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision: 6cc672b19ae2, 2597, rls $

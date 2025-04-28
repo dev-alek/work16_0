@@ -1,4 +1,4 @@
-block-level on error undo, throw.
+
 /*
 
 $Revision$
@@ -17,7 +17,7 @@ Creation date: 01/29/09
 */
 
 using Ibs.Th.Rul.Route-data_.
-
+block-level on error undo, throw.
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle as handle no-undo .
 define input parameter p-log-handle  as handle no-undo .

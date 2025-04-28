@@ -1,5 +1,3 @@
-block-level on error undo, throw.
-
 /*------------------------------------------------------------------------
     File        : exp-clients_kontur.p
     Purpose     : 
@@ -14,7 +12,7 @@ block-level on error undo, throw.
   ----------------------------------------------------------------------*/
   
 using Ibs.Th.Rul.Route-data_.
- 
+block-level on error undo, throw. 
   
 define variable vss-revision    as character no-undo init "$Revision: e470dcf1e011, 295, rls $":U .
 define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .

@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision$
@@ -24,7 +23,7 @@ Creation date: 04/24/09
 
 /*---------------------------&start-using-class&-------------------------------*/
 
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

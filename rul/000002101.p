@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*------------------------------------------------------------------------
     File        : 000002101.p
     Purpose     : Ёкспорт продажи
@@ -22,6 +21,7 @@ block-level on error undo, throw.
 using Ibs.Th.Rul.Route-data_.
 using ibs.th.bge.1crn.export.expsubject from propath.
 using ibs.th.bge.1crn.subjects.check from propath.
+block-level on error undo, throw.
 /*---------------------------&end-using-class&---------------------------------*/
 
 define input parameter parparentproc as widget-handle no-undo .

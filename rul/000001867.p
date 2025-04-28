@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision$
@@ -54,7 +53,7 @@ using Ibs.Th.Rul.Dis-card_.
 using Ibs.Th.Rul.Dis-chk-doc_obj.
 using Ibs.Th.Rul.Dis-card-sale_obj.
 using Ibs.Th.Rul.Route-data_.
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

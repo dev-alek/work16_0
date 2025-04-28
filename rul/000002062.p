@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision: 5ee64da48eb6, 3419, rls $
@@ -26,7 +25,7 @@ Creation date: 07/05/11
 
 
 /*---------------------------&start-using-class&-------------------------------*/
-
+block-level on error undo, throw.
 
 /*---------------------------&end-using-class&---------------------------------*/
 

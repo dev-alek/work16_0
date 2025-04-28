@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision$
@@ -19,7 +18,7 @@ $Archive$
 
 /*---------------------------&start-using-class&-------------------------------*/
 using Ibs.Th.Rul.Route-data_.
-
+block-level on error undo, throw.
 /*---------------------------&end-using-class&---------------------------------*/
 
 

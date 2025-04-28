@@ -1,5 +1,3 @@
-block-level on error undo, throw.
-
 /*------------------------------------------------------------------------
     File        : 000002116.p
     Purpose     : 
@@ -23,7 +21,7 @@ block-level on error undo, throw.
 
 /*---------------------------&start-using-class&-------------------------------*/
 using Ibs.Th.Rul.Route-data_.
-
+block-level on error undo, throw.
 /*---------------------------&end-using-class&---------------------------------*/
 
 
