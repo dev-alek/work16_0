@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b896e8303830, 47, rls $
+$Author: ASMorozov $
+$Date: Mon Jun 09 14:49:49 2014 +0400 $
+$Workfile: pr-stat.p $
+$Archive: str/pr-stat.p $
 
 Перевод статусов переоценки по графу
 
@@ -43,11 +44,11 @@ define variable v-name-tax as character no-undo .
 define buffer other_price-list for ub.price-list.
 define variable p-new-status_ like ub.price-doc.status_ no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b896e8303830, 47, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jun 09 14:49:49 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pr-stat.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/pr-stat.p $":U .
 define variable vss-description as character no-undo init "Перевод статусов переоценки по графу".
 define variable tt-price-sale as decimal no-undo.
 define variable v-text-mess as character no-undo .

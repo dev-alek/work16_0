@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 79a9852ece24, 1698, rls $
+$Author: druban $
+$Date: Tue Dec 11 11:54:14 2018 +0300 $
+$Workfile: usersel2.p $
+$Archive: str/usersel2.p $
 
 Диалог выбора пользователя
 
@@ -50,11 +51,11 @@ define output parameter p-new-parent-user-id    as character        no-undo.
 define output parameter p-accepted              as logical          no-undo.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 79a9852ece24, 1698, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 11 11:54:14 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: usersel2.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/usersel2.p $":U .
 define variable vss-description as character no-undo init "Диалог выбора пользователя".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c017d5c290b6, 968, rls $
+$Author: SSlivenko $
+$Date: Tue Apr 18 18:36:56 2017 +0300 $
+$Workfile: sjbysale.p $
+$Archive: str/sjbysale.p $
 
 Печать одной продажи
 
@@ -21,11 +22,11 @@ define input parameter ptwounit as logical no-undo .
 define input parameter cas-shft as logical no-undo .
 define output parameter p-frame-width as integer no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c017d5c290b6, 968, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Apr 18 18:36:56 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sjbysale.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/sjbysale.p $":U .
 define variable vss-description as character no-undo init "Печать одной продажи".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

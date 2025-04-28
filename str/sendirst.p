@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: sendirst.p $
+$Archive: str/sendirst.p $
 
 Подготовка остатков по основному БК
 
@@ -20,11 +21,11 @@ Creation date: 03/24/06
 define input  parameter p-parameter   as character no-undo .
 define output parameter table for cash-gds .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sendirst.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/sendirst.p $":U .
 define variable vss-description as character no-undo init "Подготовка остатков по основному БК":U.
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

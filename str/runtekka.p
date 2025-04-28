@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: runtekka.p $
+$Archive: str/runtekka.p $
 
 Запуск дополнительной сессии для коммуникации с кассой МАРИЯ
 
@@ -28,11 +29,11 @@ define input parameter p-dir-path   as character no-undo .
 /*директория работы с Addin.exe*/
 define input parameter p-is-script as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: 2014/01/27 14:27:46 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: runtekka.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/runtekka.p $":U .
 define variable vss-description as character no-undo init "Запуск дополнительной сессии для коммуникации с кассой МАРИЯ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

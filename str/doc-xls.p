@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: doc-xls.p $
+$Archive: str/doc-xls.p $
 
 экспорт списка документов в формате EXCEL
 
@@ -20,11 +21,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-curr-obj-type like ub.clients.obj-type no-undo .
 define input parameter p-curr-obj-code like ub.clients.obj-code no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: doc-xls.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/doc-xls.p $":U .
 define variable vss-description as character no-undo initial "Экспорт списка товаров в формате EXCEL":U .
 
 { cmp/vssrevis.i }

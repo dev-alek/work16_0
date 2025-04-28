@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1df93d09bce7, 3420, rls $
+$Author: ARostovtsev $
+$Date: 2023/10/16 15:13:31 $
+$Workfile: deskshft.p $
+$Archive: str/deskshft.p $
 
 Проверка корректности закрытия смены на объекте с точки зрения кассы и продаж
 
@@ -26,11 +27,11 @@ DEFINE INPUT PARAMETER p-shift-num like shift-obj.shift-num no-undo.
 define input parameter p-shift-name like shift-obj.shift-name no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 1df93d09bce7, 3420, rls $":u .
+define variable vss-author      as character no-undo init "$Author: ARostovtsev $":u .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:31 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: deskshft.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/deskshft.p $":u .
 define variable vss-description as character no-undo init "Проверка корректности закрытия смены на объекте с точки зрения кассы и продаж" .
 { cmp/vssrevis.i }
 

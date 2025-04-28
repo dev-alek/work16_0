@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: gen-scf.p $
+$Archive: str/gen-scf.p $
 
 Генерация счета-фактуры
 
@@ -20,11 +21,11 @@ define input  parameter p-ri   as recid     no-undo .
 define input  parameter p-type as character no-undo .  /* trn-doc fin-ob fin-doc add-doc */
 define output parameter p-list as character no-undo .  /* что сгенерили */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: gen-scf.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/gen-scf.p $":U .
 define variable vss-description as character no-undo initial "Генерация счета-фактуры":U .
 
 { cmp/vssrevis.i }

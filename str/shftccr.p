@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 82660c506036, 2990, rls $
+$Author: DRuban $
+$Date: Ср апр 06 16:23:43 2022 +0300 $
+$Workfile: shftccr.p $
+$Archive: str/shftccr.p $
 
 Создание открытия кассовой смены
 
@@ -29,11 +30,11 @@ DEFINE INPUT PARAMETER v-z-num      like ub.shift-cash.z-num no-undo.
 DEFINE INPUT PARAMETER act-mess     as character no-undo.
 DEFINE OUTPUT PARAMETER v-recid     as recid no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 82660c506036, 2990, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:43 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: shftccr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/shftccr.p $":U .
 define variable vss-description as character no-undo init "Создание записи кассовой смены".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

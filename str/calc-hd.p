@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: calc-hd.p $
+$Archive: str/calc-hd.p $
 
 Пересчет шапки документа в учетных ценах, расчет величины автоматической переоценки
 
@@ -19,11 +20,11 @@ create: Суслов Алексей Юрьевич
 
 define input parameter v-doc-code like ub.trn-doc.doc-code no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: calc-hd.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/calc-hd.p $":U .
 define variable vss-description as character no-undo initial "Пересчет шапки документа в учетных ценах, расчет величины автоматической переоценки":U .
 
 { cmp/vssrevis.i "substitute('&1':U,v-doc-code)" }

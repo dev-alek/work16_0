@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: sgdsavrg.p $
+$Archive: str/sgdsavrg.p $
 
 Процедура определения средней учетной цены товара по различным схемам для группы объектов
 
@@ -31,11 +32,11 @@ define output parameter p-tax-road-rubl like ub.gds-obj.avrg-rubl no-undo .
 
 
 
-def var vss-revision    as character no-undo init "$Revision$":U .
-def var vss-author      as character no-undo init "$Author$":U .
-def var vss-date        as character no-undo init "$Date$":U .
-def var vss-workfile    as character no-undo init "$Workfile$":U .
-def var vss-archive     as character no-undo init "$Archive$":U .
+def var vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+def var vss-author      as character no-undo init "$Author: expertek $":U .
+def var vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+def var vss-workfile    as character no-undo init "$Workfile: sgdsavrg.p $":U .
+def var vss-archive     as character no-undo init "$Archive: str/sgdsavrg.p $":U .
 def var vss-description as character no-undo init "Процедура определения средней учетной цены товара по различным схемам".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

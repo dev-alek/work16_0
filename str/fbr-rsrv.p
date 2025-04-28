@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d33fe82486ed, 142, rls $
+$Author: ASMorozov $
+$Date: Mon Feb 16 20:48:29 2015 +0400 $
+$Workfile: fbr-rsrv.p $
+$Archive: str/fbr-rsrv.p $
 
 Расчет учетных цен и резервирование (дорезервирование) по всему документу производства
 
@@ -34,11 +35,11 @@ define input parameter p-have-store     as logical          no-undo.
 define input parameter p-kitchen-rest   as logical          no-undo.
 define output parameter p-reserved      as logical          no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d33fe82486ed, 142, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Feb 16 20:48:29 2015 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: fbr-rsrv.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/fbr-rsrv.p $":U .
 define variable vss-description as character no-undo init "Расчет учетных цен и резервирование (дорезервирование) по всему документу производства".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: pr-totp.p $
+$Archive: str/pr-totp.p $
 
 Расчет сумм по документу переоценки
 
@@ -18,11 +19,11 @@ Creation date: 03/20/06
 
 define input parameter d-num like ub.price-doc.doc-num.  /* номер обрабатываемой переоценки */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pr-totp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/pr-totp.p $":U .
 define variable vss-description as character no-undo init "Расчет сумм по документу переоценки".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

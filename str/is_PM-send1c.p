@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : is_PM-send1c.p
@@ -24,11 +25,11 @@ define input parameter p-parent-handle as handle no-undo .
 define input parameter p-log-handle  as handle no-undo .
 define input parameter p-data as memptr no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: fc55a7295616, 2779, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Чт апр 08 19:52:17 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: is_PM-send1c.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/is_PM-send1c.p $":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с кодексом 18, набор 2".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

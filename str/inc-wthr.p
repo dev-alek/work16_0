@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9263cff4388a, 1753, rls $
+$Author: SMMolotkov $
+$Date: Thu Feb 07 16:50:10 2019 +0300 $
+$Workfile: inc-wthr.p $
+$Archive: str/inc-wthr.p $
 
 Процедура автоматического формирования документов по чекам МЦ
 
@@ -21,11 +22,11 @@ define input parameter p-parent-handle  as widget-handle no-undo .
 define input parameter p-log-handle     as handle no-undo .
 define input parameter p-parameter      as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 9263cff4388a, 1753, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Feb 07 16:50:10 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: inc-wthr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/inc-wthr.p $":U .
 define variable vss-description as character no-undo init "Процедура автоматического формирования документов по чекам МЦ".
 { cmp/vssrevis.i }
 

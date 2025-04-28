@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 770d6d87d9f3, 729, rls $
+$Author: ASMorozov $
+$Date: Tue Jul 26 10:34:43 2016 +0300 $
+$Workfile: vtrecalc.p $
+$Archive: str/vtrecalc.p $
 
 Пересчет последующих инвентаризаций
 
@@ -19,11 +20,11 @@ Creation date: 11/03/06
 define input  parameter parparentproc as handle no-undo .
 define input  parameter par-recid as recid no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 770d6d87d9f3, 729, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Jul 26 10:34:43 2016 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: vtrecalc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/vtrecalc.p $":U .
 define variable vss-description as character no-undo init "Пересчет последующих инвентаризаций".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

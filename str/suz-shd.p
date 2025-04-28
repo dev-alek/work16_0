@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 190dc748139a, 1744, rls $
+$Author: SSlivenko $
+$Date: Mon Jan 14 12:46:21 2019 +0300 $
+$Workfile: suz-shd.p $
+$Archive: str/suz-shd.p $
 
 ְגעמ׀אסקוע מעקועמג
 
@@ -21,11 +22,11 @@ define input  parameter p-task-type  as character no-undo .
 define input  parameter p-task-num   as integer   no-undo .
 define input  parameter p-db-num     as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 190dc748139a, 1744, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 14 12:46:21 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: suz-shd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/suz-shd.p $":U .
 define variable vss-description as character no-undo init "ְגעמ׀אסקוע מעקועמג )".
 { cmp/vssrevis.i 'substitute("&1|&2",p-db-num,p-task-type)'}
 { cmp/str-glbl.i }

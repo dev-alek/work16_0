@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9263cff4388a, 1753, rls $
+$Author: SMMolotkov $
+$Date: Thu Feb 07 16:50:10 2019 +0300 $
+$Workfile: clil-prn.p $
+$Archive: str/clil-prn.p $
 
 Экспорт списка клиентов в формате EXCEL
 
@@ -24,11 +25,11 @@ DEFINE INPUT PARAMETER pReportOption as character no-undo.
 */
 define output parameter p-frame-width as integer no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 9263cff4388a, 1753, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Feb 07 16:50:10 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: clil-prn.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/clil-prn.p $":U .
 define variable vss-description as character no-undo init "Экспорт списка клиентов в формате EXCEL".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9a33157616be, 3491, rls $
+$Author: VSpiridonov $
+$Date: 2023/10/16 15:13:36 $
+$Workfile: usracc01.p $
+$Archive: str/usracc01.p $
 
 Создание или редактирование записи user-acccount
 
@@ -47,11 +48,11 @@ define input parameter p-psn-code               as integer          no-undo.
 define input parameter i-superadm               as logical          no-undo.
 define output parameter p-user-id-out           as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 9a33157616be, 3491, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:36 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: usracc01.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/usracc01.p $":U .
 define variable vss-description as character no-undo init "Создание или редактирование записи user-acccount".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

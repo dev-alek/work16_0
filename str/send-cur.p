@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 68fba9de0545, 1255, rls $
+$Author: SSlivenko $
+$Date: Mon Mar 19 12:52:28 2018 +0300 $
+$Workfile: send-cur.p $
+$Archive: str/send-cur.p $
 
 отсылки курсов на кассы
 
@@ -27,11 +28,11 @@ define input parameter p-obj-code like ub.clients.obj-code no-undo .
 define input parameter p-action as character no-undo .
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character   no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 68fba9de0545, 1255, rls $":u .
+define variable vss-author      as character   no-undo init "$Author: SSlivenko $":u .
+define variable vss-date        as character no-undo init "$Date: Mon Mar 19 12:52:28 2018 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: send-cur.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/send-cur.p $":u .
 define variable vss-description as character no-undo init "отсылки курсов на кассы" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 2facc70d13d4, 1596, rls $
+$Author: SPalagin $
+$Date: Tue Nov 06 04:41:37 2018 +0300 $
+$Workfile: usrlgd.p $
+$Archive: str/usrlgd.p $
 
 Вызов истории по документу из истории пользовател
 
@@ -22,11 +23,11 @@ define input parameter parparentproc    as handle           no-undo.
 define input parameter p-table-name     as character        no-undo.
 define input parameter p-unique-key-rec as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 2facc70d13d4, 1596, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SPalagin $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Nov 06 04:41:37 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: usrlgd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/usrlgd.p $":U .
 define variable vss-description as character no-undo init "Вызов истории по документу из истории пользователя".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

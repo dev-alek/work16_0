@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e5fbdeab5909, 1547, rls $
+$Author: ASMorozov $
+$Date: Tue Oct 09 19:01:47 2018 +0300 $
+$Workfile: scantsd.p $
+$Archive: str/scantsd.p $
 
 Единая процедура работы с мобильным сканером
 
@@ -30,11 +31,11 @@ define input  parameter p-doc-rec as recid no-undo .
 define input  parameter p-name-file as character no-undo .
 define input  parameter p-action    as character no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: e5fbdeab5909, 1547, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo initial "$Date: Tue Oct 09 19:01:47 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: scantsd.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/scantsd.p $":U .
 define variable vss-description as character no-undo initial "Единая процедура работы с мобильным сканером":U .
 
 define variable parParentProc  as widget-handle no-undo .

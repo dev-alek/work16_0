@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: 2014/01/27 14:27:46 $
+$Workfile: cor-line.p $
+$Archive: str/cor-line.p $
 
 Редактирование линии внешней приходной накладной
 
@@ -24,11 +25,11 @@ define input-output parameter par-rec-doc-line as recid  no-undo.
 
 { str/cor-line.i "param" }
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: 2014/01/27 14:27:46 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: cor-line.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/cor-line.p $":U .
 define variable vss-description as character no-undo initial "Редактирование линии внешней приходной накладной":U .
 
 { cmp/vssrevis.i "substitute('&1|&2|&3':u,substitute('&1|&2|&3|&4|&5|&6':u,parprod-type,parprod-code,parartic,parcli-qnty,parcli-base-rate,parfact-qnty,pardoc-qnty),substitute('&1|&2|&3|&4|&5|&6':u,parunit-cli,parvat-pc,parslt-pc,parprice-cli,parprice-base,parprice-rubl,parnum-place),substitute('&1|&2|&3|&4|&5|&6|&7':u,parwt-brutto,parroad-tax,parexcise,pardoc-density,parfact-density,partemperature,parcontract-code,parcst-code,parlast-date))" }

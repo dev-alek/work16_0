@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 174449d8c587, 3618, rls $
+$Author: ARostovtsev $
+$Date: 2023/12/28 12:56:37 $
+$Workfile: lib-farh.p $
+$Archive: str/lib-farh.p $
 
 Библиотека для работы с финансовыми архивами по финдокументам
 
@@ -20,11 +21,11 @@ Creation date: 03/24/06
 В случае расходного кассового ордера расход со счета cor-acc1, приход на cor-acc.
 
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 174449d8c587, 3618, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ARostovtsev $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/12/28 12:56:37 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: lib-farh.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/lib-farh.p $":U .
 define variable vss-description as character no-undo init "Библиотека для работы с финансовыми архивами".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

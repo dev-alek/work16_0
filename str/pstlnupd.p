@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 66c80260f80d, 2644, rls $
+$Author: SSlivenko $
+$Date: 2020/10/23 18:03:38 $
+$Workfile: pstlnupd.p $
+$Archive: str/pstlnupd.p $
 
 Редактирование связки пересортицы
 
@@ -17,11 +18,11 @@ Creation date: 09/12/07
 Дата создания: 05/18/06
 
 */
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 66c80260f80d, 2644, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo initial "$Date: 2020/10/23 18:03:38 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: pstlnupd.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/pstlnupd.p $":U .
 define variable vss-description as character no-undo initial "Добавление связки пересортицы":U .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

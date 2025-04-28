@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 18022dc3b171, 1949, rls $
+$Author: SSlivenko $
+$Date: Fri Jul 26 11:38:58 2019 +0300 $
+$Workfile: del-sale.p $
+$Archive: str/del-sale.p $
 
 Безусловное/условное удаление незакрытой продажи
 
@@ -29,11 +30,11 @@ DEFINE variable forced as logical NO-UNDO.
 /*force = yes безусловное удаление - с принудительным снятием резервов*/
 define variable p-inkas-code like ub.inkas.inkas-code no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 18022dc3b171, 1949, rls $":u .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":u .
+define variable vss-date        as character no-undo init "$Date: Fri Jul 26 11:38:58 2019 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: del-sale.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/del-sale.p $":u .
 define variable vss-description as character no-undo init "Безусловное/условное удаление незакрытой продажи" .
 { cmp/vssrevis.i }
 

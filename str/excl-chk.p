@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 18022dc3b171, 1949, rls $
+$Author: SSlivenko $
+$Date: Fri Jul 26 11:38:58 2019 +0300 $
+$Workfile: excl-chk.p $
+$Archive: str/excl-chk.p $
 
 Исключение чека из незакрытой продажи
 
@@ -18,11 +19,11 @@ Creation date: 10/02/05
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-curr-r-b as character no-undo .
 define parameter buffer X_chk-doc for ub.chk-doc.
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 18022dc3b171, 1949, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jul 26 11:38:58 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: excl-chk.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/excl-chk.p $":U .
 define variable vss-description as character no-undo init "Исключение чека из незакрытой продажи".
 { cmp/vssrevis.i }
 

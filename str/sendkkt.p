@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3e87f6d879b9, 3293, rls $
+$Author: VSpiridonov $
+$Date: 2023/03/29 08:48:06 $
+$Workfile: sendkkt.p $
+$Archive: str/sendkkt.p $
 
 Отсылка схемы интеграции ККТ
 
@@ -25,11 +26,11 @@ define input parameter p-log-handle  as handle no-undo .
 define input parameter p-parameter   as character no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 3e87f6d879b9, 3293, rls $":U .
+define variable vss-author      as character no-undo init "$Author: VSpiridonov $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/03/29 08:48:06 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sendkkt.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/sendkkt.p $":U .
 define variable vss-description as character no-undo init "Отсылка схемы интеграции ККТ".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

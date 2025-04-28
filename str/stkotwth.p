@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 24d6fc541c24, 417, rls $
+$Author: PGridchina $
+$Date: Mon Jan 18 18:07:08 2016 +0400 $
+$Workfile: stkotwth.p $
+$Archive: str/stkotwth.p $
 
 Процедура заполнения остатков и оборотов по документу материальных ценностей
 
@@ -22,11 +23,11 @@ define input parameter parrecalc-doc  as logical no-undo. /*Будем перерассчитыва
 define input parameter p-wth-doc-close as logical   no-undo .
 define input parameter p-wth-code like ub.wealth.wth-code   no-undo .  /*Используется только для пересчете линий при закрытии задним числом*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 24d6fc541c24, 417, rls $":U .
+define variable vss-author      as character no-undo init "$Author: PGridchina $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 18 18:07:08 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: stkotwth.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/stkotwth.p $":U .
 define variable vss-description as character no-undo init "Триггер на запись документа".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

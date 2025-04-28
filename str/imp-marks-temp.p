@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: ac3ee8e28890, 1428, test $
+$Author: ASMorozov $
+$Date: Fri Jun 29 18:00:05 2018 +0300 $
+$Workfile: imp-marks-temp.p $
+$Archive: str/imp-marks-temp.p $
 
 Импорт акцизных марок из файла во временную таблицу.
 
@@ -24,11 +25,11 @@ define output parameter table for tt-marks .
 define output parameter table for tt-alc-qnty .
 define input parameter pardoc-code      like ub.trn-doc.doc-code  no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: ac3ee8e28890, 1428, test $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jun 29 18:00:05 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-marks-temp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/imp-marks-temp.p $":U .
 define variable vss-description as character no-undo init "Импорт акцизных марок из файла во временную таблицу.".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

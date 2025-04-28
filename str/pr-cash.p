@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: pr-cash.p $
+$Archive: str/pr-cash.p $
 
 Проверки и взаимодействие с кассой при закрытии переоценки
 
@@ -21,11 +22,11 @@ define input parameter p-doc-num               like ub.price-doc.doc-num no-undo
 define input parameter p-obj-type              like ub.price-doc.obj-type no-undo .
 define input parameter p-obj-code              like ub.price-doc.obj-code no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pr-cash.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/pr-cash.p $":U .
 define variable vss-description as character no-undo init "Проверки и взаимодействие с кассой при закрытии переоценки".
 { cmp/vssrevis.i "substitute('&1|&2',p-new-price-doc-status_,p-doc-num)"}
 { cmp/trg-def.i }

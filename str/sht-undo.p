@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f9f9d1396dd0, 1038, rls $
+$Author: SSlivenko $
+$Date: Fri Oct 06 18:30:18 2017 +0300 $
+$Workfile: sht-undo.p $
+$Archive: str/sht-undo.p $
 
 Процедура отмены смены.
 
@@ -22,11 +23,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-curr-obj-type like ub.clients.obj-type no-undo .
 define input parameter p-curr-obj-code like ub.clients.obj-code no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f9f9d1396dd0, 1038, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Oct 06 18:30:18 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sht-undo.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/sht-undo.p $":U .
 define variable vss-description as character no-undo init "Отмена смены".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

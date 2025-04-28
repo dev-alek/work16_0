@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 315b966a6a9b, 3487, rls $
+$Author: BelovaMM $
+$Date: 2023/10/16 15:13:36 $
+$Workfile: cresalad.p $
+$Archive: str/cresalad.p $
 
 Генерация дополнительных (помимо простого расхода и возврата) документов, привязанных к продаже
 
@@ -34,11 +35,11 @@ define input parameter p-cli-code as integer no-undo .
 define output parameter p-doc-code like ub.trn-doc.doc-code no-undo .
 /*номер сгенеренного документа*/
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 315b966a6a9b, 3487, rls $":U .
+define variable vss-author      as character no-undo init "$Author: BelovaMM $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:36 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cresalad.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/cresalad.p $":U .
 define variable vss-description as character no-undo init "Генерация дополнительных (помимо простого расхода и возврата) документов, привязанных к продаже".
 { cmp/vssrevis.i }
 { cmp/trg-def.i } /*МОЖЕТ ВЫЗЫВАТЬСЯ АВТОМАТОМ ПО РАСПИСАНИЮ!!*/

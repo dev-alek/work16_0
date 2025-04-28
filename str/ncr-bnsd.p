@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ncr-bnsd.p $
+$Archive: str/ncr-bnsd.p $
 
 Удаление бонусов 91 с кассы NCR по одному баркоду
 Вызывается в триггере на удаление записи dis-gds-rule-attr
@@ -25,11 +26,11 @@ def input param p-attr-code  as char no-undo.   dis-gds-rule-attr
 def input param p-attr-value as char no-undo.   dis-gds-rule-attr
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ncr-bnsd.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/ncr-bnsd.p $":U .
 define variable vss-description as character no-undo init "Удаление бонусов 91 с кассы NCR".
 
 { cmp/vssrevis.i }

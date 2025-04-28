@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 7045fcb5a0f6, 1396, rls $
+$Author: ASMorozov $
+$Date: Thu Jun 28 15:24:33 2018 +0300 $
+$Workfile: qr2uuid.p $
+$Archive: str/qr2uuid.p $
 
 Процедура определения UUID ВСД из QR-кода, напечатанного на ВСД
 
@@ -20,11 +21,11 @@ http://mercury.vetrf.ru/pub/operatorui?_language=ru&_action=showVetDocumentFormB
 define input  parameter p-url      as character no-undo .
 define output parameter p-chr-uuid as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 7045fcb5a0f6, 1396, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Jun 28 15:24:33 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: qr2uuid.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/qr2uuid.p $":U .
 define variable vss-description as character no-undo init "Процедура определения UUID ВСД из QR-кода, напечатанного на ВСД".
 { cmp/vssrevis.i }
 

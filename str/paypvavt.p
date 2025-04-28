@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: paypvavt.p $
+$Archive: str/paypvavt.p $
 
 Автомат. оплата фин. обязательств
 
@@ -20,11 +21,11 @@ Creation date: 03/23/06
 /*  define input  parameter parParentProc  AS WIDGET-HANDLE NO-UNDO.*/
 define input  parameter p-host-code    as integer   no-undo . /* надо передавать фирму */
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":u .
+define variable vss-author      as character no-undo init "$Author: expertek $":u .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: paypvavt.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/paypvavt.p $":u .
 define variable vss-description as character no-undo init "Автомат. оплата фин. обязательств" .
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

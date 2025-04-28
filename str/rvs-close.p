@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: abddb85eb294, 1634, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Nov 19 15:15:34 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: rvs-close.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/rvs-close.p $":U .
 define variable vss-description as character no-undo initial "Список документов сверки":U .
 { cmp/vssrevis.i }
 define input  parameter mutil    as class ibs.th.utl.method-for-draw-utility no-undo.

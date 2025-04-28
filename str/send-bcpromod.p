@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: db18bf2a7a81, 3297, rls $
+$Author: EShklyar $
+$Date: 2023/03/29 08:48:06 $
+$Workfile: send-bcpromod.p $
+$Archive: str/send-bcpromod.p $
 
 пересылка ШК промоакций на кассу
 
@@ -29,11 +30,11 @@ define input parameter pPromoAttr as character no-undo .
 define input parameter p-log-file-name as character no-undo .
 define input-output parameter p-view-log as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: db18bf2a7a81, 3297, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/03/29 08:48:06 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: send-bcpromod.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/send-bcpromod.p $":U .
 define variable vss-description as character no-undo init "Пересылка ШК промоакций на кассы".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

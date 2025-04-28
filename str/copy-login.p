@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 4886e87b5a2b, 3169, rls $
+$Author: DRuban $
+$Date: 2022/12/27 12:54:23 $
+$Workfile: copy-login.p $
+$Archive: str/copy-login.p $
 
 Копирование логинов пользователя
 
@@ -21,11 +22,11 @@ define input parameter p-db-list        as character        no-undo .
 define output parameter p-ok            as logical          no-undo .
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 4886e87b5a2b, 3169, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: DRuban $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/12/27 12:54:23 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: copy-login.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/copy-login.p $":U .
 define variable vss-description as character no-undo initial "Копирование логинов".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : create-LK_RECEIPT.p
@@ -16,11 +17,11 @@
 using ibs.th.gbl.sys.objsrv.
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:25 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: create-LK_RECEIPT.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/create-LK_RECEIPT.p $":U .
 define variable vss-description as character no-undo init "Список УПД".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

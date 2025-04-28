@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 9263cff4388a, 1753, rls $
+$Author: SMMolotkov $
+$Date: Thu Feb 07 16:50:10 2019 +0300 $
+$Workfile: salewth.p $
+$Archive: str/salewth.p $
 
 Создание накладных на приход МЦ от клиента РЕАЛИЗАЦИЯ В МАГАЗИНЕ
 на объект магазин, которому принадлежит продажа
@@ -28,11 +29,11 @@ define input parameter pardoc-code1 like ub.wth-doc.source-ref no-undo .
 /*номер накладной возврата*/
 define input parameter pardoc-code2 like ub.wth-doc.source-ref no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 9263cff4388a, 1753, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Feb 07 16:50:10 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: salewth.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/salewth.p $":U .
 define variable vss-description as character no-undo init "Создание накладных на приход МЦ для продажи".
 { cmp/vssrevis.i }
 

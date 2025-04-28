@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 98888aefbee4, 1809, rls $
+$Author: druban $
+$Date: Fri Mar 15 12:41:42 2019 +0300 $
+$Workfile: send-tax.p $
+$Archive: str/send-tax.p $
 
 “олчкач пересылки категорий налогов и ставок налогов на кассу из интерфейса
 
@@ -21,11 +22,11 @@ define input parameter p-obj-type like ub.clients.obj-type no-undo .
 define input parameter p-obj-code like ub.clients.obj-code no-undo .
 DEFINE INPUT PARAMETER action as char no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 98888aefbee4, 1809, rls $":u .
+define variable vss-author      as character no-undo init "$Author: druban $":u .
+define variable vss-date        as character no-undo init "$Date: Fri Mar 15 12:41:42 2019 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: send-tax.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: str/send-tax.p $":u .
 define variable vss-description as character no-undo init "ѕересылка категорий налогов и ставок налогов на кассу из интерфейса" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

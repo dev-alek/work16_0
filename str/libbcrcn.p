@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f0098cbc9507, 2545, test $
+$Author: DRuban $
+$Date: Вт авг 04 12:57:23 2020 +0300 $
+$Workfile: libbcrcn.p $
+$Archive: str/libbcrcn.p $
 
 Библиотека процедур для работы с бар-кодами
 
@@ -15,11 +16,11 @@ Creation date: 03/24/06
 
 Создана: 06/09/2004
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f0098cbc9507, 2545, test $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Вт авг 04 12:57:23 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: libbcrcn.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/libbcrcn.p $":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с бар-кодами".
 
 { cmp/vssrevis.i }

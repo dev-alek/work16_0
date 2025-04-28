@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: partolib.p $
+$Archive: str/partolib.p $
 
 Библиотека процедур для работы с атрибутами партии на объекте
 
@@ -27,11 +28,11 @@ Creation date: 02/10/10
  *                                                                                                                       *
 \* ********************************************************************************************************************* */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: expertek $":U.
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: partolib.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: str/partolib.p $":U.
 define variable vss-description as character no-undo initial "Библиотека процедур для работы с атрибутами партии на объекте":U.
 
 { cmp/vssrevis.i }
@@ -456,4 +457,4 @@ procedure partolib_tdatothn :
   end. /* on error */
 end procedure. /* partolib_partothn */
 
-/* $Workfile$   E n d */
+/* $Workfile: partolib.p $   E n d */

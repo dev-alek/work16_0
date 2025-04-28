@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: dac5fd0fa801, 3654, test $
+$Author: EShklyar $
+$Date: 2024/01/25 16:33:07 $
+$Workfile: pdf-clos.p $
+$Archive: str/pdf-clos.p $
 
 Закрытие документа назначения цены
 
@@ -51,11 +52,11 @@ define variable p-auto      as logical   no-undo . /* OXML, ... */
 define variable log-file-name                as character      no-undo init "pdf-clos.txt".
 define variable o-db-num as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: dac5fd0fa801, 3654, test $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2024/01/25 16:33:07 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: pdf-clos.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/pdf-clos.p $":U .
 define variable vss-description as character no-undo init "Закрытие документа назначения цены".
 
 { cmp/vssrevis.i }

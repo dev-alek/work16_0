@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6ae23366fafd, 1264, rls $
+$Author: SMMolotkov $
+$Date: Mon Mar 19 13:02:46 2018 +0300 $
+$Workfile: delfsale.p $
+$Archive: str/delfsale.p $
 
 Удаление продажи закрытой на факт
 
@@ -23,11 +24,11 @@ define input parameter p-parameter      as character        no-undo.
 */
 define variable parinkas-code like ub.inkas.inkas-code no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 6ae23366fafd, 1264, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Mar 19 13:02:46 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: delfsale.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/delfsale.p $":U .
 define variable vss-description as character no-undo initial "Удаление продажи закрытой на факт".
 { cmp/vssrevis.i "substitute('&1':u,parinkas-code)" }
 { cmp/trg-def.i  }

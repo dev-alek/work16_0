@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b59277d977a0, 2018, rls $
+$Author: ASMorozov $
+$Date: Mon Sep 23 12:18:40 2019 +0300 $
+$Workfile: use-list.p $
+$Archive: str/use-list.p $
 
 Заполнение документа инвентаризации по списку
 
@@ -24,11 +25,11 @@ define input  parameter p-doc-rec as recid no-undo .
 define input  parameter p-mode as logical   no-undo . /* yes вызов списка товара */
 define input  parameter p-handl-tt as handle no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b59277d977a0, 2018, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Sep 23 12:18:40 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: use-list.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/use-list.p $":U .
 define variable vss-description as character no-undo init "Документ инвентаризации".
 { cmp/vssrevis.i   }
 { cmp/str-glbl.i }

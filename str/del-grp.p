@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8151e940e67c, 2842, rls $
+$Author: EShklyar $
+$Date: Пн ноя 22 19:49:06 2021 +0300 $
+$Workfile: del-grp.p $
+$Archive: str/del-grp.p $
 
 Простое удаление товаров с кассы из группы
 
@@ -26,11 +27,11 @@ def input param i-obj-code like ub.clients.obj-code no-undo.
 */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8151e940e67c, 2842, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Пн ноя 22 19:49:06 2021 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: del-grp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/del-grp.p $":U .
 define variable vss-description as character no-undo init "Простое удаление товаров с кассы из группы":U.
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
