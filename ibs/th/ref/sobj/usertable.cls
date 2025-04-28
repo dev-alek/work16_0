@@ -185,6 +185,23 @@ END.
 
 METHOD public void my_report():
     message 'rep/r-hist-sysadm.p' view-as alert-box.
+    
+    find first tt-user-account where tt-user-account.flg = yes no-error. /* если нет помеченных записей, то все, 
+                                                                            если есть помеченные, то отправляем только их*/
+    if AVAILABLE tt-user-account then do: 
+      for each tt-user-account  :
+          if   tt-user-account.flg = no then delete tt-user-account .
+       end.
+    end.
+       
+    find first tt-objects where tt-objects.flg = yes no-error.
+    
+    if AVAILABLE tt-objects then do: 
+      for each tt-objects  :
+          if   tt-objects.flg = no then delete tt-objects .
+       end.
+    end.
+    
      run rep/r-hist-sysadm.p 
          (input mform:ParamObj:my-handle,  
           input mform:ParamObj:x-Date-Start,

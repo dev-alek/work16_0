@@ -160,7 +160,6 @@ do:
     end.  
   end.
 end.    
-
  if p-user-id <> "" and p-user-id <> "-1" then 
 do:
   for each tt-usr-hist:
@@ -172,13 +171,11 @@ do:
 end.    */
 
 
-
-
 /* ------   */
 
 do:
   for each tt-usr-hist:
-/*    message tt-usr-hist.corr-user-name view-as alert-box. */
+    /* message tt-usr-hist.corr-user-name view-as alert-box. */
     find first tt-user-account where tt-user-account.user-id_ = tt-usr-hist.corr-user-name no-error.
         if not AVAILABLE tt-user-account then 
          do:
@@ -187,15 +184,16 @@ do:
   end.
 end.    
 
-/*do:
+do:
   for each tt-usr-hist:
 
   find first tt-objects where tt-objects.table_ = tt-usr-hist.table_ no-error.
-    do:
-      delete tt-usr-hist .
-    end.  
+        if not AVAILABLE tt-objects  then 
+        do:
+          delete tt-usr-hist .
+        end.  
   end.
-end.     */
+end.     
 
 
 
