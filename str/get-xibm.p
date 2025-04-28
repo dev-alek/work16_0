@@ -2418,13 +2418,23 @@ procedure proc-01-gds :
                 end.
             end.
             if v-promo <> 0 then do:
-                create buf_chk-gds-attr.
-                assign
-                    buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
-                    buf_chk-gds-attr.line-num = buf_chk-gds.line-num
-                    buf_chk-gds-attr.attr-code = "CSPromo"
-                    buf_chk-gds-attr.attr-value =  string(v-promo)
-                    .                                                                                                     
+                find first buf_chk-gds-attr exclusive-lock where
+                           buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                       and buf_chk-gds-attr.line-num = buf_chk-gds.line-num
+                       and buf_chk-gds-attr.attr-code = "CSPromo"
+                no-wait no-error.
+                if locked buf_chk-gds-attr then .
+                else do:
+                   if not available buf_chk-gds-attr 
+                   then             
+                   create buf_chk-gds-attr.                
+                   assign
+                      buf_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                      buf_chk-gds-attr.line-num = buf_chk-gds.line-num
+                      buf_chk-gds-attr.attr-code = "CSPromo"
+                      buf_chk-gds-attr.attr-value =  string(v-promo)
+                      .   
+                end.                                                                                                     
             end.              
         end. /* if not exist */
     end.
@@ -3375,15 +3385,25 @@ procedure proc-disc :
                                  disc-sum_ = disc-sum_ + buf2_chk-gds.src-sum.                                                                 
                            end. 
                            /* создаем атрибут с суммой скидки на строке товара в чеке */
-                           create buf2_chk-gds-attr.
-                           assign
-                              buf2_chk-gds-attr.doc-code = buf_chk-gds.doc-code
-                              buf2_chk-gds-attr.line-num = buf_chk-gds.line-num
-                              buf2_chk-gds-attr.attr-code = "CSPromoSum"
-                              buf2_chk-gds-attr.attr-value =  string(-1 * disc-sum_)
-                              .  
-                           disc-sum_ = 0.
-                           disc-pcnt_ = 0.                               
+                           find first buf2_chk-gds-attr exclusive-lock where
+                                      buf2_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                  and buf2_chk-gds-attr.line-num = buf_chk-gds.line-num
+                                  and buf2_chk-gds-attr.attr-code = "CSPromoSum"
+                                  no-wait no-error.
+                           if locked buf2_chk-gds-attr then .
+                           else do:        
+                              if not available buf2_chk-gds-attr 
+                              then       
+                              create buf2_chk-gds-attr.                               
+                              assign
+                                 buf2_chk-gds-attr.doc-code = buf_chk-gds.doc-code
+                                 buf2_chk-gds-attr.line-num = buf_chk-gds.line-num
+                                 buf2_chk-gds-attr.attr-code = "CSPromoSum"
+                                 buf2_chk-gds-attr.attr-value =  string(-1 * disc-sum_)
+                                 .                                
+                              disc-sum_ = 0.
+                              disc-pcnt_ = 0.
+                           end.                               
                         end.                                                                                                      
                     end.                                                         
                 end.

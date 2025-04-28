@@ -183,8 +183,8 @@ function GetPromoSum returns decimal
            :    
            assign                
              v-price-base = buf_chk-gds.price-base
-             v-doc-qnty   = buf_chk-gds.doc-qnty
-             v-sum-base = buf_chk-gds.sum-base
+             v-doc-qnty   = if buf_chk-gds.doc-qnty = ? then buf_chk-gds.src-qnty else buf_chk-gds.doc-qnty
+             v-sum-base = if buf_chk-gds.sum-base = ? then round(v-doc-qnty * v-price-base, 2) else buf_chk-gds.sum-base
              .        
         end.
         for each buf_chk-gds no-lock where                 
@@ -229,7 +229,7 @@ function GetPromoSum returns decimal
            end.                   
            if buf_chk-gds.sum-base = ? or buf_chk-gds.src-qnty = 0 then do:
                assign
-                  v-sum-all = (buf_chk-gds.src-qnty + v-doc-qnty ) * v-price-base 
+                  v-sum-all = (buf_chk-gds.src-qnty + v-doc-qnty) * v-price-base
                   v-sum-chk = v-sum-base + RoundUp(buf_chk-gds.src-qnty, buf_chk-gds.src-price)
                   .                   
            end.
@@ -238,9 +238,8 @@ function GetPromoSum returns decimal
               v-sum-all = (buf_chk-gds.doc-qnty + v-doc-qnty ) * v-price-base          
               v-sum-chk = v-sum-base + buf_chk-gds.sum-base
               .                
-           end.           
-        end.
-        
+           end.                      
+        end.        
         v-sum-promo = Round(v-sum-all, 2) - Round(v-sum-chk, 2).   
     end.   
     

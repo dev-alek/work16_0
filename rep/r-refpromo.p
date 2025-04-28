@@ -81,8 +81,9 @@ define temp-table tt-info
    field ret-src-qnty as dec
    field ret-promo-qnty as dec
    field ret-src-price as dec
-   field ret-src-sum as dec  
+   field ret-src-sum as dec    
    field ret-discnt as dec /* скидка за ед. товара */
+   field ret-sum-no-disc as dec 
    field dop-qnty as dec   
    field dop-sum as dec
    field ret-dop-qnty as dec   
@@ -98,6 +99,7 @@ define temp-table tt-info
    field sts as char 
    field b-code as integer
    field change-BL as char
+   field ret-nodiscnt as log /* в возвратном чеке нет скидки */
    . 
      
 define variable v-report-name       as character no-undo .
@@ -282,6 +284,8 @@ procedure report:
   for each  buf_chk-gds no-lock where 
             buf_chk-gds.doc-code = buf_chk-doc.doc-code and 
             buf_chk-gds.pl-code <> ?:                    
+                
+                /*
     /* ищем скидку на данную строку товара */                            
     find first bf_chk-discnt-attr no-lock where 
              bf_chk-discnt-attr.attr-code = "promo-id" and 
@@ -313,10 +317,18 @@ procedure report:
         end.   
         else next chkda.
     end.
-                  
+                  */
+    find first buf_chk-discnt no-lock where 
+               buf_chk-discnt.doc-code = buf_chk-doc.doc-code and
+               buf_chk-discnt.promo-id > ""   and                
+               buf_chk-discnt.record-type = 1 and               
+               buf_chk-discnt.object-line-num = buf_chk-gds.line-num
+       no-error.   
+    if not avail buf_chk-discnt then next chkda.
+                    
     if not vAllPromo then do:     
        if not can-find(first tt-promo where 
-                             tt-promo.id = int(bf_chk-discnt-attr.attr-value))
+                             tt-promo.id = int(buf_chk-discnt.promo-id))
        then next chkda.
     end.
               
@@ -331,7 +343,7 @@ procedure report:
        no-error
     }        
     if not is-petrolium then next .
-  
+    
     find first tt-info no-lock where 
                tt-info.doc-code = buf_chk-gds.doc-code and 
                tt-info.pl-code = buf_chk-gds.pl-code
@@ -378,8 +390,8 @@ procedure report:
       end.              
     end.                        
     
-    if avail bf_chk-discnt-attr and tt-info.promo-id  = "" then do:
-      tt-info.promo-id = bf_chk-discnt-attr.attr-value.
+    if tt-info.promo-id  = "" then do:
+      tt-info.promo-id = buf_chk-discnt.promo-id.
       
       /* название промоакции */   
       for first buf_PromoAction no-lock where 
@@ -425,8 +437,8 @@ procedure report:
           
        assign    
           tt-info.src-qnty = tt-info.src-qnty + buf_chk-gds.src-qnty              
-          tt-info.discnt = buf_chk-gds.discnt
-          v-sum-r = Round((buf_chk-gds.src-price - buf_chk-gds.discnt) * buf_chk-gds.src-qnty, 2)          
+          tt-info.discnt = buf_chk-discnt.discnt-value-abs / buf_chk-gds.src-qnty
+          v-sum-r = Round((buf_chk-gds.src-price - tt-info.discnt) * buf_chk-gds.src-qnty, 2)          
           v-sum-disc = ChkPromoSum(buf_chk-gds.doc-code, buf_chk-gds.line-num)
           v-sum-no-disc = Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2) + v-sum-disc
           .  
@@ -437,6 +449,7 @@ procedure report:
        tt-info.src-sum-no-disc = tt-info.src-sum-no-disc + v-sum-no-disc
        tt-info.src-sum-disc = tt-info.src-sum-no-disc - tt-info.src-sum
        .
+       
   end.               
                    
 
@@ -447,6 +460,10 @@ procedure report-itog:
     define variable v-sum-no-disc        as decimal   no-undo.
     define variable v-sum-disc           as decimal   no-undo. 
     
+    define buffer buf_chk-discnt for ub.chk-discnt.
+    define buffer buf_chk-doc    for ub.chk-doc.
+    define buffer buf_chk-gds    for ub.chk-gds.
+    
     for each tt-info:
         for each buf_chk-doc no-lock where 
                  buf_chk-doc.obj-code = tt-info.obj-code 
@@ -455,14 +472,15 @@ procedure report-itog:
              and buf_chk-doc.doc-num2 = substitute("&1:&2",tt-info.chk-num,tt-info.z-number),
              each buf_chk-gds no-lock where 
                   buf_chk-gds.doc-code = buf_chk-doc.doc-code and 
-                  buf_chk-gds.pl-code  = tt-info.pl-code /*and
-                  buf_chk-gds.src-price > vPromoPrice*/:
-                       
-             /*find first buf_promo-chk-gds no-lock where 
-                   buf_promo-chk-gds.doc-code = buf_chk-gds.doc-code and 
-                   buf_promo-chk-gds.pl-code  = buf_chk-gds.pl-code  and 
-                   buf_promo-chk-gds.src-price = vPromoPrice
-                   no-error.*/
+                  buf_chk-gds.pl-code  = tt-info.pl-code 
+                  :
+             
+             find first buf_chk-discnt no-lock where 
+                        buf_chk-discnt.doc-code = buf_chk-doc.doc-code and
+                        buf_chk-discnt.promo-id > ""   and                
+                        buf_chk-discnt.record-type = 1 and               
+                        buf_chk-discnt.object-line-num = buf_chk-gds.line-num
+                  no-error.             
              
              assign
                  tt-info.ret-doc-code = buf_chk-gds.doc-code                                                   
@@ -478,6 +496,7 @@ procedure report-itog:
                   v-sum-r = RoundUp(buf_chk-gds.src-qnty, buf_chk-gds.src-price)
                   v-sum-no-disc = v-sum-r
                   v-sum-disc = 0
+                  tt-info.ret-nodiscnt = no
                   . 
               else do:
                    if ChkDopLitr(buf_chk-gds.doc-code, buf_chk-gds.line-num)
@@ -485,25 +504,33 @@ procedure report-itog:
                      assign 
                         tt-info.dop-qnty = tt-info.dop-qnty - buf_chk-gds.src-qnty 
                         tt-info.dop-sum = tt-info.dop-sum - Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2)
+                        v-sum-disc = 0
+                        tt-info.ret-nodiscnt = no
                         .
                    else    
                       assign
-                         tt-info.ret-src-price = buf_chk-gds.src-price                               
+                         tt-info.ret-src-price = buf_chk-gds.src-price
+                         tt-info.ret-discnt = if avail buf_chk-discnt then buf_chk-discnt.discnt-value-abs / buf_chk-gds.src-qnty else 0
+                         v-sum-disc = ChkPromoSum(buf_chk-gds.doc-code, buf_chk-gds.line-num)
+                         tt-info.ret-nodiscnt = if (v-sum-disc = 0 and tt-info.ret-discnt = 0) then yes else no.                               
                          .
                       
                    assign                                        
-                      /*tt-info.discnt = buf_chk-gds.src-discnt*/
-                      v-sum-r = Round((buf_chk-gds.src-price - buf_chk-gds.src-discnt) * buf_chk-gds.src-qnty, 2) 
-                      tt-info.ret-src-qnty = tt-info.ret-src-qnty - buf_chk-gds.src-qnty         
-                      /*v-sum-disc = ChkPromoSum(buf_chk-gds.doc-code, buf_chk-gds.line-num)
-                      v-sum-no-disc = Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2) + v-sum-disc*/
-                      .  
+                      tt-info.ret-discnt = if avail buf_chk-discnt then buf_chk-discnt.discnt-value-abs / buf_chk-gds.src-qnty else 0
+                      v-sum-r = Round((buf_chk-gds.src-price - tt-info.ret-discnt) * buf_chk-gds.src-qnty, 2) 
+                      tt-info.ret-src-qnty = tt-info.ret-src-qnty - buf_chk-gds.src-qnty                               
+                      v-sum-no-disc = if tt-info.ret-nodiscnt then Round(tt-info.src-price * buf_chk-gds.src-qnty, 2) 
+                                                              else (Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2) + v-sum-disc)                      
+                      .           
+                                   
               end.     
                                
               assign
                  tt-info.ret-src-sum = tt-info.ret-src-sum - v-sum-r  
-                 .    
-
+                 tt-info.ret-sum-no-disc = tt-info.ret-sum-no-disc - v-sum-no-disc
+       /*tt-info.src-sum-disc = tt-info.src-sum-no-disc - tt-info.src-sum*/
+                 .                  
+                                    
               /* кассир */
               if tt-info.ret-cashier = "" then do:
                   find first buf_person where 
@@ -522,12 +549,13 @@ procedure report-itog:
         /* итоги */
         assign
            tt-info.itog-qnty = tt-info.src-qnty - tt-info.ret-src-qnty - tt-info.ret-promo-qnty
-           tt-info.itog-sum-no-disc = (tt-info.itog-qnty - tt-info.dop-qnty) * tt-info.src-price + tt-info.dop-sum
+           tt-info.itog-sum-no-disc = tt-info.src-sum-no-disc - tt-info.ret-sum-no-disc
            tt-info.itog-sum = tt-info.src-sum - tt-info.ret-src-sum
            tt-info.itog-sum-disc = tt-info.itog-sum-no-disc - tt-info.itog-sum
            tt-info.itog-proc = tt-info.itog-sum-disc * 100 / tt-info.itog-sum-no-disc
            tt-info.sts = (if (tt-info.src-promo-qnty > 0 and tt-info.ret-promo-qnty > 0 and tt-info.ret-src-qnty = 0) 
                               or (tt-info.src-promo-qnty > 0 and tt-info.src-promo-qnty = tt-info.ret-promo-qnty) 
+                              or tt-info.itog-qnty = 0
                           then "1" 
                           else "0")
            .
