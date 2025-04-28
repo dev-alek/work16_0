@@ -478,6 +478,13 @@ class ibs.th.ref.code.code_trg final:
              formLable(1, 6, "ЕИ в ПЦ").
              MaxLevel = MaxLevel + 1.
           end.
+          else if icode eq "FuelCodeInfo"
+          then do:
+             formLable(1, 1, "Код топлива в АСУ АЗК").
+             formLable(1, 3, "Эталонный код").
+             MaxLevel = MaxLevel + 1.
+             chek-erpRN = yes.
+          end.
        end.
     end.
     

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aa3cb396dbbb, 2685, rls $
+$Author: EShklyar $
+$Date: Пт дек 18 18:16:04 2020 +0300 $
+$Workfile: sendpetrol.p $
+$Archive: str/sendpetrol.p $
 
 Толкач пересылки данных по соответствию товаров/кошельков
 
@@ -25,11 +25,11 @@ define input parameter p-log-handle  as handle no-undo .
 define input parameter p-parameter   as character no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aa3cb396dbbb, 2685, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Пт дек 18 18:16:04 2020 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: sendpetrol.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/sendpetrol.p $":U .
 define variable vss-description as character no-undo init "Отсылка данных по соответствию товаров/кошельков".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
@@ -83,26 +83,13 @@ run gbl/d-askw.w (input "Выбор соответствий товаров/кошельков для пересылки",
    "информацию о соответствии товаров/кошельков"
    ),
    input "|",
-   input "Все|Выборочно|Отказ от пересылки",
-   input "||",
+   input "Все|Отказ от пересылки",
+   input "|",
    input 1,
-   input 3,
+   input 2,
    output choice).
-CASE choice:
-  when 1 then do:
-  end.
-  when 2 then do:
-    run ref/esysgds.w ( input parparentproc
-                        ,input "b-mark,b-sel":U
-                        ,input {&all}
-                        ,input 0
-                        ,input-output rid-list) no-error.     
-    if rid-list = "" then return.
-  end.
-  when 3 then do:
-    return.
-  end.
-END CASE.   
+
+if choice = 2 then return.
 
     run str/send-petrol.p (
                     input parparentproc
@@ -111,10 +98,8 @@ END CASE.
                    ,input p-obj-code
                    ,input p-obj-type
                    ,input action
-                   ,input (if rid-list = "":U
-                           then 0
-                           else 1)
-                  , input rid-list
+                   ,input 0
+                  , input ""
                   , input log-file-name
                   , input-output v-view-log
                   ) no-error .
