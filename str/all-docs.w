@@ -7709,9 +7709,12 @@ procedure itogInvDocManual :
   define variable v-is-marking   as logical   no-undo init false.
   define variable vartime        as integer   no-undo.
   define variable varmessage     as character no-undo.
+  define variable varqnty        as decimal   no-undo .
+  
+  
   define variable nn as integer no-undo .
   do on error undo, return error return-value : 
-    
+
     empty temp-table tt-gds-list .
   { str/adinvdoc.i
         v-cntxt-obj-type
@@ -7764,10 +7767,19 @@ procedure itogInvDocManual :
               BUFFER-COPY ub.goods to tt-gds-list .
               assign tt-gds-list.nn = nn .
           end .
+          if varqnty = 0 then do:
           assign
           tt-gds-list.doc-qnty = tt-gds-list.doc-qnty + buf_doc-line.doc-qnty
           tt-gds-list.fact-qnty = tt-gds-list.fact-qnty + buf_doc-line.fact-qnty
           .
+          varqnty = tt-gds-list.doc-qnty - tt-gds-list.fact-qnty .
+          end.
+          else do:
+          assign
+          tt-gds-list.doc-qnty = tt-gds-list.doc-qnty + buf_doc-line.doc-qnty 
+          tt-gds-list.fact-qnty = tt-gds-list.doc-qnty - varqnty
+          .   
+          end.
         end.
       end.
     tr:

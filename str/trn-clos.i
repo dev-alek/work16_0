@@ -22,6 +22,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 on choose of b-open in frame {&frame-name} /* Откр */
   do:
     define buffer bf_inv-doc-attr for ub.inv-doc-attr .
+    DEFINE buffer curr_inv-doc-attr for ub.inv-doc-attr .
     {&net-proc}
     assign
       pardoc-rec = recid (t-doc)
@@ -87,7 +88,8 @@ on choose of b-open in frame {&frame-name} /* Откр */
 ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
   DO:
     define buffer bf_inv-doc-attr for ub.inv-doc-attr .
-
+    define buffer curr_inv-doc-attr for ub.inv-doc-attr .
+    
     define variable ii      as integer   no-undo .
     define variable docCode as character no-undo .
     
@@ -328,12 +330,15 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
         ub.inv-doc-attr.attr-code = 'ItogInvManual' no-error .
       if available(ub.inv-doc-attr) then 
       do:
-        for each bf_inv-doc-attr exclusive-lock where bf_inv-doc-attr.attr-value = t-doc.doc-code and
+        for each bf_inv-doc-attr no-LOCK where bf_inv-doc-attr.attr-value = t-doc.doc-code and
           bf_inv-doc-attr.attr-code = 'ManualTSD':
           for each ub.trn-doc exclusive-lock where ub.trn-doc.doc-code = bf_inv-doc-attr.doc-code:
             docCode = ub.trn-doc.doc-code .
             delete ub.trn-doc .
+            for first curr_inv-doc-attr EXCLUSIVE-LOCK where curr_inv-doc-attr.attr-code = bf_inv-doc-attr.attr-code and
+            curr_inv-doc-attr.doc-code = bf_inv-doc-attr.doc-code:
             delete bf_inv-doc-attr .
+            end.
           end.
         end.
         for first bf_inv-doc-attr no-lock where bf_inv-doc-attr.attr-code = 'isManualError' and
