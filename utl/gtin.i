@@ -954,7 +954,7 @@ function addGs2Mark return character
      if vIdx > 1 then
        vDM = substitute("&1&4&2&4&3",
                         substring(iMark,1,25),
-                        substring(iMark,26,vIdx - 26 - 1),
+                        substring(iMark,26,vIdx - 25 - 1),
                         substring(iMark,vIdx),
                         chr(29)) no-error.
      else 
@@ -962,6 +962,14 @@ function addGs2Mark return character
                         substring(iMark,1,25),
                         substring(iMark,26),
                         chr(29)) no-error.
+     vIdx = index(vDm,"240",vIdx).
+     if vIdx > 0 then
+     do:
+       vDM = substitute("&1&3&2",
+                        substring(vDm,1,vIdx - 1),
+                        substring(vDm,vIdx),
+                        chr(29)) no-error.
+     end.    
    end.
    else if substring(iMark,32,2) = "91" then
    do:  /* легпром, духи, обувь, шины, лекарства, велосипеды, кресла-коляски, консервы  */
