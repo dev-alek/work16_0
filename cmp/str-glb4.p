@@ -1534,6 +1534,15 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Должность участника комиссии */
 { cmp/cr-prep.i 1 trdcattr-pos-player3 "trdcattr-pos-player3" " " "trdcattr-pos-player3" }
 
+/* Масса слитого СУГ на промежуточных станциях АГЗС */
+{ cmp/cr-prep.i 1 sugtpattr-massa-sug "sugtpattr-massa-sug" " " "sugtpattr-massa-sug" }
+
+/* Технологические потери предыдущих станций */
+{ cmp/cr-prep.i 1 sugtpattr-teh-loss "sugtpattr-teh-loss" " " "sugtpattr-teh-loss" }
+
+/* Допустимые погрешности предыдущих станций */
+{ cmp/cr-prep.i 1 sugtpattr-err-allow "sugtpattr-err-allow" " " "err-allow" }
+
 
 &glob trdcattr-list '~
 {&bef-trdcattr-hold-part-code}~

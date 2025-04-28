@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f29df1d5f130, 3104, rls $
+$Author: DRuban $
+$Date: 2022/08/09 06:15:01 $
+$Workfile: lib-trn4.p $
+$Archive: str/lib-trn4.p $
 
 библиотека процедур для работы со складскими документами (4)
 
@@ -21,11 +21,11 @@ Create: Булгаков Андрей Николаевич
 
 using ibs.th.gbl.gbl-hndllib from propath.
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: f29df1d5f130, 3104, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: DRuban $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/08/09 06:15:01 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: lib-trn4.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: str/lib-trn4.p $":U .
 define variable vss-description as character no-undo initial "библиотека процедур для работы со складскими документами (4)":U .
 
 { cmp/vssrevis.i }
@@ -506,6 +506,8 @@ procedure lib-trn4_int-clos :
   define variable varperc-expvalue   as character no-undo .
   define variable varperc-exptype    as character no-undo .
   define variable varchg-inv         as logical   no-undo .
+  define variable varvalue           as character no-undo .
+  define variable vartype            as character no-undo .
   define variable skip-all           as logical   no-undo initial no .
   define variable skip-zero          as logical   no-undo initial no .
   define variable v-num              as integer   no-undo initial ? .
@@ -1529,9 +1531,24 @@ define variable v-codident as character no-undo.
             varlog = yes.
         end.
         else do :
-            message "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
-                    "Вы уверены ?"
-                    view-as alert-box question buttons OK-Cancel title "Вопрос" update varlog.
+          varvalue = "".
+          if buf_trn-doc.reason-code = 99 then
+          do:  /* закрытие накладной по СУГ и основание «Финальный слив СУГ», то проверим данные по тех.потерям */
+            { str/tdat-val.i
+              buf_trn-doc.doc-code
+              {&sugtpattr-massa-sug}
+              varvalue
+              vartype
+              no-error
+            }
+            varvalue = if varvalue = "" then
+              "Не заполнены данные для расчета технологических потерь.~n"
+              else "".
+          end.
+          message varvalue
+                  "Закрытие накладной № " buf_trn-doc.doc-code "ФАКТ." skip (2)
+                  "Вы уверены ?"
+                  view-as alert-box question buttons OK-Cancel title "Вопрос" update varlog.
         end.
         if not varlog then  return error.
         case buf_trn-doc.doc-type
@@ -3557,4 +3574,4 @@ procedure change_mark_sts_trn-doc:
     end.
 end procedure.
 
-/* $Workfile$   E n d */
+/* $Workfile: lib-trn4.p $   E n d */

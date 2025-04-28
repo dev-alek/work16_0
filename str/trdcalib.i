@@ -1658,6 +1658,46 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-pos-player3 true
 &glob sort-trdcattr-pos-player3 120
 
+/* Масса слитого СУГ на промежуточных станциях АГЗС */
+&glob fillin_width-sugtpattr-massa-sug 20
+&glob fillin_height-sugtpattr-massa-sug 1
+&glob type-sugtpattr-massa-sug {&type-dec}
+&glob format-sugtpattr-massa-sug "->,>>>,>>>,>>9.999"
+&glob label-sugtpattr-massa-sug "Масса слитого СУГ на промежуточных станциях АГЗС, кг"
+&glob tooltip-sugtpattr-massa-sug "Масса слитого СУГ на промежуточных станциях АГЗС"
+&glob user-can-edit-sugtpattr-massa-sug true
+&glob output-display-sugtpattr-massa-sug true
+&glob other-sugtpattr-massa-sug 'nws':u
+&glob news-sugtpattr-massa-sug true
+&glob sort-sugtpattr-massa-sug 130
+
+/* Технологические потери предыдущих станций */
+&glob fillin_width-sugtpattr-teh-loss 20
+&glob fillin_height-sugtpattr-teh-loss 1
+&glob type-sugtpattr-teh-loss {&type-dec}
+&glob format-sugtpattr-teh-loss "->,>>>,>>>,>>9.999"
+&glob label-sugtpattr-teh-loss "Технологические потери предыдущих станций, кг"
+&glob tooltip-sugtpattr-teh-loss "Технологические потери предыдущих станций"
+&glob user-can-edit-sugtpattr-teh-loss true
+&glob output-display-sugtpattr-teh-loss true
+&glob other-sugtpattr-teh-loss 'nws':u
+&glob news-sugtpattr-teh-loss true
+&glob sort-sugtpattr-teh-loss 131
+
+/* Допустимые погрешности предыдущих станций */
+&glob fillin_width-sugtpattr-err-allow 20
+&glob fillin_height-sugtpattr-err-allow 1
+&glob type-sugtpattr-err-allow {&type-dec}
+&glob format-sugtpattr-err-allow "->,>>>,>>>,>>9.999"
+&glob label-sugtpattr-err-allow "Допустимые погрешности предыдущих станций, кг"
+&glob tooltip-sugtpattr-err-allow "Допустимые погрешности предыдущих станций"
+&glob user-can-edit-sugtpattr-err-allow true
+&glob output-display-sugtpattr-err-allow true
+&glob other-sugtpattr-err-allow 'nws':u
+&glob news-sugtpattr-err-allow true
+&glob sort-sugtpattr-err-allow 132
+
+
 &if "{1}" = "class" &then
 &else
 define new global shared variable g#trdcalib as handle no-undo.
