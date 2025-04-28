@@ -399,7 +399,7 @@ put stream OutStr-html unformatted
   '<td colspan="10" style="text-align: left;">по документам: ' + vDocType + '</td>' skip
   '</tr>' skip 
   '<tr>' skip
-  '<td colspan="10" style="text-align: left;">заказ формируется на : ' + string(vDaySale) + ' дней(дня), с учетом гарантийного заказа на ' + string(pGarantDay) + ' дней(дня)</td>' skip
+  '<td colspan="10" style="text-align: left;">заказ формируется на : ' + string(vDaySale) + ' дней(дня), с учетом гарантийного запаса на ' + string(pGarantDay) + ' дней(дня)</td>' skip
   '</tr>' skip .
   
 for each tt-dateZakaz:
