@@ -37,6 +37,7 @@ define variable vss-description as character no-undo init "Отчет по удаленным че
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }     
 { rep/errorChk.i }
+{ str/cspromo-chk.i } /* функции для работы с промоакциями по НП */
 
 define buffer buf_obj-list  for obj-list .
 define buffer buf_clients   for ub.clients .
@@ -71,9 +72,10 @@ define variable jj              as integer   no-undo .
 define variable ff              as integer   no-undo .
 define variable vv              as integer   no-undo .
 
-define temp-table tt-chk-gds like ub.c-chk-gds .
+define temp-table tt-chk-gds like ub.c-chk-gds 
+   field base-sum as decimal.
 define temp-table tt-chk-pay like ub.c-chk-pay .
-DEFINE NEW SHARED TEMp-TABLE tt-pay-info no-undo
+DEFINE NEW SHARED TEMP-TABLE tt-pay-info no-undo
   FIELD line-num      like ub.chk-pay.line-num
   field calc-rate     like ub.curr-shop.exch-rate
   field exch-date     like ub.curr-shop.exch-date
@@ -611,7 +613,11 @@ procedure primtReport:
     kk = kk + 1 .
     create tt-chk-gds .
     buffer-copy buf_c-chk-gds to tt-chk-gds .
-      
+    tt-chk-gds.base-sum = GetRoundSumChkDel(tt-chk-gds.doc-code, 
+                                            tt-chk-gds.line-num,
+                                            tt-chk-gds.chip-num, 
+                                            tt-chk-gds.doc-qnty, 
+                                            tt-chk-gds.price-base).  
   end .
   for each buf_chk-pay no-lock where buf_chk-pay.doc-code = buf_c-chk-doc.doc-code:
     find first tt-chk-pay no-lock where tt-chk-pay.doc-code = buf_chk-pay.doc-code and 
@@ -643,7 +649,7 @@ procedure primtReport:
           '<TD text_wrap="true" style="text-align: center;">' + nameGoods + '</TD>' skip
           '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.doc-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.doc-qnty,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
           '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.price-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.price-base,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
-          '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.price-base * tt-chk-gds.doc-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.price-base * tt-chk-gds.doc-qnty,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
+          '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.base-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.price-base * tt-chk-gds.doc-qnty,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
           '<TD rowspan = "' string(kk) + '" text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(buf_c-chk-doc.tot-doc,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(buf_c-chk-doc.tot-doc,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
           .
         put stream OutStr-html unformatted
@@ -700,7 +706,7 @@ procedure primtReport:
           '<TD text_wrap="true" style="text-align: center;">' + string(nameGoods) + '</TD>' skip
           '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.doc-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.doc-qnty,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
           '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.price-base,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.price-base,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
-          '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.price-base * tt-chk-gds.doc-qnty,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.price-base * tt-chk-gds.doc-qnty,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
+          '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(tt-chk-gds.base-sum,"->>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + fnc-convert-dot-to-colon(tt-chk-gds.price-base * tt-chk-gds.doc-qnty,"->>>>>>>>>>>>>>9.99",2) + '</TD>' skip
           '</TR>'skip
           .
       end. 

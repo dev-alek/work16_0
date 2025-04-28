@@ -65,24 +65,7 @@ define buffer buf2_chk-doc for ub.chk-doc.
 define buffer buf_bar-code for ub.bar-code.
 define buffer buf_chk-pay-attr for ub.chk-pay-attr .
 
-function ChkPromoPrice returns logical
-    (input iDocCode as character,
-     input iLineNum as integer)
-    : 
-   define buffer buf_chk-gds-attr for ub.chk-gds-attr.
-   define variable v-is-promo as logical no-undo.
-   v-is-promo = no.
-   find first buf_chk-gds-attr no-lock where                 
-              buf_chk-gds-attr.doc-code = iDocCode
-          and buf_chk-gds-attr.line-num  = iLineNum                                      
-          and buf_chk-gds-attr.attr-code = "CSPromo"
-      no-error.
-   if avail buf_chk-gds-attr 
-     and can-do("2,4,5,7",buf_chk-gds-attr.attr-value)               
-   then v-is-promo = yes.
-   
-   return v-is-promo.
-end function.
+{ str/cspromo-chk.i } /* функции для работы с промоакциями по НП */
 
 &else
 if first-of(ub.CHK-pay.DOC-CODE) THEN Do:

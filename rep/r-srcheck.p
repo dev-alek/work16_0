@@ -99,6 +99,7 @@ function fnc-DD-MM-YYYY returns character
 function fnc-convert-dot-to-colon returns character 
 (input p-data as decimal, input p-accur as character) forward.
 
+{ str/cspromo-chk.i  } /* функции для работы с промоакциями по НП */
 
 /* ***************************  Main Block  *************************** */
 
@@ -200,6 +201,7 @@ define variable v-found as logical no-undo.
 define variable v-use-line as logical no-undo.
 define variable ii-grp as integer no-undo.
 define variable v-name         as char      no-undo.
+define variable vSumUnBase as decimal no-undo.
 define buffer buf_chk-gds-pay for ub.chk-gds-pay .
 define buffer buf_bar-code for ub.bar-code .
 define buffer buf_goods    for ub.goods .
@@ -400,15 +402,16 @@ define buffer buf-qnty-temp-chk for temp-chk .
         obj-temp-chk.pok-qnty = obj-temp-chk.pok-qnty + 1
       .
     end .
-   
+      
     assign
+      vSumUnBase = GetUnBaseSum(buf_chk-gds-pay.doc-code, buf_chk-gds-pay.line-num, buf_chk-gds-pay.eff-doc-qnty, buf_chk-gds-pay.price-base) 
       /* буффер temp-chk создан и спозиционирован в first-of_b-code */
       temp-chk.qnty       = temp-chk.qnty       + buf_chk-gds-pay.eff-doc-qnty
-      temp-chk.sum-unbase = temp-chk.sum-unbase + buf_chk-gds-pay.eff-doc-qnty * buf_chk-gds-pay.price-base          
+      temp-chk.sum-unbase = temp-chk.sum-unbase + vSumUnBase          
       temp-chk.sum-base   = temp-chk.sum-base   + buf_chk-gds-pay.tot-r-b
       /* буффер obj-temp-chk виден глобально и спозиционирован в вызывающей процедуре */
       obj-temp-chk.qnty       = obj-temp-chk.qnty       + buf_chk-gds-pay.eff-doc-qnty
-      obj-temp-chk.sum-unbase = obj-temp-chk.sum-unbase + buf_chk-gds-pay.eff-doc-qnty * buf_chk-gds-pay.price-base 
+      obj-temp-chk.sum-unbase = obj-temp-chk.sum-unbase + vSumUnBase 
       obj-temp-chk.sum-base   = obj-temp-chk.sum-base   + buf_chk-gds-pay.tot-r-b
     .
 

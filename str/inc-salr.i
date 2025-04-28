@@ -1009,8 +1009,8 @@ find first t-gds
               t-gds.discnt        = (if buf_sale-doc.doc-type = {&write-off}
                               then 0
                               else buf_chk-gds.discnt)
-              t-gds.price-sum = t-gds.price-sum +
-                                (buf_chk-gds.price-base + buf_chk-gds.price-service ) * buf_chk-gds.doc-qnty
+              t-gds.price-sum = t-gds.price-sum + GetRoundSum(buf_chk-gds.doc-code, buf_chk-gds.line-num, buf_chk-gds.doc-qnty, (buf_chk-gds.price-base + buf_chk-gds.price-service ))
+                              /*  (buf_chk-gds.price-base + buf_chk-gds.price-service ) * buf_chk-gds.doc-qnty*/
               t-gds.discnt-sum  = t-gds.discnt-sum + (if buf_sale-doc.doc-type = {&write-off}
                                                       then 0
                                                       else buf_chk-gds.discnt * buf_chk-gds.doc-qnty)
