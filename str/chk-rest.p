@@ -171,7 +171,8 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
          if entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}) begins "gds="
          then do :
            find first buf_chk-gds-attr exclusive-lock where buf_chk-gds-attr.attr-code = entry(2, buf_c-chk-doc-attr.attr-code, {&delim-par}) and
-           buf_chk-gds-attr.doc-code = buf_c-chk-doc-attr.doc-code no-error .
+           buf_chk-gds-attr.doc-code = buf_c-chk-doc-attr.doc-code and 
+           buf_chk-gds-attr.line-num = integer(entry(2, entry(1, buf_c-chk-doc-attr.attr-code, {&delim-par}), "=")) no-error .
            if not available (buf_chk-gds-attr) then do:
            create buf_chk-gds-attr.
            assign
