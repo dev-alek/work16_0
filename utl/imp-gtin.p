@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : imp-gtin.p
@@ -23,11 +24,11 @@
 define input parameter parparentproc as handle no-undo .
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:25 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: imp-gtin.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/imp-gtin.p $":U .
 define variable vss-description as character no-undo init "Импорт gtin".
 
 { cmp/vssrevis.i }

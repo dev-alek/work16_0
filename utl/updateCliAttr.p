@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
     File        : updateCliAttr.p
@@ -13,11 +14,11 @@
   ----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-Workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 441f77397fde, 2803, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: ѕт июл 23 16:27:15 2021 +0300 $":U .
+define variable vss-Workfile    as character no-undo init "$Workfile: updateCliAttr.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/updateCliAttr.p $":U .
 define variable vss-description as character no-undo init "”даление повтор€ющихс€ значений атрибута" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

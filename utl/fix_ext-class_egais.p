@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 { cmp/str-glbl.i }
 { gbl/thbjattr.i }
 { cmp/trg-def.i }

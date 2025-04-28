@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 842df30dc91c, 1422, test $
+$Author: EShklyar $
+$Date: ѕт июн 29 17:59:55 2018 +0300 $
+$Workfile: alcmarks.p $
+$Archive: utl/alcmarks.p $
 
 ”тилита проверки целостности свободной зоны марок и восстановлени€
 
@@ -15,11 +16,11 @@ Creation date: 07/23/08
 
 */
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 842df30dc91c, 1422, test $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: ѕт июн 29 17:59:55 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: alcmarks.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/alcmarks.p $":U .
 define variable vss-description as character no-undo initial "”тилита проверки целостности свободной зоны марок и восстановлени€".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

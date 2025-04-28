@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bf04b0e5cfa2, 2256, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:24:01 2019 +0300 $
+$Workfile: updclrvs.p $
+$Archive: utl/updclrvs.p $
 
 ”тилита запуска редактировани€ закрытых сверок
 
@@ -19,11 +20,11 @@ Creation date: 14/29/07
 
 
 
-define variable vss-revision    as character no-undo initial "$Revision$":U.
-define variable vss-author      as character no-undo initial "$Author$":U.
-define variable vss-date        as character no-undo initial "$Date$":U.
-define variable vss-workfile    as character no-undo initial "$Workfile$":U.
-define variable vss-archive     as character no-undo initial "$Archive$":U.
+define variable vss-revision    as character no-undo initial "$Revision: bf04b0e5cfa2, 2256, rls $":U.
+define variable vss-author      as character no-undo initial "$Author: druban $":U.
+define variable vss-date        as character no-undo initial "$Date: Wed Dec 25 15:24:01 2019 +0300 $":U.
+define variable vss-workfile    as character no-undo initial "$Workfile: updclrvs.p $":U.
+define variable vss-archive     as character no-undo initial "$Archive: utl/updclrvs.p $":U.
 define variable vss-description as character no-undo initial "”тилита запуска редактировани€ закрытых сверок":U.
 
 def input parameter parproc as handle.

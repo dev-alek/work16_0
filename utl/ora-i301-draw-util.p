@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 $Revision: 7b0cc5f31b3c, 1577, rls $
 $Author: SSlivenko $

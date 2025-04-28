@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: f0ae80db3135, 3548, rls $
+$Author: DRuban $
+$Date: 2023/11/27 08:31:17 $
+$Workfile: kick-db.p $
+$Archive: utl/kick-db.p $
 
 закачка в ГДБ р_у_блей и их курсов, основных единиц измерения, стран и т.п.
 
@@ -18,11 +19,11 @@ Creation date: 04/10/06
 */
 define input parameter p-sys-key  as character no-undo . /* системный ключ */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: f0ae80db3135, 3548, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/11/27 08:31:17 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: kick-db.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/kick-db.p $":U .
 define variable vss-description as character no-undo init "Закачка валют, едизм, стран, налогов".
 { cmp/vssrevis.i }
 

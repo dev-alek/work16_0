@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b187afc25aab, 810, rls $
+$Author: ASMorozov $
+$Date: Mon Sep 26 12:45:42 2016 +0300 $
+$Workfile: egais-initFormF1.p $
+$Archive: utl/egais-initFormF1.p $
 
 ”тилита создание справок 1 на основе накладных
 

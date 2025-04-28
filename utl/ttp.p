@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: c45d016aa072, 1756, rls $
+$Author: SMMolotkov $
+$Date: Thu Feb 07 16:51:35 2019 +0300 $
+$Workfile: ttp.p $
+$Archive: utl/ttp.p $
 
 Автор: Бахтадзе Наталья Викторовна
 Дата создания: 06/15/07
@@ -15,11 +16,11 @@ Creation date: 06/15/07
 */
 
 define input parameter p-metka as character no-undo .
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: c45d016aa072, 1756, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Feb 07 16:51:35 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ttp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ttp.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 /*---------------------------------------------------------

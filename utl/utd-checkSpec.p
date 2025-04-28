@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /*
 $Revision:$
 $Author:$
@@ -13,11 +14,11 @@ Creation date: 16 сент. 2021 г.
 */
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-Workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:25 2022 +0300 $":U .
+define variable vss-Workfile    as character no-undo init "$Workfile: utd-checkSpec.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/utd-checkSpec.p $":U .
 define variable vss-description as character no-undo init "Проверка по спецификации линий УПД" .
 { cmp/vssrevis.i }
 { cmp/trg-def.i }

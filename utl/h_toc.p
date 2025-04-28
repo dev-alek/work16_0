@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: h_toc.p $
+$Archive: utl/h_toc.p $
 
 формирование TOC
 
@@ -16,11 +17,11 @@ Creation date: 03/03/06
 Creation date: 09/09/04 5:32
 
 */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: h_toc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/h_toc.p $":U .
 define variable vss-description as character no-undo init "TOC ".
 { cmp/vssrevis.i }
 { gbl/filelist.i }

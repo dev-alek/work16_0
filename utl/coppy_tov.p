@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -40,10 +41,10 @@ DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO.
 
 /* Local Variable Definitions ---                                       */
 define variable vss-revision    as character no-undo init "$Revision: ":U .
-define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
 define variable vss-date        as character no-undo init "$Date: $":U .
 define variable vss-workfile    as character no-undo init "$Workfile: $":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/coppy_tov.p $":U .
 define variable vss-description as character no-undo init "Утилита".
 
 { cmp/vssrevis.i }

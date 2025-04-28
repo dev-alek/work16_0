@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 3379b68a93a6, 298, rls $
+$Author: SShalanin $
+$Date: Tue Dec 01 19:11:50 2015 +0300 $
+$Workfile: objarh.p $
+$Archive: utl/objarh.p $
 
 –асчет складского архива по товарам
 
@@ -21,11 +22,11 @@ Creation date: 07/23/08
 define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-install as logical no-undo init no .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 3379b68a93a6, 298, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SShalanin $":U .
+define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:50 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: objarh.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/objarh.p $":U .
 define variable vss-description as character no-undo init "–асчет складского архива по товарам".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

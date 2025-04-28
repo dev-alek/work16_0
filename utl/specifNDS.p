@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b2dec4207fce, 1690, rls $
+$Author: EShklyar $
+$Date: Tue Dec 11 10:07:35 2018 +0300 $
+$Workfile: specifNDS.p $
+$Archive: utl/specifNDS.p $
 
 Утилита перевода спецификаций на НДС 20%
 
@@ -16,11 +17,11 @@ Creation date: 07/23/08
 */
 define input parameter parParentProc as handle no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: b2dec4207fce, 1690, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: Tue Dec 11 10:07:35 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: specifNDS.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/specifNDS.p $":U .
 define variable vss-description as character no-undo initial "Утилита перевода спецификаций на НДС 20%".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

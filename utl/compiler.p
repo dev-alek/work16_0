@@ -1,3 +1,4 @@
+block-level on error undo, throw.
  define input-output parameter pFile as character no-undo.
  {utl\search.i}
  define variable mFileR    as character no-undo.

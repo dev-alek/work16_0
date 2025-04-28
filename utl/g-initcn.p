@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 4ad5914afa0c, 372, rls $
+$Author: EShklyar $
+$Date: Mon Dec 28 19:14:08 2015 +0300 $
+$Workfile: g-initcn.p $
+$Archive: utl/g-initcn.p $
 
 Инициализация фин. архива arh-trn-doc-contract
 

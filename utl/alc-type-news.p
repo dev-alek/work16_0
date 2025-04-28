@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 82c3c9aafa8c, 420, rls $
+$Author: EShklyar $
+$Date: Wed Jan 20 20:29:51 2016 +0400 $
+$Workfile: alc-type-news.p $
+$Archive: utl/alc-type-news.p $
 
 Передача таблицы alc-type-gds по новостям 
 
@@ -15,11 +16,11 @@ Creation date: 02/26/07
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 82c3c9aafa8c, 420, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Jan 20 20:29:51 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: alc-type-news.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/alc-type-news.p $":U .
 define variable vss-description as character no-undo init "Передача таблицы alc-type-gds по новостям".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 5f39998a998b, 782, rls $
+$Author: EShklyar $
+$Date: Wed Sep 14 12:28:21 2016 +0300 $
+$Workfile: egais-gds-synch.p $
+$Archive: utl/egais-gds-synch.p $
 
 Утилита заполнения инфо по егаис товарам из раенне полученных накладных
 

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
  /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 54e7b0cc03ed, 638, rls $
+$Author: ASMorozov $
+$Date: Wed Jun 01 18:13:33 2016 +0400 $
+$Workfile: cleaning-utm.p $
+$Archive: utl/cleaning-utm.p $
 
 Процедура очистки УТМ по расписанию
 
@@ -27,11 +28,11 @@ define input parameter p-task-type      as character     no-undo.
 define input parameter p-task-num       as integer       no-undo.
 define input parameter p-db-num         as integer       no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 54e7b0cc03ed, 638, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Jun 01 18:13:33 2016 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: cleaning-utm.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/cleaning-utm.p $":U .
 define variable vss-description as character no-undo init "Процедура очистки УТМ по расписанию".
 
 define variable admUtmObj         as class     admutm no-undo.

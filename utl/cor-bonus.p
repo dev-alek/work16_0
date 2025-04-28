@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 /* def input parameter p-type as int. */
 {utl/runpro.i}
 def input parameter p-type as int.

@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: chkprtob.p $
+$Archive: utl/chkprtob.p $
 
 Процедура очистки таблицы prt-obj
 
@@ -20,11 +21,11 @@ Creation date: 04/11/06
 
 define input parameter parparentproc as widget-handle no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$".
-define variable vss-author      as character no-undo init "$Author$".
-define variable vss-date        as character no-undo init "$Date$".
-define variable vss-workfile    as character no-undo init "$Workfile$".
-define variable vss-archive     as character no-undo init "$Archive$".
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $".
+define variable vss-author      as character no-undo init "$Author: expertek $".
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $".
+define variable vss-workfile    as character no-undo init "$Workfile: chkprtob.p $".
+define variable vss-archive     as character no-undo init "$Archive: utl/chkprtob.p $".
 define variable vss-description as character no-undo init "Проверка целостности всех товаров".
 { cmp/vssrevis.i }
 

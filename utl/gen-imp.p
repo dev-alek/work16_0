@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b39224d84de3, 3188, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:26 $
+$Workfile: gen-imp.p $
+$Archive: utl/gen-imp.p $
 
 Генерация процедур импорта
 
@@ -19,11 +20,11 @@ Creation date: 01/27/03
 define input         parameter gen-dir       as character no-undo .
 define input-output  parameter gen-file-list as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: b39224d84de3, 3188, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:26 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gen-imp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/gen-imp.p $":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -116,7 +117,7 @@ OUTPUT STREAM ImpStream TO value( gen-dir + {&imp-pck1} ) .
 PUT STREAM ImpStream UNFORMATTED
   {&std-vss-header-ukh} SKIP(1)
   '~&scoped-define vssseq ~{~&sequence~}             ' SKIP
-  'define variable vss-include-info~{~&vssseq~} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".' SKIP(1)
+  'define variable vss-include-info~{~&vssseq~} as character format "x(65)" no-undo initial "@(#)$Workfile: gen-imp.p $ $Revision: b39224d84de3, 3188, rls $".' SKIP(1)
   'define variable v-proc-name  as character no-undo .' SKIP
   'define variable v-proc-avail as logical   no-undo .' SKIP(1)
 .
@@ -126,7 +127,7 @@ OUTPUT STREAM ImpStream TO value( gen-dir + {&imp-pck2} ) .
 PUT STREAM ImpStream UNFORMATTED
   {&std-vss-header-ukh} SKIP(1)
   '~&scoped-define vssseq ~{~&sequence~}             ' SKIP
-  'define variable vss-include-info~{~&vssseq~} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".' SKIP(1)
+  'define variable vss-include-info~{~&vssseq~} as character format "x(65)" no-undo initial "@(#)$Workfile: gen-imp.p $ $Revision: b39224d84de3, 3188, rls $".' SKIP(1)
   'assign                                             ' SKIP
   '  v-proc-name = substitute( "proc-load-&1", ~{1} ) ' SKIP
   '  v-proc-avail = FALSE                             ' SKIP
@@ -138,7 +139,7 @@ OUTPUT STREAM ImpStream TO value( gen-dir + {&imp-pck3} ) .
 PUT STREAM ImpStream UNFORMATTED
   {&std-vss-header-ukh} SKIP(1)
   '~&scoped-define vssseq ~{~&sequence~}             ' SKIP
-  'define variable vss-include-info~{~&vssseq~} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".' SKIP(1)
+  'define variable vss-include-info~{~&vssseq~} as character format "x(65)" no-undo initial "@(#)$Workfile: gen-imp.p $ $Revision: b39224d84de3, 3188, rls $".' SKIP(1)
 .
 OUTPUT STREAM ImpStream CLOSE.
 
@@ -201,11 +202,11 @@ do while v-ind-tbl < v-num-tbls
   PUT STREAM ImpPckStream UNFORMATTED
     {&std-vss-header-ukh} SKIP
     {&start-comment} + ' Импорт строки из файла ' + {&end-comment} SKIP(2)
-    'define variable vss-revision    as character no-undo init "$Revision$":U .                    ' SKIP
-    'define variable vss-author      as character no-undo init "$Author$":U .                 ' SKIP
-    'define variable vss-date        as character no-undo init "$Date$":U .             ' SKIP
-    'define variable vss-workfile    as character no-undo init "$Workfile$":U .             ' SKIP
-    'define variable vss-archive     as character no-undo init "$Archive$":U . ' SKIP
+    'define variable vss-revision    as character no-undo init "$Revision: b39224d84de3, 3188, rls $":U .                    ' SKIP
+    'define variable vss-author      as character no-undo init "$Author: EShklyar $":U .                 ' SKIP
+    'define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:26 $":U .             ' SKIP
+    'define variable vss-workfile    as character no-undo init "$Workfile: gen-imp.p $":U .             ' SKIP
+    'define variable vss-archive     as character no-undo init "$Archive: utl/gen-imp.p $":U . ' SKIP
     'define variable vss-description as character no-undo init "загрузка в БД строки".                  ' SKIP
     '~{ cmp/vssrevis.i ~}                                                                               ' SKIP
     '~{ cmp/trg-def.i  ~}                                                                               ' SKIP

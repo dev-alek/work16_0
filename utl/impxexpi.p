@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 00d8465b63c9, 1823, rls $
+$Author: SMMolotkov $
+$Date: Wed Apr 03 10:04:52 2019 +0300 $
+$Workfile: impxexpi.p $
+$Archive: utl/impxexpi.p $
 
 Процедура импорта локальных таблиц УБД
 запускается как обычная утилита из системы
@@ -38,11 +39,11 @@ define input parameter p-parameter as character no-undo .
 /*  /*версия TH  в которой были экспортированы файлы*/        */
 /*  define input parameter p-version as character no-undo .   */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 00d8465b63c9, 1823, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Apr 03 10:04:52 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: impxexpi.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/impxexpi.p $":U .
 define variable vss-description as character no-undo init "Процедура экспорта локальных таблиц УБД".
 { cmp/vssrevis.i }
 

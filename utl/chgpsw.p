@@ -1,11 +1,12 @@
+block-level on error undo, throw.
 { utl/setpwd.i}
   
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: e9d5d9294a87, 3458, rls $
+$Author: DRuban $
+$Date: 2023/10/16 15:13:33 $
+$Workfile: chgpsw.p $
+$Archive: utl/chgpsw.p $
 
 Процедура установки паролей при запуске TH
 
@@ -16,11 +17,11 @@ Creation date: 03/22/00
 
 */
 define input  parameter ichgpsw as logical no-undo.
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: e9d5d9294a87, 3458, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:33 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: chgpsw.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/chgpsw.p $":U .
 define variable vss-description as character no-undo init "Процедура установки паролей при запуске TH".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

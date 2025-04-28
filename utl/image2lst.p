@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 6f05299baa1a, 320, rls $
+$Author: EShklyar $
+$Date: Wed Dec 02 16:59:31 2015 +0300 $
+$Workfile: image2lst.p $
+$Archive: utl/image2lst.p $
 
 ѕеренос изображений в структуру со списком изображений
 
@@ -21,11 +22,11 @@ DEFINE VARIABLE mOldDir       AS CHARACTER
     VIEW-AS FILL-IN SIZE 75 BY 1 
     LABEL "»сходна€ директори€" NO-UNDO.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 6f05299baa1a, 320, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Dec 02 16:59:31 2015 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: image2lst.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/image2lst.p $":U .
 define variable vss-description as character no-undo init "ѕеренос изображений в структуру со списком изображений".
 
 { cmp/vssrevis.i }

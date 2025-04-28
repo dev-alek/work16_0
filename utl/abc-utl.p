@@ -1,9 +1,10 @@
+block-level on error undo, throw.
 /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d47c064bc860, 1107, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: abc-utl.p $
+$Archive: utl/abc-utl.p $
 
 Начальное формирование справочника критериев анализа
 
@@ -20,11 +21,11 @@ define variable p-install as logical no-undo init true  .
 
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d47c064bc860, 1107, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: abc-utl.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/abc-utl.p $":U .
 define variable vss-description as character no-undo init "".
 
 def var start-time     as integer   no-undo .

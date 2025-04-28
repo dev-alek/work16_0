@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 12c0f79a3864, 3013, rls $
+$Author: EShklyar $
+$Date: Ср апр 06 16:23:44 2022 +0300 $
+$Workfile: rkocollection.p $
+$Archive: utl/rkocollection.p $
 
 Инкасация
 
@@ -49,11 +50,11 @@ define input parameter p-cmd-code  as integer no-undo .
 */
 
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 12c0f79a3864, 3013, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: Ср апр 06 16:23:44 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: rkocollection.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/rkocollection.p $":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с кодексом 24, набор 1".
 define variable vi as integer no-undo.
 { cmp/vssrevis.i }

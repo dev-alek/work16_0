@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 1eba0946c2d7, 3078, rls $
+$Author: DRuban $
+$Date: Пт авг 05 19:16:25 2022 +0300 $
+$Workfile: filecrypchar.p $
+$Archive: utl/filecrypchar.p $
 
 шифрование файла
 
@@ -23,11 +24,11 @@ define input  parameter i-pasword as character no-undo.
 define input  parameter i-encrypt as logical   no-undo.
 define output parameter o-Text as longchar no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
+define variable vss-author      as character no-undo init "$Author: DRuban $":U .
+define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:25 2022 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: filecrypchar.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/filecrypchar.p $":U .
 define variable vss-description as character no-undo init "шифрование текста".
 { cmp/vssrevis.i }
 

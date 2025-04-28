@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 099a383cf864, 290, rls $
+$Author: PGridchina $
+$Date: Tue Dec 01 19:11:24 2015 +0300 $
+$Workfile: trans-attr-line.p $
+$Archive: utl/trans-attr-line.p $
 
 Утилита переноса атрибутов из линий в шапку приходного документа.
 

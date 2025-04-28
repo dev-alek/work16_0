@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define stream inp.
 if search("./propath.txt") ne ?
 then do:

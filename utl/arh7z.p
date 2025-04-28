@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter iFilearh as character no-undo.
 define input  parameter iFileSourse as character no-undo.
 define variable m-arh-name as character no-undo.

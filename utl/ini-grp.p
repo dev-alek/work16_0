@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: ini-grp.p $
+$Archive: utl/ini-grp.p $
 
 Инициализация полных имен групп в goods, gds-obj
 
@@ -26,11 +27,11 @@ on write of ub.gds-grp     override do: end.
 on write of ub.goods       override do: end.
 on write of ub.gds-obj     override do: end.
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo init "$Author: expertek $":U .
+define variable vss-date        as character no-undo init "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ini-grp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ini-grp.p $":U .
 define variable vss-description as character no-undo init "Инициализация полных имен групп в goods, gds-obj".
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }

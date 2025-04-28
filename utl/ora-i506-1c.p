@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 0d5da778db5d, 1549, rls $
+$Author: ASMorozov $
+$Date: Wed Oct 17 22:18:22 2018 +0300 $
+$Workfile: ora-i506-1c.p $
+$Archive: utl/ora-i506-1c.p $
 
 Импорт инвентаризаций из временной таблицы
 
@@ -24,11 +25,11 @@ define input  PARAMETER TABLE FOR  temp_gds-line.
 define input  PARAMETER TABLE FOR  temp_grp-line.
 define output parameter p-ok-doc as integer   no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 0d5da778db5d, 1549, rls $":U .
+define variable vss-author      as character no-undo init "$Author: ASMorozov $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Oct 17 22:18:22 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: ora-i506-1c.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/ora-i506-1c.p $":U .
 define variable vss-description as character no-undo init "Импорт инвентаризаций из временной таблицы".
 
 { cmp/vssrevis.i }

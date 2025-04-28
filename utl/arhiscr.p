@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: arhiscr.p $
+$Archive: utl/arhiscr.p $
 
 Создание истории по сохранению архива
 
@@ -30,11 +31,11 @@ define input  parameter p-source-ref            as character no-undo .
 define input  parameter p-source-date           as date      no-undo .
 define output parameter p-create-chip-num       as integer   no-undo .
 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: aea5316774be, 0, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: expertek $":U .
+define variable vss-date        as character no-undo initial "$Date: Mon Jan 27 18:27:46 2014 +0400 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: arhiscr.p $":U .
+define variable vss-archive     as character no-undo initial "$Archive: utl/arhiscr.p $":U .
 define variable vss-description as character no-undo initial "Создание истории по сохранению архива".
 { cmp/vssrevis.i "substitute('&1|&2':u,substitute('&1|&2|&3|&4|&5':u,p-obj-type,p-obj-code,p-archive-type,p-action-type,p-file-name),substitute('&1|&2|&3|&4|&5':u,p-file-md5,p-file-invalid-chip-num,p-source-type,p-source-ref,p-source-date))" }
 { cmp/trg-def.i  }

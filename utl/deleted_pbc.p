@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 
  /*
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: bf04b0e5cfa2, 2256, rls $
+$Author: druban $
+$Date: Wed Dec 25 15:24:01 2019 +0300 $
+$Workfile: deleted_pbc.p $
+$Archive: utl/deleted_pbc.p $
 
 Удаление дополнительных Баркодов по списку соответствий.
 
@@ -16,11 +17,11 @@ Creation date: 17/09/14
 
 /* ***************************  Definitions  ************************** */
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: bf04b0e5cfa2, 2256, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Wed Dec 25 15:24:01 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: deleted_pbc.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/deleted_pbc.p $":U .
 define variable vss-description as character no-undo init "Удаление незакрытых накладных с просроч. платежами и связаными с ними ФО".
 
 { cmp/vssrevis.i }

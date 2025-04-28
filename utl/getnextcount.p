@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter iFileName as character no-undo.
 define input  parameter ikey      as character no-undo.
 define input  parameter icode     as character no-undo.

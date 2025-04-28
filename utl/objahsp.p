@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: dcb7008c86be, 1900, rls $
+$Author: druban $
+$Date: Fri Jun 07 16:26:46 2019 +0300 $
+$Workfile: objahsp.p $
+$Archive: utl/objahsp.p $
 
 Расчет складского архива по поставщикам
 
@@ -23,11 +24,11 @@ define input parameter p-install as logical no-undo init no .
 
 define variable v-str-obj as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: dcb7008c86be, 1900, rls $":U .
+define variable vss-author      as character no-undo init "$Author: druban $":U .
+define variable vss-date        as character no-undo init "$Date: Fri Jun 07 16:26:46 2019 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: objahsp.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: utl/objahsp.p $":U .
 define variable vss-description as character no-undo init "Расчет складского архива по поставщикам".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }

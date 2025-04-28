@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter parparentproc as handle no-undo.
 define input  parameter iparam        as character no-undo.
 define output parameter oOk           as logical no-undo.

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter iUtil as class ibs.th.utl.method-for-draw-utility no-undo.
 define input  parameter iCode as integer no-undo.
 define input  parameter ireclist as char no-undo.

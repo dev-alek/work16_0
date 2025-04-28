@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 &glob defonly yes
 { adm/auto-def.i new}
 { cmp/trg-def.i new }

@@ -1,3 +1,4 @@
+block-level on error undo, throw.
 define input  parameter iRC as logical no-undo.
 define variable mOutFile as character no-undo.
 &glob pubkey encode("system")

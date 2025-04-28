@@ -1,10 +1,11 @@
+block-level on error undo, throw.
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 01d4914e5615, 377, rls $
+$Author: EShklyar $
+$Date: Mon Dec 28 19:14:54 2015 +0300 $
+$Workfile: initcont.p $
+$Archive: utl/initcont.p $
 
 утилита  инициализации arh-trn-doc-contract
 
@@ -17,11 +18,11 @@ Creation date: 03/27/06
 /*define input parameter parparentproc as widget-handle no-undo*/ .
 
 /* ***************************  Definitions  ************************** */
-define variable vss-revision    as character no-undo init "$Revision$":u .
-define variable vss-author      as character no-undo init "$Author$":u .
-define variable vss-date        as character no-undo init "$Date$":u .
-define variable vss-workfile    as character no-undo init "$Workfile$":u .
-define variable vss-archive     as character no-undo init "$Archive$":u .
+define variable vss-revision    as character no-undo init "$Revision: 01d4914e5615, 377, rls $":u .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":u .
+define variable vss-date        as character no-undo init "$Date: Mon Dec 28 19:14:54 2015 +0300 $":u .
+define variable vss-workfile    as character no-undo init "$Workfile: initcont.p $":u .
+define variable vss-archive     as character no-undo init "$Archive: utl/initcont.p $":u .
 define variable vss-description as character no-undo init "утилита инициализации arh-trn-doc-contract " .
 { cmp/vssrevis.i }
 { cmp/trg-def.i  }
