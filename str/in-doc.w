@@ -4386,6 +4386,12 @@ end.
 {&create-record-fuel}
 &scop attr-code sugtpattr-err-allow
 {&create-record-fuel}
+&scop attr-code trdcattr-date-income
+{&create-record-fuel}
+&scop attr-code trdcattr-date-pasport
+{&create-record-fuel}
+&scop attr-code trdcattr-num-pasport
+{&create-record-fuel}
 
 end.
 end procedure.

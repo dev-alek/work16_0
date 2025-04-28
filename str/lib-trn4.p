@@ -28,6 +28,11 @@ define variable vss-workfile    as character no-undo initial "$Workfile: lib-trn
 define variable vss-archive     as character no-undo initial "$Archive: str/lib-trn4.p $":U .
 define variable vss-description as character no-undo initial "библиотека процедур для работы со складскими документами (4)":U .
 
+define temp-table tt-techLoss
+field temperatura as decimal
+field masdol as decimal
+field coef as decimal
+.
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { str/lib-trn.i  }
@@ -39,6 +44,8 @@ define variable vss-description as character no-undo initial "библиотека процеду
 { gbl/getsect.i def }
 { str/cont-ms-def.i }
 { str/trdcalib.i }
+{ str/placelib.i}
+{ rep/spr-sug.i }
 
 { utl/gtin.i    }
 
@@ -1654,7 +1661,8 @@ define variable v-codident as character no-undo.
           end.
         end case .
         if not varlog then  return error.
-      end.
+
+       end.
       else do:
         if can-do ({&expense_write-off_return}, buf_trn-doc.doc-type) and
                   buf_trn-doc.status_   = {&wayb}                     and
@@ -2881,6 +2889,35 @@ define variable v-codident as character no-undo.
     end.
 
   end.
+if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} and varstatus = {&fact} then 
+do:
+{ str/tdat-val.i
+             buf_trn-doc.doc-code
+             {&trdcattr-is-lgas}
+             varvalue
+             vartype
+             no-error
+          }
+
+  if varvalue = "yes" then
+  do:
+    /*Расчет тех потерь*/
+    run spr-sug (buf_trn-doc.doc-code, buf_trn-doc.reason-code) no-error .
+    run bge\send1cerp.p (?,
+      this-procedure,
+      this-procedure,
+      "techlosses",
+      (buffer buf_trn-doc:handle),
+      ?,
+      ?) no-error.
+
+    if error-status:error 
+      then 
+    do:
+      message return-value view-as alert-box.
+    end.
+  end.
+end.
 end procedure. /* lib-trn4_int-clos */
 
 procedure lib-trn4_int-open :

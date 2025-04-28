@@ -1423,6 +1423,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 /* Ф.И.О. водителя-экспедитора */
 { cmp/cr-prep.i 1 trdcattr-fio-driver "fio-driver" " " "fio-driver" }
 
+/* Дата прибытия на АЗС */
+{ cmp/cr-prep.i 1 trdcattr-date-income "date-income" " " "date-income" }
+
 /* Время прибытия на АЗС */
 { cmp/cr-prep.i 1 trdcattr-time-income "time-income" " " "time-income" }
 
@@ -1443,6 +1446,12 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define ext-syste
 
 /* Свидетельство о проверке */
 { cmp/cr-prep.i 1 trdcattr-date-cert "date-cert" " " "date-cert" }
+
+/* Паспорт качества дата  */
+{ cmp/cr-prep.i 1 trdcattr-date-pasport "date-pasport" " " "date-pasport" }
+
+/* Паспорт качества номер */
+{ cmp/cr-prep.i 1 trdcattr-num-pasport "num-pasport" " " "num-pasport" }
 
 /* Техническое состояние */
 { cmp/cr-prep.i 1 trdcattr-condition "condition" " " "condition" }

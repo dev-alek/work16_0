@@ -1180,6 +1180,19 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-fio-driver true
 &glob sort-trdcattr-fio-driver 190
 
+/* Паспорт качества дата */
+&glob fillin_width-trdcattr-date-income 11
+&glob fillin_height-trdcattr-date-income 1
+&glob type-trdcattr-date-income {&type-date}
+&glob format-trdcattr-date-income "99/99/9999"
+&glob label-trdcattr-date-income "Дата прибытия на АЗС"
+&glob tooltip-trdcattr-date-income "Дата прибытия на АЗС"
+&glob user-can-edit-trdcattr-date-income true
+&glob output-display-trdcattr-date-income true
+&glob other-trdcattr-date-income '':u
+&glob news-trdcattr-date-income true
+&glob sort-trdcattr-date-income 180
+
 /* Время прибытия на АЗС */
 &glob fillin_width-trdcattr-time-income 20
 &glob fillin_height-trdcattr-time-income 1
@@ -1219,6 +1232,32 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &glob news-trdcattr-date-cert true
 &glob sort-trdcattr-date-cert 100
 
+
+/* Паспорт качества дата */
+&glob fillin_width-trdcattr-date-pasport 11
+&glob fillin_height-trdcattr-date-pasport 1
+&glob type-trdcattr-date-pasport {&type-date}
+&glob format-trdcattr-date-pasport "99/99/9999"
+&glob label-trdcattr-date-pasport "Паспорт качества дата"
+&glob tooltip-trdcattr-date-pasport "Паспорт качества дата"
+&glob user-can-edit-trdcattr-date-pasport true
+&glob output-display-trdcattr-date-pasport true
+&glob other-trdcattr-date-pasport '':u
+&glob news-trdcattr-date-pasport true
+&glob sort-trdcattr-date-pasport 100
+
+/* Паспорт качества номер */
+&glob fillin_width-trdcattr-num-pasport 20
+&glob fillin_height-trdcattr-num-pasport 1
+&glob type-trdcattr-num-pasport {&type-char}
+&glob format-trdcattr-num-pasport "X(20)"
+&glob label-trdcattr-num-pasport "Паспорт качества номер"
+&glob tooltip-trdcattr-num-pasport "Паспорт качества номер"
+&glob user-can-edit-trdcattr-num-pasport true
+&glob output-display-trdcattr-num-pasport true
+&glob other-trdcattr-num-pasport '':u
+&glob news-trdcattr-num-pasport true
+&glob sort-trdcattr-num-pasport 100
 
 /* Техническое состояние */
 &glob fillin_width-trdcattr-condition 20

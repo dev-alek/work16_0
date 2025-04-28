@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 992a74a9441b, 3581, rls $
+$Author: VSpiridonov $
+$Date: 2023/12/14 13:36:13 $
+$Workfile: load-doc.i $
+$Archive: rep/load-doc.i $
 
 Список форм печати
 
@@ -19,7 +19,7 @@ Required:
 
 &scoped-define vssseq {&sequence}
 define variable vss-include-info{&vssseq} as character format "X(65)" no-undo
-initial "@(#)$Workfile$ $Revision$".
+initial "@(#)$Workfile: load-doc.i $ $Revision: 992a74a9441b, 3581, rls $".
 /*
 1 типы документов type-doc      * -это все
 2 Статусы документов Status_    * -это все
@@ -259,5 +259,6 @@ end.
 { rep/menu-doc.i {&income} "'*'" "'*'"   "'*'"   "'Акт отбора проб'"                                                 "'cost,sale,rubl,base'" "'rep/akt-prob.p'"  "''"                       "'--------'"  "'yukos,ibs,Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&income} "'*'" "'*'"   "'*'"   "'Акт приема нефтепродуктов'"                                                 "'cost,sale,rubl,base'" "'rep/akt-petrol.p'"  "''"                       "'--------'"  "'yukos,ibs,Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&income} {&fact} "'*'"   "'*'"   "'Акт приема СУГ'"                                                 "'cost,sale,rubl,base'" "'rep/akt-sug.p'"  "''"                       "'--------'"  "'yukos,ibs,Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
+{ rep/menu-doc.i {&income} {&fact} "'*'"   "'*'"   "'Акт приема СУГ (Расчет тех. потерь)'"                            "'cost,sale,rubl,base'" "'rep/akt-sug-ras.p'"  "''"                       "'--------'"  "'yukos,ibs,Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
 { rep/menu-doc.i {&income} {&fact} "'*'"   "'*'"   "'Акт приема СУГ (корректировка)'"                                                 "'cost,sale,rubl,base'" "'rep/akt-sug-corr.p'"  "''"                       "'--------'"  "'yukos,ibs,Rosneft-*'"                   "'HTML'"     "''"              "is-ptrl = 'yes'" }
-/* $Workfile$   E n d */
+/* $Workfile: load-doc.i $   E n d */

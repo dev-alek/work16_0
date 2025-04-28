@@ -636,6 +636,12 @@ procedure trdcalib_tdat-cod :
       {&attr-temp-full-code}
       &scop attr-code sugtpattr-err-allow
       {&attr-temp-full-code}
+      &scop attr-code trdcattr-date-income
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-date-pasport
+      {&attr-temp-full-code}
+      &scop attr-code trdcattr-num-pasport
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры */
       otherwise do:
         undo, return error substitute( 'неизвестный атрибут документа "&1"', p-code ).

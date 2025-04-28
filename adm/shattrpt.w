@@ -15,11 +15,11 @@ DEFINE BUFFER locked_thbj-attr FOR thbj-attr.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS shattrpt 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 8482156d642d, 3444, rls $
+$Author: EShklyar $
+$Date: 2023/10/16 15:13:33 $
+$Workfile: shattrpt.w $
+$Archive: adm/shattrpt.w $
 
 Экран настроек работы с топливном
 
@@ -38,11 +38,11 @@ DEFINE INPUT PARAMETER p-obj-type  LIKE ub.clients.obj-type NO-UNDO.
 DEFINE INPUT PARAMETER p-obj-code  LIKE ub.shop.obj-code    NO-UNDO.
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 8482156d642d, 3444, rls $":U .
+define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:33 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: shattrpt.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: adm/shattrpt.w $":U .
 define variable vss-description as character no-undo init "Экран настроек работы с топливном".
 { cmp/vssrevis.i }
 { gbl/waitfram.i }
@@ -1287,10 +1287,10 @@ PROCEDURE proc-init-dop-info :
 
    assign
       v-list-dop-info      = {&trdcattr-car-num} + "," + {&trdcattr-fio-driver} + "," + {&trdcattr-time-income} + "," + {&trdcattr-time-pour} + "," + {&trdcattr-date-pour} + "," + {&trdcattr-inspection-cert} + ","
-      + {&trdcattr-date-cert} + "," + {&trdcattr-condition} + "," + {&trdcattr-seals-condition} + "," + {&trdcattr-acc-ship} + "," + {&trdcattr-doc-not} + "," + {&trdcattr-spisok-not-doc} + "," + {&trdcattr-ptbobj} + 
+      + {&trdcattr-date-cert} + "," + {&trdcattr-date-pasport}  + "," + {&trdcattr-num-pasport} + "," + {&trdcattr-condition} + "," + {&trdcattr-seals-condition} + "," + {&trdcattr-acc-ship} + "," + {&trdcattr-doc-not} + "," + {&trdcattr-spisok-not-doc} + "," + {&trdcattr-ptbobj} + 
       "," + {&trdcattr-ptb-item-pour} + "," + {&trdcattr-autoent}.
       v-list-dop-info-full = {&label-trdcattr-car-num} + "," + {&label-trdcattr-fio-driver} + "," + {&label-trdcattr-time-income} + "," + {&label-trdcattr-time-pour} + "," + {&label-trdcattr-date-pour} + "," + {&label-trdcattr-inspection-cert} + ","
-      + {&label-trdcattr-date-cert} + "," + {&label-trdcattr-condition} + "," + {&label-trdcattr-seals-condition} + "," + {&label-trdcattr-acc-ship} + "," + {&label-trdcattr-doc-not} + "," + {&label-trdcattr-spisok-not-doc} +
+      + {&label-trdcattr-date-cert} + "," + {&label-trdcattr-date-pasport} + "," + {&label-trdcattr-num-pasport} + "," + {&label-trdcattr-condition} + "," + {&label-trdcattr-seals-condition} + "," + {&label-trdcattr-acc-ship} + "," + {&label-trdcattr-doc-not} + "," + {&label-trdcattr-spisok-not-doc} +
        "," + {&label-trdcattr-ptbobj} + "," + {&label-trdcattr-ptb-item-pour} + "," + {&label-trdcattr-autoent}.
 
 
