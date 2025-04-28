@@ -94,8 +94,8 @@ class ibs.th.bge.1crn.subjects.firms inherits ibs.th.bge.1crn.subjects.asubject:
     assign
       v-str = ",code" when code_ = ?
       v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",inn" when inn = ?
-      v-str = v-str + ",kpp" when kpp = ?
+     /* v-str = v-str + ",inn" when inn = ?
+      v-str = v-str + ",kpp" when kpp = ?*/
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(

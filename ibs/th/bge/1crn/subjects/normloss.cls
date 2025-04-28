@@ -117,8 +117,8 @@ class ibs.th.bge.1crn.subjects.normloss inherits ibs.th.bge.1crn.subjects.asubje
       when oil-grp = ?
       v-str = v-str + ",season" 
       when season_ = ?
-      v-str = v-str + ",value" 
-      when value_ = ?
+      /*v-str = v-str + ",value" 
+      when value_ = ?*/
       .
     v-str = trim (v-str, ",").
     if v-str > ''

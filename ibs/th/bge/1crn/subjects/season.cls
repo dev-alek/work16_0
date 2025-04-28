@@ -70,7 +70,7 @@ class ibs.th.bge.1crn.subjects.season inherits ibs.th.bge.1crn.subjects.asubject
     
     assign
       v-str = "Tbg-code" when Tbg-code = ?
-      v-str = v-str + ",Tb-name" when Tb-name = ?
+      /*v-str = v-str + ",Tb-name" when Tb-name = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''
