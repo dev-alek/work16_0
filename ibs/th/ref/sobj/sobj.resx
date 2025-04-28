@@ -119,10 +119,10 @@
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data mimetype="application/x-microsoft.net.object.bytearray.base64" name="BtnObj.Image" type="System.Drawing.Bitmap, System.Drawing">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAAAoAAAAFCAYAAAB8ZH1oAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAB0SURBVBhXYwhg2JVvylT2ioud6z42zMzM8oaBgSEfiBkY/JhXz7IQTnzrYuT1HxnLiMp94WDj
-        WAhWBAOezEtmmQtHwxUrSap+ZmPlWA6VRgXubLMWmoqGf1GV0vjIxsK2AyjEApHBAlzYJi3UYolEU8TA
-        AABLeScf9Hn/DgAAAABJRU5ErkJggg==
+        iVBORw0KGgoAAAANSUhEUgAAAAoAAAAFCAYAAAB8ZH1oAAAABGdBTUEAALGPC/xhBQAAAHJJREFUGFdj
+        CGDYlW/KVPaKi53rPjbMzMzyhoGBIZ8BBPyYV8+yEE5862Lk9R8Zy4jKfeFg41gIVgQDnsxLZpkLR8MV
+        K0mqfmZj5ViOoggG3NlmLTQVDf+iKqXxkY2FbQcDAwMLuho4cGGbtFCLJRJDEQBLeScfFjnVJQAAAABJ
+        RU5ErkJggg==
 </value>
   </data>
 </root>

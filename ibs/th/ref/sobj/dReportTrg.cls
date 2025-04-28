@@ -852,6 +852,13 @@ method private void make-btn ():
   end.  /* do */
 end .
 
+
+METHOD public void my_select():
+AssignParam ().    
+Assign-frame().    
+end.
+
+
 method private void AssignParam ():
    define variable vtext as character no-undo.
    /* проверка правильности интервала дат */

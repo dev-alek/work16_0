@@ -506,6 +506,7 @@ class ibs.th.ref.sobj.sObj_trg:
 
         case vSelectObject:
           when {&obj-all} then t-str = " По всем объектам ".
+          when {&obj-firm} then t-str = " Все по фирме ".
           otherwise do:
               t-str = paramObj:get-obj-List-text().
           end.

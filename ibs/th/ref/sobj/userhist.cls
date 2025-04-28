@@ -18,6 +18,8 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame: 
     
     DEFINE PRIVATE VARIABLE bindingSource1 AS Progress.Data.BindingSource NO-UNDO.
+    DEFINE PRIVATE VARIABLE button1 AS System.Windows.Forms.Button NO-UNDO.
+    DEFINE PRIVATE VARIABLE button2 AS System.Windows.Forms.Button NO-UNDO.
     DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
     DEFINE PRIVATE VARIABLE dataGridView1 AS System.Windows.Forms.DataGridView NO-UNDO.
     DEFINE PRIVATE VARIABLE dataGridView150 AS System.Windows.Forms.DataGridView NO-UNDO.
@@ -55,6 +57,28 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
  
     END CONSTRUCTOR.
 
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	METHOD PRIVATE VOID button1_Click_1( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
+    usertableObj:mark_user_all().
+    users:RefreshALL().        
+		RETURN.
+	END METHOD.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	METHOD PRIVATE VOID button2_Click( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
+		usertableObj:mark_table_all() . 
+        bindingSource1:RefreshAll().
+		RETURN.
+	END METHOD.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -114,18 +138,20 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         DEFINE VARIABLE dataGridViewCellStyle6 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
         dataGridViewCellStyle6 = NEW System.Windows.Forms.DataGridViewCellStyle().
         THIS-OBJECT:dataGridView1 = NEW System.Windows.Forms.DataGridView().
-        THIS-OBJECT:users = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
-        THIS-OBJECT:bindingSource1 = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
-        THIS-OBJECT:dataGridView150 = NEW System.Windows.Forms.DataGridView().
-        THIS-OBJECT:splitContainer1 = NEW System.Windows.Forms.SplitContainer().
         THIS-OBJECT:flg = NEW System.Windows.Forms.DataGridViewCheckBoxColumn().
         THIS-OBJECT:useridDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
         THIS-OBJECT:usernameDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
         THIS-OBJECT:dbnumDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
-        THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
-        THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
+        THIS-OBJECT:users = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
+        THIS-OBJECT:bindingSource1 = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
+        THIS-OBJECT:dataGridView150 = NEW System.Windows.Forms.DataGridView().
         THIS-OBJECT:dataGridViewCheckBoxColumn1 = NEW System.Windows.Forms.DataGridViewCheckBoxColumn().
         THIS-OBJECT:nameDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+        THIS-OBJECT:splitContainer1 = NEW System.Windows.Forms.SplitContainer().
+        THIS-OBJECT:button1 = NEW System.Windows.Forms.Button().
+        THIS-OBJECT:label1 = NEW System.Windows.Forms.Label().
+        THIS-OBJECT:button2 = NEW System.Windows.Forms.Button().
+        THIS-OBJECT:label2 = NEW System.Windows.Forms.Label().
         CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
         CAST(THIS-OBJECT:users, System.ComponentModel.ISupportInitialize):BeginInit().
         CAST(THIS-OBJECT:bindingSource1, System.ComponentModel.ISupportInitialize):BeginInit().
@@ -140,6 +166,8 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         /*  */
         THIS-OBJECT:dataGridView1:AccessibleDescription = "".
         THIS-OBJECT:dataGridView1:AccessibleName = "".
+        THIS-OBJECT:dataGridView1:AllowUserToAddRows = FALSE.
+        THIS-OBJECT:dataGridView1:AllowUserToDeleteRows = FALSE.
         DEFINE VARIABLE nestedvar0 AS System.Windows.Forms.AnchorStyles NO-UNDO.
         nestedvar0 = CAST(Progress.Util.EnumHelper:Or(CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
         THIS-OBJECT:dataGridView1:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
@@ -171,6 +199,7 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         THIS-OBJECT:dataGridView1:DefaultCellStyle = dataGridViewCellStyle2.
         THIS-OBJECT:dataGridView1:Location = NEW System.Drawing.Point(3, 32).
         THIS-OBJECT:dataGridView1:Name = "dataGridView1".
+        THIS-OBJECT:dataGridView1:ReadOnly = TRUE.
         dataGridViewCellStyle3:Alignment = System.Windows.Forms.DataGridViewContentAlignment:MiddleLeft.
         dataGridViewCellStyle3:BackColor = System.Drawing.SystemColors:Control.
         dataGridViewCellStyle3:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(8.25), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
@@ -179,9 +208,43 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         dataGridViewCellStyle3:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
         dataGridViewCellStyle3:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
         THIS-OBJECT:dataGridView1:RowHeadersDefaultCellStyle = dataGridViewCellStyle3.
+        THIS-OBJECT:dataGridView1:RowHeadersVisible = FALSE.
         THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(1088, 279).
         THIS-OBJECT:dataGridView1:TabIndex = 0.
         THIS-OBJECT:dataGridView1:CellContentClick:Subscribe(THIS-OBJECT:dataGridView1_CellContentClick).
+        /*  */
+        /* flg */
+        /*  */
+        THIS-OBJECT:flg:DataPropertyName = "flg".
+        THIS-OBJECT:flg:HeaderText = "".
+        THIS-OBJECT:flg:Name = "flg".
+        THIS-OBJECT:flg:ReadOnly = TRUE.
+        THIS-OBJECT:flg:Width = 50.
+        /*  */
+        /* useridDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:useridDataGridViewTextBoxColumn:DataPropertyName = "user-id_".
+        THIS-OBJECT:useridDataGridViewTextBoxColumn:HeaderText = " ID".
+        THIS-OBJECT:useridDataGridViewTextBoxColumn:Name = "useridDataGridViewTextBoxColumn".
+        THIS-OBJECT:useridDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        THIS-OBJECT:useridDataGridViewTextBoxColumn:Width = 60.
+        /*  */
+        /* usernameDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:usernameDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:Fill.
+        THIS-OBJECT:usernameDataGridViewTextBoxColumn:DataPropertyName = "user_name".
+        THIS-OBJECT:usernameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(200).
+        THIS-OBJECT:usernameDataGridViewTextBoxColumn:HeaderText = " Имя пользователя".
+        THIS-OBJECT:usernameDataGridViewTextBoxColumn:Name = "usernameDataGridViewTextBoxColumn".
+        THIS-OBJECT:usernameDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        /*  */
+        /* dbnumDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:DataPropertyName = "db-num".
+        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:HeaderText = " БД ".
+        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:Name = "dbnumDataGridViewTextBoxColumn".
+        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:Width = 80.
         /*  */
         /* users */
         /*  */
@@ -219,6 +282,8 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         /*  */
         /* dataGridView150 */
         /*  */
+        THIS-OBJECT:dataGridView150:AllowUserToAddRows = FALSE.
+        THIS-OBJECT:dataGridView150:AllowUserToDeleteRows = FALSE.
         DEFINE VARIABLE nestedvar1 AS System.Windows.Forms.AnchorStyles NO-UNDO.
         nestedvar1 = CAST(Progress.Util.EnumHelper:Or(CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
         THIS-OBJECT:dataGridView150:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar1, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
@@ -256,78 +321,10 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         dataGridViewCellStyle6:SelectionForeColor = System.Drawing.SystemColors:HighlightText.
         dataGridViewCellStyle6:WrapMode = System.Windows.Forms.DataGridViewTriState:True.
         THIS-OBJECT:dataGridView150:RowHeadersDefaultCellStyle = dataGridViewCellStyle6.
+        THIS-OBJECT:dataGridView150:RowHeadersVisible = FALSE.
         THIS-OBJECT:dataGridView150:Size = NEW System.Drawing.Size(1088, 281).
         THIS-OBJECT:dataGridView150:TabIndex = 1.
         THIS-OBJECT:dataGridView150:CellContentClick:Subscribe(THIS-OBJECT:dataGridView2_CellContentClick).
-        /*  */
-        /* splitContainer1 */
-        /*  */
-        THIS-OBJECT:splitContainer1:Dock = System.Windows.Forms.DockStyle:Fill.
-        THIS-OBJECT:splitContainer1:Location = NEW System.Drawing.Point(0, 0).
-        THIS-OBJECT:splitContainer1:Name = "splitContainer1".
-        THIS-OBJECT:splitContainer1:Orientation = System.Windows.Forms.Orientation:Horizontal.
-        /*  */
-        /* splitContainer1.Panel1 */
-        /*  */
-        THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:label1).
-        THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:dataGridView1).
-        THIS-OBJECT:splitContainer1:Panel1:Paint:Subscribe(THIS-OBJECT:Panel1_Paint_1).
-        /*  */
-        /* splitContainer1.Panel2 */
-        /*  */
-        THIS-OBJECT:splitContainer1:Panel2:Controls:Add(THIS-OBJECT:label2).
-        THIS-OBJECT:splitContainer1:Panel2:Controls:Add(THIS-OBJECT:dataGridView150).
-        THIS-OBJECT:splitContainer1:Size = NEW System.Drawing.Size(1094, 628).
-        THIS-OBJECT:splitContainer1:SplitterDistance = 314.
-        THIS-OBJECT:splitContainer1:TabIndex = 4.
-        /*  */
-        /* flg */
-        /*  */
-        THIS-OBJECT:flg:DataPropertyName = "flg".
-        THIS-OBJECT:flg:HeaderText = "".
-        THIS-OBJECT:flg:Name = "flg".
-        THIS-OBJECT:flg:Width = 50.
-        /*  */
-        /* useridDataGridViewTextBoxColumn */
-        /*  */
-        THIS-OBJECT:useridDataGridViewTextBoxColumn:DataPropertyName = "user-id_".
-        THIS-OBJECT:useridDataGridViewTextBoxColumn:HeaderText = " ID".
-        THIS-OBJECT:useridDataGridViewTextBoxColumn:Name = "useridDataGridViewTextBoxColumn".
-        THIS-OBJECT:useridDataGridViewTextBoxColumn:Width = 60.
-        /*  */
-        /* usernameDataGridViewTextBoxColumn */
-        /*  */
-        THIS-OBJECT:usernameDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:Fill.
-        THIS-OBJECT:usernameDataGridViewTextBoxColumn:DataPropertyName = "user_name".
-        THIS-OBJECT:usernameDataGridViewTextBoxColumn:FillWeight = Progress.Util.CastUtil:ToSingle(200).
-        THIS-OBJECT:usernameDataGridViewTextBoxColumn:HeaderText = " Имя пользователя".
-        THIS-OBJECT:usernameDataGridViewTextBoxColumn:Name = "usernameDataGridViewTextBoxColumn".
-        /*  */
-        /* dbnumDataGridViewTextBoxColumn */
-        /*  */
-        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:DataPropertyName = "db-num".
-        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:HeaderText = " БД ".
-        THIS-OBJECT:dbnumDataGridViewTextBoxColumn:Name = "dbnumDataGridViewTextBoxColumn".
-        /*  */
-        /* label1 */
-        /*  */
-        THIS-OBJECT:label1:Location = NEW System.Drawing.Point(23, 0).
-        THIS-OBJECT:label1:Name = "label1".
-        THIS-OBJECT:label1:Size = NEW System.Drawing.Size(282, 29).
-        THIS-OBJECT:label1:TabIndex = 3.
-        THIS-OBJECT:label1:Text = "Пользователи:".
-        THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label1:UseCompatibleTextRendering = TRUE.
-        /*  */
-        /* label2 */
-        /*  */
-        THIS-OBJECT:label2:Location = NEW System.Drawing.Point(23, 0).
-        THIS-OBJECT:label2:Name = "label2".
-        THIS-OBJECT:label2:Size = NEW System.Drawing.Size(153, 23).
-        THIS-OBJECT:label2:TabIndex = 4.
-        THIS-OBJECT:label2:Text = "Типы событий:".
-        THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
-        THIS-OBJECT:label2:UseCompatibleTextRendering = TRUE.
         /*  */
         /* dataGridViewCheckBoxColumn1 */
         /*  */
@@ -342,6 +339,71 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
         THIS-OBJECT:nameDataGridViewTextBoxColumn:DataPropertyName = "name_".
         THIS-OBJECT:nameDataGridViewTextBoxColumn:HeaderText = "Типы событий".
         THIS-OBJECT:nameDataGridViewTextBoxColumn:Name = "nameDataGridViewTextBoxColumn".
+        /*  */
+        /* splitContainer1 */
+        /*  */
+        THIS-OBJECT:splitContainer1:Dock = System.Windows.Forms.DockStyle:Fill.
+        THIS-OBJECT:splitContainer1:Location = NEW System.Drawing.Point(0, 0).
+        THIS-OBJECT:splitContainer1:Name = "splitContainer1".
+        THIS-OBJECT:splitContainer1:Orientation = System.Windows.Forms.Orientation:Horizontal.
+        /*  */
+        /* splitContainer1.Panel1 */
+        /*  */
+        THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:button1).
+        THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:label1).
+        THIS-OBJECT:splitContainer1:Panel1:Controls:Add(THIS-OBJECT:dataGridView1).
+        THIS-OBJECT:splitContainer1:Panel1:Paint:Subscribe(THIS-OBJECT:Panel1_Paint_1).
+        /*  */
+        /* splitContainer1.Panel2 */
+        /*  */
+        THIS-OBJECT:splitContainer1:Panel2:Controls:Add(THIS-OBJECT:button2).
+        THIS-OBJECT:splitContainer1:Panel2:Controls:Add(THIS-OBJECT:label2).
+        THIS-OBJECT:splitContainer1:Panel2:Controls:Add(THIS-OBJECT:dataGridView150).
+        THIS-OBJECT:splitContainer1:Size = NEW System.Drawing.Size(1094, 628).
+        THIS-OBJECT:splitContainer1:SplitterDistance = 314.
+        THIS-OBJECT:splitContainer1:TabIndex = 4.
+        /*  */
+        /* button1 */
+        /*  */
+        THIS-OBJECT:button1:Location = NEW System.Drawing.Point(121, 4).
+        THIS-OBJECT:button1:Name = "button1".
+        THIS-OBJECT:button1:Size = NEW System.Drawing.Size(55, 20).
+        THIS-OBJECT:button1:TabIndex = 4.
+        THIS-OBJECT:button1:Text = "Все".
+        THIS-OBJECT:button1:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:button1:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:button1:Click:Subscribe(THIS-OBJECT:button1_Click_1).
+        /*  */
+        /* label1 */
+        /*  */
+        THIS-OBJECT:label1:Location = NEW System.Drawing.Point(23, 0).
+        THIS-OBJECT:label1:Name = "label1".
+        THIS-OBJECT:label1:Size = NEW System.Drawing.Size(282, 29).
+        THIS-OBJECT:label1:TabIndex = 3.
+        THIS-OBJECT:label1:Text = "Пользователи:".
+        THIS-OBJECT:label1:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        THIS-OBJECT:label1:UseCompatibleTextRendering = TRUE.
+        /*  */
+        /* button2 */
+        /*  */
+        THIS-OBJECT:button2:Location = NEW System.Drawing.Point(121, 0).
+        THIS-OBJECT:button2:Name = "button2".
+        THIS-OBJECT:button2:Size = NEW System.Drawing.Size(55, 20).
+        THIS-OBJECT:button2:TabIndex = 5.
+        THIS-OBJECT:button2:Text = "Все".
+        THIS-OBJECT:button2:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:button2:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:button2:Click:Subscribe(THIS-OBJECT:button2_Click).
+        /*  */
+        /* label2 */
+        /*  */
+        THIS-OBJECT:label2:Location = NEW System.Drawing.Point(23, 0).
+        THIS-OBJECT:label2:Name = "label2".
+        THIS-OBJECT:label2:Size = NEW System.Drawing.Size(153, 23).
+        THIS-OBJECT:label2:TabIndex = 4.
+        THIS-OBJECT:label2:Text = "Типы событий:".
+        THIS-OBJECT:label2:TextAlign = System.Drawing.ContentAlignment:MiddleLeft.
+        THIS-OBJECT:label2:UseCompatibleTextRendering = TRUE.
         /*  */
         /* userhist */
         /*  */
@@ -367,29 +429,32 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
 	
 	
 
-   method override public void my-report ():
+    method override public void my-report ():
        
-    usertableObj:my_report().
-      
-   END METHOD.
+    usertableObj:my_report().  /* запуск печати отчета */
+    /*usertableObj:init_tt().   /* формирование заново временных таблиц и обновление экрана */ */
+    
+    bindingSource1:handle:query-open.  
+    bindingSource1:RefreshAll() .
+    
+    users:handle:query-open.          
+    users:RefreshAll() .
+    
+    RETURN.  
+    END METHOD.
 
     METHOD OVERRIDE PUBLIC VOID my-secected(  ):
         
-    usertableObj:init_tt().
+    usertableObj:chek_table().   /* если таблица пользователей пустая заполняем */
+    /* usertableObj:init_tt(). */
+   
     bindingSource1:handle:query-open.
     bindingSource1:RefreshAll() .
     
     users:handle:query-open.
     users:RefreshAll() .
-    
-        
-        
 
     END METHOD.
-
-
-
-
 
 
 	/*------------------------------------------------------------------------------
@@ -398,10 +463,10 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	METHOD PRIVATE VOID Panel1_Paint_1( INPUT sender AS System.Object, INPUT e AS System.Windows.Forms.PaintEventArgs ):
-		
+	
 		RETURN.
 
-	END METHOD.
+	END METHOD.  
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -412,7 +477,11 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
 		
 		RETURN.
 
-	END METHOD.	 
+	END METHOD. 	 
+	
+		
+	
+	
 	
 
     DESTRUCTOR PUBLIC userhist ( ):

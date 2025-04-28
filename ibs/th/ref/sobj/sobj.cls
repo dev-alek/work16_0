@@ -142,126 +142,138 @@ class ibs.th.ref.sobj.sobj inherits UserControl:
       Visual Designer to avoid any incompatible modifications.
       
       Modifying the contents of this method using a code editor will invalidate any support for this file. */
-      @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable resources as Progress.Util.ResourceManager no-undo.
-      resources = new Progress.Util.ResourceManager("ibs.th.ref.sobj.sobj").
-      this-object:TEXT1 = new System.Windows.Forms.Label().
-      this-object:SelectObjectObjFirm = new System.Windows.Forms.RadioButton().
-      this-object:SelectObjectObjCurr = new System.Windows.Forms.RadioButton().
-      this-object:SelectObjectObjChoice = new System.Windows.Forms.RadioButton().
-      this-object:SelectObjectAll = new System.Windows.Forms.RadioButton().
-      this-object:BtnObj = new System.Windows.Forms.Button().
-      this-object:ObjCount = new System.Windows.Forms.TextBox().
-      this-object:SuspendLayout().
-      /*  */
-      /* TEXT1 */
-      /*  */
-      this-object:TEXT1:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(12), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-      this-object:TEXT1:Location = new System.Drawing.Point(14, 12).
-      this-object:TEXT1:Name = "TEXT1".
-      this-object:TEXT1:Size = new System.Drawing.Size(140, 23).
-      this-object:TEXT1:TabIndex = 0.
-      this-object:TEXT1:Text = "Выбор объекта".
-      this-object:TEXT1:UseCompatibleTextRendering = true.
-      /*  */
-      /* SelectObjectObjFirm */
-      /*  */
-      this-object:SelectObjectObjFirm:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-      this-object:SelectObjectObjFirm:Location = new System.Drawing.Point(4, 39).
-      this-object:SelectObjectObjFirm:Name = "SelectObjectObjFirm".
-      this-object:SelectObjectObjFirm:Size = new System.Drawing.Size(130, 20).
-      this-object:SelectObjectObjFirm:TabIndex = 1.
-      this-object:SelectObjectObjFirm:TabStop = true.
-      this-object:SelectObjectObjFirm:Text = "Все по фирме".
-      this-object:SelectObjectObjFirm:UseCompatibleTextRendering = true.
-      this-object:SelectObjectObjFirm:UseVisualStyleBackColor = true.
-      this-object:SelectObjectObjFirm:CheckedChanged:Subscribe(this-object:SelectObjectObjFirm_CheckedChanged).
-      /*  */
-      /* SelectObjectObjCurr */
-      /*  */
-      this-object:SelectObjectObjCurr:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-      this-object:SelectObjectObjCurr:Location = new System.Drawing.Point(3, 65).
-      this-object:SelectObjectObjCurr:Name = "SelectObjectObjCurr".
-      this-object:SelectObjectObjCurr:Size = new System.Drawing.Size(104, 20).
-      this-object:SelectObjectObjCurr:TabIndex = 2.
-      this-object:SelectObjectObjCurr:TabStop = true.
-      this-object:SelectObjectObjCurr:Text = "Текущий".
-      this-object:SelectObjectObjCurr:UseCompatibleTextRendering = true.
-      this-object:SelectObjectObjCurr:UseVisualStyleBackColor = true.
-      this-object:SelectObjectObjCurr:CheckedChanged:Subscribe(this-object:SelectObjectObjCurr_CheckedChanged).
-      /*  */
-      /* SelectObjectObjChoice */
-      /*  */
-      this-object:SelectObjectObjChoice:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-      this-object:SelectObjectObjChoice:Location = new System.Drawing.Point(4, 91).
-      this-object:SelectObjectObjChoice:Name = "SelectObjectObjChoice".
-      this-object:SelectObjectObjChoice:Size = new System.Drawing.Size(104, 20).
-      this-object:SelectObjectObjChoice:TabIndex = 3.
-      this-object:SelectObjectObjChoice:TabStop = true.
-      this-object:SelectObjectObjChoice:Text = "Выборочно".
-      this-object:SelectObjectObjChoice:UseCompatibleTextRendering = true.
-      this-object:SelectObjectObjChoice:UseVisualStyleBackColor = true.
-      this-object:SelectObjectObjChoice:CheckedChanged:Subscribe(this-object:SelectObjectObjChoice_CheckedChanged).
-      /*  */
-      /* SelectObjectAll */
-      /*  */
-      this-object:SelectObjectAll:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-      this-object:SelectObjectAll:Location = new System.Drawing.Point(4, 117).
-      this-object:SelectObjectAll:Name = "SelectObjectAll".
-      this-object:SelectObjectAll:Size = new System.Drawing.Size(104, 20).
-      this-object:SelectObjectAll:TabIndex = 4.
-      this-object:SelectObjectAll:TabStop = true.
-      this-object:SelectObjectAll:Text = "Все".
-      this-object:SelectObjectAll:UseCompatibleTextRendering = true.
-      this-object:SelectObjectAll:UseVisualStyleBackColor = true.
-      this-object:SelectObjectAll:CheckedChanged:Subscribe(this-object:SelectObjectAll_CheckedChanged).
-      /*  */
-      /* BtnObj */
-      /*  */
-      this-object:BtnObj:Image = cast(resources:GetObject("BtnObj.Image"), System.Drawing.Image).
-      this-object:BtnObj:Location = new System.Drawing.Point(134, 91).
-      this-object:BtnObj:Name = "BtnObj".
-      this-object:BtnObj:Size = new System.Drawing.Size(20, 20).
-      this-object:BtnObj:TabIndex = 5.
-      this-object:BtnObj:UseCompatibleTextRendering = true.
-      this-object:BtnObj:UseVisualStyleBackColor = true.
-      this-object:BtnObj:Click:Subscribe(this-object:BtnObj_Click).
-      /*  */
-      /* ObjCount */
-      /*  */
-      define variable nestedvar0 as System.Windows.Forms.AnchorStyles no-undo.
-      nestedvar0 = cast(Progress.Util.EnumHelper:Or(cast(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
-      this-object:ObjCount:Anchor = cast(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
-      this-object:ObjCount:Enabled = false.
-      this-object:ObjCount:Font = new System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
-      this-object:ObjCount:Location = new System.Drawing.Point(4, 143).
-      this-object:ObjCount:Multiline = true.
-      this-object:ObjCount:Name = "ObjCount".
-      this-object:ObjCount:Size = new System.Drawing.Size(167, 34).
-      this-object:ObjCount:TabIndex = 6.
-      /*  */
-      /* sobj */
-      /*  */
-      this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
-      this-object:Controls:Add(this-object:ObjCount).
-      this-object:Controls:Add(this-object:BtnObj).
-      this-object:Controls:Add(this-object:SelectObjectAll).
-      this-object:Controls:Add(this-object:SelectObjectObjChoice).
-      this-object:Controls:Add(this-object:SelectObjectObjCurr).
-      this-object:Controls:Add(this-object:SelectObjectObjFirm).
-      this-object:Controls:Add(this-object:TEXT1).
-      this-object:Name = "sobj".
-      this-object:Size = new System.Drawing.Size(174, 180).
-      this-object:ResumeLayout(false).
-      this-object:PerformLayout().
-      catch e as Progress.Lang.Error:
-         undo, throw e.
-      end catch.
+        @VisualDesigner.FormMember (NeedsInitialize="true").
+        DEFINE VARIABLE resources AS Progress.Util.ResourceManager NO-UNDO.
+        resources = NEW Progress.Util.ResourceManager("ibs.th.ref.sobj.sobj").
+        THIS-OBJECT:TEXT1 = NEW System.Windows.Forms.Label().
+        THIS-OBJECT:SelectObjectObjFirm = NEW System.Windows.Forms.RadioButton().
+        THIS-OBJECT:SelectObjectObjCurr = NEW System.Windows.Forms.RadioButton().
+        THIS-OBJECT:SelectObjectObjChoice = NEW System.Windows.Forms.RadioButton().
+        THIS-OBJECT:SelectObjectAll = NEW System.Windows.Forms.RadioButton().
+        THIS-OBJECT:BtnObj = NEW System.Windows.Forms.Button().
+        THIS-OBJECT:ObjCount = NEW System.Windows.Forms.TextBox().
+        THIS-OBJECT:SuspendLayout().
+        /*  */
+        /* TEXT1 */
+        /*  */
+        THIS-OBJECT:TEXT1:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(12), System.Drawing.FontStyle:Bold, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        THIS-OBJECT:TEXT1:Location = NEW System.Drawing.Point(14, 12).
+        THIS-OBJECT:TEXT1:Name = "TEXT1".
+        THIS-OBJECT:TEXT1:Size = NEW System.Drawing.Size(140, 23).
+        THIS-OBJECT:TEXT1:TabIndex = 0.
+        THIS-OBJECT:TEXT1:Text = "Выбор объекта".
+        THIS-OBJECT:TEXT1:UseCompatibleTextRendering = TRUE.
+        /*  */
+        /* SelectObjectObjFirm */
+        /*  */
+        THIS-OBJECT:SelectObjectObjFirm:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        THIS-OBJECT:SelectObjectObjFirm:Location = NEW System.Drawing.Point(4, 39).
+        THIS-OBJECT:SelectObjectObjFirm:Name = "SelectObjectObjFirm".
+        THIS-OBJECT:SelectObjectObjFirm:Size = NEW System.Drawing.Size(130, 20).
+        THIS-OBJECT:SelectObjectObjFirm:TabIndex = 1.
+        THIS-OBJECT:SelectObjectObjFirm:TabStop = TRUE.
+        THIS-OBJECT:SelectObjectObjFirm:Text = "Все по фирме".
+        THIS-OBJECT:SelectObjectObjFirm:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:SelectObjectObjFirm:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:SelectObjectObjFirm:CheckedChanged:Subscribe(THIS-OBJECT:SelectObjectObjFirm_CheckedChanged).
+        /*  */
+        /* SelectObjectObjCurr */
+        /*  */
+        THIS-OBJECT:SelectObjectObjCurr:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        THIS-OBJECT:SelectObjectObjCurr:Location = NEW System.Drawing.Point(3, 65).
+        THIS-OBJECT:SelectObjectObjCurr:Name = "SelectObjectObjCurr".
+        THIS-OBJECT:SelectObjectObjCurr:Size = NEW System.Drawing.Size(104, 20).
+        THIS-OBJECT:SelectObjectObjCurr:TabIndex = 2.
+        THIS-OBJECT:SelectObjectObjCurr:TabStop = TRUE.
+        THIS-OBJECT:SelectObjectObjCurr:Text = "Текущий".
+        THIS-OBJECT:SelectObjectObjCurr:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:SelectObjectObjCurr:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:SelectObjectObjCurr:CheckedChanged:Subscribe(THIS-OBJECT:SelectObjectObjCurr_CheckedChanged).
+        /*  */
+        /* SelectObjectObjChoice */
+        /*  */
+        THIS-OBJECT:SelectObjectObjChoice:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        THIS-OBJECT:SelectObjectObjChoice:Location = NEW System.Drawing.Point(4, 91).
+        THIS-OBJECT:SelectObjectObjChoice:Name = "SelectObjectObjChoice".
+        THIS-OBJECT:SelectObjectObjChoice:Size = NEW System.Drawing.Size(104, 20).
+        THIS-OBJECT:SelectObjectObjChoice:TabIndex = 3.
+        THIS-OBJECT:SelectObjectObjChoice:TabStop = TRUE.
+        THIS-OBJECT:SelectObjectObjChoice:Text = "Выборочно".
+        THIS-OBJECT:SelectObjectObjChoice:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:SelectObjectObjChoice:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:SelectObjectObjChoice:CheckedChanged:Subscribe(THIS-OBJECT:SelectObjectObjChoice_CheckedChanged).
+        /*  */
+        /* SelectObjectAll */
+        /*  */
+        THIS-OBJECT:SelectObjectAll:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        THIS-OBJECT:SelectObjectAll:Location = NEW System.Drawing.Point(4, 117).
+        THIS-OBJECT:SelectObjectAll:Name = "SelectObjectAll".
+        THIS-OBJECT:SelectObjectAll:Size = NEW System.Drawing.Size(104, 20).
+        THIS-OBJECT:SelectObjectAll:TabIndex = 4.
+        THIS-OBJECT:SelectObjectAll:TabStop = TRUE.
+        THIS-OBJECT:SelectObjectAll:Text = "Все".
+        THIS-OBJECT:SelectObjectAll:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:SelectObjectAll:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:SelectObjectAll:CheckedChanged:Subscribe(THIS-OBJECT:SelectObjectAll_CheckedChanged).
+        /*  */
+        /* BtnObj */
+        /*  */
+        THIS-OBJECT:BtnObj:Image = CAST(resources:GetObject("BtnObj.Image"), System.Drawing.Image).
+        THIS-OBJECT:BtnObj:Location = NEW System.Drawing.Point(134, 91).
+        THIS-OBJECT:BtnObj:Name = "BtnObj".
+        THIS-OBJECT:BtnObj:Size = NEW System.Drawing.Size(20, 20).
+        THIS-OBJECT:BtnObj:TabIndex = 5.
+        THIS-OBJECT:BtnObj:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:BtnObj:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:BtnObj:Click:Subscribe(THIS-OBJECT:BtnObj_Click).
+        /*  */
+        /* ObjCount */
+        /*  */
+        DEFINE VARIABLE nestedvar0 AS System.Windows.Forms.AnchorStyles NO-UNDO.
+        nestedvar0 = CAST(Progress.Util.EnumHelper:Or(CAST(Progress.Util.EnumHelper:Or(System.Windows.Forms.AnchorStyles:Top, System.Windows.Forms.AnchorStyles:Bottom), System.Windows.Forms.AnchorStyles), System.Windows.Forms.AnchorStyles:Left), System.Windows.Forms.AnchorStyles).
+        THIS-OBJECT:ObjCount:Anchor = CAST(Progress.Util.EnumHelper:Or(nestedvar0, System.Windows.Forms.AnchorStyles:Right), System.Windows.Forms.AnchorStyles).
+        THIS-OBJECT:ObjCount:Enabled = FALSE.
+        THIS-OBJECT:ObjCount:Font = NEW System.Drawing.Font("Microsoft Sans Serif", Progress.Util.CastUtil:ToSingle(9.75), System.Drawing.FontStyle:Regular, System.Drawing.GraphicsUnit:Point, System.Convert:ToByte(204)).
+        THIS-OBJECT:ObjCount:Location = NEW System.Drawing.Point(4, 143).
+        THIS-OBJECT:ObjCount:Multiline = TRUE.
+        THIS-OBJECT:ObjCount:Name = "ObjCount".
+        THIS-OBJECT:ObjCount:Size = NEW System.Drawing.Size(167, 34).
+        THIS-OBJECT:ObjCount:TabIndex = 6.
+        THIS-OBJECT:ObjCount:TextChanged:Subscribe(THIS-OBJECT:ObjCount_TextChanged).
+        /*  */
+        /* sobj */
+        /*  */
+        THIS-OBJECT:AutoScaleDimensions = NEW System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:ObjCount).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:BtnObj).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:SelectObjectAll).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:SelectObjectObjChoice).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:SelectObjectObjCurr).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:SelectObjectObjFirm).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:TEXT1).
+        THIS-OBJECT:Name = "sobj".
+        THIS-OBJECT:Size = NEW System.Drawing.Size(174, 180).
+        THIS-OBJECT:ResumeLayout(FALSE).
+        THIS-OBJECT:PerformLayout().
+        CATCH e AS Progress.Lang.Error:
+            UNDO, THROW e.
+        END CATCH.
    end method.
 
    destructor public sobj ( ):
       delete object mTrgLoc.
    end destructor.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	METHOD PRIVATE VOID ObjCount_TextChanged( INPUT sender AS System.Object, INPUT e AS System.EventArgs ):
+	
+		RETURN.
+
+	END METHOD.
 
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -308,9 +320,9 @@ class ibs.th.ref.sobj.sobj inherits UserControl:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void SelectObjectObjFirm_CheckedChanged( input sender as System.Object, input e as System.EventArgs ):
-		if SelectObjectObjCurr:Checked
+		if SelectObjectObjFirm:Checked
       then
-         VALUE-CHANGED_SelectObject().
+         VALUE-CHANGED_SelectObjectF().              /* Все по фирме */
 		return.
 
 	end method.
@@ -333,6 +345,12 @@ class ibs.th.ref.sobj.sobj inherits UserControl:
       val-obj () .
       mtrgloc:VALUE-CHANGED_SelectObject(stype:SelectObjectchar(SelectObject)).
       ObjCount:text = mTrgLoc:Assign-frame(SelectObject).
+
+   end.
+   
+   method private void VALUE-CHANGED_SelectObjectF():
+      VALUE-CHANGED_SelectObject().
+      ObjCount:text = "Выбор объекта: Все по фирме" .
    end.
 
    method private void display-obj ():
