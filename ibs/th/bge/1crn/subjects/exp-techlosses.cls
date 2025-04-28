@@ -83,27 +83,27 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
       if available (buf_doc-line-attr) then 
-      hSaxWriter:write-data-element (  "tl-blowdown":U,     buf_doc-line-attr.attr-value   ).
+      hSaxWriter:write-data-element (  "tl-blowdown":U,     string(decimal(buf_doc-line-attr.attr-value),"->>9.99")   ).
       find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "fittings" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
       if available (buf_doc-line-attr) then 
-      hSaxWriter:write-data-element (  "tl-fittings":U,     buf_doc-line-attr.attr-value   ).
+      hSaxWriter:write-data-element (  "tl-fittings":U,     string(decimal(buf_doc-line-attr.attr-value),"->>9.99")   ).
             find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "emptying" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
       if available (buf_doc-line-attr) then 
-      hSaxWriter:write-data-element (  "tl-emptying":U,     buf_doc-line-attr.attr-value   ).
+      hSaxWriter:write-data-element (  "tl-emptying":U,     string(decimal(buf_doc-line-attr.attr-value),"->>9.99")   ).
             find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "refund" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
       if available (buf_doc-line-attr) then 
-      hSaxWriter:write-data-element (  "tl-refund":U,     buf_doc-line-attr.attr-value   ).
+      hSaxWriter:write-data-element (  "tl-refund":U,     string(decimal(buf_doc-line-attr.attr-value),"->>9.999")   ).
             find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "ctrlvalve" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
       if available (buf_doc-line-attr) then 
-      hSaxWriter:write-data-element (  "tl-ctrlvalve":U,     buf_doc-line-attr.attr-value   ).
+      hSaxWriter:write-data-element (  "tl-ctrlvalve":U,     string(decimal(buf_doc-line-attr.attr-value),"->>9.99")   ).
       hSaxWriter:end-element ("techlosse") .
 end.
    end.
