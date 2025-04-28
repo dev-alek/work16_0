@@ -69,7 +69,7 @@ class ibs.th.bge.1crn.subjects.assortment-matrix inherits ibs.th.bge.1crn.subjec
     
     assign
       v-str = ",gds-code" when gds-code = ?
-      v-str = v-str + ",stg" when stg = ?
+/*      v-str = v-str + ",stg" when stg = ?*/
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
