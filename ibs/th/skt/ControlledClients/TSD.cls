@@ -1876,38 +1876,32 @@ end.
     for each buf_utd where buf_utd.obj-type = ObjType and buf_utd.obj-code = ObjCode and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB
       and buf_utd.EDocType = ObjSrv:Env:Utd:EDocType:UTD:KeyIntDB:
       v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
-      /*
-      if iprotocol = 0 then do:
-     for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
+      myflagsDoc:unSetAllFlags().
+      myflagsDoc:isDocMarkOn = false.
+      block-u-l:
+      for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
          block-mark:
          for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd-l.db-num 
                              and buf_utd-m-l.doc-id    = buf_utd-l.doc-id
                              and buf_utd-m-l.LineNum   = buf_utd-l.LineNum 
          no-lock:
-            if not ismark(buf_utd-m-l.mark)
+            if    ismark(buf_utd-m-l.mark)
+               or isOAD (buf_utd-m-l.mark)
             then do:
-               leave block-mark. 
-            end.
-         end.
-         if available buf_utd-m-l
-         then do:
-            ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
+               ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
                   input  buffer buf_utd-l:handle, 
                   output vRecKey-line). 
-            find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
-            if not available buf_utd-err
-            then do:
-               LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Документ содержит не маркированный товар УТД &1.", v-doc-num).
-               next l_utd.
+               find first buf_utd-err no-lock where buf_utd-err.doc-id = buf_utd-l.doc-id and buf_utd-err.db-num = buf_utd-l.db-num and buf_utd-err.reckey = vRecKey-line no-error .
+               if not available buf_utd-err
+               then do:
+                  myflagsDoc:isDocMarkOn = true.
+                  leave block-u-l.
+               end.
+               else
+                  leave block-mark.
             end.
          end.
       end.         
-      end.
-      */
-      myflagsDoc:unSetAllFlags().
-/*      myflagsDoc:isDocMarkOn = true.*/
-     
-      
       if buf_utd.cli-code = ? or buf_utd.obj-code = ? or buf_utd.cli-type = ? or buf_utd.obj-type = ?
       then do:
         LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Не указан контрагент/объект TH в документе УТД &1.", v-doc-num).

@@ -43,7 +43,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     get.
     private set.
   
-  define private variable tsd         as class     TSD .
+  define private variable tsd         as class     TSD no-undo.
   define private variable hRoot       as handle    no-undo.
   define private variable hDoc        as handle    no-undo.
   define private variable hRow        as handle    no-undo.
@@ -124,7 +124,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
        end.
        ErrStatus = true.
-       undo.
+       return.
     end.
     mServiceBusy = yes.
     os-delete value (search ("MT_documentsSend.txt")) no-error.
@@ -269,7 +269,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       if logWrite:LogStr = ""
       then tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1)).
       else tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&1&5&2",{&CRLF},{&HdEnd},get-size(mbuffer1), "При обмене возникли ошибки.",logWrite:LogStr). 
-    
+      block-write:
+      do trans:
       set-size(mbuffer) = 0.
       set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
       put-string(mbuffer,1) = tempLongCh.
@@ -280,7 +281,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       then do:
         logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
         ErrStatus = true.
-        undo.
+        leave block-write.
       end.
       assign
          glog = req:HndlSocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
@@ -288,7 +289,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       then do:
         logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
         ErrStatus = true.
-        undo.
+        leave block-write.
+      end.
       end.
     end.
   end.
