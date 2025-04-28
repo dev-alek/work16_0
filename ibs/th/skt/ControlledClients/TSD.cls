@@ -1904,7 +1904,7 @@ end.
       end.
       */
       myflagsDoc:unSetAllFlags().
-      myflagsDoc:isDocMarkOn = true.
+/*      myflagsDoc:isDocMarkOn = true.*/
      
       
       if buf_utd.cli-code = ? or buf_utd.obj-code = ? or buf_utd.cli-type = ? or buf_utd.obj-type = ?
