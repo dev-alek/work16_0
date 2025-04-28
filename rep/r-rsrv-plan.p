@@ -547,9 +547,9 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-code) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.artic) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-name) + '</td>' skip
-      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>>>9.999",3) + '"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.999",3) + '</td>' skip
-      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '</td>' skip
-      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '</TD>' skip
+      '         <td text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>>>9",0) + '"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>9",0) + '</td>' skip
+      '         <td text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9",0) + '</td>' skip
+      '         <td text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '</TD>' skip
       '         <td text_wrap="true" style="text-align: center; font-weight:bold; font-size:12px;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
       '         <td text_wrap="true" style="text-align: center;">' + if tt-zakaz.tempSale = 0 and tt-zakaz.ostatokDay <> 0 then "-" + '</td>' else string(tt-zakaz.ostatokGoods) + '</td>' skip    
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volTemp) + '</td>' skip
@@ -567,9 +567,9 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-code) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.artic) + '</td>' skip
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.gds-name) + '</td>' skip
-      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>>>9.999",3) + '"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>9.999",3) + '</td>' skip
-      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.999",3) + '</td>' skip
-      '         <td text_wrap="true" num="" val="' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '</TD>' skip
+      '         <td text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>>>9",0) + '"  style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.ostatokToday,"->>>>>>>>>>>9",0) + '</td>' skip
+      '         <td text_wrap="true" num="0" val="' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9.",0) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.volSale,"->>>>>>>>>>>>>9",0) + '</td>' skip
+      '         <td text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-zakaz.tempSale,"->>>>>>>>>>>>>9.9",1) + '</TD>' skip
       '         <td text_wrap="true" style="text-align: center; font-weight:bold; font-size:12px;">' + string(tt-zakaz.volMinGarant) + '</td>' skip   
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokGoods) + '</td>' skip    
       '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volTemp) + '</td>' skip
