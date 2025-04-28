@@ -91,7 +91,7 @@ class ibs.th.bge.1crn.subjects.exp-DTSeasons inherits send1cerpsub:
     time-change = time_gds-obj-attr.attr-value.
     else time-change = entry(1,iso-date(now),"+") .
 
-        hSaxWriter:start-element ("DT-season") .
+        hSaxWriter:start-element ("DT-Season") .
         hSaxWriter:write-data-element (  "code":U,     string(buf_goods-attr.gds-code)   ).
 /*        hSaxWriter:write-data-element (  "chk-name":U, string(buf_code.CodeName)  ).                                 */
 /*        hSaxWriter:write-data-element (  "alt-name":U, if buf_code.misc1 = ? then "" else string(buf_code.misc1)   ).*/
@@ -99,7 +99,7 @@ class ibs.th.bge.1crn.subjects.exp-DTSeasons inherits send1cerpsub:
 /*        hSaxWriter:write-data-element (  "unit-code":U,       string(buf_code.misc3)   ).                            */
         hSaxWriter:write-data-element (  "seasons":U,       string(buf_code.code)   ).
         hSaxWriter:write-data-element (  "time-change":U,       time-change   ).
-        hSaxWriter:end-element ("DT-season") .       
+        hSaxWriter:end-element ("DT-Season") .       
         
       end.             
     end.
