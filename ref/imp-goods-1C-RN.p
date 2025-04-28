@@ -568,12 +568,12 @@ end.
             end.  
         v-barcode-list = v-barcode-list + v-barcode:bcode + "," .
         v-bc-mode = "".
+
         find first ub.prod-bc exclusive-lock where ub.prod-bc.b-str = v-barcode:bcode no-error.
 
         if not available ub.prod-bc
         then do :
-
-      
+     
             v-bc-mode = {&add-def} .
         end.
         else do :
@@ -596,7 +596,7 @@ end.
               ttKF.bar_code   = ub.bar-code.b-code
               ttKF.unit_code  = v-barcode:unit-code
               ttKF.coef       = v-barcode:coeff
-              .
+              . 
 
                   ub.prod-bc.bc-on = true .
                   ub.prod-bc.bc-on-type = (if p-GdsObj:gds-type = "н" then {&loc-pt-code} else if v-barcode:barcode-type = 1 then {&gtin} else "").
@@ -665,8 +665,14 @@ end.
                                      no-error.
 
             if not available ub.bar-code 
-            then do :                                        
-                run ref/barcode1.p (
+            then do :    
+              CREATE ttKF.
+              ASSIGN 
+              ttKF.bar_code   = v-gds-code
+              ttKF.unit_code  = v-barcode:unit-code
+              ttKF.coef       = v-barcode:coeff
+              . 
+              run ref/barcode1.p (
 
                                      input v-bc-mode 
                                     ,input yes /*p-silent*/
@@ -791,9 +797,7 @@ end.
       end.
   end.
 
-
-
-  
+ 
   for each buf_bar-code no-lock where buf_bar-code.gds-code = v-gds-code,
     each buf_prod-bc exclusive-lock where buf_prod-bc.b-code = buf_bar-code.b-code :
      if lookup( buf_prod-bc.b-str, v-barcode-list ) = 0
@@ -833,14 +837,11 @@ end.
     END.
     END.
 
-/*    if unit-list <> "" then do:
-    message "Ошибка" unit-list  view-as alert-box.
-    end. */
-
-/*    if unit-list <> "" then do:
-          v-err-mess = substitute("Ошибка изменения коэфф у ед.изм. &1", unit-list).
-          undo, return error v-err-mess .     
-    end. */ 
+/*    if unit-list <> "" then do: 
+      v-err-mess = substitute("Ошибка изменения коэфф у ед.изм. &1", unit-list).
+      undo, return error v-err-mess .     
+      end. 
+*/ 
     run str/imp2cdgeth.p(output mImp2CdH).
     FOR EACH ttKF:
     FIND FIRST ub.bar-code exclusive-lock WHERE ub.bar-code.b-code = ttKF.bar_code no-error.
@@ -854,9 +855,6 @@ end.
                END. 
         END.
     END.
-
-
-
 
    EMPTY TEMP-TABLE ttKF.
    EMPTY TEMP-TABLE ttToDel.
