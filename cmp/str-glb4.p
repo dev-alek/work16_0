@@ -695,7 +695,7 @@ attr-group-np
 
 /* типы топлива */
 { cmp/cr-prepc.i 1 prop-list-attr-fuel-type
-"petrol,diesel-sum,diesel-wint,metan,propan,lgas,diesel"
+"petrol,diesel-sum,diesel-wint,metan,propan,lgas,diesel,arctic,megsesson"
 attr-fuel-type
 }
 
