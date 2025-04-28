@@ -216,11 +216,11 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       sw:write-data-element ("contr-name", if tt-fin-doc.receiver-name = ? then "" else string(tt-fin-doc.receiver-name)).
       sw:write-data-element ("contr-code", string-mth(tt-fin-doc.receiver-code)).
     end.
-    sw:write-data-element ("doc-osn", if tt-fin-doc.naznach-plat = ? then "" else string(tt-fin-doc.naznach-plat)).
+    sw:write-data-element ("doc-osn", if tt-fin-doc.naznach-plat = ? then "" else xmlchar-encode-1c(string(tt-fin-doc.naznach-plat))).
     sw:write-data-element ("pril", xmlchar-encode-1c(tt-fin-doc.enclosure)).
-    sw:write-data-element ("nds-str", if tt-fin-doc.including = ? then "" else string(tt-fin-doc.including)).
+    sw:write-data-element ("nds-str", if tt-fin-doc.including = ? then "" else xmlchar-encode-1c(string(tt-fin-doc.including))).
     sw:write-data-element ("operator", if tt-fin-doc.user-name-doc = ? then "" else user-name(tt-fin-doc.user-name-doc)).
-    sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else string(tt-fin-doc.receiver-passport)).
+    sw:write-data-element ("idty-doc", if tt-fin-doc.payer-dop1 = ? then "" else xmlchar-encode-1c(string(tt-fin-doc.receiver-passport))).
 
     find first tt-fin-doc-attr no-lock where tt-fin-doc-attr.fin-doc = tt-fin-doc.fin-doc-code no-error .
     if available (tt-fin-doc-attr) then do:

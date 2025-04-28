@@ -146,7 +146,7 @@ define variable v-sum-doc-tab-order  as character no-undo init "sum-doc,curr-cod
 { ref/getCliKassa.i }
 { ref/findocip.i &action="define" &doc-type="expense-cash" }
 { ref/fd-attr.i " " tt0-fin-doc-attr }
-
+{ ref/clean_char.i}
 function is-fact-and-edit returns logical ():
     return (p-mode = {&update} and locked_fin-doc.status_ = {&fin-fact}).
 end.
@@ -901,6 +901,9 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+
 
 
 &Scoped-define SELF-NAME B-print
@@ -1817,10 +1820,10 @@ tt-fin-doc.sum-doc
 tt-fin-doc.receiver-code
 tt-fin-doc.receiver-type
 tt-fin-doc.receiver-name
-tt-fin-doc.naznach-plat
-tt-fin-doc.receiver-passport
-tt-fin-doc.enclosure
-tt-fin-doc.PS
+tt-fin-doc.naznach-plat = clean_char(tt-fin-doc.naznach-plat:screen-value)
+tt-fin-doc.receiver-passport = clean_char(tt-fin-doc.receiver-passport:screen-value)
+tt-fin-doc.enclosure = clean_char(tt-fin-doc.enclosure:screen-value)
+tt-fin-doc.PS = clean_char(tt-fin-doc.PS:screen-value)
 tt-fin-doc.payer-sign1
 tt-fin-doc.payer-sign1  =   v-head-position + {&delim-par} + tt-fin-doc.payer-sign1
 tt-fin-doc.payer-sign2
