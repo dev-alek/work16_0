@@ -675,29 +675,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          view-as alert-box error.
       return error.
    end.
-   
+
    CASE par-subject:
       when {&table_gds-obj-attr}
       then do:
-            { gbl/chk-actg.i
-      v-cntxt-db-num
-      v-cntxt-userid
-      {&action-head-code-main}
-      'actn_reference_update':U
-      {&cntxt-global}
-      0
-      '':U
-      0
-      0
-      0
-      0
-      false
-      glog
-      }
-            if not glog then 
-            do:
-              
-        { gbl/chk-actg.i
+     { gbl/chk-actg.i
           v-cntxt-db-num
           v-cntxt-userid
           {&action-head-code-main}
@@ -712,12 +694,47 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           false
           glog-obj
         }
-        glog-obj = true .
-            if not glog-obj then 
-            do:
-               return.
-            end.
-            end.        
+     if glog-obj then 
+     do:
+       { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      false
+      glog
+      }
+     end.
+     else 
+     do:
+       { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      true
+      glog
+      }
+       if not glog then 
+       do:
+         return.
+       end.   
+     end.
+     
       end.
       when {&table_gds-host-attr}
       or
@@ -795,10 +812,23 @@ run attr-pop-clean-up in this-procedure ( input par-subject ).
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE choose-to-add Dialog-Frame
 PROCEDURE choose-to-add :
    define input parameter p-attr-code as character no-undo .
-    if not glog and glog-obj then if p-attr-code <> "min-zapas" then do:
-      message "Доступно только для атрибута: 'Минимальный запас' "
-      view-as alert-box.
-      return .
+    if p-attr-code <> "min-zapas" then do:
+            { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      true
+      glog
+      }
+    if not glog then return error .
     end.
    assign
       add-option = p-attr-code
@@ -812,10 +842,23 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE choose-to-delete Dialog-Frame
 PROCEDURE choose-to-delete :
    define input parameter p-attr-code as character no-undo .
-    if not glog and glog-obj then if p-attr-code <> "min-zapas" then do:
-      message "Доступно только для атрибута: 'Минимальный запас' "
-      view-as alert-box.
-      return .
+    if p-attr-code <> "min-zapas" then do:
+            { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_reference_update':U
+      {&cntxt-global}
+      0
+      '':U
+      0
+      0
+      0
+      0
+      true
+      glog
+      }
+    if not glog then return error .
     end.
    assign
       add-option = p-attr-code
