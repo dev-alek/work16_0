@@ -27,7 +27,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Срабатывание промо-акции" .
+define variable vss-description as character no-undo init "Срабатывание промоакции НП" .
 
 define temp-table tt-promo like ub.PromoAction .
        
@@ -46,6 +46,8 @@ define input parameter p-cond        as integer.
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }   
 { str/lib-trn.i  }
+{ str/cspromo-chk.i } /* функции для работы с промоакциями по НП */
+
 define stream Out-Stream.
 define stream OutStr-html.
      
@@ -81,6 +83,10 @@ define temp-table tt-info
    field ret-src-price as dec
    field ret-src-sum as dec  
    field ret-discnt as dec /* скидка за ед. товара */
+   field dop-qnty as dec   
+   field dop-sum as dec
+   field ret-dop-qnty as dec   
+   field ret-dop-src-sum as dec
    field promo-id as char
    field nameAction as char
    field itog-qnty as dec
@@ -91,6 +97,7 @@ define temp-table tt-info
    field itog-proc as dec
    field sts as char 
    field b-code as integer
+   field change-BL as char
    . 
      
 define variable v-report-name       as character no-undo .
@@ -260,131 +267,162 @@ end.
 /*Общие данные*/
 
 procedure report:
-define variable is-petrolium         as logical   no-undo.
-define variable is-pieces            as logical   no-undo.
-define variable v-sum-r              as decimal   no-undo.  
+  define variable is-petrolium         as logical   no-undo.
+  define variable is-pieces            as logical   no-undo.
+  define variable v-sum-r              as decimal   no-undo.
+  define variable v-sum-no-disc        as decimal   no-undo.
+  define variable v-sum-disc           as decimal   no-undo.  
+
+  define buffer buf_promoAttr for ub.promoAttr.
+  define buffer buf_bar-code for ub.bar-code.
+  define buffer buf_goods for ub.goods.
+  
   /* чеки приема по топливу по промоакции */
+  chkda:
   for each  buf_chk-gds no-lock where 
-    buf_chk-gds.doc-code = buf_chk-doc.doc-code and 
-    buf_chk-gds.pl-code <> ? and 
-    buf_chk-gds.src-price > vPromoPrice:
-    find first ub.bar-code no-lock where ub.bar-code.b-code = buf_chk-gds.b-code no-error .
-    find first ub.goods no-lock where ub.goods.gds-code = ub.bar-code.gds-code no-error .
+            buf_chk-gds.doc-code = buf_chk-doc.doc-code and 
+            buf_chk-gds.pl-code <> ?:                    
+                                
+    find  first bf_chk-discnt-attr no-lock where 
+             bf_chk-discnt-attr.attr-code = "promo-id" and 
+             bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and 
+             bf_chk-discnt-attr.object-line-num = buf_chk-gds.line-num
+       no-error.
+          
+    if not vAllPromo then do:
+       if not avail bf_chk-discnt-attr
+       then next chkda. 
+       if not can-find(first tt-promo where 
+                             tt-promo.id = int(bf_chk-discnt-attr.attr-value))
+       then next chkda.
+    end.
+              
+    find first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code no-error .
+    find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error .
     { str/is-petrl.i
-      ub.goods.artic
-      ub.goods.prod-type
-      ub.goods.prod-code
-      is-petrolium
-      is-pieces
-      no-error
-      }        
-    if not is-petrolium then next .  
-    find first buf_promo-chk-gds no-lock where 
-      buf_promo-chk-gds.doc-code = buf_chk-gds.doc-code and 
-      buf_promo-chk-gds.pl-code  = buf_chk-gds.pl-code  and 
-      buf_promo-chk-gds.src-price = vPromoPrice
-      no-error.   
-    find first ub.bar-code no-lock where ub.bar-code.b-code = buf_promo-chk-gds.b-code no-error .
-    find first ub.goods no-lock where ub.goods.gds-code = ub.bar-code.gds-code no-error .
-    { str/is-petrl.i
-      ub.goods.artic
-      ub.goods.prod-type
-      ub.goods.prod-code
-      is-petrolium
-      is-pieces
-      no-error
-      }        
-    if not is-petrolium then next .  
-        chkda:                  
-        for each bf_chk-discnt-attr no-lock where 
-                 bf_chk-discnt-attr.attr-code = "promo-id" and 
-                 bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and 
-                 bf_chk-discnt-attr.object-line-num = buf_chk-gds.line-num
-                 :
-              if not vAllPromo and 
-                 not can-find(first tt-promo where 
-                                    tt-promo.id = int(bf_chk-discnt-attr.attr-value))
-              then next chkda.
-               
-              find first tt-info no-lock where 
-                         tt-info.doc-code = buf_chk-gds.doc-code and 
-                         tt-info.pl-code = buf_chk-gds.pl-code
-                         no-error.
-              if not avail tt-info then do:
-                  create tt-info.
-                  assign
-                     tt-info.obj-code = buf_chk-doc.obj-code
-                     tt-info.obj-type = buf_chk-doc.obj-type
-                     tt-info.doc-code = buf_chk-gds.doc-code
-                     tt-info.chk-num = buf_chk-doc.chk-num
-                     tt-info.chk-date = buf_chk-doc.chk-date
-                     tt-info.z-number = buf_chk-doc.z-number
-                     tt-info.shift-num = buf_chk-doc.shift-num
-                     tt-info.shift-date = buf_chk-doc.shift-date
-                     tt-info.pl-code  = buf_chk-gds.pl-code
-                     tt-info.price-base = buf_chk-gds.price-base
-                     tt-info.src-price = buf_chk-gds.src-price
-                     tt-info.src-qnty = buf_chk-gds.src-qnty
-                     tt-info.promo-id = bf_chk-discnt-attr.attr-value
-                     tt-info.b-code = buf_chk-gds.b-code
-                     .
-                  if avail buf_promo-chk-gds then
-                     assign
-                        tt-info.src-promo-qnty = buf_promo-chk-gds.src-qnty
-                        tt-info.discnt = 0
-                        . 
-                  else assign
-                         tt-info.src-promo-qnty = 0 
-                         tt-info.discnt = buf_chk-gds.src-discnt
-                         .
-                  v-sum-r =  Round(tt-info.src-promo-qnty * vPromoPrice, 2).
-                  if v-sum-r < tt-info.src-promo-qnty * vPromoPrice     
-                  then v-sum-r = v-sum-r + 0.01. 
-                  assign
-                     tt-info.src-sum = Round((tt-info.src-price - tt-info.discnt) * tt-info.src-qnty, 2) + v-sum-r   
-                     tt-info.src-sum-no-disc = tt-info.src-price * (tt-info.src-qnty + tt-info.src-promo-qnty)
-                     tt-info.src-sum-disc = tt-info.src-sum-no-disc - tt-info.src-sum
-                     .
-                       
-                  /* название промоакции */   
-                  for first buf_PromoAction no-lock where 
-                            buf_PromoAction.id = int64(tt-info.promo-id):
-                        tt-info.nameAction = buf_PromoAction.nameAction .  
-                  end.
-                  /* кассир */
-                  find first buf_person where 
-                             buf_person.psn-code = buf_chk-doc.cashier-psn-code 
-                     no-lock no-error.
-                  if avail buf_person THEN  
-                     tt-info.cashier = buf_person.name1 + ' ' + buf_person.name2 + ' '.
-                  find first buf_clients where 
-                             buf_clients.obj-code = buf_chk-doc.cashier-psn-code  and 
-                             buf_clients.obj-type = 'чел' 
-                     no-lock no-error.
-                  if avail buf_clients then 
-                     tt-info.cashier = tt-info.cashier + buf_clients.obj-name.
-                  for first buf_clients no-lock where 
-                            buf_clients.obj-code = tt-info.obj-code and
-                            buf_clients.obj-type = tt-info.obj-type:
-                      tt-info.obj-name = buf_clients.obj-name .
-                  end.
+       buf_goods.artic
+       buf_goods.prod-type
+       buf_goods.prod-code
+       is-petrolium
+       is-pieces
+       no-error
+    }        
+    if not is-petrolium then next .
+  
+    find first tt-info no-lock where 
+               tt-info.doc-code = buf_chk-gds.doc-code and 
+               tt-info.pl-code = buf_chk-gds.pl-code
+        no-error.
+    if not avail tt-info 
+    then do: 
+      create tt-info.    
+      assign
+         tt-info.obj-code = buf_chk-doc.obj-code
+         tt-info.obj-type = buf_chk-doc.obj-type
+         tt-info.doc-code = buf_chk-gds.doc-code
+         tt-info.chk-num = buf_chk-doc.chk-num
+         tt-info.chk-date = buf_chk-doc.chk-date
+         tt-info.z-number = buf_chk-doc.z-number
+         tt-info.shift-num = buf_chk-doc.shift-num
+         tt-info.shift-date = buf_chk-doc.shift-date
+         tt-info.pl-code  = buf_chk-gds.pl-code                  
+         tt-info.b-code = buf_chk-gds.b-code
+         .                                                                           
+      /* кассир */
+      find first buf_person where 
+                 buf_person.psn-code = buf_chk-doc.cashier-psn-code 
+         no-lock no-error.
+      if avail buf_person THEN  
+         tt-info.cashier = buf_person.name1 + ' ' + buf_person.name2 + ' '.
+      find first buf_clients where 
+                 buf_clients.obj-code = buf_chk-doc.cashier-psn-code  and 
+                 buf_clients.obj-type = 'чел' 
+         no-lock no-error.
+      if avail buf_clients then 
+         tt-info.cashier = tt-info.cashier + buf_clients.obj-name.
+      for first buf_clients no-lock where 
+                buf_clients.obj-code = tt-info.obj-code and
+                buf_clients.obj-type = tt-info.obj-type:
+          tt-info.obj-name = buf_clients.obj-name .
+      end.      
+      for first buf_bar-code no-lock where
+                 buf_bar-code.b-code = buf_chk-gds.b-code:
+         find first buf_goods no-lock where
+                    buf_goods.gds-code = buf_bar-code.gds-code 
+            no-error.
+         if available buf_goods then 
+            tt-info.gds-name = buf_goods.gds-name.
+      end.              
+    end.                        
+    
+    if avail bf_chk-discnt-attr and tt-info.promo-id  = "" then do:
+      tt-info.promo-id = bf_chk-discnt-attr.attr-value.
+      
+      /* название промоакции */   
+      for first buf_PromoAction no-lock where 
+                buf_PromoAction.id = int64(tt-info.promo-id):
+                    
+          tt-info.nameAction = buf_PromoAction.nameAction .
+                                        
+          find first ub.promoAttr where
+                     ub.promoAttr.attr-code = "charge-BL" and
+                     ub.promoAttr.tablename = "PromoPay" and
+                     buf_PromoAction.id = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and 
+                     buf_PromoAction.db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key})) 
+                no-error.
+          if available (ub.PromoAttr) and 
+             logical(ub.PromoAttr.attr-value) = true 
+          then tt-info.change-BL = "да" .
+          else tt-info.change-BL = "нет" .
+                    
+      end.
+    end.   
                   
-                  for first buf_bar-code no-lock where
-                             buf_bar-code.b-code = buf_chk-gds.b-code:
-                     find first buf_goods no-lock where
-                                buf_goods.gds-code = buf_bar-code.gds-code 
-                        no-error.
-                     if available buf_goods then 
-                        tt-info.gds-name = buf_goods.gds-name.
-                  end.              
-              end.                           
-         end.         
-    end.              
+    if ChkPromoPrice(buf_chk-gds.doc-code, buf_chk-gds.line-num) then
+       assign
+          tt-info.src-promo-qnty = buf_chk-gds.src-qnty
+          tt-info.discnt = 0
+          tt-info.src-qnty = tt-info.src-qnty + buf_chk-gds.src-qnty  
+          v-sum-r = RoundUp(buf_chk-gds.src-qnty, buf_chk-gds.src-price)
+          v-sum-no-disc = v-sum-r
+          v-sum-disc = 0
+          . 
+    else do:
+       if ChkDopLitr(buf_chk-gds.doc-code, buf_chk-gds.line-num)
+       then
+           assign 
+              tt-info.dop-qnty = buf_chk-gds.src-qnty 
+              tt-info.dop-sum = Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2)
+              .
+       else      
+           assign
+              tt-info.price-base = buf_chk-gds.price-base
+              tt-info.src-price = buf_chk-gds.src-price            
+              .
+          
+       assign    
+          tt-info.src-qnty = tt-info.src-qnty + buf_chk-gds.src-qnty              
+          tt-info.discnt = buf_chk-gds.src-discnt
+          v-sum-r = Round((buf_chk-gds.src-price - buf_chk-gds.src-discnt) * buf_chk-gds.src-qnty, 2)          
+          v-sum-disc = ChkPromoSum(buf_chk-gds.doc-code, buf_chk-gds.line-num)
+          v-sum-no-disc = Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2) + v-sum-disc
+          .  
+    end.  
+               
+    assign
+       tt-info.src-sum = tt-info.src-sum + v-sum-r   
+       tt-info.src-sum-no-disc = tt-info.src-sum-no-disc + v-sum-no-disc
+       tt-info.src-sum-disc = tt-info.src-sum-no-disc - tt-info.src-sum
+       .
+  end.               
+                   
 
 end procedure .
 
 procedure report-itog:
     define variable v-sum-r as decimal no-undo.
+    define variable v-sum-no-disc        as decimal   no-undo.
+    define variable v-sum-disc           as decimal   no-undo. 
     
     for each tt-info:
         for each buf_chk-doc no-lock where 
@@ -394,56 +432,74 @@ procedure report-itog:
              and buf_chk-doc.doc-num2 = substitute("&1:&2",tt-info.chk-num,tt-info.z-number),
              each buf_chk-gds no-lock where 
                   buf_chk-gds.doc-code = buf_chk-doc.doc-code and 
-                  buf_chk-gds.pl-code  = tt-info.pl-code and
-                  buf_chk-gds.src-price > vPromoPrice:
+                  buf_chk-gds.pl-code  = tt-info.pl-code /*and
+                  buf_chk-gds.src-price > vPromoPrice*/:
                        
-             find first buf_promo-chk-gds no-lock where 
+             /*find first buf_promo-chk-gds no-lock where 
                    buf_promo-chk-gds.doc-code = buf_chk-gds.doc-code and 
                    buf_promo-chk-gds.pl-code  = buf_chk-gds.pl-code  and 
                    buf_promo-chk-gds.src-price = vPromoPrice
-                   no-error.
+                   no-error.*/
              
              assign
-                 tt-info.ret-doc-code = buf_chk-gds.doc-code                 
-                 tt-info.ret-src-price = buf_chk-gds.src-price
-                 tt-info.ret-src-qnty = -1 * buf_chk-gds.src-qnty
+                 tt-info.ret-doc-code = buf_chk-gds.doc-code                                                   
                  tt-info.ret-chk-num = buf_chk-doc.chk-num
                  tt-info.ret-chk-date = buf_chk-doc.chk-date
                  tt-info.ret-shift-num = buf_chk-doc.shift-num
                  tt-info.ret-shift-date = buf_chk-doc.shift-date
                  .
-              if avail buf_promo-chk-gds then
-                 assign
-                    tt-info.ret-promo-qnty = -1 * buf_promo-chk-gds.src-qnty
-                    tt-info.ret-discnt = 0
-                    . 
-              else assign
-                     tt-info.ret-promo-qnty = 0 
-                     tt-info.ret-discnt = buf_chk-gds.src-discnt
-                     .
-              v-sum-r = Round(tt-info.ret-promo-qnty * vPromoPrice,2).
-              if v-sum-r < tt-info.ret-promo-qnty * vPromoPrice then v-sum-r = v-sum-r + 0.01.       
+                 
+              if ChkPromoPrice(buf_chk-gds.doc-code, buf_chk-gds.line-num) then
+                assign
+                  tt-info.ret-promo-qnty = -1 * buf_chk-gds.src-qnty                                
+                  v-sum-r = RoundUp(buf_chk-gds.src-qnty, buf_chk-gds.src-price)
+                  v-sum-no-disc = v-sum-r
+                  v-sum-disc = 0
+                  . 
+              else do:
+                   if ChkDopLitr(buf_chk-gds.doc-code, buf_chk-gds.line-num)
+                   then  
+                     assign 
+                        tt-info.dop-qnty = tt-info.dop-qnty - buf_chk-gds.src-qnty 
+                        tt-info.dop-sum = tt-info.dop-sum - Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2)
+                        .
+                   else    
+                      assign
+                         tt-info.ret-src-price = buf_chk-gds.src-price                               
+                         .
+                      
+                   assign                                        
+                      /*tt-info.discnt = buf_chk-gds.src-discnt*/
+                      v-sum-r = Round((buf_chk-gds.src-price - buf_chk-gds.src-discnt) * buf_chk-gds.src-qnty, 2) 
+                      tt-info.ret-src-qnty = tt-info.ret-src-qnty - buf_chk-gds.src-qnty         
+                      /*v-sum-disc = ChkPromoSum(buf_chk-gds.doc-code, buf_chk-gds.line-num)
+                      v-sum-no-disc = Round(buf_chk-gds.src-price * buf_chk-gds.src-qnty, 2) + v-sum-disc*/
+                      .  
+              end.     
+                               
               assign
-                 tt-info.ret-src-sum = ROUND((tt-info.ret-src-price - tt-info.ret-discnt),2) * tt-info.ret-src-qnty + v-sum-r                        
-                 .
-              
+                 tt-info.ret-src-sum = tt-info.ret-src-sum - v-sum-r  
+                 .    
+
               /* кассир */
-              find first buf_person where 
-                         buf_person.psn-code = buf_chk-doc.cashier-psn-code 
-                 no-lock no-error.
-              if avail buf_person THEN  
-                 tt-info.ret-cashier = buf_person.name1 + ' ' + buf_person.name2 + ' '.
-              find first buf_clients where 
-                         buf_clients.obj-code = buf_chk-doc.cashier-psn-code  and 
-                         buf_clients.obj-type = 'чел' 
-                 no-lock no-error.
-              if avail buf_clients then 
-                 tt-info.ret-cashier = tt-info.ret-cashier + buf_clients.obj-name.        
+              if tt-info.ret-cashier = "" then do:
+                  find first buf_person where 
+                             buf_person.psn-code = buf_chk-doc.cashier-psn-code 
+                     no-lock no-error.
+                  if avail buf_person THEN  
+                     tt-info.ret-cashier = buf_person.name1 + ' ' + buf_person.name2 + ' '.
+                  find first buf_clients where 
+                             buf_clients.obj-code = buf_chk-doc.cashier-psn-code  and 
+                             buf_clients.obj-type = 'чел' 
+                     no-lock no-error.
+                  if avail buf_clients then 
+                     tt-info.ret-cashier = tt-info.ret-cashier + buf_clients.obj-name.
+              end.           
         end.      
         /* итоги */
         assign
-           tt-info.itog-qnty = tt-info.src-qnty + tt-info.src-promo-qnty - tt-info.ret-src-qnty - tt-info.ret-promo-qnty
-           tt-info.itog-sum-no-disc = tt-info.itog-qnty * tt-info.src-price
+           tt-info.itog-qnty = tt-info.src-qnty - tt-info.ret-src-qnty - tt-info.ret-promo-qnty
+           tt-info.itog-sum-no-disc = (tt-info.itog-qnty - tt-info.dop-qnty) * tt-info.src-price + tt-info.dop-sum
            tt-info.itog-sum = tt-info.src-sum - tt-info.ret-src-sum
            tt-info.itog-sum-disc = tt-info.itog-sum-no-disc - tt-info.itog-sum
            tt-info.itog-proc = tt-info.itog-sum-disc * 100 / tt-info.itog-sum-no-disc
@@ -497,9 +553,9 @@ procedure report-header:
                             
      
     put stream OutStr-html unformatted
-       '<TR><TD colspan="26"></TD></TR>' skip
+       '<TR><TD colspan="27"></TD></TR>' skip
        '<TR>' skip
-       '<TD colspan="5" style="font-weight: bold;">Отчет по примененным скидкам</TD>' skip
+       '<TD colspan="6" style="font-weight: bold;">Отчет по примененным скидкам на НП</TD>' skip
        '</TR>' skip
        '<TR>' skip
        '<TD colspan="5">Период:</TD>' skip
@@ -534,6 +590,7 @@ procedure report-header:
         '<TH text_wrap="true" rowspan="4" colspan="8" style="text-align: center; font-weight:bold; ">Чек продажи</TH>'   skip
         '<TH text_wrap="true" rowspan="4" colspan="6" style="text-align: center; font-weight:bold; ">Чек возврата</TH>'  skip
         '<TH text_wrap="true" rowspan="4" colspan="8" style="text-align: center; font-weight:bold; ">Итоги по применению промоакции</TH>' skip
+        '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight:bold; ">Запрет начисления БЛ </TH>'           skip
         '</TR>' skip
         
         '<TR>' skip
@@ -567,7 +624,7 @@ procedure report-header:
         '<TH text_wrap="true" style="text-align: center; font-weight:bold; ">Сумма со скидкой по чеку</TH>'        skip
         '<TH text_wrap="true" style="text-align: center; font-weight:bold; ">Сумма скидки по чеку</TH>'            skip
         '<TH text_wrap="true" style="text-align: center; font-weight:bold; ">% скидки по чеку</TH>'                skip
-        '<TH text_wrap="true" style="text-align: center; font-weight:bold; ">Статус условий </TH>'                 skip
+        '<TH text_wrap="true" style="text-align: center; font-weight:bold; ">Статус условий </TH>'                 skip                
         '</TR>' skip
         
         '<TR>' skip
@@ -597,6 +654,7 @@ procedure report-header:
         '<TH style="text-align: center; font-weight:bold; ">7.6</TH>'  skip
         '<TH style="text-align: center; font-weight:bold; ">7.7</TH>'  skip
         '<TH style="text-align: center; font-weight:bold; ">7.8</TH>'  skip
+        '<TH style="text-align: center; font-weight:bold; ">8</TH>'  skip
         '</TR>' skip
       .
           
@@ -615,7 +673,7 @@ procedure report-body:
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-info.chk-date)  + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-info.chk-num)  + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-info.cashier  + '</TD>' skip
-            '<TD text_wrap="true" style="text-align: center;">' + if (tt-info.src-qnty + tt-info.src-promo-qnty) <> 0 then fnc-convert-dot-to-colon((tt-info.src-qnty + tt-info.src-promo-qnty),"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: center;">' + if tt-info.src-qnty <> 0 then fnc-convert-dot-to-colon((tt-info.src-qnty),"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.src-sum <> 0 then fnc-convert-dot-to-colon(tt-info.src-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.src-sum-no-disc <> 0 then fnc-convert-dot-to-colon(tt-info.src-sum-no-disc,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.src-sum-disc <> 0 then fnc-convert-dot-to-colon(tt-info.src-sum-disc,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
@@ -626,7 +684,7 @@ procedure report-body:
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-info.ret-chk-date)  + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + string(tt-info.ret-chk-num)   + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-info.ret-cashier  + '</TD>' skip
-            '<TD text_wrap="true" style="text-align: center;">' + if (tt-info.ret-src-qnty + tt-info.ret-promo-qnty) <> 0 then fnc-convert-dot-to-colon((tt-info.ret-src-qnty + tt-info.ret-promo-qnty),"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: center;">' + if (tt-info.ret-src-qnty +  + tt-info.ret-promo-qnty) <> 0 then fnc-convert-dot-to-colon((tt-info.ret-src-qnty + tt-info.ret-promo-qnty),"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.ret-src-sum <> 0 then fnc-convert-dot-to-colon(tt-info.ret-src-sum,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             .
         else 
@@ -647,6 +705,7 @@ procedure report-body:
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.itog-sum-disc <> 0 then fnc-convert-dot-to-colon(tt-info.itog-sum-disc,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.itog-proc <> 0 then fnc-convert-dot-to-colon(tt-info.itog-proc,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-info.sts  + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: center;">' + tt-info.change-BL  + '</TD>' skip
             '</TR>'
             skip .
     end.   

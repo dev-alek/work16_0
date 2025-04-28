@@ -47,6 +47,7 @@ define variable vss-description as character no-undo init "Заполнение полей врем
 
 
 { rep/e-sj-df.i "SHARED" }
+{ str/cspromo-chk.i } /* функции для работы с промоакциями по НП */
 
 &scop MaxSalemanNum 10000
 DEFINE var strbuf1     as      char    no-undo.
@@ -68,7 +69,7 @@ vproc-check = entry(1, par-run-names, {&delim-par}).
 FOR EACH obj-list :
     strbuf1 = obj-list.obj-type + string( obj-list.obj-code ) .
   _chk-doc:
-  FOR EACH ub.chk-doc WHERE
+  FOR EACH ub.chk-doc no-lock WHERE
           ub.chk-doc.obj-type = obj-list.obj-type AND
           ub.chk-doc.obj-code = obj-list.obj-code
           and
@@ -294,21 +295,24 @@ else
       sj-adv.qnty-3 = sj-adv.qnty-3 + (if chk-gds.doc-qnty >= 0 then 1 else - 1 ) *
                                       (if sj-goods.alt-type then 1 else 0) * sj-goods.twounit +
                                       (if sj-goods.two-type then 1 else 0) * ub.chk-gds.doc-qnty
-      sj-adv.brutto-sum = sj-adv.brutto-sum + ub.chk-gds.doc-qnty * ub.chk-gds.price-base
-      sj-adv.discnt-sum = sj-adv.discnt-sum + ub.chk-gds.discnt * ub.chk-gds.doc-qnty
+      sj-adv.brutto-sum = sj-adv.brutto-sum + GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty, ub.chk-gds.price-base) 
+                          + ChkPromoSum(ub.chk-gds.doc-code,ub.chk-gds.line-num)
+      sj-adv.discnt-sum = sj-adv.discnt-sum + ub.chk-gds.discnt * ub.chk-gds.doc-qnty 
+                          + ChkPromoSum(ub.chk-gds.doc-code,ub.chk-gds.line-num)
       sj-adv.netto-sum = sj-adv.netto-sum +
-                          ( ub.chk-gds.price-base - ub.chk-gds.discnt ) * ub.chk-gds.doc-qnty
+                         + GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty, ( ub.chk-gds.price-base - ub.chk-gds.discnt ))                           
       sj-adv.num-lines  = sj-adv.num-lines + 1
       sj-adv.num-docs   = sj-adv.num-doc + (if chk-gds.doc-code = prev-doc then 0 else 1)
       prev-doc          = chk-gds.doc-code.
+                                     
 if v-curr-r-b = {&r-b-base} then do:
       assign
-      sj-adv.brutto-sum-r = sj-adv.brutto-sum-r + ub.chk-gds.doc-qnty *
-                          round( chk-gds.price-base * (v-rate), 2 )
-      sj-adv.netto-sum-r = sj-adv.netto-sum-r +
-                          round( ( ub.chk-gds.price-base - ub.chk-gds.discnt ) *
-                          chk-gds.doc-qnty * ( v-rate ), 2 )
-      .
+      sj-adv.brutto-sum-r = sj-adv.brutto-sum-r + 
+                            round(GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty * v-rate, chk-gds.price-base), 2) + 
+                            ChkPromoSum(ub.chk-gds.doc-code,ub.chk-gds.line-num)
+      sj-adv.netto-sum-r = sj-adv.netto-sum-r +                                   
+                          round(GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty * v-rate,( ub.chk-gds.price-base - ub.chk-gds.discnt )),2)                           
+      .      
 end.
       v-found-chk-gds = yes
       .

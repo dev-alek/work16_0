@@ -30,7 +30,7 @@ define variable vss-author      as character no-undo init "$Author: EShklyar $":
 define variable vss-date        as character no-undo init "$Date: 2023/10/16 15:13:32 $":U .
 define variable vss-workfile    as character no-undo init "$Workfile: r-work_promo.p $":U .
 define variable vss-archive     as character no-undo init "$Archive: rep/r-work_promo.p $":U .
-define variable vss-description as character no-undo init "Срабатывание промо-акции" .
+define variable vss-description as character no-undo init "Срабатывание промо-акции СТ" .
 
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "Срабатывание промо-ак
 
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }   
+{ str/lib-trn.i  }
 
 define stream Out-Stream.
 define stream OutStr-html.
@@ -127,6 +128,76 @@ define buffer bf_chk-discnt-attr  for ub.chk-discnt-attr .
 
 define VARIABLE p-report-id as character no-undo .
 
+/* определение, что промоакция на НП */
+function ChkPLLine returns logical
+    (input iDocCode as character,
+    input iLineNum as integer,
+    input iPromoId as character)
+    : 
+    define buffer buf_chk-gds for ub.chk-gds.    
+    define buffer bf_chk-discnt-attr for ub.chk-discnt-attr.
+    define buffer buf_bar-code for ub.bar-code.
+    define buffer buf_goods for ub.goods.
+    
+    define variable vPromo as logical no-undo.
+    define variable is-petrolium         as logical   no-undo.
+    define variable is-pieces            as logical   no-undo.
+    
+    vPromo = no.
+        
+    find first buf_chk-gds no-lock where                 
+                 buf_chk-gds.doc-code = iDocCode
+             and buf_chk-gds.line-num  = iLineNum                                                   
+    no-error.
+    if avail buf_chk-gds 
+    then do:
+       find first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code no-error .
+       if avail buf_bar-code then
+       find first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code no-error .
+       if avail buf_bar-code and avail buf_goods then do:
+           { str/is-petrl.i
+              buf_goods.artic
+              buf_goods.prod-type
+              buf_goods.prod-code
+              is-petrolium
+              is-pieces
+              no-error
+            }        
+            if is-petrolium then 
+             vPromo = yes.
+        end. 
+    end.     
+    else do:      
+        chkdisc:
+        for each bf_chk-discnt-attr no-lock where 
+                 bf_chk-discnt-attr.attr-code = "promo-id" and 
+                 bf_chk-discnt-attr.doc-code = iDocCode and 
+                 bf_chk-discnt-attr.record-type = 0 and 
+                 bf_chk-discnt-attr.attr-value = iPromoId,                     
+           first buf_chk-gds no-lock where 
+                 buf_chk-gds.doc-code = bf_chk-discnt-attr.doc-code and 
+                 buf_chk-gds.line-num = bf_chk-discnt-attr.object-line-num,
+           first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code,
+           first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code:
+                                            
+           { str/is-petrl.i
+              buf_goods.artic
+              buf_goods.prod-type
+              buf_goods.prod-code
+              is-petrolium
+              is-pieces
+              no-error
+            }                  
+                               
+            if is-petrolium then 
+               vPromo = yes.       
+            leave chkdisc.                                       
+        end.           
+    end.    
+    
+    return vPromo.
+end.
+
 /*Данные для шапки*/
 /*Период*/
 if x-TOG-Shift then 
@@ -178,11 +249,19 @@ end.
 
 procedure report:
   for each buf_chk-discnt-attr no-lock where buf_chk-discnt-attr.attr-code = "promo-id" and buf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code:
+    if not ChkPLLine(buf_chk-discnt-attr.doc-code, buf_chk-discnt-attr.object-line-num, buf_chk-discnt-attr.attr-value)
+    then 
     for first buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-discnt-attr.doc-code and buf_chk-discnt.record-type = 5
       and buf_chk-discnt.discnt-id = buf_chk-discnt-attr.discnt-id:
-      find first tt-promo where tt-promo.obj-code = buf_chk-doc.obj-code and tt-promo.obj-type = buf_chk-doc.obj-type and 
-        tt-promo.promo-id = buf_chk-discnt-attr.attr-value and tt-promo.shift-date = buf_chk-doc.shift-date and
-        tt-promo.shift-num = buf_chk-doc.shift-num no-error .
+          
+      find first tt-promo where 
+                 tt-promo.obj-code = buf_chk-doc.obj-code and 
+                 tt-promo.obj-type = buf_chk-doc.obj-type and 
+                 tt-promo.promo-id = buf_chk-discnt-attr.attr-value and 
+                 tt-promo.shift-date = buf_chk-doc.shift-date and
+                 tt-promo.shift-num = buf_chk-doc.shift-num 
+      no-error .              
+                
       if not available (tt-promo) then 
       do:
         create tt-promo .
@@ -202,32 +281,39 @@ procedure report:
         for first ub.PromoAction no-lock where ub.PromoAction.id = int64(tt-promo.promo-id):
           tt-promo.promo-name = ub.PromoAction.nameAction .
           tt-promo.methodCalc = ub.PromoAction.methodCalc . 
-        find first ub.promoAttr where
-          ub.promoAttr.attr-code = "charge-BL" and
-          ub.promoAttr.tablename = "PromoPay" and
-          ub.PromoAction.id = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and 
-          ub.PromoAction.db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key})) 
-          no-error.
-        if available (ub.PromoAttr) then do:
-          if logical(ub.PromoAttr.attr-value) = true then tt-promo.change-BL = "да" .
-          else tt-promo.change-BL = "нет" .
-        end.
-        else tt-promo.change-BL = "нет" .                                                        
+            find first ub.promoAttr where
+              ub.promoAttr.attr-code = "charge-BL" and
+              ub.promoAttr.tablename = "PromoPay" and
+              ub.PromoAction.id = int64(entry(1,ub.PromoAttr.p-key,{&delim-key})) and 
+              ub.PromoAction.db-num = integer(entry(2,ub.PromoAttr.p-key,{&delim-key})) 
+              no-error.
+            if available (ub.PromoAttr) then do:
+              if logical(ub.PromoAttr.attr-value) = true then tt-promo.change-BL = "да" .
+              else tt-promo.change-BL = "нет" .
+            end.
+            else tt-promo.change-BL = "нет" .                                                        
         end.                                                   
       end.  
       assign
         tt-promo.object-qnty = tt-promo.object-qnty + buf_chk-discnt.object-sum
         .
+                    
       if buf_chk-doc.chk-type = integer({&rcpt-return}) or buf_chk-doc.chk-type = integer({&rcpt-return-write-off}) then 
         tt-promo.return-qnty = tt-promo.return-qnty + buf_chk-discnt.object-sum .
      
-      for each bf_chk-discnt-attr no-lock where bf_chk-discnt-attr.attr-code = "promo-id" and 
-        bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and bf_chk-discnt-attr.record-type = 0 and bf_chk-discnt-attr.attr-value = tt-promo.promo-id:
-        for first bf_chk-discnt no-lock where bf_chk-discnt.doc-code = bf_chk-discnt-attr.doc-code and bf_chk-discnt.record-type = 0
-          and bf_chk-discnt.discnt-id = bf_chk-discnt-attr.discnt-id:
-          /*По товарам*/    
-                
-          for each buf_chk-gds no-lock where buf_chk-gds.doc-code = bf_chk-discnt.doc-code and buf_chk-gds.line-num = bf_chk-discnt-attr.object-line-num:
+      for each bf_chk-discnt-attr no-lock where 
+               bf_chk-discnt-attr.attr-code = "promo-id" and 
+               bf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code and 
+               bf_chk-discnt-attr.record-type = 0 and 
+               bf_chk-discnt-attr.attr-value = tt-promo.promo-id:
+        for first bf_chk-discnt no-lock where 
+                  bf_chk-discnt.doc-code = bf_chk-discnt-attr.doc-code and 
+                  bf_chk-discnt.record-type = 0 and 
+                  bf_chk-discnt.discnt-id = bf_chk-discnt-attr.discnt-id:
+          /*По товарам*/                    
+          for each buf_chk-gds no-lock where 
+                   buf_chk-gds.doc-code = bf_chk-discnt.doc-code and 
+                   buf_chk-gds.line-num = bf_chk-discnt-attr.object-line-num:            
             /*сообщение если, тогда нет скидки*/
             if tt-promo.methodCalc <> 6 then 
             do:
@@ -238,13 +324,14 @@ procedure report:
             assign 
               tt-promo.goods-qnty = tt-promo.goods-qnty + buf_chk-gds.doc-qnty
               tt-promo.itog-sum   = tt-promo.itog-sum + buf_chk-gds.src-sum
-              .
+              .              
           end.                              
         end.              
 
       end.   
 
       if tt-promo.goods-qnty > 0 or tt-promo.methodCalc = 6 then tt-promo.sale-qnty = tt-promo.object-qnty - (tt-promo.return-qnty * 2) .
+            
     end.   
   end.                                           
   
@@ -289,7 +376,7 @@ put stream OutStr-html unformatted
 put stream OutStr-html unformatted
   '<TR><TD colspan="11"></TD></TR>' skip
   '<TR>' skip
-  '<TD colspan="11" style="font-weight: bold;">Отчет по реализации промо-акций за период с ' + string(x-Date-Start,"99.99.99") + ' по ' + string(x-Date-End,"99.99.99") + '</TD>' skip
+  '<TD colspan="11" style="font-weight: bold;">Отчет по реализации промоакций на СТ за период с ' + string(x-Date-Start,"99.99.99") + ' по ' + string(x-Date-End,"99.99.99") + '</TD>' skip
   '</TR>'skip
   '<TR>' skip
   '<TD colspan="11">Выбор объекта:</TD>' skip
@@ -305,7 +392,7 @@ put stream OutStr-html unformatted
   '<TR>' skip
   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Дата смены</TD>' skip
   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">№ смены</TD>' skip
-  '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">№ промо-акции</TD>' skip
+  '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">№ промоакции</TD>' skip
   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Наименование промо-акции</TD>' skip
   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Кол-во срабатываний</TD>' skip
   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Кол-во продаж</TD>' skip

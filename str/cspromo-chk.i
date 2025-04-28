@@ -99,6 +99,27 @@ function ChkPromoPrice returns logical
    
    return v-is-promo.
 end function.
+
+/* возвращает признак, что по строке доп.литр пролива */
+function ChkDopLitr returns logical
+    (input iDocCode as character,
+     input iLineNum as integer)
+    : 
+   define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+   define variable v-is-promo as logical no-undo.
+   
+   v-is-promo = no.
+   find first buf_chk-gds-attr no-lock where                 
+              buf_chk-gds-attr.doc-code = iDocCode
+          and buf_chk-gds-attr.line-num  = iLineNum                                      
+          and buf_chk-gds-attr.attr-code = "CSPromo"
+      no-error.
+   if avail buf_chk-gds-attr and
+     buf_chk-gds-attr.attr-value = "3"                 
+   then v-is-promo = yes.
+   
+   return v-is-promo.
+end function.
         
 /* округление вверх */
 function RoundUp return decimal

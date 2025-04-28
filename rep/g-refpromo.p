@@ -22,7 +22,7 @@ DEFINE VARIABLE vss-author      AS CHARACTER NO-UNDO INIT "$Author$":U .
 DEFINE VARIABLE vss-date        AS CHARACTER NO-UNDO INIT "$Date$":U .
 DEFINE VARIABLE vss-workfile    AS CHARACTER NO-UNDO INIT "$Workfile$":U .
 DEFINE VARIABLE vss-archive     AS CHARACTER NO-UNDO INIT "$Archive$":U .
-DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Срабатывание промо-акции".
+DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Отчет по примененным скидкам на НП".
 
 { cmp/vssrevis.i }
 
@@ -34,7 +34,7 @@ DEFINE VARIABLE vss-description AS CHARACTER NO-UNDO INIT "Срабатывание промо-ак
 RUN rep/d-report.w (
                             INPUT parparentproc
                             ,INPUT 'rep/e-refpromo.w'
-                            ,INPUT ('Срабатывание промо-акции')
+                            ,INPUT ('Отчет по примененным скидкам на НП')
                             ,INPUT 4
                             ,INPUT ""
                             ,INPUT "*"

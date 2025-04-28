@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "Заполнение полей врем
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/r-page1.i " " cmp }
+{ str/cspromo-chk.i } /* функции для работы с промоакциями по НП */
 
 &scop MaxSalemanNum 10000
 define variable strbuf1     as character no-undo.
@@ -73,8 +74,8 @@ FOR EACH obj-list :
           (
               (p-by-shift-dates = yes
               AND
-              (chk-doc.shift-date >= startdate AND
-              chk-doc.shift-date <= enddate)
+              (ub.chk-doc.shift-date >= startdate AND
+              ub.chk-doc.shift-date <= enddate)
               )
               or
               (p-by-shift-dates = no
@@ -239,13 +240,13 @@ end.
           sj-goods.artic = ub.goods.artic
           sj-goods.name = ub.goods.gds-name
           sj-goods.grp-code = ub.goods.grp-code
-          sj-goods.prod-name = clients.obj-name
+          sj-goods.prod-name = ub.clients.obj-name
           sj-goods.node-code = ub.bar-code.node-code
-          sj-goods.node-name = if avail gds-prt and NOT gds-prt.node-name = {&empty-scale}
-                                  then gds-prt.node-name
+          sj-goods.node-name = if avail ub.gds-prt and NOT ub.gds-prt.node-name = {&empty-scale}
+                                  then ub.gds-prt.node-name
                                   else ""
           sj-goods.two-type = if ptwounit
-                                  then  (if avail units and LOOKUP({&twounit}, units.type ) > 0
+                                  then  (if avail ub.units and LOOKUP({&twounit}, ub.units.type ) > 0
                                           then yes
                                           else no)
                                   else no
@@ -295,17 +296,19 @@ end.
       sj-adv.num-lines  = sj-adv.num-lines + 1
       sj-adv.num-docs   = sj-adv.num-doc + (if ub.chk-gds.doc-code = prev-doc then 0 else 1)
       prev-doc          = ub.chk-gds.doc-code
-      sj-adv.brutto-sum = sj-adv.brutto-sum + ub.chk-gds.doc-qnty * ub.chk-gds.price-base
+      sj-adv.brutto-sum = sj-adv.brutto-sum + GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty, ub.chk-gds.price-base) 
+                          + ChkPromoSum(ub.chk-gds.doc-code,ub.chk-gds.line-num)       
       sj-adv.discnt-sum = sj-adv.discnt-sum + ub.chk-gds.discnt * ub.chk-gds.doc-qnty
+                          + ChkPromoSum(ub.chk-gds.doc-code,ub.chk-gds.line-num)
       sj-adv.netto-sum = sj-adv.netto-sum +
-                      ( ub.chk-gds.price-base - ub.chk-gds.discnt ) * ub.chk-gds.doc-qnty .
+                         GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty, ( ub.chk-gds.price-base - ub.chk-gds.discnt )).
       if v-curr-r-b = {&r-b-base} then do:
         assign
-        sj-adv.brutto-sum-r = sj-adv.brutto-sum-r + ub.chk-gds.doc-qnty *
-                        round( ub.chk-gds.price-base * (v-rate), 2 )
-        sj-adv.netto-sum-r = sj-adv.netto-sum-r +
-                        round( ( ub.chk-gds.price-base - ub.chk-gds.discnt ) *
-                        ub.chk-gds.doc-qnty * ( v-rate ), 2 )
+        sj-adv.brutto-sum-r = sj-adv.brutto-sum-r + 
+                              round(GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty * v-rate, chk-gds.price-base), 2) + 
+                              ChkPromoSum(ub.chk-gds.doc-code,ub.chk-gds.line-num)
+        sj-adv.netto-sum-r = sj-adv.netto-sum-r +                                   
+                             round(GetRoundSum(ub.chk-gds.doc-code,ub.chk-gds.line-num,ub.chk-gds.doc-qnty * v-rate,( ub.chk-gds.price-base - ub.chk-gds.discnt )),2)        
         .
        end.
        v-found-chk-gds = yes
