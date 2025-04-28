@@ -550,7 +550,19 @@ class ibs.th.bge.1crn.import.parsesub:
            ReceivedSubjectPublish(v-iSubject, v-iImpSub).
            publish "startStopGroupRec" from p-parent-handle.
         end.
-        when "mark":U 
+        when "marks":U 
+        then do:
+          if level < 2 // если загрузка не из в составе edoc
+          then do:          
+            GetChildren(hNoderef, (level + 1)).
+            if valid-object(impmarkEventHndlrObj) then
+            do:
+              impmarkEventHndlrObj:WriteDB().
+              delete object impmarkEventHndlrObj.
+            end.
+          end.
+        end.
+        when "mark":U
         then do:
            if level < 3 // если загрузка не из в составе edoc
            then do:

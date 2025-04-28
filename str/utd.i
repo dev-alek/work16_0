@@ -1351,6 +1351,12 @@ function addMark returns logical
             buf_utd-marking-line.mark      = marking.mark
             buf_utd-marking-line.gds-code  = marking.Gds-code
 /*            buf_utd-marking-line.sts       = marking.sts*/
+            buf_utd-marking-line.sts      = if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(marking.sts)) or
+                                                can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(marking.sts)) or
+                                                marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                                                marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                                             then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                                             else marking.sts
          .
          
       end.

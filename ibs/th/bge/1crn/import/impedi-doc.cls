@@ -37,6 +37,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
   .
+/*  define stream myProt.*/
 /*  define private temp-table tt-operserv no-undo like ub.OperServ .*/
   
   define property Msg as character no-undo
@@ -319,7 +320,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                exclusive-lock:
                   delete utd-marking-lines.
                end.
-                  
+               
+/*output stream myProt to c:\wrk\16_0\oxml_imp\oxml\heap\ES00002-038\myprot2.txt.*/
+/*define buffer buf_utd-marking-lines for ub.utd-marking-lines.                  */
+/*run gbl/inidebug.p.                                                            */
                do v-i-num2 = 1 to v-i-counter2 :
                   v-objlistmark:Get(v-i-num2) .
                   v-marks-mark = cast(v-objlistmark:SubjectObjCurr, ibs.th.bge.1crn.subjects.mark) .
@@ -369,18 +373,35 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   if utd-marking-lines.doc-level eq 1
                   then
                      vqnty = vqnty + vQntyMark.
-                  define variable vsts as integer no-undo.
-                   
-                  if not can-do(ObjSrv:Env:marking:Sts:mark:EqualChecked,string(utd-marking-lines.sts)) then do:
-                  /* статус меняем, если марка не проверена, не продана не возвражена на кассу */
-                      vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).
-                      if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB
-                         or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB
-                      then
-                         utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:PendingVerification:KeyIntDB.
-                      else 
-                         utd-marking-lines.sts = vsts.
-                  end.
+/*                  define variable vsts as integer no-undo.                                                      */
+/*                                                                                                                */
+/*                  if not can-do(ObjSrv:Env:marking:Sts:mark:EqualChecked,string(utd-marking-lines.sts)) then do:*/
+/*                  /* статус меняем, если марка не проверена, не продана не возвражена на кассу */               */
+/*                      vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).                        */
+/*                      if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB                        */
+/*                         or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB                               */
+/*                      then                                                                                      */
+/*                         utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:PendingVerification:KeyIntDB.      */
+/*                      else                                                                                      */
+/*                         utd-marking-lines.sts = vsts.                                                          */
+/*                  end.                                                                                          */
+                  utd-marking-lines.sts = if not avail ub.marking then ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts)
+                                          else 
+                                 if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
+                                    can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) or
+                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                                 then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                                 else ub.marking.sts.
+                  
+/*put stream myProt unformatted                                */
+/*  utd-marking-lines.gds-code " "                             */
+/*  utd-marking-lines.doc-level " "                            */
+/*  marking.mark " "                                           */
+/*  objSrv:Env:Marking:Sts:Mark:GetLabel(marking.sts) " "      */
+/*  objSrv:Env:Marking:Sts:Mark:GetLabel(utd-marking-lines.sts)*/
+/*  skip                                                       */
+/*.                                                            */
                   if     v-marks-mark:stts-desc ne ?
                      and available marking
                   then
@@ -394,7 +415,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
 /*               then                                                                                                                                                                                */
 /*                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity) + {&delim-par} + string(vqnty)).*/
 
-   
                for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                             and utd-marking-lines.doc-id  eq utd-lines.doc-id
                                             and utd-marking-lines.LineNum eq utd-lines.LineNum
@@ -418,9 +438,22 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                           and marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
                           marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB.
                        end. 
+/*for each marking where marking.mark-parent eq utd-marking-lines.mark no-lock:                     */
+/*find first buf_utd-marking-lines where buf_utd-marking-lines.mark = marking.mark no-lock no-error.*/
+/*put stream myProt unformatted                                                                     */
+/*  buf_utd-marking-lines.gds-code " "                                                              */
+/*  buf_utd-marking-lines.doc-level " "                                                             */
+/*  marking.mark " "                                                                                */
+/*  objSrv:Env:Marking:Sts:Mark:GetLabel(marking.sts) " "                                           */
+/*  objSrv:Env:Marking:Sts:Mark:GetLabel(buf_utd-marking-lines.sts)                                 */
+/*  skip                                                                                            */
+/*.                                                                                                 */
+/*end.                                                                                              */
                   end.
                      
                end.
+/*output stream myProt close.*/
+/*run gbl/inidebug.p.        */
                if     vGdsCode     eq ?
                   and v-i-counter2 > 0
                then
