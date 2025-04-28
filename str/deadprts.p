@@ -114,56 +114,141 @@ else do:
   assign
     varinv-pay = bf_store.inv-pay.
 end.
+
 for each bf-in_doc-line where bf-in_doc-line.doc-code = bf-in_trn-doc.doc-code on error undo, return error return-value :
   /*Определяем совокупность строк и партий документа для компенсации*/
-  create tt-in-doc-line.
-  buffer-copy bf-in_doc-line to tt-in-doc-line.
-  assign
-    tt-in-doc-line.defect-qnty = 0.
-  for each bf-in_parts where bf-in_parts.out-code  = bf-in_doc-line.doc-code  and
-                             bf-in_parts.obj-type  = bf-in_doc-line.obj-type  and
-                             bf-in_parts.obj-code  = bf-in_doc-line.obj-code  and
-                             bf-in_parts.artic     = bf-in_doc-line.artic     and
-                             bf-in_parts.prod-type = bf-in_doc-line.prod-type and
-                             bf-in_parts.prod-code = bf-in_doc-line.prod-code on error undo, return error return-value :
-    find first bf-supp_clients where bf-supp_clients.obj-type = bf-in_parts.supp-type and
-                                     bf-supp_clients.obj-code = bf-in_parts.supp-code no-lock.
-    if bf-supp_clients.obj-type = {&shop}  or
-       bf-supp_clients.obj-type = {&stock} then do:
-      assign
-        tt-in-doc-line.defect-qnty = tt-in-doc-line.defect-qnty + bf-in_parts.fact-qnty.
-    end.
-    else do:
-      create tt-in-parts.
-      buffer-copy bf-in_parts to tt-in-parts.
-      assign
-        tt-in-parts.unrsrv-qnty = tt-in-parts.fact-qnty.
-    end.
-  end.
-  /*Формируем отрицательную зону по нашим товарам*/
-  for each bf-minus_parts where bf-minus_parts.out-code  = {&free-code}             and
-                                bf-minus_parts.obj-type  = bf-in_trn-doc.obj-type   and
-                                bf-minus_parts.obj-code  = bf-in_trn-doc.obj-code   and
-                                bf-minus_parts.artic     = bf-in_doc-line.artic     and
-                                bf-minus_parts.prod-type = bf-in_doc-line.prod-type and
-                                bf-minus_parts.prod-code = bf-in_doc-line.prod-code and
-/*                                bf-minus_parts.supp-type = bf-in_trn-doc.obj-type   and*/
-/*                                bf-minus_parts.supp-code = bf-in_trn-doc.obj-code   and*/
-                                bf-minus_parts.fact-qnty < 0                        on error undo, return error return-value :
-    find first tt-minus-doc-line where tt-minus-doc-line.doc-code  = bf-in_doc-line.doc-code  and
-                                       tt-minus-doc-line.artic     = bf-in_doc-line.artic     and
-                                       tt-minus-doc-line.prod-type = bf-in_doc-line.prod-type and
-                                       tt-minus-doc-line.prod-code = bf-in_doc-line.prod-code no-error.
-    if not available tt-minus-doc-line then do:
-      create tt-minus-doc-line.
-      buffer-copy bf-in_doc-line to tt-minus-doc-line.
-    end.
-    create tt-minus-parts.
-    buffer-copy bf-minus_parts to tt-minus-parts.
+  find first bf_goods where bf_goods.artic     = bf-in_doc-line.artic     and
+                            bf_goods.prod-type = bf-in_doc-line.prod-type and
+                            bf_goods.prod-code = bf-in_doc-line.prod-code no-lock.
+  { str/is-petrl.i
+    bf-in_doc-line.artic
+    bf-in_doc-line.prod-type
+    bf-in_doc-line.prod-code
+    varis-petrolium
+    varis-pieces
+  }
+
+  if varis-petrolium 
+  and not varis-pieces
+  then do:
+    create tt-in-doc-line.
+    buffer-copy bf-in_doc-line to tt-in-doc-line.
     assign
-      tt-minus-parts.minus-qnty    = - bf-minus_parts.fact-qnty
-      tt-minus-doc-line.minus-qnty = tt-minus-doc-line.minus-qnty + tt-minus-parts.minus-qnty.
-  end.
+      tt-in-doc-line.defect-qnty = 0
+    .
+    for each bf-in_parts where bf-in_parts.out-code  = bf-in_doc-line.doc-code  and
+                               bf-in_parts.obj-type  = bf-in_doc-line.obj-type  and
+                               bf-in_parts.obj-code  = bf-in_doc-line.obj-code  and
+                               bf-in_parts.artic     = bf-in_doc-line.artic     and
+                               bf-in_parts.prod-type = bf-in_doc-line.prod-type and
+                               bf-in_parts.prod-code = bf-in_doc-line.prod-code on error undo, return error return-value :
+      find first bf-supp_clients where bf-supp_clients.obj-type = bf-in_parts.supp-type and
+                                       bf-supp_clients.obj-code = bf-in_parts.supp-code no-lock.
+      if bf-supp_clients.obj-type = {&shop}  or
+         bf-supp_clients.obj-type = {&stock} then do:
+        assign
+          tt-in-doc-line.defect-qnty = tt-in-doc-line.defect-qnty + bf-in_parts.fact-qnty.
+      end.
+      else do:
+        find first bf-minus_parts where bf-minus_parts.out-code  = {&free-code}    and
+                                  bf-minus_parts.obj-type  = bf-in_parts.obj-type  and
+                                  bf-minus_parts.obj-code  = bf-in_parts.obj-code  and
+                                  bf-minus_parts.artic     = bf-in_parts.artic     and
+                                  bf-minus_parts.prod-type = bf-in_parts.prod-type and
+                                  bf-minus_parts.prod-code = bf-in_parts.prod-code and
+                                  bf-minus_parts.part-code = bf-in_parts.part-code and
+                                  bf-minus_parts.fact-qnty < 0
+        no-error .
+        if available bf-minus_parts
+        then do :
+          create tt-in-parts.
+          buffer-copy bf-in_parts to tt-in-parts.
+          assign
+            tt-in-parts.unrsrv-qnty = tt-in-parts.fact-qnty
+          .
+          find first tt-minus-doc-line where tt-minus-doc-line.doc-code  = bf-in_doc-line.doc-code  and
+                                             tt-minus-doc-line.artic     = bf-in_doc-line.artic     and
+                                             tt-minus-doc-line.prod-type = bf-in_doc-line.prod-type and
+                                             tt-minus-doc-line.prod-code = bf-in_doc-line.prod-code no-error.
+          if not available tt-minus-doc-line then do:
+            create tt-minus-doc-line.
+            buffer-copy bf-in_doc-line to tt-minus-doc-line .
+          end.
+          for each bf-minus_parts where bf-minus_parts.out-code  = {&free-code}    and
+                                  bf-minus_parts.obj-type  = bf-in_parts.obj-type  and
+                                  bf-minus_parts.obj-code  = bf-in_parts.obj-code  and
+                                  bf-minus_parts.artic     = bf-in_parts.artic     and
+                                  bf-minus_parts.prod-type = bf-in_parts.prod-type and
+                                  bf-minus_parts.prod-code = bf-in_parts.prod-code and
+                                  bf-minus_parts.part-code = bf-in_parts.part-code and
+                                  bf-minus_parts.fact-qnty < 0
+          :
+            create tt-minus-parts.
+            buffer-copy bf-minus_parts to tt-minus-parts.
+            assign
+              tt-minus-parts.minus-qnty    = - bf-minus_parts.fact-qnty
+              tt-minus-doc-line.minus-qnty = tt-minus-doc-line.minus-qnty + tt-minus-parts.minus-qnty
+            .
+          end .
+        end .
+        else do :
+          assign
+            tt-in-doc-line.defect-qnty = tt-in-doc-line.defect-qnty + bf-in_parts.fact-qnty
+          .
+        end .
+      end.
+    end.
+  end .
+  else do :
+    create tt-in-doc-line.
+    buffer-copy bf-in_doc-line to tt-in-doc-line.
+    assign
+      tt-in-doc-line.defect-qnty = 0.
+    for each bf-in_parts where bf-in_parts.out-code  = bf-in_doc-line.doc-code  and
+                               bf-in_parts.obj-type  = bf-in_doc-line.obj-type  and
+                               bf-in_parts.obj-code  = bf-in_doc-line.obj-code  and
+                               bf-in_parts.artic     = bf-in_doc-line.artic     and
+                               bf-in_parts.prod-type = bf-in_doc-line.prod-type and
+                               bf-in_parts.prod-code = bf-in_doc-line.prod-code on error undo, return error return-value :
+      find first bf-supp_clients where bf-supp_clients.obj-type = bf-in_parts.supp-type and
+                                       bf-supp_clients.obj-code = bf-in_parts.supp-code no-lock.
+      if bf-supp_clients.obj-type = {&shop}  or
+         bf-supp_clients.obj-type = {&stock} then do:
+        assign
+          tt-in-doc-line.defect-qnty = tt-in-doc-line.defect-qnty + bf-in_parts.fact-qnty.
+      end.
+      else do:
+        create tt-in-parts.
+        buffer-copy bf-in_parts to tt-in-parts.
+        assign
+          tt-in-parts.unrsrv-qnty = tt-in-parts.fact-qnty.
+      end.
+    end.
+    /*Формируем отрицательную зону по нашим товарам*/
+    for each bf-minus_parts where bf-minus_parts.out-code  = {&free-code}             and
+                                  bf-minus_parts.obj-type  = bf-in_trn-doc.obj-type   and
+                                  bf-minus_parts.obj-code  = bf-in_trn-doc.obj-code   and
+                                  bf-minus_parts.artic     = bf-in_doc-line.artic     and
+                                  bf-minus_parts.prod-type = bf-in_doc-line.prod-type and
+                                  bf-minus_parts.prod-code = bf-in_doc-line.prod-code and
+  /*                                bf-minus_parts.supp-type = bf-in_trn-doc.obj-type   and*/
+  /*                                bf-minus_parts.supp-code = bf-in_trn-doc.obj-code   and*/
+                                  bf-minus_parts.fact-qnty < 0                        on error undo, return error return-value :
+      find first tt-minus-doc-line where tt-minus-doc-line.doc-code  = bf-in_doc-line.doc-code  and
+                                         tt-minus-doc-line.artic     = bf-in_doc-line.artic     and
+                                         tt-minus-doc-line.prod-type = bf-in_doc-line.prod-type and
+                                         tt-minus-doc-line.prod-code = bf-in_doc-line.prod-code no-error.
+      if not available tt-minus-doc-line then do:
+        create tt-minus-doc-line.
+        buffer-copy bf-in_doc-line to tt-minus-doc-line.
+      end.
+      create tt-minus-parts.
+      buffer-copy bf-minus_parts to tt-minus-parts.
+      assign
+        tt-minus-parts.minus-qnty    = - bf-minus_parts.fact-qnty
+        tt-minus-doc-line.minus-qnty = tt-minus-doc-line.minus-qnty + tt-minus-parts.minus-qnty.
+    end.
+  end . /* не топливо */
 end.
 define variable vv-doc-code as character no-undo .
 find first tt-minus-doc-line no-error.
