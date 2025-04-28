@@ -62,11 +62,16 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-    
+  define variable HTTPError as longchar no-undo.  
   constructor public TSDCommand (  ):
     define variable tempStr       as char     no-undo.
     
     super ().
+    HTTPError = substitute("HTTP/1.1 500 Internal Server Error&1Server: 4GL&1Content-Type: text/html&1ETag: &3&4&2",
+                         chr(13) + chr(10),
+                         chr(13) + chr(10) + chr(13) + chr(10) , 
+                         "&1",
+                         "&2").
     os-command silent value( 'set pro >>procarch') .
     if search ("procarch") = ? 
     then do:
@@ -102,103 +107,131 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   end.
   define variable mServiceBusy as logical no-undo.
   method public void Execute_( input req as IRequest, resp as class IResponse, list-par as char ):
+    ErrStatus = false.
     define variable mbuffer       as memptr   no-undo.
     define variable mbuffer1      as memptr   no-undo.
     define variable tempLongCh    as longchar no-undo.
     define variable glog          as logical  no-undo.
-    
+    define variable vMesForTsd as character no-undo. 
     if mServiceBusy
     then do:
-       logWrite:LogStr = "При обмене возникли ошибки. Уже выполняется одна задание получения данных".
-       tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&2",
-                              {&CRLF},
-                              {&HdEnd},
-                              length(logWrite:LogStr,'RAW':U), 
-                              logWrite:LogStr). 
-    
-       set-size(mbuffer) = 0.
-       set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
-       put-string(mbuffer,1) = tempLongCh.
-       glog = req:HndlSocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
-       if not glog 
-       then do:
-          logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
-       end.
+       vMesForTsd = "При обмене возникли ошибки. Уже выполняется одна задание получения данных".
+       logWrite:LogStr = vMesForTsd.
+              
+/*       tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&2",*/
+/*                              {&CRLF},                                                                                */
+/*                              {&HdEnd},                                                                               */
+/*                              length(logWrite:LogStr,'RAW':U),                                                        */
+/*                              logWrite:LogStr).                                                                       */
+/*                                                                                                                      */
+/*       set-size(mbuffer) = 0.                                                                                         */
+/*       set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.                                                          */
+/*       put-string(mbuffer,1) = tempLongCh.                                                                            */
+/*       glog = req:HndlSocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.                                    */
+/*       if not glog                                                                                                    */
+/*       then do:                                                                                                       */
+/*          logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".              */
+/*       end.                                                                                                           */
        ErrStatus = true.
        return.
     end.
-    mServiceBusy = yes.
-    os-delete value (search ("MT_documentsSend.txt")) no-error.
-    os-delete value (search ("MT_lineSend.txt")) no-error.
-    os-delete value (search ("MT_MarkLinesSend.txt")) no-error.  
-    
-    startStep('Начало выгрузка из базы ТСД').
-          
-    define variable vobjtype as character no-undo.
-    logWrite:LogStr = "".
-    
-    copy-lob
-    from  object req:ContentBuff
-    to file "documents.s3db"
-    no-convert
-    no-error .
-    
-    vobjtype = entry (1, list-par, "?").
-    if vobjtype eq "" or vobjtype eq ?
-    then do:
-      mServiceBusy = no.
-      logWrite:LogStr = "Не задан тип объекта".
-      ErrStatus = true.
-      return.
+     do on error undo, leave:
+       define variable vOk as logical no-undo.
+       mServiceBusy = yes.
+       os-delete value (search ("MT_documentsSend.txt")) no-error.
+       os-delete value (search ("MT_lineSend.txt")) no-error.
+       os-delete value (search ("MT_MarkLinesSend.txt")) no-error.  
+       
+       startStep('Начало выгрузка из базы ТСД').
+             
+       define variable vobjtype as character no-undo.
+       logWrite:LogStr = "".
+       
+       copy-lob
+       from  object req:ContentBuff
+       to file "documents.s3db"
+       no-convert
+       no-error .
+       
+       vobjtype = entry (1, list-par, "?").
+       if vobjtype eq "" or vobjtype eq ?
+       then do:
+         vMesForTsd = "Не задан тип объекта".
+         logWrite:LogStr = "Не задан тип объекта".
+         return.
+       end.
+       else if vobjtype eq "shop"
+       then  
+          vobjtype = {&Shop}.
+       else if vobjtype eq "stock"
+       then  
+          vobjtype = {&stock}.
+       else if vobjtype eq "cmp"
+       then  
+          vobjtype = {&cmp}.
+       tsd:ObjCode = integer (entry (2, list-par, "?")) no-error.
+       if error-status:error
+       then do:
+         vMesForTsd  = "Не задан код объекта".
+         logWrite:LogStr = "Не задан код объекта".
+         return.
+       end.
+       assign    
+       
+       tsd:ObjType = vobjtype
+       tsd:ReqType = entry (3, list-par, "?")
+       tsd:CurrDecSeparator = entry (4, list-par, "?")
+       tsd:IsMarkOn = if entry (5, list-par, "?") = "true" then true else false
+       no-error.
+       define variable vProt as character no-undo.
+       vProt = req:HeadHTTP:getValue("TSD-protocol").
+       if vProt > ""
+       then do:
+          define variable vfileDbInit as character no-undo.
+          vfileDbInit = "exe/DBInit_" + replace (vProt,".","_") +  ".exe".
+          if (search(vfileDbInit)) eq ?
+          then do:
+             vMesForTsd = "Не найден файл " + vfileDbInit + " для версии протокола " + vProt.
+             
+             return error . 
+             
+          end. 
+          else
+             os-copy value(search(vfileDbInit)) value ("DBInit.exe").
+       end.
+       else
+          os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
+            
+       
+       if is-ProcArch64 
+       then do:
+         os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+       end.
+       else do:
+         os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+       end.    
+       define variable vpid as integer no-undo.
+       vpid = runProc('DBInit.exe ExpDoc 30 31 >DBInitExpDoc.txt').
+       
+       resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
+       resp:ParamWait = substitute ("pid,&1,status,Step1", vpid).
+       vOk = true.
+       finally:
+         if (vOk ne true)
+         then do:
+            if (vMesForTsd > "")
+            then do:
+               writeSockError (req:HndlSocket, vMesForTsd,  req:HeadHTTP:getValue("TSD-protocol")).
+            end.
+            ErrStatus = true.
+            mServiceBusy = no.
+         end.        
+       end finally.
     end.
-    else if vobjtype eq "shop"
-    then  
-       vobjtype = {&Shop}.
-    else if vobjtype eq "stock"
-    then  
-       vobjtype = {&stock}.
-    else if vobjtype eq "cmp"
-    then  
-       vobjtype = {&cmp}.
-    tsd:ObjCode = integer (entry (2, list-par, "?")) no-error.
-    if error-status:error
-    then do:
-      mServiceBusy = no.
-      logWrite:LogStr = "Не задан код объекта".
-      ErrStatus = true.
-      return.
-    end.
-    assign    
-    
-    tsd:ObjType = vobjtype
-    tsd:ReqType = entry (3, list-par, "?")
-    tsd:CurrDecSeparator = entry (4, list-par, "?")
-    tsd:IsMarkOn = if entry (5, list-par, "?") = "true" then true else false
-    no-error.
-    
-    if req:HeadHTTP:getValue("TSD-protocol") > ""
-    then
-       os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
-    else
-       os-copy value(search("exe/DBInit_1_5.exe"))   value ("DBInit.exe").       
-         
-    
-    if is-ProcArch64 
-    then do:
-      os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-    end.
-    else do:
-      os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-    end.    
-    define variable vpid as integer no-undo.
-    vpid = runProc('DBInit.exe ExpDoc 30 31 >DBInitExpDoc.txt').
-    
-    resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
-    resp:ParamWait = substitute ("pid,&1,status,Step1", vpid).
-    
   end method.
   
   method override public void ContinueExecution( input req as IRequest, input resp as IResponse ):
+    ErrStatus = false.
     define variable tempLongCh    as longchar no-undo.
     define variable mbuffer       as memptr   no-undo.
     define variable mbuffer1      as memptr   no-undo.
@@ -298,7 +331,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   
 
   method public override void Execute_( input req as IRequest, resp as class IResponse ):
-  
+  ErrStatus = false.
   do transaction:
 
     define variable contLength as integer   no-undo.
@@ -936,7 +969,51 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
+   
+  method private logical writeSockError (HndlSocket as handle, textMes as character , protocol as character):
+    define variable glog     as logical  no-undo.
+    
+    define variable v-cont-length as integer no-undo.
+    define variable VOK as longchar no-undo.
+    define variable VrespOK as memptr no-undo.
+    VOK = substitute (HTTPError, textMes).
+    copy-lob
+      from object VOK
+      to object VrespOK
+      convert target codepage "UTF-8".
+    .
+    if not hndlSocket:connected()
+    then do:
+       LogWrite:WriteFileToLog("Клиент отключился.").
+       return false.
+    end.
+    glog = hndlsocket:write(VrespOK,1,get-size(VrespOK)).
+    if    not glog
+       or hndlsocket:bytes-written ne get-size(VrespOK)
+    then do:
+       set-size(VrespOK) = 0.
+       LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
+       return false.
+    end.
+    set-size(VrespOK) = 0.
+    
+/*    if not hndlSocket:connected()                                                                    */
+/*    then do:                                                                                         */
+/*       LogWrite:WriteFileToLog("Клиент отключился.").                                                */
+/*       return false.                                                                                 */
+/*    end.                                                                                             */
+/*    glog = hndlsocket:write(resp:Content,1,get-size(resp:Content)).                                  */
+/*    if    not glog                                                                                   */
+/*       or hndlsocket:bytes-written ne get-size(resp:Content)                                         */
+/*    then do:                                                                                         */
+/*       LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".*/
+/*       return false.                                                                                 */
+/*    end.                                                                                             */
+    return true.
+      
+  end method.
 
+  
   method private logical writeSock ( arg as character, iprotocol as char ):
     
     define variable mbuffer       as memptr   no-undo.
@@ -970,7 +1047,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       then
          os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
       else
-         os-copy value(search("exe/DBInit_1_5.exe"))   value ("DBInit.exe").       
+         os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
       if is-ProcArch64 
       then do:
          os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
@@ -1018,7 +1095,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       then
          os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
       else
-         os-copy value(search("exe/DBInit_1_5.exe"))   value ("DBInit.exe").       
+         os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
         
     
     if is-ProcArch64 
