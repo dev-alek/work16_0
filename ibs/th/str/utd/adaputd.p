@@ -217,12 +217,19 @@ do:
         
       end.
       else do:
+        LABEL_1:
         for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
           and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
           and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
           and buf_utd-marking-lines.doc-level = 1
           no-lock:
-             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
+             find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark no-lock no-error.
+             if avail buf_marking and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB then
+             do: /* если марка разгруппирована, то кол-во берем из марки и не смотрим состав  */
+               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB).
+               next LABEL_1.
+             end.
+               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
              do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait):
                v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait))).  
              end.

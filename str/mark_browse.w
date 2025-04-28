@@ -2020,20 +2020,20 @@ PROCEDURE save-mark :
             assign
                 ub.marking.mark = X_marking-line.mark
                 ub.marking.box-qnty    = ?
-                .
+            .
         end.  
         v-GTIN = getGtinByDM(X_marking-line.mark) .
         assign
             ub.marking.gds-code    = X_marking-line.gds-code
             ub.marking.sts         = X_marking-line.sts
-            ub.marking.gds-ext-id  = v-gtin
+            ub.marking.gds-ext-id  = v-GTIN
             ub.marking.obj-code    = X_marking-line.obj-code
             ub.marking.obj-type    = X_marking-line.obj-type
             ub.marking.mark-parent = mark-parent
-            .
+        .
         if v-edoc-type then ub.marking.sts = Marking:Checked_:KeyIntDB .
         ub.marking.unit-ext  = getLevelMotpByDM(X_marking-line.mark) .
-        ub.marking.box-qnty  = getQntyUTDByDM(X_marking-line.mark) .
+        ub.marking.box-qnty  = getQntyCodeByGtin(getGtinByDM(X_marking-line.mark)).
     /*          ub.marking.unit = getLevelUTDByDM(v-marking) .*/
  
     end.  
