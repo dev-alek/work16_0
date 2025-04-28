@@ -212,10 +212,10 @@ do
                 buf_c-chk-pay.chip-num = p-chip-num
                 buf_c-chk-pay.corr-user-db-num = g#db-num
                 .
-        end.
+        end.        
         for each buf_chk-discnt no-lock where
             buf_chk-discnt.doc-code = buf_chk-doc.doc-code
-            And buf_chk-discnt.record-type = 0
+          /*  And buf_chk-discnt.record-type = 0*/ /* Сохраняем в историю все скидки, почему-то раньше только 0 и 4 сохраняли */
             on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
             create buf_c-chk-discnt.
             buffer-copy buf_chk-discnt
@@ -225,7 +225,7 @@ do
                 buf_c-chk-discnt.corr-user-db-num = g#db-num
                 .
         end.
-        for each buf_chk-discnt no-lock where
+        /*for each buf_chk-discnt no-lock where
             buf_chk-discnt.doc-code = buf_chk-doc.doc-code
             And buf_chk-discnt.record-type = 4
             on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
@@ -236,7 +236,7 @@ do
                 buf_c-chk-discnt.chip-num = p-chip-num
                 buf_c-chk-discnt.corr-user-db-num = g#db-num
                 .
-        end.
+        end.*/
         for each buf_chk-doc-attr no-lock where
             buf_chk-doc-attr.doc-code = buf_chk-doc.doc-code
             on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
