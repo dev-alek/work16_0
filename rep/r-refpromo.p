@@ -100,7 +100,9 @@ define temp-table tt-info
    field b-code as integer
    field change-BL as char
    field ret-nodiscnt as log /* в возвратном чеке нет скидки */
-   . 
+   field pay-desk as int /* номер кассы */
+   field ext-code as char /* номер промоакции в 1С */
+   index sort1 chk-date chk-num. 
      
 define variable v-report-name       as character no-undo .
 define variable v-file-name-rep-htm as character no-undo .
@@ -344,9 +346,11 @@ procedure report:
     }        
     if not is-petrolium then next .
     
-    find first tt-info no-lock where 
+    find first tt-info no-lock where
+               tt-info.obj-code = buf_chk-doc.obj-code and
+               tt-info.obj-type = buf_chk-doc.obj-type and 
                tt-info.doc-code = buf_chk-gds.doc-code and 
-               tt-info.pl-code = buf_chk-gds.pl-code
+               tt-info.b-code = buf_chk-gds.b-code
         no-error.
     if not avail tt-info 
     then do: 
@@ -362,6 +366,7 @@ procedure report:
          tt-info.shift-date = buf_chk-doc.shift-date
          tt-info.pl-code  = buf_chk-gds.pl-code                  
          tt-info.b-code = buf_chk-gds.b-code
+         tt-info.pay-desk = buf_chk-doc.pay-desk
          .                                                                           
       /* кассир */
       find first buf_person where 
@@ -396,8 +401,10 @@ procedure report:
       /* название промоакции */   
       for first buf_PromoAction no-lock where 
                 buf_PromoAction.id = int64(tt-info.promo-id):
-                    
-          tt-info.nameAction = buf_PromoAction.nameAction .
+          assign          
+             tt-info.nameAction = buf_PromoAction.nameAction 
+             tt-info.ext-code = buf_PromoAction.ext-code
+             .
                                         
           find first ub.promoAttr where
                      ub.promoAttr.attr-code = "charge-BL" and
@@ -468,6 +475,7 @@ procedure report-itog:
         for each buf_chk-doc no-lock where 
                  buf_chk-doc.obj-code = tt-info.obj-code 
              and buf_chk-doc.obj-type = tt-info.obj-type
+             and buf_chk-doc.pay-desk = tt-info.pay-desk
              and buf_chk-doc.chk-type = int({&rcpt-return})
              and buf_chk-doc.doc-num2 = substitute("&1:&2",tt-info.chk-num,tt-info.z-number),
              each buf_chk-gds no-lock where 
@@ -748,7 +756,7 @@ procedure report-body:
             '<TD text_wrap="true" style="text-align: center;">' + "-" + '</TD>' skip
             .
         put stream OutStr-html unformatted             
-            '<TD text_wrap="true" style="text-align: center;">' + tt-info.promo-id  + '</TD>' skip
+            '<TD text_wrap="true" style="text-align: center;">' + tt-info.promo-id + (if tt-info.ext-code > "" then (" / " + tt-info.ext-code) else "") + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + tt-info.nameAction  + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.itog-qnty <> 0 then fnc-convert-dot-to-colon(tt-info.itog-qnty,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip
             '<TD text_wrap="true" style="text-align: center;">' + if tt-info.itog-sum-no-disc <> 0 then fnc-convert-dot-to-colon(tt-info.itog-sum-no-disc,"->>>>>>>>>>>9.99",2) + '</TD>' else "0.00" + '</TD>' skip

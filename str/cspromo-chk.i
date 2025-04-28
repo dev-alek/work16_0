@@ -360,7 +360,8 @@ function SetPromoDisc return logical
       no-error.
       
    if avail buf_chk-gds-attr      
-     then do:
+     then do:              
+           
      find first buf_chk-discnt no-lock where 
                 buf_chk-discnt.doc-code = buf_chk-gds-attr.doc-code
             and buf_chk-discnt.line-num = buf_chk-gds-attr.line-num
@@ -368,7 +369,7 @@ function SetPromoDisc return logical
             and buf_chk-discnt.promo-id > ""
             no-error.
      if not avail buf_chk-discnt then do:                                        
-   
+          
         find first buf_chk-doc no-lock where                 
                    buf_chk-doc.doc-code = iDocCode         
            no-error.                  
@@ -390,19 +391,27 @@ function SetPromoDisc return logical
            for first buf2_chk-doc no-lock where 
                      buf2_chk-doc.obj-code = buf_chk-doc.obj-code 
                  and buf2_chk-doc.obj-type = buf_chk-doc.obj-type
+                 and buf2_chk-doc.pay-desk = buf_chk-doc.pay-desk
                  and buf2_chk-doc.chk-type = int({&rcpt-sale})
-                 and buf2_chk-doc.chk-num = int(entry(1,buf_chk-doc.doc-num2,":"))
+                 and buf2_chk-doc.chk-num  = int(entry(1,buf_chk-doc.doc-num2,":"))
                  and buf2_chk-doc.z-number = int(entry(2, buf_chk-doc.doc-num2,":"))
                :
-               find first buf_chk-discnt-attr no-lock where 
-                          buf_chk-discnt-attr.doc-code =  buf2_chk-doc.doc-code and
-                          buf_chk-discnt-attr.record-type = 5 and 
-                          buf_chk-discnt-attr.line-num = 0 and
-                          buf_chk-discnt-attr.attr-code = "promo-id" 
+               /* ищем этот товар в чеке продажи */    
+               find first buf2_chk-gds no-lock where                 
+                          buf2_chk-gds.doc-code = buf2_chk-doc.doc-code
+                     and  buf2_chk-gds.b-code   = buf_chk-gds.b-code
+               no-error.
+               if not avail buf2_chk-gds then return no.
+               
+               find first buf_chk-discnt no-lock where 
+                          buf_chk-discnt.doc-code =  buf2_chk-doc.doc-code and
+                          buf_chk-discnt.record-type = 1 and 
+                          buf_chk-discnt.object-line-num = buf2_chk-gds.line-num and
+                          buf_chk-discnt.promo-id > "" 
                no-error .
-               if avail buf_chk-discnt-attr 
+               if avail buf_chk-discnt
                then do:
-                  v-disc-promo-id = buf_chk-discnt-attr.attr-value.
+                  v-disc-promo-id = buf_chk-discnt.promo-id.
                    
                   find first buf2_chk-discnt no-lock where 
                     buf2_chk-discnt.doc-code = iDocCode and
