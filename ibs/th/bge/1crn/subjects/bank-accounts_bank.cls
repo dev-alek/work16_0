@@ -95,16 +95,16 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
       when bank-name = ?
       v-str = v-str + ",bik" 
       when bik = ?
-      v-str = v-str + ",bank-city" 
-      when bank-city = ?
+      /*v-str = v-str + ",bank-city" 
+      when bank-city = ?*/
       v-str = v-str + ",cor-acc" 
       when cor-acc = ?
-      v-str = v-str + ",qr-rule" 
+      /*v-str = v-str + ",qr-rule" 
       when qr-rule = ?
       v-str = v-str + ",bank-deposit-debit" 
       when bank-deposit-debit = ?
       v-str = v-str + ",bank-deposit-kredit" 
-      when bank-deposit-kredit = ?
+      when bank-deposit-kredit = ?*/
       .
     v-str = trim (v-str, ",").
     if v-str > ''

@@ -61,7 +61,7 @@ method override protected void CheckData ():
     assign
       v-str = "code" when code_ = ?
       v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",role-code" when role-code = ?
+      /*v-str = v-str + ",role-code" when role-code = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''

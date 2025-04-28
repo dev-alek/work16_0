@@ -86,12 +86,12 @@ CLASS ibs.th.bge.1crn.subjects.currency inherits ibs.th.bge.1crn.subjects.asubje
       v-str = "code" when code_ = ?
       v-str = v-str + ",name" when name_ = ?
       v-str = v-str + ",sym-name" when sym-name = ?
-      v-str = v-str + ",name-in-words-1" when name-in-words-1 = ?
+      /*v-str = v-str + ",name-in-words-1" when name-in-words-1 = ?
       v-str = v-str + ",name-in-words-2" when name-in-words-2 = ?
       v-str = v-str + ",name-in-words-3" when name-in-words-3 = ?
       v-str = v-str + ",name-in-words-4" when name-in-words-4 = ?
       v-str = v-str + ",name-in-words-5" when name-in-words-5 = ?
-      v-str = v-str + ",name-in-words-6" when name-in-words-6 = ?
+      v-str = v-str + ",name-in-words-6" when name-in-words-6 = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''

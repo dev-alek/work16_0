@@ -183,9 +183,9 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
       when code_ = ?
       v-str = v-str + ",name" 
       when name_ = ?
-      v-str = v-str + ",full-name" 
+/*      v-str = v-str + ",full-name" 
       when full-name = ?
-/*       v-str = v-str + ",inn" 
+       v-str = v-str + ",inn" 
       when inn = ?
       v-str = v-str + ",kpp" 
       when kpp = ? */

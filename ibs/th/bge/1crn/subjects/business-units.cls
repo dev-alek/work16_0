@@ -64,7 +64,7 @@ class ibs.th.bge.1crn.subjects.business-units inherits ibs.th.bge.1crn.subjects.
     
     assign
       v-str = "code" when code_ = ?
-      v-str = v-str + ",name" when name_ = ?
+     /* v-str = v-str + ",name" when name_ = ?*/
     .
     v-str = trim (v-str, ",").
     if v-str > ''
