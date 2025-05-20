@@ -323,7 +323,7 @@ do:
       : 
         if vIsMarkLine
         and buf_utd-marking-lines.doc-level < vMaxDocLevel
-        and Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB) > 1
+        and Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB) > 0
         then do :
           next utd-marking-lines_ .
         end .
