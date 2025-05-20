@@ -330,6 +330,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   define variable vmark as character no-undo.
                   vmark = repTegforDm(v-marks-mark:mark-code).
 
+                  release marking.
                   if ismark(vmark)
                   then do:
                      find first marking where marking.mark eq vmark
