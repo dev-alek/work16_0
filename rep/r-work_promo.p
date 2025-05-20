@@ -117,7 +117,6 @@ define variable v-period            as character no-undo .
 define variable v-list-obj          as character no-undo .
 define variable v-obj-name          as character no-undo .
 define variable v-first             as logical   no-undo .
-define variable vRecordType         as integer   no-undo .
 
 define buffer buf_chk-discnt      for ub.chk-discnt .
 define buffer buf_chk-discnt-attr for ub.chk-discnt-attr .
@@ -148,8 +147,8 @@ function ChkPLLine returns logical
     vPromo = no.
         
     find first buf_chk-gds no-lock where                 
-                 buf_chk-gds.doc-code = iDocCode
-             and buf_chk-gds.line-num  = iLineNum                                                   
+               buf_chk-gds.doc-code = iDocCode
+           and buf_chk-gds.line-num  = iLineNum                                                   
     no-error.
     if avail buf_chk-gds 
     then do:
@@ -168,39 +167,65 @@ function ChkPLLine returns logical
             if is-petrolium then 
              vPromo = yes.
         end. 
-    end.     
-    else do:    
-        /* если хоть один сопут. товар есть по скидке промо */  
-        chkdisc:
-        for each bf_chk-discnt no-lock where                   
-                 bf_chk-discnt.doc-code = iDocCode and 
-                 bf_chk-discnt.record-type = 1 and 
-                 bf_chk-discnt.promo-id = iPromoId,                     
-           first buf_chk-gds no-lock where 
-                 buf_chk-gds.doc-code = bf_chk-discnt.doc-code and 
-                 buf_chk-gds.line-num = bf_chk-discnt.object-line-num,
-           first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code,
-           first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code:
-                                            
-           { str/is-petrl.i
-              buf_goods.artic
-              buf_goods.prod-type
-              buf_goods.prod-code
-              is-petrolium
-              is-pieces
-              no-error
-            }                  
-                               
-            if is-petrolium then 
-               vPromo = yes.    
-            else do:
-                vPromo = no.   
-                leave chkdisc.
-            end.                                           
-        end.           
-    end.    
+    end.        
     
     return vPromo.
+end.
+
+/* определение, что промоакция по СП */
+function ChkGoodLine returns logical
+    (input iDocCode as character,    
+    input iPromoId as character)
+    : 
+    define buffer buf_chk-gds for ub.chk-gds.    
+    define buffer bf_chk-discnt for ub.chk-discnt.
+    define buffer buf_bar-code for ub.bar-code.
+    define buffer buf_goods for ub.goods.
+    define buffer  buf_chk-discnt-attr for ub.chk-discnt-attr. 
+    
+    define variable vGds as logical no-undo.
+    define variable is-petrolium         as logical   no-undo.
+    define variable is-pieces            as logical   no-undo.
+    define variable vRecordType         as integer   no-undo .
+    
+    vGds = no.
+        
+    if can-find(first bf_chk-discnt no-lock where 
+                      bf_chk-discnt.doc-code = iDocCode and 
+                      bf_chk-discnt.record-type = 1 and                
+                      bf_chk-discnt.promo-id = iPromoId)
+    then vRecordType = 1.
+    else vRecordType = 0. 
+         
+    /* если хоть один сопут. товар есть по скидке промо */  
+    chkdisc:
+    for each bf_chk-discnt no-lock where                   
+             bf_chk-discnt.doc-code = iDocCode and 
+             bf_chk-discnt.record-type = vRecordType and 
+             bf_chk-discnt.promo-id = iPromoId,                     
+       first buf_chk-gds no-lock where 
+             buf_chk-gds.doc-code = bf_chk-discnt.doc-code and 
+             buf_chk-gds.line-num = bf_chk-discnt.object-line-num,
+       first buf_bar-code no-lock where buf_bar-code.b-code = buf_chk-gds.b-code,
+       first buf_goods no-lock where buf_goods.gds-code = buf_bar-code.gds-code:
+                                        
+       { str/is-petrl.i
+          buf_goods.artic
+          buf_goods.prod-type
+          buf_goods.prod-code
+          is-petrolium
+          is-pieces
+          no-error
+        }                  
+                           
+        if not is-petrolium then 
+        do:
+            vGds = yes.   
+            leave chkdisc.
+        end.                                           
+    end.           
+         
+    return vGds.
 end.
 
 /*Данные для шапки*/
@@ -253,8 +278,10 @@ end.
 /*Общие данные*/
 
 procedure report:
+  define variable vRecordType as integer   no-undo .
+  
   for each buf_chk-discnt-attr no-lock where buf_chk-discnt-attr.attr-code = "promo-id" and buf_chk-discnt-attr.doc-code = buf_chk-doc.doc-code:
-    if not ChkPLLine(buf_chk-discnt-attr.doc-code, buf_chk-discnt-attr.object-line-num, buf_chk-discnt-attr.attr-value)
+    if ChkGoodLine(buf_chk-discnt-attr.doc-code, buf_chk-discnt-attr.attr-value)
     then 
     for first buf_chk-discnt no-lock where buf_chk-discnt.doc-code = buf_chk-discnt-attr.doc-code and buf_chk-discnt.record-type = 5
       and buf_chk-discnt.discnt-id = buf_chk-discnt-attr.discnt-id:
@@ -276,8 +303,7 @@ procedure report:
           tt-promo.promo-id   = buf_chk-discnt-attr.attr-value
           tt-promo.shift-date = buf_chk-doc.shift-date
           tt-promo.shift-num  = buf_chk-doc.shift-num
-          .        
-
+          .               
                    
         for first ub.clients no-lock where ub.clients.obj-code = tt-promo.obj-code and
           ub.clients.obj-type = tt-promo.obj-type:
@@ -408,7 +434,7 @@ put stream OutStr-html unformatted
   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Сумма скидки</TD>' skip
   '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Сумма без скидки</TD>' skip
  /* '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Сумма c учетом скидки</TD>' skip */
-  '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Запрет начисления БЛ</TD>' skip
+  '<TD text_wrap="true" style="text-align: center; font-weight: bold; background-color: silver;">Запрет начисления баллов лояльности</TD>' skip
   '</TR>'skip       
   .        
 

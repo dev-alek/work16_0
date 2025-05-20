@@ -378,7 +378,7 @@ function SetPromoDisc return logical
               and  buf_chk-gds.line-num = iLineNum
            no-error.   
                   
-        find first buf_chk-discnt-attr no-lock where 
+        /*find first buf_chk-discnt-attr no-lock where 
                 buf_chk-discnt-attr.doc-code = iDocCode and
                 buf_chk-discnt-attr.record-type = 5 and 
                 buf_chk-discnt-attr.line-num = 0 and
@@ -387,7 +387,7 @@ function SetPromoDisc return logical
         if avail buf_chk-discnt-attr 
            then v-disc-promo-id = buf_chk-discnt-attr.attr-value.
         /* найти чек продажи и взять код акции из него */   
-        else do:
+        else*/ do:
            for first buf2_chk-doc no-lock where 
                      buf2_chk-doc.obj-code = buf_chk-doc.obj-code 
                  and buf2_chk-doc.obj-type = buf_chk-doc.obj-type
@@ -419,6 +419,13 @@ function SetPromoDisc return logical
                     buf2_chk-discnt.line-num = 0 and
                     buf2_chk-discnt.promo-id =  v-disc-promo-id 
                   no-error.
+                  find first buf2_chk-discnt-attr no-lock where 
+                             buf2_chk-discnt-attr.doc-code = iDocCode and
+                             buf2_chk-discnt-attr.record-type = 5 and 
+                             buf2_chk-discnt-attr.line-num = 0 and                                
+                             buf2_chk-discnt-attr.attr-code = "promo-id" and 
+                             buf2_chk-discnt-attr.attr-value = v-disc-promo-id 
+                        no-error .
                   if not avail buf2_chk-discnt 
                   then do:
                       for each buf_chk-discnt no-lock where 
@@ -434,7 +441,9 @@ function SetPromoDisc return logical
                         buf2_chk-discnt.line-num = 0
                         buf2_chk-discnt.promo-id = v-disc-promo-id                        
                         buf2_chk-discnt.object-sum = 0 /* кол-во срабатыв. акции */
-                        buf2_chk-discnt.discnt-id = (var-discnt-id + 1)
+                        buf2_chk-discnt.discnt-id = if avail buf2_chk-discnt-attr 
+                                                       then buf2_chk-discnt-attr.discnt-id 
+                                                       else (var-discnt-id + 1)
                         var-discnt-id = 0                                     
                         buf2_chk-discnt.object-line-num = 0                              
                         buf2_chk-discnt.pay-desk = buf_chk-doc.pay-desk
@@ -446,8 +455,9 @@ function SetPromoDisc return logical
                         buf2_chk-discnt.chk-time = buf_chk-doc.chk-time
                         .
                   end.
-                  if avail buf2_chk-discnt 
-                  then do:                      
+                  if avail buf2_chk-discnt and
+                     not avail buf2_chk-discnt-attr 
+                  then do:   
                      create buf2_chk-discnt-attr.
                      assign
                         buf2_chk-discnt-attr.doc-code = iDocCode
