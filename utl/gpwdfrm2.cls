@@ -77,10 +77,6 @@ class utl.gpwdfrm2 inherits Form:
 
    define variable DataProvider as class utl.gpwdfrm-data2 no-undo.
 
-   define public static property parParentProc as handle no-undo 
-      get.
-      set. 
-   
    constructor public gpwdfrm2 (  ):
        
       super().
@@ -167,6 +163,10 @@ class utl.gpwdfrm2 inherits Form:
                undo, throw  new ValidateError (error-status:get-message (1),-1).
             end.
          end.
+         if vCash = 0
+         then
+            undo, throw  new ValidateError ("Генерация техпролива для кассы с номером м 0 не возможна.",-1).
+            
          tech-prol-pwd-obj:f-user = DataProvider:GetUserLogin().
          if    tech-prol-pwd-obj:f-user eq ""
             or tech-prol-pwd-obj:f-user eq ?

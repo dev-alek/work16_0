@@ -169,7 +169,7 @@ class utl.gpwdfrm-data2:
       def var v-rid-list as char no-undo.
       def var vCli       as char no-undo.
       
-      run ref/cli-all.w (gpwdfrm2:parParentProc
+      run ref/cli-all.w (gpwdbrw:parParentProc
                   ,input "b-sel"
                   ,input {&prs}
                   ,input {&all}

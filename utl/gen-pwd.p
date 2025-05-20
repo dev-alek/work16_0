@@ -70,6 +70,7 @@ assign
  }
  if not mOk then
       return .
+ gpwdbrw:parParentProc = parParentProc.  
 define variable v-sys-key   as character         no-undo.
 
    { gbl/currsysk.i
@@ -78,23 +79,12 @@ define variable v-sys-key   as character         no-undo.
    }                                                      
    if v-sys-key eq "SibintekTechProl"
    then do:
-      assign
-         gpwdbrw2:parParentProc = parParentProc
-         gpwdfrm2:parParentProc = parParentProc
-      .
-      
       mForm2 = new utl.gpwdbrw2().
       
       if valid-object(mForm2) then
           mForm2:Wait().
    end.       
    else do:
-         
-      assign
-         gpwdbrw:parParentProc = parParentProc
-         gpwdfrm:parParentProc = parParentProc
-      .
-      
       mForm = new utl.gpwdbrw().
       
       if valid-object(mForm) then
