@@ -331,8 +331,8 @@ DEFINE BROWSE br_marking-type
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br_marking-type Dialog-Frame _STRUCTURED
   QUERY br_marking-type NO-LOCK DISPLAY
   type-marking.mark-type COLUMN-LABEL "Тип!маркировки" LABEL-BGCOLOR 8 FORMAT "X(35)":U 
-  type-marking.mark COLUMN-LABEL "Помарочный!учет АЗК" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
-  type-marking.EDO column-label "Приходование!учет внеш." LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
+/*  type-marking.mark COLUMN-LABEL "Помарочный!учет АЗК" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box*/
+  type-marking.EDO column-label "Поэкземплярный!учет" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   type-marking.artic column-label "Объемно-!артикульный!учет" LABEL-BGCOLOR 8 FORMAT "yes/no":U 
   view-as toggle-box
   type-marking.transitional column-label "Переходный!период" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
@@ -347,7 +347,7 @@ DEFINE BROWSE br_marking-type
   type-marking.checkStatusKM column-label "Проверка!статуса КМ" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   type-marking.checkTracking column-label "Проверка!прослежи-!ваемости" LABEL-BGCOLOR 8 FORMAT "yes/no":U view-as toggle-box
   ENABLE
-      type-marking.mark
+/*      type-marking.mark*/
       type-marking.EDO
       type-marking.artic
       type-marking.transitional
@@ -420,7 +420,7 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
-ASSIGN 
+ASSIGN
        type-marking.mark-type:COLUMN-READ-ONLY IN BROWSE br_marking-type = true.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -581,7 +581,7 @@ ON ROW-DISPLAY OF br_marking-type IN FRAME Dialog-Frame
     type-marking.artic       :bgcolor  IN BROWSE br_marking-type = if isArticAvail()        then WHITE_COLOR else GRAY_COLOR .
     type-marking.edo         :bgcolor  IN BROWSE br_marking-type = if isMarkVnAvail()       then WHITE_COLOR else GRAY_COLOR .
     type-marking.transitional:bgcolor  IN BROWSE br_marking-type = if isTransitionalAvail() then WHITE_COLOR else GRAY_COLOR .
-    type-marking.mark        :bgcolor  IN BROWSE br_marking-type = if isMarkAZKAvail()      then WHITE_COLOR else GRAY_COLOR .
+/*    type-marking.mark        :bgcolor  IN BROWSE br_marking-type = if isMarkAZKAvail()      then WHITE_COLOR else GRAY_COLOR .*/
     /*     type-marking.blockCashUnMark   :bgcolor  IN BROWSE br_marking-type = if isblockCashUnMarkAvail() then WHITE_COLOR else GRAY_COLOR .*/
     type-marking.saleReturn        :bgcolor  IN BROWSE br_marking-type = if issaleReturnAvail()      then WHITE_COLOR else GRAY_COLOR .
     /*     type-marking.saleUPD           :bgcolor  IN BROWSE br_marking-type = if issaleUPDAvail()         then WHITE_COLOR else GRAY_COLOR .*/
@@ -632,7 +632,7 @@ ON row-leave OF br_marking-type IN FRAME Dialog-Frame
       browse br_marking-type type-marking.edo
       browse br_marking-type type-marking.artic
       browse br_marking-type type-marking.transitional
-      browse br_marking-type type-marking.mark
+/*      browse br_marking-type type-marking.mark*/
 /*      browse br_marking-type type-marking.blockCashUnMark*/
       browse br_marking-type type-marking.saleReturn
       /*      browse br_marking-type type-marking.saleUPD */
@@ -665,7 +665,7 @@ ON row-leave OF br_marking-type IN FRAME Dialog-Frame
       and  type-marking.mark ne no)
    then do:
       assign
-      type-marking.mark:checked IN BROWSE br_marking-type = no.
+/*      type-marking.mark:checked IN BROWSE br_marking-type = no.*/
       type-marking.mark = no.
       vMarkAZK = no.
    end.
@@ -966,8 +966,8 @@ run adm/shattri.p (
                                               END.                                                                                                               
   END.
   for each type-marking:
-    if lookup (type-marking.mark-orig,S-type-mark) > 0 then type-marking.mark = true .
-    else type-marking.mark = false .
+/*    if lookup (type-marking.mark-orig,S-type-mark) > 0 then type-marking.mark = true .*/
+/*    else type-marking.mark = false .                                                  */
     if lookup (type-marking.mark-orig,S-type-EDO) > 0 then type-marking.EDO = true .
     else type-marking.EDO = false .
     if lookup (type-marking.mark-orig,S-type-artic) > 0 then type-marking.artic = true .
@@ -1081,7 +1081,7 @@ ASSIGN FRAME {&FRAME-NAME}
   S-type-checkStatusKM = "".
   S-type-checkTracking = "".
   for each type-marking:
-    if type-marking.mark = true then S-type-mark = S-type-mark + "," + type-marking.mark-orig . 
+/*    if type-marking.mark = true then S-type-mark = S-type-mark + "," + type-marking.mark-orig .*/
     if type-marking.edo = true then S-type-EDO = S-type-edo + "," + type-marking.mark-orig .
     if type-marking.artic = true then S-type-artic = S-type-artic + "," + type-marking.mark-orig .
     if type-marking.transitional = true then S-type-transitional = S-type-transitional + "," + type-marking.mark-orig .   
