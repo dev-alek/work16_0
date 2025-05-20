@@ -159,9 +159,11 @@ on error undo, return error return-value
       then do:
         undo, return error return-value.
       end.
+
       assign
         v-flag-doc-err = yes
       .
+  
     end.
 
     if del_trn-doc.ext-doc-type = {&TDEDt_Corr_Acc_Price}
