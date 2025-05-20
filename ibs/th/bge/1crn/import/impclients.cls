@@ -115,7 +115,7 @@ class ibs.th.bge.1crn.import.impclients implements ibs.th.bge.1crn.import.iimpsu
       and buf_clients.obj-code = v-firm-code no-error .
     if available buf_clients then 
     do:
-      if objImp:del-l > 0 then 
+      if objImp:del-l > 0 and buf_clients.stts = 0 then 
       do:
         run ref/clients2.p             
           (input ?    /* parparentproc; внутри не используется, передаётся процедурам машины правил rul/999999999.p */
