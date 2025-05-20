@@ -28,9 +28,9 @@ define variable vss-description as character no-undo init "Кассы по регионам".
 { cmp/vssrevis.i }
 define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
     
-mCodeTrg = new ibs.th.ref.code.code_trg(if    g#db-num eq 0
+mCodeTrg = new ibs.th.ref.code.code_trg( /*if    g#db-num eq 0
                                         then {&update}
-                                        else {&lookup}).
+                                        else*/ {&lookup}).
 
 mCodeTrg:formLable(1, 1, "Регион").
 mCodeTrg:formLable(1, 2, "Наименование").
