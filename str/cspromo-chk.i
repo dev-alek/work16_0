@@ -330,6 +330,65 @@ function GetRoundSumChkDel returns decimal
    return vBaseSum.
 end function. 
 
+function GetSaleRetDisc returns decimal
+    (input iDocCode as character,
+     input iSaleCode as character):
+         
+   define buffer buf_chk-gds-attr for ub.chk-gds-attr.
+   define buffer buf_chk-gds for ub.chk-gds.
+   
+   define variable vQntyPromoRet as decimal no-undo.
+   define variable vQntyPromoSel as decimal no-undo.
+   define variable vDiscSumRet   as decimal no-undo.
+   define variable vDiscSumSale  as decimal no-undo.
+   
+   vDiscSumRet = 0.
+   
+   /* определяем кол-во по акц.цене в чеке возврата */
+   cspr:
+   for each  buf_chk-gds no-lock where                 
+             buf_chk-gds.doc-code = iDocCode,
+       first buf_chk-gds-attr no-lock where                 
+             buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
+         and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+         and buf_chk-gds-attr.attr-code = "CSPromo"
+         and can-do("2,4,5,7", buf_chk-gds-attr.attr-value)
+       :                 
+       vQntyPromoRet = buf_chk-gds.src-qnty. 
+       leave cspr.          
+   end.    
+   
+   /* определяем кол-во по акц.цене в чеке продажи и величину скидки */
+   if vQntyPromoRet <> 0 then 
+   for each  buf_chk-gds no-lock where                 
+             buf_chk-gds.doc-code = iSaleCode:
+                 
+       find first buf_chk-gds-attr no-lock where                 
+                  buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
+              and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+              and buf_chk-gds-attr.attr-code = "CSPromo"
+       no-error.
+       if avail buf_chk-gds-attr       
+            and can-do("2,4,5,7", buf_chk-gds-attr.attr-value)
+       then                  
+         vQntyPromoSel = buf_chk-gds.src-qnty.             
+       
+       find first buf_chk-gds-attr no-lock where                 
+                 buf_chk-gds-attr.doc-code  = buf_chk-gds.doc-code
+             and buf_chk-gds-attr.line-num  = buf_chk-gds.line-num                                      
+             and buf_chk-gds-attr.attr-code = "CSPromoSum"
+       no-error.
+       if avail buf_chk-gds-attr then                       
+          vDiscSumSale = dec(buf_chk-gds-attr.attr-value) no-error.           
+   end.
+   
+   /* если равны, берем сумму скидки из чека продажи */
+   if vQntyPromoRet <> 0 and 
+      vQntyPromoSel = -1 * vQntyPromoRet
+   then vDiscSumRet = -1 * vDiscSumSale.                    
+         
+   return vDiscSumRet.
+end function. 
 
 /* создаем скидки для возвратного чека */
 function SetPromoDisc return logical
@@ -352,6 +411,7 @@ function SetPromoDisc return logical
    define variable v-promo-sum as decimal no-undo.
    define variable v-disc-promo-id as character no-undo.   
    define variable var-discnt-id as integer no-undo.   
+   define variable v-chk-sale as character no-undo.
               
    find first buf_chk-gds-attr no-lock where                 
               buf_chk-gds-attr.doc-code = iDocCode
@@ -377,121 +437,120 @@ function SetPromoDisc return logical
                    buf_chk-gds.doc-code = iDocCode
               and  buf_chk-gds.line-num = iLineNum
            no-error.   
-                  
-        /*find first buf_chk-discnt-attr no-lock where 
-                buf_chk-discnt-attr.doc-code = iDocCode and
-                buf_chk-discnt-attr.record-type = 5 and 
-                buf_chk-discnt-attr.line-num = 0 and
-                buf_chk-discnt-attr.attr-code = "promo-id" 
-        no-error .
-        if avail buf_chk-discnt-attr 
-           then v-disc-promo-id = buf_chk-discnt-attr.attr-value.
-        /* найти чек продажи и взять код акции из него */   
-        else*/ do:
-           for first buf2_chk-doc no-lock where 
-                     buf2_chk-doc.obj-code = buf_chk-doc.obj-code 
-                 and buf2_chk-doc.obj-type = buf_chk-doc.obj-type
-                 and buf2_chk-doc.pay-desk = buf_chk-doc.pay-desk
-                 and buf2_chk-doc.chk-type = int({&rcpt-sale})
-                 and buf2_chk-doc.chk-num  = int(entry(1,buf_chk-doc.doc-num2,":"))
-                 and buf2_chk-doc.z-number = int(entry(2, buf_chk-doc.doc-num2,":"))
-               :
-               /* ищем этот товар в чеке продажи */    
-               find first buf2_chk-gds no-lock where                 
-                          buf2_chk-gds.doc-code = buf2_chk-doc.doc-code
-                     and  buf2_chk-gds.b-code   = buf_chk-gds.b-code
-               no-error.
-               if not avail buf2_chk-gds then return no.
-               
-               find first buf_chk-discnt no-lock where 
-                          buf_chk-discnt.doc-code =  buf2_chk-doc.doc-code and
-                          buf_chk-discnt.record-type = 1 and 
-                          buf_chk-discnt.object-line-num = buf2_chk-gds.line-num and
-                          buf_chk-discnt.promo-id > "" 
-               no-error .
-               if avail buf_chk-discnt
-               then do:
-                  v-disc-promo-id = buf_chk-discnt.promo-id.
-                   
-                  find first buf2_chk-discnt no-lock where 
-                    buf2_chk-discnt.doc-code = iDocCode and
-                    buf2_chk-discnt.record-type = 5 and 
-                    buf2_chk-discnt.line-num = 0 and
-                    buf2_chk-discnt.promo-id =  v-disc-promo-id 
-                  no-error.
-                  find first buf2_chk-discnt-attr no-lock where 
-                             buf2_chk-discnt-attr.doc-code = iDocCode and
-                             buf2_chk-discnt-attr.record-type = 5 and 
-                             buf2_chk-discnt-attr.line-num = 0 and                                
-                             buf2_chk-discnt-attr.attr-code = "promo-id" and 
-                             buf2_chk-discnt-attr.attr-value = v-disc-promo-id 
-                        no-error .
-                  if not avail buf2_chk-discnt 
-                  then do:
-                      for each buf_chk-discnt no-lock where 
-                               buf_chk-discnt.doc-code = buf_chk-gds-attr.doc-code            
-                           and buf_chk-discnt.record-type = 5:
-                           var-discnt-id  = var-discnt-id + 1.     
-                      end. 
         
-                      create buf2_chk-discnt.
-                      assign
-                        buf2_chk-discnt.doc-code = iDocCode 
-                        buf2_chk-discnt.record-type = 5 
-                        buf2_chk-discnt.line-num = 0
-                        buf2_chk-discnt.promo-id = v-disc-promo-id                        
-                        buf2_chk-discnt.object-sum = 0 /* кол-во срабатыв. акции */
-                        buf2_chk-discnt.discnt-id = if avail buf2_chk-discnt-attr 
-                                                       then buf2_chk-discnt-attr.discnt-id 
-                                                       else (var-discnt-id + 1)
-                        var-discnt-id = 0                                     
-                        buf2_chk-discnt.object-line-num = 0                              
-                        buf2_chk-discnt.pay-desk = buf_chk-doc.pay-desk
-                        buf2_chk-discnt.obj-code = buf_chk-doc.obj-code
-                        buf2_chk-discnt.obj-type = buf_chk-doc.obj-type
-                        buf2_chk-discnt.chk-date = buf_chk-doc.chk-date
-                        buf2_chk-discnt.shift-date = buf_chk-doc.shift-date
-                        buf2_chk-discnt.shift-num = buf_chk-doc.shift-num
-                        buf2_chk-discnt.chk-time = buf_chk-doc.chk-time
-                        .
-                  end.
-                  if avail buf2_chk-discnt and
-                     not avail buf2_chk-discnt-attr 
-                  then do:   
-                     create buf2_chk-discnt-attr.
-                     assign
-                        buf2_chk-discnt-attr.doc-code = iDocCode
-                        buf2_chk-discnt-attr.discnt-id = buf2_chk-discnt.discnt-id
-                        buf2_chk-discnt-attr.record-type     = 5 
-                        buf2_chk-discnt-attr.line-num        = 0                     
-                        buf2_chk-discnt-attr.object-line-num = 0
-                        buf2_chk-discnt-attr.attr-code       = "promo-id"
-                        buf2_chk-discnt-attr.attr-value      = v-disc-promo-id 
-                        .
-                  end.
-               end.             
-           end.              
-        end.         
-                  
+        /* найти чек продажи и взять код акции из него */           
+       for first buf2_chk-doc no-lock where 
+                 buf2_chk-doc.obj-code = buf_chk-doc.obj-code 
+             and buf2_chk-doc.obj-type = buf_chk-doc.obj-type
+             and buf2_chk-doc.pay-desk = buf_chk-doc.pay-desk
+             and buf2_chk-doc.chk-type = int({&rcpt-sale})
+             and buf2_chk-doc.chk-num  = int(entry(1,buf_chk-doc.doc-num2,":"))
+             and buf2_chk-doc.z-number = int(entry(2, buf_chk-doc.doc-num2,":"))
+           :
+           /* ищем этот товар в чеке продажи */    
+           find first buf2_chk-gds no-lock where                 
+                      buf2_chk-gds.doc-code = buf2_chk-doc.doc-code
+                 and  buf2_chk-gds.b-code   = buf_chk-gds.b-code
+           no-error.
+           if not avail buf2_chk-gds then return no.
+           
+           /* Запоминаем чек продажи */
+           v-chk-sale = buf2_chk-doc.doc-code.
+           
+           find first buf_chk-discnt no-lock where 
+                      buf_chk-discnt.doc-code =  buf2_chk-doc.doc-code and
+                      buf_chk-discnt.record-type = 1 and 
+                      buf_chk-discnt.object-line-num = buf2_chk-gds.line-num and
+                      buf_chk-discnt.promo-id > "" 
+           no-error .
+           if avail buf_chk-discnt
+           then do:
+              v-disc-promo-id = buf_chk-discnt.promo-id.
+               
+              find first buf2_chk-discnt no-lock where 
+                buf2_chk-discnt.doc-code = iDocCode and
+                buf2_chk-discnt.record-type = 5 and 
+                buf2_chk-discnt.line-num = 0 and
+                buf2_chk-discnt.promo-id =  v-disc-promo-id 
+              no-error.
+              find first buf2_chk-discnt-attr no-lock where 
+                         buf2_chk-discnt-attr.doc-code = iDocCode and
+                         buf2_chk-discnt-attr.record-type = 5 and 
+                         buf2_chk-discnt-attr.line-num = 0 and                                
+                         buf2_chk-discnt-attr.attr-code = "promo-id" and 
+                         buf2_chk-discnt-attr.attr-value = v-disc-promo-id 
+                    no-error .
+              if not avail buf2_chk-discnt 
+              then do:
+                  for each buf_chk-discnt no-lock where 
+                           buf_chk-discnt.doc-code = buf_chk-gds-attr.doc-code            
+                       and buf_chk-discnt.record-type = 5:
+                       var-discnt-id  = var-discnt-id + 1.     
+                  end. 
+    
+                  create buf2_chk-discnt.
+                  assign
+                    buf2_chk-discnt.doc-code = iDocCode 
+                    buf2_chk-discnt.record-type = 5 
+                    buf2_chk-discnt.line-num = 0
+                    buf2_chk-discnt.promo-id = v-disc-promo-id                        
+                    buf2_chk-discnt.object-sum = 0 /* кол-во срабатыв. акции */
+                    buf2_chk-discnt.discnt-id = if avail buf2_chk-discnt-attr 
+                                                   then buf2_chk-discnt-attr.discnt-id 
+                                                   else (var-discnt-id + 1)
+                    var-discnt-id = 0                                     
+                    buf2_chk-discnt.object-line-num = 0                              
+                    buf2_chk-discnt.pay-desk = buf_chk-doc.pay-desk
+                    buf2_chk-discnt.obj-code = buf_chk-doc.obj-code
+                    buf2_chk-discnt.obj-type = buf_chk-doc.obj-type
+                    buf2_chk-discnt.chk-date = buf_chk-doc.chk-date
+                    buf2_chk-discnt.shift-date = buf_chk-doc.shift-date
+                    buf2_chk-discnt.shift-num = buf_chk-doc.shift-num
+                    buf2_chk-discnt.chk-time = buf_chk-doc.chk-time
+                    .
+              end.
+              if avail buf2_chk-discnt and
+                 not avail buf2_chk-discnt-attr 
+              then do:   
+                 create buf2_chk-discnt-attr.
+                 assign
+                    buf2_chk-discnt-attr.doc-code = iDocCode
+                    buf2_chk-discnt-attr.discnt-id = buf2_chk-discnt.discnt-id
+                    buf2_chk-discnt-attr.record-type     = 5 
+                    buf2_chk-discnt-attr.line-num        = 0                     
+                    buf2_chk-discnt-attr.object-line-num = 0
+                    buf2_chk-discnt-attr.attr-code       = "promo-id"
+                    buf2_chk-discnt-attr.attr-value      = v-disc-promo-id 
+                    .
+              end.
+           end.             
+       end.                               
+        v-promo-sum = 0.          
         if can-do("1,6,7", buf_chk-gds-attr.attr-value)              
         then do: 
-           v-promo-sum = GetPromoSum(iDocCode).
-           find first buf2_chk-gds-attr no-lock where                 
+            /* проверяем, что если в чеке возврата то же кол-во по акц. цене, что и в чеке продажи,
+            ** то сумму скидки берем из чека продажи */            
+           if v-chk-sale <> ? and v-chk-sale <> "" then
+              v-promo-sum = GetSaleRetDisc(iDocCode,v-chk-sale).
+           /* если это не так, то считаем скидку сами */ 
+           v-promo-sum = if v-promo-sum = 0 then GetPromoSum(iDocCode) else v-promo-sum.
+           if v-promo-sum <> 0 then do:
+               find first buf2_chk-gds-attr no-lock where                 
+                          buf2_chk-gds-attr.doc-code = iDocCode
+                      and buf2_chk-gds-attr.line-num  = iLineNum                                      
+                      and buf2_chk-gds-attr.attr-code = "CSPromoSum"
+                  no-error.
+               if not avail buf2_chk-gds-attr then do:
+                   create buf2_chk-gds-attr.
+                   assign
                       buf2_chk-gds-attr.doc-code = iDocCode
-                  and buf2_chk-gds-attr.line-num  = iLineNum                                      
-                  and buf2_chk-gds-attr.attr-code = "CSPromoSum"
-              no-error.
-           if not avail buf2_chk-gds-attr then do:
-               create buf2_chk-gds-attr.
-               assign
-                  buf2_chk-gds-attr.doc-code = iDocCode
-                  buf2_chk-gds-attr.line-num  = iLineNum                                      
-                  buf2_chk-gds-attr.attr-code = "CSPromoSum"
-                  buf2_chk-gds-attr.attr-value = string(Round(v-promo-sum,2))
-                  .
+                      buf2_chk-gds-attr.line-num  = iLineNum                                      
+                      buf2_chk-gds-attr.attr-code = "CSPromoSum"
+                      buf2_chk-gds-attr.attr-value = string(Round(v-promo-sum,2))
+                      .
+               end.
            end.                  
-        end.
-        else v-promo-sum = 0.
+        end.        
         
         for each buf_chk-discnt no-lock where 
                 buf_chk-discnt.doc-code = buf_chk-gds-attr.doc-code            
