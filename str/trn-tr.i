@@ -368,6 +368,7 @@ define buffer bf_clients       for ub.clients.
 define buffer bf_contract      for ub.contract.
 define buffer buf_contract-attr for ub.contract-attr.
 define buffer bf_currency      for ub.currency.
+define buffer buf_trn-reason   for ub.trn-reason.
 define variable varexch-rate     like ub.trn-doc.exch-rate            no-undo.
 define variable varexch-scale    like ub.trn-doc.exch-scale           no-undo.
 define variable varcurr-abbr     as   character                       no-undo.
@@ -791,6 +792,14 @@ if ( varis-fin = "yes":u
             then return error .
             else return .
           end .
+          if not can-find(first buf_trn-reason no-lock where buf_trn-reason.reason-code = bf_contract.spec-check) then
+          do:
+            message "Для выбранного договора поставки не определена схема возврата, оформить возврат невозможно. Обратитесь в офис для корректировки договора." view-as alert-box .
+            run check-cli no-error.
+            if error-status :error
+            then return error .
+            else return .
+          end.
         end .
         
         
