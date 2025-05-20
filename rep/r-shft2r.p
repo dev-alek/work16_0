@@ -111,6 +111,7 @@ DEFINE BUFFER buf_doc-line        FOR ub.doc-line.
 DEFINE BUFFER buf_inv-line        FOR ub.inv-line.
 DEFINE BUFFER buf_trn-doc         FOR ub.trn-doc.
 
+
 /* записываем во временную таблицу все топлива за сверку данной смены */
 FIND FIRST ub.rvs-doc NO-LOCK WHERE
   ub.rvs-doc.obj-type   = pobj-type    AND
@@ -169,8 +170,10 @@ define temp-table temp-rvs no-undo
   FIELD shift-date like ub.rvs-doc.shift-date
   FIELD shift-num  like ub.rvs-doc.shift-num
   field pl-code    like ub.rvs-line.pl-code
+  field rvs-code   like ub.rvs-line.rvs-code
   INDEX pi IS UNIQUE PRIMARY gds-code pl-code
   .
+define buffer bf_temp-rvs for temp-rvs .
 
 for each  ub.rvs-doc NO-LOCK WHERE
   ub.rvs-doc.obj-type   = pobj-type    AND
@@ -179,9 +182,11 @@ for each  ub.rvs-doc NO-LOCK WHERE
   ub.rvs-doc.shift-date <= pshift-date1  AND
   ub.rvs-doc.status_    = {&fact}      AND
   ub.rvs-doc.rvs-type   = {&rvs-shift}
-  :
+  break by ub.rvs-doc.shift-date by ub.rvs-doc.shift-num:
   if ub.rvs-doc.shift-date = pshift-date  and ub.rvs-doc.shift-num < pshift-num  then next .
   if ub.rvs-doc.shift-date = pshift-date1 and ub.rvs-doc.shift-num > pshift-num1 then next .
+
+
 
   _rvs-line:
   FOR EACH ub.rvs-line NO-LOCK WHERE
@@ -227,6 +232,7 @@ for each  ub.rvs-doc NO-LOCK WHERE
         previous-rvs-line.rvs-code = previous-rvs-doc.rvs-code AND
         previous-rvs-line.pl-code  = ub.rvs-line.pl-code       AND
         previous-rvs-line.gds-code = t-2.gds-code              :
+
         ASSIGN 
           found-in-previous = YES .
         if pshift-date = ub.rvs-doc.shift-date and pshift-num  = ub.rvs-doc.shift-num then 
@@ -235,7 +241,8 @@ for each  ub.rvs-doc NO-LOCK WHERE
             t-2.qnty1-before = t-2.qnty1-before + previous-rvs-line.system-qnty
             t-2.qnty2-before = t-2.qnty2-before + previous-rvs-line.system-cli-qnty
             .
-        end.
+          end.  
+
       END. /* FOR EACH previous-rvs-line */
     END. /* IF AVAILABLE previous-rvs-doc */
     IF found-in-previous = NO THEN 
@@ -261,6 +268,7 @@ for each  ub.rvs-doc NO-LOCK WHERE
         LEAVE.
       END. /* FOR EACH this-shift-rvs-doc */
     END. /* IF NOT found-in-previous */
+/*if ub.rvs-line.gds-code = 107305 then run gbl/inidebug.p.*/
 
     find first temp-rvs where temp-rvs.gds-code = ub.rvs-line.gds-code no-error .
     if available temp-rvs then 
@@ -273,11 +281,19 @@ for each  ub.rvs-doc NO-LOCK WHERE
           t-2.qnty1-after = t-2.qnty1-after + ub.rvs-line.system-qnty
           t-2.qnty2-after = t-2.qnty2-after + ub.rvs-line.system-cli-qnty
           .
+          if temp-rvs.rvs-code <> ub.rvs-line.rvs-code then temp-rvs.pl-code = ub.rvs-line.pl-code .
+/*          find first bf_temp-rvs no-lock where bf_temp-rvs.gds-code = temp-rvs.gds-code and*/
+/*          bf_temp-rvs.pl-code = temp-rvs.pl-code and                                       */
+/*          bf_temp-rvs.rvs-code = temp-rvs.rvs-code no-error .                              */
+/*          if not available (bf_temp-rvs) then                                              */
+/*          temp-rvs.pl-code = ub.rvs-line.pl-code                                           */
+/*          .          .                                                                     */
           end.
           else do:
         ASSIGN
           t-2.qnty1-after = ub.rvs-line.system-qnty
           t-2.qnty2-after = ub.rvs-line.system-cli-qnty
+          temp-rvs.rvs-code   = ub.rvs-line.rvs-code
           .            
           end.
       end.
@@ -291,12 +307,16 @@ for each  ub.rvs-doc NO-LOCK WHERE
         temp-rvs.shift-date = ub.rvs-doc.shift-date
         temp-rvs.shift-num  = ub.rvs-doc.shift-num
         temp-rvs.pl-code    = ub.rvs-line.pl-code
+        temp-rvs.rvs-code   = ub.rvs-line.rvs-code
         t-2.qnty1-after     = ub.rvs-line.system-qnty
         t-2.qnty2-after     = ub.rvs-line.system-cli-qnty 
         .
     end.
+    
   END. /* FOR EACH ub.rvs-line */
+
 end.
+
 
 IF moving <> YES THEN 
 DO: 

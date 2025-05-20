@@ -490,7 +490,7 @@ rep-shift-rol-mng-next = "Старший оператор"
 run get-report-num in parParentProc (
    output p-report-id
    ).
-v-report-name-html = session:temp-directory + {&DF_Name} + string(p-report-id) + ".html". /*формирование имя файла для часть1*/        
+v-report-name-html = session:temp-directory + {&DF_Name} + string(p-report-id) + string(time) + ".html". /*формирование имя файла для часть1*/        
 
 if v-param-code = 3 then v-param = yes. 
 else v-param = no .
@@ -2028,17 +2028,32 @@ procedure first-line-tog2-html :
                         <td style="width:60px"></td>
                       </tr>
                     <tr>
-                      <td colspan="17" >&2</td>
+                      <td colspan="17" > &2 </td>
                     </tr>
                     <tr>
                       <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">СМЕННЫЙ ОТЧЕТ</td>
                     </tr>
                     <tr>
                       <td colspan="17" style="font-size:16px;font-weight:bold; text-align: center;">Часть №2 Движение нефтепродуктов по количеству и суммам</td>
-                    </tr>
-                    <tr>
-                      <td colspan="17"> Смены  с &3  по &4 </td>
-                    </tr>
+                    </tr>'
+                    ,v-host-name,
+                    rep-shift-store-name) .
+                    
+                           if v-one-shift then 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="16">Смена: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.
+       else 
+       do:
+          put stream OutStr-html unformatted
+             '<tr><td colspan="16">Смены с: ' + string(X-Shift-Start) + ' от ' +  String(v-rep-shift-open-date , "99.99.9999") + ' ' + String ( v-rep-shift-open-time,"hh:mm") + ' по ' + string(X-Shift-End) + ' от ' + String(x-date-end , "99.99.9999") + ' ' + String( v-rep-shift-close-time,"hh:mm") + '</td></tr>' skip
+             .
+       end.  
+       
+         put stream OutStr-html unformatted
+            substitute('
                     <tr>
                       <td colspan="17"> Закрыта &5 </td>
                     </tr>
