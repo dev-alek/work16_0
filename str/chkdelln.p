@@ -1,4 +1,3 @@
-block-level on error undo, throw.
 /*
 
 $Revision$
@@ -56,6 +55,7 @@ define variable vss-description as character no-undo init "Проверка линии докуме
 define stream str-err .
 
 define variable v-flag-err              as logical   no-undo .
+define variable v-str-err               as char   no-undo .
 define variable v-shift-on              as logical   no-undo .
 define variable v-is-petrolium          as logical   no-undo .
 define variable v-is-pieces             as logical   no-undo .
@@ -300,6 +300,13 @@ on error undo, return error return-value
       output stream str-err close . ~
       assign ~
         v-flag-err = yes ~
+        v-str-err = substitute ("По товару &2 &3 &4 есть незакрытая сверка &5.&1" ~
+                   ,{&new-line} ~
+                   ,p-artic ~
+                   ,p-prod-type ~
+                   ,p-prod-code ~
+                   ,cdl_rvs-line.rvs-code ~
+                   ) ~
       . ~
     end.
     &scop znak >
@@ -330,6 +337,11 @@ on error undo, return error return-value
       output stream str-err close . ~
       assign ~
         v-flag-err = yes ~
+        v-str-err  = substitute ("По товару &1 &2 &3 есть открытый документ &4.", ~
+                                                  p-artic,                    ~
+                                                  p-prod-type,                ~
+                                                  p-prod-code,                ~
+                                                  cdl_doc-line.doc-code)  ~
       . ~
   end.
   &scop znak >
@@ -734,8 +746,22 @@ on error undo, return error return-value
             "Свободное количество по партии в расходной зоне:    " v-new-output-qnty
             .
           output stream str-err close.
+          
+
           assign
             v-flag-err = yes
+            v-str-err  = substitute("После удаления документа свободное количество в приходной или расходной зоне 
+                       выйдет за допустимые пределы.&1
+                       Приходный документ: &2.&1Код товара: &3.&1Код партии: &4.&1Артикул: &5 &6 &7 &8 &9 &10 .&1 "
+                      ,{&new-line}         /* 1 */
+                      ,buf_parts.in-code   /* 2 */
+                      ,v-gds-code          /* 3 */
+                      ,buf_parts.part-code /* 4 */
+                      ,p-artic             /* 5 */
+                      ,buf_parts.out-code   /* 6 */
+                      ,p-ext-doc-type
+                      ,string( v-new-free-qnty  +  v-new-output-qnty  - buf_parts-attr.fact-qnty )
+                      ) 
           .
        end.
     end.
@@ -807,6 +833,17 @@ on error undo, return error return-value
         output stream str-err close.
         assign
           v-flag-err = yes
+          v-str-err = substitute("+После удаления документа общее количество 
+          в приходной или расходной зоне выйдет за допустимые пределы.
+          &1Приходный документ: &2.&1Код товара: &3.&1Код партии: &4.&1Артикул: &5 &6 &7.&1"
+                    ,{&new-line}         /* 1 */
+                    ,buf_parts.in-code   /* 2 */
+                    ,v-gds-code          /* 3 */
+                    ,buf_parts.part-code /* 4 */
+                    ,p-artic             /* 5 */
+                    ,p-prod-type         /* 6 */
+                    ,p-prod-code         /* 7 */
+                    )
         .
       end.
     end.
@@ -845,6 +882,8 @@ on error undo, return error return-value
                     ,p-prod-code                     /* 7 */
                     ,buf_temp-archive-parts.doc-code /* 8 */
                     ) .
+
+
         put stream str-err unformatted
           "Первоначальное количество в партии:                 " buf_parts-attr.fact-qnty skip
           "Общее количество по партии в свободной зоне:        " v-new-total-free-qnty    skip
@@ -857,6 +896,18 @@ on error undo, return error return-value
         output stream str-err close.
         assign
           v-flag-err = yes
+          v-str-err  =  substitute("=После удаления документа количество в 
+                     свободной или расходной зоне&1на момент после закрытия документа &8&1выйдет за допустимые пределы.&1Приходный документ: &2.&1Код товара: &3.&1Код партии: &4.&1Артикул: &5 &6 &7 &1 &8.&1"
+                    ,{&new-line}                     /* 1 */
+                    ,buf_parts.in-code               /* 2 */
+                    ,v-gds-code                      /* 3 */
+                    ,buf_parts.part-code             /* 4 */
+                    ,p-artic                         /* 5 */
+                    ,p-prod-type                     /* 6 */
+                    ,p-prod-code                     /* 7 */
+                    ,buf_temp-archive-parts.doc-code /* 8 */
+                    ) 
+
         .
       end.
 
@@ -972,6 +1023,7 @@ on error undo, return error return-value
                     ,string(buf_temp-archive-parts.error-flag, 'Количество вышло за допустимые пределы/')
                     )
           .
+
       end.
       output stream str-err close.
     end.
@@ -979,11 +1031,7 @@ on error undo, return error return-value
 
   if v-flag-err = yes
   then do:
-    message
-    "При проверке на возможность удаления документа, были обнаружены ошибки."
-    "После процедуры удаления документа запустите утилиты проверки целостности товара"
-    "АРМ Администратор -> Утилиты -> Проверки БД"
-    view-as alert-box information .
+    /* message "Невозможно удалить документ " {&new-line} v-str-err view-as alert-box information . */
     return .
   end.
 

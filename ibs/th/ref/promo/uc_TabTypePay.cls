@@ -114,192 +114,192 @@ class ibs.th.ref.promo.uc_TabTypePay inherits UserControl:
         Visual Designer to avoid any incompatible modifications.
         
         Modifying the contents of this method using a code editor will invalidate any support for this file. */
-    this-object:components = new System.ComponentModel.Container().
-    @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable dataGridViewCellStyle5 as System.Windows.Forms.DataGridViewCellStyle no-undo.
-    dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle().
-    @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable dataGridViewCellStyle6 as System.Windows.Forms.DataGridViewCellStyle no-undo.
-    dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle().
-    @VisualDesigner.FormMember (NeedsInitialize="true").
-    define variable tableDesc3 as Progress.Data.TableDesc no-undo.
-    tableDesc3 = new Progress.Data.TableDesc("tt-CashPay").
-    this-object:tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel().
-    this-object:tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel().
-    this-object:button2 = new System.Windows.Forms.Button().
-    this-object:button1 = new System.Windows.Forms.Button().
-    this-object:dataGridView1 = new System.Windows.Forms.DataGridView().
-    this-object:cdpaycodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:objnameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:currcodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:paycodeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn().
-    this-object:bindPromoPay = new Progress.Data.BindingSource(this-object:components).
-    this-object:checkBox1 = new System.Windows.Forms.CheckBox().
-    this-object:tableLayoutPanel1:SuspendLayout().
-    this-object:tableLayoutPanel2:SuspendLayout().
-    cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
-    cast(this-object:bindPromoPay, System.ComponentModel.ISupportInitialize):BeginInit().
-    this-object:SuspendLayout().
-    /*  */
-    /* tableLayoutPanel1 */
-    /*  */
-    this-object:tableLayoutPanel1:ColumnCount = 1.
-    this-object:tableLayoutPanel1:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    this-object:tableLayoutPanel1:Controls:Add(this-object:tableLayoutPanel2, 0, 1).
-    this-object:tableLayoutPanel1:Controls:Add(this-object:dataGridView1, 0, 2).
-    this-object:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
-    this-object:tableLayoutPanel1:Location = new System.Drawing.Point(0, 0).
-    this-object:tableLayoutPanel1:Name = "tableLayoutPanel1".
-    this-object:tableLayoutPanel1:RowCount = 3.
-    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(7))).
-    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(25))).
-    this-object:tableLayoutPanel1:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    this-object:tableLayoutPanel1:Size = new System.Drawing.Size(734, 291).
-    this-object:tableLayoutPanel1:TabIndex = 5.
-    /*  */
-    /* tableLayoutPanel2 */
-    /*  */
-    this-object:tableLayoutPanel2:ColumnCount = 4.
-    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
-    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
-    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(120))).
-    this-object:tableLayoutPanel2:ColumnStyles:Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    this-object:tableLayoutPanel2:Controls:Add(this-object:button2, 1, 0).
-    this-object:tableLayoutPanel2:Controls:Add(this-object:button1, 0, 0).
-    this-object:tableLayoutPanel2:Controls:Add(this-object:checkBox1, 3, 0).
-    this-object:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
-    this-object:tableLayoutPanel2:Location = new System.Drawing.Point(3, 7).
-    this-object:tableLayoutPanel2:Margin = new System.Windows.Forms.Padding(3, 0, 0, 0).
-    this-object:tableLayoutPanel2:Name = "tableLayoutPanel2".
-    this-object:tableLayoutPanel2:RowCount = 1.
-    this-object:tableLayoutPanel2:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
-    this-object:tableLayoutPanel2:Size = new System.Drawing.Size(731, 25).
-    this-object:tableLayoutPanel2:TabIndex = 0.
-    /*  */
-    /* button2 */
-    /*  */
-    this-object:button2:Dock = System.Windows.Forms.DockStyle:Fill.
-    this-object:button2:Location = new System.Drawing.Point(80, 0).
-    this-object:button2:Margin = new System.Windows.Forms.Padding(0).
-    this-object:button2:Name = "button2".
-    this-object:button2:Size = new System.Drawing.Size(80, 25).
-    this-object:button2:TabIndex = 1.
-    this-object:button2:Text = "Удалить".
-    this-object:button2:UseCompatibleTextRendering = true.
-    this-object:button2:UseVisualStyleBackColor = true.
-    this-object:button2:Click:Subscribe(this-object:button2_Click).
-    /*  */
-    /* button1 */
-    /*  */
-    this-object:button1:Dock = System.Windows.Forms.DockStyle:Fill.
-    this-object:button1:Location = new System.Drawing.Point(0, 0).
-    this-object:button1:Margin = new System.Windows.Forms.Padding(0).
-    this-object:button1:Name = "button1".
-    this-object:button1:Size = new System.Drawing.Size(80, 25).
-    this-object:button1:TabIndex = 0.
-    this-object:button1:Text = "Добавить".
-    this-object:button1:UseCompatibleTextRendering = true.
-    this-object:button1:UseVisualStyleBackColor = true.
-    this-object:button1:Click:Subscribe(this-object:button1_Click).
-    /*  */
-    /* dataGridView1 */
-    /*  */
-    this-object:dataGridView1:AllowUserToAddRows = false.
-    this-object:dataGridView1:AllowUserToDeleteRows = false.
-    this-object:dataGridView1:AllowUserToOrderColumns = true.
-    this-object:dataGridView1:AutoGenerateColumns = false.
-    this-object:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
-    this-object:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar0 as System.Windows.Forms.DataGridViewColumn extent 4 no-undo.
-    arrayvar0[1] = this-object:cdpaycodeDataGridViewTextBoxColumn.
-    arrayvar0[2] = this-object:objnameDataGridViewTextBoxColumn.
-    arrayvar0[3] = this-object:currcodeDataGridViewTextBoxColumn.
-    arrayvar0[4] = this-object:paycodeDataGridViewTextBoxColumn.
-    this-object:dataGridView1:Columns:AddRange(arrayvar0).
-    this-object:dataGridView1:DataSource = this-object:bindPromoPay.
-    this-object:dataGridView1:Dock = System.Windows.Forms.DockStyle:Fill.
-    this-object:dataGridView1:Location = new System.Drawing.Point(3, 35).
-    this-object:dataGridView1:Name = "dataGridView1".
-    this-object:dataGridView1:ReadOnly = true.
-    this-object:dataGridView1:Size = new System.Drawing.Size(728, 253).
-    this-object:dataGridView1:TabIndex = 2.
-    /*  */
-    /* cdpaycodeDataGridViewTextBoxColumn */
-    /*  */
-    this-object:cdpaycodeDataGridViewTextBoxColumn:DataPropertyName = "cdpay-code".
-    dataGridViewCellStyle5:Format = "0000".
-    this-object:cdpaycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle5.
-    this-object:cdpaycodeDataGridViewTextBoxColumn:HeaderText = "Код".
-    this-object:cdpaycodeDataGridViewTextBoxColumn:Name = "cdpaycodeDataGridViewTextBoxColumn".
-    this-object:cdpaycodeDataGridViewTextBoxColumn:ReadOnly = true.
-    /*  */
-    /* objnameDataGridViewTextBoxColumn */
-    /*  */
-    this-object:objnameDataGridViewTextBoxColumn:DataPropertyName = "obj-name".
-    this-object:objnameDataGridViewTextBoxColumn:HeaderText = "Название".
-    this-object:objnameDataGridViewTextBoxColumn:Name = "objnameDataGridViewTextBoxColumn".
-    this-object:objnameDataGridViewTextBoxColumn:ReadOnly = true.
-    /*  */
-    /* currcodeDataGridViewTextBoxColumn */
-    /*  */
-    this-object:currcodeDataGridViewTextBoxColumn:DataPropertyName = "curr-code".
-    this-object:currcodeDataGridViewTextBoxColumn:HeaderText = "Код валюты".
-    this-object:currcodeDataGridViewTextBoxColumn:Name = "currcodeDataGridViewTextBoxColumn".
-    this-object:currcodeDataGridViewTextBoxColumn:ReadOnly = true.
-    /*  */
-    /* paycodeDataGridViewTextBoxColumn */
-    /*  */
-    this-object:paycodeDataGridViewTextBoxColumn:DataPropertyName = "pay-code".
-    dataGridViewCellStyle6:Format = "00000".
-    this-object:paycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle6.
-    this-object:paycodeDataGridViewTextBoxColumn:HeaderText = "Оплата".
-    this-object:paycodeDataGridViewTextBoxColumn:Name = "paycodeDataGridViewTextBoxColumn".
-    this-object:paycodeDataGridViewTextBoxColumn:ReadOnly = true.
-    /*  */
-    /* bindPromoPay */
-    /*  */
-    this-object:bindPromoPay:MaxDataGuess = 0.
-    this-object:bindPromoPay:NoLOBs = false.
-    this-object:bindPromoPay:Position = 0.
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
-    arrayvar1 = new "Progress.Data.TableDesc[]"(0).
-    tableDesc3:ChildTables = arrayvar1.
-    @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
-    define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 4 no-undo.
-    arrayvar2[1] = new Progress.Data.ColumnPropDesc("cdpay-code", "Код", Progress.Data.DataType:INTEGER).
-    arrayvar2[2] = new Progress.Data.ColumnPropDesc("curr-code", "Код валюты", Progress.Data.DataType:INTEGER).
-    arrayvar2[3] = new Progress.Data.ColumnPropDesc("obj-name", "Название", Progress.Data.DataType:CHARACTER).
-    arrayvar2[4] = new Progress.Data.ColumnPropDesc("pay-code", "Оплата", Progress.Data.DataType:INTEGER).
-    tableDesc3:Columns = arrayvar2.
-    this-object:bindPromoPay:TableSchema = tableDesc3.
-    /*  */
-    /* checkBox1 */
-    /*  */
-    this-object:checkBox1:Location = new System.Drawing.Point(283, 3).
-    this-object:checkBox1:Name = "checkBox1".
-    this-object:checkBox1:Size = new System.Drawing.Size(152, 19).
-    this-object:checkBox1:TabIndex = 2.
-    this-object:checkBox1:Text = "Запрет начисления БЛ".
-    this-object:checkBox1:UseCompatibleTextRendering = true.
-    this-object:checkBox1:UseVisualStyleBackColor = true.
-    this-object:checkBox1:CheckedChanged:Subscribe(this-object:checkBox1_CheckedChanged).
-    /*  */
-    /* uc_TabTypePay */
-    /*  */
-    this-object:AutoScaleDimensions = new System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
-    this-object:Controls:Add(this-object:tableLayoutPanel1).
-    this-object:Name = "uc_TabTypePay".
-    this-object:Size = new System.Drawing.Size(734, 291).
-    this-object:tableLayoutPanel1:ResumeLayout(false).
-    this-object:tableLayoutPanel2:ResumeLayout(false).
-    cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
-    cast(this-object:bindPromoPay, System.ComponentModel.ISupportInitialize):EndInit().
-    this-object:ResumeLayout(false).
-    catch e as Progress.Lang.Error:
-      undo, throw e.
-    end catch.
+        THIS-OBJECT:components = NEW System.ComponentModel.Container().
+        @VisualDesigner.FormMember (NeedsInitialize="true").
+        DEFINE VARIABLE dataGridViewCellStyle3 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle3 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        @VisualDesigner.FormMember (NeedsInitialize="true").
+        DEFINE VARIABLE dataGridViewCellStyle4 AS System.Windows.Forms.DataGridViewCellStyle NO-UNDO.
+        dataGridViewCellStyle4 = NEW System.Windows.Forms.DataGridViewCellStyle().
+        @VisualDesigner.FormMember (NeedsInitialize="true").
+        DEFINE VARIABLE tableDesc2 AS Progress.Data.TableDesc NO-UNDO.
+        tableDesc2 = NEW Progress.Data.TableDesc("tt-CashPay").
+        THIS-OBJECT:tableLayoutPanel1 = NEW System.Windows.Forms.TableLayoutPanel().
+        THIS-OBJECT:tableLayoutPanel2 = NEW System.Windows.Forms.TableLayoutPanel().
+        THIS-OBJECT:button2 = NEW System.Windows.Forms.Button().
+        THIS-OBJECT:button1 = NEW System.Windows.Forms.Button().
+        THIS-OBJECT:checkBox1 = NEW System.Windows.Forms.CheckBox().
+        THIS-OBJECT:dataGridView1 = NEW System.Windows.Forms.DataGridView().
+        THIS-OBJECT:cdpaycodeDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+        THIS-OBJECT:objnameDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+        THIS-OBJECT:currcodeDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+        THIS-OBJECT:paycodeDataGridViewTextBoxColumn = NEW System.Windows.Forms.DataGridViewTextBoxColumn().
+        THIS-OBJECT:bindPromoPay = NEW Progress.Data.BindingSource(THIS-OBJECT:components).
+        THIS-OBJECT:tableLayoutPanel1:SuspendLayout().
+        THIS-OBJECT:tableLayoutPanel2:SuspendLayout().
+        CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
+        CAST(THIS-OBJECT:bindPromoPay, System.ComponentModel.ISupportInitialize):BeginInit().
+        THIS-OBJECT:SuspendLayout().
+        /*  */
+        /* tableLayoutPanel1 */
+        /*  */
+        THIS-OBJECT:tableLayoutPanel1:ColumnCount = 1.
+        THIS-OBJECT:tableLayoutPanel1:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:tableLayoutPanel2, 0, 1).
+        THIS-OBJECT:tableLayoutPanel1:Controls:Add(THIS-OBJECT:dataGridView1, 0, 2).
+        THIS-OBJECT:tableLayoutPanel1:Dock = System.Windows.Forms.DockStyle:Fill.
+        THIS-OBJECT:tableLayoutPanel1:Location = NEW System.Drawing.Point(0, 0).
+        THIS-OBJECT:tableLayoutPanel1:Name = "tableLayoutPanel1".
+        THIS-OBJECT:tableLayoutPanel1:RowCount = 3.
+        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(7))).
+        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(25))).
+        THIS-OBJECT:tableLayoutPanel1:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        THIS-OBJECT:tableLayoutPanel1:Size = NEW System.Drawing.Size(734, 291).
+        THIS-OBJECT:tableLayoutPanel1:TabIndex = 5.
+        /*  */
+        /* tableLayoutPanel2 */
+        /*  */
+        THIS-OBJECT:tableLayoutPanel2:ColumnCount = 4.
+        THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
+        THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(80))).
+        THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(120))).
+        THIS-OBJECT:tableLayoutPanel2:ColumnStyles:Add(NEW System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:button2, 1, 0).
+        THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:button1, 0, 0).
+        THIS-OBJECT:tableLayoutPanel2:Controls:Add(THIS-OBJECT:checkBox1, 3, 0).
+        THIS-OBJECT:tableLayoutPanel2:Dock = System.Windows.Forms.DockStyle:Fill.
+        THIS-OBJECT:tableLayoutPanel2:Location = NEW System.Drawing.Point(3, 7).
+        THIS-OBJECT:tableLayoutPanel2:Margin = NEW System.Windows.Forms.Padding(3, 0, 0, 0).
+        THIS-OBJECT:tableLayoutPanel2:Name = "tableLayoutPanel2".
+        THIS-OBJECT:tableLayoutPanel2:RowCount = 1.
+        THIS-OBJECT:tableLayoutPanel2:RowStyles:Add(NEW System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Percent, Progress.Util.CastUtil:ToSingle(100))).
+        THIS-OBJECT:tableLayoutPanel2:Size = NEW System.Drawing.Size(731, 25).
+        THIS-OBJECT:tableLayoutPanel2:TabIndex = 0.
+        /*  */
+        /* button2 */
+        /*  */
+        THIS-OBJECT:button2:Dock = System.Windows.Forms.DockStyle:Fill.
+        THIS-OBJECT:button2:Location = NEW System.Drawing.Point(80, 0).
+        THIS-OBJECT:button2:Margin = NEW System.Windows.Forms.Padding(0).
+        THIS-OBJECT:button2:Name = "button2".
+        THIS-OBJECT:button2:Size = NEW System.Drawing.Size(80, 25).
+        THIS-OBJECT:button2:TabIndex = 1.
+        THIS-OBJECT:button2:Text = "Удалить".
+        THIS-OBJECT:button2:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:button2:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:button2:Click:Subscribe(THIS-OBJECT:button2_Click).
+        /*  */
+        /* button1 */
+        /*  */
+        THIS-OBJECT:button1:Dock = System.Windows.Forms.DockStyle:Fill.
+        THIS-OBJECT:button1:Location = NEW System.Drawing.Point(0, 0).
+        THIS-OBJECT:button1:Margin = NEW System.Windows.Forms.Padding(0).
+        THIS-OBJECT:button1:Name = "button1".
+        THIS-OBJECT:button1:Size = NEW System.Drawing.Size(80, 25).
+        THIS-OBJECT:button1:TabIndex = 0.
+        THIS-OBJECT:button1:Text = "Добавить".
+        THIS-OBJECT:button1:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:button1:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:button1:Click:Subscribe(THIS-OBJECT:button1_Click).
+        /*  */
+        /* checkBox1 */
+        /*  */
+        THIS-OBJECT:checkBox1:Location = NEW System.Drawing.Point(283, 3).
+        THIS-OBJECT:checkBox1:Name = "checkBox1".
+        THIS-OBJECT:checkBox1:Size = NEW System.Drawing.Size(242, 19).
+        THIS-OBJECT:checkBox1:TabIndex = 2.
+        THIS-OBJECT:checkBox1:Text = "Запрет начисления баллов лояльности".
+        THIS-OBJECT:checkBox1:UseCompatibleTextRendering = TRUE.
+        THIS-OBJECT:checkBox1:UseVisualStyleBackColor = TRUE.
+        THIS-OBJECT:checkBox1:CheckedChanged:Subscribe(THIS-OBJECT:checkBox1_CheckedChanged).
+        /*  */
+        /* dataGridView1 */
+        /*  */
+        THIS-OBJECT:dataGridView1:AllowUserToAddRows = FALSE.
+        THIS-OBJECT:dataGridView1:AllowUserToDeleteRows = FALSE.
+        THIS-OBJECT:dataGridView1:AllowUserToOrderColumns = TRUE.
+        THIS-OBJECT:dataGridView1:AutoGenerateColumns = FALSE.
+        THIS-OBJECT:dataGridView1:AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode:Fill.
+        THIS-OBJECT:dataGridView1:ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode:AutoSize.
+        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+        DEFINE VARIABLE arrayvar0 AS System.Windows.Forms.DataGridViewColumn EXTENT 4 NO-UNDO.
+        arrayvar0[1] = THIS-OBJECT:cdpaycodeDataGridViewTextBoxColumn.
+        arrayvar0[2] = THIS-OBJECT:objnameDataGridViewTextBoxColumn.
+        arrayvar0[3] = THIS-OBJECT:currcodeDataGridViewTextBoxColumn.
+        arrayvar0[4] = THIS-OBJECT:paycodeDataGridViewTextBoxColumn.
+        THIS-OBJECT:dataGridView1:Columns:AddRange(arrayvar0).
+        THIS-OBJECT:dataGridView1:DataSource = THIS-OBJECT:bindPromoPay.
+        THIS-OBJECT:dataGridView1:Dock = System.Windows.Forms.DockStyle:Fill.
+        THIS-OBJECT:dataGridView1:Location = NEW System.Drawing.Point(3, 35).
+        THIS-OBJECT:dataGridView1:Name = "dataGridView1".
+        THIS-OBJECT:dataGridView1:ReadOnly = TRUE.
+        THIS-OBJECT:dataGridView1:Size = NEW System.Drawing.Size(728, 253).
+        THIS-OBJECT:dataGridView1:TabIndex = 2.
+        /*  */
+        /* cdpaycodeDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:cdpaycodeDataGridViewTextBoxColumn:DataPropertyName = "cdpay-code".
+        dataGridViewCellStyle3:Format = "0000".
+        THIS-OBJECT:cdpaycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle3.
+        THIS-OBJECT:cdpaycodeDataGridViewTextBoxColumn:HeaderText = "Код".
+        THIS-OBJECT:cdpaycodeDataGridViewTextBoxColumn:Name = "cdpaycodeDataGridViewTextBoxColumn".
+        THIS-OBJECT:cdpaycodeDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        /*  */
+        /* objnameDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:objnameDataGridViewTextBoxColumn:DataPropertyName = "obj-name".
+        THIS-OBJECT:objnameDataGridViewTextBoxColumn:HeaderText = "Название".
+        THIS-OBJECT:objnameDataGridViewTextBoxColumn:Name = "objnameDataGridViewTextBoxColumn".
+        THIS-OBJECT:objnameDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        /*  */
+        /* currcodeDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:currcodeDataGridViewTextBoxColumn:DataPropertyName = "curr-code".
+        THIS-OBJECT:currcodeDataGridViewTextBoxColumn:HeaderText = "Код валюты".
+        THIS-OBJECT:currcodeDataGridViewTextBoxColumn:Name = "currcodeDataGridViewTextBoxColumn".
+        THIS-OBJECT:currcodeDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        /*  */
+        /* paycodeDataGridViewTextBoxColumn */
+        /*  */
+        THIS-OBJECT:paycodeDataGridViewTextBoxColumn:DataPropertyName = "pay-code".
+        dataGridViewCellStyle4:Format = "00000".
+        THIS-OBJECT:paycodeDataGridViewTextBoxColumn:DefaultCellStyle = dataGridViewCellStyle4.
+        THIS-OBJECT:paycodeDataGridViewTextBoxColumn:HeaderText = "Оплата".
+        THIS-OBJECT:paycodeDataGridViewTextBoxColumn:Name = "paycodeDataGridViewTextBoxColumn".
+        THIS-OBJECT:paycodeDataGridViewTextBoxColumn:ReadOnly = TRUE.
+        /*  */
+        /* bindPromoPay */
+        /*  */
+        THIS-OBJECT:bindPromoPay:MaxDataGuess = 0.
+        THIS-OBJECT:bindPromoPay:NoLOBs = FALSE.
+        THIS-OBJECT:bindPromoPay:Position = 0.
+        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+        DEFINE VARIABLE arrayvar1 AS "Progress.Data.TableDesc[]" NO-UNDO.
+        arrayvar1 = NEW "Progress.Data.TableDesc[]"(0).
+        tableDesc2:ChildTables = arrayvar1.
+        @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
+        DEFINE VARIABLE arrayvar2 AS Progress.Data.ColumnPropDesc EXTENT 4 NO-UNDO.
+        arrayvar2[1] = NEW Progress.Data.ColumnPropDesc("cdpay-code", "Код", Progress.Data.DataType:INTEGER).
+        arrayvar2[2] = NEW Progress.Data.ColumnPropDesc("curr-code", "Код валюты", Progress.Data.DataType:INTEGER).
+        arrayvar2[3] = NEW Progress.Data.ColumnPropDesc("obj-name", "Название", Progress.Data.DataType:CHARACTER).
+        arrayvar2[4] = NEW Progress.Data.ColumnPropDesc("pay-code", "Оплата", Progress.Data.DataType:INTEGER).
+        tableDesc2:Columns = arrayvar2.
+        THIS-OBJECT:bindPromoPay:TableSchema = tableDesc2.
+        /*  */
+        /* uc_TabTypePay */
+        /*  */
+        THIS-OBJECT:AutoScaleDimensions = NEW System.Drawing.SizeF(Progress.Util.CastUtil:ToSingle(6), Progress.Util.CastUtil:ToSingle(13)).
+        THIS-OBJECT:Controls:Add(THIS-OBJECT:tableLayoutPanel1).
+        THIS-OBJECT:Name = "uc_TabTypePay".
+        THIS-OBJECT:Size = NEW System.Drawing.Size(734, 291).
+        THIS-OBJECT:tableLayoutPanel1:ResumeLayout(FALSE).
+        THIS-OBJECT:tableLayoutPanel2:ResumeLayout(FALSE).
+        CAST(THIS-OBJECT:dataGridView1, System.ComponentModel.ISupportInitialize):EndInit().
+        CAST(THIS-OBJECT:bindPromoPay, System.ComponentModel.ISupportInitialize):EndInit().
+        THIS-OBJECT:ResumeLayout(FALSE).
+        CATCH e AS Progress.Lang.Error:
+            UNDO, THROW e.
+        END CATCH.
     end method.
 
     destructor public uc_TabTypePay ( ):

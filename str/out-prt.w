@@ -821,6 +821,9 @@ DO:
     return no-apply.
   end.
 
+  run check-fact-qnty in this-procedure no-error .
+  if error-status :error then return no-apply.
+
   block_save:
   do transaction
   on error undo block_save, return no-apply
@@ -3880,42 +3883,8 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE l-fact-qnty d-out-prt 
 PROCEDURE l-fact-qnty :
-/* Если кол-во в базовых единицах товара получается дробное, то ошибка.*/
-  if can-find( first ub.units where ub.units.unit-name = buf_goods.unit-base
-                      and lookup( {&pieces}, ub.units.type ) > 0 ) and
-    truncate( input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty,  0 )
-        <>    input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty
-  then do:
-    message "Базовая единица товара " buf_goods.unit-base " - штучная." skip
-            "Кол-во по факту должно быть целым."
-    view-as alert-box error.
-    return error.
-  end.
-  if ( ( lookup( t-doc.doc-type, {&income_return} ) > 0
-         and t-doc.internal = true
-         and ( ub.gds-prt.upper-code = buf_goods.prt-root /* выключены шкалы на тек. объекте */
-               or can-find( out-dtl no-lock
-                            where out-dtl.doc-code  = t-doc.out-code
-                              and out-dtl.artic     = ub.gds-dtl.artic
-                              and out-dtl.prod-type = ub.gds-dtl.prod-type
-                              and out-dtl.prod-code = ub.gds-dtl.prod-code
-                              and out-dtl.prt-code  = ub.gds-dtl.prt-code
-                           )
-             ) /* включены и на объекте-источнике */
-       )
-       or ( t-doc.doc-type = {&return}
-            and t-doc.internal = false
-          )
-       or lookup( t-doc.doc-type, {&income_return} ) = 0
-     )
-    and input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty - ub.gds-dtl.doc-qnty > ( if is-petrolium = true and is-pieces = false then 0.001 else 0.0 )
-  then do:
-    message
-      "Фактическое количество товара не может быть больше количества по накладной."
-      view-as alert-box.
-    apply "ENTRY":U to ub.gds-dtl.fact-qnty in frame {&FRAME-NAME}.
-    return error.
-  end.
+  run check-fact-qnty in this-procedure no-error .
+  if error-status:error then return error. 
 
   { str/set-pr.i recid(ub.gds-dtl) yes "input frame {&frame-name} ub.gds-dtl.fact-qnty" no-error }
   if error-status :error then do:
@@ -3959,6 +3928,49 @@ PROCEDURE l-fact-qnty :
     end.
   end.
   run re-calcpr in this-procedure .
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE check-fact-qnty d-out-prt 
+PROCEDURE check-fact-qnty :
+/* Если кол-во в базовых единицах товара получается дробное, то ошибка.*/
+  if can-find( first ub.units where ub.units.unit-name = buf_goods.unit-base
+                      and lookup( {&pieces}, ub.units.type ) > 0 ) and
+    truncate( input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty,  0 )
+        <>    input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty
+  then do:
+    message "Базовая единица товара " buf_goods.unit-base " - штучная." skip
+            "Кол-во по факту должно быть целым."
+    view-as alert-box error.
+    return error.
+  end.
+  if ( ( lookup( t-doc.doc-type, {&income_return} ) > 0
+         and t-doc.internal = true
+         and ( ub.gds-prt.upper-code = buf_goods.prt-root /* выключены шкалы на тек. объекте */
+               or can-find( out-dtl no-lock
+                            where out-dtl.doc-code  = t-doc.out-code
+                              and out-dtl.artic     = ub.gds-dtl.artic
+                              and out-dtl.prod-type = ub.gds-dtl.prod-type
+                              and out-dtl.prod-code = ub.gds-dtl.prod-code
+                              and out-dtl.prt-code  = ub.gds-dtl.prt-code
+                           )
+             ) /* включены и на объекте-источнике */
+       )
+       or ( t-doc.doc-type = {&return}
+            and t-doc.internal = false
+          )
+       or lookup( t-doc.doc-type, {&income_return} ) = 0
+     )
+    and input frame {&FRAME-NAME} ub.gds-dtl.fact-qnty - ub.gds-dtl.doc-qnty > ( if is-petrolium = true and is-pieces = false then 0.001 else 0.0 )
+  then do:
+    message
+      "Фактическое количество товара не может быть больше количества по накладной."
+      view-as alert-box.
+    apply "ENTRY":U to ub.gds-dtl.fact-qnty in frame {&FRAME-NAME}.
+    return error.
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

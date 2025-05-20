@@ -315,18 +315,25 @@ do:
           vMaxDocLevel = max(vMaxDocLevel, buf_utd-marking-lines.doc-level) .
         end .
       end .
-      
+
       utd-marking-lines_ :
       for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
                                        and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
                                        and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
       : 
-        if vIsMarkLine
-        and buf_utd-marking-lines.doc-level < vMaxDocLevel
-        and Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB) > 1
-        then do :
-          next utd-marking-lines_ .
-        end .
+        if vIsMarkLine then
+        do:
+          if can-find(first buf_marking where buf_marking.mark-parent = buf_utd-marking-lines.mark) then
+          do:  /* пропускаем марки, которые имеют "детей" */
+            next utd-marking-lines_ .
+          end.
+          find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark no-lock no-error.
+          if avail buf_marking and 
+             not can-do(objSrv:Env:Marking:Sts:Mark:AllChecked, string(buf_marking.sts)) then
+          do:  /* пропускаем марку, которая не в статусе Проверен или его аналог (Продан, Списан и т.д.)*/
+            next utd-marking-lines_ .
+          end.
+        end.
         
         vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
         if vGtin > ""
@@ -458,7 +465,8 @@ do:
       if vGtinSumDocQnty > temp_doc-line.doc-qnty
       and not CheckErrForLine(buffer buf_utd-lines:handle)
       then do :
-        do while vGtinSumDocQnty <> temp_doc-line.doc-qnty :
+        if vGtinSumDocQnty <> temp_doc-line.doc-qnty then
+        do: 
           do vGT = 1 to num-entries(vGtinList) :
             if integer(entry(vGT, vGtinFactQntyList)) >= integer(entry(vGT, vGtinDocQntyList)) 
             then
@@ -469,6 +477,11 @@ do:
             then
               leave .
           end .
+          if vGtinSumDocQnty <> temp_doc-line.doc-qnty then
+          do:
+            undo, return error substitute("По строке &1 общее кол-во &2 по строке не совпадает с общим кол-вом &3 по всем GTIN.",
+                                          temp_doc-line.line-num, temp_doc-line.doc-qnty, vGtinSumDocQnty).
+          end.
         end .
       end .
       

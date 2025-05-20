@@ -633,6 +633,16 @@ on endkey undo _main, return error substitute( "&1. endkey", vss-workfile )
                             ,~{&sale-doc-name~}                                                          ~
                             ,v-doc-code)
         {&display-message}.
+
+          message substitute("!!!Продажу &1 нельзя удалить&2&3 &4 не удален:&2"   
+                            ,parinkas-code                                                               
+                            ,{&new-line}                                                             
+                            ,{&sale-doc-name}                                                         
+                            ,v-doc-code)  
+        return-value
+        view-as alert-box information . 
+
+
         run read-write-log in this-procedure .
         undo _main, return error .
       end.

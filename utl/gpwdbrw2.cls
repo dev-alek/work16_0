@@ -50,10 +50,6 @@ class utl.gpwdbrw2 inherits Form:
    get.
    set. 
 
-   define public static property parParentProc as handle no-undo 
-   get.
-   set. 
-
    constructor public gpwdbrw2():
         
         

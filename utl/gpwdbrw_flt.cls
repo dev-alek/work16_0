@@ -101,7 +101,7 @@ class utl.gpwdbrw_flt inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void btnCli_Click( input sender as System.Object, input e as System.EventArgs ):
-		
+		this-object:ucFio:SetEnabledTo(true).
       ucFio:SetValue(this-object:GetCli()).
 		
 		return.
@@ -114,7 +114,7 @@ class utl.gpwdbrw_flt inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void btnGetUser_Click( input sender as System.Object, input e as System.EventArgs ):
-		
+		this-object:ucUser:SetEnabledTo(true).
 		this-object:ucUser:SetValue(this-object:GetUser()).
 		
 		return.
@@ -127,7 +127,7 @@ class utl.gpwdbrw_flt inherits Form:
 	------------------------------------------------------------------------------*/
 	@VisualDesigner.
 	method private void btnObject_Click( input sender as System.Object, input e as System.EventArgs ):
-	   
+	   this-object:ucObject:SetEnabledTo(true).
 		this-object:ucObject:SetValue(this-object:GetShop()).
 		
 		return.

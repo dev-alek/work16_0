@@ -1562,17 +1562,18 @@ END.
 &Scoped-define SELF-NAME B-quit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-quit Dialog-Frame
 ON CHOOSE OF B-quit IN FRAME Dialog-Frame /* Отмена */
+/*UNDO, RETURN.*/
 DO:
 { gbl/stdbtn.i }
   case par-mode:
-    when {&add-def} then do:
-      if available locked_chk-doc then
-       delete locked_chk-doc.
-       p-doc-rec = ?.
+    when {&add-def} then do:          
+      /*if available locked_chk-doc then
+       delete locked_chk-doc.*/       
+       p-doc-rec = ?.       
     end.
-  END CASE.
+  END CASE.  
   p-next-prev = "quit".
-END.
+END. 
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -3033,7 +3034,7 @@ var-mode = par-mode.
 p-next-prev = '':U.
 n-p: do while p-next-prev = '':U :
 MAIN-BLOCK:
-DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
+DO TRANSACTION ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   { gbl/getcntxt.i get }
@@ -4164,7 +4165,7 @@ IF par-mode = {&add-def} then do:
                         ,output exch-time_
                         )  no-error.
     if error-status:error then undo, return error .
-    DO TRANSACTION ON ERROR UNDO, RETURN ERROR:
+  /* DO TRANSACTION ON ERROR UNDO, RETURN ERROR: */
 
       create tt-chk-doc.
       assign
@@ -4201,7 +4202,7 @@ IF par-mode = {&add-def} then do:
       create locked_chk-doc.
       buffer-copy tt-chk-doc to locked_chk-doc.
       
-    END.
+    /*END. */
     FIND FIRST buf_obj No-LOCK WHERe
                 buf_obj.obj-type = shop-type AND
                 buf_obj.obj-code = shop-code No-ERROR.
@@ -4212,11 +4213,11 @@ else do:
                 recid(locked_chk-doc) = p-doc-rec.
   end.
   ELSE do:
-    DO TRANSACTION
-      ON ERROR UNDO, RETURN ERROR:
+    /* DO TRANSACTION
+      ON ERROR UNDO, RETURN ERROR: */
       FIND FIRST locked_chk-doc EXCLUSIVE-LOCK WHERE
                  recid(locked_chk-doc) = p-doc-rec.
-    END.
+     /* END. */
   END.
   IF NOT AVAIL locked_chk-doc then
   return error.

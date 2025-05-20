@@ -44,6 +44,10 @@ class utl.tech-prol-pwd:
       get.
       set. 
 
+  define public property region-surr as character no-undo 
+      get.
+      set. 
+
    define public property shop-surr as character no-undo 
       get.
       set. 

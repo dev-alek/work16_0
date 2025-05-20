@@ -1011,9 +1011,14 @@ DO:
   loc#log
 }
 if not loc#log then return .
-
-  run utl/rkocollection.p(parparentproc,this-procedure,?).
-
+  run utl/rkocollection.p(parparentproc,this-procedure,?) no-error.
+  if error-status:error then
+    message if return-value <> "" 
+            then return-value
+            else if error-status:get-message(1) <> "" 
+                 then error-status:get-message(1)
+                 else "Неизвестная ошибка" 
+    view-as alert-box error.
   RUn OpenBR in this-procedure ( input yes, input no, input '':U).
 
 END.

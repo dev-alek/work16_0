@@ -122,6 +122,7 @@ define buffer chi_marking       for ub.marking  .
 { gbl/objsrv.i }
 
 { str/in-vatp.i def }
+&scop error_marking-line "Ошибка повторной привязки марки &1 в документ &2 партия &3"
 
 do transaction
 on error undo, return error return-value
@@ -223,7 +224,7 @@ on error undo, return error return-value
   }
   if error-status :error then do:
     v-end-message =  substitute("Ошибка при создании документа внутреннего перемещения &1 " ,
-            TempTrnDoc.out-code ).
+            TempTrnDoc.out-code ) .
     run pcall-log-file in parparentproc (input v-end-message) .
     undo, return error v-end-message .
   end.
@@ -395,7 +396,11 @@ on error undo, return error return-value
 /*      buf_doc-line.wt-brutto      = ub.doc-line.wt-brutto * v-doc-line-chg-qnty / ub.doc-line.fact-qnty*/
     no-error.
     if error-status:error then
-      return error error-status:get-message(1).
+    do:
+      v-end-message = error-status:GET-MESSAGE(1).
+      run pcall-log-file in parparentproc (input v-end-message) .
+      undo, return error v-end-message .
+    end.
 
     assign
       buf_doc-line.fact-density  = buf_doc-line.doc-density
@@ -569,6 +574,23 @@ on error undo, return error return-value
                                    no-error .
           if available TempDocMark
           then do :
+            if can-find(first ub.marking-lines where
+                              ub.marking-lines.mark = "02" + vGtin + "37" + string(abs(buf_parts.fact-qnty))
+                          and ub.marking-lines.obj-type = buf_parts.obj-type
+                          and ub.marking-lines.obj-code = buf_parts.obj-code
+                          and ub.marking-lines.gds-code = TempDocLine.gds-code
+                          and ub.marking-lines.in-code = buf_parts.in-code
+                          and ub.marking-lines.out-code = buf_parts.out-code
+                          and ub.marking-lines.part-code = buf_parts.part-code) then
+            do:
+              v-end-message = substitute(
+                {&error_marking-line},
+                "02" + vGtin + "37" + string(abs(buf_parts.fact-qnty)), 
+                buf_parts.in-code,
+                buf_parts.part-code).
+              run pcall-log-file in parparentproc (input v-end-message) .
+              undo, return error v-end-message .
+            end.
             create ub.marking-lines.
             assign
               ub.marking-lines.obj-type = buf_parts.obj-type
@@ -578,8 +600,8 @@ on error undo, return error return-value
               ub.marking-lines.part-code = buf_parts.part-code
               ub.marking-lines.gds-code = TempDocLine.gds-code
               ub.marking-lines.mark = "02" + vGtin + "37" + string(abs(buf_parts.fact-qnty))
+              ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB
             .
-            ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB.
           end .
         end .
       end .
@@ -591,6 +613,23 @@ on error undo, return error return-value
       :
         if TempDocMark.gtin > "" and TempDocMark.gtin_qnt > 0 then next .
         
+        if can-find(first ub.marking-lines where
+                          ub.marking-lines.mark = TempDocMark.mark
+                      and ub.marking-lines.obj-type = buf_parts.obj-type
+                      and ub.marking-lines.obj-code = buf_parts.obj-code
+                      and ub.marking-lines.gds-code = TempDocLine.gds-code
+                      and ub.marking-lines.in-code = buf_parts.in-code
+                      and ub.marking-lines.out-code = buf_parts.out-code
+                      and ub.marking-lines.part-code = buf_parts.part-code) then
+        do:
+          v-end-message = substitute(
+            {&error_marking-line},
+            TempDocMark.mark, 
+            buf_parts.in-code,
+            buf_parts.part-code).
+          run pcall-log-file in parparentproc (input v-end-message) .
+          undo, return error v-end-message .
+        end.
         create ub.marking-lines.
         assign
           ub.marking-lines.obj-type = buf_parts.obj-type
@@ -601,7 +640,7 @@ on error undo, return error return-value
           ub.marking-lines.prt-code  = buf_parts.prt-code
           ub.marking-lines.gds-code = TempDocLine.gds-code
           ub.marking-lines.mark = TempDocMark.mark
-          ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.
+          ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
         .
         assign
           buf_parts.PS =  TempDocMark.upd_id when TempDocMark.upd_id <> ""
@@ -696,6 +735,23 @@ on error undo, return error return-value
 /*  skip                                                      */
 /*.                                                           */
           for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
+            if can-find(first ub.marking-lines where
+                              ub.marking-lines.mark = chi_marking.mark
+                          and ub.marking-lines.obj-type = buf_parts.obj-type
+                          and ub.marking-lines.obj-code = buf_parts.obj-code
+                          and ub.marking-lines.gds-code = TempDocLine.gds-code
+                          and ub.marking-lines.in-code = buf_parts.in-code
+                          and ub.marking-lines.out-code = buf_parts.out-code
+                          and ub.marking-lines.part-code = buf_parts.part-code) then
+            do:
+              v-end-message = substitute(
+                {&error_marking-line},
+                chi_marking.mark, 
+                buf_parts.in-code,
+                buf_parts.part-code).
+              run pcall-log-file in parparentproc (input v-end-message) .
+              undo, return error v-end-message .
+            end.
             create ub.marking-lines.
             assign
               ub.marking-lines.obj-type = buf_parts.obj-type

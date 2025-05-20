@@ -159,10 +159,10 @@ DEFINE TEMP-TABLE TT_cash-pay NO-UNDO LIKE ub.price-list-type-cash-pay.
            and buf_clients.obj-code = v-obj-code no-error .
 
     
-    if objImp:del-l > 0 then do:
+    if objImp:del-l > 0  then do:
       /* реализовано только для таблицы клиентов (контрагенты);
          пользовательский интерфейс работы с магазинами использует эту реализацию */
-      if available buf_clients then do:
+      if available buf_clients and buf_clients.stts = 0 then do:
         run ref/clients2.p             
         (input ?    /* parparentproc; внутри не используется, передаётся процедурам машины правил rul/999999999.p */
         ,input recid(buf_clients)

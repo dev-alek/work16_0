@@ -123,17 +123,20 @@ class ibs.th.bge.1crn.import.impfirms implements ibs.th.bge.1crn.import.iimpsubj
       if not available buf_clients then undo, throw new Progress.Lang.AppError(
         substitute("Не найдена запись КЛИЕНТ для записи СВОЯ ФИРМА с кодом [&1]", v-host-code)
       ) .
-      
-      run ref/clients2.p             
-      (input ?    /* parparentproc; внутри не используется, передаётся процедурам машины правил rul/999999999.p */
-      ,input recid(buf_clients)
-      ,input {&bef-deleted-status-int} /* p-stts: {&current-status-int} - запись видна, {&deleted-status-int} - запись как бы удалена */
-      ,input true /* p-silent */
-      ,input no   /* отсюда удаляем только {&cmp}, а магазины и склады - в импорте АЗС, не в импорте контрагентов или фирм */
-      ,input '':U /*p-mode2*/
-      ,input '':U /*p-source-type*/
-      ,input '':U /*p-source-ref*/
-      ) .
+
+      if buf_clients.stts = 0 then do:
+	      run ref/clients2.p             
+	   (input ?    /* parparentproc; внутри не используется, передаётся процедурам машины правил rul/999999999.p */
+	   ,input recid(buf_clients)
+	   ,input {&bef-deleted-status-int} /* p-stts: {&current-status-int} - запись видна, {&deleted-status-int} - запись как бы удалена */
+	   ,input true /* p-silent */
+	   ,input no   /* отсюда удаляем только {&cmp}, а магазины и склады - в импорте АЗС, не в импорте контрагентов или фирм */
+	   ,input '':U /*p-mode2*/
+	   ,input '':U /*p-source-type*/
+	   ,input '':U /*p-source-ref*/
+	   ) .
+      end.
+
       /* v-retfl = true . */
       /* после delete уйдёт в update и пропишет изменения, если часть полей удаляемой фирмы хотели изменить */
     end. /* end_of objImp:del-l */

@@ -691,20 +691,20 @@ procedure print-grp-itog :
 /*        DOWN stream Out-Stream 1 with FRAME invent-gold .                                        */
 /*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.*/
 /*      End.                                                                                       */
-/*      when  "sl"  THEN DO:                                                                       */
-/*        display stream Out-Stream                                                                */
-/*          "хрнцн"      @  temp-str.artic                                                         */
-/*          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name                                      */
-/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13                             */
-/*          sym14 sum-ubl @ temp-str.UBL                                                           */
-/*          sum-a-qnty   @ temp-str.a-qnty                                                         */
-/*          sum-a-stoim  @ temp-str.a-stoim                                                        */
-/*          sum-b-qnty   @ temp-str.b-qnty                                                         */
-/*          sum-b-stoim  @ temp-str.b-stoim                                                        */
-/*        with FRAME sl.                                                                           */
-/*        DOWN stream Out-Stream 1 with FRAME sl .                                                 */
-/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.      */
-/*      End.                                                                                       */
+      when  "sl"  THEN DO:
+        display stream Out-Stream
+          "хрнцн"      @  temp-str.artic
+          TRIM(CAPS(temp-str.grp-name)) @ temp-str.gds-name
+          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13
+          sym14 sum-ubl @ temp-str.UBL
+          sum-a-qnty   @ temp-str.a-qnty
+          sum-a-stoim  @ temp-str.a-stoim
+          sum-b-qnty   @ temp-str.b-qnty
+          sum-b-stoim  @ temp-str.b-stoim
+        with FRAME sl.
+        DOWN stream Out-Stream 1 with FRAME sl .
+        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.
+      End.
 /*      when  "sl-gold"  THEN DO:                                                                  */
 /*        display stream Out-Stream                                                                */
 /*          "хрнцн"      @  temp-str.artic                                                         */
@@ -773,20 +773,20 @@ procedure print-prod-itog :
 /*        DOWN stream Out-Stream 1 with FRAME invent-gold .                                        */
 /*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.*/
 /*      End.                                                                                       */
-/*      when  "sl"  THEN DO:                                                                       */
-/*        display stream Out-Stream                                                                */
-/*          "хрнцн"      @  temp-str.artic                                                         */
-/*          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name                                   */
-/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14                      */
-/*          sum2-ubl     @ temp-str.UBL                                                            */
-/*          sum2-a-qnty   @ temp-str.a-qnty                                                        */
-/*          sum2-a-stoim  @ temp-str.a-stoim                                                       */
-/*          sum2-b-qnty   @ temp-str.b-qnty                                                        */
-/*          sum2-b-stoim  @ temp-str.b-stoim                                                       */
-/*        with FRAME sl.                                                                           */
-/*        DOWN stream Out-Stream 1 with FRAME sl .                                                 */
-/*        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.      */
-/*      End.                                                                                       */
+      when  "sl"  THEN DO:
+        display stream Out-Stream
+          "хрнцн"      @  temp-str.artic
+          TRIM(CAPS(buf_clients.obj-name)) @ temp-str.gds-name
+          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14
+          sum2-ubl     @ temp-str.UBL
+          sum2-a-qnty   @ temp-str.a-qnty
+          sum2-a-stoim  @ temp-str.a-stoim
+          sum2-b-qnty   @ temp-str.b-qnty
+          sum2-b-stoim  @ temp-str.b-stoim
+        with FRAME sl.
+        DOWN stream Out-Stream 1 with FRAME sl .
+        if print-graft = false THEN Put stream Out-Stream LineBuf format {&format-sl} SKIP.
+      End.
 /*      when  "sl-gold"  THEN DO:                                                                  */
 /*        display stream Out-Stream                                                                */
 /*          "хрнцн"      @  temp-str.artic                                                         */
@@ -850,19 +850,19 @@ procedure print-all-itog :
 /*        DOWN stream Out-Stream 1 with FRAME invent-gold .                                      */
 /*        Put stream Out-Stream LineBuf format {&format-inv-gold} SKIP.                          */
 /*      End.                                                                                     */
-/*      when  "sl"  THEN DO:                                                                     */
-/*        display stream Out-Stream                                                              */
-/*          "хрнцн"      @  temp-str.artic                                                       */
-/*          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14                    */
-/*          sum1-a-qnty   @ temp-str.a-qnty                                                      */
-/*          sum1-a-stoim  @ temp-str.a-stoim                                                     */
-/*          sum1-b-qnty   @ temp-str.b-qnty                                                      */
-/*          sum1-b-stoim  @ temp-str.b-stoim                                                     */
-/*          sum1-ubl      @ temp-str.ubl                                                         */
-/*        with FRAME sl.                                                                         */
-/*        DOWN stream Out-Stream 1 with FRAME sl .                                               */
-/*        Put stream Out-Stream LineBuf format {&format-sl} SKIP.                                */
-/*      End.                                                                                     */
+      when  "sl"  THEN DO:
+        display stream Out-Stream
+          "хрнцн"      @  temp-str.artic
+          sym1 sym2 sym3 sym4 sym5 sym6 sym7 sym9 sym10 sym12  sym13  sym14
+          sum1-a-qnty   @ temp-str.a-qnty
+          sum1-a-stoim  @ temp-str.a-stoim
+          sum1-b-qnty   @ temp-str.b-qnty
+          sum1-b-stoim  @ temp-str.b-stoim
+          sum1-ubl      @ temp-str.ubl
+        with FRAME sl.
+        DOWN stream Out-Stream 1 with FRAME sl .
+        Put stream Out-Stream LineBuf format {&format-sl} SKIP.
+      End.
 /*      when  "sl-gold"  THEN DO:                                                                */
 /*        display stream Out-Stream                                                              */
 /*          "хрнцн"      @  temp-str.artic                                                       */

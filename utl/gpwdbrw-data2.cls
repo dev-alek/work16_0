@@ -20,7 +20,7 @@ Creation date: 21/10/18
 class utl.gpwdbrw-data2:
    
    { utl/flt-operator.i }
-   
+   {cmp/str-glbl.i class}   
    define stream sHtml.
    
    define temp-table ttTechProlBrw no-undo
@@ -73,8 +73,14 @@ class utl.gpwdbrw-data2:
       
       do while not hQuery-tt:query-off-end:
           
-
-         vShop = b-tech-prol-pwd.shop-surr.
+         define variable vregion as character no-undo.
+         if num-entries  (b-tech-prol-pwd.shop-surr,{&delim-par})  eq 2
+         then assign
+            vregion = entry(1,b-tech-prol-pwd.shop-surr,{&delim-par})
+            vShop = entry(2,b-tech-prol-pwd.shop-surr,{&delim-par})
+            .
+         else
+            vShop = b-tech-prol-pwd.shop-surr.
 
          vCashDesk = b-tech-prol-pwd.cash-desk-surr.
          create ttTechProlBrw.
@@ -85,13 +91,15 @@ class utl.gpwdbrw-data2:
             ttTechProlBrw.fTime = substring(ttTechProlBrw.fTime,10)
             ttTechProlBrw.fHostName = b-tech-prol-pwd.f-hostname
             ttTechProlBrw.fDetails = substitute(
-               "маг &1, касса &2, &3, &4 - &5, &6",
+               "Регион &7 (&8) маг &1, касса &2, &3, &4 - &5, &6",
                vShop,
                vCashDesk,
                b-tech-prol-pwd.f-date,
                b-tech-prol-pwd.f-beg-time,
                b-tech-prol-pwd.f-end-time,
-               b-tech-prol-pwd.f-fio)
+               b-tech-prol-pwd.f-fio,
+               vregion,
+               GetRegName(vregion))
          .
          
          if b-tech-prol-pwd.f-user <> "" then
@@ -111,7 +119,29 @@ class utl.gpwdbrw-data2:
       end finally.
       
    end method.
-   
+   method public char GetRegName(reg as char):
+      def buffer code for ub.code.
+
+            
+      define variable vParent as character no-undo.
+      define variable vCode   as character no-undo.
+      vParent = "cashobj".
+      vCode   = reg.
+      find first code where Code.parent eq vParent
+                        and Code.code   eq vcode
+      no-lock no-error.
+      
+      if avail code then
+      do:
+         return Code.CodeName
+         .
+
+      end.
+      
+
+      return "".
+      
+   end.
    method public char GetUserLogin(iUser as char):
       
       def var vUserLogin as char no-undo.

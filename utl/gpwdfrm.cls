@@ -74,10 +74,6 @@ class utl.gpwdfrm inherits Form:
 
    define variable DataProvider as class utl.gpwdfrm-data no-undo.
 
-   define public static property parParentProc as handle no-undo 
-      get.
-      set. 
-   
    constructor public gpwdfrm (  ):
        
       super().

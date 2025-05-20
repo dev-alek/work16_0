@@ -123,10 +123,7 @@ run str/diallog.w (parparentproc, this-procedure, 'str/get-chkf.p':U, (v-cntxt-o
                 input 1                            ~
               , input log-file-name                ~
               , input 1                            ~
-              , input ~{&my-message}~)   .          ~
-          else ~
-             message ~{&my-message}  ~
-             view-as alert-box
+              , input ~{&my-message}~)
 
 
 
@@ -309,6 +306,7 @@ define variable v-limit-access  as integer   no-undo .
 define variable v-obj-db-num    as integer   no-undo .
 define variable v-vat-pc        as integer   no-undo .
 define variable v-slt-pc        as integer   no-undo .
+define variable fact-order      as decimal   no-undo .
 
 define buffer buf_inkas          for ub.inkas.
 define buffer buf_inkas-pay-desk for ub.inkas-pay-desk.
@@ -389,7 +387,7 @@ define variable v-err               as logical    no-undo .
 /*                                  ,buf_shift-obj.obj-code ~                                                                             */
 /*                                  ,g#db-num  )                                                                                          */
 /*      {&display-message}.                                                                                                               */
-/*      undo, return error .                                                                                                              */
+/*      undo, return error {&my-message}.                                                                                                              */
 /*    end.                                                                                                                                */
 /*    if cash-book = integer({&cash-book-object})                                                                                         */
 /*    and g#db-num <> v-obj-db-num                                                                                                        */
@@ -402,7 +400,7 @@ define variable v-err               as logical    no-undo .
 /*                                  , {&new-line} ~                                                                                       */
 /*                                  , v-obj-db-num  )                                                                                     */
 /*      {&display-message}.                                                                                                               */
-/*      undo, return error .                                                                                                              */
+/*      undo, return error  {&my-message}.                                                                                                              */
 /*    end.                                                                                                                                */
     /*перезаполним с учетом  требований ЮКОС*/
     find first buf_shift-staff no-lock
@@ -433,7 +431,7 @@ define variable v-err               as logical    no-undo .
           if return-value = 'false':u then do:
                &scop my-message substitute("Нельзя создать ордер на выручку, если кассир не определен")
                {&display-message}.
-               undo, return error .
+               undo, return error {&my-message}.
           END.
        end.
       v-cashier = v-value.
@@ -827,7 +825,7 @@ define variable v-err               as logical    no-undo .
                                   , error-status:get-message(1)    ~
                                   , return-value )
         {&display-message}.
-        undo _main, return error.
+        undo _main, return error {&my-message}.
 
       end.
       find first tt-fin-doc.
@@ -996,7 +994,7 @@ define variable v-err               as logical    no-undo .
          &scop my-message substitute("Не задан счет для инкасации" ~
                                      )
        {&DISPLAY-MESSAGE}.
-       undo _main, return error.
+       undo _main, return error  {&my-message}.
       end.
       if o-uchet = "0"
       then v-uchet = "cal" .
@@ -1032,7 +1030,7 @@ define variable v-err               as logical    no-undo .
                                   , error-status:get-message(1)    ~
                                   , return-value )
         {&display-message}.
-        undo _main, return error.
+        undo _main, return error  {&my-message}.
       end.
       /*закрываем до факта*/
       find first buf_fin-doc share-lock where
@@ -1110,7 +1108,7 @@ define variable v-err               as logical    no-undo .
                                   , error-status:get-message(1)    ~
                                   , return-value )
         {&display-message}.
-        undo _main, return error.
+        undo _main, return error  {&my-message}.
        END.
       if buf_fin-doc.status_ <> {&fin-fact} then do:
         run proc-close in this-procedure ( buffer buf_fin-doc) NO-ERROR.
@@ -1120,7 +1118,7 @@ define variable v-err               as logical    no-undo .
                                     , error-status:get-message(1)    ~
                                     , return-value )
           {&display-message}.
-          undo _main, return error.
+          undo _main, return error  {&my-message}.
         END.
       end.
       if buf_fin-doc.status_ <> {&fin-fact} then do:
@@ -1131,7 +1129,7 @@ define variable v-err               as logical    no-undo .
                                     , error-status:get-message(1)    ~
                                     , return-value )
           {&display-message}.
-          undo _main, return error.
+          undo _main, return error  {&my-message}.
         END.
      end.
      
@@ -1148,7 +1146,7 @@ define variable v-err               as logical    no-undo .
                                   , ~{&new-line~} ~
                                   )
     {&DISPLAY-MESSAGE}.
-
+    message {&my-message} view-as alert-box.
    end. /*for each buf_temp-fin-sum no-lock*/
 
   /* ------------------------- &end-rule& -------------------------------------*/
