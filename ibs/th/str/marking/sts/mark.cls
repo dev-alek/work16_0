@@ -53,6 +53,7 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
   define public property  UnknowSts as class propmap no-undo get.  protected set.
   
   define public property  EqualChecked as character  no-undo get.  protected set.
+  define public property  AllChecked   as character  no-undo get.  protected set.
   define public property  Sale_Return_Wait as character  no-undo get.  protected set.
   define public property  Doc_Status       as character  no-undo get.  protected set.
   define public property  FreeStatuses     as character  no-undo get.  protected set.
@@ -102,6 +103,7 @@ class ibs.th.str.marking.sts.mark inherits TypeMap:
     Sale_Return_Wait  = "11,12,14,15".   /* —татусы, что марка добавлена  чек  */
     Doc_Status = "13,16,17,18,19,22,23". /* —татусы, что марка добавлена в какой-либо расходный док-т */
     FreeStatuses = "1,3,5,6,7,10".       /* —татусы, что марка не добавена в чек или в какой-либо расходный док-т */
+    AllChecked   = substitute("7,&1,&2",Sale_Return_Wait,Doc_Status). /* Cтатусы равносильные статусу ѕроверен - полный список*/
     
     
    /* 
