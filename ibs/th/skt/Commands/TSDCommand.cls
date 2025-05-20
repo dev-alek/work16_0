@@ -148,11 +148,19 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        logWrite:LogStr = "".
        
        copy-lob
-       from  object req:ContentBuff
-       to file "documents.s3db"
-       no-convert
+          from  object req:ContentBuff
+          to file "documents.s3db"
+          no-convert
        no-error .
-       
+       if session:debug-alert
+       then do:
+          os-delete value (search ("documents_tsd.s3db")) no-error.
+          copy-lob
+             from  object req:ContentBuff
+             to file "documents_tsd.s3db"
+             no-convert
+          no-error .
+       end.
        vobjtype = entry (1, list-par, "?").
        if vobjtype eq "" or vobjtype eq ?
        then do:
