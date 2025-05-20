@@ -34,11 +34,12 @@ define input parameter p-doc-id       as integer      no-undo .
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { cmp/r-pril.i   }
-{ str/lib-trn.i  }
+{ str/lib-trn.i class }
 { gbl/getcntxt.i def }
 { gbl/prn-lib.i     }
 { rep/html-conv.i }
 { str/edo.i }
+
 &global-define month-list-for-date '€нвар€,феврал€,марта,апрел€,ма€,июн€,июл€,августа,сент€бр€,окт€бр€,но€бр€,декабр€':U
 /* ƒл€ вызова функции конвертации даты к виду: "01 январ€ 2014г" */
 &scop f-l MonthNameRusCase
@@ -61,6 +62,8 @@ define variable v-itog-level        as integer   no-undo .
 define variable v-itog-unit         as integer   no-undo . 
 define variable v-obj-info          as character no-undo . 
 define variable v-gtin              as character no-undo .
+define variable ser-level           as character no-undo .
+
 def    var      Marking             as class     mark no-undo .
 Marking = ObjSrv:Env:Marking:Sts:Mark .
 FUNCTION GdsName RETURNS CHARACTER
@@ -157,12 +160,15 @@ do:
       assign
         tt-utd.qnty-level = tt-utd.qnty-level + 1 
         .
+
       if tt-utd.ser-level <> "" then tt-utd.ser-level = tt-utd.ser-level + " " + GetTegCod(buf_utd-marking-lines.mark,"21") .
       else tt-utd.ser-level = GetTegCod(buf_utd-marking-lines.mark,"21") .  
+
     end.  
-    else tt-utd.qnty-unit = tt-utd.qnty-unit + 1 .
+    else tt-utd.qnty-unit = tt-utd.qnty-unit + 1 .            
   end.  
 end.      
+
 if buf_utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB then 
 do:     
   for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num and buf_utd-marking-lines.doc-id = buf_utd.doc-id:
@@ -188,8 +194,11 @@ do:
         tt-utd.qnty-level = tt-utd.qnty-level + 1 
         .
       tt-utd.qnty-unit = tt-utd.qnty-unit + buf_marking.box-qnty . 
+
       if tt-utd.ser-level <> "" then tt-utd.ser-level = tt-utd.ser-level + " " + GetTegCod(buf_utd-marking-lines.mark,"21") .
       else tt-utd.ser-level = GetTegCod(buf_utd-marking-lines.mark,"21") .  
+      ser-level = "".
+
     end.  
   /*      else tt-utd.qnty-unit = tt-utd.qnty-unit + 1 .*/
   end.  
@@ -294,6 +303,7 @@ v-itog-unit = 0 .
 for each tt-utd no-lock by tt-utd.linenum:
   v-itog-level = v-itog-level + tt-utd.qnty-level .
   v-itog-unit = v-itog-unit + tt-utd.qnty-unit .
+  run xmlchar-encode(tt-utd.ser-level, output ser-level) .
     
   put stream OutStr-html unformatted
     '<TR>' skip
@@ -302,9 +312,8 @@ for each tt-utd no-lock by tt-utd.linenum:
     '<TD text_wrap="true" colspan="2" style="text-align: center;">' + string (tt-utd.gtin) + '</TD>' skip
     '<TD text_wrap="true" style="text-align: center;">' + string (tt-utd.qnty-unit) + '</TD>' skip
     '<TD text_wrap="true" colspan="4" style="text-align: center;">' + string (tt-utd.qnty-level) + '</TD>' skip
-    '<TD text_wrap="true" colspan="2" style="text-align: center;">' + string (tt-utd.ser-level) + '</TD>' skip
+    '<TD text_wrap="true" colspan="2" style="text-align: center;">' + ser-level + '</TD>' skip
     '</TR>'.                     
-
 end.
 put stream OutStr-html unformatted
   '<TR>' skip
