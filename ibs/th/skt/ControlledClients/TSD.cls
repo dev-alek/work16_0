@@ -236,13 +236,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
               and buf_trn-doc.status_ = {&wayb})
             ) 
       no-lock:
-    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "ItogInv" and ub.inv-doc-attr.attr-value = entry(1,buf_trn-doc.doc-code,"/") no-error .
-    if not available (ub.inv-doc-attr) then do:  
-/*      assign        */
-/*        dFactSum = 0*/
-/*        cHeader = ""*/
-/*        cLine= ""   */
-/*      .             */
+
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and (ub.inv-doc-attr.attr-code = "ItogInv" or ub.inv-doc-attr.attr-code = "ItogInvManual" )no-error .
+
+/*    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "ItogInv" and ub.inv-doc-attr.attr-value = entry(1,buf_trn-doc.doc-code,"/") no-error .*/
+    if available (ub.inv-doc-attr) then next .  
 
       myflagsDoc:unSetAllFlags().
       case buf_trn-doc.ext-doc-type:
@@ -458,7 +456,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
       
 /*      SomeStr = SomeStr + cHeader + cLine + cMarkLine.*/
-    end.
+
     end.
 /*    SomeStr = substitute ('<?xml version="1.0" encoding="&1"?><TSD>', CP) + SomeStr + ('</TSD>').*/
 /*    output stream logTSD to value ("logSKTTSD.txt").*/
