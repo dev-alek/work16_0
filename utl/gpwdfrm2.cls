@@ -129,45 +129,32 @@ class utl.gpwdfrm2 inherits Form:
 	@VisualDesigner.
 	method private void btnGenerate_Click( input sender as System.Object, input e as System.EventArgs ):
 
-      def var vSelectedItem as net-item no-undo.
       
       main:
       do on error undo, throw:
             
-         assign 
-            vSelectedItem = cast(cmbShop:SelectedItem,net-item)
-         no-error.
+         if cmbRegion:Text eq ""
+         then
+            undo, throw new ValidateError("Регион не может быть пустым",-1).  
+   		if cmbShop:Text eq ""
+         then do:
+             undo, throw new ValidateError ("Магазин не может быть пустым",-1).
+         end.
+         if cmbCash:Text eq ""
+         then do:
+               undo, throw new ValidateError ("Номер кассы не может быть пустым",-1).
+         end.
          
-         if not valid-object(vSelectedItem) then
-         do:
-            
-         end.   
-   		
    		ValidateForm().
    		define variable vShop as int64 no-undo.
-   		if cmbShop:Text eq ""
-   		then do:
-   		   message "Магазин не может быть пустым"
-                  view-as alert-box.
-               undo, throw new ValidateError (error-status:get-message (1)).
-   		end.
-   		vShop = int64(cast(cmbShop:SelectedItem,net-item):DisplayName)NO-error .
+   		vShop = int64(cast(cmbShop:SelectedItem,net-item):DisplayName)no-error .
    		if error-status:error
    		then do:
    		   vShop = int64(cmbShop:Text)no-error.
    		   if error-status:error
    		   then do:
-   		      message error-status:get-message (1)
-                  view-as alert-box.
-               undo, throw new ValidateError (error-status:get-message (1)).
+   		      undo, throw new ValidateError (error-status:get-message (1),-1).
             end.
-         end.
-         if cmbCash:text eq ""
-         then do:
-            message "Касса не может быть пустой"
-                  view-as alert-box.
-            undo, throw new ValidateError (error-status:get-message (1)).
-            
          end.
          
          define variable vCash as int64 no-undo.
@@ -177,18 +164,14 @@ class utl.gpwdfrm2 inherits Form:
             vCash = int64(cmbCash:Text)no-error.
             if error-status:error
             then do:
-               message error-status:get-message (1)
-               view-as alert-box.
-               undo, throw  new ValidateError (error-status:get-message (1)).
+               undo, throw  new ValidateError (error-status:get-message (1),-1).
             end.
          end.
          tech-prol-pwd-obj:f-user = DataProvider:GetUserLogin().
          if    tech-prol-pwd-obj:f-user eq ""
             or tech-prol-pwd-obj:f-user eq ?
          then do:
-               message "Не удается вас определить. Генерация пароля запрещена"
-               view-as alert-box.
-               undo, throw new ValidateError ("Не удается вас определить. Генерация пароля запрещена").
+               undo, throw new ValidateError ("Не удается вас определить. Генерация пароля запрещена",-1).
                
          end.
          label8:Text = string(new gpwd():gen-pwd(
@@ -206,19 +189,18 @@ class utl.gpwdfrm2 inherits Form:
          
          new repoPwd2(tech-prol-pwd-obj):Save().
          catch vErr as ValidateError :
-/*            MESSAGE 77 VERR:NUMMESSAGES SKIP              */
-/*            VERR:RETURNVALUE SKIP                         */
-/*            VERR:GETMESSAGENUM(0) SKIP                    */
-/*            VERR:GETMESSAGE(1) SKIP                       */
-/*            VERR:GETMESSAGE(2)                            */
-/*            VIEW-AS ALERT-BOX.                            */
-/*            SYSTEM.WINDOWS.FORMS.MESSAGEBOX:SHOW(         */
-/*               VERR:GETMESSAGE(1),                        */
-/*               "ВНИМАНИЕ!",                               */
-/*               SYSTEM.WINDOWS.FORMS.MESSAGEBOXBUTTONS:OK, */
-/*               SYSTEM.WINDOWS.FORMS.MESSAGEBOXICON:ERROR).*/
-/*                                                          */
-         end catch.
+/*            MESSAGE 77 VERR:NUMMESSAGES SKIP*/
+/*            VERR:RETURNVALUE SKIP           */
+/*            VERR:GETMESSAGENUM(0) SKIP      */
+/*            VERR:GETMESSAGE(1) SKIP         */
+/*            VERR:GETMESSAGE(2)              */
+/*            VIEW-AS ALERT-BOX.              */
+        System.Windows.Forms.MessageBox:Show(
+            vErr:GetMessage(1),
+            "Внимание!",
+            System.Windows.Forms.MessageBoxButtons:OK,
+            System.Windows.Forms.MessageBoxIcon:Error).
+                  end catch.
       end. /* main */
 	end method.
 
@@ -496,15 +478,19 @@ class utl.gpwdfrm2 inherits Form:
          cmbCash:ValueMember = "Value"
          this-object:DataProvider = new gpwdfrm-data2()
       .
-             
+      cmbRegion:DataSource = DataProvider:GetList("CashObj").         
       if this-object:State = "Add" then
       do:      
          assign
-            cmbRegion:DataSource = DataProvider:GetList("CashObj") 
+           
             cmbFio:DataSource =  DataProvider:GetUserList() 
          .
       end.
-      
+      else do:
+      cmbRegion:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDown.
+      cmbShop:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDown.
+      cmbCash:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDown.
+      end.
       ObjectToForm(tech-prol-pwd-obj).
       cmbShop:Focus().   
       return.
@@ -750,7 +736,10 @@ class utl.gpwdfrm2 inherits Form:
       /*  */
       /* cmbRegion */
       /*  */
+      this-object:cmbRegion:AutoCompleteSource = System.Windows.Forms.AutoCompleteSource:CustomSource.
+      this-object:cmbRegion:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
       this-object:cmbRegion:FormattingEnabled = true.
+      this-object:cmbRegion:ImeMode = System.Windows.Forms.ImeMode:On.
       this-object:cmbRegion:Location = new System.Drawing.Point(67, 3).
       this-object:cmbRegion:Name = "cmbRegion".
       this-object:cmbRegion:Size = new System.Drawing.Size(121, 21).
@@ -821,6 +810,7 @@ class utl.gpwdfrm2 inherits Form:
       /*  */
       /* cmbTimeEnd */
       /*  */
+      this-object:cmbTimeEnd:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
       this-object:cmbTimeEnd:FormattingEnabled = true.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar0 as System.Object extent 49 no-undo.
@@ -883,6 +873,7 @@ class utl.gpwdfrm2 inherits Form:
       /*  */
       /* cmbTimeBeg */
       /*  */
+      this-object:cmbTimeBeg:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
       this-object:cmbTimeBeg:FormattingEnabled = true.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar1 as System.Object extent 49 no-undo.
@@ -975,6 +966,7 @@ class utl.gpwdfrm2 inherits Form:
       /*  */
       /* cmbCash */
       /*  */
+      this-object:cmbCash:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
       this-object:cmbCash:FormattingEnabled = true.
       this-object:cmbCash:Location = new System.Drawing.Point(67, 57).
       this-object:cmbCash:Name = "cmbCash".
@@ -984,6 +976,7 @@ class utl.gpwdfrm2 inherits Form:
       /*  */
       /* cmbShop */
       /*  */
+      this-object:cmbShop:DropDownStyle = System.Windows.Forms.ComboBoxStyle:DropDownList.
       this-object:cmbShop:FormattingEnabled = true.
       this-object:cmbShop:Location = new System.Drawing.Point(67, 30).
       this-object:cmbShop:Name = "cmbShop".
@@ -1079,11 +1072,11 @@ class utl.gpwdfrm2 inherits Form:
       this-object:btnExit:UseVisualStyleBackColor = true.
       this-object:btnExit:Click:Subscribe(this-object:btnExit_Click).
       /*  */
-      /* gpwdfrm */
+      /* gpwdfrm2 */
       /*  */
       this-object:ClientSize = new System.Drawing.Size(669, 276).
       this-object:Controls:Add(this-object:panel1).
-      this-object:Name = "gpwdfrm".
+      this-object:Name = "gpwdfrm2".
       this-object:Text = "Генерация пароля для технологического пролива".
       this-object:KeyPress:Subscribe(this-object:gpwdfrm_KeyPress).
       this-object:KeyUp:Subscribe(this-object:gpwdfrm_KeyUp).
@@ -1139,6 +1132,7 @@ class utl.gpwdfrm2 inherits Form:
          btnGenerate:visible     = no
          cmbTimeBeg:Enabled      = no
          cmbTimeEnd:Enabled      = no
+         cmbRegion:Enabled       = no
          cmbShop:Enabled         = no
          cmbCash:Enabled         = no
          dateTimePicker1:Enabled = no
@@ -1166,6 +1160,7 @@ class utl.gpwdfrm2 inherits Form:
          btnToBuff:Visible       = yes
          btnToBuff:Enabled       = yes
          btnFio:enabled          = yes
+         cmbRegion:Enabled       = yes
          
          .
          
@@ -1238,6 +1233,7 @@ class utl.gpwdfrm2 inherits Form:
          iObj:f-host = System.Net.Dns:GetHostName()
          iObj:cash-desk-surr = string(vCash)
          iObj:shop-surr = String(vShop)
+         iObj:region-surr = cmbRegion:text
          iObj:f-date = date(replace(mtbDate:text,",","."))
          iObj:f-time = vNow
          iObj:f-fio = cmbFio:Text
@@ -1261,7 +1257,17 @@ class utl.gpwdfrm2 inherits Form:
          rbtnOnce:Checked = yes. 
       else 
          rbtnInterval:Checked = yes.
-         
+      
+      vNetItem = DataProvider:GetObj(iObj:region-surr).
+      
+      if valid-object(vNetItem) then
+      do:
+         assign
+            cmbRegion:SelectedValue = vNetItem
+            cmbRegion:Text = vNetItem:DisplayName
+            lblRegion:Text = vNetItem:Desctiption
+         .
+      end.   
       vNetItem = DataProvider:GetObj(iObj:shop-surr).
       
       if valid-object(vNetItem) then

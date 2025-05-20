@@ -25,20 +25,36 @@ class utl.gpwdfrm-data2:
    { cmp/str-glbl.i class }
    
    method public "System.Collections.Generic.List<System.Object>" GetList(iSuppParent as char):
-      
       def buffer code for ub.code.
       
       def var vItem as class net-item no-undo. 
       def var vList as class "System.Collections.Generic.List<System.Object>" no-undo.
-       
       vList = new "System.Collections.Generic.List<System.Object>"().
-      for each code where Code.parent = iSuppParent no-lock:
-         
-         vItem = new net-item(Code.code,
-                              substitute ("&2&1&3",{&delim-par},iSuppParent,Code.code),
-                              Code.CodeName).
-         vList:Add(vItem).
-      end.
+      vItem = new net-item("",
+                              "",
+                              "").
+      vList:Add(vItem).
+      
+      if iSuppParent eq ""
+      then
+         return vList.
+      if(num-entries (iSuppParent,{&delim-par}) > 1 )
+      then
+         for each code where Code.parent = iSuppParent  no-lock by int(code.code):
+            
+            vItem = new net-item(Code.code,
+                                 substitute ("&2&1&3",{&delim-par},iSuppParent,Code.code),
+                                 Code.CodeName).
+            vList:Add(vItem).
+         end.
+      else
+         for each code where Code.parent = iSuppParent  no-lock :
+            
+            vItem = new net-item(Code.code,
+                                 substitute ("&2&1&3",{&delim-par},iSuppParent,Code.code),
+                                 Code.CodeName).
+            vList:Add(vItem).
+         end.
       
       return vList.
 
@@ -66,8 +82,13 @@ class utl.gpwdfrm-data2:
       define variable vParent as character no-undo.
       define variable vCode   as character no-undo.
       vPos = r-index (isurr,{&delim-par}).
-      vParent = substring (iSurr,1,vpos - 1).
-      vCode   = substring (iSurr,vpos + 1).
+      if( vPos eq  0)
+      then assign
+         vParent = "cashobj"
+         vCode   = iSurr.
+      else assign
+         vParent = substring (iSurr,1,vpos - 1)
+         vCode   = substring (iSurr,vpos + 1).
       find first code where Code.parent eq vParent
                         and Code.code   eq vcode
       no-lock no-error.
@@ -110,6 +131,7 @@ class utl.gpwdfrm-data2:
       define variable vParent as character no-undo init "CashObj".
       define variable vCode as character no-undo.
       vCode = iComboBoxRegion:text.
+      
       if not can-find(code where 
                       Code.parent = vParent
                   and Code.code   = vCode

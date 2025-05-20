@@ -61,9 +61,15 @@ class utl.repoPwd2 inherits repository:
                Obj:f-beg-time     = btech-prol-pwd.f-beg-time
                Obj:f-end-time     = btech-prol-pwd.f-end-time  
                Obj:cash-desk-surr = btech-prol-pwd.cash-desk-surr 
-               Obj:shop-surr      = btech-prol-pwd.shop-surr
             .
-            
+            if num-entries (btech-prol-pwd.shop-surr,{&delim-par})eq 2 and entry(1,btech-prol-pwd.shop-surr,{&delim-par}) ne  "маг"
+            then assign
+               Obj:region-surr      = entry(1,btech-prol-pwd.shop-surr,{&delim-par})
+               Obj:shop-surr      = entry(2,btech-prol-pwd.shop-surr,{&delim-par})
+            .
+            else
+               Obj:shop-surr      = btech-prol-pwd.shop-surr.
+              
          end.
       end.
       
@@ -106,11 +112,16 @@ class utl.repoPwd2 inherits repository:
             btech-prol-pwd.f-beg-time     = Obj:f-beg-time
             btech-prol-pwd.f-end-time     = Obj:f-end-time
             btech-prol-pwd.cash-desk-surr = Obj:cash-desk-surr
-            btech-prol-pwd.shop-surr      = Obj:shop-surr
-            btech-prol-pwd.f-object-num   = INT(if num-entries (btech-prol-pwd.shop-surr) eq 1 then btech-prol-pwd.shop-surr else ENTRY(2,btech-prol-pwd.shop-surr))
+            btech-prol-pwd.f-object-num   = INT(if num-entries (Obj:shop-surr) eq 1 then Obj:shop-surr else ENTRY(2,Obj:shop-surr))
             btech-prol-pwd.f-cash-num     = INT(if num-entries (btech-prol-pwd.cash-desk-surr) eq 1  then btech-prol-pwd.cash-desk-surr else ENTRY(4,btech-prol-pwd.cash-desk-surr))
          .
+         if Obj:region-surr eq ""
+         then
+            btech-prol-pwd.shop-surr      = Obj:shop-surr.
+         else
+            btech-prol-pwd.shop-surr      = Obj:region-surr  + {&delim-par} + Obj:shop-surr.
          
+               
          run trg/userlog.p (
             input 'tech-prol-pwd'
           , input ("Генерация пароля " + {&delim-key} + string(vId) )
