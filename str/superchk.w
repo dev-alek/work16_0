@@ -1562,18 +1562,18 @@ END.
 &Scoped-define SELF-NAME B-quit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-quit Dialog-Frame
 ON CHOOSE OF B-quit IN FRAME Dialog-Frame /* Отмена */
-UNDO, RETURN.
-/* DO:
+/*UNDO, RETURN.*/
+DO:
 { gbl/stdbtn.i }
   case par-mode:
-    when {&add-def} then do:
-      if available locked_chk-doc then
-       delete locked_chk-doc.
-       p-doc-rec = ?.
+    when {&add-def} then do:          
+      /*if available locked_chk-doc then
+       delete locked_chk-doc.*/       
+       p-doc-rec = ?.       
     end.
-  END CASE.
+  END CASE.  
   p-next-prev = "quit".
-END. */
+END. 
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -3034,7 +3034,7 @@ var-mode = par-mode.
 p-next-prev = '':U.
 n-p: do while p-next-prev = '':U :
 MAIN-BLOCK:
-DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
+DO TRANSACTION ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
   { gbl/getcntxt.i get }
