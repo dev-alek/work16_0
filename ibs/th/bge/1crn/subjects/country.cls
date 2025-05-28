@@ -1,10 +1,10 @@
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: country.cls $
-$Archive: ibs/th/bge/1crn/subjects/country.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных countries из 1С ERPRN
 
@@ -79,7 +79,7 @@ class ibs.th.bge.1crn.subjects.country inherits ibs.th.bge.1crn.subjects.asubjec
 
   method override protected void CheckData ():
 
-    def var v-str as char no-undo.
+/*    def var v-str as char no-undo.
     
     assign
       v-str = "code" when code_ = ?
@@ -92,7 +92,7 @@ class ibs.th.bge.1crn.subjects.country inherits ibs.th.bge.1crn.subjects.asubjec
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
+  */
   end.
   
   method override protected void ClearSub():

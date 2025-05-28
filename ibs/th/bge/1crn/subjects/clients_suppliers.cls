@@ -1,11 +1,11 @@
 
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: clients_suppliers.cls $
-$Archive: ibs/th/bge/1crn/subjects/clients_suppliers.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных clients_suppliers в 1С
 
@@ -47,7 +47,7 @@ class ibs.th.bge.1crn.subjects.clients_suppliers inherits ibs.th.bge.1crn.subjec
  
   method override protected void CheckData ():
 
-    def var v-str as char no-undo.
+/*    def var v-str as char no-undo.
     
     assign
       v-str = v-str + ",code" 
@@ -57,7 +57,7 @@ class ibs.th.bge.1crn.subjects.clients_suppliers inherits ibs.th.bge.1crn.subjec
     if v-str > ''
       then 
       undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
+  */
   end.
   
   method override protected void ClearSub():

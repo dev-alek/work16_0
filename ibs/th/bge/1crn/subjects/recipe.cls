@@ -1,10 +1,10 @@
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: recipe.cls $
-$Archive: ibs/th/bge/1crn/subjects/recipe.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных recipe в 1С
 
@@ -127,6 +127,7 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
   end method.
 
   method override protected void CheckData ():
+    /*
     def var v-str as char no-undo.
     
     assign
@@ -143,7 +144,7 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
     ) .
-
+    */
   end method.
   
   method override protected void ClearSub():

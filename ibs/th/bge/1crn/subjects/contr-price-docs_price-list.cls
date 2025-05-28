@@ -1,11 +1,11 @@
 
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: contr-price-docs_price-list.cls $
-$Archive: ibs/th/bge/1crn/subjects/contr-price-docs_price-list.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных contr-price-docs_price-list в 1С
 
@@ -67,7 +67,7 @@ class ibs.th.bge.1crn.subjects.contr-price-docs_price-list inherits ibs.th.bge.1
 
 
   method override protected void CheckData ():
-    def var v-str as char no-undo.
+   /* def var v-str as char no-undo.
     assign
       v-str = ",gds-code" when gds-code = ?
       v-str = v-str + ",price-sale" when price-sale = ?
@@ -79,6 +79,7 @@ class ibs.th.bge.1crn.subjects.contr-price-docs_price-list inherits ibs.th.bge.1
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
     ) .
+*/
   end.
   
   method override protected void ClearSub():
