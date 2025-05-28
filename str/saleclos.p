@@ -810,11 +810,13 @@ on error undo, return error return-value
                    and ub.sale-doc.doc-kind = {&TDEDT_VOZVRAT_Vnesh_Kass}
                    and ub.sale-doc.chr-office = {&gds-goods}
                    )
-    then RUN compense in this-procedure ( input p-inkas-code
+    then do: 
+        RUN compense in this-procedure ( input p-inkas-code
                                         ,input p-is-tpsi-obj
                                         ,input rest-tpsi) no-error.
-    if error-status:error then undo f-close, return error.
-    else compensed = yes.
+       if error-status:error then undo f-close, return error.
+       compensed = yes.
+    end.
     run set-compensed in p-parent-handle(input compensed) no-error .
     
     run compense-tabak in this-procedure (input p-inkas-code) no-error .
