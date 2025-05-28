@@ -766,7 +766,7 @@ define private temp-table tt-recid-TranFuel no-undo
         /* далее обязательность 0-1 */
 
         /* chk-gds.discnt - скидка относительно цены; чтобы получить скидку по строке - её надо умножать на количество */
-        if (buf_chk-gds.discnt > 0) or (buf_chk-gds.discnt < 0) then
+        if (buf_chk-gds.discnt <> 0) or (v-sum-promo <> 0) then
         insw:write-data-element (  "sum-discnt",
           left-trim( string(buf_chk-gds.doc-qnty * buf_chk-gds.discnt + v-sum-promo, "->>>>>>>>>9.9<<<<<<<<<") )
         ) . /* Скидка на строку товара - с учетом всех скидок на строку и на итог (Число) */
