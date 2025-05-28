@@ -1194,25 +1194,25 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* fCorpko */
       /*  */
       this-object:fCorpko:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "corrPko", true)).
-      this-object:fCorpko:Location = new System.Drawing.Point(67, 20).
+      this-object:fCorpko:Location = new System.Drawing.Point(56, 19).
       this-object:fCorpko:Name = "fCorpko".
-      this-object:fCorpko:Size = new System.Drawing.Size(36, 20).
+      this-object:fCorpko:Size = new System.Drawing.Size(52, 20).
       this-object:fCorpko:TabIndex = 5.
       /*  */
       /* fCorpkoVne */
       /*  */
       this-object:fCorpkoVne:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "corrPkoVne", true)).
-      this-object:fCorpkoVne:Location = new System.Drawing.Point(67, 20).
+      this-object:fCorpkoVne:Location = new System.Drawing.Point(56, 19).
       this-object:fCorpkoVne:Name = "fCorpkoVne".
-      this-object:fCorpkoVne:Size = new System.Drawing.Size(36, 20).
+      this-object:fCorpkoVne:Size = new System.Drawing.Size(52, 20).
       this-object:fCorpkoVne:TabIndex = 5.
       /*  */
       /* fCorpkoAvans */
       /*  */
       this-object:fCorpkoAvans:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "corrPkoAvans", true)).
-      this-object:fCorpkoAvans:Location = new System.Drawing.Point(67, 20).
+      this-object:fCorpkoAvans:Location = new System.Drawing.Point(56, 19).
       this-object:fCorpkoAvans:Name = "fCorpkoAvans".
-      this-object:fCorpkoAvans:Size = new System.Drawing.Size(36, 20).
+      this-object:fCorpkoAvans:Size = new System.Drawing.Size(52, 20).
       this-object:fCorpkoAvans:TabIndex = 5.
       /*  */
       /* fOsnacct */
@@ -1419,9 +1419,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* FcorRko */
       /*  */
       this-object:FcorRko:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "CorrRko", true)).
-      this-object:FcorRko:Location = new System.Drawing.Point(67, 14).
+      this-object:FcorRko:Location = new System.Drawing.Point(58, 14).
       this-object:FcorRko:Name = "FcorRko".
-      this-object:FcorRko:Size = new System.Drawing.Size(36, 20).
+      this-object:FcorRko:Size = new System.Drawing.Size(50, 20).
       this-object:FcorRko:TabIndex = 33.
       /*  */
       /* bChooseCorRko */
@@ -1438,7 +1438,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       this-object:label9:Location = new System.Drawing.Point(4, 14).
       this-object:label9:Name = "label9".
-      this-object:label9:Size = new System.Drawing.Size(57, 23).
+      this-object:label9:Size = new System.Drawing.Size(54, 20).
       this-object:label9:TabIndex = 35.
       this-object:label9:Text = "Кор.счет:".
       this-object:label9:UseCompatibleTextRendering = true.
@@ -1652,7 +1652,7 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /*  */
       this-object:label16:Location = new System.Drawing.Point(4, 19).
       this-object:label16:Name = "label16".
-      this-object:label16:Size = new System.Drawing.Size(61, 23).
+      this-object:label16:Size = new System.Drawing.Size(54, 23).
       this-object:label16:TabIndex = 54.
       this-object:label16:Text = "Кор.счет:".
       this-object:label16:UseCompatibleTextRendering = true.
@@ -1670,9 +1670,9 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* FcorrRKOincas */
       /*  */
       this-object:FcorrRKOincas:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "CorrAcctIncas", true)).
-      this-object:FcorrRKOincas:Location = new System.Drawing.Point(67, 19).
+      this-object:FcorrRKOincas:Location = new System.Drawing.Point(58, 19).
       this-object:FcorrRKOincas:Name = "FcorrRKOincas".
-      this-object:FcorrRKOincas:Size = new System.Drawing.Size(36, 20).
+      this-object:FcorrRKOincas:Size = new System.Drawing.Size(50, 20).
       this-object:FcorrRKOincas:TabIndex = 52.
       /*  */
       /* label17 */
@@ -1959,16 +1959,16 @@ class ibs.th.ref.cashbookfrm inherits Form :
       /* fcorrtrans */
       /*  */
       this-object:fcorrtrans:DataBindings:Add(new System.Windows.Forms.Binding("Text", this-object:bindingSource1, "Corr-transf", true)).
-      this-object:fcorrtrans:Location = new System.Drawing.Point(67, 20).
+      this-object:fcorrtrans:Location = new System.Drawing.Point(58, 20).
       this-object:fcorrtrans:Name = "fcorrtrans".
-      this-object:fcorrtrans:Size = new System.Drawing.Size(36, 20).
+      this-object:fcorrtrans:Size = new System.Drawing.Size(52, 20).
       this-object:fcorrtrans:TabIndex = 5.
       /*  */
       /* label22 */
       /*  */
       this-object:label22:Location = new System.Drawing.Point(4, 20).
       this-object:label22:Name = "label22".
-      this-object:label22:Size = new System.Drawing.Size(57, 23).
+      this-object:label22:Size = new System.Drawing.Size(54, 23).
       this-object:label22:TabIndex = 21.
       this-object:label22:Text = "Кор.счет:".
       this-object:label22:UseCompatibleTextRendering = true.

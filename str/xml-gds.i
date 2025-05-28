@@ -479,7 +479,7 @@ run gds-attr-value in this-procedure (
                                 ,output v-attr-emrc
                                 ,output v-attr-type) no-error.
 run bgelib-tag-put in this-procedure ( input 3, input "Item_EMRC"  , input v-attr-emrc , input 1 ).
-vGdsTabak = no.
+vGdsTabak = if vaction = "D" then yes else no.
 find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
               and buf_goods-attr.attr-code  = {&attr-mark-type} and buf_goods-attr.attr-value <> "not-type" no-error . 
     if available (buf_goods-attr) 
@@ -639,6 +639,14 @@ for each buf_cash-gds no-lock where
          then 
             vBarCode1 = buf_bar-code_cl.b-code.
        end.
+       if vaction = "D" and 
+          v-i-cli-qnty = 999999999 
+       then do:
+          assign
+             v-i-cli-qnty = cash-gds.cli-base-rate 
+             vBarCode1 = cash-gds.main-prt-b-code
+             .
+       end.    
     end.
     else do:
        v-i-cli-qnty = 999999999.
@@ -648,7 +656,16 @@ for each buf_cash-gds no-lock where
          v-i-cli-qnty = min (v-i-cli-qnty, buf_bar-code_cl.cli-base-rate).
          vBarCode2 = buf_bar-code_cl.b-code.
        end.
+       if vaction = "D" and 
+          v-i-cli-qnty = 999999999 
+       then do:
+          assign
+             v-i-cli-qnty = cash-gds.cli-base-rate 
+             vBarCode2 = cash-gds.main-prt-b-code
+             .
+       end.
     end.
+    
     if vGdsTabak then do:
        block-cli:
        do v-i-cli = 1 to 2:

@@ -1,11 +1,11 @@
 
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: ARostovtsev $
-$Date: 2024/04/26 13:37:08 $
-$Workfile: tank-imp_belt-tbl.cls $
-$Archive: ibs/th/bge/1crn/subjects/tank-imp_belt-tbl.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных transport_section в 1С
 
@@ -74,7 +74,7 @@ class ibs.th.bge.1crn.subjects.tank-imp_belt-tbl inherits ibs.th.bge.1crn.subjec
 
  
    method override protected void CheckData ():
-
+      /*
       def var v-str as char no-undo.
     
       assign
@@ -93,7 +93,7 @@ class ibs.th.bge.1crn.subjects.tank-imp_belt-tbl inherits ibs.th.bge.1crn.subjec
       if v-str > ''
          then 
          undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
+      */
    end.
   
    method override protected void ClearSub():

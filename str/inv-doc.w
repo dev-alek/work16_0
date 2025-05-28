@@ -1,10 +1,10 @@
 /*
 
-$Revision: 315b966a6a9b, 3487, rls $
-$Author: BelovaMM $
-$Date: 2023/10/16 15:13:36 $
-$Workfile: inv-doc.w $
-$Archive: str/inv-doc.w $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Документ инвентаризации
 
@@ -56,11 +56,11 @@ define input-output parameter line-rec        as   recid                   no-un
 define input        parameter br-handle       as   handle                  no-undo.
 define input        parameter bf-handle       as   handle                  no-undo.
 
-define variable vss-revision    as character no-undo initial "$Revision: 315b966a6a9b, 3487, rls $":U .
-define variable vss-author      as character no-undo initial "$Author: BelovaMM $":U .
-define variable vss-date        as character no-undo initial "$Date: 2023/10/16 15:13:36 $":U .
-define variable vss-workfile    as character no-undo initial "$Workfile: inv-doc.w $":U .
-define variable vss-archive     as character no-undo initial "$Archive: str/inv-doc.w $":U .
+define variable vss-revision    as character no-undo initial "$Revision$":U .
+define variable vss-author      as character no-undo initial "$Author$":U .
+define variable vss-date        as character no-undo initial "$Date$":U .
+define variable vss-workfile    as character no-undo initial "$Workfile$":U .
+define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo initial "Документ инвентаризации":U .
 
 { cmp/vssrevis.i }
@@ -1198,7 +1198,7 @@ define variable fi-val-header as character format "x(5)":U initial " ВАЛ "
      bgcolor cyan_color fgcolor white_color .
 
 DEFINE VARIABLE invTSD AS LOGICAL INITIAL no 
-     LABEL "ИНУ" 
+     LABEL "ТСД" 
      VIEW-AS TOGGLE-BOX
      SIZE 10.4 BY .81 NO-UNDO.
      
@@ -2655,7 +2655,7 @@ end.
 /*      b-marks:visible = false.*/
     end.
     
-  find first ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code no-error.
+  find first ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code no-lock no-error.
   if available (ub.doc-line)
   then do:
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and

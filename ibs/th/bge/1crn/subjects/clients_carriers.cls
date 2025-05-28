@@ -1,11 +1,11 @@
 
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: clients_carriers.cls $
-$Archive: ibs/th/bge/1crn/subjects/clients_carriers.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных clients_carriers в 1С
 
@@ -46,7 +46,7 @@ class ibs.th.bge.1crn.subjects.clients_carriers inherits ibs.th.bge.1crn.subject
 
  
   method override protected void CheckData ():
-
+    /*
     def var v-str as char no-undo.
     
     assign
@@ -57,7 +57,7 @@ class ibs.th.bge.1crn.subjects.clients_carriers inherits ibs.th.bge.1crn.subject
     if v-str > ''
       then 
       undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
+    */
   end.
   
   method override protected void ClearSub():

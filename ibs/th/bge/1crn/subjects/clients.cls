@@ -1,10 +1,10 @@
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: clients.cls $
-$Archive: ibs/th/bge/1crn/subjects/clients.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных clients (контрагенты) из 1С
 
@@ -175,7 +175,7 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
   end.
   
   method override protected void CheckData ():
-
+   /*
     def var v-str as char no-undo.
     
     assign
@@ -194,7 +194,7 @@ class ibs.th.bge.1crn.subjects.clients inherits ibs.th.bge.1crn.subjects.asubjec
     if v-str > "" then undo, throw new Progress.Lang.AppError(
         substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
         ) .
-
+     */
   end method.
   
   method override protected void ClearSub():

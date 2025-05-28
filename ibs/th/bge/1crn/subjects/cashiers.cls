@@ -1,10 +1,10 @@
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: cashiers.cls $
-$Archive: ibs/th/bge/1crn/subjects/cashiers.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных cashiers в 1С
 
@@ -58,7 +58,7 @@ method override protected void CheckData ():
 
     def var v-str as char no-undo.
     
-    assign
+/*    assign
       v-str = "code" when code_ = ?
       v-str = v-str + ",name" when name_ = ?
       /*v-str = v-str + ",role-code" when role-code = ?*/
@@ -67,7 +67,7 @@ method override protected void CheckData ():
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
+  */
   end.
   
   method override protected void ClearSub():

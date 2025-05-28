@@ -1,10 +1,10 @@
 /*
 
-$Revision: b10ceb95d184, 3329, rls $
-$Author: DRuban $
-$Date: 2023/05/19 13:37:08 $
-$Workfile: bank-accounts_bank.cls $
-$Archive: ibs/th/bge/1crn/subjects/bank-accounts_bank.cls $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Структура данных bank-accounts в 1С
 
@@ -89,7 +89,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
   method override protected void CheckData ():
 
     def var v-str as char no-undo.
-    
+/*    
     assign
       /*v-str = v-str + ",bank-name" 
       when bank-name = ?*/
@@ -110,7 +110,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts_bank inherits ibs.th.bge.1crn.subje
     if v-str > ''
       then 
       undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
-
+  */
   end.
   
   method override protected void ClearSub():
