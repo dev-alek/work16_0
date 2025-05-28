@@ -950,8 +950,8 @@ define variable v-err               as logical    no-undo .
       
       if available ub.CashBook
       then do :
-        tt-fin-doc.cor-acc-value  = ub.CashBook.OsnAcct .
-        tt-fin-doc.cor-acc1-value = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CorrAcctIncas") .
+        tt-fin-doc.cor-acc-value  = mCashBook:getSinglRule(buf_temp-fin-sum.CashBookId, {&by_all}, 0, "CorrAcctIncas") .
+        tt-fin-doc.cor-acc1-value = ub.CashBook.OsnAcct .
         
                
         FIND ub.fin-code-cor-acc WHERE
