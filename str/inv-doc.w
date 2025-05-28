@@ -1198,7 +1198,7 @@ define variable fi-val-header as character format "x(5)":U initial " бюк "
      bgcolor cyan_color fgcolor white_color .
 
 DEFINE VARIABLE invTSD AS LOGICAL INITIAL no 
-     LABEL "хмс" 
+     LABEL "ряд" 
      VIEW-AS TOGGLE-BOX
      SIZE 10.4 BY .81 NO-UNDO.
      

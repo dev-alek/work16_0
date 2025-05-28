@@ -446,8 +446,8 @@ DEFINE BUTTON b-f-ed
 
 DEFINE BUTTON b-to-inv
      LABEL "В инвен.":L
-     tooltip "В инвентаризацию"
-     SIZE 9 BY 1. 
+     SIZE 9 BY 1 
+     TOOLTIP "Объединение документов в итоговую инвентаризацию" . 
 
 DEFINE BUTTON b-to-update
      LABEL "Обнов.":L
@@ -4488,13 +4488,13 @@ else do:
     assign
     varlog = no.
 
-    if t-doc.status_ = {&inquiry} and num-entries(t-doc.doc-code,"/") > 0 then do:
+    if t-doc.status_ = {&inquiry} then do:
     if t-doc.doc-type = {&inventory} then do:
       { gbl/chk-actg.i
         v-cntxt-db-num
         v-cntxt-userid
         {&action-head-code-main}
-        'actn_expense_del-INV-inquiry':U
+        'actn_inventory_del-fact':U
         {&cntxt-object}
         t-doc.host-code
         t-doc.obj-type
@@ -4505,6 +4505,23 @@ else do:
         true
         varlog
       }
+    if not varlog then
+          { gbl/chk-actg.i
+        v-cntxt-db-num
+        v-cntxt-userid
+        {&action-head-code-main}
+        'actn_inventory_delete':U
+        {&cntxt-object}
+        t-doc.host-code
+        t-doc.obj-type
+        t-doc.obj-code
+        0
+        0
+        0
+        true
+        varlog
+      }
+    
     if not varlog then return .
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "ItogInv" and
     ub.inv-doc-attr.attr-value = entry(1,t-doc.doc-code,"/") no-error .
@@ -7685,13 +7702,13 @@ procedure proc-m_to-inv :
       num-entries(buf_trn-doc.doc-code,"/") > 1 and bf_trn-doc.status_ = {&inquiry} and not bf_trn-doc.flag_: 
         if lookup(string(bf_trn-doc.doc-code),list-trn) = 0 then 
         do:
-          misTrnDoc = misTrnDoc + ","  + bf_trn-doc.doc-code .
+          misTrnDoc = misTrnDoc + ", "  + bf_trn-doc.doc-code .
         end.
       end. 
       if misTrnDoc <> "" then 
       do:
-        list-trn <> trim(misTrnDoc,",") .
-        message "По инвентаризации " + trnDocCode + " есть другие загруженные документы." skip
+        list-trn <> trim(misTrnDoc,", ") .
+        message "По инвентаризации " + trnDocCode + " есть другие загруженные документы:" + misTrnDoc skip
           "При продолжении они будут проигнорированы." skip
           "Продолжить?"
           view-as alert-box QUESTION buttons YES-NO update glog.

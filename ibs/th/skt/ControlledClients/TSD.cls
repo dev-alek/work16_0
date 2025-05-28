@@ -238,9 +238,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       no-lock:
 
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and (ub.inv-doc-attr.attr-code = "ItogInv" or ub.inv-doc-attr.attr-code = "ItogInvManual" )no-error .
-
-/*    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "ItogInv" and ub.inv-doc-attr.attr-value = entry(1,buf_trn-doc.doc-code,"/") no-error .*/
     if available (ub.inv-doc-attr) then next .  
+    
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and ub.inv-doc-attr.attr-code = "invMultDevice" and ub.inv-doc-attr.attr-value = string(true) no-error .
+    if not available (ub.inv-doc-attr) and buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then next .  
 
       myflagsDoc:unSetAllFlags().
       case buf_trn-doc.ext-doc-type:
@@ -984,7 +985,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = TempTrnDoc.ext-doc-code and
         ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
       if available (ub.inv-doc-attr) then invMulti = true .
-
+      if invMulti = false then next .  
       if invMulti then 
       do:
         find last ub.trn-doc no-lock where ub.trn-doc.status_ = {&inquiry} and TempTrnDoc.ext-doc-code = entry(1,ub.trn-doc.doc-code,"/") no-error .
