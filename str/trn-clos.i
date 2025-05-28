@@ -337,7 +337,8 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
         for each bf_inv-doc-attr no-LOCK where bf_inv-doc-attr.attr-value = t-doc.doc-code and
           bf_inv-doc-attr.attr-code = 'ManualTSD':
           for each ub.trn-doc exclusive-lock where ub.trn-doc.doc-code = bf_inv-doc-attr.doc-code:
-            docCode = ub.trn-doc.doc-code .
+            if docCode = "" then docCode = ub.trn-doc.doc-code .
+            else docCode = docCode + ";" + ub.trn-doc.doc-code .
             delete ub.trn-doc .
             for first curr_inv-doc-attr EXCLUSIVE-LOCK where curr_inv-doc-attr.attr-code = bf_inv-doc-attr.attr-code and
             curr_inv-doc-attr.doc-code = bf_inv-doc-attr.doc-code:
@@ -345,17 +346,20 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
             end.
           end.
         end.
-        for first bf_inv-doc-attr no-lock where bf_inv-doc-attr.attr-code = 'isManualError' and
-          bf_inv-doc-attr.doc-code = docCode + "-M":
-          message "В системе есть ошибочные накладные инвентаризации." skip
-            "Удалить их?"  view-as alert-box question buttons yes-no update v-ok as logical .
-          if v-ok then 
-          do:
-            for each ub.trn-doc exclusive-lock where ub.trn-doc.doc-code = bf_inv-doc-attr.doc-code:
-              delete ub.trn-doc .
-            end.
-          end.
-        end.     
+        define variable dd as integer no-undo .
+        do dd = 1 to num-entries(docCode,";"):
+              for first bf_inv-doc-attr no-lock where bf_inv-doc-attr.attr-code = 'isManualError' and
+                  bf_inv-doc-attr.doc-code = entry(dd,docCode,";") + "-M" :
+                  message "В системе есть ошибочные накладные инвентаризации." skip
+                      "Удалить их?"  view-as alert-box question buttons yes-no update v-ok as logical .
+                  if v-ok then 
+                  do:
+                      for each ub.trn-doc exclusive-lock where ub.trn-doc.doc-code = bf_inv-doc-attr.doc-code:
+                          delete ub.trn-doc .
+                      end.
+                  end.
+              end. 
+          end.    
       end.
     end.
     if t-doc.status_ = {&permitted} then 
