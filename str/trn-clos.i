@@ -22,6 +22,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 on choose of b-open in frame {&frame-name} /* Откр */
   do:
     define buffer bf_inv-doc-attr for ub.inv-doc-attr .
+    define buffer buf_doc-line-attr for doc-line-attr.
     DEFINE buffer curr_inv-doc-attr for ub.inv-doc-attr .
     {&net-proc}
     assign
@@ -77,6 +78,10 @@ on choose of b-open in frame {&frame-name} /* Откр */
           delete bf_inv-doc-attr .
         end.
       end.
+      for each buf_doc-line-attr exclusive-lock where buf_doc-line-attr.doc-code = t-doc.doc-code and
+          buf_doc-line-attr.attr-code = 'tsd-qnty':
+          delete buf_doc-line-attr .
+        end.
     end.    
     run UI-on in this-procedure ( input "open" ).
     return no-apply.
