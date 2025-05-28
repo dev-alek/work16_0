@@ -805,7 +805,7 @@ PROCEDURE save_update :
     do:
       find first buf_mark_goods where
                  buf_mark_goods.gds-code = v-cis-gds-code no-lock no-error.
-      run dispmessage (substitute("ѕросканированна€ марка принадлежит другому товару, необходимо сканировать товар &1 &2.", buf_mark_goods.gds-code, buf_mark_goods.gds-name)).
+      run dispmessage (substitute("ѕросканированна€ марка принадлежит другому товару, необходимо сканировать товар &1 &2.", buf_goods.gds-code, buf_goods.gds-name)).
       return error.
     end.
     find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
