@@ -322,6 +322,7 @@ define variable bcol                                as   handle                 
 define variable hBrowse                             as   handle                        no-undo.
 define variable ii                                  as   integer                       no-undo.
 define variable v-other                     as   character                     no-undo.
+define variable ItogInv as logical no-undo .
 { gbl/objsrv.i }
    
 DEFINE VARIABLE f-acc as decimal format "->>>,>>>,>>9.999":U
@@ -1981,8 +1982,11 @@ on value-changed of invTSD in frame {&FRAME-NAME} /* ИНУ */
     else 
     do:
       if available (buf_inv-doc-attr) then delete buf_inv-doc-attr .
+      
     end.
-  end.
+run UI-on-browse in this-procedure ( input "":U ) no-error.
+end.
+
 
 ON CHOOSE OF b-attr IN FRAME {&FRAME-NAME} /* Атрибуты */
 DO:
@@ -2117,6 +2121,13 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL {&BROWSE-NAME} {&frame-name}
 ON row-display OF {&BROWSE-NAME} IN FRAME {&frame-name}
 DO:
+    define variable color_ as integer no-undo .
+    
+    if invTSD and (t-doc.status_ = {&wayb} or t-doc.status_ = {&permitted}) and not ItogInv then color_ = white_COLOR .
+    else color_ = black_COLOR .
+
+      assign
+        doc-line.doc-qnty:fgcolor in browse {&BROWSE-NAME} = color_.
 
   if not ((v-is-introduce or v-is-marking) and (t-doc.status_ = {&wayb}))
     then return.
@@ -2127,8 +2138,11 @@ DO:
     then do:
       assign
         bcol[ii]:bgcolor = RED_COLOR.
+        if invTSD and (t-doc.status_ = {&wayb} or t-doc.status_ = {&permitted}) and not ItogInv then doc-line.doc-qnty:fgcolor in browse {&BROWSE-NAME} = RED_COLOR.
+        else doc-line.doc-qnty:fgcolor in browse {&BROWSE-NAME} = black_COLOR.
     end.
   end.
+
 
 END.
 
@@ -2276,6 +2290,7 @@ do while parnext-prev :
         parnext-prev = no.
       return error.
     end.
+
     run fill-mol.
     WAIT-FOR GO OF FRAME {&FRAME-NAME} FOCUS {&BROWSE-NAME}.
   end. /* main-block */
@@ -2298,6 +2313,7 @@ define buffer bf_trn-reason      for ub.trn-reason.
 define variable p-value as character no-undo.
 define variable p-type  as character no-undo.
 
+define buffer bf_inv-doc-attr for ub.inv-doc-attr .
 
   find first ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code no-error.
   if available (ub.doc-line)
@@ -2311,7 +2327,11 @@ define variable p-type  as character no-undo.
         no-error
     }
   end.
-
+    find first bf_inv-doc-attr no-lock where bf_inv-doc-attr.doc-code = t-doc.doc-code and
+      bf_inv-doc-attr.attr-code = 'invMultDevice' no-error . 
+      if available (bf_inv-doc-attr) then invTSD = logical(bf_inv-doc-attr.attr-value) .
+      else invTSD = false .
+      
   /* включение пользовательского интерфейса */
   assign
     varwas-qnty-kg  :visible in browse {&browse-name} = ( is-petrol )
@@ -2327,7 +2347,7 @@ define variable p-type  as character no-undo.
     fi-izlishki-header
     fi-nedostacha-header
     fi-raschet-header
-invTSD
+    invTSD
     with frame {&FRAME-NAME} .
 
   hide loc-art in frame {&FRAME-NAME} loc-name loc-code in frame {&FRAME-NAME}.
@@ -2392,9 +2412,16 @@ invTSD
   if t-doc.status_ = {&wayb}
   and pardoc-mode <> {&lookup} then
   enable invTSD with frame {&FRAME-NAME}.
+  
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
     ub.inv-doc-attr.attr-code = 'invMultDevice' no-error .
     if available (ub.inv-doc-attr) then invTSD = logical(ub.inv-doc-attr.attr-value) .
+    
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+    (ub.inv-doc-attr.attr-code = 'ItogInv' or ub.inv-doc-attr.attr-code = 'ItogInvManual') and
+    ub.inv-doc-attr.attr-value = string(true) no-error .
+    if available (ub.inv-doc-attr) then ItogInv = true .
+    
   display invTSD with frame {&FRAME-NAME}.
 
   /* Читаем атрибуты on-line-ового расчета */
@@ -2898,6 +2925,63 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
   
   apply "entry":U to {&BROWSE-NAME}.
 end procedure. /* UI-On */
+
+procedure ui-on-browse :
+define input parameter parmode as character no-undo .
+
+define variable p-value as character no-undo.
+define variable p-type  as character no-undo.
+
+    disable {&BROWSE-NAME} with frame {&FRAME-NAME}.
+    enable {&BROWSE-NAME} with frame {&FRAME-NAME}.
+
+    extent (bcol) = ?.
+
+    hbrowse = browse {&BROWSE-NAME}:handle.
+    extent (bcol) = hbrowse:num-columns.
+    bcol[1] = hbrowse:first-column.
+    do ii = 1 to extent (bcol).  
+        bcol[ii] = hbrowse:get-browse-column (ii).
+    end.
+
+
+  if parmode <> "no-query":U THEN DO:
+    case dif-only:
+      when "all" then do:
+        &scop dif-cond
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+      when "shortage" then do:
+        &scop dif-cond and ub.doc-line.fact-qnty < 0
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+      when "surplus" then do:
+        &scop dif-cond and ub.doc-line.fact-qnty > 0
+        {&OPEN-QUERY-br-list}.
+      end.
+      when "coincidence" then do:
+        &scop dif-cond and ub.doc-line.fact-qnty = 0
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+      when "markseqdocqnty" then do:
+        def var v-qnty as integer no-undo.
+        def var v-rec-list as character no-undo.
+        for each ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code:
+          run procmarkqntycheckinv (buffer ub.doc-line, output v-qnty).
+          if ub.doc-line.doc-qnty - ub.doc-line.fact-qnty ne v-qnty
+            then v-rec-list = string (recid(ub.doc-line)) + "," + v-rec-list.
+        end.
+        &scop dif-cond and lookup (string (recid (ub.doc-line)), v-rec-list) > 0
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+    end case.
+    if line-rec <> ? then do:
+      reposition {&BROWSE-NAME} to recid line-rec no-error.
+    end.
+  END.
+
+  apply "entry":U to {&BROWSE-NAME}.
+end procedure. /* UI-On-browse */
 
 PROCEDURE init-attr-general :
 /* Атрибуты расходного документа */
