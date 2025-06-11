@@ -117,9 +117,9 @@ first ub.goods no-lock where ~
 &SCOP label-clmn_5-br-list  'Шкала'
 &SCOP clmn_5-br-list        fncnode-name( buffer ub.doc-line, buffer ub.goods )
 &SCOP label-clmn_6-br-list  'Было'
-&SCOP clmn_6-br-list        wasQuant(ub.doc-line.doc-qnty, ub.doc-line.fact-qnty, invTSD)
+&SCOP clmn_6-br-list        ub.doc-line.doc-qnty - ub.doc-line.fact-qnty
 &SCOP label-clmn_7-br-list  'Стало'
-&SCOP clmn_7-br-list        ub.doc-line.doc-qnty
+&SCOP clmn_7-br-list        wasQuant(ub.doc-line.doc-qnty, invTSD)
 &SCOP label-clmn_8-br-list  'Разница'
 &SCOP clmn_8-br-list        ub.doc-line.fact-qnty
 &SCOP label-clmn_9-br-list  'Ед. изм.'
@@ -193,7 +193,7 @@ first ub.goods no-lock where ~
  {&clmn_30-br-list}  @ varare-qnty-kg        column-label {&label-clmn_30-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_6-br-list}   @ varbefore-qnty        column-label {&label-clmn_6-br-list} ~
- {&clmn_7-br-list}                           column-label {&label-clmn_7-br-list} ~
+ {&clmn_7-br-list}   @ vdoc-qnty             column-label {&label-clmn_7-br-list} ~
  {&clmn_8-br-list}                           column-label {&label-clmn_8-br-list} ~
  {&clmn_33-br-list}                          column-label {&label-clmn_33-br-list} format ">9.9%":U ~
  {&clmn_9-br-list}                           column-label {&label-clmn_9-br-list} ~
@@ -280,6 +280,7 @@ define variable varextra-rb                         like ub.doc-line.fact-qnty  
 define variable varmiss-rb                          like ub.doc-line.fact-qnty        no-undo.
 define variable varwast-rb                          like ub.doc-line.price-base       no-undo.
 define variable varunus-wast-rb                     like ub.doc-line.price-base       no-undo.
+define variable vdoc-qnty                           as character no-undo.
 define variable varr-b                              as   character                     no-undo.
 define variable varmiss-without-wast                like ub.doc-line.price-base       no-undo.
 define variable varwastage                          like ub.doc-line.price-base       no-undo.
@@ -810,13 +811,12 @@ function fncwastage returns decimal ( buffer local-doc-line for ub.doc-line,
 end function. /* fncwastage */
 
 function wasQuant returns character ( input doc-qnty as decimal,
-                                      input fact-qnty as decimal,
                                       input invTSD as logical) :
 define variable v-result as character no-undo .                                          
 
     if invTSD and (t-doc.status_ = {&wayb} or t-doc.status_ = {&permitted}) and not ItogInv then v-result = "" .
     else do:
-    v-result = string(doc-qnty - fact-qnty) .
+    v-result = string(doc-qnty) .
     end.
     return v-result .
 end function.
