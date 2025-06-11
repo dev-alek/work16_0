@@ -94,6 +94,7 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
   DO:
     define buffer bf_inv-doc-attr for ub.inv-doc-attr .
     define buffer curr_inv-doc-attr for ub.inv-doc-attr .
+    define buffer del_inv-doc-attr for ub.inv-doc-attr .
     define variable p-ok as logical no-undo .
     define variable ii      as integer   no-undo .
     define variable docCode as character no-undo .
@@ -325,6 +326,7 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
       no-lock where recid( t-doc ) = pardoc-rec.
     if t-doc.status_ = {&fact} then 
     do:  
+
       find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
         ub.inv-doc-attr.attr-code = 'ItogInv' no-error .
       if available(ub.inv-doc-attr) then 
@@ -333,8 +335,14 @@ ON CHOOSE OF b-close IN FRAME {&frame-name} /* Закр */
           if entry(2,ub.trn-doc.doc-code,"/") = "и" then next .
           delete ub.trn-doc .
         end.
+        
+      for each del_inv-doc-attr exclusive-lock where del_inv-doc-attr.attr-value = t-doc.doc-code and
+      del_inv-doc-attr.attr-code = "MultiTSD":
+       find first ub.trn-doc exclusive-lock where ub.trn-doc.doc-code = del_inv-doc-attr.doc-code no-error .
+       if available (ub.trn-doc) then delete ub.trn-doc .
       end.
-
+      end.
+      
       find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
         ub.inv-doc-attr.attr-code = 'ItogInvManual' no-error .
       if available(ub.inv-doc-attr) then 

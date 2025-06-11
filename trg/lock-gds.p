@@ -101,6 +101,10 @@ on error undo main-block, return error
  ub.inv-doc-attr.attr-code = "invMultDevice" and 
  ub.inv-doc-attr.attr-value = string(true) no-error .
  if available(ub.inv-doc-attr) then return .
+ find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
+ ub.inv-doc-attr.attr-code = "correctItogInv" and 
+ ub.inv-doc-attr.attr-value = string(true) no-error .
+ if available(ub.inv-doc-attr) then return .
   def frame a
     "Блокировка товаров на объекте." skip
     num_rec           format ">>>>>>>9"   label "Обработано артикулов" skip

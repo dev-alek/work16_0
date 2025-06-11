@@ -3151,6 +3151,7 @@ procedure lib-trn4_int-open :
     end.
     when {&permitted} then do:
       if  buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then do:
+       if not is-mes(buf_trn-doc.doc-code) then do:
         message
           "Документ №" buf_trn-doc.doc-code skip (2)
           "Открыть инвентаризацию?   Будут потеряны все введенные остатки!" skip
@@ -3181,6 +3182,7 @@ procedure lib-trn4_int-open :
           varlog
         }
         if not varlog then  return error.
+        end.
           for each buf_doc-line exclusive-lock where
                    buf_doc-line.doc-code =  buf_trn-doc.doc-code
                    :
