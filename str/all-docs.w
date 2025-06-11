@@ -7529,6 +7529,7 @@ procedure proc-m_to-inv :
   define buffer buf_trn-doc for ub.trn-doc .
   define buffer bf_trn-doc  for ub.trn-doc .
   define variable ii          as integer   no-undo .
+  define variable ll          as integer   no-undo .
   define variable list-trn    as character no-undo .
   define variable trnDocCode  as character no-undo .
   define variable errorTrnDoc as character no-undo .
@@ -7538,6 +7539,8 @@ procedure proc-m_to-inv :
   define variable isMultiTSD  as logical   no-undo .
   define variable trn-doc     as character no-undo .
   
+  define buffer error_inv-doc-attr for ub.inv-doc-attr .
+  define buffer error_trn-doc for ub.trn-doc .
   do on error undo, return error return-value :
     if not available t-doc and mark-list = "" then 
     do:
@@ -7632,7 +7635,17 @@ procedure proc-m_to-inv :
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = buf_trn-doc.doc-code and
           ub.inv-doc-attr.attr-code = 'isManualError' and ub.inv-doc-attr.attr-value = string(true) no-error .
         if available (ub.inv-doc-attr) then do:
-              message "Выбраны документы, не подлежащие включению в итоговую инвентаризацию! Инвентаризация не создана!"  view-as alert-box.
+        do ll = 1 to num-entries(mark-list):
+          find first error_trn-doc no-lock where recid(error_trn-doc) = integer(entry(ll,mark-list)) no-error .
+          if available (error_trn-doc) then do:  
+          for first error_inv-doc-attr no-lock where error_inv-doc-attr.doc-code = error_trn-doc.doc-code and
+          error_inv-doc-attr.attr-code = 'isManualError' and error_inv-doc-attr.attr-value = string(true):
+          if errorTrnDoc = '' then errorTrnDoc = error_inv-doc-attr.doc-code .
+          else errorTrnDoc = errorTrnDoc + ", "  + error_inv-doc-attr.doc-code .
+          end.  
+          end.
+        end.        
+              message "Выбраны документы" + errorTrnDoc + ", не подлежащие включению в итоговую инвентаризацию! Инвентаризация не создана!"  view-as alert-box.
               mark-list = "" .
               run UI-on in this-procedure ( input "open" ).
               return error.                    
@@ -8712,10 +8725,17 @@ procedure proc-check-inv : /* проверка товаров в инвентаризации на кол-во = 0 и 
             message "Не все товары загружены в документ инвентаризации " + t-doc.doc-code + "!" skip 
                 "Список незагруженных товаров выведен в файл " + v-name-txt + "" skip
                 view-as alert-box.
-        
-            run rep/errors-inv.p (
-                input parparentproc,
-                input table tt-gds-line-err) no-error.
+                
+           if search(v-name-txt) <> ? then os-command no-wait value(v-name-txt).
+           else 
+           do:
+               message "Файл " + v-name-txt + " не найден"
+                   view-as alert-box.
+           end.
+              
+/*            run rep/errors-inv.p (                    */
+/*                input parparentproc,                  */
+/*                input table tt-gds-line-err) no-error.*/
     
         end.
     end. /* do */

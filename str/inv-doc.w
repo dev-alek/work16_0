@@ -117,7 +117,7 @@ first ub.goods no-lock where ~
 &SCOP label-clmn_5-br-list  'Шкала'
 &SCOP clmn_5-br-list        fncnode-name( buffer ub.doc-line, buffer ub.goods )
 &SCOP label-clmn_6-br-list  'Было'
-&SCOP clmn_6-br-list        ub.doc-line.doc-qnty - ub.doc-line.fact-qnty
+&SCOP clmn_6-br-list        wasQuant(ub.doc-line.doc-qnty, ub.doc-line.fact-qnty, invTSD)
 &SCOP label-clmn_7-br-list  'Стало'
 &SCOP clmn_7-br-list        ub.doc-line.doc-qnty
 &SCOP label-clmn_8-br-list  'Разница'
@@ -809,6 +809,19 @@ function fncwastage returns decimal ( buffer local-doc-line for ub.doc-line,
   end.
 end function. /* fncwastage */
 
+function wasQuant returns character ( input doc-qnty as decimal,
+                                      input fact-qnty as decimal,
+                                      input invTSD as logical) :
+define variable v-result as character no-undo .                                          
+
+    if invTSD and (t-doc.status_ = {&wayb} or t-doc.status_ = {&permitted}) and not ItogInv then v-result = "" .
+    else do:
+    v-result = string(doc-qnty - fact-qnty) .
+    end.
+    return v-result .
+end function.
+
+
 function fncnode-name returns character ( buffer local-doc-line for ub.doc-line,
                                           buffer local-goods for ub.goods ) :
   define buffer local-gds-prt for ub.gds-prt.
@@ -1186,6 +1199,12 @@ define variable scl-name like ub.gds-prt.node-name no-undo. /* название шкалы в 
 define query {&BROWSE-NAME} for ub.doc-line except , ub.goods except
 /* FIELDS() */
 .
+
+DEFINE VARIABLE invTSD AS LOGICAL INITIAL no 
+     LABEL "ТСД" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 10.4 BY .81 NO-UNDO.
+     
 define browse {&BROWSE-NAME} query {&BROWSE-NAME} no-lock display
     {&disp-list}
     enable {&clmn_8-br-list}
@@ -1198,10 +1217,7 @@ define variable fi-val-header as character format "x(5)":U initial " ВАЛ "
      size 5.9 by 0.60
      bgcolor cyan_color fgcolor white_color .
 
-DEFINE VARIABLE invTSD AS LOGICAL INITIAL no 
-     LABEL "ТСД" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 10.4 BY .81 NO-UNDO.
+
      
 define variable fi-rub-header as character format "x(5)":U initial " {&abbr_rub_allshift} "
      view-as fill-in
@@ -2121,13 +2137,7 @@ end.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL {&BROWSE-NAME} {&frame-name}
 ON row-display OF {&BROWSE-NAME} IN FRAME {&frame-name}
 DO:
-    define variable color_ as integer no-undo .
-    
-    if invTSD and (t-doc.status_ = {&wayb} or t-doc.status_ = {&permitted}) and not ItogInv then color_ = white_COLOR .
-    else color_ = black_COLOR .
 
-      assign
-        doc-line.doc-qnty:fgcolor in browse {&BROWSE-NAME} = color_.
 
   if not ((v-is-introduce or v-is-marking) and (t-doc.status_ = {&wayb}))
     then return.
@@ -2138,8 +2148,6 @@ DO:
     then do:
       assign
         bcol[ii]:bgcolor = RED_COLOR.
-        if invTSD and (t-doc.status_ = {&wayb} or t-doc.status_ = {&permitted}) and not ItogInv then doc-line.doc-qnty:fgcolor in browse {&BROWSE-NAME} = RED_COLOR.
-        else doc-line.doc-qnty:fgcolor in browse {&BROWSE-NAME} = black_COLOR.
     end.
   end.
 
