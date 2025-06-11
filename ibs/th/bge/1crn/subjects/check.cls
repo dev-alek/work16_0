@@ -1030,10 +1030,12 @@ define private temp-table tt-recid-TranFuel no-undo
     define variable vflg as logical no-undo.
     define variable vflg0 as logical no-undo.
     define variable v-discnt-value-abs as decimal no-undo.
+    define variable v-promocode-list as character no-undo.
     assign
        vflg  = no
        vflg0 = no
        v-discnt-value-abs = 0
+       v-promocode-list = ""
        .
     if not can-find (first chk-discnt where chk-discnt.doc-code = p-buf_chk-doc.doc-code
                                         and chk-discnt.discnt-type       = 23
@@ -1047,6 +1049,11 @@ define private temp-table tt-recid-TranFuel no-undo
                or buf_chk-discnt.value-type = 14)
     break by buf_chk-discnt.doc-code :
       if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section3}) .
+      if buf_chk-discnt.promo-id > "" and 
+         not can-do(v-promocode-list,buf_chk-discnt.promo-id) then 
+            v-promocode-list = if v-promocode-list = "" 
+                                  then buf_chk-discnt.promo-id 
+                                  else v-promocode-list + "," + buf_chk-discnt.promo-id. 
       /*если промоакции и скидка на подитог, необходимо размазать скидку на все товары*/
       if /* buf_chk-discnt.promo-id > "" and */  buf_chk-discnt.line-type = integer({&discnt-sub-total})
       and buf_chk-discnt.record-type = 1 
@@ -1198,7 +1205,7 @@ define private temp-table tt-recid-TranFuel no-undo
         for each buf_chk-discnt no-lock
        where buf_chk-discnt.doc-code    = p-buf_chk-doc.doc-code
          and buf_chk-discnt.record-type = 5
-        
+         and can-do(v-promocode-list, buf_chk-discnt.promo-id)
     break by buf_chk-discnt.doc-code by buf_chk-discnt.promo-id :
       if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section7}) .
         insw:start-element ({&tag-item7}) .
