@@ -3403,7 +3403,6 @@ DO ON ERROR undo _main, return error:
                                           , v-note-compense)
           locked_trn-doc.creid = g#userid
           .
-          validate locked_trn-doc.
           assign
           locked_inkas.PS = locked_inkas.PS + (if not (buf_sale-doc.doc-kind = {&TDEDT_Ras_Vnesh_Kass}
                                                        and
