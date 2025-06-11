@@ -1172,6 +1172,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
           if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
           or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsEDOForType(v-marking-type)
+          or logical(getattrutdlinesex(temp_doc-line.db-num, temp_doc-line.doc-id, temp_doc-line.line-num, "MarkUtdLine", "no"))
           then do:
             fe1_:
             for each ub.utd-marking-lines where 

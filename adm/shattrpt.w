@@ -428,7 +428,7 @@ DEFINE FRAME shattrpt
      f-invclipt-name AT ROW 18 COL 17 COLON-ALIGNED NO-LABEL WIDGET-ID 72
      "метода измерения массы в резервуаре" VIEW-AS TEXT
           SIZE 36 BY .67 AT ROW 29.42 COL 6.13 WIDGET-ID 608
-     "Температура, к которой приводиться плотность и объем °С :" VIEW-AS TEXT
+     "Температура, к которой приводится плотность и объем °С :" VIEW-AS TEXT
           SIZE 58 BY .83 AT ROW 19 COL 3.5 WIDGET-ID 516
      "Алгоритм принятия топлива к учету:" VIEW-AS TEXT
           SIZE 34.5 BY 1 AT ROW 26.08 COL 3.63 WIDGET-ID 116

@@ -119,7 +119,7 @@ first ub.goods no-lock where ~
 &SCOP label-clmn_6-br-list  'Было'
 &SCOP clmn_6-br-list        ub.doc-line.doc-qnty - ub.doc-line.fact-qnty
 &SCOP label-clmn_7-br-list  'Стало'
-&SCOP clmn_7-br-list        ub.doc-line.doc-qnty
+&SCOP clmn_7-br-list        wasQuant(ub.doc-line.doc-qnty, invTSD)
 &SCOP label-clmn_8-br-list  'Разница'
 &SCOP clmn_8-br-list        ub.doc-line.fact-qnty
 &SCOP label-clmn_9-br-list  'Ед. изм.'
@@ -193,7 +193,7 @@ first ub.goods no-lock where ~
  {&clmn_30-br-list}  @ varare-qnty-kg        column-label {&label-clmn_30-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_31-br-list}  @ vardiff-qnty-kg       column-label {&label-clmn_31-br-list} format "->>>,>>>,>>9.999":U ~
  {&clmn_6-br-list}   @ varbefore-qnty        column-label {&label-clmn_6-br-list} ~
- {&clmn_7-br-list}                           column-label {&label-clmn_7-br-list} ~
+ {&clmn_7-br-list}   @ vdoc-qnty             column-label {&label-clmn_7-br-list} ~
  {&clmn_8-br-list}                           column-label {&label-clmn_8-br-list} ~
  {&clmn_33-br-list}                          column-label {&label-clmn_33-br-list} format ">9.9%":U ~
  {&clmn_9-br-list}                           column-label {&label-clmn_9-br-list} ~
@@ -280,6 +280,7 @@ define variable varextra-rb                         like ub.doc-line.fact-qnty  
 define variable varmiss-rb                          like ub.doc-line.fact-qnty        no-undo.
 define variable varwast-rb                          like ub.doc-line.price-base       no-undo.
 define variable varunus-wast-rb                     like ub.doc-line.price-base       no-undo.
+define variable vdoc-qnty                           as character no-undo.
 define variable varr-b                              as   character                     no-undo.
 define variable varmiss-without-wast                like ub.doc-line.price-base       no-undo.
 define variable varwastage                          like ub.doc-line.price-base       no-undo.
@@ -322,6 +323,7 @@ define variable bcol                                as   handle                 
 define variable hBrowse                             as   handle                        no-undo.
 define variable ii                                  as   integer                       no-undo.
 define variable v-other                     as   character                     no-undo.
+define variable ItogInv as logical no-undo .
 { gbl/objsrv.i }
    
 DEFINE VARIABLE f-acc as decimal format "->>>,>>>,>>9.999":U
@@ -808,6 +810,18 @@ function fncwastage returns decimal ( buffer local-doc-line for ub.doc-line,
   end.
 end function. /* fncwastage */
 
+function wasQuant returns character ( input doc-qnty as decimal,
+                                      input invTSD as logical) :
+define variable v-result as character no-undo .                                          
+
+    if invTSD and (t-doc.status_ = {&wayb} or t-doc.status_ = {&permitted}) and not ItogInv then v-result = "" .
+    else do:
+    v-result = string(doc-qnty) .
+    end.
+    return v-result .
+end function.
+
+
 function fncnode-name returns character ( buffer local-doc-line for ub.doc-line,
                                           buffer local-goods for ub.goods ) :
   define buffer local-gds-prt for ub.gds-prt.
@@ -1185,6 +1199,12 @@ define variable scl-name like ub.gds-prt.node-name no-undo. /* название шкалы в 
 define query {&BROWSE-NAME} for ub.doc-line except , ub.goods except
 /* FIELDS() */
 .
+
+DEFINE VARIABLE invTSD AS LOGICAL INITIAL no 
+     LABEL "ТСД" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 10.4 BY .81 NO-UNDO.
+     
 define browse {&BROWSE-NAME} query {&BROWSE-NAME} no-lock display
     {&disp-list}
     enable {&clmn_8-br-list}
@@ -1197,10 +1217,7 @@ define variable fi-val-header as character format "x(5)":U initial " ВАЛ "
      size 5.9 by 0.60
      bgcolor cyan_color fgcolor white_color .
 
-DEFINE VARIABLE invTSD AS LOGICAL INITIAL no 
-     LABEL "ТСД" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 10.4 BY .81 NO-UNDO.
+
      
 define variable fi-rub-header as character format "x(5)":U initial " {&abbr_rub_allshift} "
      view-as fill-in
@@ -1981,8 +1998,11 @@ on value-changed of invTSD in frame {&FRAME-NAME} /* ИНУ */
     else 
     do:
       if available (buf_inv-doc-attr) then delete buf_inv-doc-attr .
+      
     end.
-  end.
+run UI-on-browse in this-procedure ( input "":U ) no-error.
+end.
+
 
 ON CHOOSE OF b-attr IN FRAME {&FRAME-NAME} /* Атрибуты */
 DO:
@@ -2118,6 +2138,7 @@ end.
 ON row-display OF {&BROWSE-NAME} IN FRAME {&frame-name}
 DO:
 
+
   if not ((v-is-introduce or v-is-marking) and (t-doc.status_ = {&wayb}))
     then return.
   
@@ -2129,6 +2150,7 @@ DO:
         bcol[ii]:bgcolor = RED_COLOR.
     end.
   end.
+
 
 END.
 
@@ -2276,6 +2298,7 @@ do while parnext-prev :
         parnext-prev = no.
       return error.
     end.
+
     run fill-mol.
     WAIT-FOR GO OF FRAME {&FRAME-NAME} FOCUS {&BROWSE-NAME}.
   end. /* main-block */
@@ -2298,6 +2321,7 @@ define buffer bf_trn-reason      for ub.trn-reason.
 define variable p-value as character no-undo.
 define variable p-type  as character no-undo.
 
+define buffer bf_inv-doc-attr for ub.inv-doc-attr .
 
   find first ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code no-error.
   if available (ub.doc-line)
@@ -2311,7 +2335,11 @@ define variable p-type  as character no-undo.
         no-error
     }
   end.
-
+    find first bf_inv-doc-attr no-lock where bf_inv-doc-attr.doc-code = t-doc.doc-code and
+      bf_inv-doc-attr.attr-code = 'invMultDevice' no-error . 
+      if available (bf_inv-doc-attr) then invTSD = logical(bf_inv-doc-attr.attr-value) .
+      else invTSD = false .
+      
   /* включение пользовательского интерфейса */
   assign
     varwas-qnty-kg  :visible in browse {&browse-name} = ( is-petrol )
@@ -2327,7 +2355,7 @@ define variable p-type  as character no-undo.
     fi-izlishki-header
     fi-nedostacha-header
     fi-raschet-header
-invTSD
+    invTSD
     with frame {&FRAME-NAME} .
 
   hide loc-art in frame {&FRAME-NAME} loc-name loc-code in frame {&FRAME-NAME}.
@@ -2392,9 +2420,16 @@ invTSD
   if t-doc.status_ = {&wayb}
   and pardoc-mode <> {&lookup} then
   enable invTSD with frame {&FRAME-NAME}.
+  
     find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
     ub.inv-doc-attr.attr-code = 'invMultDevice' no-error .
     if available (ub.inv-doc-attr) then invTSD = logical(ub.inv-doc-attr.attr-value) .
+    
+    find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+    (ub.inv-doc-attr.attr-code = 'ItogInv' or ub.inv-doc-attr.attr-code = 'ItogInvManual') and
+    ub.inv-doc-attr.attr-value = string(true) no-error .
+    if available (ub.inv-doc-attr) then ItogInv = true .
+    
   display invTSD with frame {&FRAME-NAME}.
 
   /* Читаем атрибуты on-line-ового расчета */
@@ -2898,6 +2933,63 @@ if t-doc.fact-date <> ? and t-doc.fact-date < t-doc.doc-date then hide  b-st b-c
   
   apply "entry":U to {&BROWSE-NAME}.
 end procedure. /* UI-On */
+
+procedure ui-on-browse :
+define input parameter parmode as character no-undo .
+
+define variable p-value as character no-undo.
+define variable p-type  as character no-undo.
+
+    disable {&BROWSE-NAME} with frame {&FRAME-NAME}.
+    enable {&BROWSE-NAME} with frame {&FRAME-NAME}.
+
+    extent (bcol) = ?.
+
+    hbrowse = browse {&BROWSE-NAME}:handle.
+    extent (bcol) = hbrowse:num-columns.
+    bcol[1] = hbrowse:first-column.
+    do ii = 1 to extent (bcol).  
+        bcol[ii] = hbrowse:get-browse-column (ii).
+    end.
+
+
+  if parmode <> "no-query":U THEN DO:
+    case dif-only:
+      when "all" then do:
+        &scop dif-cond
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+      when "shortage" then do:
+        &scop dif-cond and ub.doc-line.fact-qnty < 0
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+      when "surplus" then do:
+        &scop dif-cond and ub.doc-line.fact-qnty > 0
+        {&OPEN-QUERY-br-list}.
+      end.
+      when "coincidence" then do:
+        &scop dif-cond and ub.doc-line.fact-qnty = 0
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+      when "markseqdocqnty" then do:
+        def var v-qnty as integer no-undo.
+        def var v-rec-list as character no-undo.
+        for each ub.doc-line no-lock where ub.doc-line.doc-code = t-doc.doc-code:
+          run procmarkqntycheckinv (buffer ub.doc-line, output v-qnty).
+          if ub.doc-line.doc-qnty - ub.doc-line.fact-qnty ne v-qnty
+            then v-rec-list = string (recid(ub.doc-line)) + "," + v-rec-list.
+        end.
+        &scop dif-cond and lookup (string (recid (ub.doc-line)), v-rec-list) > 0
+        {&OPEN-QUERY-br-list} by ub.doc-line.line-num.
+      end.
+    end case.
+    if line-rec <> ? then do:
+      reposition {&BROWSE-NAME} to recid line-rec no-error.
+    end.
+  END.
+
+  apply "entry":U to {&BROWSE-NAME}.
+end procedure. /* UI-On-browse */
 
 PROCEDURE init-attr-general :
 /* Атрибуты расходного документа */
