@@ -30,7 +30,7 @@ on choose of b-open in frame {&frame-name} /* Откр */
       .
     if t-doc.status_ = {&permitted} then 
     do:
-      find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = "ItogInv" and
+      find first ub.inv-doc-attr no-lock where (ub.inv-doc-attr.attr-code = "ItogInv" or ub.inv-doc-attr.attr-code = "ItogInvManual")and
         ub.inv-doc-attr.doc-code = t-doc.doc-code no-error .
       if available (ub.inv-doc-attr) then 
       do:
