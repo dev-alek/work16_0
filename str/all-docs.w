@@ -7622,8 +7622,8 @@ procedure proc-m_to-inv :
           return error.           
       end.
       if t-doc.status_ <> {&fact} then do:
-      message "После создания итогового документа по инвентаризации " + list-trn + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
-        "Внести изменения в полученный документ инвентаризации можно будет только вручную." skip
+      message "После создания итогового документа по инвентаризации " + list-trn + " все включенные документы будут заблокированы." skip
+        "Внести изменения в полученный документ инвентаризации можно будет вручную или с помощью корректирующего документа, созданного на ТСД" skip
         "Продолжить?"
         view-as alert-box QUESTION buttons YES-NO update glog.
       if not glog then 
@@ -7774,10 +7774,10 @@ procedure proc-m_to-inv :
           run UI-on in this-procedure ( input "open" ).
           return .
         end.
-      end.
-        message "После создания итогового документа по инвентаризации " + trnDocCode + " все исходные документы будут заблокированы, а загрузка новых проигнорирована." skip
-          "Внести изменения в полученный документ инвентаризации можно будет только вручную." skip
-          "Продолжить?"
+      end. 
+        message "После создания итогового документа по инвентаризации " + trnDocCode + " все включенные документы будут заблокированы." skip
+        "Внести изменения в полученный документ инвентаризации можно будет вручную или с помощью корректирующего документа, созданного на ТСД" skip
+        "Продолжить?"
           view-as alert-box QUESTION buttons YES-NO update glog.
         if not glog then 
         do:
@@ -8108,7 +8108,7 @@ procedure correctItogInvDoc :
     define variable v-is-marking               as logical   no-undo init false.
     define variable vartime                    as integer   no-undo.
     define variable varmessage                 as character no-undo.
-    define variable p-question                 as logical   no-undo .
+    define variable p-question                 as integer   no-undo .
     define variable p-first                    as logical   no-undo .
     define variable nn                         as integer   no-undo .
     define variable is-Manual                  as logical   no-undo .
@@ -8120,7 +8120,8 @@ procedure correctItogInvDoc :
     do on error undo, return error return-value : 
 
         empty temp-table tt-gds-list .
-
+        empty temp-table tt-gds-list2 .
+        
         find bf_trn-doc where recid(bf_trn-doc) = par-ItogInv .
         pardoc-rec = par-ItogInv.
     
@@ -8129,16 +8130,38 @@ procedure correctItogInvDoc :
 
         if bf_trn-doc.PS = "" then bf_trn-doc.PS      = par-list .
         else bf_trn-doc.PS      = bf_trn-doc.PS + "," + par-list .
-
-
-        message "Итоговую инвентаризацию " + bf_trn-doc.doc-code + " корректировать: " skip
-            "ДА - добавлять кол-во к кол-ву по товару" skip
-            "НЕТ - обновлять кол-во по товару" skip
-            "ОТМЕНА - отказаться от корректировки итоговой инвентаризации"  
-            view-as alert-box question buttons yes-no-cancel update p-question.
-        if p-question = ? then return .
+    if num-entries (par-list) > 1 then do:
+    run gbl/d-askw_inv.w (
+                 input "Корректировка документа"
+                ,input "Корректировка документа итоговой инвентаризации " + bf_trn-doc.doc-code + ". " + {&new-line} + {&new-line} + "При использовании нескольких корректирующих документов одновременно функция «Заменить» не доступна. Для использования функции «Заменить» — вам необходимо применять документы коррекции по одному, последовательно." 
+                ,input "|"
+                ,input "Объединить|Отмена"
+                ,input "Суммировать значения по строкам документа коррекции " + par-list + " и итогового документа инвентаризации|Отказ от корректировки итоговой инвентаризации"
+                ,input 1
+                ,input 2
+                ,output p-question).        
+                if p-question = 2 then p-question = 3 .
+    end.
+    else do:
+    run gbl/d-askw_inv.w (
+                 input "Корректировка документа"
+                ,input "Корректировка документа итоговой инвентаризации " + bf_trn-doc.doc-code 
+                ,input "|"
+                ,input "Объединить|Заменить|Отмена"
+                ,input "Суммировать значения по строкам документа коррекции " + par-list + " и итогового документа инвентаризации|Заменить значения по строкам итогового документа инвентаризации на значения по строкам документа коррекции  " + par-list + "|Отказ от корректировки итоговой инвентаризации"
+                ,input 1
+                ,input 3
+                ,output p-question).
+     end.           
+                
+/*        message "Итоговую инвентаризацию " + bf_trn-doc.doc-code + " корректировать: " skip*/
+/*            "ДА - добавлять кол-во к кол-ву по товару" skip                                */
+/*            "НЕТ - обновлять кол-во по товару" skip                                        */
+/*            "ОТМЕНА - отказаться от корректировки итоговой инвентаризации"                 */
+/*            view-as alert-box question buttons yes-no-cancel update p-question.            */
+/*        if p-question = ? then return .                                                    */
     
-
+if p-question = 3 then return . 
         /*создание атрибута, чтобы не было сообщений, после удалить его*/
         create ub.inv-doc-attr .
         assign
@@ -8253,7 +8276,7 @@ procedure correctItogInvDoc :
             end.
             else 
             do:
-                if p-question then 
+                if p-question = 1 then 
                 do:
                     assign
                         tt-gds-list.doc-qnty  = tt-gds-list.doc-qnty + tt-gds-list2.doc-qnty 
