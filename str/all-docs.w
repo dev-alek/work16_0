@@ -4506,7 +4506,7 @@ else do:
     if t-doc.doc-type = {&inventory} and t-doc.status_ = {&permitted} then do:
         find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
             ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
-    if not available (ub.inv-doc-attr) then return no-apply .   
+    if available (ub.inv-doc-attr) then do:  
     assign
     varlog = no.
     message "После удаления данной инвентаризации все связанные" skip
@@ -4546,6 +4546,7 @@ else do:
     if available (ub.inv-doc-attr) then delete ub.inv-doc-attr .
     return .
     end. 
+    end.
     if t-doc.status_ = {&inquiry} then do:
     if t-doc.doc-type = {&inventory} then do:
       { gbl/chk-actg.i
