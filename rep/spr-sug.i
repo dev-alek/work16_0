@@ -124,7 +124,7 @@ FUNCTION getNunHoses RETURNS integer /*Получение кол-ва рукавов*/
   define buffer buf_doc-line      for ub.doc-line.
   define buffer buf_goods         for ub.goods.
   define buffer buf_doc-line-attr for ub.doc-line-attr.
-  
+
   find first buf_doc-pl where
     buf_doc-pl.out-code = p-doc-code
     no-lock no-error.
@@ -254,7 +254,7 @@ function volumeGF RETURNS decimal /*Объем слитой ЖФ СУГ*/
       for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
         buf_rvs-line.gds-code = buf_goods.gds-code:
                         
-        beforeVol = beforeVol + buf_rvs-line.state-measure-tc-qnty .
+        beforeVol = beforeVol + buf_rvs-line.state-measure-qnty .
 
       end.
     end. 
@@ -264,10 +264,10 @@ function volumeGF RETURNS decimal /*Объем слитой ЖФ СУГ*/
     do:
       for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code and
         buf_rvs-line.gds-code = buf_goods.gds-code :
-        if buf_rvs-line.state-measure-tc-qnty = ? then
+        if buf_rvs-line.state-measure-qnty = ? then
         afterVol = afterVol + buf_rvs-line.state-brutto-qnty .
         else 
-        afterVol = afterVol + buf_rvs-line.state-measure-tc-qnty .
+        afterVol = afterVol + buf_rvs-line.state-measure-qnty .
 
       end.
     end.
@@ -506,7 +506,7 @@ procedure tp-emp:
       then ktp = 6.294  .                   
     if    sug-temp   >   20 
       and mass-prop >   50 and mass-prop <=  60
-      and length    >    0 and length    <=   7
+      and length    >=    0 and length    <=   7
       then ktp = 6.317  .               
     if    sug-temp   >   20 
       and mass-prop >   50 and mass-prop <=  60
@@ -630,7 +630,7 @@ procedure doc-line-value:
     and ub.doc-line-attr.gds-code = gds-code no-error .
   if available (ub.doc-line-attr) then 
   do:
-    attr-value = ub.doc-line-attr.attr-value .
+    if ub.doc-line-attr.attr-value <> ? then attr-value = ub.doc-line-attr.attr-value .
   end.
 
 end procedure .  
