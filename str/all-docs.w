@@ -136,6 +136,7 @@ define variable ii                                  as   integer                
 { str/all-doca.i {&bef-trdcattr-nosn           } }
 { str/all-doca.i {&bef-trdcattr-acc-ship       } }
 { str/all-doca.i {&bef-trdcattr-delivery-date  } }
+{ str/is-mes.i }
 
 define variable v-is-lgas as logical no-undo.
 define variable p-par as character no-undo .
@@ -4470,20 +4471,24 @@ define buffer bf-pri_trn-doc for ub.trn-doc.
 define buffer bf-vzv_trn-doc for ub.trn-doc.
 define buffer bf-irv_trn-doc for ub.trn-doc.
 define buffer bf-irs_trn-doc for ub.trn-doc.
+define buffer bf-del_trn-doc for ub.trn-doc.
 define buffer bf_clients     for ub.clients.
 define buffer bf-c_clients   for ub.clients.
 
 define variable vardel-rec as recid no-undo.
 define variable vardel-doc-code like ub.trn-doc.doc-code no-undo.
 define variable varhold-doc as logical no-undo.
+define variable vDocCode    as character no-undo .
 
 { gbl/hold-doc.i  t-doc.doc-code varhold-doc no-error }
 {&net-del}
 if can-do ({&wayb_inquiry}, t-doc.status_) and t-doc.flag_ then do:
+    if not is-mes(t-doc.doc-code) then do:
     varlog = no.
     message "Редактирование документа уже закончено. Вы уверены, что хотите удалить его?"
                     view-as alert-box question buttons OK-Cancel update varlog.
     {&if-not-true}
+    end.
 end.
 else do:
   if t-doc.status_ = {&fact} then do:
@@ -4498,7 +4503,49 @@ else do:
   else do:
     assign
     varlog = no.
-
+    if t-doc.doc-type = {&inventory} and t-doc.status_ = {&permitted} then do:
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+            ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
+    if not available (ub.inv-doc-attr) then return no-apply .   
+    assign
+    varlog = no.
+    message "После удаления данной инвентаризации все связанные" skip
+            "с ней документы в статусе 'запрос' будут удалены," skip
+            "а отправленные на ТСД не будут обработаны." skip
+            "Вы уверены ?"
+            view-as alert-box question buttons OK-Cancel update varlog.
+    {&if-not-true}     
+    for each bf-del_trn-doc exclusive-lock where bf-del_trn-doc.doc-code begins t-doc.doc-code and
+    bf-del_trn-doc.status_ = {&inquiry}:
+        delete bf-del_trn-doc .
+    end.
+    
+    /*создание атрибута, чтобы не было сообщений, после удалить его*/
+    find first ub.inv-doc-attr exclusive-lock where ub.inv-doc-attr.attr-code = 'notMes' and
+    ub.inv-doc-attr.doc-code = t-doc.doc-code no-error .
+    if not available (ub.inv-doc-attr) then do:
+    create ub.inv-doc-attr .
+    assign
+      ub.inv-doc-attr.doc-code   = t-doc.doc-code
+      ub.inv-doc-attr.attr-code  = 'notMes' .
+    end.
+      ub.inv-doc-attr.attr-value = string(true)
+      .    
+    
+       { gbl/int-open.i
+    parparentproc
+    t-doc.doc-code
+    gds-list
+    no-error
+  }
+  vDocCode = t-doc.doc-code .
+      run proc-b-del no-error .
+  if error-status :error then return no-apply.
+  find first ub.inv-doc-attr exclusive-lock where ub.inv-doc-attr.attr-code = 'notMes' and
+    ub.inv-doc-attr.doc-code = vDocCode no-error .
+    if available (ub.inv-doc-attr) then delete ub.inv-doc-attr .
+    return .
+    end. 
     if t-doc.status_ = {&inquiry} then do:
     if t-doc.doc-type = {&inventory} then do:
       { gbl/chk-actg.i
@@ -4541,11 +4588,11 @@ else do:
       view-as alert-box.
       return.
     end.
-
+    if not is-mes(t-doc.doc-code) then do:
     message "Удалить документ №" t-doc.doc-code "?   Вы уверены ?"
             view-as alert-box question buttons OK-Cancel update varlog.
     {&if-not-true}      
-
+    end.
     end.      
     else do:
       { gbl/chk-actg.i
