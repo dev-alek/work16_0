@@ -248,17 +248,23 @@ do
                 buf_c-chk-doc-attr.corr-user-db-num = g#db-num
                 .
         end.
-     for each buf_marking-chk no-lock where
-             buf_marking-chk.doc-code = buf_chk-doc.doc-code
-    on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
-      create buf_c-marking-chk.
-      buffer-copy buf_marking-chk
-      to buf_c-marking-chk
-      assign
-      buf_c-marking-chk.chip-num = p-chip-num
-      buf_c-marking-chk.corr-user-db-num = g#db-num
-      .
-    end. 
+        for each buf_marking-chk no-lock where
+                 buf_marking-chk.doc-code = buf_chk-doc.doc-code
+                 on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
+                 find first buf_c-marking-chk where  
+                            buf_c-marking-chk.doc-code = buf_chk-doc.doc-code
+                        AND buf_c-marking-chk.chip-num = p-chip-num no-error.
+                 if not available buf_c-marking-chk then do:
+                    create buf_c-marking-chk.
+                    buffer-copy buf_marking-chk
+                    to buf_c-marking-chk
+                    assign
+                    buf_c-marking-chk.chip-num = p-chip-num
+                    buf_c-marking-chk.corr-user-db-num = g#db-num
+                    .
+                 end.
+        end. 
+
     for each buf_chk-gds-attr no-lock where
             buf_chk-gds-attr.doc-code = buf_chk-doc.doc-code
     on error undo _main, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1)):
@@ -495,6 +501,13 @@ do
             AND buf_c-chk-doc-attr.chip-num = p-chip-num:
             delete buf_c-chk-doc-attr.
         end.
+        for each buf_c-marking-chk where
+            buf_c-marking-chk.doc-code = buf_chk-doc.doc-code
+            AND buf_c-marking-chk.chip-num = p-chip-num:
+            delete buf_c-marking-chk.
+        END.
+
         delete buf_c-chk-doc.
+
     end.
 end.
