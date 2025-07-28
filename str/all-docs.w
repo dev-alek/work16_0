@@ -136,6 +136,7 @@ define variable ii                                  as   integer                
 { str/all-doca.i {&bef-trdcattr-nosn           } }
 { str/all-doca.i {&bef-trdcattr-acc-ship       } }
 { str/all-doca.i {&bef-trdcattr-delivery-date  } }
+{ str/is-mes.i }
 
 define variable v-is-lgas as logical no-undo.
 define variable p-par as character no-undo .
@@ -4470,20 +4471,24 @@ define buffer bf-pri_trn-doc for ub.trn-doc.
 define buffer bf-vzv_trn-doc for ub.trn-doc.
 define buffer bf-irv_trn-doc for ub.trn-doc.
 define buffer bf-irs_trn-doc for ub.trn-doc.
+define buffer bf-del_trn-doc for ub.trn-doc.
 define buffer bf_clients     for ub.clients.
 define buffer bf-c_clients   for ub.clients.
 
 define variable vardel-rec as recid no-undo.
 define variable vardel-doc-code like ub.trn-doc.doc-code no-undo.
 define variable varhold-doc as logical no-undo.
+define variable vDocCode    as character no-undo .
 
 { gbl/hold-doc.i  t-doc.doc-code varhold-doc no-error }
 {&net-del}
 if can-do ({&wayb_inquiry}, t-doc.status_) and t-doc.flag_ then do:
+    if not is-mes(t-doc.doc-code) then do:
     varlog = no.
     message "Редактирование документа уже закончено. Вы уверены, что хотите удалить его?"
                     view-as alert-box question buttons OK-Cancel update varlog.
     {&if-not-true}
+    end.
 end.
 else do:
   if t-doc.status_ = {&fact} then do:
@@ -4498,7 +4503,50 @@ else do:
   else do:
     assign
     varlog = no.
-
+    if t-doc.doc-type = {&inventory} and t-doc.status_ = {&permitted} then do:
+        find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.doc-code = t-doc.doc-code and
+            ub.inv-doc-attr.attr-code = 'invMultDevice' and ub.inv-doc-attr.attr-value = string(true) no-error .
+    if available (ub.inv-doc-attr) then do:  
+    assign
+    varlog = no.
+    message "После удаления данной инвентаризации все связанные" skip
+            "с ней документы в статусе 'запрос' будут удалены," skip
+            "а отправленные на ТСД не будут обработаны." skip
+            "Вы уверены ?"
+            view-as alert-box question buttons OK-Cancel update varlog.
+    {&if-not-true}     
+    for each bf-del_trn-doc exclusive-lock where bf-del_trn-doc.doc-code begins t-doc.doc-code and
+    bf-del_trn-doc.status_ = {&inquiry}:
+        delete bf-del_trn-doc .
+    end.
+    
+    /*создание атрибута, чтобы не было сообщений, после удалить его*/
+    find first ub.inv-doc-attr exclusive-lock where ub.inv-doc-attr.attr-code = 'notMes' and
+    ub.inv-doc-attr.doc-code = t-doc.doc-code no-error .
+    if not available (ub.inv-doc-attr) then do:
+    create ub.inv-doc-attr .
+    assign
+      ub.inv-doc-attr.doc-code   = t-doc.doc-code
+      ub.inv-doc-attr.attr-code  = 'notMes' .
+    end.
+      ub.inv-doc-attr.attr-value = string(true)
+      .    
+    
+       { gbl/int-open.i
+    parparentproc
+    t-doc.doc-code
+    gds-list
+    no-error
+  }
+  vDocCode = t-doc.doc-code .
+      run proc-b-del no-error .
+  if error-status :error then return no-apply.
+  find first ub.inv-doc-attr exclusive-lock where ub.inv-doc-attr.attr-code = 'notMes' and
+    ub.inv-doc-attr.doc-code = vDocCode no-error .
+    if available (ub.inv-doc-attr) then delete ub.inv-doc-attr .
+    return .
+    end. 
+    end.
     if t-doc.status_ = {&inquiry} then do:
     if t-doc.doc-type = {&inventory} then do:
       { gbl/chk-actg.i
@@ -4541,11 +4589,11 @@ else do:
       view-as alert-box.
       return.
     end.
-
+    if not is-mes(t-doc.doc-code) then do:
     message "Удалить документ №" t-doc.doc-code "?   Вы уверены ?"
             view-as alert-box question buttons OK-Cancel update varlog.
     {&if-not-true}      
-
+    end.
     end.      
     else do:
       { gbl/chk-actg.i
@@ -8525,7 +8573,16 @@ procedure itogInvDoc :
   define variable line-rec     as recid     no-undo .
   define variable old-line-rec as recid     no-undo .
   define variable chg-qnty     like ub.doc-line.fact-qnty no-undo .
-
+  define variable p-document-fact-order like ub.trn-doc.fact-order no-undo .
+  
+  define variable can-process   as logical no-undo .
+  define variable p-fact-close  as logical no-undo .
+  define variable p-is-news     as logical no-undo .
+  define variable l-reserv-pl-code as logical no-undo .
+  define variable v-rvs-list    as character no-undo .
+  define variable p-check-inv   as logical no-undo init yes.
+  define variable vErrorMessage as character no-undo .
+  
   define buffer buf_trn-doc      for ub.trn-doc .
   define buffer bf_trn-doc       for ub.trn-doc .
   define buffer buf_doc-line     for ub.doc-line .
@@ -8534,7 +8591,12 @@ procedure itogInvDoc :
   define buffer buf_trn-doc-sum  for ub.trn-doc-sum .
   define buffer buf_doc-line-sum for ub.doc-line-sum .
   define buffer bf_inv-doc-attr  for ub.inv-doc-attr .
-  
+  define buffer buf_goods        for ub.goods .
+  define buffer buf_gds-obj      for ub.gds-obj .
+  define buffer buf_rvs-doc      for ub.rvs-doc .
+  define buffer buf_doc-pl       for ub.doc-pl .
+  define buffer inv_doc-line     for ub.doc-line .
+  define buffer inv_trn-doc      for ub.trn-doc .
   do on error undo, return error return-value : 
     find first buf_trn-doc exclusive-lock where buf_trn-doc.doc-code = par-docCode no-error .
     if not available (buf_trn-doc) then do:
@@ -8550,21 +8612,7 @@ procedure itogInvDoc :
     /*Проверка на ошибки в документах запрос*/
     end.
     /*Создание итогового документа в статусе*/
-/*    run doc-code in this-procedure                         */
-/*      (input  "main":u,                                    */
-/*      input  buf_trn-doc.obj-type,                         */
-/*      input  buf_trn-doc.obj-code,                         */
-/*      input  ?,                                            */
-/*      output vardoc-code) no-error.                        */
-/*    if error-status :error then                            */
-/*    do:                                                    */
-/*      message "Ошибка при генерации номера документа." skip*/
-/*        return-value skip                                  */
-/*        error-status :get-message(1)                       */
-/*        view-as alert-box error.                           */
-/*      undo, return error.                                  */
-/*    end.                                                   */
-  
+ 
     create ub.trn-doc .
     assign
       ub.trn-doc.doc-code = vardoc-code 
@@ -8644,8 +8692,8 @@ procedure itogInvDoc :
       delete ub.parts .
       end. 
     /* Проставляем фактическое значение из накладных запрос*/
-    if not buf_trn-doc.status_ = {&wayb} then 
-    do:
+/*    if not buf_trn-doc.status_ = {&wayb} then*/
+/*    do:                                      */
       { gbl/int-clos.i
     parparentproc
     vardoc-code
@@ -8653,7 +8701,7 @@ procedure itogInvDoc :
     no-error
   }
   if error-status:error then return error .
-    end.
+/*    end.*/
     do ii = 1 to num-entries(par-list):
       for each bf_doc-line no-lock where bf_doc-line.doc-code = entry(ii,par-list):
         find first tt-line exclusive-lock where 
@@ -8668,9 +8716,12 @@ procedure itogInvDoc :
         tt-line.fact-qnty = tt-line.fact-qnty + bf_doc-line.doc-qnty .
       end.
     end.
-
+    
     find first buf_trn-doc no-lock where buf_trn-doc.doc-code = vardoc-code .
     pardoc-rec = recid(buf_trn-doc) .
+    
+    /*Проверка на товары в других инвентаризациях*/
+    
     for each tt-line no-lock where tt-line.doc-code = buf_trn-doc.doc-code:
       find first ub.goods no-lock where ub.goods.artic = tt-line.artic and
         ub.goods.prod-code = tt-line.prod-code and
@@ -8712,11 +8763,350 @@ procedure itogInvDoc :
           input {&g#root}).
       end.
 
-      for each gds-obj exclusive-lock where gds-obj.artic = doc-line.artic and
-        gds-obj.prod-code = doc-line.prod-code and
-        gds-obj.prod-type = doc-line.prod-type and
-        gds-obj.obj-code = doc-line.obj-code and
-        gds-obj.obj-type = doc-line.obj-type:
+
+    end.
+
+/*Проверка целостности товара*/
+  for each buf_doc-line no-lock
+    where buf_doc-line.doc-code = vardoc-code
+  :
+
+    find first buf_goods no-lock
+      where buf_goods.artic     = buf_doc-line.artic
+        and buf_goods.prod-type = buf_doc-line.prod-type
+        and buf_goods.prod-code = buf_doc-line.prod-code
+      no-error .
+    if error-status :error then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Не найден товар" skip
+        "Документ" buf_doc-line.doc-code skip
+        "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+      return error .
+    end.
+
+
+    { gbl/gdsobjcr.i
+      buf_doc-line.obj-type
+      buf_doc-line.obj-code
+      buf_doc-line.artic
+      buf_doc-line.prod-type
+      buf_doc-line.prod-code
+      buf_gds-obj
+      no-error
+    }
+    if error-status :error then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Невозможно найти gds-obj" skip
+        error-status :get-message(1) skip
+        return-value skip
+        view-as alert-box error .
+      return error .
+    end.
+
+    find current buf_gds-obj exclusive-lock .
+    release buf_gds-obj .
+
+    /* проверяем целостность товара
+        gds-obj совпадает с корневым prt-obj  и
+        с партиями свободной зоны и зарезервированными из свободной зоны
+    */
+    { gbl/gdscheck.i
+      buf_doc-line.obj-type
+      buf_doc-line.obj-code
+      buf_doc-line.artic
+      buf_doc-line.prod-type
+      buf_doc-line.prod-code
+      ?
+      "''"
+      no-error
+    }
+    if error-status :error then do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Ошибка при проверке целостности товара" skip
+        "Объект" buf_doc-line.obj-type buf_doc-line.obj-code skip
+        "Артикул" buf_doc-line.artic buf_doc-line.prod-type buf_doc-line.prod-code skip
+        error-status :get-message(1) skip
+        view-as alert-box .
+      return error .
+    end.
+
+    { str/gdnorsrv.i
+        buf_doc-line.artic
+        buf_doc-line.prod-type
+        buf_doc-line.prod-code
+        buf_doc-line.doc-code
+        can-process
+        no-error
+    }
+    if ( error-status :error
+         or can-process <> yes
+       )
+      and p-fact-close = true
+      and p-is-news    = false
+    then do:
+      { gbl/gdsobjat.i
+        buf_doc-line.obj-type
+        buf_doc-line.obj-code
+        buf_doc-line.artic
+        buf_doc-line.prod-type
+        buf_doc-line.prod-code
+        "'place-rsrv=request'"
+        l-reserv-pl-code
+        no-error
+      }
+
+      /* проверяем, что товары, которые резервируются по складским местам не заблокированы */
+      if l-reserv-pl-code = yes then do:
+        assign
+          v-rvs-list = "":U
+        .
+        if buf_trn-doc.doc-type = {&income} then do:
+          for each buf_rvs-doc no-lock
+            where buf_rvs-doc.out-code = buf_trn-doc.doc-code
+          on error undo, return error return-value
+          :
+            if v-rvs-list <> "":U then do:
+              assign
+                v-rvs-list = v-rvs-list + {&comma-char}
+              .
+            end.
+            assign
+              v-rvs-list = v-rvs-list + substitute( "&1", buf_rvs-doc.rvs-code )
+            .
+          end.
+        end.
+        for each buf_doc-pl no-lock
+          where buf_doc-pl.obj-type = buf_doc-line.obj-type
+            and buf_doc-pl.obj-code = buf_doc-line.obj-code
+            and buf_doc-pl.out-code = buf_doc-line.doc-code
+            and buf_doc-pl.gds-code = buf_goods.gds-code
+        on error undo, return error return-value
+        :
+          run trg/lockplgd.p
+            ( input buf_doc-line.obj-type  /* p-obj-type          */
+            , input buf_doc-line.obj-code  /* p-obj-code          */
+            , input buf_doc-pl.pl-code     /* p-pl-code           */
+            , input buf_goods.gds-code     /* p-gds-code          */
+            , input "check-rvs-on=false"   /* p-action            */
+            , input v-rvs-list             /* p-no-check-rvs-code */
+            , input false                  /* p-is-berate         */
+            ) no-error .
+          if error-status :error then do:
+            message
+              vss-workfile vss-revision vss-description skip
+              "Товар заблокирован на складском месте" skip
+              error-status :get-message(1) skip
+              return-value skip
+              view-as alert-box error .
+            return error .
+          end. /* error */
+        end. /* for each buf_doc-pl */
+      end. /* if l-reserv-pl-code */
+    end. /* if p-fact-close and not p-is-news */
+
+    if p-check-inv = yes then do:
+      /* проверяем, нет ли инвентаризации "разр +" по данному товару для данного объекта
+      */
+      define variable l-inv-on as logical no-undo .
+      { gbl/gdsobjat.i
+        buf_doc-line.obj-type
+        buf_doc-line.obj-code
+        buf_doc-line.artic
+        buf_doc-line.prod-type
+        buf_doc-line.prod-code
+        "'inv-on=request'"
+        l-inv-on
+        no-error
+      }
+      if error-status :error then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Ошибка получения признака товара на объекте" skip
+          error-status :get-message(1) skip
+          return-value skip
+          view-as alert-box error .
+        return no-apply .
+      end.
+
+      if l-inv-on then do:
+
+        define variable v-doc-with-inv as logical no-undo .
+
+        assign
+          v-doc-with-inv = false
+        .
+
+        for each inv_doc-line no-lock
+          where ( inv_doc-line.obj-type      = buf_doc-line.obj-type
+                  and inv_doc-line.obj-code  = buf_doc-line.obj-code
+                  and inv_doc-line.artic     = buf_doc-line.artic
+                  and inv_doc-line.prod-type = buf_doc-line.prod-type
+                  and inv_doc-line.prod-code = buf_doc-line.prod-code
+                  and inv_doc-line.status_   = {&permitted}
+                )
+             or ( inv_doc-line.obj-type      = buf_doc-line.obj-type
+                  and inv_doc-line.obj-code  = buf_doc-line.obj-code
+                  and inv_doc-line.artic     = buf_doc-line.artic
+                  and inv_doc-line.prod-type = buf_doc-line.prod-type
+                  and inv_doc-line.prod-code = buf_doc-line.prod-code
+                  and inv_doc-line.status_   = {&rvs-froze}
+                )
+        ,first inv_trn-doc no-lock
+          where inv_trn-doc.doc-code     = inv_doc-line.doc-code
+        :
+          if inv_trn-doc.doc-type     = {&inventory}
+            and ( inv_trn-doc.status_    = {&permitted}
+                  or inv_trn-doc.status_ = {&rvs-froze}
+                )
+            and inv_trn-doc.flag_        = true
+            and inv_trn-doc.ext-doc-type = {&TDEDT_Inv}
+          then do:
+            if inv_trn-doc.doc-code begins buf_trn-doc.out-code /* игнорируем документы привязанные к инвентаризации */
+            then do:
+              assign
+                v-doc-with-inv = true
+              .
+            end.
+            else do:
+              find first ub.inv-doc-attr no-lock where ub.inv-doc-attr.attr-code = 'invMultDevice' and
+              ub.inv-doc-attr.doc-code = inv_trn-doc.doc-code and
+              ub.inv-doc-attr.attr-value = string(true) no-error .
+              if not available(ub.inv-doc-attr) then do:
+              vErrorMessage = substitute(
+                "Товар: &1 &2 &3~n&4~nна объекте &5 &6~nсейчас в инвентаризации (Документ № &7).",
+                buf_goods.artic,
+                buf_goods.prod-type,
+                buf_goods.prod-code,
+                buf_goods.gds-name,
+                inv_doc-line.obj-type,
+                inv_doc-line.obj-code,
+                inv_doc-line.doc-code
+              ).
+                message vErrorMessage view-as alert-box information .
+              return error vErrorMessage.
+            end.
+          end.
+        end.
+        end.
+        for each inv_doc-line no-lock
+          where inv_doc-line.obj-type  = buf_doc-line.obj-type
+            and inv_doc-line.obj-code  = buf_doc-line.obj-code
+            and inv_doc-line.artic     = buf_doc-line.artic
+            and inv_doc-line.prod-type = buf_doc-line.prod-type
+            and inv_doc-line.prod-code = buf_doc-line.prod-code
+            and inv_doc-line.status_   = {&wayb}
+        ,first inv_trn-doc no-lock
+          where inv_trn-doc.doc-code     = inv_doc-line.doc-code
+            and inv_trn-doc.doc-type     = {&inventory}
+            and inv_trn-doc.status_      = {&wayb}
+            and inv_trn-doc.flag_        = false
+            and inv_trn-doc.ext-doc-type = {&TDEDT_Corr_Acc_Price}
+        :
+          vErrorMessage = substitute(
+                "Товар: &1 &2 &3~n&4~nна объекте &5 &6~nсейчас в коррекции учетных цен (Документ № &7).",
+                buf_goods.artic,
+                buf_goods.prod-type,
+                buf_goods.prod-code,
+                buf_goods.gds-name,
+                inv_doc-line.obj-type,
+                inv_doc-line.obj-code,
+                inv_doc-line.doc-code
+              ).
+            message vErrorMessage view-as alert-box information .
+          return error vErrorMessage.
+        end.
+        for each inv_doc-line no-lock
+          where inv_doc-line.obj-type  = buf_doc-line.obj-type
+            and inv_doc-line.obj-code  = buf_doc-line.obj-code
+            and inv_doc-line.artic     = buf_doc-line.artic
+            and inv_doc-line.prod-type = buf_doc-line.prod-type
+            and inv_doc-line.prod-code = buf_doc-line.prod-code
+            and inv_doc-line.status_   = {&wayb}
+        ,first inv_trn-doc no-lock
+          where inv_trn-doc.doc-code     = inv_doc-line.doc-code
+            and inv_trn-doc.doc-type     = {&inventory}
+            and inv_trn-doc.status_      = {&wayb}
+            and inv_trn-doc.flag_        = false
+            and inv_trn-doc.ext-doc-type = {&TDEDT_Peresort}
+        : 
+          vErrorMessage = substitute(
+            "Товар :&1 &2 &3~n&4~nна объекте &5 &6~nсейчас в пересортице (Документ № &7).",
+            buf_goods.artic,
+            buf_goods.prod-type,
+            buf_goods.prod-code,
+            buf_goods.gds-name, 
+            inv_doc-line.obj-type, 
+            inv_doc-line.obj-code,
+            inv_doc-line.doc-code).
+              message vErrorMessage view-as alert-box information .
+          return error vErrorMessage.
+        end.
+
+        if v-doc-with-inv = false then do:
+          vErrorMessage = substitute(
+                "Товар: &1 &2 &3~nна объекте &4 &5~nотмечен, как принадлежащий документу с типом инвентаризация~n~
+Документ коррекции учетных цен не найден.",
+                buf_goods.artic,
+                buf_goods.prod-type,
+                buf_goods.prod-code,
+                inv_doc-line.obj-type,
+                inv_doc-line.obj-code
+              ).
+            message vErrorMessage view-as alert-box information .
+          return error vErrorMessage.
+        end.
+      end.
+    end.
+
+
+    if false /* p-check-inv-rasr-minus */ then do:
+
+
+      for each inv_doc-line no-lock
+        where inv_doc-line.obj-type     = buf_doc-line.obj-type
+          and inv_doc-line.obj-code     = buf_doc-line.obj-code
+          and inv_doc-line.artic        = buf_doc-line.artic
+          and inv_doc-line.prod-type    = buf_doc-line.prod-type
+          and inv_doc-line.prod-code    = buf_doc-line.prod-code
+          and inv_doc-line.ext-doc-type = {&TDEDT_Inv}
+          and inv_doc-line.status_      = {&permitted}
+          and inv_doc-line.doc-code     <> vardoc-code
+      ,first ub.trn-doc no-lock
+        where ub.trn-doc.doc-code       = inv_doc-line.doc-code
+          and ub.trn-doc.flag_          = no
+      :
+        vErrorMessage = substitute(
+          "На объекте &1 &2~nсуществует инвентаризация (Документ №&3) по товару~n&4 &5 &6~n&7~nНаходящаяся в статусе ~"&8&9~".",
+          inv_doc-line.obj-type,
+          inv_doc-line.obj-code,
+          inv_doc-line.doc-code,
+          buf_goods.artic,
+          buf_goods.prod-type,
+          buf_goods.prod-code,
+          buf_goods.gds-name,
+          STRING(ub.trn-doc.status_),
+          STRING(ub.trn-doc.flag_, "+/-")
+        ).
+            message vErrorMessage view-as alert-box information .
+        return error vErrorMessage.
+      end.
+    end.
+
+  end. /* for each buf_doc-line */
+    for each buf_doc-line no-lock
+    where buf_doc-line.doc-code = vardoc-code
+  :
+      for each gds-obj exclusive-lock where gds-obj.artic = buf_doc-line.artic and
+        gds-obj.prod-code = buf_doc-line.prod-code and
+        gds-obj.prod-type = buf_doc-line.prod-type and
+        gds-obj.obj-code = buf_doc-line.obj-code and
+        gds-obj.obj-type = buf_doc-line.obj-type:
         assign
           gds-obj.inv-on = true 
           gds-obj.in-ov  = true .

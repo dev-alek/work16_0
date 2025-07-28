@@ -1062,10 +1062,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     else 
     do:
       if not (TempTrnDoc.ext-doc-code begins "TSD-") then do:
-      LogWrite:LogStr = "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code.
-      SomeStr = getStatusXml(false, "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code).
+/*          run gbl/inidebug.p.                                                                    */
+/*      LogWrite:LogStr = "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code.*/
+/*      SomeStr = getStatusXml(true, "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code).*/
   
-      return false.
+      return true.
       end.
         /* Проверка на создание итогового документа */
     find first bf_inv-doc-attr no-lock where bf_inv-doc-attr.attr-code = "ItogInv" and bf_inv-doc-attr.attr-value = TempTrnDoc.ext-doc-code no-error .

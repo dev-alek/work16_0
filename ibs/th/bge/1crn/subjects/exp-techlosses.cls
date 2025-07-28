@@ -71,7 +71,7 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
    define variable blowdown as decimal no-undo format "->>9.99".
    define variable fittings as decimal no-undo format "->>9.99".
    define variable emptying as decimal no-undo format "->>9.99".
-   define variable refund as decimal no-undo format "->>9.99".
+   define variable refund as decimal no-undo format "->>9.99" init ?.
    define variable ctrlvalve as decimal no-undo format "->>9.99".
 
    
@@ -87,17 +87,20 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
       find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "blowdown" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
-      if available (buf_doc-line-attr) then blowdown = decimal(buf_doc-line-attr.attr-value) .
+      if available (buf_doc-line-attr) then if buf_doc-line-attr.attr-value = ? then blowdown = 0 .
+      else blowdown = decimal(buf_doc-line-attr.attr-value) .
 
       find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "fittings" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
-      if available (buf_doc-line-attr) then fittings = decimal(buf_doc-line-attr.attr-value) .
+      if available (buf_doc-line-attr) then if buf_doc-line-attr.attr-value = ? then fittings = 0 .
+      else fittings = decimal(buf_doc-line-attr.attr-value) .
 
             find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "emptying" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
-      if available (buf_doc-line-attr) then emptying = decimal(buf_doc-line-attr.attr-value) .
+      if available (buf_doc-line-attr) then if buf_doc-line-attr.attr-value = ? then emptying = 0 .
+      else emptying = decimal(buf_doc-line-attr.attr-value) .
 
             find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "refund" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
@@ -107,14 +110,15 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
             find first buf_doc-line-attr no-lock where buf_doc-line-attr.attr-code = "ctrlvalve" and
       buf_doc-line-attr.doc-code = buf_doc-line.doc-code and
       buf_doc-line-attr.gds-code = ub.goods.gds-code no-error .
-      if available (buf_doc-line-attr) then ctrlvalve = decimal(buf_doc-line-attr.attr-value) .
+      if available (buf_doc-line-attr) then if buf_doc-line-attr.attr-value = ? then ctrlvalve = 0 .
+      else ctrlvalve = decimal(buf_doc-line-attr.attr-value) .
 
       hSaxWriter:start-element ("techlosse") .
       hSaxWriter:write-data-element (  "out-code":U,     buf_trn-doc.doc-code   ). 
       hSaxWriter:write-data-element (  "tl-blowdown":U,left-trim(string(blowdown,"->>>>>>>>9.999"))).
       hSaxWriter:write-data-element (  "tl-fittings":U,left-trim (string(fittings,"->>>>>>>>9.999"))).
       hSaxWriter:write-data-element (  "tl-emptying":U,left-trim (string(emptying,"->>>>>>>>9.999"))).
-      hSaxWriter:write-data-element (  "tl-refund":U,left-trim (string(refund,"->>>>>>>>9.999"))).
+      if refund <> ? then hSaxWriter:write-data-element (  "tl-refund":U,left-trim (string(refund,"->>>>>>>>9.999"))).
       hSaxWriter:write-data-element (  "tl-ctrlvalve":U,left-trim (string(ctrlvalve,"->>>>>>>>9.999"))).
       hSaxWriter:end-element ("techlosse") .      
 end.
