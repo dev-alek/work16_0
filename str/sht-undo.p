@@ -55,6 +55,7 @@ define variable v-shift-staff-list  as character no-undo .
 define variable v-shift-manager     as character no-undo .
 
 define buffer buf_rvs-doc       for ub.rvs-doc.
+define buffer buf_shift-period  for ub.shift-period .
 
 { gbl/getcntxt.i get }
 /* проверяем, что на объекте включены смены */
@@ -325,6 +326,13 @@ if is-closed then do:
             v-shift-staff-list = v-shift-staff-list + (if v-shift-staff-list = "" then "" else ", ") + ub.shift-staff.name
         .                                  
     end.   
+    for each buf_shift-period exclusive-lock where buf_shift-period.obj-type = buf_shift-obj.obj-type
+                                               and buf_shift-period.obj-code = buf_shift-obj.obj-code
+                                               and buf_shift-period.shift-num = buf_shift-obj.shift-num
+                                               and buf_shift-period.shift-date = buf_shift-obj.shift-date
+    :
+      delete buf_shift-period .
+    end .
     release buf_shift-obj no-error.
     if error-status:error
     then do :

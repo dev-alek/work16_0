@@ -415,7 +415,7 @@ do :
   ,input "b-sel,b-mark"
   ,input r-doc.obj-type
   ,input r-doc.obj-code
-  ,input {&g___object} + {&delim-par} + "test-asi"
+  ,input {&g___object} + {&delim-par} + "only-np"
   ,input-output place-list).
   
   do ii = 1 to num-entries(place-list) :

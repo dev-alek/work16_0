@@ -12595,6 +12595,12 @@ procedure m-is_PM-rep :
   end.
 end procedure.
 
+procedure m-shift-periods :
+  do on error undo, return error return-value  :
+    run rep/g-shift-periods.w (input parparentproc, input v-cntxt-obj-type, input v-cntxt-obj-code ) .
+  end.
+end procedure.
+
 procedure m-reason-exe :
   define variable j_reason-code like ub.trn-reason.reason-code no-undo.
 

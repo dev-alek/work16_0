@@ -1923,6 +1923,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         end .
       end .
       
+      this-object:label44:ForeColor = System.Drawing.Color:Red.
+      
       do ii = 1 to num-entries(v-sec-fields) :
         v-field = entry(ii, v-sec-fields) .
         case v-field :
@@ -5386,8 +5388,8 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
         end.
       end.
       
-      if lookup("pasp-dens", v-sec-fields) > 0
-      then do : 
+/*      if lookup("pasp-dens", v-sec-fields) > 0*/
+/*      then do :                               */
         v-dec = decimal (maskedTextBoxPaspDens:Text) no-error.
         if ( error-status:error or v-dec = 0)
         then do:
@@ -5401,7 +5403,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
           setFocusMaskTextDoc = maskedTextBoxPaspDens.
           return false.
         end .
-      end .
+/*      end .*/
       
       if lookup("list-tank", v-sec-fields) > 0
       then do :

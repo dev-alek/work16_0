@@ -364,6 +364,7 @@ on error undo stop-shift, return error return-value
       undo, return error v-err-msg .
     end.
   end.
+  
   release buf_shift-obj no-error.
   if error-status:error then do:
     if not p-silent then do:
@@ -382,9 +383,54 @@ on error undo stop-shift, return error return-value
                                                 , error-status:get-message(1)
                                                 , return-value ).
 
-end.
+    end.
   end.
 end. /*do transaction*/
+
+/* Контроль плотности НП при реализации на АЗС */
+run str/calc-shift-period.p (input parparentproc,
+                             input p-curr-obj-type,
+                             input p-curr-obj-code,
+                             input v-shift-date,
+                             input v-shift-num)
+                             no-error .
+if error-status:error then do:
+  assign
+    v-err-msg = substitute( "&1.&2&3&2&4&2"
+                            , vss-workfile
+                            , {&new-line}
+                            , return-value
+                            , error-status :get-message (1)
+                          ).
+  if p-silent <> true then do:
+    message
+      v-err-msg
+      view-as alert-box error.
+  end.
+/*  undo, return error v-err-msg .*/
+end.
+
+run str/prep1C-shift-period.p (input parparentproc,
+                               input p-curr-obj-type,
+                               input p-curr-obj-code,
+                               input v-shift-date,
+                               input v-shift-num)
+                               no-error .
+if error-status:error then do:
+  assign
+    v-err-msg = substitute( "&1.&2&3&2&4&2"
+                            , vss-workfile
+                            , {&new-line}
+                            , return-value
+                            , error-status :get-message (1)
+                          ).
+  if p-silent <> true then do:
+    message
+      v-err-msg
+      view-as alert-box error.
+  end.
+/*  undo, return error v-err-msg .*/
+end.
 
 if p-silent <> true then do:
   run mainmenu-disp-mutable in parparentproc (
