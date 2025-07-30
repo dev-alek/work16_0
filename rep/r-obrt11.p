@@ -44,6 +44,8 @@ define input parameter RADIO-AltObj      as integer   no-undo .
 define input parameter AltObj-list       as character no-undo .
 define input parameter sys-key           as character no-undo .
 define input  parameter prod-zen as logical   no-undo .
+define input parameter ShowZero          as logical   no-undo .
+define input parameter ShowZero-2        as logical   no-undo .
 DEFINE INPUT-OUTPUT PARAMETER TABLE FOR gds-prop .
 DEFINE INPUT-OUTPUT PARAMETER TABLE FOR o_temp-parts .
 

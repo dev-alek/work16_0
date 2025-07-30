@@ -134,6 +134,8 @@ define variable v-qntyp      as decimal   no-undo .
                  , input AltObj-list
                  , input sys-key
                  , input prod-zen
+                 , input ShowZero
+                 , input ShowZero-2
                  , input-output table gds-prop
                  , input-output table o_temp-parts) .
 
