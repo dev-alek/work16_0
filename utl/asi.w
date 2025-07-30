@@ -979,6 +979,10 @@ DO:
                 ,input v-cntxt-obj-code
                 ,input {&g___object}
                , input-output place-list).
+  if place-list = "cancel"
+  then do :
+    return no-apply .
+  end .
   if place-list <> '':U then do:
      FIND FIRST ub.place No-LOCK WHERE recid(ub.place) = integer(entry(1, place-list)) NO-ERROR.
      if available ub.place 

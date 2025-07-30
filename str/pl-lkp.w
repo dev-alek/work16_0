@@ -186,6 +186,10 @@ DO:
     , input        {&all}
     , input-output rid-list
     ) .
+  if rid-list = "cancel"
+  then do :
+    return no-apply .
+  end .
   if rid-list <> "":U
   then do:
     find first ub.place no-lock where

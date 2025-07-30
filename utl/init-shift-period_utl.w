@@ -147,6 +147,11 @@ DO:
     end .
     when 2
     then do :
+      if place-list = ""
+      then do :
+        message "Не выбрано ни одного резервуара!" view-as alert-box .
+        return no-apply .
+      end .
       run utl/init-shift-period.p (input place-list) .
     end .
   end case .
@@ -170,6 +175,11 @@ DO:
     ,input v-cntxt-obj-code
     ,input {&g___object} + {&delim-par} + "only-np"
     ,input-output place-list).
+    if place-list = "cancel"
+    then do :
+      place-list = "" .
+      return no-apply .
+    end .
   end .
 END.
 
