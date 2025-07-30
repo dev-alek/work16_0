@@ -2125,8 +2125,11 @@ procedure partcopy-update-parts-delete :
               then do :
                 delete free_marking-lines .
               end .
-              if not can-do({&NOT_CHANGE_MARKING_STS},string(buf_marking.sts)) then
+              if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB and
+                 not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts))
+              then do:
                 buf_marking.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB .
+              end.
             end . 
           end.
 
