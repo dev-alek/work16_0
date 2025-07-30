@@ -417,12 +417,12 @@ PROCEDURE enable_UI :
   else do:
       DISPLAY OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
               cdnAdress registrationKey adressPort login password
-              dopParam waitTime Proxytext
+              dopParam waitTime Proxytext crashSituat
           WITH FRAME Dialog-Frame.
       
       ENABLE B-exit B-quit OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
               cdnAdress registrationKey adressPort login password
-              dopParam waitTime  
+              dopParam waitTime crashSituat
           WITH FRAME Dialog-Frame.
       VIEW FRAME Dialog-Frame.
       assign
@@ -431,7 +431,7 @@ PROCEDURE enable_UI :
          banDate:VISIBLE = false 
          cdnTimeUpdate:VISIBLE = false 
          cdnRepeat:VISIBLE = false 
-         crashSituat:VISIBLE = false 
+         /*crashSituat:VISIBLE = false*/ 
          cdnChange:VISIBLE = false
          UpdateRequest:VISIBLE = false
          
@@ -565,6 +565,10 @@ FOR EACH temp-thbj-attr
     else IF temp-thbj-attr.prop-code = {&attr-gisMT_OflinePswd} THEN DO:
        OflinePswd = fill("*",length (temp-thbj-attr.property-value-character)).
        display OflinePswd with frame {&frame-name} .
+    END.
+    else IF temp-thbj-attr.prop-code = {&attr-gisMT_crashSituat} THEN DO:
+       crashSituat = temp-thbj-attr.property-value-logical.
+       display crashSituat with frame {&frame-name} .
     END.
     else if p-obj-type eq {&db}
     then      

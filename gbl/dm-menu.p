@@ -6714,38 +6714,42 @@ END PROCEDURE.
 PROCEDURE m_disable-online-check :
   define buffer buf_thbj-attr for ub.thbj-attr .
   define variable p-enable-item as logical   no-undo .
+  
   run chk-goods_add(output p-enable-item)no-error .
   if not p-enable-item then return .
+  
   define variable v-current-db-num as integer   no-undo .
   define variable v-obj-db-num     as integer   no-undo .
-
-    { gbl/curdbnum.i
-      v-current-db-num
-    }
+  define variable v-CrashCh        as logical   no-undo .
+  define variable v-ok             as logical   no-undo .
+     
+  message
+   "Внимание! При включении аварии продажа маркированной продукции на кассе происходит без проверки в Честном Знаке! Включить аварию?"    
+    view-as alert-box question buttons yes-no update v-ok .
+  if v-ok <> true then do:
+      return.
+  end.    
   
+  { gbl/curdbnum.i
+    v-current-db-num
+  }
+  v-CrashCh = no.
   if v-current-db-num <> 0 then do:
-  for each ub.shop no-lock where ub.shop.obj-code = v-cntxt-obj-code: 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = v-current-db-num and
-      buf_thbj-attr.obj-type = {&db} and
-      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
-      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
-      buf_thbj-attr.property-value-logical = true .
-    end. 
-  end.
+      /* изменяем локальное значение для данного магазина */
+      run chgCrashSituat (v-current-db-num, {&db}, yes, output v-CrashCh).      
   end.
   else do:
-  for each ub.db no-lock : 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.db.db-num and
-      buf_thbj-attr.obj-type = {&db} and
-      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
-      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
-      buf_thbj-attr.property-value-logical = true .
-    end. 
+      /* меняем значение для всех локальных секций */
+      for each ub.db no-lock :
+        run chgCrashSituat (ub.db.db-num, {&db}, yes, output v-CrashCh).         
+      end.
+      /* меняем глобальное значение */
+      run chgCrashSituat (0, "", yes, output v-CrashCh).
   end.
-  end.
+  if v-CrashCh = yes then
   message "Параметр «Аварийная ситуация в ГИС МТ» - включен"
     view-as alert-box.          
-
+  
 END PROCEDURE.
 
 PROCEDURE m_enable-online-check :
@@ -6755,34 +6759,51 @@ PROCEDURE m_enable-online-check :
   if not p-enable-item then return .
   define variable v-current-db-num as integer   no-undo .
   define variable v-obj-db-num     as integer   no-undo .
+  define variable v-CrashCh        as logical   no-undo .
 
     { gbl/curdbnum.i
       v-current-db-num
     }
-  
+  v-CrashCh = no.
   if v-current-db-num <> 0 then do:
- 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = v-current-db-num and
-      buf_thbj-attr.obj-type = {&db} and
-      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
-      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
-      buf_thbj-attr.property-value-logical = false .
-    end. 
-
+    /* изменяем локальное значение для данного магазина */
+    run chgCrashSituat (v-current-db-num, {&db}, no, output v-CrashCh).     
   end.
   else do:
-  for each ub.db no-lock : 
-    for first buf_thbj-attr exclusive-lock where buf_thbj-attr.obj-code = ub.db.db-num and
-      buf_thbj-attr.obj-type = {&db} and
-      buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
-      buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}:
-      buf_thbj-attr.property-value-logical = false .
-    end. 
+      /* изменяем значение для всех локальных секций */
+      for each ub.db no-lock : 
+        run chgCrashSituat (ub.db.db-num, {&db}, no, output v-CrashCh).         
+      end.
+      /* изменяем глобальное значение */
+      run chgCrashSituat (0, "", no, output v-CrashCh).
   end.
-  end.
+  if v-CrashCh = yes then
   message "Параметр «Аварийная ситуация в ГИС МТ» - выключен"
     view-as alert-box.          
 
+END PROCEDURE.
+
+PROCEDURE chgCrashSituat:
+   define input  parameter iObjCode as integer no-undo.
+   define input  parameter iObjType as character no-undo.
+   define input  parameter iValue   as logical no-undo.
+   define output parameter oChgVal  as logical no-undo. 
+    
+   define buffer buf_thbj-attr for ub.thbj-attr .
+   
+   oChgVal = no.
+    
+   find first buf_thbj-attr exclusive-lock where 
+              buf_thbj-attr.obj-code = iObjCode and
+              buf_thbj-attr.obj-type = iObjType and
+              buf_thbj-attr.upper-prop-code = {&attr-gisMT} and
+              buf_thbj-attr.prop-code = {&attr-gisMT_crashSituat}
+          no-wait no-error.
+   if avail buf_thbj-attr then do:
+      buf_thbj-attr.property-value-logical = iValue .
+      oChgVal = yes.
+   end.
+    
 END PROCEDURE.
 
 PROCEDURE m_obj-sht-all-exe :
