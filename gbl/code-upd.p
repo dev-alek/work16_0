@@ -87,13 +87,14 @@ do mdbver = mdbver_old + 1 to 999999999:
       then
          return error return-value.
       
-      UPD_TBL:
-      do transaction on error undo UPD_TBL, leave UPD_TBL:
+/*      UPD_TBL:                                            */
+/*      do transaction on error undo UPD_TBL, leave UPD_TBL:*/
+/*      убрана транзакция временно по BTS-1809   */
           vimport:updatetablefordb(this-procedure) no-error.
           if error-status:error
           then return error return-value.
             
-      end.
+/*      end.*/
       return-value = "".
       vimport:xmldom-clear().
    end.
