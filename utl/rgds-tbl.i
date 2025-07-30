@@ -19,6 +19,7 @@ Creation date: 12/04/07
 define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
 
 &glob TABLE-RGDS_IGNORE "~
+shift-period~
 ":U
 
 &glob TABLE-RGDS_SPECIAL "~

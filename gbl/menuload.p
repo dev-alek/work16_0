@@ -700,7 +700,7 @@ define variable vss-description as character no-undo init "Информация об объекте
 { gbl/menuload.i
   {&bef-menuload_adm_function}
   "'Повторная инициализация расчета контрольных значений НП по периодам'"
-  "'utl/init-shift-period.w'"
+  "'utl/init-shift-period_utl.w'"
   " "
   " "
   " "

@@ -9,8 +9,9 @@ define variable vBufPlaceAttr as handle no-undo.
 create buffer vBufSysCtrl for table "sys-ctrl".
 vBufSysCtrl:find-first ("" , no-lock) no-error.
 
-if vBufSysCtrl:available
-and vBufSysCtrl:buffer-field("db-num"):buffer-value() eq 0
+if (vBufSysCtrl:available
+and vBufSysCtrl:buffer-field("db-num"):buffer-value() eq 0)
+or not vBufSysCtrl:available
 then do :
   oOK = true .
   delete object vBufSysCtrl .

@@ -1138,6 +1138,7 @@
 &glob shift-cash-attr_primary_key obj-type obj-code cash-num shift-date shift-num src-shift-name attr-code 
 &glob shift-obj_primary_key obj-type obj-code shift-date shift-num 
 &glob shift-obj-attr_primary_key obj-type obj-code shift-date shift-num attr-code 
+&glob shift-period_primary_key obj-type obj-code shift-date shift-num period-num pl-code gds-code
 &glob shift-staff_primary_key obj-type obj-code shift-date shift-num next-shift psn-num 
 &glob shift-staff-attr_primary_key obj-type obj-code shift-date shift-num next-shift psn-num attr-code 
 &glob shop_primary_key obj-code 
