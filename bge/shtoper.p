@@ -1200,7 +1200,7 @@ on error undo, return error
         run wp-xmltagput( input 4, "tprProPLCode"  , input string( buf_temp_techPro.pl-code     ), input 0 ).
         run wp-xmltagput( input 4, "tprProQnty"    , input string( buf_temp_techPro.qnty        ), input 0 ).
         run wp-xmltagput( input 4, "tprProCliQnty" , input string( buf_temp_techPro.cli-qnty    ), input 0 ).
-        run wp-xmltagput( input 4, "tprProDensity" , input string( buf_temp_techPro.state-density, ">>>>>9.99"), input 0 ).
+        run wp-xmltagput( input 4, "tprProDensity" , input string( buf_temp_techPro.state-density, ">>>>>>>>>9.99"), input 0 ).
         run wp-xmltagclose( input 3, input "tprProPL").
 
         for each buf_temp_chk-doc where buf_temp_chk-doc.gds-code = buf_temp_techPro.gds-code and buf_temp_chk-doc.chk-type = integer({&rcpt-tech-refuell}) :
@@ -1481,7 +1481,7 @@ procedure export-techChk :
       for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
         run wp-xmltagopen( input 4, input "CheckGds", input "" ).
         run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
-        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>>>>>9.99"       ), input 0 ).
         run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
         run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
         run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
@@ -1505,7 +1505,7 @@ procedure export-techChk :
         run wp-xmltagopen( input 4, input "CheckGds", input "" ).
         run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
         run wp-xmltagput( input 5, "ChkReason"  , input string( buf_temp_chk-gds.sbros-type   ), input 0 ).
-        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>>>>>9.99"       ), input 0 ).
         run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
         run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
         run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
@@ -1529,7 +1529,7 @@ procedure export-techChk :
       for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
         run wp-xmltagopen( input 4, input "CheckGds", input "" ).
         run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
-        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>>>>>9.99"       ), input 0 ).
         run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
         run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
         run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
@@ -1553,7 +1553,7 @@ procedure export-techChk :
       for each buf_temp_chk-gds where buf_temp_chk-gds.doc-code = buf_temp_chk-doc.doc-code:
         run wp-xmltagopen( input 4, input "CheckGds", input "" ).
         run wp-xmltagput( input 5, "ChkGds-code", input string( buf_temp_chk-gds.gds-code   ), input 0 ).
-        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>9.99"       ), input 0 ).
+        run wp-xmltagput( input 5, "ChkQnty"    , input string( buf_temp_chk-gds.qnty,  "->>>>>>>>>9.99"       ), input 0 ).
         run wp-xmltagput( input 5, "ChkTRK"     , input string( buf_temp_chk-gds.pump       ), input 0 ).
         run wp-xmltagput( input 5, "ChkNozzle"  , input string( buf_temp_chk-gds.nozzle-code), input 0 ).
         run wp-xmltagput( input 5, "ChkPL"      , input string( buf_temp_chk-gds.pl-code    ), input 2 ).
