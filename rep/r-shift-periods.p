@@ -19,6 +19,7 @@ block-level on error undo, throw.
 define temp-table tt-shift no-undo
   field shift-date like ub.shift-obj.shift-date
   field shift-num  like ub.shift-obj.shift-num
+  field shift-name like ub.shift-obj.shift-name
 .  
   
 define temp-table tt-pl-gds no-undo
@@ -50,6 +51,7 @@ define temp-table tt-shift-pl-gds no-undo
   field num as integer
   field shift-date like ub.shift-period.shift-date
   field shift-num like ub.shift-period.shift-num
+  field shift-name like ub.shift-obj.shift-name
   field pl-code like ub.shift-period.pl-code
   field loc1 like ub.place.loc1
   field gds-code like ub.shift-period.gds-code
@@ -95,7 +97,7 @@ run PrintRep .
 procedure fillTT :
   define variable v-num as integer no-undo init 0 .
   
-  for each tt-shift no-lock :
+  for each tt-shift no-lock by tt-shift.shift-date desc by tt-shift.shift-num :
     for each buf_shift-period no-lock where buf_shift-period.shift-date = tt-shift.shift-date
                                         and buf_shift-period.shift-num = tt-shift.shift-num
     :
@@ -118,6 +120,7 @@ procedure fillTT :
           tt-shift-pl-gds.num        = v-num
           tt-shift-pl-gds.shift-date = buf_shift-period.shift-date
           tt-shift-pl-gds.shift-num  = buf_shift-period.shift-num
+          tt-shift-pl-gds.shift-name = tt-shift.shift-name
           tt-shift-pl-gds.pl-code    = buf_shift-period.pl-code
           tt-shift-pl-gds.loc1       = tt-pl-gds.loc1
           tt-shift-pl-gds.gds-code   = buf_shift-period.gds-code
@@ -167,7 +170,7 @@ procedure PrintRep :
     v-period = "Смены: " .
     
     for each tt-shift :
-      v-period = v-period + string(tt-shift.shift-num) + " от " + string(tt-shift.shift-date, "99.99.9999") + ", " .
+      v-period = v-period + string(tt-shift.shift-num) + " (" + tt-shift.shift-name + ") от " + string(tt-shift.shift-date, "99.99.9999") + ", " .
     end .
     v-period = trim(v-period, ", ") .
     
@@ -282,7 +285,7 @@ procedure PrintRep :
       '<TR>' skip
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">№ п/п</TH>' skip
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Дата смены</TH>' skip
-      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Номер смены</TH>' skip
+      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Порядок и номер смены</TH>' skip
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">№ Резервуара</TH>' skip
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Наименование топлива</TH>' skip
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Период в смене</TH>' skip
@@ -321,7 +324,7 @@ procedure PrintRep :
         '<TR>' skip
         '<TD text_wrap="true" rowspan="' + string(tt-shift-pl-gds.num-periods) + '" style="text-align: center;">' + string(tt-shift-pl-gds.num) + '</TD>' skip
         '<TD text_wrap="true" rowspan="' + string(tt-shift-pl-gds.num-periods) + '" style="text-align: center;">' + string(tt-shift-pl-gds.shift-date, "99.99.9999") + '</TD>' skip
-        '<TD text_wrap="true" rowspan="' + string(tt-shift-pl-gds.num-periods) + '" style="text-align: center;">' + string(tt-shift-pl-gds.shift-num) + '</TD>' skip
+        '<TD text_wrap="true" rowspan="' + string(tt-shift-pl-gds.num-periods) + '" style="text-align: center;">' + string(tt-shift-pl-gds.shift-num) + " (" + tt-shift-pl-gds.shift-name + ")" + '</TD>' skip
         '<TD text_wrap="true" rowspan="' + string(tt-shift-pl-gds.num-periods) + '" style="text-align: center;">' + string(tt-shift-pl-gds.loc1) + '</TD>' skip
         '<TD text_wrap="true" rowspan="' + string(tt-shift-pl-gds.num-periods) + '" style="text-align: center;">' + string(tt-shift-pl-gds.gds-name) + '</TD>' skip
       .

@@ -834,6 +834,18 @@ ON CHOOSE OF b-sel IN FRAME d-pl-list /* Выбор  */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-quit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit d-pl-list
+ON CHOOSE OF b-quit IN FRAME d-pl-list /* Выход */
+  DO:
+    
+      p-rid-list = "cancel" .
+
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME m_obj-sched
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_obj-sched d-pl-list
 ON CHOOSE OF menu-item m_obj-sched in menu menu-b-atd /* - */

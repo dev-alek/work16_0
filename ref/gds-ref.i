@@ -1391,6 +1391,7 @@ frame {&FRAME-NAME} :title = for-title
 if g-list = "ptrl"
 or g-list = "lgas"
 or g-list = "ptrlsug"
+or g-list = "only-np"
 then do:
   assign
   rs-list = {&all}

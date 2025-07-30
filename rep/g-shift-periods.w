@@ -28,16 +28,19 @@
 define temp-table tt-shift no-undo
   field shift-date like ub.shift-obj.shift-date
   field shift-num  like ub.shift-obj.shift-num
+  field shift-name like ub.shift-obj.shift-name
 .  
 
 define temp-table tt-shift-1 no-undo
   field shift-date like ub.shift-obj.shift-date
   field shift-num  like ub.shift-obj.shift-num
+  field shift-name like ub.shift-obj.shift-name
 .  
 
 define temp-table tt-shift-2 no-undo
   field shift-date like ub.shift-obj.shift-date
   field shift-num  like ub.shift-obj.shift-num
+  field shift-name like ub.shift-obj.shift-name
 . 
 
 define temp-table tt-pl-gds no-undo
@@ -135,6 +138,19 @@ b-goods rs-place b-place
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
+/* ************************  Function Prototypes ********************** */
+
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD shift-name Dialog-Frame
+function shift-name returns character 
+  ( input p-shift-num like ub.shift-obj.shift-num, input p-shift-name  like ub.shift-obj.shift-name) forward.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
 
 
 /* ***********************  Control Definitions  ********************** */
@@ -175,7 +191,7 @@ DEFINE BUTTON Btn_Cancel AUTO-END-KEY
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
-DEFINE BUTTON Btn_OK AUTO-GO 
+DEFINE BUTTON Btn_OK
      LABEL "Выполнить" 
      SIZE 15 BY 1.14
      BGCOLOR 8 .
@@ -246,7 +262,7 @@ DEFINE BROWSE br-shift
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-shift Dialog-Frame _FREEFORM
   QUERY br-shift DISPLAY
       tt-shift.shift-date format "99.99.9999" column-label "Дата"
-    tt-shift.shift-num format ">9" column-label "Номер"
+      shift-name (tt-shift.shift-num, tt-shift.shift-name) format "X(6)" column-label "Номер"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 26.4 BY 5.19 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
@@ -373,36 +389,90 @@ END.
 ON CHOOSE OF b-place IN FRAME Dialog-Frame /* b-place */
 DO:
   define variable ii as integer no-undo .
+  define variable v-value as character no-undo .
+  define variable v-type as character no-undo .
+  define variable v-ok as logical no-undo .
+  define variable tmp-pl-list as character no-undo .
   
   assign rs-place = 2 .
   display rs-place with frame {&frame-name} .
   
+  assign tmp-pl-list = pl-recid-list .
   empty temp-table tt-place .
-  if rs-goods = 1
+  run ref/pl-list.w (
+     input parparentproc
+    ,input "b-sel,b-mark"
+    ,input p-obj-type
+    ,input p-obj-code
+    ,input {&g___object} + {&delim-par} + "np-list"
+    ,input-output tmp-pl-list).
+  if tmp-pl-list = "cancel"
   then do :
-    run ref/pl-list.w (
-       input parparentproc
-      ,input "b-sel,b-mark"
-      ,input p-obj-type
-      ,input p-obj-code
-      ,input {&g___object} + {&delim-par} + "only-np"
-      ,input-output pl-recid-list).
+    return no-apply .
   end .
-  else do :
-    run ref/pl-list.w (
-       input parparentproc
-      ,input "b-sel,b-mark"
-      ,input p-obj-type
-      ,input p-obj-code
-      ,input {&g___object} + {&delim-par} + "np-list"
-      ,input-output pl-recid-list).
-  end .
+  assign pl-recid-list = tmp-pl-list .
+  
   do ii = 1 to num-entries(pl-recid-list) :
     find first buf_place no-lock where recid(buf_place) = integer(entry(ii, pl-recid-list)) no-error .
     if available buf_place
     then do :
       create tt-place .
       assign tt-place.pl-code = buf_place.pl-code .
+    end .
+  end .
+  empty temp-table tt-pl-gds .
+  do ii = 1 to num-entries(gds-recid-list) :
+    find first buf_goods no-lock where recid(buf_goods) = integer(entry(ii, gds-recid-list)) no-error .
+    if available buf_goods
+    then do :
+      for each buf_pl-gds no-lock where buf_pl-gds.gds-code = buf_goods.gds-code
+                                    and buf_pl-gds.obj-type = p-obj-type
+                                    and buf_pl-gds.obj-code = p-obj-code,
+        first buf_place where buf_place.pl-code = buf_pl-gds.pl-code
+      :
+        &scop proc-name gds-attr-value
+        {&run_proc_attr-lib}
+          (input  buf_pl-gds.gds-code
+          ,input  {&attr-fuel-type}
+          ,output v-value
+          ,output v-type) no-error.
+        if v-value = "lgas"
+        or v-value = "metan"
+        or v-value = "propan"
+        then next .
+        
+        run placelib_get-attr  ( input {&place-com-tanks}
+                                ,input buf_place.obj-code
+                                ,input buf_place.obj-type
+                                ,input buf_place.pl-code
+                                ,output v-value
+                                ,output v-ok      ) no-error.
+        if v-ok
+        and v-value > ""
+        then do :
+          run placelib_get-attr  ( input {&place-is-main}
+                                  ,input buf_place.obj-code
+                                  ,input buf_place.obj-type
+                                  ,input buf_place.pl-code
+                                  ,output v-value
+                                  ,output v-ok      ) no-error.
+          if v-ok
+          and v-value > ""
+          and logical(v-value)
+          then do :
+          end .
+          else do :
+            next .
+          end .
+        end .
+        create tt-pl-gds .
+        assign
+          tt-pl-gds.pl-code  = buf_place.pl-code
+          tt-pl-gds.loc1     = buf_place.loc1
+          tt-pl-gds.gds-code = buf_goods.gds-code
+          tt-pl-gds.gds-name = buf_goods.gds-name
+        .
+      end .
     end .
   end .
   for each tt-pl-gds :
@@ -462,6 +532,7 @@ DO:
   assign
     tt-shift-1.shift-date = buf_shift-obj.shift-date
     tt-shift-1.shift-num  = buf_shift-obj.shift-num
+    tt-shift-1.shift-name = buf_shift-obj.shift-name
     num-rvs = 1
   .
   
@@ -478,6 +549,7 @@ DO:
     assign
       tt-shift-1.shift-date = prev_shift-obj.shift-date
       tt-shift-1.shift-num  = prev_shift-obj.shift-num
+      tt-shift-1.shift-name = prev_shift-obj.shift-name
       num-rvs = num-rvs + 1
     .
     if num-rvs = 7
@@ -541,7 +613,13 @@ DO:
       assign
         tt-shift-2.shift-date = buf_shift-obj.shift-date
         tt-shift-2.shift-num  = buf_shift-obj.shift-num
+        tt-shift-2.shift-name = buf_shift-obj.shift-name
       .
+    end .
+    if available buf_shift-obj
+    and not buf_shift-obj.status_ = {&sht-closed}
+    then do :
+      message "Выберите закрытую смену!" view-as alert-box .
     end .
   end .
   empty temp-table tt-shift .
@@ -759,6 +837,16 @@ DO:
         end .
       end .
     end .
+    assign pl-recid-list = "" .
+    for each tt-pl-gds no-lock break by tt-pl-gds.pl-code :
+      if first-of(tt-pl-gds.pl-code)
+      then do :
+        for first place where place.pl-code = tt-pl-gds.pl-code :
+          assign pl-recid-list = pl-recid-list + string(recid(place)) + "," .
+        end .
+      end .
+    end .
+    assign pl-recid-list = trim(pl-recid-list, ",") .
   end .
   
   if rs-place = 2
@@ -994,6 +1082,7 @@ PROCEDURE init_ :
   assign
     tt-shift-1.shift-date = buf_shift-obj.shift-date
     tt-shift-1.shift-num  = buf_shift-obj.shift-num
+    tt-shift-1.shift-name = buf_shift-obj.shift-name
     shoosed-shift-recid = recid(buf_shift-obj)
     num-rvs = 1
   .
@@ -1011,6 +1100,7 @@ PROCEDURE init_ :
     assign
       tt-shift-1.shift-date = prev_shift-obj.shift-date
       tt-shift-1.shift-num  = prev_shift-obj.shift-num
+      tt-shift-1.shift-name = prev_shift-obj.shift-name
       num-rvs = num-rvs + 1
     .
     if num-rvs = 7
@@ -1051,7 +1141,7 @@ PROCEDURE select-gds :
                      input parparentproc
                     ,input "b-mark,b-sel"
                     ,input {&all}           /*p-stat */
-                    ,input "ptrl"           /*p-list  */
+                    ,input "only-np"        /*p-list  */
                     ,input ?                /*p-cond  */
                     ,input ?                /*p-rec   */
                     ,input ?                /*p-grp   */
@@ -1139,7 +1229,7 @@ PROCEDURE select-gds :
     if first-of(tt-pl-gds.gds-code)
     then do :
       for first goods where goods.gds-code = tt-pl-gds.gds-code :
-        assign gds-recid-list = gds-recid-list + string(recid(place)) + "," .
+        assign gds-recid-list = gds-recid-list + string(recid(goods)) + "," .
       end .
     end .
   end .
@@ -1148,4 +1238,26 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+/* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION shift-name Dialog-Frame
+function shift-name returns character 
+  ( input p-shift-num like ub.shift-obj.shift-num, input p-shift-name  like ub.shift-obj.shift-name ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  define variable result as character no-undo.
+    
+  result = string(p-shift-num, ">9") + " (" + p-shift-name + ")" .
+
+  return result.
+
+end function.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 

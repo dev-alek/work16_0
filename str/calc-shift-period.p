@@ -86,7 +86,9 @@ define buffer buf_chk-doc for ub.chk-doc .
 define buffer buf_chk-gds for ub.chk-gds .
 define buffer buf_chk-gds-attr for ub.chk-gds-attr .
 define buffer prev_shift-period for ub.shift-period .
+define buffer prev2_shift-period for ub.shift-period .
 define buffer new_shift-period for ub.shift-period .
+define buffer buf_clients-attr for ub.clients-attr .
 
 
 define variable v-value as character no-undo .
@@ -265,6 +267,8 @@ procedure main-proc :
         delete tt-pl-gds .
         next pl-gds_ .
       end .
+      /* От инициализации... */
+      assign tt-pl-gds.is-init = yes .
       if buf_place-attr.attr-value <> prev_rvs-doc.rvs-code
       then do :
         find first prev_rvs-line no-lock where prev_rvs-line.rvs-code = buf_place-attr.attr-value
@@ -278,9 +282,10 @@ procedure main-proc :
           delete tt-pl-gds .
           next pl-gds_ .
         end .
+        assign tt-pl-gds.is-init = no .
       end .
-      /* От инициализации... */
-      assign tt-pl-gds.is-init = yes .
+      
+      trn-doc_ :
       for each buf_trn-doc no-lock where buf_trn-doc.obj-type   = cur_shift-obj.obj-type
                                      and buf_trn-doc.obj-code   = cur_shift-obj.obj-code
                                      and buf_trn-doc.shift-date = cur_shift-obj.shift-date
@@ -288,6 +293,13 @@ procedure main-proc :
                                      and buf_trn-doc.status_    = {&fact}
                                      and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
       :
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                             and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                             :
+          /* ТехПролив */
+          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next trn-doc_ .
+        end .
         find first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
                                         and buf_doc-pl.obj-code = buf_trn-doc.obj-code
                                         and buf_doc-pl.pl-code  = tt-pl-gds.pl-code
@@ -319,6 +331,14 @@ procedure main-proc :
         .
         run calc_control-density .
         
+        if not tt-pl-gds.is-init
+        then do :
+          assign
+            new_shift-period.period-type = 2
+            new_shift-period.period-name = "Начало смены - Конец смены"
+          .
+        end .
+        
         run calc_sales-density15 (output v-del-shift-period) .
         if v-del-shift-period
         then do :
@@ -340,6 +360,14 @@ procedure main-proc :
                                        and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
                                        by buf_trn-doc.fact-order
         :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next trn-doc_ .
+          end .
+          
           find first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
                                           and buf_doc-pl.obj-code = buf_trn-doc.obj-code
                                           and buf_doc-pl.pl-code  = tt-pl-gds.pl-code
@@ -369,6 +397,14 @@ procedure main-proc :
                 new_shift-period.ost-temperature = prev_rvs-line.state-temperature
               .
               run calc_control-density .
+              
+              if not tt-pl-gds.is-init
+              then do :
+                assign
+                  new_shift-period.period-type = 3
+                  new_shift-period.period-name = "Начало смены - Прием НП (№" + buf_trn-doc.doc-code + ")"
+                .
+              end .
               
               run calc_sales-density15 (output v-del-shift-period) .
               if v-del-shift-period
@@ -400,6 +436,16 @@ procedure main-proc :
                 new_shift-period.ost-mass = 0
               .
               run calc_control-density .
+              if new_shift-period.control-density = 0
+              or new_shift-period.control-density = ?
+              then do :
+                assign
+                  tt-pl-gds.period-num = tt-pl-gds.period-num + 1
+                  v-prev-doc-code = buf_trn-doc.doc-code
+                .
+                delete new_shift-period .
+                next trn-doc_ .
+              end .
               
               run calc_sales-density15 (output v-del-shift-period) .
               if v-del-shift-period
@@ -443,6 +489,12 @@ procedure main-proc :
           new_shift-period.ost-mass = 0
         .
         run calc_control-density .
+        if new_shift-period.control-density = 0
+        or new_shift-period.control-density = ?
+        then do :
+          delete new_shift-period .
+          next pl-gds_ .
+        end .
         
         run calc_sales-density15 (output v-del-shift-period) .
         if v-del-shift-period
@@ -468,6 +520,7 @@ procedure main-proc :
       then do : /* От инициализации... */
         assign tt-pl-gds.is-init = yes .
       end .
+      trn-doc_ :
       for each buf_trn-doc no-lock where buf_trn-doc.obj-type   = cur_shift-obj.obj-type
                                      and buf_trn-doc.obj-code   = cur_shift-obj.obj-code
                                      and buf_trn-doc.shift-date = cur_shift-obj.shift-date
@@ -475,6 +528,13 @@ procedure main-proc :
                                      and buf_trn-doc.status_    = {&fact}
                                      and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
       :
+        for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                             and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                             and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                             :
+          /* ТехПролив */
+          if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next trn-doc_ .
+        end .
         find first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
                                         and buf_doc-pl.obj-code = buf_trn-doc.obj-code
                                         and buf_doc-pl.pl-code  = tt-pl-gds.pl-code
@@ -498,7 +558,7 @@ procedure main-proc :
           new_shift-period.pl-code     = tt-pl-gds.pl-code
           new_shift-period.gds-code    = tt-pl-gds.gds-code
           new_shift-period.period-type = if tt-pl-gds.is-init then 0 else 2
-          new_shift-period.period-name = "Начало смены - Конец смены"
+          new_shift-period.period-name = if tt-pl-gds.is-init then "Инициализация - Конец смены" else "Начало смены - Конец смены"
           
           new_shift-period.ost-density = prev_rvs-line.state-density
           new_shift-period.ost-mass    = prev_rvs-line.state-measure-cli-qnty
@@ -527,6 +587,13 @@ procedure main-proc :
                                        and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}
                                        by buf_trn-doc.fact-order
         :
+          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
+                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
+                                               and buf_clients-attr.attr-code = {&attr-shftrep2}
+                                               :
+            /* ТехПролив */
+            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next trn-doc_ .
+          end .
           find first buf_doc-pl no-lock where buf_doc-pl.obj-type = buf_trn-doc.obj-type
                                           and buf_doc-pl.obj-code = buf_trn-doc.obj-code
                                           and buf_doc-pl.pl-code  = tt-pl-gds.pl-code
@@ -549,7 +616,7 @@ procedure main-proc :
             then do : /* От открытия смены (или инициализации) до приема НП */
               assign
                 new_shift-period.period-type = if tt-pl-gds.is-init then 1 else 3
-                new_shift-period.period-name = "Начало смены - Прием НП (№" + buf_trn-doc.doc-code + ")"
+                new_shift-period.period-name = if tt-pl-gds.is-init then ("Инициализация - Прием НП (№" + buf_trn-doc.doc-code + ")") else ("Начало смены - Прием НП (№" + buf_trn-doc.doc-code + ")")
                 
                 new_shift-period.ost-density = prev_rvs-line.state-density
                 new_shift-period.ost-mass    = prev_rvs-line.state-measure-cli-qnty
@@ -587,6 +654,16 @@ procedure main-proc :
                 new_shift-period.ost-mass = 0
               .
               run calc_control-density .
+              if new_shift-period.control-density = 0
+              or new_shift-period.control-density = ?
+              then do :
+                assign
+                  tt-pl-gds.period-num = tt-pl-gds.period-num + 1
+                  v-prev-doc-code = buf_trn-doc.doc-code
+                .
+                delete new_shift-period .
+                next trn-doc_ .
+              end .
               
               run calc_sales-density15 (output v-del-shift-period) .
               if v-del-shift-period
@@ -630,6 +707,12 @@ procedure main-proc :
           new_shift-period.ost-mass = 0
         .
         run calc_control-density .
+        if new_shift-period.control-density = 0
+        or new_shift-period.control-density = ?
+        then do :
+          delete new_shift-period .
+          next pl-gds_ .
+        end .
         
         run calc_sales-density15 (output v-del-shift-period) .
         if v-del-shift-period
@@ -658,7 +741,7 @@ procedure put_log :
     "----------------------------------------------------------" skip
     cur-time-string()           format "x(16)"    skip
     "Дата смены: " new_shift-period.shift-date skip
-    "Номер смены: " new_shift-period.shift-num skip
+    "Порядок и номер смены: " new_shift-period.shift-num " (" cur_shift-obj.shift-name ")" skip
     "Период в смене: " new_shift-period.period-type skip
     "Резервуар: " tt-pl-gds.loc1 skip
     "Наименование топлива: " v-gds-name skip
@@ -695,6 +778,7 @@ end procedure .
 
 procedure calc_control-density :
   define variable v-tmp-rvs-code as character no-undo .
+  define variable v-last-calc-control-density as decimal no-undo .
   define buffer tmp_rvs-doc for ub.rvs-doc .
   
   case new_shift-period.period-type :
@@ -760,14 +844,164 @@ procedure calc_control-density :
     
     when 2 or when 3
     then do :
-      assign
-        new_shift-period.last-density = prev_shift-period.control-density
-        new_shift-period.control-density = new_shift-period.last-density
-      .
+      if prev_shift-period.control-density > 0
+      then do :
+        assign
+          new_shift-period.last-density = prev_shift-period.control-density
+          new_shift-period.control-density = new_shift-period.last-density
+        .
+      end .
+      else do :
+        find last prev2_shift-period no-lock where prev2_shift-period.obj-type = prev_rvs-doc.obj-type
+                                               and prev2_shift-period.obj-code = prev_rvs-doc.obj-code
+                                               and prev2_shift-period.gds-code = tt-pl-gds.gds-code
+                                               and prev2_shift-period.pl-code  = tt-pl-gds.pl-code
+                                               and prev2_shift-period.control-density > 0
+                                               use-index pi
+                                               no-error .
+        if available prev2_shift-period
+        then do :
+          assign
+            new_shift-period.last-density = prev2_shift-period.control-density
+            new_shift-period.control-density = new_shift-period.last-density
+          .
+        end .
+        else do :
+          find first prev_rvs-line-attr no-lock where prev_rvs-line-attr.obj-type = prev_rvs-line.obj-type
+                                                  and prev_rvs-line-attr.obj-code = prev_rvs-line.obj-code
+                                                  and prev_rvs-line-attr.rvs-code = prev_rvs-line.rvs-code
+                                                  and prev_rvs-line-attr.pl-code  = prev_rvs-line.pl-code
+                                                  and prev_rvs-line-attr.gds-code = prev_rvs-line.gds-code
+                                                  and prev_rvs-line-attr.attr-code = "POkMI-result"
+                                                  no-error .
+          if not available prev_rvs-line-attr
+          then do :
+            if prev_rvs-doc.ps begins "Создана на основе"
+            then do :
+              assign
+                v-tmp-rvs-code = entry(2, prev_rvs-doc.ps, "№")
+                v-tmp-rvs-code = trim(v-tmp-rvs-code, ".")
+                v-tmp-rvs-code = trim(v-tmp-rvs-code)
+              .
+              find first prev_rvs-line-attr no-lock where prev_rvs-line-attr.obj-type = prev_rvs-line.obj-type
+                                                      and prev_rvs-line-attr.obj-code = prev_rvs-line.obj-code
+                                                      and prev_rvs-line-attr.rvs-code = v-tmp-rvs-code
+                                                      and prev_rvs-line-attr.pl-code  = prev_rvs-line.pl-code
+                                                      and prev_rvs-line-attr.gds-code = prev_rvs-line.gds-code
+                                                      and prev_rvs-line-attr.attr-code = "POkMI-result"
+                                                      no-error .
+              if not available prev_rvs-line-attr
+              then do :
+                find first tmp_rvs-doc no-lock where tmp_rvs-doc.rvs-code = v-tmp-rvs-code no-error .
+                if available tmp_rvs-doc
+                and tmp_rvs-doc.ps begins "Создана на основе"
+                then do :
+                  assign
+                    v-tmp-rvs-code = entry(2, tmp_rvs-doc.ps, "№")
+                    v-tmp-rvs-code = trim(v-tmp-rvs-code, ".")
+                    v-tmp-rvs-code = trim(v-tmp-rvs-code)
+                  .
+                  find first prev_rvs-line-attr no-lock where prev_rvs-line-attr.obj-type = prev_rvs-line.obj-type
+                                                          and prev_rvs-line-attr.obj-code = prev_rvs-line.obj-code
+                                                          and prev_rvs-line-attr.rvs-code = v-tmp-rvs-code
+                                                          and prev_rvs-line-attr.pl-code  = prev_rvs-line.pl-code
+                                                          and prev_rvs-line-attr.gds-code = prev_rvs-line.gds-code
+                                                          and prev_rvs-line-attr.attr-code = "POkMI-result"
+                                                          no-error .
+                end .
+              end .
+            end .
+          end .
+          if available prev_rvs-line-attr
+          then do :
+            assign
+              new_shift-period.control-density = decimal(entry(2, entry(3, prev_rvs-line-attr.attr-value, {&new-line}), ":"))
+              new_shift-period.last-density = new_shift-period.control-density
+            no-error .
+          end .
+          else do :
+            assign
+              new_shift-period.control-density = prev_rvs-line.state-density
+              new_shift-period.last-density = new_shift-period.control-density
+            .
+          end .
+        end .
+      end .
     end .
     
     when 4 or when 5
     then do :
+      if v-prev-control-density > 0
+      then do :
+        assign v-last-calc-control-density = v-prev-control-density .
+      end .
+      else do :
+        find last prev2_shift-period no-lock where prev2_shift-period.obj-type = prev_rvs-doc.obj-type
+                                               and prev2_shift-period.obj-code = prev_rvs-doc.obj-code
+                                               and prev2_shift-period.gds-code = tt-pl-gds.gds-code
+                                               and prev2_shift-period.pl-code  = tt-pl-gds.pl-code
+                                               and prev2_shift-period.control-density > 0
+                                               use-index pi
+                                               no-error .
+        if available prev2_shift-period
+        then do :
+          assign v-last-calc-control-density = prev2_shift-period.control-density .
+        end .
+        else do :
+          find first prev_rvs-line-attr no-lock where prev_rvs-line-attr.obj-type = prev_rvs-line.obj-type
+                                                  and prev_rvs-line-attr.obj-code = prev_rvs-line.obj-code
+                                                  and prev_rvs-line-attr.rvs-code = prev_rvs-line.rvs-code
+                                                  and prev_rvs-line-attr.pl-code  = prev_rvs-line.pl-code
+                                                  and prev_rvs-line-attr.gds-code = prev_rvs-line.gds-code
+                                                  and prev_rvs-line-attr.attr-code = "POkMI-result"
+                                                  no-error .
+          if not available prev_rvs-line-attr
+          then do :
+            if prev_rvs-doc.ps begins "Создана на основе"
+            then do :
+              assign
+                v-tmp-rvs-code = entry(2, prev_rvs-doc.ps, "№")
+                v-tmp-rvs-code = trim(v-tmp-rvs-code, ".")
+                v-tmp-rvs-code = trim(v-tmp-rvs-code)
+              .
+              find first prev_rvs-line-attr no-lock where prev_rvs-line-attr.obj-type = prev_rvs-line.obj-type
+                                                      and prev_rvs-line-attr.obj-code = prev_rvs-line.obj-code
+                                                      and prev_rvs-line-attr.rvs-code = v-tmp-rvs-code
+                                                      and prev_rvs-line-attr.pl-code  = prev_rvs-line.pl-code
+                                                      and prev_rvs-line-attr.gds-code = prev_rvs-line.gds-code
+                                                      and prev_rvs-line-attr.attr-code = "POkMI-result"
+                                                      no-error .
+              if not available prev_rvs-line-attr
+              then do :
+                find first tmp_rvs-doc no-lock where tmp_rvs-doc.rvs-code = v-tmp-rvs-code no-error .
+                if available tmp_rvs-doc
+                and tmp_rvs-doc.ps begins "Создана на основе"
+                then do :
+                  assign
+                    v-tmp-rvs-code = entry(2, tmp_rvs-doc.ps, "№")
+                    v-tmp-rvs-code = trim(v-tmp-rvs-code, ".")
+                    v-tmp-rvs-code = trim(v-tmp-rvs-code)
+                  .
+                  find first prev_rvs-line-attr no-lock where prev_rvs-line-attr.obj-type = prev_rvs-line.obj-type
+                                                          and prev_rvs-line-attr.obj-code = prev_rvs-line.obj-code
+                                                          and prev_rvs-line-attr.rvs-code = v-tmp-rvs-code
+                                                          and prev_rvs-line-attr.pl-code  = prev_rvs-line.pl-code
+                                                          and prev_rvs-line-attr.gds-code = prev_rvs-line.gds-code
+                                                          and prev_rvs-line-attr.attr-code = "POkMI-result"
+                                                          no-error .
+                end .
+              end .
+            end .
+          end .
+          if available prev_rvs-line-attr
+          then do :
+            assign v-last-calc-control-density = decimal(entry(2, entry(3, prev_rvs-line-attr.attr-value, {&new-line}), ":")) no-error .
+          end .
+          else do :
+            assign v-last-calc-control-density = prev_rvs-line.state-density .
+          end .
+        end .
+      end .
       for each before_rvs-doc no-lock where before_rvs-doc.rvs-type = {&rvs-before-doc}
                                         and before_rvs-doc.out-code = v-prev-doc-code
       :
@@ -782,7 +1016,7 @@ procedure calc_control-density :
           then do :
             assign
               new_shift-period.ost-mass = before_rvs-line.state-measure-cli-qnty
-              new_shift-period.ost-volume15 = new_shift-period.ost-mass / v-prev-control-density
+              new_shift-period.ost-volume15 = new_shift-period.ost-mass / v-last-calc-control-density
             .
           end .
         end .
@@ -801,7 +1035,7 @@ procedure calc_control-density :
       delete object v-InfoSection .
       delete object v-InfoSectionsTotal .
       assign
-        new_shift-period.last-density = v-prev-control-density
+        new_shift-period.last-density = v-last-calc-control-density
         new_shift-period.income-density15 = new_shift-period.income-mass / new_shift-period.income-volume15
         new_shift-period.control-density = (new_shift-period.ost-mass + new_shift-period.income-mass) / (new_shift-period.ost-volume15 + new_shift-period.income-volume15)
       .
