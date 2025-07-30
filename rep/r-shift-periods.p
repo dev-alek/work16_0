@@ -97,7 +97,7 @@ run PrintRep .
 procedure fillTT :
   define variable v-num as integer no-undo init 0 .
   
-  for each tt-shift no-lock by tt-shift.shift-date desc by tt-shift.shift-num :
+  for each tt-shift no-lock by tt-shift.shift-date by tt-shift.shift-num :
     for each buf_shift-period no-lock where buf_shift-period.shift-date = tt-shift.shift-date
                                         and buf_shift-period.shift-num = tt-shift.shift-num
     :
@@ -169,7 +169,7 @@ procedure PrintRep :
     
     v-period = "Смены: " .
     
-    for each tt-shift :
+    for each tt-shift by tt-shift.shift-date by tt-shift.shift-num :
       v-period = v-period + string(tt-shift.shift-num) + " (" + tt-shift.shift-name + ") от " + string(tt-shift.shift-date, "99.99.9999") + ", " .
     end .
     v-period = trim(v-period, ", ") .
@@ -213,9 +213,9 @@ procedure PrintRep :
         '<TD style="width:  90px;"></TD>' skip            /*  4    */
         '<TD style="width:  80px;"></TD>' skip            /*  5    */
         '<TD style="width: 180px;"></TD>' skip            /*  6    */
-        '<TD style="width:  90px;"></TD>' skip            /*  7    */
-        '<TD style="width:  90px;"></TD>' skip            /*  8    */
-        '<TD style="width:  90px;"></TD>' skip            /*  9    */
+        '<TD style="width: 140px;"></TD>' skip            /*  7    */
+        '<TD style="width: 140px;"></TD>' skip            /*  8    */
+        '<TD style="width: 140px;"></TD>' skip            /*  9    */
       '</TR>' skip
     .
     
@@ -289,9 +289,9 @@ procedure PrintRep :
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">№ Резервуара</TH>' skip
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Наименование топлива</TH>' skip
       '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Период в смене</TH>' skip
-      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Плотность реализации НП за период, г/см3</TH>' skip
-      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Контрольная плотность НП за период, г/см3</TH>' skip
-      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Отклонение по плотности НП за период, г/см3</TH>' skip
+      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Плотность реализации НП за период, г/см3 (приведенная к 15 С)</TH>' skip
+      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Контрольная плотность НП за период, г/см3 (приведенная к 15 С)</TH>' skip
+      '<TH text_wrap="true" rowspan="5" style="text-align: center; font-weight: bold; background-color: silver;">Отклонение по плотности НП за период, г/см3 (1.9 = 1.7 – 1.8)</TH>' skip
       '</TR>' skip 
       
       '<TR >'skip
@@ -343,9 +343,9 @@ procedure PrintRep :
         end .
         put stream sOutStr-html unformatted
           '<TD text_wrap="true" style="text-align: center;">' + string(tt-result.period-name) + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + fDec2Str(tt-result.sales-density15, "-9.9999") + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center;">' + fDec2Str(tt-result.control-density, "-9.9999") + '</TD>' skip
-          '<TD text_wrap="true" style="text-align: center; color: ' + (if abs(tt-result.delta-density) > 0.0017 then "red" else "black") + ';">' + fDec2Str(tt-result.delta-density, "-9.9999") + '</TD>' skip
+          '<TD num="#,####0.0000" val="' + fDec2Str(tt-result.sales-density15, "-9.9999") + '" text_wrap="true" style="text-align: center;">' + fDec2Str(tt-result.sales-density15, "-9.9999") + '</TD>' skip
+          '<TD num="#,####0.0000" val="' + fDec2Str(tt-result.control-density, "-9.9999") + '" text_wrap="true" style="text-align: center;">' + fDec2Str(tt-result.control-density, "-9.9999") + '</TD>' skip
+          '<TD num="#,####0.0000" val="' + fDec2Str(tt-result.delta-density, "-9.9999") + '" text_wrap="true" style="text-align: center; color: ' + (if abs(tt-result.delta-density) > 0.0017 then "red" else "black") + ';">' + fDec2Str(tt-result.delta-density, "-9.9999") + '</TD>' skip
           '</TR>' skip.
         .
       end .
