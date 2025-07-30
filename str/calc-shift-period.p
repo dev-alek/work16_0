@@ -44,6 +44,7 @@ define temp-table tt-pl-gds no-undo like ub.pl-gds
   field num-pri-doc as integer
   field period-num as integer
   field is-init as logical
+  field num-pri-periods as integer
 .
 
 define temp-table tt-fringing-rvs no-undo
@@ -223,6 +224,7 @@ procedure main-proc :
       tt-pl-gds.loc1 = buf_place.loc1
       tt-pl-gds.num-pri-doc = 0
       tt-pl-gds.period-num = 1
+      tt-pl-gds.num-pri-periods = 0
     .
   end .
   
@@ -461,6 +463,11 @@ procedure main-proc :
               
               assign new_shift-period.delta-density = new_shift-period.sales-density15 - new_shift-period.control-density .
               
+              if tt-pl-gds.num-pri-doc > 2
+              then do :
+                assign tt-pl-gds.num-pri-periods = tt-pl-gds.num-pri-periods + 1 .
+              end .
+              
               run put_log .
               
               assign
@@ -679,6 +686,11 @@ procedure main-proc :
               
               assign new_shift-period.delta-density = new_shift-period.sales-density15 - new_shift-period.control-density .
               
+              if tt-pl-gds.num-pri-doc > 2
+              then do :
+                assign tt-pl-gds.num-pri-periods = tt-pl-gds.num-pri-periods + 1 .
+              end .
+              
               run put_log .
               
               assign 
@@ -732,9 +744,19 @@ end procedure. /* main-proc */
 
 procedure put_log :
   define variable v-gds-name as character no-undo .
+  define variable v-period-type as character no-undo .
+  
   for first buf_goods no-lock where buf_goods.gds-code = tt-pl-gds.gds-code :
     assign v-gds-name = buf_goods.gds-name .
   end .
+  
+  assign v-period-type = string(new_shift-period.period-type) .
+  if new_shift-period.period-type = 4
+  and tt-pl-gds.num-pri-periods > 0
+  then do :
+    assign v-period-type = string(new_shift-period.period-type) + "." + string(tt-pl-gds.num-pri-periods) .
+  end .
+  
   output stream s-log to value ("shift-period.log") append.
   put stream s-log unformatted
     "    " skip
@@ -742,7 +764,7 @@ procedure put_log :
     cur-time-string()           format "x(16)"    skip
     "Дата смены: " new_shift-period.shift-date skip
     "Порядок и номер смены: " new_shift-period.shift-num " (" cur_shift-obj.shift-name ")" skip
-    "Период в смене: " new_shift-period.period-type skip
+    "Период в смене: " v-period-type skip
     "Резервуар: " tt-pl-gds.loc1 skip
     "Наименование топлива: " v-gds-name skip
     "    " skip
