@@ -84,6 +84,19 @@ define variable v-sys-key as character no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION mark-string d-all-r-docs 
+FUNCTION mark-string RETURNS CHARACTER
+    ( p-rec as recid ) :
+  def buffer loc-shift-obj for ub.shift-obj  .
+  find first loc-shift-obj no-lock where  recid ( loc-shift-obj ) = p-rec no-error  .
+  if error-status :error then return '' .
+
+  if can-do (p-rid-list, string (recid (loc-shift-obj))) then RETURN "*".
+  else RETURN "".
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
 
@@ -176,6 +189,10 @@ DEFINE BUTTON B-sel AUTO-GO
 DEFINE BUTTON B-staff
      LABEL "&Персонал"
      SIZE 10 BY 1.
+     
+DEFINE BUTTON b-mark 
+     LABEL "*":L 
+     SIZE 3 BY 1.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -187,6 +204,7 @@ DEFINE QUERY br-shift FOR
 DEFINE BROWSE br-shift
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-shift d-shifts _FREEFORM
   QUERY br-shift DISPLAY
+      mark-string(recid(X_shift-obj)) column-label "*" format "X(1)":U
       X_shift-obj.obj-type + " " + string (X_shift-obj.obj-code, ">>>>9") COLUMN-LABEL "Объект" FORMAT "x(9)":U
       X_shift-obj.shift-date COLUMN-LABEL "Дата смены" FORMAT "99/99/9999":U
       X_shift-obj.shift-name COLUMN-LABEL "№" FORMAT "X(2)":U WIDTH 3
@@ -215,6 +233,7 @@ DEFINE FRAME d-shifts
      B-rep AT ROW 1 COL 61
      B-hist AT ROW 1 COL 92
      b-help AT ROW 1 COL 95
+     b-mark at row 2 col 1
      br-shift AT ROW 3 COL 1
      SPACE(0.00) SKIP(0.04)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
@@ -302,6 +321,20 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-shifts
+ON CHOOSE OF b-mark IN FRAME d-shifts /* * */
+DO:
+    define variable varlog as logical no-undo .
+    run local-mark in this-procedure .
+    assign
+        varlog = {&browse-name}:select-next-row ()
+        .
+    apply "entry" to {&browse-name} in frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-chg
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-chg d-shifts
@@ -1121,8 +1154,6 @@ else do:
    end.
 end.
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 ENABLE
 b-quit
 b-help
@@ -1132,11 +1163,17 @@ b-hist
 B-sel when lookup("b-sel":U, bttns) > 0
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
+if lookup("b-mark":U, bttns) > 0
+then do :
+  display b-mark WITH FRAME {&frame-name}.
+  enable b-mark WITH FRAME {&frame-name}.
+end .
+else do :
+  disable b-mark WITH FRAME {&frame-name}.
+  hide b-mark in FRAME {&frame-name}.
+end .
 RUN OpenBr IN THIS-PROCEDURE.
 END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 procedure smenUcr:
    rep-name = "g-zmzvit":U.
@@ -1144,3 +1181,20 @@ procedure smenUcr:
    if error-status :error then do: return no-apply. end.
 end.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE local-mark d-shifts
+PROCEDURE local-mark :
+if not available X_shift-obj then 
+do:
+    message "Неправильный выбор строки.".
+    return .
+end.
+{ gbl/markstrn.i X_shift-obj p-rid-list }
+{&browse-name}:refresh() in frame {&frame-name} .
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

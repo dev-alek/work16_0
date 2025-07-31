@@ -644,6 +644,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
         v-input-type-list = v-input-type-list + ',' + buf_rvs-line-attr.attr-value .
       end.
     end.  
+    v-input-type-list = left-trim(v-input-type-list, ",") .
     
     if can-do(v-input-type-list, 'à')
     and not can-do(v-input-type-list, 'ô')
@@ -678,11 +679,13 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     then v-doc-input-type = 'ð'.
     
     if v-doc-input-type = 'à'
-    and can-do(v-input-type-list, 'ð') 
+    and (can-do(v-input-type-list, 'ð') 
+      or can-do(v-input-type-list, ''))
     then v-doc-input-type = 'àê'.
     
     if v-doc-input-type = 'ô'
-    and can-do(v-input-type-list, 'ð') 
+    and (can-do(v-input-type-list, 'ð') 
+      or can-do(v-input-type-list, ''))
     then v-doc-input-type = 'ôê'.
 
     /*    sw:start-element ("check-fuel-docs") .*/

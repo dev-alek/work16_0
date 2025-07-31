@@ -981,7 +981,9 @@ procedure procmarkqntycheckinv:
   define buffer buf_marking for ub.marking.
   define buffer buf_gds for ub.goods.
   define buffer buf_utd-marking-lines for ub.utd-marking-lines.
-  
+  if not v-is-introduce and not v-is-marking
+  then
+     return.
   if v-is-marking = false
     then ii = 0.
   find first buf_gds no-lock where buf_gds.artic = local-doc-line.artic

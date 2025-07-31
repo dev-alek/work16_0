@@ -120,6 +120,7 @@ then do:
   if v-list = "ptrl"
   or v-list = "lgas"
   or v-list = "ptrlsug"
+  or v-list = "only-np"
   then do:
     entry(2, v-uf-list_,  {&delim-par} ) = {&all}.
     v-list =  {&all}. 

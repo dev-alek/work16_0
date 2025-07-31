@@ -1,4 +1,4 @@
-block-level on error undo, throw.
+/* block-level on error undo, throw. */
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v9r12 GUI
 &ANALYZE-RESUME
 /* Connected Databases 
@@ -39,9 +39,6 @@ define input parameter Date-End    as date           no-undo .
 {rep/tt-user.i} 
 define input parameter table for tt-user-account BIND. 
 define input parameter table for tt-objects BIND.  
-
-
-
 
 
 
@@ -102,10 +99,13 @@ run get-report-num in parParentProc (
 v-report-name-html-list = session:temp-directory + {&DF_Name} + string(p-report-id) + "_hist" + ".html". /*формирование имя файла для часть1*/        
 
 
+/*do on error undo, leave : */
+
 for each bf_c-user-log no-lock where bf_c-user-log.corr-date >= Date-Start
-  and bf_c-user-log.corr-date <= Date-End by bf_c-user-log.head-table :
+  and bf_c-user-log.corr-date <= Date-End by bf_c-user-log.head-table  :
+
   v-table = bf_c-user-log.head-table .
-            
+
   if v-table begins "c-" and v-table <> {&table_c-usr-hist} and v-table <> {&table_c-plc-hist} then 
   do:
     v-user-table = replace(v-table,"c-","").
@@ -115,42 +115,52 @@ for each bf_c-user-log no-lock where bf_c-user-log.corr-date >= Date-Start
                     v-user-table
                     v-user-table-name
                   }
-
+/*   message '*' bf_c-user-log.corr-user-db-num view-as alert-box. */
   create tt-usr-hist .
   assign
     tt-usr-hist.corr-date        = bf_c-user-log.corr-date
     tt-usr-hist.corr-time        = bf_c-user-log.corr-time
     tt-usr-hist.time_            = string(truncate (bf_c-user-log.corr-time / 3600, 0)) + ":" + string((bf_c-user-log.corr-time modulo 3600) / 60,"99")  + ":" + string((bf_c-user-log.corr-time modulo 3600) / 360,"99") 
     tt-usr-hist.corr-user-db-num = bf_c-user-log.corr-user-db-num
-    tt-usr-hist.corr-user-name   = bf_c-user-log.corr-user-name
-    tt-usr-hist.head-table       = v-user-table-name 
-    tt-usr-hist.des              = bf_c-user-log.des
-    tt-usr-hist.table_           = v-user-table.
+    tt-usr-hist.corr-user-name   = bf_c-user-log.corr-user-name   
+    tt-usr-hist.head-table       = v-user-table-name               
+    tt-usr-hist.des              = bf_c-user-log.des                
+    tt-usr-hist.table_           = v-user-table                     
     tt-usr-hist.uniq-key-rec     = get-unique-key(bf_c-user-log.head-table,bf_c-user-log.uniq-key-rec)
-  .
-    
-  tt-usr-hist.name-bd = if bf_c-user-log.corr-user-db-num = 0 then "ГБД" else "АЗК " + string (bf_c-user-log.corr-user-db-num) .
+    tt-usr-hist.name-bd = if bf_c-user-log.corr-user-db-num = 0 then "ГБД" 
+                           else if bf_c-user-log.corr-user-db-num = ? then "Неизвестная БД"
+                           else "АЗК " + string (bf_c-user-log.corr-user-db-num).
+  
   for first ub.user-account no-lock where ub.user-account.user-id = bf_c-user-log.corr-user-name :
     tt-usr-hist.user-name = ub.user-account.last-name + " " + ub.user-account.first-name + " " + ub.user-account.second-name .
   end .    
+
+  
   
   if bf_c-user-log.head-table = 'schedule':U
   then do :
+
     assign
       tt-usr-hist.des           = "Изменение расписания автоматического задания"
       tt-usr-hist.head-table    = entry(5, bf_c-user-log.head-table-key, {&delim-cmd}) 
       tt-usr-hist.uniq-key-rec  = entry(4, bf_c-user-log.des, ";")
     .
+
+
     if entry(5, bf_c-user-log.head-table-key, {&delim-cmd}) = {&btpr-type-autofree}
     then 
       tt-usr-hist.head-table = tt-usr-hist.head-table + " - " + entry(6, bf_c-user-log.head-table-key, {&delim-cmd})
     .
+
     if entry(15, bf_c-user-log.head-table-key, {&delim-cmd}) = "del"
     then
       tt-usr-hist.des = "Удаление расписания автоматического задания"
     .
-  end .
 end.  
+
+end. /* do on error undo, leave : */
+
+
 
 /* if p-obj-list <> "-1" and p-obj-list <> "" then 
 do:
@@ -169,20 +179,19 @@ do:
       delete tt-usr-hist .
     end.  
   end.  
+
 end.    */
 
-
-/* ------   */
-
 do:
-  for each tt-usr-hist:
 
+  for each tt-usr-hist:
     find first tt-user-account where tt-user-account.user-id_ = tt-usr-hist.corr-user-name no-error.
         if not AVAILABLE tt-user-account then 
          do:
             delete tt-usr-hist .
          end.  
   end.
+
 end.    
 
 do:
@@ -194,22 +203,21 @@ do:
           delete tt-usr-hist .
         end.  
   end.
+
 end.     
 
 
-
-
-
-
+/*   if not can-find(first tt-usr-hist) 
+      then do:
+/*        return-value = "Нет данных для отчета". */
+        return error return-value .
+    end. */
             
 run PROC-print-list in this-procedure.
 
+
 PROCEDURE proc-print-list :
-  /*------------------------------------------------------------------------------
-    Purpose:     
-    Parameters:  <none>
-    Notes:       
-  ------------------------------------------------------------------------------*/
+
   define buffer buf_c-user-log for ub.c-user-log .
   do
     on error undo, return error
@@ -256,7 +264,7 @@ PROCEDURE proc-print-list :
       '<td colspan="9" style="text-align: center;">История действий пользователя за период с ' + string(date-start,"99.99.99") + ' по ' + string(date-end,"99.99.99") + ' </td>' skip
       '</tr>' skip   
       '</thead>' skip .
-    
+
     put stream OutStr-html unformatted
       '<tbody>' skip
       '<TR>' skip
@@ -270,22 +278,20 @@ PROCEDURE proc-print-list :
       '<TD text_wrap="true" style="text-align: center;">Объект</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">Информация</TD>' skip
       '</TR>'skip       
-           
       .
     
     FOR EACH tt-usr-hist NO-LOCK 
       by tt-usr-hist.corr-user-db-num 
       by tt-usr-hist.corr-date
       by tt-usr-hist.corr-time:
-                
                     
       put stream OutStr-html unformatted
         '<TR>' skip
         '<TD text_wrap="true" style="text-align: center;">' + string(tt-usr-hist.corr-date,"99.99.9999") + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + tt-usr-hist.time_ + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + string(tt-usr-hist.corr-user-db-num) + '</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">' + string(tt-usr-hist.name-bd) + '</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">' + STRING(tt-usr-hist.user-name) + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + tt-usr-hist.name-bd + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + tt-usr-hist.user-name + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + STRING(tt-usr-hist.corr-user-name) + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + STRING(tt-usr-hist.des) + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + STRING(tt-usr-hist.head-table) + '</TD>' skip
@@ -296,7 +302,7 @@ PROCEDURE proc-print-list :
 
 
     output stream OutStr-html close.   
- 
+
 
 
     /*вызов программы печати*/ 
@@ -305,9 +311,7 @@ PROCEDURE proc-print-list :
       ,input v-report-name-html-list
       ).
 
-
   end.
-
 
 END PROCEDURE.
 

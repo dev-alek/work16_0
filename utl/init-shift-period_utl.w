@@ -25,11 +25,14 @@
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-define input-output parameter p-FIO as character no-undo .
-define input-output parameter p-position as character no-undo .
+define input        parameter parparentproc as handle    no-undo .
 /* Local Variable Definitions ---                                       */
-
+define variable place-list as character no-undo .
 /* _UIB-CODE-BLOCK-END */
+
+{ cmp/str-glbl.i      }
+{ gbl/getcntxt.i def  }
+{ gbl/getcntxt.i get  }
 &ANALYZE-RESUME
 
 
@@ -44,8 +47,8 @@ define input-output parameter p-position as character no-undo .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS f-FIO f-position B-OK B-Cancel 
-&Scoped-Define DISPLAYED-OBJECTS f-FIO f-position 
+&Scoped-Define ENABLED-OBJECTS Btn_OK Btn_Cancel rs-place 
+&Scoped-Define DISPLAYED-OBJECTS rs-place 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -60,41 +63,37 @@ define input-output parameter p-position as character no-undo .
 /* Define a dialog box                                                  */
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON B-Cancel AUTO-END-KEY 
+DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
      LABEL "Отмена" 
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
-DEFINE BUTTON B-OK AUTO-GO 
+DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "Ввод" 
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-FIO AS CHARACTER FORMAT "X(120)":U 
-     VIEW-AS FILL-IN 
-     SIZE 88 BY 1 NO-UNDO.
-
-DEFINE VARIABLE f-position AS CHARACTER FORMAT "X(120)":U 
-     VIEW-AS FILL-IN 
-     SIZE 88 BY 1 NO-UNDO.
+DEFINE VARIABLE rs-place AS INTEGER INITIAL 1 
+     VIEW-AS RADIO-SET VERTICAL
+     RADIO-BUTTONS 
+          "Все", 1,
+"Выборочно", 2
+     SIZE 23 BY 2.14 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     f-FIO AT ROW 2 COL 1 COLON-ALIGNED NO-LABEL WIDGET-ID 6
-     f-position AT ROW 4 COL 1 COLON-ALIGNED NO-LABEL WIDGET-ID 10
-     B-OK AT ROW 5.1 COL 2.8
-     B-Cancel AT ROW 5.1 COL 17.8
-     "ФИО" VIEW-AS TEXT
-          SIZE 8 BY .62 AT ROW 1.2 COL 3 WIDGET-ID 2
-     "Должность" VIEW-AS TEXT
-          SIZE 12.2 BY .62 AT ROW 3.2 COL 3 WIDGET-ID 8
-     SPACE(77.79) SKIP(2.48)
+     Btn_OK AT ROW 1.24 COL 2
+     Btn_Cancel AT ROW 1.24 COL 17
+     rs-place AT ROW 4.33 COL 5 NO-LABEL WIDGET-ID 2
+     "Резервуары:" VIEW-AS TEXT
+          SIZE 17 BY 1.19 AT ROW 2.71 COL 4 WIDGET-ID 6
+     SPACE(18.99) SKIP(3.76)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE " "
-         DEFAULT-BUTTON B-OK CANCEL-BUTTON B-Cancel WIDGET-ID 100.
+         TITLE "Повторная инициализация"
+         DEFAULT-BUTTON Btn_OK CANCEL-BUTTON Btn_Cancel WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -137,17 +136,51 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&Scoped-define SELF-NAME B-OK
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-OK Dialog-Frame
-ON CHOOSE OF B-OK IN FRAME Dialog-Frame /* Ввод */
+&Scoped-define SELF-NAME Btn_Ok
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Ok Dialog-Frame
+ON choose OF Btn_Ok in frame Dialog-Frame
 DO:
-  assign
-    f-FIO
-    f-position
-    p-FIO = f-FIO
-    p-position = f-position
-  .
+  case rs-place :
+    when 1
+    then do :
+      run utl/init-shift-period.p (input "all") .
+    end .
+    when 2
+    then do :
+      if place-list = ""
+      then do :
+        message "Не выбрано ни одного резервуара!" view-as alert-box .
+        return no-apply .
+      end .
+      run utl/init-shift-period.p (input place-list) .
+    end .
+  end case .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME rs-place
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL rs-place Dialog-Frame
+ON VALUE-CHANGED OF rs-place IN FRAME Dialog-Frame
+DO:
+  assign rs-place .
+  if rs-place = 2
+  then do :
+    run ref/pl-list.w (
+     input parparentproc
+    ,input "b-sel,b-mark"
+    ,input v-cntxt-obj-type
+    ,input v-cntxt-obj-code
+    ,input {&g___object} + {&delim-par} + "only-np"
+    ,input-output place-list).
+    if place-list = "cancel"
+    then do :
+      place-list = "" .
+      return no-apply .
+    end .
+  end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -172,10 +205,6 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  assign
-    f-FIO = p-FIO
-    f-position = p-position
-  .
   RUN enable_UI.
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
@@ -215,9 +244,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-FIO f-position 
+  DISPLAY rs-place 
       WITH FRAME Dialog-Frame.
-  ENABLE f-FIO f-position B-OK B-Cancel 
+  ENABLE Btn_OK Btn_Cancel rs-place 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

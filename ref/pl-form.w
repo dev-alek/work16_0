@@ -2735,6 +2735,10 @@ DO:
                 ,input p-obj-code
                 ,input {&g___object}
                , input-output place-list).
+  if place-list = "cancel"
+  then do :
+    place-list = '' .
+  end .
   if place-list <> '':U then do:
     com-tanks = "" .
     do ii = 1 to num-entries(place-list) :
@@ -2846,6 +2850,10 @@ DO:
                 ,input p-obj-code
                 ,input {&g___object}
                , input-output place-list).
+  if place-list = "cancel"
+  then do :
+    place-list = '' .
+  end .
   if place-list <> '':U then do:
     gate-valve-tanks = "" .
     do ii = 1 to num-entries(place-list) :

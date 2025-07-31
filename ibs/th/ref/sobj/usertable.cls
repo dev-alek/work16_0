@@ -142,7 +142,8 @@ END METHOD.
 
 METHOD public void mark_user_all():
       for each tt-user-account  :
-            tt-user-account.flg = not tt-user-account.flg .
+            /*tt-user-account.flg = not tt-user-account.flg . */
+            tt-user-account.flg = yes .             
       end.
 END METHOD.
 
@@ -157,12 +158,14 @@ END METHOD.
 METHOD public void mark_table_all():
     
     for each tt-objects  :    
-    tt-objects.flg = not tt-objects.flg .
+    /*tt-objects.flg = not tt-objects.flg . */
+    tt-objects.flg = yes.    
     end.
     
     for each tt-objects2  :    
-    tt-objects2.flg = not tt-objects2.flg .
-    end.
+    /* tt-objects2.flg = not tt-objects2.flg . */
+    tt-objects2.flg = yes . 
+    end. 
  
 END METHOD.
 

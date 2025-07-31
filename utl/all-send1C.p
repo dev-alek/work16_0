@@ -253,6 +253,18 @@ for each tt-fin:
 end.    
 end.
 
+/*выгрузка Контрольной плотности НП*/
+run str/prep1C-shift-period.p (input ?,
+                               input buf_shift-obj.obj-type,
+                               input buf_shift-obj.obj-code,
+                               input buf_shift-obj.shift-date,
+                               input buf_shift-obj.shift-num)
+                               no-error .
+if error-status:error 
+then do:
+  message return-value view-as alert-box.
+end.
+
 /*выгрузка УПД*/
 /*   EXPSD-8344                                                                                                                                                                      */
 /*for each ub.utd no-lock where ub.utd.obj-code = buf_shift-obj.obj-code and                                                                                               */

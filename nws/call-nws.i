@@ -225,6 +225,7 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,obj-date~
 ,shift-obj~
 ,c-shift-obj~
+,shift-period~
 ,sum-grp-obj~
 ,c-sum-grp-obj~
 ,cshr-month~

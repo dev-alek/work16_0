@@ -1160,6 +1160,7 @@ Creation date: 04/05/06
 &glob table_shift-cash-attr 'shift-cash-attr':U
 &glob table_shift-obj 'shift-obj':U
 &glob table_shift-obj-attr 'shift-obj-attr':U
+&glob table_shift-period 'shift-period':U
 &glob table_shift-staff 'shift-staff':U
 &glob table_shift-staff-attr 'shift-staff-attr':U
 &glob table_shop 'shop':U

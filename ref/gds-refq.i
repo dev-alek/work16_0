@@ -248,6 +248,48 @@ CASE g-list :
 
     end.
   end.
+  when "only-np" then do:
+    if a-n-c <> "context" OR NameContext = "" then do:
+      for-title = "ВСЕ товары".
+    for each ub.units no-lock where lookup( {&petrolium}, ub.units.type) > 0:
+      v-list-unit-name = v-list-unit-name + ub.units.unit-name + {&delim-par}.
+    end.
+    for each ub.goods no-lock where lookup (ub.goods.unit-base, v-list-unit-name, {&delim-par}) > 0:
+      run gds-attr-value in this-procedure
+        (  input ub.goods.gds-code
+          ,input {&attr-fuel-type}
+          ,output v-attr-value
+          ,output v-attr-type
+         ) .
+      if v-attr-value = "lgas"
+      or v-attr-value = "metan"
+      or v-attr-value = "propan"
+      then do:
+        v-list-gds-code-lgas = v-list-gds-code-lgas + string (ub.goods.gds-code) + {&delim-par}.
+      end.
+    end.
+    
+    v-list-unit-name = right-trim(v-list-unit-name,{&delim-par}).
+    v-list-gds-code-lgas = right-trim(v-list-gds-code-lgas,{&delim-par}).
+    
+    { gbl/fltopend.i
+      &where-cond = " goo-doc.stts = 0 and lookup (goo-doc.unit-base, v-list-unit-name, {&delim-par}) > 0 and not lookup (string(goo-doc.gds-code),v-list-gds-code-lgas, {&delim-par}) > 0"
+      &use-ind    = "  "
+      &by         = " by goo-doc.artic ~
+                      BY GOO-DOC.PROD-TYPE ~
+                      BY goo-doc.prod-code " }
+
+      /*
+      OPEN QUERY br-gds
+      FOR EACH goo-doc NO-LOCK
+      {&q-table0} by goo-doc.artic
+      BY GOO-DOC.PROD-TYPE
+      BY goo-doc.prod-code
+      indexed-reposition.
+      */
+
+    end.
+  end.
   when {&all} then do:
     &if "{1}" = "goo-doc" &then
       CASE g-stat :

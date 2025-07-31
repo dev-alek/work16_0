@@ -36,6 +36,7 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
     DEFINE         VARIABLE usertableObj AS CLASS ibs.th.ref.sobj.usertable no-undo.  
     DEFINE         VARIABLE mparamObj AS CLASS ibs.th.ref.sobj.sParamObj no-undo.
     DEFINE PRIVATE VARIABLE srt as logical. 
+    DEFINE         VARIABLE str2 as logical.
       
     CONSTRUCTOR PUBLIC userhist (  ):
         
@@ -439,20 +440,27 @@ CLASS ibs.th.ref.sobj.userhist INHERITS sUserFrame:
 
 
     METHOD OVERRIDE PUBLIC VOID my-report ():
-       
-    usertableObj:my_report().  /* запуск печати отчета */
-    /*usertableObj:init_tt().   /* формирование заново временных таблиц и обновление экрана */ */
-    bindingSource1:handle:query-open.  
-    bindingSource1:RefreshAll() .
-    users:handle:query-open.          
-    users:RefreshAll() .
-    
-    RETURN.  
+        
+    if  str2 = yes then do:
+       usertableObj:my_report().  /* запуск печати отчета */
+       /*usertableObj:init_tt().   /* формирование заново временных таблиц и обновление экрана */ */
+       bindingSource1:handle:query-open.  
+       bindingSource1:RefreshAll() .
+       users:handle:query-open.          
+       users:RefreshAll() .
+       RETURN.
+    END.
+    else do:
+        message "Необходимо сходить на закладку <Продолжение...> !". 
+        RETURN.
+    end.
     
     END METHOD.
 
     METHOD OVERRIDE PUBLIC VOID my-secected(  ):
-        
+  
+    str2 =  yes .
+       
     usertableObj:init_tt().      /* формирование заново временных таблиц и обновление экрана */
     bindingSource1:handle:query-open.
     bindingSource1:RefreshAll() .

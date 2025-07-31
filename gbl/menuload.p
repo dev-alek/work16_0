@@ -697,6 +697,17 @@ define variable vss-description as character no-undo init "Информация об объекте
   "yes"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Повторная инициализация расчета контрольных значений НП по периодам'"
+  "'utl/init-shift-period_utl.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_adm_check}                                                      */
 /* АРМ Администратор   Утилиты/Проверки                                       */

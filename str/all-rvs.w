@@ -3008,6 +3008,7 @@ FUNCTION get-input-type RETURNS CHARACTER
         end.
       end.
     end .
+    v-input-type-list = left-trim(v-input-type-list, ",") .
     
     if can-do(v-input-type-list, 'à')
     and not can-do(v-input-type-list, 'ô')
@@ -3042,11 +3043,13 @@ FUNCTION get-input-type RETURNS CHARACTER
     then v-doc-input-type = 'ð'.
     
     if v-doc-input-type = 'à'
-    and can-do(v-input-type-list, 'ð') 
+    and (can-do(v-input-type-list, 'ð')  
+      or can-do(v-input-type-list, ''))
     then v-doc-input-type = 'àê'.
     
     if v-doc-input-type = 'ô'
-    and can-do(v-input-type-list, 'ð') 
+    and (can-do(v-input-type-list, 'ð')  
+      or can-do(v-input-type-list, ''))
     then v-doc-input-type = 'ôê'.
     
     if v-doc-input-type = ? then v-doc-input-type = '' .

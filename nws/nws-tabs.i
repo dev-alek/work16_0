@@ -694,6 +694,7 @@ abc-analysis~
 ,sert-join~
 ,shift-obj~
 ,c-shift-obj~
+,shift-period~
 ,shop~
 ,c-shop~
 ,some-lk~

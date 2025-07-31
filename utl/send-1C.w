@@ -88,8 +88,8 @@ DEFINE INPUT PARAMETER parparentproc AS WIDGET-HANDLE NO-UNDO .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-3 b-start b-close T-1 T-2 T-3 T-4 T-5 ~
-T-6 T-7 T-9 T-8 
-&Scoped-Define DISPLAYED-OBJECTS T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-9 T-8 
+T-6 T-7 T-9 T-10 T-8 
+&Scoped-Define DISPLAYED-OBJECTS T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-9 T-10 T-8 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -114,7 +114,7 @@ DEFINE BUTTON b-start
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 54 BY 10.5.
+     SIZE 54 BY 11.75.
 
 DEFINE VARIABLE T-1 AS LOGICAL INITIAL no 
      LABEL "Документа (накл., инв., перес.)" 
@@ -161,6 +161,10 @@ DEFINE VARIABLE T-9 AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 42.5 BY .83 NO-UNDO.
 
+DEFINE VARIABLE T-10 AS LOGICAL INITIAL no 
+     LABEL "Контрольная плотность НП" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 42.5 BY .83 NO-UNDO.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -175,7 +179,8 @@ DEFINE FRAME gDialog
      T-6 AT ROW 9 COL 13.5 WIDGET-ID 64
      T-7 AT ROW 10 COL 13.5 WIDGET-ID 68
      T-9 AT ROW 11 COL 13.5 WIDGET-ID 70
-     T-8 AT ROW 12 COL 13.5 WIDGET-ID 66
+     T-10 AT ROW 12 COL 13.5 WIDGET-ID 70
+     T-8 AT ROW 13 COL 13.5 WIDGET-ID 66
      "Выгрузка:" VIEW-AS TEXT
           SIZE 9.5 BY .67 AT ROW 3 COL 4.5 WIDGET-ID 52
      RECT-3 AT ROW 3.25 COL 3 WIDGET-ID 50
@@ -252,6 +257,7 @@ DO:
   t-7
   t-8
   t-9
+  t-10
     .
     
 if t-1 then do:
@@ -284,6 +290,10 @@ end.
 
 if t-9 then do:
   run utl/send9c.p.
+end.
+
+if t-10 then do:
+  run utl/send10c.p.
 end.
 
 if t-8 then do:
@@ -413,6 +423,18 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME T-10
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-10 gDialog
+ON VALUE-CHANGED OF T-10 IN FRAME gDialog /* Текущая топология */
+DO:
+  assign
+  t-10
+  .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK gDialog 
@@ -469,9 +491,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-9 T-8 
+  DISPLAY T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-9 T-10 T-8 
       WITH FRAME gDialog.
-  ENABLE RECT-3 b-start b-close T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-9 T-8 
+  ENABLE RECT-3 b-start b-close T-1 T-2 T-3 T-4 T-5 T-6 T-7 T-9 T-10 T-8 
       WITH FRAME gDialog.
   VIEW FRAME gDialog.
   {&OPEN-BROWSERS-IN-QUERY-gDialog}

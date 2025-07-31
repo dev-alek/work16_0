@@ -74,7 +74,7 @@ method override public void CrContentToSW (insw as handle):
     insw:start-element ({&tag-check}) .
     insw:write-data-element (  "cb-num":U,     string(c-chk-doc.pay-desk)   ).
     insw:write-data-element (  "shift-num":U,        if c-chk-doc.shift-num eq ? then "" else string(c-chk-doc.shift-num)  ).
-    insw:write-data-element (  "shift-date":U,        if c-chk-doc.shift-date eq ? then "" else iso-date(c-chk-doc.shift-date)   ).
+    insw:write-data-element (  "shift-date":U,        if c-chk-doc.src-shift-date eq ? then "" else iso-date(c-chk-doc.src-shift-date)   ).
     insw:write-data-element (  "chk-type":U,       string(c-chk-doc.chk-type)).
     insw:start-element ("condition-check":U) .
     do ii = 1 to num-entries(office):

@@ -83,9 +83,15 @@ define variable v_is-ptrl           as character no-undo.
 define variable par-type            as character no-undo.
 define variable v-chk-act-host-code as integer   no-undo .
 define variable glog                as logical   no-undo .
-define variable v-is-test-asi       as logical   no-undo init no .
+define variable v-is-only-np        as logical   no-undo init no .
+define variable v-is-np-list        as logical   no-undo init no .
 
 define buffer buf_pl-gds for ub.pl-gds .
+define buffer list_place for ub.place .
+
+define temp-table tt-pl-list no-undo
+  field pl-code like ub.place.pl-code
+.
 
 define temp-table tt-place-attr
   field pl-code         like place.pl-code
@@ -828,6 +834,18 @@ ON CHOOSE OF b-sel IN FRAME d-pl-list /* Выбор  */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-quit
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-quit d-pl-list
+ON CHOOSE OF b-quit IN FRAME d-pl-list /* Выход */
+  DO:
+    
+      p-rid-list = "cancel" .
+
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME m_obj-sched
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_obj-sched d-pl-list
 ON CHOOSE OF menu-item m_obj-sched in menu menu-b-atd /* - */
@@ -1004,7 +1022,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   if num-entries(p-mode, {&delim-par}) = 2
   then do :
     assign
-      v-is-test-asi = (entry(2, p-mode, {&delim-par}) = "test-asi")
+      v-is-only-np = (entry(2, p-mode, {&delim-par}) = "only-np")
+      v-is-np-list = (entry(2, p-mode, {&delim-par}) = "np-list")
       p-mode = entry(1, p-mode, {&delim-par})
     .
   end .
@@ -1025,6 +1044,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     assign 
       v_is-ptrl = 'no':U. 
   end.
+  if v-is-np-list
+  then do :
+    do ii = 1 to num-entries(p-rid-list) :
+      for first list_place no-lock where recid(list_place) = integer(entry(ii, p-rid-list)) :
+        create tt-pl-list .
+        assign tt-pl-list.pl-code = list_place.pl-code .
+      end .
+    end .
+  end .
   p-rid-list = v-rid-list.
   if v-rid-list <> "":U then 
   do:
@@ -1207,7 +1235,7 @@ PROCEDURE OpenBr :
           end case.
         end.
         
-        if v-is-test-asi
+        if v-is-only-np
         then do :
           find first buf_pl-gds no-lock where buf_pl-gds.pl-code = tt-place-attr.pl-code no-error .
           if not available buf_pl-gds
@@ -1228,7 +1256,15 @@ PROCEDURE OpenBr :
               delete tt-place-attr .
             end .
           end .
-        end . /* v-is-test-asi */
+        end . /* v-is-only-np */
+        if v-is-np-list
+        then do :
+          find first tt-pl-list where tt-pl-list.pl-code = tt-place-attr.pl-code no-error .
+          if not available tt-pl-list
+          then do :
+            delete tt-place-attr .
+          end .
+        end . /* v-is-np-list */
       end.
     end.
   end.
@@ -1291,7 +1327,7 @@ PROCEDURE OpenBr :
           end case.
         end.
         
-        if v-is-test-asi
+        if v-is-only-np
         then do :
           find first buf_pl-gds no-lock where buf_pl-gds.pl-code = tt-place-attr.pl-code no-error .
           if not available buf_pl-gds
@@ -1312,7 +1348,7 @@ PROCEDURE OpenBr :
               delete tt-place-attr .
             end .
           end .
-        end . /* v-is-test-asi */
+        end . /* v-is-only-np */
       end.
     end.
   end.

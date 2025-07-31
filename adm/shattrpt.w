@@ -989,7 +989,7 @@ PROCEDURE enable_UI :
   ENABLE B-exit b-quit B-Help RECT-1 RECT-2 RECT-3 RECT-4 RECT-5 RECT-6 
          t-autopump-izm t-autopump t-avtinvpm t-olddens r-expptrl r-inpptrl 
          sec-fields rvs-wt-email B-set_dop-info B-set_sec-fields r-algrvspt 
-         t-rvsnmter t-invclipt f-invclipt b-invclipt r-temp-for-pomi r-denstclc 
+         t-rvsnmter t-invclipt f-invclipt b-invclipt r-denstclc 
          mass-proc mass-proc-in-lgas r-algoincptrl t-mand-chioce-autocar 
          otkl-fact-volue otkl-temp otkl-density otkl-water t-calc-free-vol 
          t-calc-free-vol-sug t-trn-reas-sug t-trnscanqr t-rvd-own-nb 
