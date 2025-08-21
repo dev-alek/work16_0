@@ -1009,9 +1009,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
                                       (trn-doc.doc-code eq TempTrnDoc.ext-doc-code
                                       and trn-doc.status_ = {&inquiry})  
                                    or (trn-doc.doc-code begins TempTrnDoc.ext-doc-code + "/"
-                                   and trn-doc.status_ = {&inquiry}):
-                                    
-                                   
+                                   and trn-doc.status_ = {&inquiry}) by trn-doc.doc-code desc:
+  
           leave block-trn.
         end.                         
         if available (trn-doc) then 
