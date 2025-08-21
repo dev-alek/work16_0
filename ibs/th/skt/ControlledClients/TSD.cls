@@ -1185,7 +1185,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       if available (TempDocLineTSD) then 
       do:
         /*создаем накладную*/
-        createTrn(clients.obj-code,vardoc-code,userId_).
+        createTrn( buffer clients ,vardoc-code,userId_).
 
         createAttrInv(vardoc-code,"isManual",string(true)).
         /*Создаем линии для накладной*/
@@ -1197,7 +1197,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       if available (TempDocLineTSD) then 
       do:
         /*создаем ошибочную накладную*/
-        createTrn(clients.obj-code,vardoc-code + "-M",userId_).
+        createTrn(buffer clients, vardoc-code + "-M",userId_).
         createAttrInv(vardoc-code + "-M","isManualError",string(true)).
         for each bfTempDocLineTSD where bfTempDocLineTSD.Flags_:
           find first goods where goods.gds-code = bfTempDocLineTSD.gds-code no-error .
@@ -1355,15 +1355,24 @@ method public void createTempGoodsError():
   TempDocLineTSD.fact-qnty = TempDocLineTSD.fact-qnty + TempDocLine.fact-qnty .
 end.
   
-method public void createTrn(iobj-code as integer, docCode as character, parUserId as character):
+method public void createTrn(buffer clients for clients, docCode as character, parUserId as character):
   define buffer bf_trn-doc    for ub.trn-doc .
   define buffer bf_curr-accnt for ub.curr-accnt .
   define buffer bf_sysconf    for ub.sysconf .
   define buffer shop       for ub.shop .
+  
+  if not available clients
+  then
+     return error "createTrn не передан клиент".  
     
-    
-  find first shop no-lock where shop.obj-code = iobj-code no-error .
+  find first shop no-lock where shop.obj-code = clients.obj-code no-error .
+  if not available shop
+  then
+     return error "Не найден Магазин с кодом " + string(clients.obj-code).
   find first bf_sysconf no-lock where bf_sysconf.host-code = clients.host-code .
+  if not available shop
+  then
+     return error "Не найден Фирма с кодом " + string(clients.host-code).
   v-today = today .
   { str/crtrndoc.i
   ?
