@@ -632,6 +632,7 @@ ON CHOOSE OF btn_ok IN FRAME Dialog-Frame
       message "Необходимо сходить на вкладку 'Продолжение...'"
         view-as alert-box.
       APPLY "choose" TO BUTTON-2 .
+      return no-apply .
     end.
     vOk = true .
     
