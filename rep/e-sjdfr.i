@@ -33,11 +33,11 @@ DEFINE FRAME {4}
         sj-goods.name column-label "Наименование  ! " format "x(18)"
         sj-goods.prod-name column-label "Производитель! " format "{5}"
 &if "{3}" = "twounit" &then
-        sj-adv.qnty column-label "Количество !учет.ед.изм" format "->>>>>9.<<<"
-        sj-adv.qnty-2 column-label "Количество !штуки" format "->>>>>9.<<<"
-        sj-adv.qnty-3 column-label "Количество !вес" format "->>>>>9.<<<"
+        sj-adv.qnty column-label "Количество !учет.ед.изм" format "->>>>>>>9.<<<"
+        sj-adv.qnty-2 column-label "Количество !штуки" format "->>>>>>>9.<<<"
+        sj-adv.qnty-3 column-label "Количество !вес" format "->>>>>>>9.<<<"
 &else
-        sj-adv.qnty column-label "Количество !" format "->>>>>9.<<<"
+        sj-adv.qnty column-label "Количество !" format "->>>>>>>9.<<<"
 &endif
         sj-adv.price column-label  "Цена!(вал.продаж)"   format ">>>>>>>9.99"
         sj-adv.brutto-sum column-label  "Сумма!(вал.продаж)"  format "->>>>>>>>>9.99"
