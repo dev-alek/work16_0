@@ -2812,6 +2812,53 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME {&sort-clmn_6-br-dtl}
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL {&sort-clmn_6-br-dtl} d-out-doc
+ON LEAVE OF {&sort-clmn_6-br-dtl} IN BROWSE {&browse-name}
+DO:
+  define variable vIsExemplarGoods as logical no-undo .
+  define variable vGtin     as character no-undo.
+  define variable vGtinQnty as integer no-undo.
+  define buffer buf_marking-lines for ub.marking-lines.
+  define buffer buf_marking       for ub.marking.
+  define buffer buf_goods         for ub.goods.
+    
+  find first buf_goods where 
+        buf_goods.artic     = ub.gds-dtl.artic
+    and buf_goods.prod-type = ub.gds-dtl.prod-type
+    and buf_goods.prod-code = ub.gds-dtl.prod-code.
+        
+    run isExemplarGoods in this-procedure 
+       (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+    
+  if vIsExemplarGoods then
+  do:  /* для поэкземплярного учета проверим: введенное кол-во не должно быть < просканированных марок */
+    for each buf_marking-lines no-lock where
+             buf_marking-lines.out-code = t-doc.doc-code
+         and buf_marking-lines.obj-type = t-doc.obj-type
+         and buf_marking-lines.obj-code = t-doc.obj-code
+         and buf_marking-lines.gds-code = buf_goods.gds-code
+         and buf_marking-lines.doc-level = 1,
+        first buf_marking no-lock where
+              buf_marking.mark = buf_marking-lines.mark
+    :
+      assign
+        vGtin     = getGtinByDM(buf_marking.mark)
+        vGtinQnty = vGtinQnty  + getQntyCodeByGtin(vGtin)
+      .
+    end.
+    if vGtinQnty > int({&self-name}:screen-value IN BROWSE {&browse-name}) then 
+    do:
+      message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
+      {&self-name}:screen-value IN BROWSE {&browse-name} = string(vGtinQnty).
+      return no-apply.  
+    end.  
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &Scoped-define SELF-NAME t-doc.discnt-pc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-doc.discnt-pc d-out-doc
 ON LEAVE OF t-doc.discnt-pc IN FRAME d-out-doc /* Скидка */
@@ -2838,7 +2885,6 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 &Scoped-define SELF-NAME t-doc.fact-date
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL t-doc.fact-date d-out-doc
