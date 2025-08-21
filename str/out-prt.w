@@ -3790,6 +3790,9 @@ PROCEDURE l-doc-qnty :
   Parameters:  <none>
   Notes:
 -------------------------------------------------------------*/
+  define variable vGtin     as character no-undo.
+  define variable vGtinQnty as integer no-undo.
+    
   if vIsExemplarGoods then
   do:  /* для поэкземплярного учета проверим: введенное кол-во не должно быть < просканированных марок */
     for each buf_marking-lines no-lock where
@@ -3801,12 +3804,15 @@ PROCEDURE l-doc-qnty :
         first buf_marking no-lock where
               buf_marking.mark = buf_marking-lines.mark
     :
-      accum buf_marking.box-qnty (total).  
+      assign
+        vGtin     = getGtinByDM(buf_marking.mark)
+        vGtinQnty = vGtinQnty  + getQntyCodeByGtin(vGtin)
+      .
     end.
-    if (accum total buf_marking.box-qnty) > input frame {&frame-name} ub.gds-dtl.doc-qnty then 
+    if vGtinQnty > input frame {&frame-name} ub.gds-dtl.doc-qnty then 
     do:
       message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
-      ub.gds-dtl.doc-qnty:screen-value = string(accum total buf_marking.box-qnty).
+      ub.gds-dtl.doc-qnty:screen-value = string(vGtinQnty).
       apply "enrty" to ub.gds-dtl.doc-qnty in frame {&frame-name}.
       return error.  
     end.  

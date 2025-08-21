@@ -2429,7 +2429,7 @@ ON CHOOSE OF b_deliv-cancel IN FRAME d-utd /* Отказать в подписи */
          end.
          if v-ok then 
          do:
-            if buf_utd.comment <> "" then buf_utd.comment = buf_utd.comment + {&delim-cmd} + v-comment .
+            if buf_utd.comment <> "" and buf_utd.comment <> ? then buf_utd.comment = buf_utd.comment + {&delim-cmd} + v-comment .
             else buf_utd.comment = v-comment .
             f-comment = buf_utd.comment .
             display f-comment with frame {&frame-name} . 

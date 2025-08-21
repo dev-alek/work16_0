@@ -1248,10 +1248,11 @@ define private temp-table tt-recid-TranFuel no-undo
                and buf_chk-gds-attr.line-num  = buf_chk-gds-pay.line-num                 
                and buf_chk-gds-attr.attr-code = "CSPromoSum"
             no-error.
-      v-sum-promo = if avail buf_chk-gds-attr then dec(buf_chk-gds-attr.attr-value) else 0 no-error. 
-        
-      insw:write-data-element (  "discntValueAbs",  left-trim(string((buf_chk-gds-pay.discnt + (v-sum-promo / buf_chk-gds-pay.eff-doc-qnty)), "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* јбсолютное значение скидки Ц сумма („исло) */
-      
+      v-sum-promo = if avail buf_chk-gds-attr then dec(buf_chk-gds-attr.attr-value) else 0 no-error.         
+      if  v-sum-promo <> 0 and buf_chk-gds-pay.eff-doc-qnty <> 0 then  
+         insw:write-data-element (  "discntValueAbs",  left-trim(string((buf_chk-gds-pay.discnt + (v-sum-promo / buf_chk-gds-pay.eff-doc-qnty)), "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* јбсолютное значение скидки Ц сумма („исло) */
+      else   
+         insw:write-data-element (  "discntValueAbs",  left-trim(string((buf_chk-gds-pay.discnt), "->>>>>>>>>9.9<<<<<<<<<"))  ) . /* јбсолютное значение скидки Ц сумма („исло) */  
       insw:end-element ({&tag-item6}) .
       if last-of(buf_chk-gds-pay.doc-code) then insw:end-element ({&tag-section6}) .
     end . /* end_of for each buf_chk-gds-pay */

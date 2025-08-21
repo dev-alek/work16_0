@@ -79,7 +79,10 @@ end.
   &if "{&called}"  =  "s-prodbc" or "{&called}" = "s-prodbcn"  or "{&called}"  =  "send-bc" or "{&called}" = "send-bcn" &then
 
   run bgelib-tag-open in this-procedure ( input 2, input "Item", input substitute("ctrl='&1' tms='&2' code='&3'"
-                                        ,"ADD":U, OS2-time, cash-gds.main-prt-b-code)).
+                                        ,(if vaction = "U" 
+                                                then (if cash-gds.bc-on eq yes then "ADD":U else "DEL":U)
+                                         else "DEL":U)
+                                       , OS2-time, cash-gds.main-prt-b-code)).
   &else
   run bgelib-tag-open in this-procedure ( input 2, input "Item", input substitute("ctrl='&1' tms='&2' code='&3'",
                                         (if
@@ -681,9 +684,9 @@ for each buf_cash-gds no-lock where
    
          run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 
                                              , (if vaction = "U" 
-                                                then "ADD":U    
-                                                else "DEL":U)   
-                                             , OS2-time         
+                                                then (if buf_cash-gds.bc-on eq yes then "ADD":U else "DEL":U)
+                                                else "DEL":U) 
+                                              , OS2-time         
                                              , string(v-cli-base + buf_cash-gds.b-str))).                                              
          run bgelib-tag-put in this-procedure ( input 3, input "IBCCode"                                          
                                               , input string( if v-i-cli eq 1 and cash-gds.cli-base-rate ne 1
@@ -734,9 +737,9 @@ for each buf_cash-gds no-lock where
 
       run bgelib-tag-open in this-procedure ( input 2, input "ItemBarCode", input substitute("ctrl='&1' tms='&2' code='&3'" 
                                           , (if vaction = "U" 
-                                             then "ADD":U    
-                                             else "DEL":U)   
-                                          , OS2-time         
+                                             then (if buf_cash-gds.bc-on eq yes then "ADD":U else "DEL":U)
+                                             else "DEL":U) 
+                                           , OS2-time         
                                           , string(v-cli-base + buf_cash-gds.b-str))).                                              
       run bgelib-tag-put in this-procedure ( input 3, input "IBCCode"                                          
                                            , input string( cash-gds.main-prt-b-code )

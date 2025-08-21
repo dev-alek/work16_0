@@ -163,11 +163,11 @@ put stream PrnLibStream unformatted
 
 put stream PrnLibStream unformatted
   v-line skip
-  "! № !                                    !      Код       !   Показание   !  Показание   !              !  " skip
-  "!ТРК! Наименование продукта              !    продукта    ! механического ! электронного !   Дельта     !  " skip
-  "!   !                                    !                !   счетчика    !  счетчика    !              !  " skip
+  "! № !                                   !      Код       !   Показание   !  Показание   !               !" skip
+  "!ТРК! Наименование продукта             !    продукта    ! механического ! электронного !    Дельта     !" skip
+  "!   !                                   !                !   счетчика    !  счетчика    !               !" skip
   v-line skip
-  "! 1 !               2                    !        3       !        4      !      5       !       6      !  " skip
+  "! 1 !               2                   !        3       !        4      !      5       !       6       !" skip
   v-line /* skip */
 .
 
@@ -184,7 +184,7 @@ form header
 
   form header
     v-line1 at 1 skip
-    "! 1 !               2                    !        3       !       4       !      5       !       6      !"  at 1
+    "! 1 !               2                   !        3       !       4       !      5       !       6       !"  at 1
     v-line2 at 1
     with frame top2frame
     width {&report-width-frame} page-top no-labels  no-box stream-io use-text.
@@ -203,12 +203,12 @@ view stream PrnLibStream frame bottomframe .
 define variable v-bar-code  like ub.bar-code.b-code no-undo  .
 define variable v-column-4  as decimal no-undo   format "->>,>>>,>>9.99" .
 define variable v-column-5  as decimal no-undo   format "->>,>>>,>>9.99" .
-define variable v-column-6  as decimal no-undo   format "->>,>>>,>>9.99" .
+define variable v-column-6  as decimal no-undo   format "->>>,>>>,>>9.99" .
 
 /* определяем фрейм в котором будут выводиться данные */
 define frame icnt-line-frm
 sym1  no-label space(0)  n-pump         format ">>9"   no-label space(0)
-sym2  no-label space(0) buf_goods.gds-name  format "x(36)" no-label  space(0)
+sym2  no-label space(0) buf_goods.gds-name  format "x(35)" no-label  space(0)
 sym3  no-label space(4) v-bar-code   no-label  space(3)
 sym4  no-label space(1) v-column-4   no-label space(0)
 sym5  no-label space(0) v-column-5   no-label space(0)
