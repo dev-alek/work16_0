@@ -297,7 +297,6 @@ do:
     
     if (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
     or logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "ArticUtdLine", "no")))
-    and not logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "MarkUtdLine", "no"))
     then do:
       
       assign

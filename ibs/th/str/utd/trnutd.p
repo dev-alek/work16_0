@@ -98,6 +98,8 @@ define buffer t_gds-dtl  for ub.gds-dtl .
 define buffer buf_goods  for ub.goods .
 define buffer buf_contract for ub.contract  .
 define buffer buf_bar-code for ub.bar-code.
+define buffer buf_marking  for ub.marking.
+define buffer buf_utd-marking-lines  for ub.utd-marking-lines.
 
 define variable parrec-doc      as recid    no-undo .
 define variable parrecalc-price as logical  no-undo init false .
@@ -1094,6 +1096,47 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 ub.marking-lines.mark = ub.utd-marking-lines.mark
                 ub.marking-lines.doc-level = ub.utd-marking-lines.doc-level
               .
+              
+              if avail ub.marking and
+                 ub.marking.unit-ext = "UNIT" and
+                 ub.marking.mark-parent <> "" then
+              do:  /* BTS-1690 и BTS-1862 Если это КМ потреб. упаковки и она есть в УПД, то добавим КМ груп. упаковки к партии*/
+                find first ub.marking-lines no-lock where
+                           ub.marking-lines.mark = ub.marking.mark-parent
+                       and ub.marking-lines.obj-type = tt-parts.obj-type
+                       and ub.marking-lines.obj-code = tt-parts.obj-code
+                       and ub.marking-lines.gds-code = temp_doc-line.gds-code
+                       and ub.marking-lines.in-code = tt-parts.in-code
+                       and ub.marking-lines.out-code = tt-parts.out-code
+                       and ub.marking-lines.part-code = tt-parts.part-code no-error.
+                if avail ub.marking-lines 
+                  then next fe1_.              /* уже добавлено */
+                find first buf_marking no-lock where 
+                           buf_marking.mark = ub.marking.mark-parent 
+                       and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
+                       and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
+                if not available (buf_marking)
+                  then next fe1_.
+                find first buf_utd-marking-lines no-lock where 
+                           buf_utd-marking-lines.mark   = buf_marking.mark
+                       and buf_utd-marking-lines.db-num = temp_doc-line.db-num
+                       and buf_utd-marking-lines.doc-id = temp_doc-line.doc-id
+                       and buf_utd-marking-lines.gds-code = temp_doc-line.gds-code
+                       and buf_utd-marking-lines.LineNum = temp_doc-line.line-num no-error.
+                if not available (buf_utd-marking-lines)
+                  then next fe1_.
+                create ub.marking-lines.
+                assign
+                  ub.marking-lines.obj-type = tt-parts.obj-type
+                  ub.marking-lines.obj-code = tt-parts.obj-code
+                  ub.marking-lines.in-code = tt-parts.in-code
+                  ub.marking-lines.out-code = tt-parts.out-code
+                  ub.marking-lines.part-code = tt-parts.part-code
+                  ub.marking-lines.gds-code = temp_doc-line.gds-code
+                  ub.marking-lines.mark = buf_utd-marking-lines.mark
+                  ub.marking-lines.doc-level = buf_utd-marking-lines.doc-level
+                .
+              end.
             end.
 /*          end .*/
           
@@ -1172,7 +1215,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
           if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
           or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsEDOForType(v-marking-type)
-          or logical(getattrutdlinesex(temp_doc-line.db-num, temp_doc-line.doc-id, temp_doc-line.line-num, "MarkUtdLine", "no"))
           then do:
             fe1_:
             for each ub.utd-marking-lines where 
