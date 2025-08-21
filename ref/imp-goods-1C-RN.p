@@ -813,7 +813,7 @@ end.
                      buf_prod-bc.b-str,
                      buf_prod-bc.bc-on,
                      no).
-              
+            
               end.  
             end.
         end.
@@ -827,6 +827,13 @@ end.
         and length (buf_prod-bc.b-str) > 2
      then do :
        buf_prod-bc.bc-on = false .  
+                 run fill-pbc-list in mImp2CdH
+                     (v-rid-pbc,
+                     ub.bar-code.gds-code,
+                     buf_prod-bc.b-code,
+                     buf_prod-bc.b-str,
+                     buf_prod-bc.bc-on,
+                     no).
      end.
   end.
 
