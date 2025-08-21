@@ -1812,7 +1812,8 @@ DO:
     end.
     find first buf_shift-obj where recid (buf_shift-obj) = integer (c_shift-list) no-lock.
     tt-chk-doc.src-shift-date:screen-value = string(buf_shift-obj.shift-date) no-error.
-    tt-chk-doc.shift-name:screen-value = string(buf_shift-obj.shift-num) no-error.
+    tt-chk-doc.shift-name:screen-value = string(buf_shift-obj.shift-name) no-error.
+    tt-chk-doc.shift-num:screen-value = string(buf_shift-obj.shift-num) no-error.
 END.
 
 /* _UIB-CODE-BLOCK-END */
