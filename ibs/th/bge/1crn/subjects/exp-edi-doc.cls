@@ -124,7 +124,7 @@ method override public void CrContentToSW (insw as handle):
         insw:write-data-element (  "contr-code":U,       utd.CounteragentId   ).
         insw:write-data-element (  "dog-code":U,       string(utd.contract-code)   ).
         insw:write-data-element (  "orig-edoc-id":U,       utd.parentDocumentExt   ).
-        insw:write-data-element (  "comment":U,       xmlchar-encode-1c( utd.comment)   ).
+        insw:write-data-element (  "comment":U,       if utd.comment = ? then "" else xmlchar-encode-1c( utd.comment)   ).
         insw:write-data-element (  "sum":U,       string(utd.total)   ).
         insw:write-data-element (  "sum-nonds":U,       string(utd.total - utd.vat )    ).
         if utd.EDocType        = objSrv:Env:Utd:EDocType:returns:KeyIntDB
