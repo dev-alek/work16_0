@@ -79,7 +79,10 @@ end.
   &if "{&called}"  =  "s-prodbc" or "{&called}" = "s-prodbcn"  or "{&called}"  =  "send-bc" or "{&called}" = "send-bcn" &then
 
   run bgelib-tag-open in this-procedure ( input 2, input "Item", input substitute("ctrl='&1' tms='&2' code='&3'"
-                                        ,"ADD":U, OS2-time, cash-gds.main-prt-b-code)).
+                                        ,(if vaction = "U" 
+                                                then (if cash-gds.bc-on eq yes then "ADD":U else "DEL":U)
+                                         else "DEL":U)
+                                       , OS2-time, cash-gds.main-prt-b-code)).
   &else
   run bgelib-tag-open in this-procedure ( input 2, input "Item", input substitute("ctrl='&1' tms='&2' code='&3'",
                                         (if
