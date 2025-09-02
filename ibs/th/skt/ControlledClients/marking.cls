@@ -101,7 +101,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      INDEX ofline ofline.
      
   /* ответ от ЛМ ЧЗ */   
-  DEFINE TEMP-TABLE ttlocal-mark  no-undo serialize-name  "bodys"    
+  DEFINE TEMP-TABLE ttlocal-mark  no-undo serialize-name  "results"    
    FIELD reqId        AS CHAR
    FIELD reqTimestamp AS INT64   
    FIELD inst         AS CHAR
@@ -988,7 +988,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE vlongJson      AS LONGCHAR    NO-UNDO CASE-SENSITIVE.
     DEFINE VARIABLE vlongJsonError AS LONGCHAR    NO-UNDO CASE-SENSITIVE.
     DEFINE VARIABLE vMark          AS CHARACTER   NO-UNDO CASE-SENSITIVE.
-    DEFINE VARIABLE vDataMark      AS CHARACTER   NO-UNDO.    
+    DEFINE VARIABLE vDataMark      AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE vDataMarkLM    AS CHARACTER   NO-UNDO.    
     DEFINE VARIABLE vRetProp       AS CHARACTER   NO-UNDO.
     
     DEFINE VARIABLE v-value-character AS CHARACTER NO-UNDO .
@@ -1026,9 +1027,9 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     /* заменяем 1D в 16-тиричной на \u001d */
     ASSIGN       
        vMark = mark
-       vMark = REPLACE(vMark, '\', '\\') .
-       vMark = REPLACE(vMark, '/', '\/') .
-       vMark = REPLACE(vMark, '"', '\"') .
+       vMark = REPLACE(vMark, '\', '\\') 
+       vMark = REPLACE(vMark, '/', '\/') 
+       vMark = REPLACE(vMark, '"', '\"') 
        vMark = REPLACE(vMark,CHR(29),"\u001d")
        .
 
@@ -1079,6 +1080,26 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       vCh SKIP NOW CHR(9) mMarkOrig CHR(9).
     OUTPUT STREAM out_data CLOSE.     
     
+    /* формируем файл запроса к ЛМ ЧЗ с маркой */
+    RUN gbl/_tmpfile.p ( "LMChz_data", ".txt", OUTPUT vDataMarkLM ) .
+    CREATE tt-file-name.
+    ASSIGN tt-file-name.tmpFileName = vDataMarkLM.
+    
+    dbgPrint("marking.log", SUBSTITUTE("vDataMarkLM &1 ", vDataMarkLM)).
+        
+    ASSIGN       
+       vMarkShort = mark-short
+       vMarkShort = REPLACE(vMarkShort, '\', '\\') 
+       vMarkShort = REPLACE(vMarkShort, '/', '\/') 
+       vMarkShort = REPLACE(vMarkShort, '"', '\"') .
+        
+    dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)). 
+               
+    OUTPUT STREAM out_data TO value(vDataMarkLM).        
+    PUT STREAM out_data UNFORMATTED  
+      '~{"cis_list":["' vMarkShort '"]~}' .
+    OUTPUT STREAM out_data CLOSE.
+    
     /* если установлен параметр, обозначающий наличие аварии в ГИС МТ, выходим */
     IF gismt-CrashSituat THEN DO:
        dbgPrint("marking.log", "Установлена аварийная ситуация.").
@@ -1087,11 +1108,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
           "Установлена аварийная ситуация в ГИС МТ" CHR(9).
        OUTPUT STREAM out_data CLOSE.
        /* Запускаем офлайн проверку */
-       vRetVal = GetResLocalMark(mark-short).
+       vRetVal = GetResLocalMark(vDataMarkLM).
        RETURN 1.
     END.
     
-    /* формируем файл запроса к ГИС МТ с маркой и ИНН */
+    /* формируем файл запроса к ГИС МТ с маркой */
     RUN gbl/_tmpfile.p ( "GisMT_data", ".txt", OUTPUT vDataMark ) .
     CREATE tt-file-name.
     ASSIGN tt-file-name.tmpFileName = vDataMark.
@@ -1101,7 +1122,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     OUTPUT STREAM out_data TO value(vDataMark).        
     PUT STREAM out_data UNFORMATTED  
       '~{"codes":["' vMark '"]~}' .
-    OUTPUT STREAM out_data CLOSE.
+    OUTPUT STREAM out_data CLOSE.       
      
     IF gismt-AdressPort <> "" AND gismt-ProxyLogin <> "" AND gismt-ProxyPswd <> "" 
     THEN CmdParamProxy = SUBSTITUTE ('-x &1 -U &2:&3',gismt-AdressPort,gismt-ProxyLogin,gismt-ProxyPswd).
@@ -1161,9 +1182,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            dbgPrint("marking.log", SUBSTITUTE("vFileResultErr &1 ", vFileResultErr)).
            dbgPrint("marking.log", SUBSTITUTE("vFileBat &1 ", vFileBat)).
            
-           IF vNumRep = 1 THEN DO:               
-               vMarkShort = percentCoding(mark-short). 
-               dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)).               
+           IF vNumRep = 1 THEN DO:                                            
                RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .               
                CREATE tt-file-name.
                ASSIGN tt-file-name.tmpFileName = vFileResOf
@@ -1187,11 +1206,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
            
            vRetVal = RunCurlGisMT(vGisAdress,     
                                   vDataMark,
+                                  vDataMarkLM,
                                   CmdParamProxy,
                                   vFileResult,
                                   vFileResultErr,
-                                  vFileBat,
-                                  vMarkShort,
+                                  vFileBat,                                  
                                   vFileResOf,
                                   vFileResOfErr,
                                   vFileBatOf). 
@@ -1861,7 +1880,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                      "ttlocal-mark.inst: " ttlocal-mark.inst SKIP
                      "ttlocal-mark.version: " ttlocal-mark.version SKIP
                      "ttlocal-mark.description: " ttlocal-mark.description       SKIP              
-                     "ttlocal-mark.code: " ttlocal-mark.code       SKIP                     
+                     "ttlocal-mark.code: " ttlocal-mark.code       SKIP
+                     "ttlocal-mark.errorCode " ttlocal-mark.errorCode SKIP                     
                      .                        
               END.    
               FOR EACH ttlocal-mark-code:
@@ -2058,11 +2078,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   METHOD PRIVATE INTEGER RunCurlGisMT (
      vGisAdress AS CHARACTER,     
      vDataMark AS CHARACTER,
+     vDataMarkLM AS CHARACTER,
      CmdParamProxy AS CHARACTER,
      vFileResult AS CHARACTER,
      vFileResultErr AS CHARACTER,
-     vFileBat AS CHARACTER,
-     vMarkShort AS CHARACTER,
+     vFileBat AS CHARACTER,     
      vFileResOf AS CHARACTER,
      vFileResOfErr AS CHARACTER,
      vFileBatOf AS CHARACTER
@@ -2103,13 +2123,14 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     
     /* запускаем проверку офлайн пока ждем окончания */
     IF vFileBatOf <> "" THEN DO:     
-        vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
+        vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X POST -H "Accept: application/json" -H &2 --data @&7 &3 >&4 --stderr &5',
                           SEARCH ("exe/curl.exe"), /*1*/                                                                  
                           QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
-                          QUOTER(gismt-OflineAdress + "/cis/outCheck?cis=" + vMarkShort), /*3*/
+                          QUOTER(gismt-OflineAdress + "/cis/outCheck"), /*3*/
                           vFileResOf,             /*4*/                      
                           vFileResOfErr,          /*5*/                      
-                          TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
+                          TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),""), /*6*/
+                          searchfile(vDataMarkLM)).         /*7*/
         dbgPrint("marking.log", "vcmdof: " + vcmdof).                  
         vpidof = runProcFile(vcmdof, vFileBatOf).
         /*os-command silent value(vcmdof).*/                         
@@ -2192,8 +2213,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   ):
      DEFINE VARIABLE vFileResult  AS CHARACTER   NO-UNDO.
      DEFINE VARIABLE vFileLog     AS CHARACTER   NO-UNDO.
-     DEFINE VARIABLE vlongJson    AS LONGCHAR NO-UNDO.
-     DEFINE VARIABLE vlongJsonS   AS LONGCHAR NO-UNDO.
+     DEFINE VARIABLE vlongJson    AS LONGCHAR NO-UNDO.     
      DEFINE VARIABLE hDS          AS HANDLE NO-UNDO.
      DEFINE VARIABLE vFileResJson AS CHARACTER   NO-UNDO.
      DEFINE VARIABLE vRetOk       AS LOGICAL NO-UNDO.
@@ -2215,9 +2235,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         dbgPrint("marking.log", SUBSTITUTE("Файл офлайн-проверки &1 ", tt-file-name.tmpFileName)).
         vFileResult = searchFile(tt-file-name.tmpFileName).
         
-        COPY-LOB FROM FILE vFileResult TO vlongJsonS NO-ERROR.          
-               
-        vlongJson = '~{"bodys":[' + vlongJsonS + "]}" .
+        COPY-LOB FROM FILE vFileResult TO vlongJson NO-ERROR.          
+                       
         hDS = DATASET gismt-local-mark:HANDLE.
                   
         vRetOk  = hDS:read-json("longchar":U, vlongJson) NO-ERROR.      
@@ -2278,8 +2297,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
              NOW CHR(9) .
         OUTPUT STREAM out_data CLOSE.
         /* добавляем в лог ответ ЛМ ЧЗ */
-        if vlongJsonS <> "" then
-        COPY-LOB FROM vlongJsonS TO FILE vFileLog APPEND NO-ERROR.  
+        if vlongJson <> "" then
+        COPY-LOB FROM vlongJson TO FILE vFileLog APPEND NO-ERROR.  
         else do:
             OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
             PUT STREAM out_data UNFORMATTED  
@@ -2320,7 +2339,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   
     /* Запуск офлайн проверка марки в ЛМ ЧЗ */
   METHOD PRIVATE INTEGER GetResLocalMark (    
-    mark-short AS CHARACTER 
+    vDataMarkLM AS CHARACTER 
   ):
     DEFINE VARIABLE vMarkShort AS CHARACTER NO-UNDO.
     DEFINE VARIABLE vFileResOf AS CHARACTER NO-UNDO.
@@ -2342,8 +2361,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE vcmdof AS CHARACTER   NO-UNDO.
     DEFINE VARIABLE vpidof AS INTEGER     NO-UNDO.
                
-    vMarkShort = percentCoding(mark-short). 
-    dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)).               
+    /*vMarkShort = percentCoding(mark-short). 
+    dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)).*/               
     RUN gbl/_tmpfile.p ( "ChkLMRes", ".txt", OUTPUT vFileResOf ) .
     CREATE tt-file-name.
     ASSIGN tt-file-name.tmpFileName = vFileResOf
@@ -2358,14 +2377,16 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     dbgPrint("marking.log", SUBSTITUTE("vFileResOf &1 ", vFileResOf)).           
     dbgPrint("marking.log", SUBSTITUTE("vFileResOfErr &1 ", vFileResOfErr)).
     dbgPrint("marking.log", SUBSTITUTE("vFileBatOf &1 ", vFileBatOf)).
-               
-    vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X GET -H "Accept: application/json" -H &2 &3 >&4 --stderr &5',
+                     
+    vcmdof = SUBSTITUTE ('&1 --connect-timeout &6 --max-time &6 -X POST -H "Accept: application/json" -H &2 --data @&7 &3 >&4 --stderr &5',
                           SEARCH ("exe/curl.exe"), /*1*/                                                                  
                           QUOTER("Authorization: Basic " + gismt-OflineAutoriz), /*2*/
-                          QUOTER(gismt-OflineAdress + "/cis/outCheck?cis=" + vMarkShort), /*3*/
+                          QUOTER(gismt-OflineAdress + "/cis/outCheck"), /*3*/
                           vFileResOf,             /*4*/                      
                           vFileResOfErr,          /*5*/                      
-                          TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),"")).         /*6*/
+                          TRIM(REPLACE(STRING(gismt-WaitTime, "zzzz9.99999"),".",","),""), /*6*/
+                          searchfile(vDataMarkLM)).         /*7*/
+                          
     dbgPrint("marking.log", "vcmdof: " + vcmdof).         
     vBefCurl = NOW.         
     vpidof = runProcFile(vcmdof, vFileBatOf).
