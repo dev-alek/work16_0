@@ -317,6 +317,7 @@ class ibs.th.skt.SktServer:
 
   method public logical checkEnd ():
      return clientControl:checkEnd().
+     
   end.
 	/*------------------------------------------------------------------------------
 	 Purpose:
@@ -478,7 +479,7 @@ class ibs.th.skt.SktServer:
                   or get-size (mbuffer-in) = 0) 
             and not HeadHttp:contentType = 'raw'
          then 
-            v-content = get-string (mbuffer-in, 1).
+            copy-lob from mbuffer-in to v-content no-error.
  
 /*         logWrite:WriteFileToLog('SOCKET-READ:' + v-content ).*/
 /*    RUN write-to-log('SOCKET-READ:' + v-str ).*/
