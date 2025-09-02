@@ -1152,7 +1152,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
               OUTPUT STREAM out_data CLOSE.
               /* Запрашиваем офлайн проверку, если еще этого не делали */
               IF vFileResult = "" THEN DO:
-                 vRetVal = GetResLocalMark(mark-short). 
+                 vRetVal = GetResLocalMark(vDataMarkLM). 
               END.    
               RETURN 2.
            END.   
@@ -2506,6 +2506,12 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE vMarkGs       AS CHARACTER NO-UNDO. 
     DEFINE BUFFER buf_marking FOR ub.marking.
     
+    dbgPrint("marking.log", SUBSTITUTE("Проверка марки для документа iObjCode &1 iMark &2 iMarkShort &3 iRunOffLine &4", 
+                                       iObjCode,
+                                       iMark,
+                                       iMarkShort,
+                                       iRunOffLine)).
+                                       
     gismt-WaitTimePlus = 3.     /* Увеличим время ожидания ответа на 3 сек. */
     oRunedOffLine = false.
     IF iMarkShort = ? THEN
@@ -2571,7 +2577,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
        IF (mCheckSts = 2 AND mCheckGisMT = 0) OR mCheckGisMT = 2
        THEN DO: 
            oRunedOffLine = true.
-           gismt-OflineDate = today + 2.
+           /*gismt-OflineDate = today + 2.*/
            vAccMarkCheck = ChekLocalMark(iMarkShort).
            IF mCheckSts = 2 THEN mCheckSts = 1.
        END.
