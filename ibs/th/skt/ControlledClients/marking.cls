@@ -53,6 +53,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   
   DEFINE PRIVATE VARIABLE mMarkOrig     AS CHARACTER NO-UNDO.
   DEFINE PRIVATE VARIABLE mCheckSts     AS INTEGER   NO-UNDO.
+  DEFINE PRIVATE VARIABLE mCheckStsOff  AS INTEGER   NO-UNDO.
   DEFINE PRIVATE VARIABLE mReqId        AS CHARACTER NO-UNDO. 
   DEFINE PRIVATE VARIABLE mReqTimestamp AS CHARACTER NO-UNDO.
   DEFINE PRIVATE VARIABLE mInst         AS CHARACTER NO-UNDO. 
@@ -2225,6 +2226,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         vChkNotSell = NO
         vFileLog = "GisMtReq-" + replace(STRING(TODAY),"/","-") +  ".log"
         vErrTxt = "Ошибка при проверке товара в локальном модуле Честный знак. Товар не добавлен в чек. Сообщите управляющему/старшему смены. "
+        mCheckStsOff = 0
         . 
                   
      FIND FIRST tt-file-name WHERE tt-file-name.ofline = YES NO-ERROR.     
@@ -2255,41 +2257,52 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                mVersion = ttlocal-mark.version
                . 
            IF ttlocal-mark.errorCode > 0 THEN DO:                             
-              mCheckSts = 0.
+              ASSIGN
+                 mCheckSts = 0
+                 mCheckStsOff = 3              
+                 vErrSts = vErrTxt.
               dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка errorCode &1 reason &2", ttlocal-mark.errorCode, ttlocal-mark.reason)).
-              vErrSts = vErrTxt.
            END.            
            ELSE IF ttlocal-mark.code <> 0 THEN DO:                             
-              mCheckSts = 0.
+              ASSIGN
+                 mCheckSts = 0
+                 mCheckStsOff = 3              
+                 vErrSts = vErrTxt.
               dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка Code &1 Описание &2", ttlocal-mark.code, ttlocal-mark.description)).
-              vErrSts = vErrTxt.
            END.
-           ELSE IF NOT AVAIL ttlocal-mark-code THEN DO:                             
-              mCheckSts = 0.
+           ELSE IF NOT AVAIL ttlocal-mark-code THEN DO:
+              ASSIGN                              
+                 mCheckSts = 0
+                 mCheckStsOff = 3              
+                 vErrSts = vErrTxt.
               dbgPrint("marking.log", "Ошибка проверки КИ в ЛМ ЧЗ. Не удалось разобрать секцию codes").
-              vErrSts = vErrTxt.
            END.
            ELSE DO:
                IF ttlocal-mark-code.isBlocked THEN 
                DO:
                    ASSIGN
                       vChkNotSell = YES /* получили запрет продажи от ЛМ ЧЗ */
+                      mCheckStsOff = 0
                       mCheckSts = 0
                       .
                    dbgPrint("marking.log", "КИ в ЛМ ЧЗ помечена как запрещенная к продаже.").
                    vErrSts = "Реализация товара запрещена контролирующими органами. Снимите с продажи и передайте товар управляющему/старшему смены. ".
                END.     
                ELSE DO:
-                  mCheckSts = 2.
-                  vErrSts = "". 
+                  ASSIGN
+                     mCheckSts = 2
+                     mCheckStsOff = 1
+                     vErrSts = "". 
                   dbgPrint("marking.log", "Проверка в ЛМ ЧЗ прошла успешно.").
                END.
            END.       
         END.     
         ELSE DO:
-            mCheckSts = 0.
+            ASSIGN
+               mCheckSts = 0         
+               mCheckStsOff = 3   
+               vErrSts = vErrTxt.
             dbgPrint("marking.log", "Ошибка проверки КИ в ЛМ ЧЗ.").
-            vErrSts = vErrTxt.
         END.      
         
         OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
@@ -2308,9 +2321,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      END.
      /* нет файла офлайн проверки */ 
      ELSE DO:
-        mCheckSts = 0.
+        ASSIGN
+           mCheckSts = 0
+           mCheckStsOff = 3        
+           vErrSts = vErrTxt.
         dbgPrint("marking.log", "Отсутствует файл офлайн проверки в ЛМ ЧЗ.").
-        vErrSts = vErrTxt.
         OUTPUT STREAM out_data TO value(vFileLog) APPEND.            
         PUT STREAM out_data UNFORMATTED  
              NOW CHR(9) "Отсутствует ответ ЛМ ЧЗ".
@@ -2325,14 +2340,18 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      THEN  do:
          ASSIGN
             mCheckSts = 2
+            mCheckStsOff = 2  
             vErrSts = "".                     
-         dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать при отсутствии ответа от ЛМ ЧЗ. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts)).   
+         dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать при отсутствии ответа от ЛМ ЧЗ. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3 mCheckStsOff &5",
+                                            vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts, mCheckStsOff)).   
      end.
      else do:         
          IF mCheckSts = 0 then
-            dbgPrint("marking.log", SUBSTITUTE("Не разрешаем продавать. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts)).
+            dbgPrint("marking.log", SUBSTITUTE("Не разрешаем продавать. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3 mCheckStsOff &5",
+                                               vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts, mCheckStsOff)).
          else
-            dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3",vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts)).                
+            dbgPrint("marking.log", SUBSTITUTE("Разрешаем продавать. mCheckSts &4 vChkNotSell &1 gismt-OflineDate &2 mCheckGisMT &3 mCheckStsOff &5",
+                                               vChkNotSell, gismt-OflineDate, mCheckGisMT, mCheckSts, mCheckStsOff)).                
      end.    
      RETURN vErrSts.        
   END.
@@ -2503,7 +2522,9 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   ):
     
     DEFINE VARIABLE vAccMarkCheck AS CHARACTER NO-UNDO. 
-    DEFINE VARIABLE vMarkGs       AS CHARACTER NO-UNDO. 
+    DEFINE VARIABLE vMarkGs       AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE vChkScanSts   AS INTEGER   NO-UNDO. 
+     
     DEFINE BUFFER buf_marking FOR ub.marking.
     
     dbgPrint("marking.log", SUBSTITUTE("Проверка марки для документа iObjCode &1 iMark &2 iMarkShort &3 iRunOffLine &4", 
@@ -2539,31 +2560,30 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                        mCheckSts,
                                        mReqId,
                                        mReqTimeStamp,
-                                       mCheckGisMT)).
+                                       mCheckGisMT)).                                      
     /* если марки нет в ГИС МТ (found = false), то  сразу выходим */
-    IF mCheckSts = 3 THEN mCheckSts = 0.          
-
+    IF mCheckSts = 3 THEN vChkScanSts = 0.          
     /* Если прошло более 72ч с момента отсутствия ответа ГИС МТ  - для этих проверок не контролируем */
-    IF mCheckSts = 4 THEN mCheckSts = 2.                      
+    ELSE IF mCheckSts = 4 THEN vChkScanSts = 2.
+    ELSE vChkScanSts = mCheckSts.                       
     
     /* если не проверяем офлайн, то запрещаем продавать при отсутствии ответа, и разрешаем при аварии */
-    IF NOT iRunOffLine AND mCheckSts = 2 THEN DO:                
-        
+    IF NOT iRunOffLine AND vChkScanSts = 2 THEN DO:                        
         CASE mCheckGisMT:
            /* ответа от ЛМ ЧЗ не получено */
            WHEN 0 THEN 
            DO:
-              mCheckSts = 2.
+              vChkScanSts = 2.
            END.
            /* проверка онлайн прошла, только срок годности не проверили */
            WHEN 1 THEN 
            DO:
-              mCheckSts = 1.
+              vChkScanSts = 1.
            END.
            /* при аварии разрешаем продавать */
            WHEN 2 THEN 
            DO:
-              mCheckSts = 1.
+              vChkScanSts = 1.
            END.          
         END CASE.          
     END.       
@@ -2571,19 +2591,21 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     /* если надо проверять офлайн  */
     IF iRunOffLine THEN DO:
        /* проверка онлайн прошла, только срок годности не проверили */ 
-       IF mCheckGisMT = 1 AND mCheckSts = 2  THEN mCheckSts = 1.
+       IF mCheckGisMT = 1 AND vChkScanSts = 2  THEN vChkScanSts = 1.
        
        /* если аварийная ситуация, или не было ответа от ГИС МТ */ 
-       IF (mCheckSts = 2 AND mCheckGisMT = 0) OR mCheckGisMT = 2
+       IF (vChkScanSts = 2 AND mCheckGisMT = 0) OR mCheckGisMT = 2
        THEN DO: 
            oRunedOffLine = true.
            /*gismt-OflineDate = today + 2.*/
            vAccMarkCheck = ChekLocalMark(iMarkShort).
-           IF mCheckSts = 2 THEN mCheckSts = 1.
+           vChkScanSts = mCheckStsOff.            
        END.
     END.                 
-    
-    RETURN mCheckSts.
+    dbgPrint("marking.log", SUBSTITUTE("Результат проверки ГИС МТ и ЛМ ЧЗ: &1 Проверка офлайн &2", 
+                                       vChkScanSts, 
+                                       oRunedOffLine)).  
+    RETURN vChkScanSts.
   END METHOD.
 
   /*------------------------------------------------------------------------------
