@@ -116,7 +116,7 @@ if first-of(buf_doc-pl.gds-code) then do:
   if bef-rvs-doc-rec <> ? then do:
     find first bef-rvs-doc no-lock
       where recid(bef-rvs-doc) = bef-rvs-doc-rec
-      .
+      no-error.
     find first bef-rvs-line no-lock
       where bef-rvs-line.rvs-code = bef-rvs-doc.rvs-code
         and bef-rvs-line.obj-type = bef-rvs-doc.obj-type
@@ -205,25 +205,31 @@ case buf_trn-doc.doc-type:
             and bef-doc-rvs-line.obj-code = bef-doc-rvs-doc.obj-code
             and bef-doc-rvs-line.pl-code  = buf_doc-pl.pl-code
             and bef-doc-rvs-line.gds-code = buf_doc-pl.gds-code
-          .
+            no-error .
         find first aft-doc-rvs-line no-lock
           where aft-doc-rvs-line.rvs-code = aft-doc-rvs-doc.rvs-code
             and aft-doc-rvs-line.obj-type = aft-doc-rvs-doc.obj-type
             and aft-doc-rvs-line.obj-code = aft-doc-rvs-doc.obj-code
             and aft-doc-rvs-line.pl-code  = buf_doc-pl.pl-code
             and aft-doc-rvs-line.gds-code = buf_doc-pl.gds-code
-            .
+            no-error .
+      if available bef-doc-rvs-line   and available aft-doc-rvs-line
+      then do: 
         assign
           varwayb_measure    = varwayb_measure + (if p-tog-weight = true then aft-doc-rvs-line.measure-cli-qnty - bef-doc-rvs-line.measure-cli-qnty else aft-doc-rvs-line.measure-qnty - bef-doc-rvs-line.measure-qnty)
           varwayb_difference = varwayb - varwayb_measure
         .
+       end.
+
+      /*else do:                  
+    message '*'  {&income} buf_trn-doc.doc-code   view-as alert-box.
+        assign                  
+          varwayb_measure    = ?
+          varwayb_difference = ?
+        .                       
+      end.                      */
+
       end.
-/*      else do:                  */
-/*        assign                  */
-/*          varwayb_measure    = ?*/
-/*          varwayb_difference = ?*/
-/*        .                       */
-/*      end.                      */
     end.
     else do:
       assign

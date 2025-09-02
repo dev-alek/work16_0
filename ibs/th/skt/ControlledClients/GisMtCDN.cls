@@ -96,6 +96,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
      define variable vFileErr as character   no-undo.
      define variable vParamProxy as character no-undo.  
      define variable vReqSDN as logical no-undo.             
+     define variable vFileCmd as char no-undo.
      
      vParamProxy = GetParamProxy().
      if not gismt-cdnTurnOn then return .
@@ -128,6 +129,7 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
          run gbl/_tmpfile.p ( "CdnListGisMTRes", ".txt", output vFileResult ) .
          run gbl/_tmpfile.p ( "CdnListGisMTErr", ".txt", output vFileErr ) .
          run gbl/_tmpfile.p ( "CdnListGisMTRes", ".json", output vFileResJson ) .
+         if session:debug-alert then run gbl/_tmpfile.p ( "CdnListGisMTCmd", ".txt", output vFileCmd ) .
                           
          cmd = substitute ('&1 --connect-timeout &8 --max-time &8 &7 -X GET &3 -H "Content-Type: application/json" -H &4 &5 >&2 --stderr &6',
                           search ("exe/curl.exe"), /*1*/
@@ -138,6 +140,14 @@ class ibs.th.skt.ControlledClients.GisMtCDN inherits objth :
                           vFileErr,              /*6*/
                           gismt-DopParam,        /*7*/
                           trim(replace(string(gismt-WaitTime * 2, "zzzz9.99999"),".",","),"")). /*8*/
+         
+         if session:debug-alert then 
+         do:
+             OUTPUT STREAM out_data TO value(vFileCmd).        
+             PUT STREAM out_data UNFORMATTED  
+              cmd .
+             OUTPUT STREAM out_data CLOSE.
+         end.
                           
          os-command silent value(cmd).                 
                            

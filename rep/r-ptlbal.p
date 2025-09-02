@@ -1,4 +1,4 @@
-block-level on error undo, throw.
+/*block-level on error undo, throw. */
 /*
 
 $Revision: 0ec5d11e52eb, 2015, rls $
@@ -183,7 +183,7 @@ assign
 
 if not can-find(first gds-list) then do:
   message
-    "Не заданы товары для формирования опреративного баланса."
+    "Не заданы товары для формирования оперативного баланса."
     view-as alert-box error.
   return.
 end.
@@ -209,7 +209,7 @@ assign
 find first buf_clients no-lock
   where buf_clients.obj-type = parobj-type
     and buf_clients.obj-code = parobj-code
-  .
+  no-error.
 assign
   v-obj-name = buf_clients.obj-name
 .
@@ -218,7 +218,7 @@ assign
 find first buf_clients no-lock
   where buf_clients.obj-type = {&cmp}
     and buf_clients.obj-code = varhost-code
-  .
+  no-error.
 assign
   v-host-name = buf_clients.obj-name
 .

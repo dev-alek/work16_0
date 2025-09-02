@@ -562,7 +562,7 @@ PROCEDURE CrCheckMark :
   end . 
   
   if v-is-off-line 
-  and v-GisMTcheckStatus = 2
+  and v-GisMTcheckStatus = 3
   then do :
     run waitfram-hide in this-procedure .
     message ("Онлайн и офлайн – проверки не выполнены, товар не может быть добавлен в производство")

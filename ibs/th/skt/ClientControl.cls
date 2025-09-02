@@ -136,7 +136,9 @@ class ibs.th.skt.ClientControl:
      define variable req  as ibs.th.skt.Commands.IRequest  no-undo.
      define variable resp as ibs.th.skt.Commands.IResponse no-undo.
      define variable vAvailProc as logical no-undo.
+     define variable vDelete as logical no-undo.
      for each ttDeferredCommands:
+        vDelete = false.
         req  = cast(ttDeferredCommands.objreq, ibs.th.skt.Commands.IRequest).
         resp = cast(ttDeferredCommands.objResp,ibs.th.skt.Commands.IResponse).
         block-check:
@@ -165,15 +167,55 @@ class ibs.th.skt.ClientControl:
               then
                  publish "write-to-log" from hLog (substitute ("RESPONCE: Class: &1 end result: &2",resp ,resp-head)).
               logWrite:LogStr = "".
-              req:HndlSocket:disconnect().
-              delete object req.
-              delete object resp.
-              delete ttDeferredCommands.
+              vDelete = yes.
               
            end.
            else
               vAvailProc = yes.
+         define variable v-err-msg as character no-undo .  
+         catch exAppErrors as class Progress.Lang.AppError :
+            v-err-msg = exAppErrors:ReturnValue .
+            if v-err-msg > "" 
+            then . 
+            else do :
+               v-err-msg = exAppErrors:GetMessage(1) .
+               if v-err-msg > "" 
+               then . 
+               else v-err-msg = "AppError в модуле {&FILE-NAME}" .
+            end .
+            logWrite:LogStr = v-err-msg.
+            vDelete = yes.
+         end catch .
+         catch exProErrors as class Progress.Lang.ProError :
+            v-err-msg = exProErrors:GetMessage(1) . 
+            if v-err-msg > "" 
+            then . 
+            else v-err-msg = "ProError в модуле {&FILE-NAME}" .
+            logWrite:LogStr = v-err-msg + exProErrors:CallStack.
+            vDelete = yes.
+         end catch .
+         catch exAnyErrors as class Progress.Lang.Error:
+            v-err-msg = "Unexpected error в модуле {&FILE-NAME} " + exAnyErrors:GetMessage(1).
+            logWrite:LogStr = v-err-msg + exAnyErrors:CallStack.
+            vDelete = yes.
+         end catch .
+         finally:
+           if vdelete
+           then do:
+              if 
+                     valid-handle (hlog)
+                 and logWrite:LogStr > ""
+              then
+                 publish "write-to-log" from hLog (substitute ("Error: Class: &1 end result: &2",resp ,logWrite:LogStr)).
+              
+              req:HndlSocket:disconnect().
+              delete object req.
+              delete object resp.
+              delete ttDeferredCommands.
+           end.
+        
         end.
+     end.
      end.
      return vAvailProc.
   end.
