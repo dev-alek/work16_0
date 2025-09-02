@@ -263,8 +263,9 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
             if file-info:file-size <> 0 then do:
                copy-lob from file vFileResult to vlongJson no-error.          
                /*vlongJson = '~{"bodys":[' + vlongJson + "]}" .*/
-               vlongJsonCh = REPLACE(vlongJson, 'null', '"unknown"').
-               copy-lob from vlongJsonCh to file vFileResult no-error.
+               vlongJsonCh = REPLACE(vlongJson, 'null', '"unknown"').               
+               vlongJsonCh = REPLACE(vlongJsonCh, '"replicationStatus":~{}', '"replicationStatus":""') no-error.               
+               copy-lob from vlongJsonCh to file vFileResult no-error.               
                cmd = substitute ('&1 -file=&2 >&3',
                                       search("exe/json2xml.exe"),
                                       vFileResult,
@@ -370,7 +371,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
         define variable vNum as integer no-undo.
         define variable vStrLong as longchar no-undo.        
         define variable vStatus as character no-undo.        
-        define variable vTimeLag as int64 no-undo.
+        define variable vTimeLag as datetime-tz no-undo.
         
         vFileName = "GisMtOffLine-" + replace(string(today),"/","-") +  ".log".
         
@@ -389,11 +390,11 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
            no-lock no-error.
         if avail ttstatus-body then 
         do:   
-           vTimeLag = GetMaxTime().                                    
-           vStatus =  substitute("Статус модуля ЛМ ЧЗ:&1&2&1Время синхронизации:&1&3",
+           vTimeLag = GetStatusTime(ttstatus-body.lastSync).                                    
+           vStatus =  substitute("Статус модуля ЛМ ЧЗ:&1&2&1Дата и время синхронизации:&1&3",
                                  chr(9),
                                  ttstatus-body.f_status,
-                                 (if vTimeLag > 0 then string(now - vTimeLag) else " не определено")).           
+                                 vTimeLag).           
         end.
         else vStatus =  "Ошибка получения статуса ЛМ ЧЗ".                     
         
@@ -423,39 +424,17 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
                                                      
    end method.    
    
-   method  private int64 GetMaxTime():
-       define variable vTimeLag as int64 no-undo.
-       define variable vTimeTT as int64 no-undo.
+   method  private datetime-tz GetStatusTime 
+       (iLastSync as char):
        
-       vTimeLag = 0.
-       find first ttblocked_series no-error.
-       if avail ttblocked_series
-            and ttblocked_series.timeLag <> "unknown" 
-       then do: 
-          vTimeTT = Int64(ttblocked_series.timeLag) no-error.
-          if not error-status:error and
-             vTimeTT > vTimeLag
-          then vTimeLag = vTimeTT.            
-       end. 
-       find first ttblocked_gtin no-error.
-       if avail ttblocked_gtin 
-            and ttblocked_gtin.timeLag <> "unknown"
-       then do: 
-          vTimeTT = Int64(ttblocked_gtin.timeLag) no-error.
-          if not error-status:error and
-             vTimeTT > vTimeLag     
-          then vTimeLag = vTimeTT.       
-       end.       
-       find first ttblocked_cis no-error.
-       if avail ttblocked_cis 
-            and ttblocked_cis.timeLag <> "unknown"
-       then do: 
-          vTimeTT = Int64(ttblocked_cis.timeLag) no-error.
-          if not error-status:error and
-             vTimeTT > vTimeLag     
-          then vTimeLag = vTimeTT.       
-       end.
-       return vTimeLag.     
+       define variable vSync as int64 no-undo.
+       define variable vTimeSync as datetime-tz no-undo. 
+       define variable vTz as integer no-undo.
+               
+       vSync = int64(iLastSync).
+       vTz = TIMEZONE (now).   
+       vTimeSync = DateTime("01/01/1970") + vSync + vTz * 60000. 
+       return vTimeSync.     
    end method.   
    
    /* Принудительная инициализация */  
