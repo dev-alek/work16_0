@@ -316,7 +316,7 @@ if last-of(buf_doc-pl.gds-code) then do:
     sym02 varpl-code
     sym03 vargoods-name
     sym04 varrest_start_measure
-    sym05 varrest_start_book
+    sym05 varrest_start_book format "->>>>>>>>9.<<<"
     sym06 varwayb
     sym07 varwayb_measure
     sym08 varwayb_fact
@@ -328,7 +328,7 @@ if last-of(buf_doc-pl.gds-code) then do:
     sym14 varret_supp
     sym15 varanother
     sym16 varrest_end_measure
-    sym17 varrest_end_book
+    sym17 varrest_end_book format "->>>>>>>>9.<<<"
     sym18 varrest_end_balans
     sym19
    with frame doc-line-frm.

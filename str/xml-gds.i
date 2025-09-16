@@ -46,8 +46,12 @@ MarkType = ObjSrv:Env:Marking:Types.
 define buffer buf_prod-bc-attr for ub.prod-bc-attr .
 define buffer buf_prod-bc for ub.prod-bc .
 define buffer     prod-bc for ub.prod-bc .
+define buffer buf_goods   for ub.goods .
 define variable vaction as character no-undo.
 vaction = action.
+
+find first buf_goods no-lock where buf_goods.gds-code = cash-gds.gds-code no-error .
+if available (buf_goods) and buf_goods.stts > 0 then vaction = "D".
 if check-ban-sales-via-cd(cash-gds.gds-code) 
 then do:
    vaction = "D".
