@@ -26,9 +26,9 @@ then do:
   create buffer vBufPlaceAttr for table "place-attr" .
   vBufPlaceAttr:find-first ("where place-attr.attr-code eq 'init-shift-period-rvs'", no-lock) no-error.
   oOK = vBufPlaceAttr:available .
+  delete object vBufPlaceAttr .
 end .
 else
   oOK = true .
   
-delete object vBufPlaceAttr .
 delete object vBufPlace .
