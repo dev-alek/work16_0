@@ -820,7 +820,6 @@ end.
       end.
   end.
 
- 
   for each buf_bar-code no-lock where buf_bar-code.gds-code = v-gds-code,
     each buf_prod-bc exclusive-lock where buf_prod-bc.b-code = buf_bar-code.b-code :
      if lookup( buf_prod-bc.b-str, v-barcode-list ) = 0
@@ -829,7 +828,7 @@ end.
        buf_prod-bc.bc-on = false .  
                  run fill-pbc-list in mImp2CdH
                      (v-rid-pbc,
-                     ub.bar-code.gds-code,
+                     v-gds-code,
                      buf_prod-bc.b-code,
                      buf_prod-bc.b-str,
                      buf_prod-bc.bc-on,
