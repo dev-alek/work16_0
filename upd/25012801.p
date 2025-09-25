@@ -27,6 +27,7 @@ then do:
                            and thbj-attr.prop-code       ne {&attr-gisMT_waitTime}
                            and thbj-attr.prop-code       ne {&attr-gisMT_cdnTurnOn}
                            and thbj-attr.prop-code       ne {&attr-gisMT_cdnAdress}
+                           and thbj-attr.prop-code       ne {&attr-gisMT_crashSituat}
       exclusive-lock:
             delete thbj-attr.
       end.
