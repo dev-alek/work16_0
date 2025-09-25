@@ -316,7 +316,7 @@ if last-of(buf_doc-pl.gds-code) then do:
     sym02 varpl-code
     sym03 vargoods-name
     sym04 varrest_start_measure
-    sym05 varrest_start_book format "->>>>>>>>9.<<<"
+    sym05 varrest_start_book format "->>>>>>>9.<<<"
     sym06 varwayb
     sym07 varwayb_measure
     sym08 varwayb_fact
