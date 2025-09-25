@@ -208,7 +208,7 @@ DEFINE VARIABLE UpdateRequest AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 47 BY .81 NO-UNDO.
 
-DEFINE VARIABLE Proxytext AS char INITIAL "Проски-сервер" format "x(13)"
+DEFINE VARIABLE Proxytext AS char INITIAL "Прокси-сервер" format "x(13)"
       .
 
 
