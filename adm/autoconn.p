@@ -1,11 +1,11 @@
 block-level on error undo, throw.
 /*
 
-$Revision: 1eba0946c2d7, 3078, rls $
-$Author: DRuban $
-$Date: Пт авг 05 19:16:25 2022 +0300 $
-$Workfile: autoconn.p $
-$Archive: adm/autoconn.p $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 процедура коннекта к db
 
@@ -16,11 +16,11 @@ Creation date: 03/22/06
 
 */
 
-define variable vss-revision    as character no-undo init "$Revision: 1eba0946c2d7, 3078, rls $":U .
-define variable vss-author      as character no-undo init "$Author: DRuban $":U .
-define variable vss-date        as character no-undo init "$Date: Пт авг 05 19:16:25 2022 +0300 $":U .
-define variable vss-workfile    as character no-undo init "$Workfile: autoconn.p $":U .
-define variable vss-archive     as character no-undo init "$Archive: adm/autoconn.p $":U .
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "процедура коннекта к db".
 { cmp/vssrevis.i }
 { adm/auto-def.i }
@@ -71,7 +71,7 @@ on quit   undo, return error substitute( "&1. QUIT", vss-workfile )
   define variable v-connect-option as character no-undo .
   assign
     v-file-name      = substitute( "./ATH&1.pid":U, g#auto-pid )
-    v-connect-option = substitute('-U &1 -P &2':u
+    v-connect-option = substitute('-U &1 -P "&2"':u
                               ,g#auto-user-login
                               ,v-user-password-enc
                               ) when  g#auto-user-login ne ""
@@ -135,4 +135,4 @@ on quit   undo, return error substitute( "&1. QUIT", vss-workfile )
   create alias ubflt for database ub .
 
 end.
-/* $Workfile: autoconn.p $ end */
+/* $Workfile$ end */
