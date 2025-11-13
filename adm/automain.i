@@ -498,7 +498,7 @@ procedure AddUtil:
       run utl/chknds22.p (output vRun). 
       if vRun then
       do:
-        run addTaskTime in this-procedure("Смена кода ставки НДС с 1 на 10.","utl/run_nds22.p" , mFileCashParLog, datetime-tz (1,1,2026,0,0 )).
+        run addTaskTime in this-procedure("Смена кода ставки НДС с 1 на 11.","utl/run_nds22.p" , mFileCashParLog, datetime-tz (1,1,2026,0,0 )).
       end.
    end.
    

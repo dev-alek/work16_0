@@ -6,7 +6,7 @@ $Date$
 $Workfile$
 $Archive$
 
-Утилита для BTS-2056. Добавление ставки налога "10" на товарах с 01.01.2026 и смена стаки на группах товаров с "1" на "10".
+Утилита для BTS-2056. Добавление ставки налога "11" на товарах с 01.01.2026 и смена стаки на группах товаров с "1" на "11".
 
 Автор: Ростовцев А.М.
 Дата создания: 16.09.2025
@@ -29,6 +29,8 @@ define buffer tax-rate-gds-grp for ub.tax-rate-gds-grp.
 define buffer sys-ctrl         for ub.sys-ctrl.
 define buffer buf_code         for ub.code.
 
+&scop nds22 11
+
 find first sys-ctrl no-lock.
 
 run factord-end-day in this-procedure (
@@ -38,11 +40,10 @@ run factord-end-day in this-procedure (
 for each tax-rate-gds no-lock where
          tax-rate-gds.tax-code  = 1
      and tax-rate-gds.rate-code = 1
-/*     and tax-rate-gds.gds-code = 107882*/
 on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:get-message(1), error-status:get-message(2))
 :
 
-  find first buf_tax-rate-gds no-lock where
+  find first buf_tax-rate-gds exclusive-lock where
              buf_tax-rate-gds.gds-code = tax-rate-gds.gds-code
          and buf_tax-rate-gds.tax-code = tax-rate-gds.tax-code
          and buf_tax-rate-gds.host-code = tax-rate-gds.host-code
@@ -57,32 +58,33 @@ on error undo, return error SUBSTITUTE("&1 &2 &3", return-value, error-status:ge
       except chip-num corr-time corr-user-db-num corr-user-name corr-date
       to buf_tax-rate-gds
       assign
-        buf_tax-rate-gds.rate-code = 10
         buf_tax-rate-gds.fact-date = v-fact-date
         buf_tax-rate-gds.fact-order = v-fact-order
     .
   end.
+  if buf_tax-rate-gds.rate-code <> {&nds22} then
+    buf_tax-rate-gds.rate-code = {&nds22}.
 end.
 
 for each tax-rate-gds-grp exclusive-lock where
          tax-rate-gds-grp.tax-code  = 1
      and tax-rate-gds-grp.rate-code = 1
 :
-  tax-rate-gds-grp.rate-code = 10.
+  tax-rate-gds-grp.rate-code = {&nds22}.
 end.
 
-run str/diallog.w ( this-procedure
-                  , this-procedure
-                  , 'str/sendalcd.p':U
-                  , ('yes' + {&delim-par} +
-                     'no' + {&delim-par} +
-                     'no' + {&delim-par} +
-                     'no' + {&delim-par}  +
-                     'no' + {&delim-par}
-                       )
-                  , yes /*p-auto-go*/
-                  , 'Прервать':U
-                  , 'Отправка информации на кассу') no-error .
+/*run str/diallog.w ( this-procedure                            */
+/*                  , this-procedure                            */
+/*                  , 'str/sendalcd.p':U                        */
+/*                  , ('yes' + {&delim-par} +                   */
+/*                     'no' + {&delim-par} +                    */
+/*                     'no' + {&delim-par} +                    */
+/*                     'no' + {&delim-par}  +                   */
+/*                     'no' + {&delim-par}                      */
+/*                       )                                      */
+/*                  , yes /*p-auto-go*/                         */
+/*                  , 'Прервать':U                              */
+/*                  , 'Отправка информации на кассу') no-error .*/
 
 find first buf_code exclusive-lock where
            buf_code.parent = substitute("RunUtils&1&2",{&delim-par},sys-ctrl.db-num)
@@ -116,4 +118,5 @@ do:
 end.
 buf_code.CodeValue = entry(1,string(datetime(today, mtime)),".").
 
+run utl\proc-msg.p (" Внимание! Проведено изменение ставки НДС у товаров с 20% на 22%. Необходимо передать информацию по налоговым ставкам и товарам на все кассы!") no-error.
 
