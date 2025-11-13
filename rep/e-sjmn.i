@@ -24,7 +24,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scoped-define   line-length-base 196
   &else
 &scoped-define   line-length-full 196
-&scoped-define   line-length-base 134
+&scoped-define   line-length-base 136
   &endif
 
 &else

@@ -49,8 +49,8 @@ DEFINE FRAME {4}
         sj-adv.discnt column-label  "Скидка!(вал.продаж)"   format "->>>>>>>9.99"
 &endif
         sj-adv.discnt-sum column-label "Сумма скидки!(вал.продаж)" format "->>>>>>>9.99"
-        pcnt column-label "%!скидки" format "->9.9%"
-        sj-adv.netto-sum column-label  "Выручка!(вал.продаж)"  format "->>>>>>>>9.99" space(0)
+        pcnt column-label "%!скидки" format "->>9.9%"
+        sj-adv.netto-sum column-label  "Выручка!(вал.продаж)"  format "->>>>>>>9.99" space(0)
 &if "{1}" = "full" &then
         sj-adv.netto-sum-r column-label "Выручка!(в {&abbr_rublyah})"
                 format "->>>,>>>,>>>,>>9.99" space(0)
@@ -92,7 +92,7 @@ DEFINE FRAME {4}
       Line format {&line-format}
       AT 1  with width  {&A4_LS} down stream-io use-text no-box.
     &else
-&scoped-define line-length 134
+&scoped-define line-length 136
       Line format {&line-format}
       AT 1  with width  {&A4_CW0} down stream-io use-text no-box.
     &endif
