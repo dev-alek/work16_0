@@ -71,8 +71,8 @@ else do:
 end.
 
 /* ширина отчета */
-&scop report-width        200
-&scop report-width-frame  202
+&scop report-width        211
+&scop report-width-frame  213
 &scop report-width-25     182
 
 define buffer bef-rvs-doc         for ub.rvs-doc.
@@ -236,11 +236,11 @@ else
 
 put stream PrnLibStream unformatted
   v-line skip
-  STRING(":           ", "X(12)") STRING(":           ", "X(12)") STRING(":         ", "X(12)") STRING(":          ", "X(11)") STRING(": Остаток  ", "X(11)") STRING(":          ", "X(11)") STRING("   Внешний ", "X(11)") STRING(" приход    ", "X(11)") STRING("           ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":        :", "X(10)") skip
-  STRING(":   Номер   ", "X(12)") STRING(":  № резер- ", "X(12)") STRING(":   Вид   ", "X(12)") STRING(": Остаток  ", "X(11)") STRING(":на начало ", "X(11)") STRING(":__________", "X(11)") STRING("___________", "X(11)") STRING("___________", "X(11)") STRING("___________", "X(11)") STRING(": Расход   ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":Остаток на", "X(11)") STRING(":Остаток на", "X(11)") STRING(": Баланс :", "X(10)") skip
-  STRING(":   смены   ", "X(12)") STRING(":    вуара  ", "X(12)") STRING(":  нефте  ", "X(12)") STRING(":на начало ", "X(11)") STRING(":расчетно- ", "X(11)") STRING(":          ", "X(11)") STRING(":    По    ", "X(11)") STRING(":          ", "X(11)") STRING(":Отклонение", "X(11)") STRING(":по данным ", "X(11)") STRING(": Списание ", "X(11)") STRING(": Инвентари", "X(11)") STRING(": Расход   ", "X(11)") STRING(": Возврат  ", "X(11)") STRING(":Остальное ", "X(11)") STRING(":  конец   ", "X(11)") STRING(":  конец   ", "X(11)") STRING(":+излишки:", "X(10)") skip
-  STRING(": и дата ее ", "X(12)") STRING(":           ", "X(12)") STRING(": продукта", "X(12)") STRING(":   факт   ", "X(11)") STRING(": книжный  ", "X(11)") STRING(": По ТТН   ", "X(11)") STRING(":измер-ию в", "X(11)") STRING(":По факту  ", "X(11)") STRING(":от принят.", "X(11)") STRING(": с касс   ", "X(11)") STRING(":          ", "X(11)") STRING(":  зация   ", "X(11)") STRING(": внешний  ", "X(11)") STRING(":поставщику", "X(11)") STRING(":          ", "X(11)") STRING(":фактически", "X(11)") STRING(":расчетно- ", "X(11)") STRING(":-недост.:", "X(10)") skip
-  STRING(":  начала   ", "X(12)") STRING(":           ", "X(12)") STRING(":         ", "X(12)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":резервуаре", "X(11)") STRING(":          ", "X(11)") STRING(":количества", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(":          ", "X(11)") STRING(": книжный  ", "X(11)") STRING(":        :", "X(10)") skip
+  STRING(":           ", "X(12)") STRING(":           ", "X(12)") STRING(":         ", "X(12)") STRING(":          ", "X(12)") STRING(": Остаток  ", "X(11)") STRING(":           ", "X(12)") STRING("   Внешний  ", "X(12)") STRING(" приход     ", "X(12)") STRING("           ", "X(11)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(11)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":        :", "X(10)") skip
+  STRING(":   Номер   ", "X(12)") STRING(":  № резер- ", "X(12)") STRING(":   Вид   ", "X(12)") STRING(": Остаток  ", "X(12)") STRING(":на начало ", "X(11)") STRING(":___________", "X(12)") STRING("____________", "X(12)") STRING("____________", "X(12)") STRING("___________", "X(11)") STRING(": Расход   ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(11)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":Остаток на", "X(12)") STRING(":Остаток на", "X(12)") STRING(": Баланс :", "X(10)") skip
+  STRING(":   смены   ", "X(12)") STRING(":    вуара  ", "X(12)") STRING(":  нефте  ", "X(12)") STRING(":на начало ", "X(12)") STRING(":расчетно- ", "X(11)") STRING(":           ", "X(12)") STRING(":    По     ", "X(12)") STRING(":           ", "X(12)") STRING(":Отклонение", "X(11)") STRING(":по данным ", "X(12)") STRING(": Списание ", "X(12)") STRING(": Инвентари", "X(11)") STRING(": Расход   ", "X(12)") STRING(": Возврат  ", "X(12)") STRING(":Остальное ", "X(12)") STRING(":  конец   ", "X(12)") STRING(":  конец   ", "X(12)") STRING(":+излишки:", "X(10)") skip
+  STRING(": и дата ее ", "X(12)") STRING(":           ", "X(12)") STRING(": продукта", "X(12)") STRING(":   факт   ", "X(12)") STRING(": книжный  ", "X(11)") STRING(": По ТТН    ", "X(12)") STRING(":измер-ию в ", "X(12)") STRING(":По факту   ", "X(12)") STRING(":от принят.", "X(11)") STRING(": с касс   ", "X(12)") STRING(":          ", "X(12)") STRING(":  зация   ", "X(11)") STRING(": внешний  ", "X(12)") STRING(":поставщику", "X(12)") STRING(":          ", "X(12)") STRING(":фактически", "X(12)") STRING(":расчетно- ", "X(12)") STRING(":-недост.:", "X(10)") skip
+  STRING(":  начала   ", "X(12)") STRING(":           ", "X(12)") STRING(":         ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(11)") STRING(":           ", "X(12)") STRING(":резервуаре ", "X(12)") STRING(":           ", "X(12)") STRING(":количества", "X(11)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(11)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(":          ", "X(12)") STRING(": книжный  ", "X(12)") STRING(":        :", "X(10)") skip
   v-line
   .
 
@@ -340,7 +340,7 @@ assign
 
 run rep/extitle.p  ( input 1 ) no-error.
 
-&scop format-qnty ">,>>>,>>9.<<<"
+&scop format-qnty "->,>>>,>>9.<<<"
 
 &scop frm-clmn-01 format "x(11)"
 &scop lb-clmn-01  column-label "1":C10

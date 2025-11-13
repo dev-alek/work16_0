@@ -169,6 +169,7 @@ define variable v-no-add-marks             as logical   no-undo initial no .
 define variable vIsExemplarGoods           as logical   no-undo .
 define variable vRightChngQntyCode         as character no-undo .
 define variable vRightChngQnty             as logical   no-undo .
+define variable vBackSale                  as logical   no-undo initial no. /* признак возврата по договору "Обратная продажа" */
 { gbl/objsrv.i }
 define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 define variable v-pack-qnty as integer no-undo .
@@ -2353,9 +2354,11 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   define buffer buf_doc-pl   for ub.doc-pl.
   define buffer buf_currency for ub.currency  .
   define buffer buf_doc-pl-attr for ub.doc-pl-attr .
+  define buffer buf_contract    for ub.contract.
 
   define variable vGtin     as character no-undo.
   define variable vGtinQnty as integer no-undo.
+  define variable vExistGdsDtl as logical no-undo init true. /* признак, что gds-dtl уже есть */
   
   if num-entries(prt-mode, {&delim-par}) = 2
   then do :
@@ -2376,6 +2379,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   find first t-doc no-lock
     where recid(t-doc) = doc-rec
     .
+  if v-is-return then
+  do:
+    for first buf_contract no-lock where
+              buf_contract.host-code     = t-doc.host-code
+          and buf_contract.contract-code = t-doc.contract-code
+    :
+      vBackSale = (buf_contract.spec-check = 23). /* Возврат по "Обратной продаже" */
+    end.
+  end.
+    
   find first ub.gds-prt no-lock
     where recid( ub.gds-prt ) = cur-rec
     .
@@ -2557,6 +2570,7 @@ end.
   end.
 
   if not available ub.gds-dtl then do:
+    vExistGdsDtl = false.
     if ( lookup( t-doc.doc-type, {&income_return} ) > 0
       and t-doc.internal
       and ( ub.gds-prt.upper-code = buf_goods.prt-root /* выключены шкалы на тек. объекте */ or
@@ -2684,7 +2698,9 @@ end.
     find ub.gds-prt no-lock where recid( ub.gds-prt ) = cur-rec.
   end.
   
-  if v-is-return and in-part-rec > 0
+  if v-is-return and in-part-rec > 0 
+  and (not vExistGdsDtl or not vBackSale) /* BTS-2021 - для возврата по Обратной продаже, что открываем уже 
+                                             существующую запись и тогда цену НЕ берем из партии */
   then do :
     find first in_parts no-lock where recid(in_parts) = in-part-rec no-error .
     if available in_parts
@@ -4949,7 +4965,8 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE UI-on d-out-prt 
 PROCEDURE UI-on :
 define variable v-data-type     as character no-undo.
-  define variable calc_after-qnty as decimal   no-undo.
+  define variable calc_after-qnty as decimal no-undo.
+  define variable isRightEditPrice as logical no-undo.
   disable all  with frame {&FRAME-NAME}.
 
   if prt-mode <> {&lookup} then do:
@@ -5027,6 +5044,28 @@ if t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} then do:
      ( ub.gds-dtl.price-base:VISIBLE AND ub.gds-dtl.price-base:sensitive )
      THEN
      ENABLE r-price with frame {&FRAME-NAME}.
+  if prt-mode <> {&lookup} and v-is-return and vBackSale then
+  do:
+  /* BTS-2021 Для док-тов возврата расхода внешнего по договору со схемой возврата «Обратная продажа»  */
+  /* и наличием права «actn_expense_price» даем редактировать цену                                     */
+    { gbl/chk-actg.i
+      v-cntxt-db-num
+      v-cntxt-userid
+      {&action-head-code-main}
+      'actn_expense_price'
+      {&cntxt-object}
+      t-doc.host-code
+      t-doc.obj-type
+      t-doc.obj-code
+      0
+      0
+      0
+      false
+      isRightEditPrice
+    }
+    if isRightEditPrice then
+      enable ub.gds-dtl.price-rubl with frame {&FRAME-NAME}.  
+  end.
 end.
 else if prt-mode <> {&lookup} and t-doc.ext-doc-type = {&TDEDT_Pri_Perem} and is-petrolium and not is-pieces then do:
     /* #2901, разрешаем редактирование, если применили сброс факт количеств */    

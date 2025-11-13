@@ -141,7 +141,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
      if vpas begins "nocrypt:"
      then
         vpas = substring (vpas,9).
-     return substitute(" -U &1 -P &2":U
+     return substitute(' -U &1 -P "&2"':U
                                 ,myUser
                                 ,vpas 
                                 ).

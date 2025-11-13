@@ -423,7 +423,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} implements ibs.th.bge.1crn.import.ii
       .      
             
       if objImp:code-payer <> ? then
-      tt-cashbook.cli-code          = objImp:code-payer   .       
+      assign
+      tt-cashbook.cli-code          = objImp:code-payer   
+      tt-cashbook.cli-type          = {&cmp}  .
 
       if objImp:code-payer-nonop-inc <> ? then
       assign

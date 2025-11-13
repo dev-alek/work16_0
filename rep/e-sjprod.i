@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: aea5316774be, 0, rls $
+$Author: expertek $
+$Date: Mon Jan 27 18:27:46 2014 +0400 $
+$Workfile: e-sjprod.i $
+$Archive: rep/e-sjprod.i $
 
 журнал продаж
 
@@ -16,7 +16,7 @@ Creation date: 12/05/05
 */
 
 &scoped-define vssseq {&sequence}
-define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile$ $Revision$".
+define variable vss-include-info{&vssseq} as character format "x(65)" no-undo initial "@(#)$Workfile: e-sjprod.i $ $Revision: aea5316774be, 0, rls $".
 
 &if "{5}" = "sj-adv.price" &then
   &if "{8}" = "-t" &then
@@ -24,7 +24,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 &scoped-define   put-line-length-base 198
   &else
 &scoped-define   put-line-length-full 198
-&scoped-define   put-line-length-base 136
+&scoped-define   put-line-length-base 138
   &endif
 
 &else
@@ -986,4 +986,4 @@ if SHBySalers AND last-of( sj-goods.saleman-chr ) then do:
     "Директор ______________" format "X(50)"
     "Кассир ___________________" format "X(50)" SKIP .
   end.
-/* $Workfile$ e n d */
+/* $Workfile: e-sjprod.i $ e n d */

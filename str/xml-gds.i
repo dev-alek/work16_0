@@ -48,10 +48,14 @@ define buffer buf_prod-bc for ub.prod-bc .
 define buffer     prod-bc for ub.prod-bc .
 define buffer buf_goods   for ub.goods .
 define variable vaction as character no-undo.
+define variable d_action as character no-undo.
 vaction = action.
-
+d_action = "".
 find first buf_goods no-lock where buf_goods.gds-code = cash-gds.gds-code no-error .
-if available (buf_goods) and buf_goods.stts > 0 then vaction = "D".
+if available (buf_goods) and buf_goods.stts > 0 then do:
+ vaction = "D".
+ d_action = "D".
+end.
 if check-ban-sales-via-cd(cash-gds.gds-code) 
 then do:
    vaction = "D".
@@ -83,10 +87,9 @@ end.
   &if "{&called}"  =  "s-prodbc" or "{&called}" = "s-prodbcn"  or "{&called}"  =  "send-bc" or "{&called}" = "send-bcn" &then
 
   run bgelib-tag-open in this-procedure ( input 2, input "Item", input substitute("ctrl='&1' tms='&2' code='&3'"
-                                        ,(if vaction = "U" 
-                                                then (if cash-gds.bc-on eq yes then "ADD":U else "DEL":U)
-                                         else "DEL":U)
-                                       , OS2-time, cash-gds.main-prt-b-code)).
+                                        ,(if d_action <> "D" then "ADD":U else "DEL":U), OS2-time, cash-gds.main-prt-b-code)).
+  d_action = "". 
+
   &else
   run bgelib-tag-open in this-procedure ( input 2, input "Item", input substitute("ctrl='&1' tms='&2' code='&3'",
                                         (if

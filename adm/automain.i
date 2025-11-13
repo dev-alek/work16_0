@@ -440,6 +440,7 @@ procedure AddCashParam:
    define input  parameter p-auto-type-list as character no-undo.
    define input  parameter iToday as date no-undo.
    define input  parameter iTime as integer no-undo.
+   
    if mFileCashParLog eq ""
    then do:
       mFileCashParLog = searchfile("cashparam.log").
@@ -469,6 +470,41 @@ procedure AddCashParam:
    end.
    
 end.
+
+procedure AddUtil:
+   define input  parameter p-auto-type-list as character no-undo.
+   
+   define variable vRun as logical no-undo. 
+
+   if mFileCashParLog eq ""
+   then do:
+      mFileCashParLog = searchfile("utils.log").
+      if mFileCashParLog eq ?
+      then do:
+         output stream sOutCash to "utils.log" append.
+         output stream sOutCash close.
+         mFileCashParLog = searchfile("utils.log").
+         if mFileCashParLog eq ?
+         then
+            mFileCashParLog = "".
+      end.
+   end.
+   if (   /* lookup ({&btpr-type-autonws}   ,p-auto-type-list) > 0
+        or */ lookup ({&btpr-type-autooxml}  ,p-auto-type-list) > 0
+      )
+   then do:
+      mAsyncHelper:setTimeOutTask("Utils",600).
+      
+      run utl/chknds22.p (output vRun). 
+      if vRun then
+      do:
+        run addTaskTime in this-procedure("Смена кода ставки НДС с 1 на 11.","utl/run_nds22.p" , mFileCashParLog, datetime-tz (1,1,2026,0,0 )).
+      end.
+   end.
+   
+end.
+
+
 define variable mPrintNextMes as logical no-undo init yes.
 procedure checkConect:
    define input  parameter iTitle  as character no-undo.
