@@ -5755,6 +5755,7 @@ case PAR-MODE:
     WITH FRAME Dialog-Frame.
     assign
     tt-chk-gds.src-code:read-only in browse br-gds = yes
+    tt-chk-gds.b-code:read-only in browse br-gds = yes 
     tt-chk-gds.pump:read-only in browse br-gds = yes
     /*
     tt-chk-gds.nozzle-code:read-only in browse br-gds = yes
