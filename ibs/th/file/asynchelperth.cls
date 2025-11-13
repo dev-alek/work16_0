@@ -1414,7 +1414,7 @@ end.
                        and (   ttRun.task        eq iSched
                             or iSched            eq ?)
       no-lock:
-         vList = vList + "," + ttrun.task + string(ttrun.num).
+         vList = vList + "," + string(ttrun.num) + ". " + ttrun.task.
       end.
       if vList ne ""
       then

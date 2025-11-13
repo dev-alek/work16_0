@@ -664,6 +664,14 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   run initProcMode (i-auto-type,i-mode).
 
+  mAsyncHelper = new ibs.th.file.AsyncHelperth().
+  mAsyncHelper:mProcPublish = this-procedure.
+  mAsyncHelper:setCurrentUserPasswd().
+  mAsyncHelper:MyBachMode = yes.
+  mAsyncHelper:WritelogInter = 5.
+  mAsyncHelper:MyBachMode = yes.
+  mAsyncHelper:maxproc    = 1.
+
   run adm/autoconn.p no-error.
   if error-status :error then do:
     run write-to-log ( substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message(1) ) ).
@@ -688,6 +696,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   else do:
      define variable Vdbinfo as character no-undo.
+
+    run AddUtil(i-auto-type).
+
     run adm/db-info.p ( output g#db-num, output Vdbinfo ) no-error.
     run gbl/dbdiscon.p no-error.
     if error-status :error then do:
@@ -967,14 +978,6 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     end.
   end.
   
-  mAsyncHelper = new ibs.th.file.AsyncHelperth().
-  mAsyncHelper:mProcPublish = this-procedure.
-  mAsyncHelper:setCurrentUserPasswd().
-  mAsyncHelper:MyBachMode = yes.
-  mAsyncHelper:WritelogInter = 5.
-  mAsyncHelper:MyBachMode = yes.
-  mAsyncHelper:maxproc    = 1.
-   
    main-cycl:
    do while not log-exit
    on error  undo, leave main-cycl
@@ -1174,9 +1177,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    then do:
       define variable vListTask as character no-undo.
       vListTask = mAsyncHelper:getListWorkShed().
-      run write-to-log ( substitute( "ќжидаем выполнение асихронных процессов &1.", vListTask) ).
+      run write-to-log ( substitute( "ќжидаем выполнение асихронных процессов: &1.", vListTask) ).
       run waitproc("ќжидаем получение данных").
-      run write-to-log ( "јсихронных процессы выполнены .").
+      run write-to-log ( "јсихронные процессы выполнены .").
    end.
    assign
       start-time = etime
