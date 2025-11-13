@@ -24,7 +24,7 @@ initial "@(#)$Workfile$".
 
   if not ShowZero-2 and not ShowZero then 
   if buf_gds-obj.fact-qnty = 0 and buf_gds-obj.avrg-qnty = 0 and buf_gds-obj.fact-sale =0 and buf_gds-obj.fact-base = 0 and buf_gds-obj.last-doc < x-date-start then next .
-  if ShowZero-2 and not ShowZero then if buf_gds-obj.fact-qnty = 0 and buf_gds-obj.avrg-qnty = 0 and buf_gds-obj.fact-sale =0 and buf_gds-obj.fact-base = 0 then next .
+  if ShowZero-2 and not ShowZero then if buf_gds-obj.fact-qnty = 0 and buf_gds-obj.last-doc < x-date-start then next .
   
   case RADIO-Nomenkl :
     when 2 then /* Текуща  */
