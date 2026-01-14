@@ -51,6 +51,9 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
     private set.    
   define property edi_        as integer      no-undo get. 
     private set. 
+  define property edi-orders   as integer    no-undo
+    get. 
+    private set.  
   define property return-code as integer      no-undo get. 
     private set.   
     
@@ -119,6 +122,8 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
           assign 
             edi_ = integer(inValue) .
         end.
+      when "edi-orders"  then 
+        edi-orders    = if inValue >= "" then int(inValue) else 0 .
       when "return-code" then 
         do:
           assign 
@@ -174,6 +179,7 @@ class ibs.th.bge.1crn.subjects.contracts inherits ibs.th.bge.1crn.subjects.asubj
       date_      = ?
       code-SCVD  = ?
       edi_       = ?
+      edi-orders = ?      
       return-code = ?
       .
   end.

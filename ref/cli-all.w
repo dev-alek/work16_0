@@ -14,8 +14,8 @@ DEFINE NEW SHARED BUFFER X_firm FOR ub.firm.
 DEFINE NEW SHARED BUFFER X_person FOR ub.person.
 DEFINE NEW SHARED BUFFER X_shop FOR ub.shop.
 DEFINE NEW SHARED BUFFER X_store FOR ub.store.
-
-
+define new shared buffer X_contract-attr for ub.contract-attr .
+define new shared buffer X_contractr for ub.contract .
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*
@@ -2284,6 +2284,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   else do:
    { gbl/getcntxt.i get }
   end.
+
   RUN StartProc  in this-procedure ( input 1).
   RUN Myenable.
   RUN StartProc  in this-procedure ( input 2).
@@ -4106,6 +4107,34 @@ if ( v-use-grp-buy or v-use-oborot-buy )  then   is-price-buyer = true .
           end.
         end .
       end.
+      if entry(1, entry(ii, c-other, ";":U), "=":U) = "contract-edi_orders":U then do:
+        for each x_temp-list-buyer :
+          delete x_temp-list-buyer.
+        end.
+
+        for each X_contract-attr no-lock where X_contract-attr.attr-code = "contract-edi_orders" and
+        X_contract-attr.host-code = v-cntxt-host-code-obj and
+        X_contract-attr.attr-value = string(true):
+            for first X_contractr no-lock where 
+                      X_contractr.contract-code = X_contract-attr.contract-code
+                  and X_contractr.host-code = X_contract-attr.host-code
+                  and X_contractr.doc-type = {&income}
+                  and X_contractr.status_ = {&current-contr}
+                  and (X_contractr.contract-date-end >= today or X_contractr.contract-date-end = ?)
+                  and X_contractr.contract-date-beg <= today
+              :
+              if not can-find (first x_temp-list-buyer where x_temp-list-buyer.obj-type = X_contractr.cli-type
+                                                         and x_temp-list-buyer.obj-code = X_contractr.cli-code)
+              then do :
+                create x_temp-list-buyer.
+                assign
+                  x_temp-list-buyer.obj-type = X_contractr.cli-type
+                  x_temp-list-buyer.obj-code = X_contractr.cli-code
+                .
+              end.                
+            end.
+        end.    
+      end.
     end.
     /*для пущей корректности*/
     if v-cntxt-level <> {&cntxt-object} then do:
@@ -4131,7 +4160,7 @@ if ( v-use-grp-buy or v-use-oborot-buy )  then   is-price-buyer = true .
     end.
     return.
 end.
-if v-other begins "tank-farm-for" or v-other begins "auto-tank-for" or v-other begins "supp-np" or v-other begins "supp-lgas" then v-other = "".
+if v-other begins "tank-farm-for" or v-other begins "auto-tank-for" or v-other begins "supp-np" or v-other begins "supp-lgas" or v-other begins "contract-edi_orders" then v-other = "".
 if c-types = {&pro} then do :
   c-types = ? .
   v-is-prod = true.
@@ -4322,6 +4351,7 @@ or entry(1,c-other,"=":U) = "supp-np"
 or entry(1,c-other,"=":U) = "supp-np-lgas"
 or entry(1,c-other,"=":U) = "auto-tank-for-supp"
 or entry(1,c-other,"=":U) = "tank-farm-for-supp"
+or entry(1,c-other,"=":U) = "contract-edi_orders"
 then do :
   HIDE
   CLi-list in frame {&frame-name}
@@ -4407,11 +4437,15 @@ END CASE .
 
 if JoinType <> "NO" then
     TitleStr = TitleStr + ". С доп. фильтром." .
+
 if entry(1,c-other,"=":U) = "supp-np"
 then TitleStr = TitleStr + {&space-char} + "Поставщики НП" .
 else
 if entry(1,c-other,"=":U) = "supp-lgas"
 then TitleStr = TitleStr + {&space-char} + "Поставщики СУГ" .
+else
+if entry(1,c-other,"=":U) = "contract-edi_orders"
+then TitleStr = TitleStr + {&space-char} + "Поставщики с контрактом EDI" .
 else
 if entry(1,c-other,"=":U) = "supp-np-lgas"
 then TitleStr = TitleStr + {&space-char} + "Поставщики НП и СУГ" .

@@ -591,18 +591,14 @@ ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
       find first buf_goods no-lock where buf_goods.gds-code = tt_contract-specif.gds-code no-error .
       if available (buf_goods) then 
       do:
-        for each buf_contract-specif no-lock where buf_contract-specif.contract-num = integer(entry(ii,p-doc-num,",")):
-          find first ub.contract no-lock where ub.contract.contract-code = buf_contract-specif.contract-num and buf_contract.status_ = {&current-contr} no-error .
+        for first buf_contract-specif no-lock where buf_contract-specif.contract-num = tt_contract-specif.contract-num and buf_contract-specif.gds-code = tt_contract-specif.gds-code:
+          find first ub.contract no-lock where ub.contract.contract-code = buf_contract-specif.contract-num and ub.contract.status_ = {&current-contr} no-error .
           create gds-list .
           buffer-copy buf_goods to gds-list .
           gds-list.contract = ub.contract.contract-prn-code .
+          gds-list.contract-code = ub.contract.contract-code .
         end.
-        find first gds-list no-error .
-        if not available (gds-list) then 
-        do:
-          create gds-list .
-          buffer-copy buf_goods to gds-list .
-        end.
+
       end.
     end.
     else 
@@ -616,27 +612,18 @@ ON CHOOSE OF b-sel IN FRAME Dialog-Frame /* Выбор */
             find first buf_goods no-lock where buf_goods.gds-code = tt_contract-specif.gds-code no-error .
             if available (buf_goods) then 
             do:
-              do ii = 1 to num-entries (p-doc-num,","):
-                for each buf_contract-specif no-lock where buf_contract-specif.contract-num = integer(entry(ii,p-doc-num,",")):
-                  find first ub.contract no-lock where ub.contract.contract-code = buf_contract-specif.contract-num no-error .
+                  find first ub.contract no-lock where ub.contract.contract-code = tt_contract-specif.contract-num no-error .
                   find first gds-list where gds-list.gds-code = buf_goods.gds-code and gds-list.contract = ub.contract.contract-prn-code no-error .
                   if not available (gds-list) then 
                   do:
                     create gds-list .
                     buffer-copy buf_goods to gds-list .
                     gds-list.contract = ub.contract.contract-prn-code .
+                    gds-list.contract-code = ub.contract.contract-code .
                   end.
                 end.
-              end.
-              find first gds-list where gds-list.gds-code = buf_goods.gds-code no-error .
-              if not available (gds-list) then 
-              do:
-                create gds-list .
-                buffer-copy buf_goods to gds-list .
-              end.        
             end.
           end.
-        end.
       end.
     end.
   END.

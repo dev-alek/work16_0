@@ -216,6 +216,21 @@ class ibs.th.bge.1crn.import.impcontracts implements ibs.th.bge.1crn.import.iimp
         .
     end.
     ub.contract-attr.attr-value = string(if objContracts:edi_ = 2 then "yes" else "no") . 
+
+    find first ub.contract-attr exclusive-lock where ub.contract-attr.host-code = ub.contract.host-code and 
+      ub.contract-attr.contract-code = ub.contract.contract-code and
+      ub.contract-attr.attr-code = "contract-edi_orders"  no-error .
+    if not available (ub.contract-attr) then 
+    do:
+      create ub.contract-attr .
+      assign
+        ub.contract-attr.host-code     = ub.contract.host-code
+        ub.contract-attr.contract-code = ub.contract.contract-code
+        ub.contract-attr.attr-code     = "contract-edi_orders"
+        .
+    end.
+    ub.contract-attr.attr-value = string(if objContracts:edi-orders = 1 then "yes" else "no") . 
+
   end method.
   method private character date-1C (inValue as character):
     

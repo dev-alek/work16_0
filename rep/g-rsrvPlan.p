@@ -16,6 +16,7 @@ Output:
 */
 
 define input parameter p-mainmenu-handle as handle           no-undo.
+define input parameter p-ok as logical no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision: aea5316774be, 0, rls $":U .
 define variable vss-author      as character no-undo init "$Author: expertek $":U .
@@ -30,5 +31,5 @@ define variable vss-description as character no-undo init "Отчет по планированию
 do
 on error undo, return error
 :
-run rep/e-rsrv-plan.w ( input p-mainmenu-handle) .
+run rep/e-rsrv-plan.w ( input p-mainmenu-handle, p-ok) .
 end.

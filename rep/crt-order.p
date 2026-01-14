@@ -62,7 +62,7 @@ do transaction on error undo MAIN, leave MAIN:
            and buf_clients.obj-code = iClientCode.
 
     for each tt-zakaz no-lock /*where
-             tt-zakaz.volMinGarant > 0*/
+             tt-zakaz.order-qnty > 0*/
              break by tt-zakaz.contract-code by tt-zakaz.gds-code:
 
       if first-of(tt-zakaz.contract-code) then
@@ -75,12 +75,12 @@ do transaction on error undo MAIN, leave MAIN:
           buf_order-doc.obj-code          = v-cntxt-obj-code
           buf_order-doc.doc-code          = vDocCode
           buf_order-doc.doc-date          = now
-          buf_order-doc.order-date        = iDateOrder
+          buf_order-doc.order-date        = today + 1
           buf_order-doc.cli-type          = iClientType 
           buf_order-doc.cli-code          = iClientCode 
           buf_order-doc.cli-name          = if avail buf_clients then buf_clients.obj-name else "" 
           buf_order-doc.contract-code     = tt-zakaz.contract-code
-          buf_order-doc.contract-prn-code = tt-zakaz.contract
+          buf_order-doc.contract-prn-code = tt-zakaz.contract-prn-code
           buf_order-doc.user-id           = v-cntxt-userid
           buf_order-doc.sts               = orderStatus:NewStatus:KeyIntDB
           buf_order-doc.params            = iParams
@@ -112,16 +112,16 @@ do transaction on error undo MAIN, leave MAIN:
          buf_order-line.artic         = tt-zakaz.artic  
          buf_order-line.prod-type     = if avail buf_goods then buf_goods.prod-type else ""
          buf_order-line.prod-code     = if avail buf_goods then buf_goods.prod-code else 0
-         buf_order-line.order-qnty    = tt-zakaz.volMinGarant
-         buf_order-line.fact-qnty     = tt-zakaz.volMinGarant
-         buf_order-line.rest          = tt-zakaz.ostatokToday
-         buf_order-line.sales         = tt-zakaz.volSale
-         buf_order-line.average-sales = tt-zakaz.tempSale
-         buf_order-line.stock-goods   = if tt-zakaz.tempSale = 0 and tt-zakaz.ostatokDay <> 0 then -1 else integer(tt-zakaz.ostatokGoods)
-         buf_order-line.volume-goods  = tt-zakaz.volTemp
-         buf_order-line.volume-stock  = if tt-zakaz.minZapas > tt-zakaz.ostatokToday then tt-zakaz.minZapas else tt-zakaz.volMinZapas
-         buf_order-line.min-stock     = tt-zakaz.minZapas
-         buf_order-line.garant-stock  = tt-zakaz.garantZapas
+         buf_order-line.order-qnty    = tt-zakaz.order-qnty
+         buf_order-line.fact-qnty     = tt-zakaz.order-qnty
+         buf_order-line.rest          = tt-zakaz.rest
+         buf_order-line.sales         = tt-zakaz.sales
+         buf_order-line.average-sales = tt-zakaz.average-sales
+         buf_order-line.stock-goods   = if tt-zakaz.average-sales = 0 and tt-zakaz.ostatokDay <> 0 then -1 else integer(tt-zakaz.ostatokGoods)
+         buf_order-line.volume-goods  = tt-zakaz.volume-goods
+         buf_order-line.volume-stock  = if tt-zakaz.minZapas > tt-zakaz.rest then tt-zakaz.minZapas else tt-zakaz.volMinZapas
+         buf_order-line.min-stock     = tt-zakaz.min-stock
+         buf_order-line.garant-stock  = tt-zakaz.garant-stock
          buf_order-line.promo         = tt-zakaz.promo
 /*         buf_order-line.unit          = buf_goods.unit-base*/
       .

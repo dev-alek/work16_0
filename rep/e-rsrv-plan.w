@@ -31,6 +31,7 @@
 
 /* Parameters Definitions ---                                           */
 DEFINE INPUT PARAMETER  parParentProc  AS WIDGET-HANDLE NO-UNDO.
+define input parameter p-ok as logical no-undo .
 
 /* Local Variable Definitions ---                                       */
 define variable fl              as character no-undo .
@@ -40,6 +41,7 @@ define variable v-cli-code      as integer   no-undo .
 define variable v-cli-name      as character no-undo .
 define variable list-dogovor    as character no-undo .
 define variable v-rid-list      as character no-undo .
+define variable v-dog-edi       as character no-undo .
 define variable vOk             as logical   no-undo .
 define variable glog            as logical   no-undo .
        
@@ -50,6 +52,8 @@ define variable glog            as logical   no-undo .
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { rep/tt-date.i }
+
+&scoped-define ALL_DOG_EDI "Все действующие договоры с EDI"
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -322,6 +326,9 @@ DEFINE VARIABLE t-daygoods AS LOGICAL INITIAL true
   SIZE 40 BY .83
   FONT 1 NO-UNDO.
 
+
+define variable v-title as character no-undo .
+
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY br_date FOR 
@@ -385,7 +392,7 @@ DEFINE FRAME Dialog-Frame
   SPACE(1.24) SKIP(0.57)
   WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
   SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-  TITLE "Отчет по планированию заказа товаров Магазина и готовой продукции Кафе" WIDGET-ID 100.
+  TITLE v-title WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -627,6 +634,19 @@ ON LEAVE OF Date-Start IN FRAME Dialog-Frame /* с */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btn_ok Dialog-Frame
 ON CHOOSE OF btn_ok IN FRAME Dialog-Frame
   DO:
+    if text-cliname = "" then 
+    do:
+      message "Выберите контрагента!"
+        view-as alert-box.
+      return no-apply .
+    end.
+    if SelectGood = 3 and Goods-Editor = "" then 
+    do:
+      message "Товар не выбран!"
+        view-as alert-box.
+      return no-apply .
+    end.
+    
     if fl = "" then 
     do:
       message "Необходимо сходить на вкладку 'Продолжение...'"
@@ -643,15 +663,29 @@ ON CHOOSE OF btn_ok IN FRAME Dialog-Frame
       if not glog then return no-apply .
     end.
     find first gds-list no-error .
-    if not available (gds-list) then apply "value-changed" to SelectGood .
-    
+    if not available (gds-list) then do:
+    if p-ok then do:
+        message "Не найдены товары для создания заказа."
+        view-as alert-box.
+        return no-apply .
+    end. 
+    else apply "value-changed" to SelectGood .
+    end.
+
     assign
       t-daygoods
       RADIO-SET-1
       rs_period
       .
 
+    if p-ok and customer-name = "БЕЗ ДОГОВОРА" then do:
+        message "Внимание! Формирование заказа невозможно, выберите договор(-ы)"
+        view-as alert-box.
+        return no-apply .
+    end.
+
     run rep/r-rsrv-plan.p(input parParentProc,
+      input p-ok,
       input post-grp_recids,
       input Date-order,
       input rs_period,    
@@ -708,18 +742,35 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
     
     define variable v-nn as integer no-undo .
     define variable ii   as integer no-undo .
-    
-    run ref/cli-all.w
-      ( parParentProc
-      , "b-sel"
-      , {&all}
-      , {&all}
-      , {&current}
-      , ?
-      , ?
-      , ""
-      , output post-grp_recids ) .
+    define variable vIsChange as logical no-undo init no.
+    define variable old-list-dogovor as character no-undo .
 
+      if p-ok then 
+      do:
+          run ref/cli-all.w
+              ( parParentProc
+              , "b-sel"
+              , {&all}
+              , {&all}
+              , {&current}
+              , ?
+              , ?
+              , "contract-edi_orders"
+              , output post-grp_recids ) .
+      end.
+      else 
+      do:
+          run ref/cli-all.w
+              ( parParentProc
+              , "b-sel"
+              , {&all}
+              , {&all}
+              , {&current}
+              , ?
+              , ?
+              , ""
+              , output post-grp_recids ) .        
+      end.
     if post-grp_recids <> "" then
     do:
       Assign
@@ -728,7 +779,9 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
       v-nn = num-entries( post-grp_recids ) .
       DO ii = 1 TO v-nn :
         FIND cli-post WHERE recid( cli-post ) = int(entry( ii, post-grp_recids )) NO-LOCK.
-        assign
+        if v-cli-code <> cli-post.obj-code or v-cli-type <> cli-post.obj-type then
+          vIsChange = yes.
+        assign 
           v-cli-code   = cli-post.obj-code
           v-cli-type   = cli-post.obj-type
           v-cli-name   = cli-post.obj-name
@@ -745,6 +798,13 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
         post-grp_recids = string(recid (cli-post)) .
       end.
     end.
+    
+    if p-ok and v-dog-edi = "" then
+    do:
+      /* получим все действующие договоры EDI */  
+      run getEdiDogs in this-procedure.
+    end.
+
     find first bf_contract where bf_contract.host-code = v-cntxt-host-code-obj and
       bf_contract.cli-type  = v-cli-type and
       bf_contract.cli-code  = v-cli-code no-lock no-error.
@@ -754,6 +814,22 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
     end.
     else 
     do:
+      old-list-dogovor = list-dogovor.
+      if p-ok then do:
+      run check-contract-code-attr in this-procedure (input  substitute("&1,&2", "choose":u, "doc-type"),
+        input  v-cntxt-host-code-obj,
+        input  v-cli-type,
+        input  v-cli-code,
+        input  ?,
+        input  parparentproc,
+        input  today,
+        input  "" ,
+        input  "contract-edi_orders",
+        output list-dogovor) .   
+        if trim (list-dogovor,",") = "" then
+           list-dogovor = v-dog-edi.       
+      end.
+      else do:  
       run check-contract-code in this-procedure (input  substitute("&1,&2", "choose":u, "doc-type"),
         input  v-cntxt-host-code-obj,
         input  v-cli-type,
@@ -763,17 +839,30 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
         input  today,
         input  "" ,
         output list-dogovor) no-error.
+      end.
       list-dogovor =  trim (list-dogovor,",") .
+      if old-list-dogovor <> list-dogovor then
+        vIsChange = yes. 
         
-      do ii = 1 to num-entries(list-dogovor):
-        find first buf_contract no-lock where buf_contract.contract-code = integer(entry(ii,list-dogovor,",")) no-error .
-        if available (buf_contract) then 
-        do:
-          customer-name = customer-name + ", " + buf_contract.contract-prn-code .
-        end.
-      end.  
+      if list-dogovor = v-dog-edi then
+        customer-name = {&ALL_DOG_EDI} .
+      else   
+         do ii = 1 to num-entries(list-dogovor):
+            find first buf_contract no-lock where buf_contract.contract-code = integer(entry(ii,list-dogovor,",")) no-error .
+            if available (buf_contract) then 
+            do:
+              customer-name = customer-name + ", " + buf_contract.contract-prn-code .
+            end.
+         end.
       if customer-name = "" then customer-name = "БЕЗ ДОГОВОРА" .  
       else customer-name = trim (customer-name,", ") .
+
+      if p-ok and vIsChange then
+      do:
+       SelectGood = if list-dogovor = "" or list-dogovor = v-dog-edi then 1 else 2.
+       display SelectGood with frame Dialog-Frame .
+       apply "value-changed" to SelectGood .
+      end.
     end.
     display customer-name with frame Dialog-Frame .
   END.
@@ -885,9 +974,8 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
     find first buf_clients no-lock where recid(buf_clients) = integer(post-grp_recids) no-error .
     if available (buf_clients) then 
     do:
-      case SelectGood:
-        when 1 then 
-          do: /* Все по поставщику */
+        if SelectGood = 1 and not p-ok then 
+        do: /* Все по поставщику */
             v-rid-list = "" .
             for each buf_trn-doc no-lock where buf_trn-doc.obj-code = v-cntxt-obj-code and
               buf_trn-doc.obj-type = v-cntxt-obj-type and
@@ -904,7 +992,13 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
 
                 for each ub.contract no-lock where ub.contract.cli-code = buf_clients.obj-code and
                   ub.contract.cli-type = buf_clients.obj-type and 
-                  ub.contract.contract-date-end > today:
+                  (ub.contract.contract-date-end > today or ub.contract.contract-date-end = ?) and
+                  ub.contract.contract-date-beg <= today and
+                  ub.contract.status_ = {&current-contr},
+                  first ub.contract-attr no-lock where ub.contract-attr.contract-code = ub.contract.contract-code and
+                  ub.contract-attr.host-code = ub.contract.host-code and
+                  ub.contract-attr.attr-code = "contract-edi_orders" and
+                  ub.contract-attr.attr-value = string (true):
                   for each buf_contract-specif no-lock where 
                     buf_contract-specif.contract-num = ub.contract.contract-code and
                     buf_contract-specif.gds-code = buf_goods.gds-code:
@@ -916,22 +1010,36 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
                       buffer-copy buf_goods to gds-list assign      
                         gds-list.contract-code = ub.contract.contract-code                
                         gds-list.contract      = ub.contract.contract-prn-code
-                      .                
+                      .
                     end.
                   end.
                 end.
+                if not p-ok then do: 
                 find first gds-list where gds-list.gds-code = buf_goods.gds-code no-error .
                 if not available (gds-list) then 
                 do:
                   create gds-list .
                   buffer-copy buf_goods to gds-list .      
                 end.              
+                end.
               end.
             end.
-          end.
-        when 2 then 
-          do: /* Все по договору */
+            if p-ok and list-dogovor <> "" then
+            do:
+              list-dogovor = "".
+              customer-name = "БЕЗ ДОГОВОРА" .  
+              display customer-name with frame Dialog-Frame .
+            end.
+        end.
+        if SelectGood = 2 or (p-ok and SelectGood = 1) then 
+        do: /* Все по договору */
             v-rid-list = "" .
+            if p-ok and SelectGood = 1 then
+            do:
+              list-dogovor = v-dog-edi.
+              customer-name = {&ALL_DOG_EDI} .  
+              display customer-name with frame Dialog-Frame .
+            end.
             if list-dogovor = "" then 
             do:
               message "Договор не выбран!"
@@ -941,9 +1049,11 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
               display SelectGood with frame {&frame-name} .
             end.
             do ii = 1 to num-entries (list-dogovor):
-              for each buf_contract-specif no-lock where buf_contract-specif.contract-num = integer(entry(ii,list-dogovor,",")):
-                find first ub.contract no-lock where ub.contract.contract-code = buf_contract-specif.contract-num no-error .
-                find first gds-list where gds-list.gds-code = buf_contract-specif.gds-code no-error .
+              find first ub.contract no-lock where ub.contract.contract-code = integer(entry(ii,list-dogovor,",")) no-error .  
+              for each buf_contract-specif no-lock where buf_contract-specif.contract-num = ub.contract.contract-code:
+                
+                find first gds-list where gds-list.gds-code = buf_contract-specif.gds-code and 
+                gds-list.contract-code = buf_contract-specif.contract-num no-error .
                 if not available (gds-list) then 
                 do:
                   find first buf_goods no-lock where buf_goods.gds-code = buf_contract-specif.gds-code no-error .
@@ -959,8 +1069,15 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
               end.
             end.
           end.
-        when 3 then 
-          do: /* Выборочно */
+        if SelectGood = 3 then 
+        do: /* Выборочно */
+            if p-ok and list-dogovor = "" then
+            do:
+              message "Для выбора товара необходимо выбрать договор(ы)" view-as alert-box.
+              SelectGood = 1 .
+              display SelectGood with frame {&frame-name} .
+              return no-apply.  
+            end.
             empty temp-table gds-list .
             RUN str/contspec_choose.w (
               input  parparentproc,
@@ -971,15 +1088,16 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
               input integer(post-grp_recids),
               output table gds-list
               ).   
+
             for each gds-list:
-              v-rid-list = v-rid-list + ", " + string(gds-list.gds-code) .
+              if lookup(string(gds-list.gds-code),v-rid-list,", ") > 0 then next .  
+              v-rid-list = v-rid-list + "," + string(gds-list.gds-code) .
             end.
-            v-rid-list = trim(v-rid-list,", ") .
-            if v-rid-list = "" then 
-              assign SelectGood = 1 .
+            v-rid-list = trim(v-rid-list,",") .
+            if v-rid-list = "" then
+              assign SelectGood = if p-ok and list-dogovor <> v-dog-edi then 2 else 1 .
             display SelectGood with frame {&frame-name} .
-          end.
-      end case .
+        end.
     end.
     Goods-Editor = v-rid-list .
     if not vOk then display Goods-Editor with frame Dialog-Frame .
@@ -995,9 +1113,16 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
     do:
       if vOk then 
       do:
+        if p-ok then do:
+        message "Внимание! Не у всех выбранных товаров установлен атрибут «Минимальный запас»" skip
+          "Создать заказ?"
+          view-as alert-box question buttons YES-NO update glog .            
+        end.
+        else do:
         message "Внимание! Не у всех выбранных товаров установлен атрибут «Минимальный запас»" skip
           "Вывести отчет?"
           view-as alert-box question buttons YES-NO update glog .
+        end.  
         if not glog then 
         do:
           APPLY "choose" TO BUTTON-1 .  
@@ -1009,6 +1134,7 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
           view-as alert-box.
       end.  
     end.
+
   END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1299,10 +1425,12 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
     
-  { gbl/ed_date.i Date-order }
+{ gbl/ed_date.i Date-order }
 { gbl/ed_date.i Date-Start }  
 { gbl/ed_date.i Date-End }
-    
+
+if p-ok then v-title = "Заказ товаров Магазина" .
+else v-title = "Отчет по планированию заказа товаров Магазина и готовой продукции Кафе" .    
 Date-order = today .
 Date-End = today - 1 .
 Date-Start = today - 28 .
@@ -1385,3 +1513,35 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE getEdiDocs Dialog-Frame 
+PROCEDURE getEdiDogs :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+  define buffer buf_contract      for ub.contract.
+  define buffer buf_contract-attr for ub.contract-attr.
+
+  for each buf_contract no-lock where 
+           buf_contract.host-code  = v-cntxt-host-code-obj and 
+           buf_contract.doc-type = {&income} and 
+           buf_contract.status_ = {&current-contr} and 
+           buf_contract.cli-type = v-cli-type and 
+           buf_contract.cli-code = v-cli-code and 
+           (buf_contract.contract-date-end >= today or buf_contract.contract-date-end = ?) and
+           buf_contract.contract-date-beg <= today,
+      first buf_contract-attr no-lock where 
+            buf_contract-attr.contract-code = buf_contract.contract-code and 
+            buf_contract-attr.attr-code = "contract-edi_orders" and
+            buf_contract-attr.host-code = buf_contract.host-code and 
+            buf_contract-attr.attr-value = string(true)
+      :
+     v-dog-edi = substitute("&1,&2", v-dog-edi, buf_contract.contract-code).     
+   end.
+   v-dog-edi = trim(v-dog-edi,",").
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

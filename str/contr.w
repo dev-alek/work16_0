@@ -143,33 +143,34 @@ define variable v-log as logical no-undo. /* ТН-2356. 2014г. Арн. */
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
-&Scoped-define INTERNAL-TABLES ub.contract
+&Scoped-define INTERNAL-TABLES contract
 
 /* Definitions for DIALOG-BOX Dialog-Frame                              */
-&Scoped-define QUERY-STRING-Dialog-Frame FOR EACH ub.contract SHARE-LOCK
-&Scoped-define OPEN-QUERY-Dialog-Frame OPEN QUERY Dialog-Frame FOR EACH ub.contract SHARE-LOCK.
-&Scoped-define TABLES-IN-QUERY-Dialog-Frame ub.contract
-&Scoped-define FIRST-TABLE-IN-QUERY-Dialog-Frame ub.contract
+&Scoped-define QUERY-STRING-Dialog-Frame FOR EACH contract SHARE-LOCK
+&Scoped-define OPEN-QUERY-Dialog-Frame OPEN QUERY Dialog-Frame FOR EACH contract SHARE-LOCK.
+&Scoped-define TABLES-IN-QUERY-Dialog-Frame contract
+&Scoped-define FIRST-TABLE-IN-QUERY-Dialog-Frame contract
 
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-OK RECT-8 RECT-9 b-exit b-spec B-transport ~
-b-hist B-Help contract-prn-code contract-date contract-city contract-name T-edi ~
-BUTTON-curr contract-date-beg contract-date-end curr-code COMBO-type-contr t-diadoc ~
-b-bank-own b-bank-cli cli-code cli-type BUTTON-cli b-bank-posr posr-code ~
-posr-type BUTTON-posr b-bank-agnt agnt-code agnt-type BUTTON-agnt mngr-code ~
-BUTTON-mngr COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 ~
-srok-opl-2 COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo ~
-str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal b-cor-acc b-an-uchet ~
-b-cel-nazn b-cor-acc-2 contract-code own-code 
-&Scoped-Define DISPLAYED-OBJECTS contract-prn-code contract-date ~
-contract-city contract-name contract-date-beg contract-date-end curr-code ~
+&Scoped-Define ENABLED-OBJECTS b-OK b-exit b-spec B-transport b-hist B-Help ~
+RECT-8 RECT-9 T-edi T-diadoc T-edi-order contract-prn-code contract-date ~
+contract-city contract-name BUTTON-curr contract-date-beg contract-date-end ~
+curr-code COMBO-return-type COMBO-type-contr b-bank-own b-bank-cli cli-code ~
+cli-type BUTTON-cli b-bank-posr posr-code posr-type BUTTON-posr b-bank-agnt ~
+agnt-code agnt-type BUTTON-agnt mngr-code BUTTON-mngr COMBO-usl-opl ~
+srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 COMBO-auto-pay-2 ~
+kredit-limit kredit-sum balance-fo str-uslov-oplat fin-VAT-pc RADIO-SET-1 ~
+b-nal b-cor-acc b-an-uchet b-cel-nazn b-cor-acc-2 contract-code own-code 
+&Scoped-Define DISPLAYED-OBJECTS T-edi T-diadoc T-edi-order ~
+contract-prn-code contract-date contract-city contract-name ~
+contract-date-beg contract-date-end curr-code COMBO-return-type ~
 COMBO-type-contr cli-code cli-type posr-code posr-type agnt-code agnt-type ~
 mngr-code COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 ~
-COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo T-edi t-diadoc ~
-str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal cor-acc an-uchet cel-nazn ~
-cor-acc-2 contract-code curr-name own-code own-name cli-name posr-name ~
-agnt-name mngr-name 
+COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo str-uslov-oplat ~
+fin-VAT-pc RADIO-SET-1 b-nal cor-acc an-uchet cel-nazn cor-acc-2 ~
+contract-code curr-name own-code own-name cli-name posr-name agnt-name ~
+mngr-name 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -312,6 +313,15 @@ DEFINE VARIABLE COMBO-auto-pay-2 AS CHARACTER FORMAT "X(256)":U
      DROP-DOWN-LIST
      SIZE 16 BY 1 TOOLTIP "Конечный статус сгенеренного счета-фактуры" NO-UNDO.
 
+DEFINE VARIABLE COMBO-return-type AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0 
+     LABEL "Схема возврата" 
+     VIEW-AS COMBO-BOX INNER-LINES 3
+     LIST-ITEM-PAIRS "",0,
+                     "Обратная продажа",23,
+                     "Корректировка поступления",25
+     DROP-DOWN-LIST
+     SIZE 26.25 BY 1 TOOLTIP "Схема возврата поставщику" NO-UNDO.
+
 DEFINE VARIABLE COMBO-type-contr AS CHARACTER FORMAT "X(256)":U 
      LABEL "Тип" 
      VIEW-AS COMBO-BOX INNER-LINES 7
@@ -332,15 +342,6 @@ DEFINE VARIABLE COMBO-usl-opl-2 AS CHARACTER FORMAT "X(256)":U
      LIST-ITEMS "Item 1" 
      DROP-DOWN-LIST
      SIZE 40.25 BY 1 TOOLTIP "Условие генерации счетов-фактур" NO-UNDO.
-     
-DEFINE VARIABLE COMBO-return-type AS integer 
-     LABEL "Схема возврата" 
-     VIEW-AS COMBO-BOX INNER-LINES 3
-     LIST-ITEM-PAIRS "", 0,
-                "Обратная продажа", 23,
-                "Корректировка поступления", 25 
-     DROP-DOWN-LIST
-     SIZE 26.25 BY 0.9 TOOLTIP "Схема возврата поставщику" NO-UNDO.
 
 DEFINE VARIABLE agnt-code AS INTEGER FORMAT ">>>>>>>>>>>9" INITIAL 0 
      VIEW-AS FILL-IN 
@@ -363,8 +364,6 @@ DEFINE VARIABLE balance-fo AS DECIMAL FORMAT "->>>,>>>,>>>,>>>,>>9.99":U INITIAL
      LABEL "Баланс" 
      VIEW-AS FILL-IN 
      SIZE 17.88 BY 1 NO-UNDO.
-
-
 
 DEFINE VARIABLE cel-nazn AS CHARACTER FORMAT "X(256)":U 
      LABEL "Код целевого назначения" 
@@ -524,21 +523,25 @@ DEFINE VARIABLE kredit-limit AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
      SIZE 22.25 BY 1 NO-UNDO.
 
-DEFINE VARIABLE T-edi AS LOGICAL INITIAL no 
-     LABEL "Поставки через ЭДО" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 21.5 BY .83 NO-UNDO.
-
 DEFINE VARIABLE T-diadoc AS LOGICAL INITIAL no 
      LABEL "Поставки через Диадок" 
      VIEW-AS TOGGLE-BOX
      SIZE 24.5 BY .83 NO-UNDO.
 
+DEFINE VARIABLE T-edi AS LOGICAL INITIAL no 
+     LABEL "Поставки через ЭДО" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 21.5 BY .83 NO-UNDO.
+
+DEFINE VARIABLE T-edi-order AS LOGICAL INITIAL no 
+     LABEL "Электронные заказы EDI" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 24.5 BY .83 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY Dialog-Frame FOR 
-      ub.contract SCROLLING.
+      contract SCROLLING.
 &ANALYZE-RESUME
 
 /* ************************  Frame Definitions  *********************** */
@@ -554,92 +557,91 @@ DEFINE FRAME Dialog-Frame
      b-hist AT ROW 1 COL 78
      B-Help AT ROW 1 COL 88
      T-edi AT ROW 1.13 COL 70 WIDGET-ID 12
-     T-diadoc AT ROW 1.7 COL 70 WIDGET-ID 14
-     
-     contract-prn-code AT ROW 2.5 COL 2.5 COLON-ALIGNED
-     contract-date AT ROW 2.5 COL 39.75 COLON-ALIGNED
-     contract-city AT ROW 2.5 COL 58.5 COLON-ALIGNED
-     contract-name AT ROW 3.58 COL 12 COLON-ALIGNED
-     BUTTON-curr AT ROW 4.5 COL 89
-     contract-date-beg AT ROW 4.58 COL 12 COLON-ALIGNED
-     contract-date-end AT ROW 4.58 COL 27.63 COLON-ALIGNED
-     curr-code AT ROW 4.58 COL 83 COLON-ALIGNED
-     COMBO-type-contr AT ROW 5.58 COL 12 COLON-ALIGNED
-     COMBO-return-type AT ROW 5.51 COL 70 COLON-ALIGNED
-     b-bank-own AT ROW 6.5 COL 85.13
-     b-bank-cli AT ROW 7.5 COL 85.13
-     cli-code AT ROW 7.63 COL 12 COLON-ALIGNED NO-LABEL
-     cli-type AT ROW 7.63 COL 22.13 COLON-ALIGNED NO-LABEL
-     BUTTON-cli AT ROW 7.63 COL 28.75
-     b-bank-posr AT ROW 8.5 COL 85.13
-     posr-code AT ROW 8.63 COL 12 COLON-ALIGNED NO-LABEL
-     posr-type AT ROW 8.63 COL 22.13 COLON-ALIGNED NO-LABEL
-     BUTTON-posr AT ROW 8.63 COL 28.75
-     b-bank-agnt AT ROW 9.5 COL 85.13
-     agnt-code AT ROW 9.63 COL 12 COLON-ALIGNED NO-LABEL
-     agnt-type AT ROW 9.63 COL 22.13 COLON-ALIGNED NO-LABEL
-     BUTTON-agnt AT ROW 9.63 COL 28.75
-     mngr-code AT ROW 10.63 COL 12 COLON-ALIGNED NO-LABEL
-     BUTTON-mngr AT ROW 10.63 COL 28.75
-     COMBO-usl-opl AT ROW 12.38 COL 16 COLON-ALIGNED
-     srok-opl AT ROW 12.38 COL 65 COLON-ALIGNED
-     COMBO-auto-pay AT ROW 12.38 COL 79.5 COLON-ALIGNED
-     COMBO-usl-opl-2 AT ROW 13.46 COL 16 COLON-ALIGNED
-     srok-opl-2 AT ROW 13.46 COL 65 COLON-ALIGNED
-     COMBO-auto-pay-2 AT ROW 13.46 COL 79.5 COLON-ALIGNED
-     kredit-limit AT ROW 15.58 COL 2.5
-     kredit-sum AT ROW 15.58 COL 23 COLON-ALIGNED NO-LABEL
-     balance-fo AT ROW 15.58 COL 77.63 COLON-ALIGNED
-     
-     str-uslov-oplat AT ROW 16.63 COL 23 COLON-ALIGNED
-     fin-VAT-pc AT ROW 16.63 COL 77.63 COLON-ALIGNED
-     RADIO-SET-1 AT ROW 18.25 COL 2.5 NO-LABEL
-     b-nal AT ROW 18.25 COL 14 NO-LABEL
-     cor-acc AT ROW 18.42 COL 53.5 COLON-ALIGNED
-     b-cor-acc AT ROW 18.42 COL 94.88
-     an-uchet AT ROW 19.42 COL 53.5 COLON-ALIGNED
-     b-an-uchet AT ROW 19.42 COL 94.88
-     cel-nazn AT ROW 20.42 COL 53.5 COLON-ALIGNED
-     b-cel-nazn AT ROW 20.42 COL 94.88
-     cor-acc-2 AT ROW 21.42 COL 53.5 COLON-ALIGNED
-     b-cor-acc-2 AT ROW 21.42 COL 94.88
-     contract-code AT ROW 2.71 COL 85.63 COLON-ALIGNED
-     curr-name AT ROW 4.5 COL 90.5 COLON-ALIGNED NO-LABEL
-     own-code AT ROW 6.58 COL 12.25 COLON-ALIGNED NO-LABEL
-     own-name AT ROW 6.75 COL 21.5 COLON-ALIGNED NO-LABEL
-     cli-name AT ROW 7.63 COL 31.75 NO-LABEL
-     posr-name AT ROW 8.63 COL 31.75 NO-LABEL
-     agnt-name AT ROW 9.63 COL 31.75 NO-LABEL
-     mngr-name AT ROW 10.63 COL 31.75 NO-LABEL
-     "Посредник:" VIEW-AS TEXT
-          SIZE 10.13 BY 1 AT ROW 8.5 COL 2.88
-          FGCOLOR 4 
+     T-diadoc AT ROW 1.88 COL 70 WIDGET-ID 14
+     T-edi-order AT ROW 2.63 COL 70 WIDGET-ID 16
+     contract-prn-code AT ROW 3.58 COL 2.5 COLON-ALIGNED
+     contract-date AT ROW 3.58 COL 39.75 COLON-ALIGNED
+     contract-city AT ROW 3.58 COL 58.5 COLON-ALIGNED
+     contract-name AT ROW 4.67 COL 12 COLON-ALIGNED
+     BUTTON-curr AT ROW 5.58 COL 89
+     contract-date-beg AT ROW 5.67 COL 12 COLON-ALIGNED
+     contract-date-end AT ROW 5.67 COL 27.63 COLON-ALIGNED
+     curr-code AT ROW 5.67 COL 83 COLON-ALIGNED
+     COMBO-return-type AT ROW 6.58 COL 70 COLON-ALIGNED
+     COMBO-type-contr AT ROW 6.67 COL 12 COLON-ALIGNED
+     b-bank-own AT ROW 7.58 COL 85.13
+     b-bank-cli AT ROW 8.58 COL 85.13
+     cli-code AT ROW 8.71 COL 12 COLON-ALIGNED NO-LABEL
+     cli-type AT ROW 8.71 COL 22.13 COLON-ALIGNED NO-LABEL
+     BUTTON-cli AT ROW 8.71 COL 28.75
+     b-bank-posr AT ROW 9.58 COL 85.13
+     posr-code AT ROW 9.71 COL 12 COLON-ALIGNED NO-LABEL
+     posr-type AT ROW 9.71 COL 22.13 COLON-ALIGNED NO-LABEL
+     BUTTON-posr AT ROW 9.71 COL 28.75
+     b-bank-agnt AT ROW 10.58 COL 85.13
+     agnt-code AT ROW 10.71 COL 12 COLON-ALIGNED NO-LABEL
+     agnt-type AT ROW 10.71 COL 22.13 COLON-ALIGNED NO-LABEL
+     BUTTON-agnt AT ROW 10.71 COL 28.75
+     mngr-code AT ROW 11.71 COL 12 COLON-ALIGNED NO-LABEL
+     BUTTON-mngr AT ROW 11.71 COL 28.75
+     COMBO-usl-opl AT ROW 13.46 COL 16 COLON-ALIGNED
+     srok-opl AT ROW 13.46 COL 65 COLON-ALIGNED
+     COMBO-auto-pay AT ROW 13.46 COL 79.5 COLON-ALIGNED
+     COMBO-usl-opl-2 AT ROW 14.54 COL 16 COLON-ALIGNED
+     srok-opl-2 AT ROW 14.54 COL 65 COLON-ALIGNED
+     COMBO-auto-pay-2 AT ROW 14.54 COL 79.5 COLON-ALIGNED
+     kredit-limit AT ROW 16.67 COL 2.5
+     kredit-sum AT ROW 16.67 COL 23 COLON-ALIGNED NO-LABEL
+     balance-fo AT ROW 16.67 COL 77.63 COLON-ALIGNED
+     str-uslov-oplat AT ROW 17.71 COL 23 COLON-ALIGNED
+     fin-VAT-pc AT ROW 17.71 COL 77.63 COLON-ALIGNED
+     RADIO-SET-1 AT ROW 19.33 COL 2.5 NO-LABEL
+     b-nal AT ROW 19.33 COL 14 NO-LABEL
+     cor-acc AT ROW 19.5 COL 53.5 COLON-ALIGNED
+     b-cor-acc AT ROW 19.5 COL 94.88
+     an-uchet AT ROW 20.5 COL 53.5 COLON-ALIGNED
+     b-an-uchet AT ROW 20.5 COL 94.88
+     cel-nazn AT ROW 21.5 COL 53.5 COLON-ALIGNED
+     b-cel-nazn AT ROW 21.5 COL 94.88
+     cor-acc-2 AT ROW 22.5 COL 53.5 COLON-ALIGNED
+     b-cor-acc-2 AT ROW 22.5 COL 94.88
+     contract-code AT ROW 3.58 COL 85.63 COLON-ALIGNED
+     curr-name AT ROW 5.58 COL 90.5 COLON-ALIGNED NO-LABEL
+     own-code AT ROW 7.67 COL 12.25 COLON-ALIGNED NO-LABEL
+     own-name AT ROW 7.83 COL 21.5 COLON-ALIGNED NO-LABEL
+     cli-name AT ROW 8.71 COL 31.75 NO-LABEL
+     posr-name AT ROW 9.71 COL 31.75 NO-LABEL
+     agnt-name AT ROW 10.71 COL 31.75 NO-LABEL
+     mngr-name AT ROW 11.71 COL 31.75 NO-LABEL
      "ГЕНЕРАЦИЯ" VIEW-AS TEXT
-          SIZE 10.5 BY .83 AT ROW 11.75 COL 1.5 WIDGET-ID 2
+          SIZE 10.5 BY .83 AT ROW 11.58 COL 1.5 WIDGET-ID 2
           FGCOLOR 4 
-     "Исполнитель:" VIEW-AS TEXT
-          SIZE 12 BY 1 AT ROW 10.46 COL 1.13
-          FGCOLOR 4 
-     "Контрагент:" VIEW-AS TEXT
-          SIZE 11.5 BY 1 AT ROW 7.5 COL 2
+     "Фирма:" VIEW-AS TEXT
+          SIZE 6.13 BY .92 AT ROW 7.67 COL 7
           FGCOLOR 4 
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE .
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
+     "Контрагент:" VIEW-AS TEXT
+          SIZE 11.5 BY 1 AT ROW 8.71 COL 2
+          FGCOLOR 4 
+     "Исполнитель:" VIEW-AS TEXT
+          SIZE 12 BY 1 AT ROW 10.46 COL 1.13
+          FGCOLOR 4 
+     "Посредник:" VIEW-AS TEXT
+          SIZE 10.13 BY 1 AT ROW 9.58 COL 2.88
+          FGCOLOR 4 
      "Агент:" VIEW-AS TEXT
-          SIZE 6.13 BY 1 AT ROW 9.5 COL 6.88
+          SIZE 6.13 BY 1 AT ROW 10.58 COL 6.88
           FGCOLOR 4 
      "ОПЛАТА" VIEW-AS TEXT
-          SIZE 7 BY .83 AT ROW 14.75 COL 1.5
+          SIZE 7 BY .83 AT ROW 14.58 COL 1.5
           FGCOLOR 4 
-     "Фирма:" VIEW-AS TEXT
-          SIZE 6.13 BY .92 AT ROW 6.58 COL 7
-          FGCOLOR 4 
-     RECT-8 AT ROW 12 COL 1 WIDGET-ID 4
-     RECT-9 AT ROW 15.08 COL 1 WIDGET-ID 6
-     SPACE(0.86) SKIP(0.16)
+     RECT-8 AT ROW 13.13 COL 1.25 WIDGET-ID 4
+     RECT-9 AT ROW 16.13 COL 1.25 WIDGET-ID 6
+     SPACE(0.61) SKIP(0.19)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Договор".
@@ -1091,7 +1093,7 @@ DO:
       contract-date COMBO-type-contr COMBO-usl-opl srok-opl contract-name contract-prn-code contract-city own-name
       contract-date-beg  contract-date-end  curr-code cli-type cli-code posr-type posr-code  agnt-type
       agnt-code mngr-code str-uslov-oplat COMBO-auto-pay RADIO-SET-1 COMBO-usl-opl-2 COMBO-auto-pay-2 srok-opl-2 T-edi t-diadoc
-      COMBO-return-type
+      COMBO-return-type T-edi-order
     .
     run create-proc in this-procedure no-error .
     if error-status:error then return no-apply.
@@ -1569,6 +1571,19 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME T-diadoc
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-diadoc Dialog-Frame
+ON VALUE-CHANGED OF T-diadoc IN FRAME Dialog-Frame /* Поставки через Диадок */
+DO:
+  
+  assign t-diadoc .
+        
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME T-edi
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-edi Dialog-Frame
 ON VALUE-CHANGED OF T-edi IN FRAME Dialog-Frame /* Поставки через ЭДО */
@@ -1581,17 +1596,19 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&Scoped-define SELF-NAME T-diadoc
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-diadoc Dialog-Frame
-ON VALUE-CHANGED OF T-diadoc IN FRAME Dialog-Frame /* Поставки через диадок */
+
+&Scoped-define SELF-NAME T-edi-order
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL T-edi-order Dialog-Frame
+ON VALUE-CHANGED OF T-edi-order IN FRAME Dialog-Frame /* Электронные заказы EDI */
 DO:
   
-  assign t-diadoc .
+  assign T-edi-order .
         
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 &UNDEFINE SELF-NAME
 
@@ -2086,7 +2103,7 @@ PROCEDURE create-proc :
     buf_contract-attr.attr-value = string (T-edi)
     .
   end.  
-  
+
   find first buf_contract-attr exclusive-lock where buf_contract-attr.contract-code = b_contract.contract-code
   and buf_contract-attr.host-code = b_contract.host-code and buf_contract-attr.attr-code = "contract-diadoc" no-error .
   if available (buf_contract-attr) then buf_contract-attr.attr-value = string(T-diadoc) .
@@ -2161,25 +2178,25 @@ PROCEDURE enable_UI :
 
   {&OPEN-QUERY-Dialog-Frame}
   GET FIRST Dialog-Frame.
-  DISPLAY T-edi t-diadoc contract-prn-code contract-date contract-city contract-name 
-          contract-date-beg contract-date-end curr-code COMBO-type-contr 
-          cli-code cli-type posr-code posr-type agnt-code agnt-type mngr-code 
-          COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 
-          COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo  
-          str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal cor-acc an-uchet cel-nazn 
-          cor-acc-2 contract-code curr-name own-code own-name cli-name posr-name 
-          agnt-name mngr-name 
+  DISPLAY T-edi T-diadoc T-edi-order contract-prn-code contract-date 
+          contract-city contract-name contract-date-beg contract-date-end 
+          curr-code COMBO-return-type COMBO-type-contr cli-code cli-type 
+          posr-code posr-type agnt-code agnt-type mngr-code COMBO-usl-opl 
+          srok-opl COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 COMBO-auto-pay-2 
+          kredit-limit kredit-sum balance-fo str-uslov-oplat fin-VAT-pc 
+          RADIO-SET-1 b-nal cor-acc an-uchet cel-nazn cor-acc-2 contract-code 
+          curr-name own-code own-name cli-name posr-name agnt-name mngr-name 
       WITH FRAME Dialog-Frame.
-  ENABLE b-OK b-exit b-spec B-transport b-hist B-Help RECT-8 RECT-9 T-edi  t-diadoc
-         contract-prn-code contract-date contract-city contract-name 
-         BUTTON-curr contract-date-beg contract-date-end curr-code 
-         COMBO-type-contr b-bank-own b-bank-cli cli-code cli-type BUTTON-cli 
-         b-bank-posr posr-code posr-type BUTTON-posr b-bank-agnt agnt-code 
-         agnt-type BUTTON-agnt mngr-code BUTTON-mngr COMBO-usl-opl srok-opl 
-         COMBO-auto-pay COMBO-usl-opl-2 srok-opl-2 COMBO-auto-pay-2 
-         kredit-limit kredit-sum balance-fo str-uslov-oplat 
-         fin-VAT-pc RADIO-SET-1 b-nal b-cor-acc b-an-uchet b-cel-nazn 
-         b-cor-acc-2 contract-code own-code 
+  ENABLE b-OK b-exit b-spec B-transport b-hist B-Help RECT-8 RECT-9 T-edi 
+         T-diadoc T-edi-order contract-prn-code contract-date contract-city 
+         contract-name BUTTON-curr contract-date-beg contract-date-end 
+         curr-code COMBO-return-type COMBO-type-contr b-bank-own b-bank-cli 
+         cli-code cli-type BUTTON-cli b-bank-posr posr-code posr-type 
+         BUTTON-posr b-bank-agnt agnt-code agnt-type BUTTON-agnt mngr-code 
+         BUTTON-mngr COMBO-usl-opl srok-opl COMBO-auto-pay COMBO-usl-opl-2 
+         srok-opl-2 COMBO-auto-pay-2 kredit-limit kredit-sum balance-fo 
+         str-uslov-oplat fin-VAT-pc RADIO-SET-1 b-nal b-cor-acc b-an-uchet 
+         b-cel-nazn b-cor-acc-2 contract-code own-code 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -2598,7 +2615,13 @@ assign
         T-edi = logical (buf_contract-attr.attr-value) .
       end.
       display t-edi with frame {&frame-name} .
-      
+
+      for first buf_contract-attr no-lock where buf_contract-attr.host-code = b_contract.host-code and
+      buf_contract-attr.contract-code = b_contract.contract-code and buf_contract-attr.attr-code = "contract-edi_orders":
+        T-edi-order = logical (buf_contract-attr.attr-value) .
+      end.
+      display t-edi-order with frame {&frame-name} .
+            
       for first buf_contract-attr no-lock where buf_contract-attr.host-code = b_contract.host-code and
       buf_contract-attr.contract-code = b_contract.contract-code and buf_contract-attr.attr-code = "contract-diadoc":
         T-diadoc = logical (buf_contract-attr.attr-value) .
