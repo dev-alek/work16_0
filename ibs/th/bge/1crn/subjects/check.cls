@@ -262,7 +262,6 @@ if BufHandle:table = "chk-doc" then do:    /* отдельная выгрузка чеков  открытия
     find first shift-obj where shift-obj.status_ = "ТЕК" and shift-obj.obj-code = v-obj-code no-error.
     IF AVAILABLE shift-obj THEN v-shift-num = shift-obj.shift-num.
     else v-shift-num = 0.
-    
     insw:start-element ({&tag-shift}) .
 
     insw:write-data-element (  "shift-date":U,  iso-date(v-shift-date) ).
@@ -672,7 +671,7 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
       insw:write-data-element (  "operator":U,   p-inkas-operator           ). /* Оператор создавший документ (Строка) */
     if p-buf_chk-doc.out-code > "" then // chk-doc.out-code хранит значение из inkas.inkas-code
       insw:write-data-element (  "prdoc-num":U,  p-buf_chk-doc.out-code     ). /* Номер документа продажи в GC (Строка) */
-    if p-inkas-dtime = ? then . else
+    if p-inkas-dtime = ? then insw:write-data-element ("prdoc-date":U, "0001-01-01T00:00:00.000" ). else
       insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
 
 
