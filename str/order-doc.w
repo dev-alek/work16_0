@@ -74,6 +74,7 @@ define variable StatusOrder   as class     ibs.th.str.order.sts.order no-undo .
 
 define variable bcol          as handle    extent no-undo.
 define variable hBrowse       as handle    no-undo.
+define variable vUndo         as logical   no-undo init no.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -437,7 +438,7 @@ ASSIGN
 ON WINDOW-CLOSE OF FRAME Dialog-Frame
 DO:
         apply "choose":U to b-cancel in frame {&frame-name}.
-    END.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -521,6 +522,7 @@ DO:
          end.
          else return no-apply .
         end.
+        vUndo = yes.
         return.
     END.
 
@@ -825,10 +827,12 @@ DO:
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-line Dialog-Frame
 ON row-leave OF br-line IN FRAME Dialog-Frame
 DO:
+        find current X_order-line exclusive-lock. 
         assign
             browse br-line X_order-line.order-qnty 
             .  
             X_order-line.fact-qnty = X_order-line.order-qnty .
+        find current X_order-line no-lock. 
 
         br-line:refresh ().
         apply "ROW-DISPLAY" to br-line IN FRAME Dialog-Frame.
@@ -948,6 +952,8 @@ frame {&frame-name}:title = title0 .
       end.
       
 WAIT-FOR GO OF FRAME {&FRAME-NAME} .
+if vUndo then
+  UNDO MAIN-BLOCK, LEAVE.
 END.
 RUN disable_UI.
 

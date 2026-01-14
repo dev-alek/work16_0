@@ -88,7 +88,7 @@ class ibs.th.bge.1crn.subjects.edi-doc inherits ibs.th.bge.1crn.subjects.asubjec
       when "comment"      then comment          = {&attr-str} .
       when "sum"          then sum              = {&attr-dec} .
       when "sum-nonds"    then sum-nonds        = {&attr-dec} .
-      when "order-item"   then order-item         = {&attr-str} .
+      when "order-item-external" then order-item = {&attr-str} .
       
       
     end case.

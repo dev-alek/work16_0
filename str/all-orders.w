@@ -1079,7 +1079,7 @@ ON CHOOSE OF b-send IN FRAME d-order /* Отправить */
             if errorRidList <> "" then do:
                 do ii = 1 to num-entries (errorRidList):
                     find first buf_X_order no-lock where recid(buf_X_order) = integer(entry (ii,errorRidList)) no-error .
-                   message "В заказе кодом ТН " + string(buf_X_order.doc-code) + " не должно быть строк с количеством <= 0"
+                   message "В заказе c кодом ТН " + string(buf_X_order.doc-code) + " не должно быть строк с количеством <= 0"
                     view-as alert-box. 
                 end.                    
             end. 
