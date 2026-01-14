@@ -1044,7 +1044,7 @@ procedure proc-00 :
                 mc-for-chk-type = ""
                 mc-exist = yes /* Предполагаем что уже есть в базе */
                 .
-            FIND  buf_chk-doc where
+/*            FIND  buf_chk-doc where
                 buf_chk-doc.obj-type = shop-type and
                 buf_chk-doc.obj-code = shop-code and
                 buf_chk-doc.chk-date = chk-date_ and
@@ -1052,8 +1052,19 @@ procedure proc-00 :
                 buf_chk-doc.chk-time = chk-time_ and
                 buf_chk-doc.chk-num  = chk-num_ and
                 buf_chk-doc.sales-man = sales-man_
-                NO-ERROR NO-WAIT.   
-            IF NOT AVAIL buf_chk-doc AND NOT LOCKED buf_chk-doc  AND NOT AMBIGUOUS buf_chk-doc then do:    
+                NO-ERROR NO-WAIT.   */
+
+            FIND  ub.chk-doc where
+                ub.chk-doc.obj-type = shop-type and
+                ub.chk-doc.obj-code = shop-code and
+                ub.chk-doc.chk-date = chk-date_ and
+                ub.chk-doc.pay-desk = pay-desk_ and
+                ub.chk-doc.chk-time = chk-time_ and
+                ub.chk-doc.chk-num  = chk-num_ and
+                ub.chk-doc.sales-man = sales-man_
+                NO-LOCK NO-ERROR.   
+
+            IF NOT AVAIL ub.chk-doc AND NOT LOCKED ub.chk-doc  AND NOT AMBIGUOUS ub.chk-doc then do:    
                 /*установить смены на кассе*/
                 
                 assign
@@ -2790,13 +2801,17 @@ procedure proc-end-chk :
        
     FIND FIRST tt-chk-doc NO-ERROR. 
     IF AVAILABLE tt-chk-doc THEN DO:
+
        FIND FIRST ub.chk-doc WHERE 
                   ub.chk-doc.chk-id    = tt-chk-doc.chk-id
               AND ub.chk-doc.obj-code  = tt-chk-doc.obj-code
               AND ub.chk-doc.obj-type  = tt-chk-doc.obj-type
               AND ub.chk-doc.chk-date  = tt-chk-doc.chk-date
               AND ub.chk-doc.chk-time  = tt-chk-doc.chk-time
-       NO-ERROR. 
+              AND ub.chk-doc.pay-desk  = tt-chk-doc.pay-desk
+              AND ub.chk-doc.chk-num   = tt-chk-doc.chk-num
+              AND ub.chk-doc.sales-man = tt-chk-doc.sales-man
+              NO-LOCK  NO-ERROR. 
        
        IF NOT AVAILABLE ub.chk-doc THEN DO:
           lll = lll + 1 .
