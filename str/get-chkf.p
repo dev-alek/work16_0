@@ -2332,6 +2332,9 @@ if error-status:error then do:
 
 end.
 
+{str/proc-exp-1s.i} 
+run proc-exp-1s in this-procedure  no-error.
+
 run write-log-and-file in p-log-handle (
       input 1
     , input log-file-name

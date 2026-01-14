@@ -243,6 +243,8 @@ define private temp-table tt-recid-TranFuel no-undo
 
 
 if BufHandle:table = "chk-doc" then do:    /* отдельная выгрузка чеков  открытия и закрытия с типом 40 и 13 */ 
+      define variable v-curr-sv-date as date no-undo .
+      run gbl/getcurdt.p  (output v-curr-sv-date ) .
 
     assign
       v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
@@ -253,24 +255,31 @@ if BufHandle:table = "chk-doc" then do:    /* отдельная выгрузка чеков  открытия
     assign
       v-obj-type   = v-fld-obj-type:buffer-value
       v-obj-code   = v-fld-obj-code:buffer-value
-      v-shift-date = TODAY.
+      v-shift-date = v-curr-sv-date
       v-shift-num  = v-fld-shift-num:buffer-value
     .
+
+    find first shift-obj where shift-obj.status_ = "ТЕК" and shift-obj.obj-code = v-obj-code no-error.
+    IF AVAILABLE shift-obj THEN v-shift-num = shift-obj.shift-num.
+    else v-shift-num = 0.
     
     insw:start-element ({&tag-shift}) .
 
     insw:write-data-element (  "shift-date":U,  iso-date(v-shift-date) ).
-    if v-shift-num  = ? then insw:write-empty-element ( "shift-num":U  ) .  /* Номер смены (Число) */
-                        else insw:write-data-element (  "shift-num":U,   string(v-shift-num)     ).
+    insw:write-data-element (  "shift-num":U,   string(v-shift-num)    ).
 
     insw:start-element ({&tag-checks}) .
-    for each over_buf_chk-doc /*no-lock */
-       where over_buf_chk-doc.chk-id = BufHandle:buffer-field( "chk-id":U  ):buffer-value :
-      v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error . 
-      if not error-status:error then 
-        CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
-          v-host-code, v-obj-type, v-obj-code) .
-
+    for each over_buf_chk-doc
+       where over_buf_chk-doc.chk-type eq 40 or over_buf_chk-doc.chk-type eq 13 :
+       FIND FIRST ub.chk-doc-attr WHERE over_buf_chk-doc.doc-code = chk-doc-attr.doc-code and ub.chk-doc-attr.attr-code  = "CHFlag1S" and ub.chk-doc-attr.attr-value = "no" NO-ERROR. 
+       IF AVAILABLE ub.chk-doc-attr THEN 
+            DO:
+               v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error . 
+               if not error-status:error then 
+               CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
+              v-host-code, v-obj-type, v-obj-code) .
+            delete chk-doc-attr.
+            end .   
     end .   
 insw:end-element ({&tag-checks}) . 
 insw:end-element ({&tag-shift}) . 

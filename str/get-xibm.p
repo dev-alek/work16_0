@@ -37,7 +37,6 @@ DEFINE VARIABLE vss-date        as character no-undo init "$Date$":u .
 DEFINE VARIABLE vss-workfile    as character no-undo init "$Workfile$":u .
 DEFINE VARIABLE vss-archive     as character no-undo init "$Archive$":u .
 DEFINE VARIABLE vss-description as character no-undo init "Программа приема чеков с касс IBM-XML" .
-{str/proc-exp-1s.i} 
 { cmp/vssrevis.i }
 { str/get-chk.i }
 /*общие для кассовой части и чековой*/
@@ -2778,7 +2777,8 @@ procedure proc-end :
             mc-prev-code = "":U
             .
     end.
-    
+
+   
 end procedure. /* proc-end */
 
 
@@ -2910,8 +2910,6 @@ procedure proc-end-chk :
     END.
  END.
 
-/*{str/proc-exp-1s.i} */
-run proc-exp-1s in this-procedure  (ub.chk-doc.doc-code, ub.chk-doc.chk-id) no-error.
 
 
 end procedure. /* proc-end-chk */
