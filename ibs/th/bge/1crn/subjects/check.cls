@@ -671,8 +671,8 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
       insw:write-data-element (  "operator":U,   p-inkas-operator           ). /* Оператор создавший документ (Строка) */
     if p-buf_chk-doc.out-code > "" then // chk-doc.out-code хранит значение из inkas.inkas-code
       insw:write-data-element (  "prdoc-num":U,  p-buf_chk-doc.out-code     ). /* Номер документа продажи в GC (Строка) */
-    if p-inkas-dtime = ? then insw:write-data-element ("prdoc-date":U, "0001-01-01T00:00:00.000" ). else
-      insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
+    if p-inkas-dtime = ? then insw:write-data-element ("prdoc-date":U, SUBSTITUTE("&1T&2", iso-date(p-buf_chk-doc.chk-date), timeFormat(p-buf_chk-doc.chk-time) )). 
+    else  insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
 
 
     /* 19/II-2019  Если в чеке есть платеж, с is-nds = 1, то в товарных строках НДС выгружать,
