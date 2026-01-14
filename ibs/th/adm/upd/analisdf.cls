@@ -55,7 +55,16 @@ class ibs.th.adm.upd.analisdf final:
     get.
     set.
 
+    define public property fileDF as character no-undo
+    get.
+    set.
+
+    define public property noMessage as logical no-undo
+    get.
+    set.
+
     define stream Ostream.
+    define stream sTrigger.
     define public variable mFileDf   as character no-undo.
     define public variable mUpdateTo as integer   no-undo.
     
@@ -617,9 +626,17 @@ define temp-table {&prefixtt}INDEX
       end.     /* can-do("add,upddate,drop", vStrTmp) */
    
    end method.
+   
    method public void dumpTable(ifile  as character):
-      output stream Ostream to value(ifile).
-      output stream Ostream close.
+      if fileDF <> "" then 
+      do:
+          iFile = fileDF.
+      end.
+      else
+      do:
+        output stream Ostream to value(ifile).
+        output stream Ostream close.
+      end.
       find first {&prefixtt}Table no-error.
       if available {&prefixtt}Table
       then
@@ -636,10 +653,14 @@ define temp-table {&prefixtt}INDEX
       if available {&prefixtt}SEQUENCE
       then
          dumpOneTable(ifile,buffer {&prefixtt}SEQUENCE:handle ).
-      output stream Ostream to value(ifile) append.
-      put stream Ostream unformatted "." skip "PSC" skip "cpstream=1251" skip "." skip .
-      output stream Ostream close.                                
+      if fileDF = "" then 
+      do:
+          output stream Ostream to value(ifile) append.
+          put stream Ostream unformatted "." skip "PSC" skip "cpstream=1251" skip "." skip .
+          output stream Ostream close.
+      end.           
    end.
+   
    method private void dumpOneTable(ifile  as character,
                                    iBuffer as  handle):
    
@@ -655,10 +676,15 @@ define temp-table {&prefixtt}INDEX
    
    vBuffer = iBuffer.
    output stream Ostream to value(ifile) append.
+   do transaction:
    create query vQuery.
    vQuery:add-buffer(vBuffer).
-   if not vQuery:query-prepare("for EACH " + vBuffer:name) then  do: msg = substitute( "ERROR 1 ", error-status:get-message(1)).  message msg view-as alert-box. end.
-   if not vQuery:query-open()                              then  do: msg = substitute( "ERROR 2 ", error-status:get-message(1)).  message msg view-as alert-box. end.
+   def var vPredicate as char no-undo.
+/*   vPredicate = "for EACH " + vBuffer:name + " BY "  + vBuffer:name + ".{&prefixfil}ORDER".*/
+/*   run gbl/inidebug.p.*/
+   vPredicate = "for EACH " + vBuffer:name + if vBuffer:name = "{&prefixtt}FIELD" then " BY INT("  + vBuffer:name + ".{&prefixfil}ORDER)" else "".
+   if not vQuery:query-prepare(vPredicate) then  do: msg = substitute( "ERROR 1 ", error-status:get-message(1)).  message msg view-as alert-box. end.
+   if not vQuery:query-open()then  do: msg = substitute( "ERROR 2 ", error-status:get-message(1)).  message msg view-as alert-box. end.
    vQuery:get-first().
    if vBuffer:available
    then do: 
@@ -705,10 +731,16 @@ define temp-table {&prefixtt}INDEX
          vQuery:get-next().
       end.
    end.
-   vQuery:query-close().
+   finally :
+     if valid-handle(vQuery) then
+     do:
+       vQuery:query-close().
+       delete object vQuery.
+     end.
+     output stream Ostream close.
+   end finally .
 
-   delete object vQuery.
-   output stream Ostream close.
+   end.
 end method.
 method public logical CheckTable(ifile  as character):
       define variable vOk as logical no-undo.
@@ -962,7 +994,9 @@ method private void DeleteFieldsForHeadTable(iTableName as character):
        vField = substitute("&1 ASCENDING",{&prefixtt}FIELD.{&prefixfil}Name).
        if not can-do(vIndex, vField) then
        do:
-         delete {&prefixtt}FIELD.
+         vField = substitute("&1 DESCENDING",{&prefixtt}FIELD.{&prefixfil}Name).
+         if not can-do(vIndex, vField) then
+           delete {&prefixtt}FIELD.
        end.
      end.
    end.
@@ -1002,8 +1036,8 @@ method private void addIndexHeadHist(iTableName as character ):
                                                       + {&delim-par} + '"corr-user-db-num" ASCENDING'
                                                      
              {&prefixtt}Index.{&prefixfil}INDEX-FIELD =     {&prefixtt}Index.{&prefixfil}INDEX-FIELD 
-                                                      + {&delim-par} + '"chip-num" ASCENDING'
                                                       + {&delim-par} + '"corr-user-db-num" ASCENDING'
+                                                      + {&delim-par} + '"chip-num" ASCENDING'
                                                       + {&delim-par} + '"subject" ASCENDING'
       .
    end.
@@ -1033,6 +1067,29 @@ method private void addIndexHeadHist(iTableName as character ):
       {&prefixtt}Index.{&prefixfil}AREA        = '"History_Index"'
       {&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"corr-user-name" ASCENDING' + {&delim-par} + '"corr-user-db-num" ASCENDING'
    .
+end method.
+
+method private void addIndexAttr(iTableName as character ):
+   define buffer buf_{&prefixtt}Index for {&prefixtt}Index.
+   define variable vArea as character no-undo.
+   
+   for first {&prefixtt}Index where 
+             {&prefixtt}Index.{&prefixfil}table = iTableName
+         and {&prefixtt}Index.{&prefixfil}Name  = "~"pi~"":  
+     {&prefixtt}Index.{&prefixfil}INDEX-FIELD = 
+       substitute("&1&2~"attr-code~" ASCENDING",{&prefixtt}Index.{&prefixfil}INDEX-FIELD,{&delim-par}).
+     vArea = {&prefixtt}Index.{&prefixfil}AREA.
+   end.
+
+   create {&prefixtt}Index.
+   assign
+      {&prefixtt}Index.{&prefixfil}mode        = "ADD"
+      {&prefixtt}Index.{&prefixfil}Table       = iTableName
+      {&prefixtt}Index.{&prefixfil}Name        = '"code-value"'
+      {&prefixtt}Index.{&prefixfil}AREA        = vArea
+      {&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"attr-code" ASCENDING' + {&delim-par} + '"attr-value" ASCENDING'
+   .
+
 end method.
 
 method private void addindexHist(iTableName as character ):
@@ -1076,6 +1133,61 @@ method private void addindexHist(iTableName as character ):
       {&prefixtt}Index.{&prefixfil}AREA        = '"History_Index"'
       {&prefixtt}Index.{&prefixfil}INDEX-FIELD = '"corr-user-name" ASCENDING' + {&delim-par} + '"corr-user-db-num" ASCENDING'
    .
+end method.
+
+method private void addFieldAttr(iTableName as character ):
+   define variable vORDER    as integer no-undo init 0.
+   define variable vPOSITION as integer no-undo init 1. 
+   for each {&prefixtt}FIELD where {&prefixtt}FIELD.{&prefixfil}table eq iTableName
+       by int({&prefixtt}FIELD.{&prefixfil}ORDER):
+      assign
+        vPOSITION                              = vPOSITION + 1
+       {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+      .
+   end.
+   for each {&prefixtt}FIELD where {&prefixtt}FIELD.{&prefixfil}table eq iTableName
+       by int({&prefixtt}FIELD.{&prefixfil}POSITION):
+      assign
+      vORDER                                  = vORDER + 10
+      {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
+      .
+   end.
+
+   create {&prefixtt}FIELD.
+   assign
+      vORDER                                  = vORDER + 10
+      vPOSITION                               = vPOSITION + 1
+      {&prefixtt}FIELD.{&prefixfil}localIndex = 1
+      {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
+      {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
+      {&prefixtt}FIELD.{&prefixfil}Name       ='"attr-code"'
+      {&prefixtt}FIELD.{&prefixfil}Data-Type  = "character"
+      {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"X(8)"'
+      {&prefixtt}FIELD.{&prefixfil}INITIAL    = '""'
+      {&prefixtt}FIELD.{&prefixfil}LABEL       = '"Код атрибута"'
+      {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+      {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = "16"
+      {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
+      {&prefixtt}FIELD.{&prefixfil}MANDATORY  = "{&logicalfield}"
+   .
+
+   create {&prefixtt}FIELD.
+   assign
+      vORDER                                  = vORDER + 10
+      vPOSITION                               = vPOSITION + 1
+      {&prefixtt}FIELD.{&prefixfil}localIndex = 1
+      {&prefixtt}FIELD.{&prefixfil}mode       = "ADD"
+      {&prefixtt}FIELD.{&prefixfil}Table      = iTableName
+      {&prefixtt}FIELD.{&prefixfil}Name       ='"attr-value"'
+      {&prefixtt}FIELD.{&prefixfil}Data-Type  = "character"
+      {&prefixtt}FIELD.{&prefixfil}FORMAT     = '"X(20)"'
+      {&prefixtt}FIELD.{&prefixfil}INITIAL    = '""'
+      {&prefixtt}FIELD.{&prefixfil}LABEL       = '"Значение атрибута"'
+      {&prefixtt}FIELD.{&prefixfil}POSITION   = string(vPOSITION)
+      {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = "40"
+      {&prefixtt}FIELD.{&prefixfil}ORDER      = string (vORDER)
+   .
+
 end method.
 
 method private void addFieldHist(iTableName as character, iIsHead as logical ):
@@ -1221,6 +1333,7 @@ method private void addFieldHist(iTableName as character, iIsHead as logical ):
           {&prefixtt}FIELD.{&prefixfil}INITIAL    = '""'
           {&prefixtt}FIELD.{&prefixfil}LABEL      = '"Предмет изменения"'
           {&prefixtt}FIELD.{&prefixfil}MAX-WIDTH  = '16'
+          {&prefixtt}FIELD.{&prefixfil}MANDATORY  = "логическое_поле"
        .
 
     /*ADD FIELD "is-news" OF "<iTableName>" AS logical*/
@@ -1298,15 +1411,74 @@ method private void addFieldHist(iTableName as character, iIsHead as logical ):
       
 end method.
 
+method public void crTriggerFile(
+  iTableName as character,
+  iFileName as character, 
+  iTrigger as character ):
+  define variable vFullName as character no-undo.
+  
+  vFullName = substitute("&1&2&3.p",session:temp-directory, iFileName, lc(substr(iTrigger,1,1))).
+  output stream sTrigger to value(vFullName).
+  put stream sTrigger unformatted
+     "block-level on error undo, throw." skip(1)
+     "/*" skip
+     "$Revision$" skip
+     "$Author$" skip
+     "$Date$" skip
+     "$Workfile$" skip
+     "$Archive$" skip(1)
+     "Автор: Сгенерировано автоматически методом " program-name(1) skip
+     "Дата создания: " string(today,"99/99/9999") skip
+     "Author: automatically generated by " program-name(1) skip
+     "Created: " string(today,"99/99/9999") skip
+     "*/" skip(1)
+     "&glob main-tbl " iTableName skip
+     "trigger procedure for " lc(iTrigger) " of ub.~{&main-tbl~}" 
+  .
+  if iTrigger = "write" then
+  do:
+    put stream sTrigger unformatted
+      " " skip
+      "  new buffer new-~{&main-tbl~}" skip
+      "  old buffer old-~{&main-tbl~}" skip
+    .
+  end.
+  put stream sTrigger unformatted 
+    "." skip(1)
+    "define variable vss-revision    as character no-undo initial ~"$Revision$~":U." skip
+    "define variable vss-author      as character no-undo initial ~"$Author$~":U." skip
+    "define variable vss-date        as character no-undo initial ~"$Date$~":U." skip
+    "define variable vss-workfile    as character no-undo initial ~"$Workfile$~":U." skip
+    "define variable vss-archive     as character no-undo initial ~"$Archive$~":U." skip
+    "define variable vss-description as character no-undo init ~"Триггер на " lc(iTrigger) " " iTableName "~"." skip 
+  . 
+    
+  output stream sTrigger close.
+end method.
+
 method public void crtablehist(iTableName as character ):
-   empty temp-table {&prefixtt}TABLE.
-   empty temp-table {&prefixtt}FIELD.
-   empty temp-table {&prefixtt}Index.
-   empty temp-table {&prefixtt}SEQUENCE.
-   run prodict/dump_df.p   (iTableName,
-                            iTableName + ".df",
-                            "").
-   readDF(iTableName + ".df").
+  crtablehist(iTableName, no, "").
+end method.
+
+method public void crtablehist(
+   iTableName as character, 
+   iCrSeq as logical, 
+   iFileTrigger  as character 
+):
+
+   if not can-find(first {&prefixtt}TABLE where {&prefixtt}TABLE.{&prefixfil}Name = '"' + iTableName + '"') then
+   do:
+     /* if нужен для генерации таблицы истории по таблице атрибутов из crTableAttr */
+     empty temp-table {&prefixtt}TABLE.
+     empty temp-table {&prefixtt}FIELD.
+     empty temp-table {&prefixtt}Index.
+     empty temp-table {&prefixtt}SEQUENCE.
+     run prodict/dump_df.p   (iTableName,
+                              iTableName + ".df",
+                              "").
+     readDF(iTableName + ".df").
+   end.
+
    define variable vnewName   as character no-undo.
    define variable vnewNameno as character no-undo.
    for each {&prefixtt}TABLE where not ( {&prefixtt}TABLE.{&prefixfil}Name begins "c-") :
@@ -1315,23 +1487,39 @@ method public void crtablehist(iTableName as character ):
       ChangeTable({&prefixtt}TABLE.{&prefixfil}Name,vnewName).
       {&prefixtt}TABLE.{&prefixfil}Area = '"History"'.
       ChangeAreahist (vnewName).
+      if iFileTrigger <> "" then
+      do:
+        crTriggerFile (vnewNameno, iFileTrigger, "WRITE").
+        crTriggerFile (vnewNameno, iFileTrigger, "DELETE").
+        {&prefixtt}TABLE.{&prefixfil}TABLE-TRIGGER = substitute(
+          "~"DELETE~" OVERRIDE PROCEDURE ~"trg/&1d.p~" CRC ~"?~"~
+&2~"WRITE~" OVERRIDE PROCEDURE ~"trg/&1w.p~" CRC ~"?~"",
+          iFileTrigger, {&delim-par}).  
+      end.
+      else
+      do:
+        {&prefixtt}TABLE.{&prefixfil}TABLE-TRIGGER = "". 
+      end. 
       addFieldHist (vnewName, false).
       addIndexHist (vnewName).
       {&prefixtt}TABLE.{&prefixfil}Name     = vnewName.
       {&prefixtt}TABLE.{&prefixfil}DUMP-NAME = '"' + lc(vnewNameno) + '"'.
-     /* create {&prefixtt}SEQUENCE.
-      assign
-         {&prefixtt}SEQUENCE.{&prefixfil}mode           = "add"
-         {&prefixtt}SEQUENCE.{&prefixfil}Name           = "s-" + vnewNameno + "-chip-num"
-         {&prefixtt}SEQUENCE.{&prefixfil}INITIAL        = '0'
-         {&prefixtt}SEQUENCE.{&prefixfil}INCREMENT      = '1'
-         {&prefixtt}SEQUENCE.{&prefixfil}CYCLE-ON-LIMIT = 'no'
-      . */
-      
+      if iCrSeq then
+      do:
+        create {&prefixtt}SEQUENCE.
+        assign
+          {&prefixtt}SEQUENCE.{&prefixfil}mode           = "ADD"
+          {&prefixtt}SEQUENCE.{&prefixfil}Name           = "s-" + vnewNameno + "-chip-num"
+          {&prefixtt}SEQUENCE.{&prefixfil}INITIAL        = '0'
+          {&prefixtt}SEQUENCE.{&prefixfil}INCREMENT      = '1'
+          {&prefixtt}SEQUENCE.{&prefixfil}CYCLE-ON-LIMIT = 'no'
+        .
+      end.
    end.
    dumpTable ("c-" + iTableName + ".df"). 
-   message "c-" + iTableName + ".df" search("c-" + iTableName + ".df")
-   view-as alert-box. 
+   if not noMessage then
+     message "c-" + iTableName + ".df" search("c-" + iTableName + ".df")
+     view-as alert-box. 
  end method.
 
 /*------------------------------------------------------------------------
@@ -1340,8 +1528,8 @@ method public void crtablehist(iTableName as character ):
                 iTableHead    - имя новой головной таблицы
                 iSequenceName - имя последовательности (Sequence) для истории
                 iFileTrigger  - имя файла триггера для новой таблицы без суффикса
-                                (например: для "cordh" будет прописано "trg\cordhd.p" и 
-                                "trg\cordhц.p")
+                                (например: для "cordh" будет прописано "trg/cordhd.p" и 
+                                "trg/cordhw.p")
   Purpose     : Генерация головной таблицы для истории 
   Author(s)   : Ростовцев Александр
   Created     : 18.04.2025
@@ -1373,9 +1561,11 @@ method public void crTableHeadHist
       ChangeAreahist (vnewName).
       if iFileTrigger <> "" then
       do:
+        crTriggerFile (vnewNameno, iFileTrigger, "WRITE").
+        crTriggerFile (vnewNameno, iFileTrigger, "DELETE").
         {&prefixtt}TABLE.{&prefixfil}TABLE-TRIGGER = substitute(
-          "~"DELETE~" OVERRIDE PROCEDURE ~"trg\&1d.p~" CRC ~"?~"~
-&2~"WRITE~" OVERRIDE PROCEDURE ~"trg\&1w.p~" CRC ~"?~"",
+          "~"DELETE~" OVERRIDE PROCEDURE ~"trg/&1d.p~" CRC ~"?~"~
+&2~"WRITE~" OVERRIDE PROCEDURE ~"trg/&1w.p~" CRC ~"?~"",
           iFileTrigger, {&delim-par}).  
       end.
       else
@@ -1395,12 +1585,72 @@ method public void crTableHeadHist
          {&prefixtt}SEQUENCE.{&prefixfil}CYCLE-ON-LIMIT = 'no'
       .
       
-   end.
-   dumpTable (iTableHead + ".df"). 
-   message iTableHead + ".df" search(iTableHead + ".df")
-   view-as alert-box. 
+   end.   
+   dumpTable (iTableHead + ".df") no-error.
+   
+   if not noMessage then
+     message iTableHead + ".df" search(iTableHead + ".df")
+     view-as alert-box. 
 end method.
  
+/*------------------------------------------------------------------------
+  Method      : crTableAttr
+  Parameters  : iTableName    - имя таблицы, для которой генерируем таблицу атрибутов
+  Purpose     : Генерация таблицы атрибутов 
+  Author(s)   : Ростовцев Александр
+  Created     : 06.05.2025
+  ----------------------------------------------------------------------*/
+method public void crTableAttr (
+   iTableName       as character,
+   iFileTrigger     as character,
+   iCrHistAttr      as logical,
+   iFileTriggerHist as character):
+   
+   define variable vnewName   as character no-undo.
+   define variable vnewNameno as character no-undo.
+   
+   empty temp-table {&prefixtt}TABLE.
+   empty temp-table {&prefixtt}FIELD.
+   empty temp-table {&prefixtt}Index.
+   empty temp-table {&prefixtt}SEQUENCE.
+   run prodict/dump_df.p   (iTableName,
+                            iTableName + ".df",
+                            "").
+   readDF(iTableName + ".df").
+
+   for each {&prefixtt}TABLE where not ( {&prefixtt}TABLE.{&prefixfil}Name begins "c-") :
+      vnewNameno = trim(iTableName) + "-attr".
+      vnewName = '"' + vnewNameno + '"'.
+      DeleteFieldsForHeadTable({&prefixtt}TABLE.{&prefixfil}Name).
+      ChangeTable({&prefixtt}TABLE.{&prefixfil}Name,vnewName).
+      if iFileTrigger <> "" then
+      do:
+        crTriggerFile (vnewNameno, iFileTrigger, "WRITE").
+        crTriggerFile (vnewNameno, iFileTrigger, "DELETE").
+        {&prefixtt}TABLE.{&prefixfil}TABLE-TRIGGER = substitute(
+          "~"DELETE~" OVERRIDE PROCEDURE ~"trg/&1d.p~" CRC ~"?~"~
+&2~"WRITE~" OVERRIDE PROCEDURE ~"trg/&1w.p~" CRC ~"?~"",
+          iFileTrigger, {&delim-par}).  
+      end.
+      else
+      do:
+        {&prefixtt}TABLE.{&prefixfil}TABLE-TRIGGER = "". 
+      end. 
+      addFieldAttr (vnewName).
+      addIndexAttr (vnewName).
+      {&prefixtt}TABLE.{&prefixfil}Name     = vnewName.
+      {&prefixtt}TABLE.{&prefixfil}DUMP-NAME = '"' + lc(vnewNameno) + '"'.
+   end.
+   dumpTable (iTableName + "-attr.df").
+   if iCrHistAttr then
+   do: 
+     crtablehist(iTableName + "-attr", no, iFileTriggerHist).
+   end.
+   if not noMessage then
+     message iTableName + "-attr.df" search(iTableName + "-attr.df")
+     view-as alert-box. 
+end method.
+
  method public void putmes (input itext as char):
     if not silent 
     then do:

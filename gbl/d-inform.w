@@ -1248,6 +1248,17 @@ PROCEDURE make-temp-table :
     assign
       action-table.action-group        = "Procedure"
       action-table.action-num          = "67"
+      action-table.action-name         = "GenDF"
+      action-table.action-description  = "Генерация DF-файла"
+      action-table.action-external     = true
+      action-table.action-close-dialog = false
+      action-table.action-procedure    = "utl/gendffile.w"
+    .
+
+    create action-table .
+    assign
+      action-table.action-group        = "Procedure"
+      action-table.action-num          = "68"
       action-table.action-name         = "Clear Library"
       action-table.action-description  = "Clear library"
       action-table.action-external     = false
@@ -1258,7 +1269,7 @@ PROCEDURE make-temp-table :
     create action-table .
     assign
       action-table.action-group        = "Procedure"
-      action-table.action-num          = "68"
+      action-table.action-num          = "69"
       action-table.action-name         = "R-Code inf"
       action-table.action-description  = "Display R-Code information"
       action-table.action-external     = true
