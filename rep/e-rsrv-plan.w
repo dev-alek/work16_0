@@ -998,6 +998,8 @@ ON CHOOSE OF b-clients IN FRAME Dialog-Frame
             if p-ok then customer-name = {&ALL_DOG_EDI} .
             else customer-name = {&ALL_DOG} .
             SelectGood = 1 .
+            if p-ok then customer-name = {&ALL_DOG_EDI} .
+            else customer-name = {&ALL_DOG} .            
             list-dogovor = "" .
             v-rid-list = "" .
             Goods-Editor = "" .
@@ -1154,6 +1156,9 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
                         if list-dogovor = "" then 
                         do: 
                             SelectGood = 1 .  
+                            if p-ok then customer-name = {&ALL_DOG_EDI} .
+                            else customer-name = {&ALL_DOG} .      
+                            display SelectGood customer-name with frame {&frame-name} .                      
                             hide b-chooseContract b-chooseGoods b-contract in frame {&frame-name} .
                         end.
                     end.
