@@ -211,7 +211,6 @@ for each gds-list:
                 buf_temp-gds-qnty.day <= tt-dateZakaz.dateEnd:
                 tt-zakaz.qntyDayGoods = tt-zakaz.qntyDayGoods + 1 .
             end.
-            if tt-zakaz.qntyDayGoods > 0 then tt-zakaz.qntyDayGoods = tt-zakaz.qntyDayGoods + 1 .
         end.
         else tt-zakaz.qntyDayGoods = tt-dateZakaz.dateEnd - tt-dateZakaz.dateStart + 1.
 
@@ -762,26 +761,27 @@ procedure ost-gds-day :
         find first p_goods no-lock where p_goods.gds-code = p-gds-code no-error .
         if error-status :error then return error .
 
-            for each pc-gds-obj no-lock where pc-gds-obj.gds-code = p_goods.gds-code and
-                pc-gds-obj.obj-code = p-obj-code and
-                pc-gds-obj.obj-type = p-obj-type and
-                pc-gds-obj.corr-date >= p-dateStart and
-                pc-gds-obj.corr-date <= p-dateEnd and
-                pc-gds-obj.fact-qnty <> 0:
-            find first temp-gds-qnty where temp-gds-qnty.day = pc-gds-obj.corr-date and
-            temp-gds-qnty.gds-code = p_goods.gds-code no-error .
-            if not available (temp-gds-qnty) then do:        
+        do periodDate = vDateStart to vDateEnd:   
             create temp-gds-qnty .                                                        
             assign
-                temp-gds-qnty.day      = pc-gds-obj.corr-date
+                temp-gds-qnty.day      = periodDate
                 temp-gds-qnty.gds-code = p_goods.gds-code  
                 .
-            end.    
-                temp-gds-qnty.ost = pc-gds-obj.fact-qnty .
-                
+            find first pc-gds-obj no-lock where pc-gds-obj.gds-code = p_goods.gds-code and
+                pc-gds-obj.obj-code = p-obj-code and
+                pc-gds-obj.obj-type = p-obj-type and
+                pc-gds-obj.corr-date = periodDate no-error .
+            if not available (pc-gds-obj) then 
+            do:
+                find last pc-gds-obj2 no-lock where pc-gds-obj2.gds-code = p_goods.gds-code and
+                    pc-gds-obj2.obj-code = p-obj-code and
+                    pc-gds-obj2.obj-type = p-obj-type and
+                    pc-gds-obj2.corr-date < periodDate no-error .
+                if available (pc-gds-obj2) then temp-gds-qnty.ost = pc-gds-obj2.fact-qnty .
             end.
-
+            else temp-gds-qnty.ost = pc-gds-obj.fact-qnty .
+        end.  
     end.  
 
-end procedure. /* qnty-lib-create-tt */
+end procedure. /* ost-gds-day */
 

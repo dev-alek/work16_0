@@ -140,7 +140,7 @@ put stream OutStr-html unformatted
     '<td colspan="13" style="text-align: left; font-weight:bold;">Отчет по планированию заказа товаров Магазина и готовой продукции Кафе</td>' skip
     '</tr>' skip
     '<tr style="font-size:11px;">' skip
-    '<td colspan="5" text_wrap="true" style="text-align: left;">на ' + string(buf_order-doc.order-date,"99/99/9999") + '</td>' skip
+    '<td colspan="5" text_wrap="true" style="text-align: left;">на ' + string(buf_order-doc.doc-date,"99/99/9999") + '</td>' skip
     '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Остаток товара, шт (О)</b> Количество товара на остатке в штуках на текущий момент (4).</td>' skip
     '</tr>' skip
     '<tr style="font-size:11px;">' skip
