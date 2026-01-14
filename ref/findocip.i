@@ -1263,7 +1263,7 @@ do :
     .
 end.
 assign
-  tt-fin-doc.including = "@, â ò.÷. 20/120 (ÍÄÑ)" .
+  tt-fin-doc.including = "@, â ò.÷. 22/122 (ÍÄÑ)" .
   paramVne = "avans" .
 end.
 else do:
@@ -1747,7 +1747,7 @@ do :
     .
 end.
 assign
-  tt-fin-doc.including = "@, â ò.÷. 20/120 (ÍÄÑ)" .
+  tt-fin-doc.including = "@, â ò.÷. 22/122 (ÍÄÑ)" .
   paramVne = "avans" .
 end.
 else do:
@@ -3111,7 +3111,7 @@ procedure proc-create-default-tax :
           end.
           when "avans" then do:
           assign
-            tt0-fin-doc-tax.vat-pc           = 20
+            tt0-fin-doc-tax.vat-pc           = 22
             tt0-fin-doc-tax.sum-vat-line-doc = (tt-fin-doc.sum-doc * tt0-fin-doc-tax.vat-pc)/(100 + tt0-fin-doc-tax.vat-pc)
             tt0-fin-doc-tax.with-vat         = yes
             .
@@ -3194,7 +3194,7 @@ procedure proc-update-sum-vat-chr :
       end.
       when "avans" then do:
         if v-vat-pc <> 0 then v-sum-vat-chr = "â ò.÷. " + string(v-vat-pc) + "/" + string(100 + v-vat-pc) + " (ÍÄÑ)" + right-trim (v-each-vat-chr , ";").
-        else v-sum-vat-chr = "â ò.÷. 20/120 (ÍÄÑ)" + right-trim (v-each-vat-chr , ";").
+        else v-sum-vat-chr = "â ò.÷. 22/122 (ÍÄÑ)" + right-trim (v-each-vat-chr , ";").
       end.
       otherwise do:  
         v-sum-vat-chr = "â òîì ÷èñëå ÍÄÑ" + right-trim (v-each-vat-chr , ";").
