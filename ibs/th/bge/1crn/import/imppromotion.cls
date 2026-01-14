@@ -442,6 +442,15 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
         v-promo-gifts:AddItem (v-promo-gift) .
         
       end . 
+      if v-threshold:message-gks <> ? then do:
+        v-promo-gift = new ibs.th.ref.promo.promoGiftsub () .
+        assign
+          v-promo-gift:mess-gks = v-threshold:message-gks
+          v-promo-gift:Mode = v-promo-crit:Mode
+        .
+        v-promo-gifts:AddItem (v-promo-gift) .
+        
+      end .       
       v-objlist3 = v-threshold:Gifts .
       if valid-object(v-objlist3) then do :
         v-j-counter = v-objlist3:iCounter .

@@ -29,6 +29,7 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
   define property value_      as decimal    no-undo get. private set.
   define property dscnt       as decimal    no-undo get. private set.
   define property message_    as character  no-undo get. private set.
+  define property message-gks as character  no-undo get. private set.
 
   define property Gifts as subjects no-undo
     get. 
@@ -50,6 +51,7 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
       when "value"   then value_   = {&attr-dec} .
       when "dscnt"   then dscnt    = {&attr-dec} .
       when "message" then message_ = {&attr-str} .
+      when "message-gks" then message-gks = {&attr-str} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -85,6 +87,7 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
       value_   = ?
       dscnt    = ?
       message_ = ?
+      message-gks = ?
     .
     if valid-object(Gifts) then delete object Gifts .
   end method .   

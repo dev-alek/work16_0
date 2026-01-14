@@ -105,6 +105,7 @@ define temp-table tt-PromoGift no-undo
   FIELD gdsName AS char
   field sub     as class Progress.Lang.Object serialize-hidden
   FIELD mode    AS char
+  field mess-gks as character
   .
 
  

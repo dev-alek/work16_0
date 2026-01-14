@@ -298,7 +298,10 @@ do:
         vgift = yes.
         v-subCrGifts:GetItem(v-i) .
         v-subCrGift = v-subCrGifts:promoGiftObjCurr .
+        if v-i = 1 then do:
         if v-subCrGift:mess <> "" or v-subCrGift:mess <> ? then v-mess = v-subCrGift:mess .
+        if v-subCrGift:mess-gks <> "" or v-subCrGift:mess-gks <> ? then v-mess-gks = v-subCrGift:mess-gks .
+        end.
         if v-subCrGift:GdsCode <> 0 then 
         do:
           run bgelib-tag-open in this-procedure ( input 3, input "PAGiftGoods","").
@@ -347,6 +350,8 @@ do:
         , input string(v-subGDCrite:discont), input 1 ).
       run bgelib-tag-put in this-procedure ( input 4, input "PACMessage":U
         , input string(v-mess), input 0 ).  
+      run bgelib-tag-put in this-procedure ( input 4, input "PACMessage-GKS":U
+        , input string(v-mess-gks), input 0 ).  
       run bgelib-tag-close in this-procedure ( input 3, input "PACond").
     end.
     else 

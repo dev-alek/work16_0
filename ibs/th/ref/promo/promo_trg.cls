@@ -626,6 +626,30 @@ end . /* end_of низ таблицы и html-файла */
                                                  "  and tt-PromoGift.mode     ne {&h-delete}"
                                             )).
                     end.
+                    when "PromoMes1" 
+                    then do: 
+                        vFirst = yes.
+                        if     available tt-PromoCriterion 
+                           and not can-find( first tt-PromoGift  where tt-PromoGift.idaction eq tt-PromoCriterion.idaction 
+                                                   and tt-PromoGift.idCrit   eq tt-PromoCriterion.id   
+                                                   and tt-PromoGift.mode     ne {&h-delete})
+                        then do:
+                            create tt-PromoGift.
+                            assign 
+                            tt-PromoGift.idCrit   = tt-PromoCriterion.id
+                            tt-PromoGift.idaction = tt-PromoCriterion.idaction
+                            tt-PromoGift.mode     = {&h-create}
+                            tt-PromoGift.id       = m-local-sec
+                            m-local-sec           = m-local-sec - 1.
+                            
+                        end.  
+                        hQuery:set-buffers(buffer tt-PromoGift:HANDLE). 
+                        hQuery:query-prepare("FOR each tt-PromoGift " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoGift.idaction eq " + string(tt-PromoCriterion.idaction) +
+                                                 "  and tt-PromoGift.idCrit   eq " + string(tt-PromoCriterion.id)       +
+                                                 "  and tt-PromoGift.mode     ne {&h-delete}"
+                                            )).
+                    end.
                     when "PromoGiftForCrit" 
                     then do: 
                         hQuery:set-buffers(buffer tt-PromoGift:HANDLE). 
@@ -1488,6 +1512,7 @@ end . /* end_of низ таблицы и html-файла */
            tt-PromoGift.sub            = p-subs:SubjectObjCurr
            tt-PromoGift.mode           = p-sub:Mode
            tt-PromoGift.db-num         = p-sub:db-num
+           tt-PromoGift.mess-gks       = p-sub:mess-gks
          . 
          if p-mode = {&add-def} 
          then do:
@@ -1877,7 +1902,8 @@ end . /* end_of низ таблицы и html-файла */
            v-sub:GdsCode  = tt-PromoGift.gds-code        
            v-sub:mess     = tt-PromoGift.mess        
            v-sub:qnty     = tt-PromoGift.qnty        
-           v-sub:Mode     = tt-PromoGift.mode        
+           v-sub:Mode     = tt-PromoGift.mode   
+           v-sub:mess-gks = tt-PromoGift.mess-gks     
          . 
      end.
   end method. // end_of_updateObjForGift
