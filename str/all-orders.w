@@ -1205,14 +1205,47 @@ ON CHOOSE OF b-update IN FRAME d-order /* Изменить */
 &ANALYZE-RESUME
 
 
+&Scoped-define BROWSE-NAME br-order
+&Scoped-define SELF-NAME br-order
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-order d-order
-ON ROW-DISPLAY OF {&BROWSE-name} IN FRAME d-order
+ON ROW-DISPLAY OF br-order IN FRAME d-order
     DO:
-        if X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
+        if  X_order.sts = StatusOrder:DeliveryCompleted:KeyIntDB then 
         do:
-            enable b-del with frame {&frame-name} .
-        end.
-        else disable b-del with frame {&frame-name} .
+      
+            do ii = 1 to extent (bcol):  
+                if valid-handle (bcol[ii]) 
+                    then 
+                do:
+                    assign
+                        bcol[ii]:fgcolor = 8.
+                end.
+            end.
+        end.   
+        if  X_order.sts = StatusOrder:Corrected:KeyIntDB then 
+        do:
+      
+            do ii = 1 to extent (bcol):  
+                if valid-handle (bcol[ii]) 
+                    then 
+                do:
+                    assign
+                        bcol[ii]:fgcolor = 5.
+                end.
+            end.
+        end.        
+        if  X_order.sts = StatusOrder:Cancelled:KeyIntDB then 
+        do:
+      
+            do ii = 1 to extent (bcol):  
+                if valid-handle (bcol[ii]) 
+                    then 
+                do:
+                    assign
+                        bcol[ii]:fgcolor = 12.
+                end.
+            end.
+        end. 
     END .
 
 /* _UIB-CODE-BLOCK-END */
