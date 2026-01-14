@@ -160,7 +160,7 @@ do
 on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line}, error-status :get-message (1), v-last-error-message)
 :
 /* ------------------------- &end-hn-option& -----------------------------------*/
-if v-newbh:table <> "chk-doc" then do:
+if v-has-newbh and v-newbh:table <> "chk-doc" then do:
   if v-has-newbh then do:
     v-doc-rowid = v-newbh:rowid .
     v-fld-sht-status = v-newbh:BUFFER-FIELD ("status_") .
