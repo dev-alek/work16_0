@@ -691,6 +691,12 @@ then do:
       end.
       
     end.
+    
+    delete object vsdSts .
+    delete object vsdSubsObj .
+    delete object vsdStr .
+    delete object keyrecObj .
+    
   end.
   
   
