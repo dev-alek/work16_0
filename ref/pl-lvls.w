@@ -916,18 +916,8 @@ DO:
         {&update}
         
     ).
-    run enable_UI in this-procedure.
     
-    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
-                                      and buf_pl-level.obj-code = p-obj-code
-                                      and buf_pl-level.pl-code  = p-pl-code
-                                      no-error .
-    if available buf_pl-level
-    then do :
-      disable
-        b-add b-chg b-del b-load b-delete
-      with frame {&frame-name} .
-    end .
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
 
 /* _UIB-CODE-BLOCK-END */
