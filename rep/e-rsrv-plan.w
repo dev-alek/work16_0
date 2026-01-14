@@ -1164,13 +1164,30 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
                         list-dogovor = "" .
                         empty temp-table gds-list . 
                         APPLY "choose" TO b-contract .
-                        if list-dogovor = "" then 
+                       if list-dogovor = "" then 
                         do:
                             SelectGood = 1 .
-                            display SelectGood with frame {&frame-name} .  
+                            if p-ok then customer-name = {&ALL_DOG_EDI} .                          
+                            else customer-name = {&ALL_DOG} .
+                            display SelectGood customer-name with frame {&frame-name} .  
                             hide b-chooseContract b-chooseGoods b-contract in frame {&frame-name} .
                             return no-apply .
-                        end.
+                        end.                        
+/*                        if list-Dogovor = "" and listDogovor = "" then                             */
+/*                        do:                                                                        */
+/*                            SelectGood = 1 .                                                       */
+/*                            if p-ok then customer-name = {&ALL_DOG_EDI} .                          */
+/*                            else customer-name = {&ALL_DOG} .                                      */
+/*                            display SelectGood with frame {&frame-name} .                          */
+/*                            hide b-chooseContract b-chooseGoods b-contract in frame {&frame-name} .*/
+/*                            return no-apply .                                                      */
+/*                        end.                                                                       */
+/*                        if listDogovor = "" and list-dogovor <> "" then do:                        */
+/*                            SelectGood = 2 .                                                       */
+/*                            display SelectGood with frame {&frame-name} .                          */
+/*                            hide b-chooseContract b-chooseGoods in frame {&frame-name} .           */
+/*                            return no-apply .                                                      */
+/*                        end.                                                                       */
                         APPLY "choose" TO b-chooseGoods .
                         find first gds-list no-error .
                         if not available (gds-list) then 
