@@ -166,7 +166,7 @@ DEFINE FRAME Dialog-Frame
      host-name AT ROW 8.58 COL 18.88 COLON-ALIGNED NO-LABEL
      tt-tax-rate-value.host-code AT ROW 8.63 COL 1.75 COLON-ALIGNED NO-LABEL
            VIEW-AS TEXT
-          SIZE 5.88 BY 1
+          SIZE 9 BY 1
      tt-tax-rate-value.obj-type AT ROW 11.04 COL 1.5 COLON-ALIGNED NO-LABEL
            VIEW-AS TEXT
           SIZE 6.13 BY 1
@@ -514,10 +514,12 @@ end.
   WITH FRAME Dialog-Frame.
   if parhost-code > 0 then
      DISPLAY
-     parhost-code @ tt-tax-rate-value.host-code
+     parhost-code FORMAT "999999999" @ tt-tax-rate-value.host-code
+
      (if avail ub.clients then ub.clients.obj-name else "":U) @ host-name
 
     WITH FRAME Dialog-Frame.
+
     if parobj-code <> 0 then do:
       DISPLAY
       parobj-type @ tt-tax-rate-value.obj-type
