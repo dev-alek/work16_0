@@ -42,7 +42,7 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand,CashSend". /*список клиентов через запятую, с которыми работает сокет-сервер*/
+  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand,CashSend,FileSend". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
   
   define private variable hLog          as handle no-undo.
@@ -92,7 +92,8 @@ class ibs.th.skt.SktServer:
     define variable THGetInfoCmd  as class THGetInfoCmd.
     define variable AuthMarking   as class markingcmd.
     define variable DeferredCommand   as class DeferredCommand.
-	 define variable CashSend      as class CashSend.
+    define variable CashSend      as class CashSend.
+    define variable FileSend      as class FileSend.
    	
     clientControl = new ClientControl(hLog). /*количество возможных комманд соответсвует кол-ву клиентов*/
     logWrite = new LogWrite().
@@ -133,6 +134,10 @@ class ibs.th.skt.SktServer:
     
     CashSend = new CashSend (hLog).
     clientControl:SetCommandForClient(lookup("CashSend",clientList), CashSend).
+    
+    FileSend = new FileSend ().
+    clientControl:SetCommandForClient(lookup("FileSend",clientList), FileSend).
+    
     
   end constructor.
 
@@ -274,6 +279,10 @@ class ibs.th.skt.SktServer:
     if req:HeadHTTP:queryAdr <> ""
     then do:
       client_ = entry(1,req:HeadHTTP:queryAdr,"/").
+      if     lookup (client_,clientList) = 0
+         and num-entries (client_,".") eq 2
+      then
+         client_= "FileSend".
       return client_.
     end.
     else
@@ -437,7 +446,7 @@ class ibs.th.skt.SktServer:
                   v-header = get-string (mbuffer-hdr, 1).
                   v-str = "".
                   v-pos-buf = 0.
-                  logWrite:WriteFileToLog('REQUEST-HEADER:' + v-header ).
+                  logWrite:WriteFileToLog('REQUEST-HEADER:' + {&CRLF} + v-header ).
                   HeadHttp = new HeadHttp(v-header).
 /*          run parseheader(input v-header).*/
                   set-size (mbuffer-in) = 0.
@@ -446,6 +455,19 @@ class ibs.th.skt.SktServer:
                   leave dwhdr_.
                end.
             end.
+         end.
+         if v-header eq ""
+         then do:
+            logWrite:WriteFileToLog("Test request").
+            resp-head =  substitute("HTTP/1.0 200 OK &1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            SET-SIZE(mbuffer-out) = 0.
+            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+            PUT-STRING(mbuffer-out,1) = resp-head.
+            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+            hsocket:disconnect ().
+            logWrite:WriteFileToLog("Response: OK").
+            
+            leave ContBlock.
          end.
          if not valid-object (HeadHttp)
          then do:
@@ -517,7 +539,7 @@ class ibs.th.skt.SktServer:
             leave ContBlock.
          end.
          if     HeadHttp:contentLength = 0 
-            and not num-entries (HeadHttp:queryReq, "?") > 1 
+            and HeadHttp:queryReq eq "" 
          then do:  /* Если запрос c нулевой длиной тела, то создаем ответ об успешном выполнении запроса */
             resp-head = substitute("HTTP/1.0 411 No Content&1Server: 4GL&2",{&CRLF},{&HdEnd}).
             SET-SIZE(mbuffer-out) = 0.
@@ -589,7 +611,14 @@ class ibs.th.skt.SktServer:
                RequestProcessing(HeadHttp,mbuffer-in, hsocket, HeadHttp:userAgent) no-error.
                resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
             end.
-             
+            otherwise do:
+               resp-head =  substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).
+               SET-SIZE(mbuffer-out) = 0.
+               SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+               PUT-STRING(mbuffer-out,1) = resp-head.
+               hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+               hsocket:disconnect ().
+            end.
          end case.
           
          logWrite:LogStr = "".

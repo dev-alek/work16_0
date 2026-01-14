@@ -766,8 +766,8 @@ IF NOT vl-dis THEN DO:
   RUN write-to-log-event(substitute('Ошибка остановки сервера &1!',error-status:get-message(1) )).
   return.
 END.
-DELETE OBJECT sktserv.
-DELETE OBJECT hServerSocket.
+DELETE OBJECT sktserv no-error.
+DELETE OBJECT hServerSocket no-error.
 IF NOT valid-handle(hServerSocket) THEN
 RUN write-to-log-event(substitute('Остановлен сокет-сервер (&1)',v-connect-param)).
 ELSE RETURN.

@@ -77,6 +77,33 @@ class ibs.th.skt.Commands.IResponse abstract:
       to object Content.
       mAddctrf = yes.
    end.
+   method public void setFile(arg as char ):
+      define variable vtype    as character no-undo.
+      define variable vConType as character no-undo.
+      define variable vRas     as character no-undo.
+      file-information:file-name = "cmp/" + arg.
+      vtype = file-information:file-type.
+      if    file-information:file-name eq "" 
+         or vtype eq ?
+         or index( vtype, "F") = 0
+      then
+         file-information:file-name = "cmp/dontknow.jpg".
+      vRas = entry(2,file-information:file-name,".").
+      case vRas:
+         when "icon" then vConType = "image/vnd.microsoft.icon". 
+         when "jpg"  then vConType = "image/jpeg".
+         when "jpeg" then vConType = "image/jpeg".
+         when "png"  then vConType = "image/png". 
+         when "txt" 
+      or when "xml"  then vConType = "text/xml".
+         when "json" then vConType = "application/json".
+         when "html" then vConType = "text/html".
+      end.
+      set-size(Content) = 0.
+      set-size(Content) = file-information:file-size + 1.    
+      copy-lob from file file-information:full-pathname to Content.
+      Content-Type = vConType.
+   end.
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
