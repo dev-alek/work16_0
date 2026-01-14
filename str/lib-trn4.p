@@ -597,6 +597,9 @@ define variable v-codident as character no-undo.
       v-ischg-ext-type = true.
       buf_trn-doc.tot-cli = buf_trn-doc.tot-calc.
       buf_trn-doc.fact-date = today.
+      for first buf_parts no-lock where buf_parts.out-code = buf_trn-doc.doc-code :
+        buf_trn-doc.slt-type = buf_parts.slt-type .
+      end .
     end.
     
 
