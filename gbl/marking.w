@@ -79,14 +79,14 @@ define variable v-tth     as handle no-undo .
 define variable v-tth-host as handle no-undo .
 define variable v-to-create-host as logical no-undo.
 define variable str-attr as character no-undo .
-define variable S-type-mark as character no-undo .
+/* define variable S-type-mark as character no-undo . */
 define variable S-type-EDO as character no-undo .
 define variable S-type-artic as character no-undo .
 define variable S-type-transitional as character no-undo .
-define variable S-type-blockCashUnMark as character no-undo .
+/* define variable S-type-blockCashUnMark as character no-undo . */
 define variable S-type-saleReturn      as character no-undo .
-define variable S-type-saleUPD         as character no-undo .
-define variable S-type-onlySale        as character no-undo .
+/* define variable S-type-saleUPD         as character no-undo . */
+/* define variable S-type-onlySale        as character no-undo . */
 define variable S-type-checkBlock      as character no-undo .
 define variable S-type-checkDate       as character no-undo .
 define variable S-type-checkMRC        as character no-undo .
@@ -883,7 +883,7 @@ run adm/shattri.p (
         END.
         else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type} THEN 
           DO:
-            S-type-mark = temp-thbj-attr.property-value-character .
+          /* S-type-mark = temp-thbj-attr.property-value-character .*/
           /*       display s-type with frame {&frame-name} .*/
           END.
           else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} THEN 
@@ -901,7 +901,7 @@ run adm/shattri.p (
                 END.
                 else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-blockCashUnMark} THEN 
                   DO:
-                    S-type-blockCashUnMark = temp-thbj-attr.property-value-character .
+                    /* S-type-blockCashUnMark = temp-thbj-attr.property-value-character . */
                   END.
                   else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleReturn} THEN 
                     DO:
@@ -909,11 +909,11 @@ run adm/shattri.p (
                     END.
                     else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleUPD} THEN 
                       DO:
-                        S-type-saleUPD = temp-thbj-attr.property-value-character .
+                        /* S-type-saleUPD = temp-thbj-attr.property-value-character . */
                       END.
                       else IF temp-thbj-attr.prop-code = {&attr-marking_marking-type-onlySale} THEN 
                         DO:
-                          S-type-onlySale = temp-thbj-attr.property-value-character .
+                          /* S-type-onlySale = temp-thbj-attr.property-value-character . */
                         END.                
                         else IF temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} THEN 
                           DO:
@@ -974,14 +974,14 @@ run adm/shattri.p (
     else type-marking.artic = false . 
     if lookup (type-marking.mark-orig,S-type-transitional) > 0 then type-marking.transitional = true .
     else type-marking.transitional = false .
-    if lookup (type-marking.mark-orig,S-type-blockCashUnMark) > 0 then type-marking.blockCashUnMark = true .
-    else type-marking.blockCashUnMark = false .
+/*    if lookup (type-marking.mark-orig,S-type-blockCashUnMark) > 0 then type-marking.blockCashUnMark = true .
+    else type-marking.blockCashUnMark = false . */
     if lookup (type-marking.mark-orig,S-type-saleReturn) > 0 then type-marking.saleReturn = true .
     else type-marking.saleReturn = false .
-    if lookup (type-marking.mark-orig,S-type-saleUPD) > 0 then type-marking.saleUPD = true .
-    else type-marking.saleUPD = false .
-    if lookup (type-marking.mark-orig,S-type-onlySale) > 0 then type-marking.onlySale = true .
-    else type-marking.onlySale = false .  
+/*    if lookup (type-marking.mark-orig,S-type-saleUPD) > 0 then type-marking.saleUPD = true .
+    else type-marking.saleUPD = false . */
+/*    if lookup (type-marking.mark-orig,S-type-onlySale) > 0 then type-marking.onlySale = true .
+    else type-marking.onlySale = false .  */
     if lookup (type-marking.mark-orig,S-type-checkBlock) > 0 then type-marking.checkBlock = true .
     else type-marking.checkBlock = false .    
     if lookup (type-marking.mark-orig,S-type-checkDate) > 0 then type-marking.checkDate = true .
@@ -1022,7 +1022,7 @@ objType  = ObjSrv:Env:Marking:Types:CurrProp.
 create type-marking .
 assign
    type-marking.mark-orig = objType:NameProp 
-   type-marking.mark-type = objType:Label_ .
+   type-marking.mark-type = objType:Label_ . 
 end.
 
 END PROCEDURE.
@@ -1066,14 +1066,14 @@ ASSIGN FRAME {&FRAME-NAME}
         t-bar-code
         t-rus-key
     .
-  S-type-mark = "" .
+  /* S-type-mark = "" . */
   S-type-artic = "" .
   S-type-EDO = "" .
   S-type-transitional = "".    
-  S-type-blockCashUnMark = "".
+/*  S-type-blockCashUnMark = "". */
   S-type-saleReturn = "".
-  S-type-saleUPD = "".
-  S-type-onlySale = "".
+/*  S-type-saleUPD = "". */
+/*  S-type-onlySale = "". */
   S-type-checkBlock = "".
   S-type-checkDate = "".
   S-type-checkMRC = "".
@@ -1085,10 +1085,10 @@ ASSIGN FRAME {&FRAME-NAME}
     if type-marking.edo = true then S-type-EDO = S-type-edo + "," + type-marking.mark-orig .
     if type-marking.artic = true then S-type-artic = S-type-artic + "," + type-marking.mark-orig .
     if type-marking.transitional = true then S-type-transitional = S-type-transitional + "," + type-marking.mark-orig .   
-    if type-marking.blockCashUnMark = true then S-type-blockCashUnMark = S-type-blockCashUnMark + "," + type-marking.mark-orig .   
+/*    if type-marking.blockCashUnMark = true then S-type-blockCashUnMark = S-type-blockCashUnMark + "," + type-marking.mark-orig .   */
     if type-marking.saleReturn = true then S-type-saleReturn = S-type-saleReturn + "," + type-marking.mark-orig .   
-    if type-marking.saleUPD = true then S-type-saleUPD = S-type-saleUPD + "," + type-marking.mark-orig .   
-    if type-marking.onlySale = true then S-type-onlySale = S-type-onlySale + "," + type-marking.mark-orig .   
+/*    if type-marking.saleUPD = true then S-type-saleUPD = S-type-saleUPD + "," + type-marking.mark-orig .    */
+/*    if type-marking.onlySale = true then S-type-onlySale = S-type-onlySale + "," + type-marking.mark-orig .    */
     if type-marking.checkBlock = true then S-type-checkBlock = S-type-checkBlock + "," + type-marking.mark-orig .
     if type-marking.checkDate = true then S-type-checkDate = S-type-checkDate + "," + type-marking.mark-orig .
     if type-marking.checkMRC = true then S-type-checkMRC = S-type-checkMRC + "," + type-marking.mark-orig .
@@ -1103,22 +1103,22 @@ ASSIGN FRAME {&FRAME-NAME}
   temp-thbj-attr.property-value-logical = t-edo-NotMark.
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-manual} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   temp-thbj-attr.property-value-logical = t-manual.
-  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  temp-thbj-attr.property-value-character = trim(S-type-mark,",").
+  /* find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-mark,","). */
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-edo} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  temp-thbj-attr.property-value-character = trim(S-type-edo,",").
+  temp-thbj-attr.property-value-character = trim(S-type-edo,","). 
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-artic} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   temp-thbj-attr.property-value-character = trim(S-type-artic,",").
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-transitional} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   temp-thbj-attr.property-value-character = trim(S-type-transitional,",").
-  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-blockCashUnMark} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  temp-thbj-attr.property-value-character = trim(S-type-blockCashUnMark,",").
+/*  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-blockCashUnMark} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-blockCashUnMark,","). */
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleReturn} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   temp-thbj-attr.property-value-character = trim(S-type-saleReturn,",").
-  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleUPD} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  temp-thbj-attr.property-value-character = trim(S-type-saleUPD,",").
-  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-onlySale} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  temp-thbj-attr.property-value-character = trim(S-type-onlySale,",").
+/*  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-saleUPD} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-saleUPD,","). */
+/*  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_marking-type-onlySale} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
+  temp-thbj-attr.property-value-character = trim(S-type-onlySale,","). */
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_gray_zone_qnty} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   temp-thbj-attr.property-value-integer = cb-gray_zone_qnty.    
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_ban-recipes} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
@@ -1141,6 +1141,7 @@ ASSIGN FRAME {&FRAME-NAME}
   IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkStatusKM,",").
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkTracking} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkTracking,",").  
+
   do transaction:
     RUN thbjattr_set-section IN THIS-PROCEDURE (
       input p-obj-type
