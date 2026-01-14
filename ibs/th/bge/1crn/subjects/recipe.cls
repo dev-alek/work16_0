@@ -132,11 +132,11 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
     assign
       v-str = ",recipe-code" when recipe-code = ?
       v-str = v-str + ",gd-code" when gd-code = ?
-      v-str = v-str + ",qnty" when qnty = ?
-      v-str = v-str + ",recipe-name" when recipe-name = ?
-      v-str = v-str + ",recipe-type" when recipe-type = ?
-      v-str = v-str + ",recipe-num" when recipe-num = ?
-      v-str = v-str + ",weight" when weight = ?
+/*      v-str = v-str + ",qnty" when qnty = ?              */
+/*      v-str = v-str + ",recipe-name" when recipe-name = ?*/
+/*      v-str = v-str + ",recipe-type" when recipe-type = ?*/
+/*      v-str = v-str + ",recipe-num" when recipe-num = ?*/
+/*      v-str = v-str + ",weight" when weight = ?*/
       v-str = v-str + ",recipe-gds" when not valid-object(recipe-gds)
     .
     v-str = substring(v-str, 2).

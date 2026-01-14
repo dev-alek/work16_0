@@ -71,9 +71,9 @@ class ibs.th.bge.1crn.subjects.contr-price-docs_price-list inherits ibs.th.bge.1
     assign
       v-str = ",gds-code" when gds-code = ?
       v-str = v-str + ",price-sale" when price-sale = ?
-      v-str = v-str + ",nds-code" when nds-code = ?
-      v-str = v-str + ",min-otkl" when min-otkl = ?
-      v-str = v-str + ",max-otkl" when max-otkl = ?
+/*      v-str = v-str + ",nds-code" when nds-code = ?*/
+/*      v-str = v-str + ",min-otkl" when min-otkl = ?*/
+/*      v-str = v-str + ",max-otkl" when max-otkl = ?*/
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(

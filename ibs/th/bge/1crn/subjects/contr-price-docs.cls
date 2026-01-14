@@ -78,10 +78,10 @@ class ibs.th.bge.1crn.subjects.contr-price-docs inherits ibs.th.bge.1crn.subject
     def var v-str as char no-undo.
     
     assign
-      v-str = ",doc-id" when doc-id = ?
-      v-str = v-str + "doc-num" when doc-num = ?
-      v-str = v-str + "doc-date" when doc-date = ?
-      v-str = v-str + ",contr-code" when contr-code = ?
+/*      v-str = ",doc-id" when doc-id = ?                */
+/*      v-str = v-str + ",doc-num" when doc-num = ?      */
+/*      v-str = v-str + ",doc-date" when doc-date = ?    */
+/*      v-str = v-str + ",contr-code" when contr-code = ?*/
       v-str = v-str + ",cont-code" when cont-code = ?
     .
     v-str = substring(v-str, 2).
