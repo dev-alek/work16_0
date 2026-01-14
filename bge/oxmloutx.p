@@ -1,11 +1,11 @@
 block-level on error undo, throw.
 /*
 
-$Revision: 7e2ce28b2302, 3222, rls $
-$Author: SSlivenko $
-$Date: 2022/12/27 12:54:29 $
-$Workfile: oxmloutx.p $
-$Archive: bge/oxmloutx.p $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Экспорт в файл OpenXML
 
@@ -28,11 +28,11 @@ define input parameter p-parent-handle      as widget-handle    no-undo.
 define input parameter p-log-handle         as handle           no-undo.
 define input parameter p-parameter-string   as character        no-undo.
 
-define variable vss-revision    as character no-undo init "$Revision: 7e2ce28b2302, 3222, rls $":U .
-define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
-define variable vss-date        as character no-undo init "$Date: 2022/12/27 12:54:29 $":U .
-define variable vss-workfile    as character no-undo init "$Workfile: oxmloutx.p $":U .
-define variable vss-archive     as character no-undo init "$Archive: bge/oxmloutx.p $":U .
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Экспорт в файл OpenXML".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -861,7 +861,7 @@ on error undo, return error return-value
         
         sw:start-element ("GC-ERPRN") .
         
-        sw:insert-attribute ("xmlns", "http://www.rosneft.ru/GasComplex/Retail/9.0") .
+        sw:insert-attribute ("xmlns", "http://www.rosneft.ru/GasComplex/Retail/10.0") .
         sw:insert-attribute ("xmlns:xs", "http://www.w3.org/2001/XMLSchema") .
         sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
 
