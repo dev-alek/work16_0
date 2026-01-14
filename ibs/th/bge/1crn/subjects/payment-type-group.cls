@@ -51,7 +51,7 @@ CLASS ibs.th.bge.1crn.subjects.payment-type-group inherits ibs.th.bge.1crn.subje
   end.
 
   method override protected void CheckData ():
-    /*
+
     def var v-str as char no-undo.
     
     assign
@@ -62,7 +62,7 @@ CLASS ibs.th.bge.1crn.subjects.payment-type-group inherits ibs.th.bge.1crn.subje
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-    */
+
   end.
   
   method override protected void ClearSub():

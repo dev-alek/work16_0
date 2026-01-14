@@ -75,7 +75,7 @@ class ibs.th.bge.1crn.subjects.contr-price-docs inherits ibs.th.bge.1crn.subject
   end method.
   
   method override protected void CheckData ():
-   /* def var v-str as char no-undo.
+    def var v-str as char no-undo.
     
     assign
       v-str = ",doc-id" when doc-id = ?
@@ -88,7 +88,6 @@ class ibs.th.bge.1crn.subjects.contr-price-docs inherits ibs.th.bge.1crn.subject
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
     ) .
-*/
   end method.
   
   method override protected void ClearSub():

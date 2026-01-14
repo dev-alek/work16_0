@@ -83,7 +83,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts inherits ibs.th.bge.1crn.subjects.a
 
     def var v-str as char no-undo.
     
-/*    assign
+    assign
       v-str = "r-schet" 
       when r-schet = ?
       v-str = v-str + ",cont-code" 
@@ -93,7 +93,7 @@ CLASS ibs.th.bge.1crn.subjects.bank-accounts inherits ibs.th.bge.1crn.subjects.a
     if v-str > ''
       then 
       undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-  */
+
   end.
   
   method override protected void ClearSub():

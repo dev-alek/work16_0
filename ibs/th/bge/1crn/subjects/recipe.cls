@@ -127,7 +127,6 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
   end method.
 
   method override protected void CheckData ():
-    /*
     def var v-str as char no-undo.
     
     assign
@@ -144,7 +143,7 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
     ) .
-    */
+
   end method.
   
   method override protected void ClearSub():
