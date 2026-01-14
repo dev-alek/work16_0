@@ -49,11 +49,11 @@ define input parameter v-curr-r-b   as character no-undo .
 define input parameter p-cmd-proc-handle as handle no-undo .
 define input parameter p-cmd-code  as integer no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: 39d83991554b, 1501, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Aug 30 10:41:48 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: 000002103.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: rul/000002103.p $":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с кодексом 18, набор 2".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
@@ -152,6 +152,7 @@ define variable v-fld-sht-status as handle no-undo .
 define variable v-custom-pack-name as character no-undo .
 define variable v-dump-ord-int64   as int64 no-undo .
 define buffer buf_shift-obj   for ub.shift-obj .
+define buffer buf_chk-doc   for ub.chk-doc.
 
 
 _main:
@@ -159,26 +160,27 @@ do
 on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line}, error-status :get-message (1), v-last-error-message)
 :
 /* ------------------------- &end-hn-option& -----------------------------------*/
-
+if v-newbh:table <> "chk-doc" then do:
   if v-has-newbh then do:
     v-doc-rowid = v-newbh:rowid .
     v-fld-sht-status = v-newbh:BUFFER-FIELD ("status_") .
-    if not valid-handle(v-fld-sht-status) then undo _main, return error "не найдено поле shift-obj.status_" .
-    v-sht-status = v-fld-sht-status:BUFFER-VALUE ( ) .
+    if not valid-handle(v-fld-sht-status) and v-newbh:table <> "chk-doc" then undo _main, return error "не найдено поле shift-obj.status_" .
+     v-sht-status = v-fld-sht-status:BUFFER-VALUE ( ) . 
   end.
   else do:
-    v-doc-rowid = v-oldbh:rowid .
+    v-doc-rowid = v-oldbh:rowid . 
     /* из триггера на write нам должен приходить и новый, и старый буффер;
        если пришёл только старый буффер - это удаление записи.
        Выгрузка удаления смен не предусмотрена.
     */
     return .
   end.
-    
+
   /* Смена может иметь четыре статуса:
      ожд sht-expected, тек sht-current, зкр sht-closed, отм sht-canceled
      Экспорт в машину правил только если статус поменялся на тек или на зкр 
   */
+
   if (v-sht-status = {&sht-closed}) or (v-sht-status = {&sht-current}) then do:
     
   IF not context_begin-esys-command( input string(v-esys-id-list), input-output v-esys-cmd-proc-handle, output v-esys-cmd-code) THEN
@@ -262,15 +264,51 @@ define buffer buf_inkas       for ub.inkas .
   &scop my-message substitute( "Успешно. ")
   {&display-message}.
       /* ------------------------- &end-rule& -------------------------------------*/
-
       /* ------------------------- &start-release-obj& -----------------------------------*/
-
-
       /* ------------------------- &end-release-obj& -------------------------------------*/
   num-rec-ok = num-rec-ok + 1.
        
   
-end. /*doe _main*/
+end.
+
+if v-has-newbh and v-newbh:table = "chk-doc" then do:  /* выгрузка чеков открытия и закрытия смен */ 
+/*  message  v-has-newbh v-newbh:table v-newbh:buffer-field( "obj-code":U  ):buffer-value view-as alert-box. */
+
+    IF not context_begin-esys-command( input string(v-esys-id-list), 
+                                       input-output v-esys-cmd-proc-handle, 
+                                       output v-esys-cmd-code) THEN
+    undo _main, return error v-last-error-message .
+
+     subObj2 = new check ().
+     expObj = new expsubject ().
+     subObj2:BufHandle = v-newbh:handle.
+     expObj:GetContent(subObj2).
+
+    IF not ExpData1:esys-add-dump-data ( INPUT expObj:Data
+                                       , INPUT v-esys-cmd-proc-handle
+                                       , INPUT v-esys-cmd-code
+                                      , '+update' + {&delim-par} + expObj:InitSecTag) THEN
+    undo _main, return error v-last-error-message . 
+
+    v-dump-ord-int64 = context_send-esys-command( input v-esys-id-list
+                                  , input v-esys-cmd-proc-handle
+                                  , input v-esys-cmd-code
+                                  , input g#userid).
+
+
+    if v-dump-ord-int64 = 0 THEN undo _main, return error v-last-error-message .
+
+    &scop release_1 clear-data ( ) 
+    ExpData1:Route-data_{&release_1} .  
+    &scop my-message substitute( "Успешно. ")
+    {&display-message}.
+    num-rec-ok = num-rec-ok + 1.
+
+end. /* v-has-newbh and v-newbh:table = "chk-doc" */
+
+ 
+end.
+/*doe _main*/
 
 end procedure. /* proc-main */
 
@@ -306,11 +344,11 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
   case p-ruleset-id:
     when {&edoc-proc_18_event_shift_140} then do:
       if v-has-newbh
-      and v-newbh:table <> {&table_shift-obj} then do:
+      and v-newbh:table <> {&table_shift-obj} AND v-newbh:table <> "chk-doc" then do:
         undo, return error substitute("Передан неверный буфер [&1] вместо буфера для &2", v-newbh:table, {&table_shift-obj}).
       end.
       if v-has-oldbh
-      and v-oldbh:table <> {&table_shift-obj} and v-oldbh:table <> "tt-shift" then do:
+      and v-oldbh:table <> {&table_shift-obj} and v-oldbh:table <> "tt-shift" AND  v-oldbh:table <> "chk-doc" then do:
         undo, return error substitute("Передан неверный буфер [&1] вместо буфера для &2", v-oldbh:table, {&table_shift-obj}).
       end.
     end.

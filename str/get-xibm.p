@@ -37,6 +37,7 @@ DEFINE VARIABLE vss-date        as character no-undo init "$Date$":u .
 DEFINE VARIABLE vss-workfile    as character no-undo init "$Workfile$":u .
 DEFINE VARIABLE vss-archive     as character no-undo init "$Archive$":u .
 DEFINE VARIABLE vss-description as character no-undo init "Программа приема чеков с касс IBM-XML" .
+{str/proc-exp-1s.i} 
 { cmp/vssrevis.i }
 { str/get-chk.i }
 /*общие для кассовой части и чековой*/
@@ -90,6 +91,7 @@ define variable ibm-ccm as integer no-undo.
 define variable seasonDT as integer no-undo.
 
 define buffer buf_ext-classif for ub.ext-classif.
+
 
 define temp-table temp-cash-desk no-undo
     field last-date like ub.chk-doc.chk-date
@@ -2890,7 +2892,9 @@ procedure proc-end-chk :
           END.       
 
        END.
-          
+
+
+
        EMPTY TEMP-TABLE     tt-chk-doc.
        EMPTY TEMP-TABLE     tt-chk-doc-attr.
        EMPTY TEMP-TABLE     tt-chk-gds.
@@ -2904,11 +2908,13 @@ procedure proc-end-chk :
        EMPTY TEMP-TABLE     tt-marking-chk.
        EMPTY TEMP-TABLE     tt-cd-trans.         
     END.
-
  END.
-    
-end procedure. /* proc-end-chk */
 
+/*{str/proc-exp-1s.i} */
+run proc-exp-1s in this-procedure  (ub.chk-doc.doc-code, ub.chk-doc.chk-id) no-error.
+
+
+end procedure. /* proc-end-chk */
 
 
 

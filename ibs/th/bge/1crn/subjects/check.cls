@@ -156,17 +156,16 @@ define private temp-table tt-recid-TranFuel no-undo
     Msg = "" .
     if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись СМЕНЫ shift_obj с документами продажи") .
     
-    
-    
+  if BufHandle:table <> "chk-doc" then do:  
     assign
-      v-fld-host-code  = BufHandle:buffer-field( "host-code":U  )
+      v-fld-host-code  = BufHandle:buffer-field( "host-code":U  ) 
       v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
       v-fld-obj-code   = BufHandle:buffer-field( "obj-code":U  )
       v-fld-shift-date = BufHandle:buffer-field( "shift-date":U  )
       v-fld-shift-num  = BufHandle:buffer-field( "shift-num":U  )
     .
     assign
-      v-host-code  = v-fld-host-code:buffer-value
+      v-host-code  = v-fld-host-code:buffer-value  
       v-obj-type   = v-fld-obj-type:buffer-value
       v-obj-code   = v-fld-obj-code:buffer-value
       v-shift-date = v-fld-shift-date:buffer-value
@@ -240,6 +239,44 @@ define private temp-table tt-recid-TranFuel no-undo
   insw:end-element ({&tag-checks}) .
   insw:end-element ({&tag-shift}) .
 
+ END.   /*   if BufHandle:table <> "chk-doc" then do:   */
+
+
+if BufHandle:table = "chk-doc" then do:    /* отдельная выгрузка чеков  открытия и закрытия с типом 40 и 13 */ 
+
+    assign
+      v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
+      v-fld-obj-code   = BufHandle:buffer-field( "obj-code":U  )
+      v-fld-shift-num  = BufHandle:buffer-field( "shift-num":U  )
+    .
+
+    assign
+      v-obj-type   = v-fld-obj-type:buffer-value
+      v-obj-code   = v-fld-obj-code:buffer-value
+      v-shift-date = TODAY.
+      v-shift-num  = v-fld-shift-num:buffer-value
+    .
+    
+    insw:start-element ({&tag-shift}) .
+
+    insw:write-data-element (  "shift-date":U,  iso-date(v-shift-date) ).
+    if v-shift-num  = ? then insw:write-empty-element ( "shift-num":U  ) .  /* Номер смены (Число) */
+                        else insw:write-data-element (  "shift-num":U,   string(v-shift-num)     ).
+
+    insw:start-element ({&tag-checks}) .
+    for each over_buf_chk-doc /*no-lock */
+       where over_buf_chk-doc.chk-id = BufHandle:buffer-field( "chk-id":U  ):buffer-value :
+      v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error . 
+      if not error-status:error then 
+        CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
+          v-host-code, v-obj-type, v-obj-code) .
+
+    end .   
+insw:end-element ({&tag-checks}) . 
+insw:end-element ({&tag-shift}) . 
+
+END. /*   if BufHandle:table = "chk-doc" then do:   */
+
 
     catch exAppErrors as class Progress.Lang.AppError :
       Msg = exAppErrors:ReturnValue .
@@ -254,7 +291,7 @@ define private temp-table tt-recid-TranFuel no-undo
       Msg = "Unexpected error occurred..." .
       undo, throw exAnyErrors .
     end catch .
-    
+
     
   end method . /* end_of CrContentToSW */
 
