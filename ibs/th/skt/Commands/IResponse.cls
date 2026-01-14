@@ -42,6 +42,15 @@ class ibs.th.skt.Commands.IResponse abstract:
    get.
    set.
    
+   define public property content-disposition as character  no-undo 
+   get.
+   set.
+  
+   define public property saveFile as character  no-undo 
+   set (arg as char):
+      content-disposition = substitute ('attachment; filename="&1"',arg).
+   end.
+   
    define variable mAddctrf as logical no-undo.
    
    define public property Content as memptr no-undo 
@@ -78,6 +87,9 @@ class ibs.th.skt.Commands.IResponse abstract:
       mAddctrf = yes.
    end.
    method public void setFile(arg as char ):
+      setFile(arg,"").
+   end.
+   method public void setFile(arg as char,iparam as char ):
       define variable vtype    as character no-undo.
       define variable vConType as character no-undo.
       define variable vRas     as character no-undo.
@@ -103,6 +115,16 @@ class ibs.th.skt.Commands.IResponse abstract:
       set-size(Content) = file-information:file-size + 1.    
       copy-lob from file file-information:full-pathname to Content.
       Content-Type = vConType.
+      if iparam = "savefile"
+      then do:
+         define variable vSaveFile  as character no-undo.
+         define variable vpos       as integer no-undo.
+         vSaveFile = replace (file-information:file-name,"\","/").
+         vpos = index(vSaveFile,"/").
+         vSaveFile = substring (vSaveFile,vpos + 1).
+         vSaveFile = replace (vSaveFile,"/","_").
+         saveFile = vSaveFile.
+      end.
    end.
 	/*------------------------------------------------------------------------------
 	 Purpose:

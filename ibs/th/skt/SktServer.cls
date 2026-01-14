@@ -42,7 +42,7 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand,CashSend,FileSend". /*список клиентов через запятую, с которыми работает сокет-сервер*/
+  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand,CashSend,FileSend,Help". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
   
   define private variable hLog          as handle no-undo.
@@ -94,7 +94,7 @@ class ibs.th.skt.SktServer:
     define variable DeferredCommand   as class DeferredCommand.
     define variable CashSend      as class CashSend.
     define variable FileSend      as class FileSend.
-   	
+    define variable HelpSkt       as class HelpSkt.	
     clientControl = new ClientControl(hLog). /*количество возможных комманд соответсвует кол-ву клиентов*/
     logWrite = new LogWrite().
     /*создадим объекты конкретных комманд для клиентов сокет-сервера. вешаем комманду на порядковый номер клиента в списке*/
@@ -137,6 +137,9 @@ class ibs.th.skt.SktServer:
     
     FileSend = new FileSend ().
     clientControl:SetCommandForClient(lookup("FileSend",clientList), FileSend).
+    
+    HelpSkt = new HelpSkt ().
+    clientControl:SetCommandForClient(lookup("Help",clientList), HelpSkt).
     
     
   end constructor.
@@ -280,7 +283,7 @@ class ibs.th.skt.SktServer:
     then do:
       client_ = entry(1,req:HeadHTTP:queryAdr,"/").
       if     lookup (client_,clientList) = 0
-         and num-entries (client_,".") eq 2
+         and num-entries (req:HeadHTTP:queryAdr,".") eq 2
       then
          client_= "FileSend".
       return client_.

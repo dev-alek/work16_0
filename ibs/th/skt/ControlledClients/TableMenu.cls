@@ -83,15 +83,15 @@ class ibs.th.skt.ControlledClients.TableMenu:
     v-obj-code = integer(entry(1, v-parsed, ';')) no-error.
     if error-status:error
     then do:
-       logWrite:LogStr = "Не передан объект в запросе".
-       return error.
+       SomeStr = "Не передан объект в запросе".
+       return .
     end.
        
     v-sea-code = integer(entry(2, v-parsed, ';')) no-error.
     if error-status:error
     then do:
-       logWrite:LogStr = "Не передан группа в запросе".
-       return error.
+       SomeStr = "Не передан группа в запросе".
+       return .
     end.
     logWrite:LogStr = "".
     for each ub.gds-season where ub.gds-season.sea-code = v-sea-code no-lock:
