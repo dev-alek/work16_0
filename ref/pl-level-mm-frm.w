@@ -205,7 +205,9 @@ DO:
                bf_pl-level-mm.zone <> f-zone) or
               (bf_pl-level-mm.min-level <= f-max-level and
                bf_pl-level-mm.max-level >= f-max-level and
-               bf_pl-level-mm.zone <> f-zone))
+               bf_pl-level-mm.zone <> f-zone) or
+              (bf_pl-level-mm.zone = f-zone and
+               bf_pl-level-mm.level = f-level))
        no-lock no-error.
   if avail bf_pl-level-mm then 
   do:

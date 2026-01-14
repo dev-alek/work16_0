@@ -252,8 +252,263 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Градуировочная таблица */
 DO:
+  define variable v-gap as character no-undo.
+  define variable v-ok  as logical   no-undo.
+  
+  if v-new
+  then do :
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в 1С: ERP. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+  end .
+
+  run check-pl-level in this-procedure ( OUTPUT v-gap ).
+  IF v-gap <> ""
+      THEN 
+  DO:
+      message
+          "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
+          skip v-gap
+          SKIP 
+          "Выйти и оставить пропуски?"
+          view-as alert-box information
+          BUTTONS YES-NO
+          update v-ok
+          .
+      IF NOT v-ok THEN 
+      DO:
+          RETURN NO-APPLY.
+      END.
+  END.
+
+  if AVAILABLE (buf_pl-level) and v-ok-level then 
+  do:
+/*запуск машины правил для выгрузки резервуара*/
+  { gbl/rum-runa.i
+  ?
+  this-procedure:handle
+  ?
+  {&thref-proc_ref-event}
+  " buffer buf_pl-level:handle "
+  " buffer buf_pl-level:handle "
+  ''
+  ''
+  no-error
+  }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+  if v-ok-level then 
+  do:
+      run trg/userlog.p (
+          input {&nwsdochs_action_create}
+          , input {&table_pl-level}
+          , input ( buffer buf_pl-level :handle )
+          , input ?
+          , input ""
+          ) no-error.
+      if error-status :error
+          then 
+      do:
+          undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+              , {&new-line}
+              , vss-workfile
+              , return-value
+              , error-status :get-message ( 1 ) ).
+      end.
+  end.
   APPLY "END-ERROR":U TO SELF.
 END.
+
+on "ESC" ANYWHERE do:
+  define variable v-gap as character no-undo.
+  define variable v-ok  as logical   no-undo.
+  
+  if v-new
+  then do :
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в 1С: ERP. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+  end .
+
+  run check-pl-level in this-procedure ( OUTPUT v-gap ).
+  IF v-gap <> ""
+      THEN 
+  DO:
+      message
+          "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
+          skip v-gap
+          SKIP 
+          "Выйти и оставить пропуски?"
+          view-as alert-box information
+          BUTTONS YES-NO
+          update v-ok
+          .
+      IF NOT v-ok THEN 
+      DO:
+          RETURN NO-APPLY.
+      END.
+  END.
+
+  if AVAILABLE (buf_pl-level) and v-ok-level then 
+  do:
+/*запуск машины правил для выгрузки резервуара*/
+  { gbl/rum-runa.i
+  ?
+  this-procedure:handle
+  ?
+  {&thref-proc_ref-event}
+  " buffer buf_pl-level:handle "
+  " buffer buf_pl-level:handle "
+  ''
+  ''
+  no-error
+  }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+  if v-ok-level then 
+  do:
+      run trg/userlog.p (
+          input {&nwsdochs_action_create}
+          , input {&table_pl-level}
+          , input ( buffer buf_pl-level :handle )
+          , input ?
+          , input ""
+          ) no-error.
+      if error-status :error
+          then 
+      do:
+          undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+              , {&new-line}
+              , vss-workfile
+              , return-value
+              , error-status :get-message ( 1 ) ).
+      end.
+  end.
+end.
+
+on "F2" ANYWHERE do:
+  define variable v-gap as character no-undo.
+  define variable v-ok  as logical   no-undo.
+  
+  if v-new
+  then do :
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в 1С: ERP. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+  end .
+
+  run check-pl-level in this-procedure ( OUTPUT v-gap ).
+  IF v-gap <> ""
+      THEN 
+  DO:
+      message
+          "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
+          skip v-gap
+          SKIP 
+          "Выйти и оставить пропуски?"
+          view-as alert-box information
+          BUTTONS YES-NO
+          update v-ok
+          .
+      IF NOT v-ok THEN 
+      DO:
+          RETURN NO-APPLY.
+      END.
+  END.
+
+  if AVAILABLE (buf_pl-level) and v-ok-level then 
+  do:
+/*запуск машины правил для выгрузки резервуара*/
+  { gbl/rum-runa.i
+  ?
+  this-procedure:handle
+  ?
+  {&thref-proc_ref-event}
+  " buffer buf_pl-level:handle "
+  " buffer buf_pl-level:handle "
+  ''
+  ''
+  no-error
+  }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+  if v-ok-level then 
+  do:
+      run trg/userlog.p (
+          input {&nwsdochs_action_create}
+          , input {&table_pl-level}
+          , input ( buffer buf_pl-level :handle )
+          , input ?
+          , input ""
+          ) no-error.
+      if error-status :error
+          then 
+      do:
+          undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+              , {&new-line}
+              , vss-workfile
+              , return-value
+              , error-status :get-message ( 1 ) ).
+      end.
+  end.
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

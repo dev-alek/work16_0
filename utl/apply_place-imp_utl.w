@@ -132,7 +132,7 @@ DEFINE BROWSE br-place-imp
   QUERY br-place-imp NO-LOCK DISPLAY
       place-imp.table-version column-label "Номер версии" FORMAT ">>>>>>>>>9":U 
       place-imp.corr-date column-label 'Дата получения статуса!"Ожидает применения"' FORMAT "99/99/9999":U
-      string(place-imp.corr-time, "HH:MM") column-label 'Время получения статуса!"Ожидает применения"' FORMAT "X(7)":U
+      string(place-imp.corr-time, "hh:mm:ss") column-label 'Время получения статуса!"Ожидает применения"' FORMAT "X(7)":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ROW-MARKERS SEPARATORS SIZE 75 BY 6.19 FIT-LAST-COLUMN.

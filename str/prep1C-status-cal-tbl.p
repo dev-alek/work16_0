@@ -55,7 +55,7 @@ procedure create-esys-data :
       sw:write-data-element ("table-version", string(p-table-version)).
       sw:write-data-element ("tank-code", string(p-tank-code)).
       sw:write-data-element ("status-date", iso-date(p-status-date)).
-      sw:write-data-element ("status-time", string (p-status-time, "HH:MM")).
+      sw:write-data-element ("status-time", string (p-status-time, "HH:MM:SS")).
       sw:write-data-element ("status", string(p-status_)).
     sw:end-element ("status-cal-tbl") .
   sw:end-document () .

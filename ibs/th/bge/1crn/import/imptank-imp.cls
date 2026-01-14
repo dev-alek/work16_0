@@ -82,7 +82,7 @@ class ibs.th.bge.1crn.import.imptank-imp implements ibs.th.bge.1crn.import.iimps
     find first buf_place-imp no-lock where buf_place-imp.obj-type = buf_clients.obj-type
                                        and buf_place-imp.obj-code = buf_clients.obj-code
                                        and buf_place-imp.pl-code  = integer(v-tank:tank-code)
-                                       and buf_place-imp.table-version = v-tank:table-version
+                                       and buf_place-imp.table-version >= v-tank:table-version
                                        no-error .
     if NOT AVAILABLE (buf_place-imp) then 
     do:

@@ -3484,31 +3484,28 @@ DO:
       rvs-line-attr.attr-value = string(v-mi-tmp) .
     end.
     
-    if t-tank-cleaning
-    then do :
-      find first rvs-line-attr exclusive-lock
-           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
-             and rvs-line-attr.attr-code = "tank-cleaning" no-error.
-      if not available rvs-line-attr then do :
-        create rvs-line-attr.
-        assign
-          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
-          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
-          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
-          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
-          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
-          rvs-line-attr.attr-code = "tank-cleaning"
-          rvs-line-attr.attr-value = string(t-tank-cleaning)
-        .
-      end.
-      else do :
-        rvs-line-attr.attr-value = string(t-tank-cleaning) .
-      end.
-    end .
+    find first rvs-line-attr exclusive-lock
+         where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+           and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+           and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+           and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+           and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+           and rvs-line-attr.attr-code = "tank-cleaning" no-error.
+    if not available rvs-line-attr then do :
+      create rvs-line-attr.
+      assign
+        rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+        rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+        rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+        rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+        rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+        rvs-line-attr.attr-code = "tank-cleaning"
+        rvs-line-attr.attr-value = string(t-tank-cleaning)
+      .
+    end.
+    else do :
+      rvs-line-attr.attr-value = string(t-tank-cleaning) .
+    end.
   end .
   
   find first rvs-line-attr exclusive-lock
