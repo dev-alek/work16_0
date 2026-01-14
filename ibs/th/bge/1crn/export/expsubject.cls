@@ -61,9 +61,12 @@ class ibs.th.bge.1crn.export.expsubject:
     sendOldRowid  = expsubject:sendOldRowid.
     sendNewRowid  = expsubject:sendNewRowid.
     if inType = "memptr" and get-size(Data) > 0 and sendTableName = "" or 
-      (sendTableName <> "code" and sendTableName <> "Cash-param-histand" and sendOldRowid = ? and sendNewRowid = ?) then
+      (sendTableName <> "code" and sendTableName <> "Cash-param-hist" and sendOldRowid = ? and sendNewRowid = ?) then
     do:
-      Msg = "ƒолжны быть установлены об€зательные свойства класса экспорта: охватывающий тег, таблица и rowid выгружаемой записи.".
+      Msg = substitute(
+        "ƒолжны быть установлены об€зательные свойства класса экспорта: охватывающий тег, таблица и rowid выгружаемой записи (&1).", 
+        expsubject:InitSecTag
+      ).
       return error.
     end.
     sw:end-document () .
