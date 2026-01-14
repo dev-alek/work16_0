@@ -990,14 +990,23 @@ procedure procmarkqntycheckinv:
     and buf_gds.prod-type = local-doc-line.prod-type
     and buf_gds.prod-code = local-doc-line.prod-code.
   
-  for each ub.marking-attr no-lock where (marking-attr.attr-code = "inv-doc" or marking-attr.attr-code = "inv-doc-scan")  and ub.marking-attr.attr-value = ub.doc-line.doc-code:
+  for each ub.marking-attr no-lock where (    ub.marking-attr.attr-code = "inv-doc" 
+                                          and ub.marking-attr.attr-value = ub.doc-line.doc-code)
+                                     or  (    ub.marking-attr.attr-code = "inv-doc-scan"  
+                                          and ub.marking-attr.attr-value = ub.doc-line.doc-code ):
     if not can-find (first ub.marking no-lock where ub.marking.mark = ub.marking-attr.mark and ub.marking.unit-ext = "UNIT" and ub.marking.gds-code = buf_gds.gds-code) 
       then next.
     ii = ii + 1.
   end.
   for each ub.utd no-lock where ub.utd.doc-code = local-doc-line.doc-code:
-    for each ub.utd-marking-lines no-lock where ub.utd-marking-lines.doc-id = ub.utd.doc-id and ub.utd-marking-lines.db-num = ub.utd.db-num and ub.utd-marking-lines.gds-code = buf_gds.gds-code
-      and (ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB or ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB):
+    for each ub.utd-marking-lines no-lock where (    ub.utd-marking-lines.doc-id = ub.utd.doc-id 
+                                                 and ub.utd-marking-lines.db-num = ub.utd.db-num 
+                                                 and ub.utd-marking-lines.gds-code = buf_gds.gds-code
+                                                 and ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:PendingVerification:KeyIntDB )
+                                             or (    ub.utd-marking-lines.doc-id = ub.utd.doc-id 
+                                                 and ub.utd-marking-lines.db-num = ub.utd.db-num 
+                                                 and ub.utd-marking-lines.gds-code = buf_gds.gds-code
+                                                 and ub.utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB):
       for each ub.marking no-lock where ub.marking.mark = ub.utd-marking-lines.mark.
         if can-find (buf_utd-marking-lines where 
               buf_utd-marking-lines.doc-id = ub.utd.doc-id and buf_utd-marking-lines.db-num = ub.utd.db-num and buf_utd-marking-lines.mark = ub.marking.mark-parent
