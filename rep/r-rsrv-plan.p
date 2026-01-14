@@ -164,7 +164,7 @@ for each gds-list:
         tt-zakaz.prod-code         = gds-list.prod-code
         tt-zakaz.prod-type         = gds-list.prod-type
         tt-zakaz.garant-stock      = 0
-        tt-zakaz.minZapas          = gds-list.minZapas
+        tt-zakaz.min-stock         = gds-list.minZapas
         tt-zakaz.ostatokDay        = 0
         tt-zakaz.ostatokGoods      = 0
         tt-zakaz.rest              = 0
@@ -211,6 +211,7 @@ for each gds-list:
                 buf_temp-gds-qnty.day <= tt-dateZakaz.dateEnd:
                 tt-zakaz.qntyDayGoods = tt-zakaz.qntyDayGoods + 1 .
             end.
+            if tt-zakaz.qntyDayGoods > 0 then tt-zakaz.qntyDayGoods = tt-zakaz.qntyDayGoods + 1 .
         end.
         else tt-zakaz.qntyDayGoods = tt-dateZakaz.dateEnd - tt-dateZakaz.dateStart + 1.
 
@@ -276,9 +277,9 @@ for each gds-list:
         else tt-zakaz.volume-goods = round-maxInt(tt-zakaz.average-sales * vDaySale - tt-zakaz.rest). /* Vз */
         if tt-zakaz.qntyDaySale <> 0 then 
         do:   
-            tt-zakaz.volMinZapas = round-maxInt(tt-zakaz.volume-goods + tt-zakaz.minZapas) . /* Vзм */
+            tt-zakaz.volMinZapas = round-maxInt(tt-zakaz.volume-goods + tt-zakaz.min-stock) . /* Vзм */
             tt-zakaz.garant-stock = pGarantDay * tt-zakaz.average-sales . /* G */
-            tt-zakaz.order-qnty = round-maxInt(tt-zakaz.volume-goods + tt-zakaz.minZapas + tt-zakaz.garant-stock) . /* Vзг */
+            tt-zakaz.order-qnty = round-maxInt(tt-zakaz.volume-goods + tt-zakaz.min-stock + tt-zakaz.garant-stock) . /* Vзг */
 
             if tt-zakaz.average-sales <> 0 then tt-zakaz.ostatokGoods = round-minInt(tt-zakaz.rest / tt-zakaz.average-sales) . /* Од */
         end.
@@ -526,8 +527,8 @@ for each tt-zakaz no-lock break by tt-zakaz.contract-code by tt-zakaz.gds-code:
             '         <td text_wrap="true" style="text-align: center; font-weight:bold; font-size:12px;">' + string(tt-zakaz.order-qnty) + '</td>' skip   
             '         <td text_wrap="true" style="text-align: center;">' + if tt-zakaz.average-sales = 0 and tt-zakaz.ostatokDay <> 0 then "-" + '</td>' else string(tt-zakaz.ostatokGoods) + '</td>' skip    
             '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volume-goods) + '</td>' skip
-            '         <td text_wrap="true" style="text-align: center;">' + if tt-zakaz.minZapas > tt-zakaz.rest then string(tt-zakaz.minZapas) + '</td>' else string(tt-zakaz.volMinZapas) + '</td>' skip
-            '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip
+            '         <td text_wrap="true" style="text-align: center;">' + if tt-zakaz.min-stock > tt-zakaz.rest then string(tt-zakaz.min-stock) + '</td>' else string(tt-zakaz.volMinZapas) + '</td>' skip
+            '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.min-stock) + '</td>' skip
             '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garant-stock) + '</td>' skip
             '         <td text_wrap="true" style="text-align: center;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
             '       </tr>' skip
@@ -547,7 +548,7 @@ for each tt-zakaz no-lock break by tt-zakaz.contract-code by tt-zakaz.gds-code:
             '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.ostatokGoods) + '</td>' skip    
             '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volume-goods) + '</td>' skip
             '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.volMinZapas) + '</td>' skip
-            '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.minZapas) + '</td>' skip
+            '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.min-stock) + '</td>' skip
             '         <td text_wrap="true" style="text-align: center;">' + string(tt-zakaz.garant-stock) + '</td>' skip
             '         <td text_wrap="true" style="text-align: center;">' + (if tt-zakaz.promo then "да" else "нет") + '</td>' skip
             '       </tr>' skip
@@ -745,8 +746,8 @@ procedure ost-gds-day :
     do
         on error undo, return error return-value
         :
-        define input parameter p-dateStart as decimal no-undo . /*начало периода*/
-        define input parameter p-dateEnd as decimal no-undo . /*конец периода*/
+        define input parameter p-dateStart as date no-undo . /*начало периода*/
+        define input parameter p-dateEnd as date no-undo . /*конец периода*/
         define input parameter p-gds-code like ub.goods.gds-code no-undo .
         define input parameter p-obj-type as character no-undo .
         define input parameter p-obj-code as integer no-undo .
@@ -761,26 +762,25 @@ procedure ost-gds-day :
         find first p_goods no-lock where p_goods.gds-code = p-gds-code no-error .
         if error-status :error then return error .
 
-        do periodDate = vDateStart to vDateEnd:   
-            create temp-gds-qnty .                                                        
-            assign
-                temp-gds-qnty.day      = periodDate
-                temp-gds-qnty.gds-code = p_goods.gds-code  
-                .
-            find first pc-gds-obj no-lock where pc-gds-obj.gds-code = p_goods.gds-code and
+            for each pc-gds-obj no-lock where pc-gds-obj.gds-code = p_goods.gds-code and
                 pc-gds-obj.obj-code = p-obj-code and
                 pc-gds-obj.obj-type = p-obj-type and
-                pc-gds-obj.corr-date = periodDate no-error .
-            if not available (pc-gds-obj) then 
-            do:
-                find last pc-gds-obj2 no-lock where pc-gds-obj2.gds-code = p_goods.gds-code and
-                    pc-gds-obj2.obj-code = p-obj-code and
-                    pc-gds-obj2.obj-type = p-obj-type and
-                    pc-gds-obj2.corr-date < periodDate no-error .
-                if available (pc-gds-obj2) then temp-gds-qnty.ost = pc-gds-obj2.fact-qnty .
+                pc-gds-obj.corr-date >= p-dateStart and
+                pc-gds-obj.corr-date <= p-dateEnd and
+                pc-gds-obj.fact-qnty <> 0:
+            find first temp-gds-qnty where temp-gds-qnty.day = pc-gds-obj.corr-date and
+            temp-gds-qnty.gds-code = p_goods.gds-code no-error .
+            if not available (temp-gds-qnty) then do:        
+            create temp-gds-qnty .                                                        
+            assign
+                temp-gds-qnty.day      = pc-gds-obj.corr-date
+                temp-gds-qnty.gds-code = p_goods.gds-code  
+                .
+            end.    
+                temp-gds-qnty.ost = pc-gds-obj.fact-qnty .
+                
             end.
-            else temp-gds-qnty.ost = pc-gds-obj.fact-qnty .
-        end.  
+
     end.  
 
 end procedure. /* qnty-lib-create-tt */
