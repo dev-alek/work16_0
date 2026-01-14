@@ -36,10 +36,17 @@ define public property Content as longchar no-undo
   define public property HeadHTTP as HeadHTTP no-undo 
     get.
     set.
+  
+  define public property queryAdr as character  no-undo 
+  get:
+     return if valid-object (HeadHTTP) then HeadHTTP:queryAdr else "".
+  end. 
   define public property queryPar as character  no-undo 
   get:
      return if valid-object (HeadHTTP) then HeadHTTP:queryPar else "".
-  end.  
- 
+  end.
+  method public character getQueryParam(iParam as char):  
+     return if valid-object (HeadHTTP) then HeadHTTP:getQueryParam(iParam) else ?.
+  end.
   
 end class.

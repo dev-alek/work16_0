@@ -415,7 +415,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
        wait-for choose of Btn-st or close of this-procedure.
      
   end.
-  delete object mAsyncHelper.
+  delete object mAsyncHelper no-error.
   unsubscribe "write-to-log".
   unsubscribe "runCDN".
   unsubscribe "runLmStatus".  

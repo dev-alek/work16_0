@@ -588,6 +588,7 @@ end.*/
      find first ttrun where    (ttrun.task eq iSched
                              or iSched eq ? )
                              and ttrun.fstatusItem ne "WorkEnd"
+                             and ttrun.fstatusItem ne "WorkEndAvailDir"
                              and ttRun.StartAfter <= vnow 
      no-lock no-error.
      WAIT-FOR-COMPLETE = not available ttrun.
@@ -607,6 +608,7 @@ end.*/
        vtask = buf_run.task.
        find first ttrun where ttrun.task        eq vtask
                           and ttrun.fstatusItem ne "WorkEnd"
+                          and ttrun.fstatusItem ne "WorkEndAvailDir"
        no-lock no-error.
        if not available ttrun
        then do:
@@ -616,12 +618,12 @@ end.*/
           do while available ttrun:
              if not SaveFile
              then do:
-               /* os-delete value (MyWorkDir + vtask + string(ttrun.num)) recursive. */
+/*                os-delete value (MyWorkDir + vtask + string(ttrun.num)) recursive.*/
                 os-delete value (MyWorkDir + vtask + string(ttrun.num) + ".bat").
              end.
              writeStatusProces("Delete", ttrun.task, ttrun.num,  "WorkEnd").
-          
-             delete ttrun.
+             ttrun.fstatusItem = "WorkEndAvailDir".
+/*             delete ttrun.*/
              find first ttrun where ttrun.task        eq vtask
                                 and ttrun.fstatusItem eq "WorkEnd"
              no-lock no-error.
@@ -840,6 +842,21 @@ Phase 1 of Load completed.  Working.  Please wait ...~
       end.
    end.
    
+   method public logical DelShedDirEndProc ( input iSched as character):
+      find first ttrun where    ttrun.fstatusItem eq "WorkEndAvailDir"
+                               and (   ttrun.task eq iSched
+                                    or iSched eq ?) 
+      no-lock no-error.
+      do while available ttrun:
+         os-delete value (MyWorkDir + ttrun.task + string(ttrun.num)) recursive.
+         delete ttrun.
+         find first ttrun where    ttrun.fstatusItem eq "WorkEndAvailDir"
+                               and (   ttrun.task eq iSched
+                                    or iSched eq ?) 
+         no-lock no-error.
+      end.
+   end.
+   
    method public logical WaitStopEnd ( input iSched as character):
       return WaitStopEnd(iSched,3).
    end.
@@ -1008,7 +1025,7 @@ end.
       return v-cmd-comm.
    end.
    
-   method private int64 AsyncRun ():
+   method public int64 AsyncRun ():
       define buffer ttrun for ttrun.
       define variable vFile as character no-undo.
       
@@ -1394,6 +1411,7 @@ end.
       define variable vnow as datetime-tz no-undo.
       vnow = getnow().
       find first ttRun where ttrun.fstatusItem ne "WorkEnd"
+                         and ttrun.fstatusItem ne "WorkEndAvailDir"
                          and ttRun.StartAfter  <= vnow
                          and (   ttRun.task        eq iSched
                               or iSched            eq ?)
@@ -1410,6 +1428,7 @@ end.
       define variable vList as character no-undo.
       vnow = getnow().
       for each ttRun where ttrun.fstatusItem ne "WorkEnd"
+                       and ttrun.fstatusItem ne "WorkEndAvailDir"
                        and ttRun.StartAfter  <= vnow
                        and (   ttRun.task        eq iSched
                             or iSched            eq ?)

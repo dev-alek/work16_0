@@ -144,34 +144,36 @@ class ibs.th.skt.ClientControl:
         block-check:
         do transaction:
            cast(ttDeferredCommands.objCommand, ibs.th.skt.Commands.ICommand):ContinueExecution (req,resp). 
-           if resp:condition eq resp:STSlist:WriteResponse:NameProp
+           if     resp:condition eq resp:STSlist:WriteResponse:NameProp
+              and req:HndlSocket:CONNECTED()
            then do:
               if not writeSock(req:HndlSocket,resp)
               then
                  undo block-check, leave block-check.
            end.
-           if resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
-           then do:
-              if valid-handle (hlog)
-              then
-                 publish "write-to-log" from hLog (substitute ("Wait result Class: &1 Param: &2",resp, resp:ParamWait)) .
-              resp:condition = resp:STSlist:WaitResult:NameProp.
-           end.
-           
-           if resp:condition ne resp:STSlist:WaitResult:NameProp
-              or  not req:HndlSocket:CONNECTED()
-           then do:
-              define variable resp-head as character no-undo.
-              resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
-              if valid-handle (hlog)
-              then
-                 publish "write-to-log" from hLog (substitute ("RESPONCE: Class: &1 end result: &2",resp ,resp-head)).
-              logWrite:LogStr = "".
-              vDelete = yes.
+        end.
+        if resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
+        then do:
+           if valid-handle (hlog)
+           then
+              publish "write-to-log" from hLog (substitute ("Wait result Class: &1 Param: &2",resp, resp:ParamWait)) .
+           resp:condition = resp:STSlist:WaitResult:NameProp.
+        end.
+        
+        if resp:condition ne resp:STSlist:WaitResult:NameProp
+           or  not req:HndlSocket:CONNECTED()
+        then do:
+           define variable resp-head as character no-undo.
+           resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
+           if valid-handle (hlog)
+           then
+              publish "write-to-log" from hLog (substitute ("RESPONCE: Class: &1 end result: &2",resp ,resp-head)).
+           logWrite:LogStr = "".
+           vDelete = yes.
               
-           end.
-           else
-              vAvailProc = yes.
+        end.
+        else
+           vAvailProc = yes.
          define variable v-err-msg as character no-undo .  
          catch exAppErrors as class Progress.Lang.AppError :
             v-err-msg = exAppErrors:ReturnValue .
@@ -215,7 +217,7 @@ class ibs.th.skt.ClientControl:
            end.
         
         end.
-     end.
+     
      end.
      return vAvailProc.
   end.
@@ -226,7 +228,6 @@ class ibs.th.skt.ClientControl:
     define variable v-cont-length as integer no-undo.
     define variable VOK as longchar no-undo.
     define variable VrespOK as memptr no-undo.
-    define variable vBytes as int64 no-undo.
     VOK = substitute (HTTPOK,resp:Content-Type,string(resp:ContentLength)).
     copy-lob
       from object VOK
@@ -237,10 +238,9 @@ class ibs.th.skt.ClientControl:
        LogWrite:WriteFileToLog("Клиент отключился.").
        return false.
     end.
-    vBytes = hndlsocket:bytes-written. 
     glog = hndlsocket:write(VrespOK,1,get-size(VrespOK)).
     if    not glog
-       or hndlsocket:bytes-written ne vBytes + get-size(VrespOK)
+       or hndlsocket:bytes-written ne get-size(VrespOK)
     then do:
        set-size(VrespOK) = 0.
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
@@ -253,10 +253,9 @@ class ibs.th.skt.ClientControl:
        LogWrite:WriteFileToLog("Клиент отключился.").
        return false.
     end.
-    vBytes = hndlsocket:bytes-written. 
     glog = hndlsocket:write(resp:Content,1,get-size(resp:Content)).
     if    not glog
-       or hndlsocket:bytes-written ne vBytes + get-size(resp:Content)
+       or hndlsocket:bytes-written ne get-size(resp:Content)
     then do:
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
        return false.

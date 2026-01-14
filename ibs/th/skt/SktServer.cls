@@ -42,7 +42,7 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand". /*список клиентов через запятую, с которыми работает сокет-сервер*/
+  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand,CashSend". /*список клиентов через запятую, с которыми работает сокет-сервер*/
 
   
   define private variable hLog          as handle no-undo.
@@ -92,7 +92,8 @@ class ibs.th.skt.SktServer:
     define variable THGetInfoCmd  as class THGetInfoCmd.
     define variable AuthMarking   as class markingcmd.
     define variable DeferredCommand   as class DeferredCommand.
-		
+	 define variable CashSend      as class CashSend.
+   	
     clientControl = new ClientControl(hLog). /*количество возможных комманд соответсвует кол-ву клиентов*/
     logWrite = new LogWrite().
     /*создадим объекты конкретных комманд для клиентов сокет-сервера. вешаем комманду на порядковый номер клиента в списке*/
@@ -129,6 +130,9 @@ class ibs.th.skt.SktServer:
     
     DeferredCommand = new DeferredCommand ().
     clientControl:SetCommandForClient(lookup("DeferredCommand",clientList), DeferredCommand).
+    
+    CashSend = new CashSend (hLog).
+    clientControl:SetCommandForClient(lookup("CashSend",clientList), CashSend).
     
   end constructor.
 

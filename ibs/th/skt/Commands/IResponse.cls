@@ -42,14 +42,16 @@ class ibs.th.skt.Commands.IResponse abstract:
    get.
    set.
    
+   define variable mAddctrf as logical no-undo.
+   
    define public property Content as memptr no-undo 
    get.
    set(arg as memptr):
       Content = arg.
+      mAddctrf = no.
    end.
-
    define public property ContentLength as int64 no-undo 
-   get : return get-size(Content). end.
+   get : return get-size(Content) - if mAddctrf then 2 else 0 . end.
    
    define public property ParamWait as char no-undo 
    get.
@@ -61,7 +63,8 @@ class ibs.th.skt.Commands.IResponse abstract:
       set-size(Content) = length(arg,"raw").
       copy-lob
       from object arg
-      to object Content.
+      to object Content convert target codepage "UTF-8".
+      mAddctrf = yes.
    end.
    
    method public void setContent(arg as char ):
@@ -72,6 +75,7 @@ class ibs.th.skt.Commands.IResponse abstract:
       copy-lob
       from object VStr
       to object Content.
+      mAddctrf = yes.
    end.
 	/*------------------------------------------------------------------------------
 	 Purpose:

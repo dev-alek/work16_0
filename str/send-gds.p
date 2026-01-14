@@ -45,6 +45,7 @@ define variable i-obj-code like ub.clients.obj-code no-undo.
 define variable p-batch as logical no-undo .
 define variable action     as   character no-undo init "U".
 define variable p-other    as character no-undo .
+define variable onecash    as int no-undo .
 assign
 i-obj-code = integer(entry(1, p-parameter, {&delim-par}))
 p-batch  = (if entry(2, p-parameter, {&delim-par}) = "yes"
@@ -58,7 +59,13 @@ p-other = (if num-entries(p-parameter, {&delim-par}) > 2
            else "":U)
 no-error
 .
+
 if error-status:error or p-batch = ? then return error substitute("&1 &2", error-status:get-message(1) , return-value ).
+if num-entries(p-parameter, {&delim-par}) > 3
+   and entry(4, p-parameter, {&delim-par}) ne ""
+then
+   onecash = int (entry(4, p-parameter, {&delim-par})) no-error.
+
 if not g#news
 and not g#auto then do:
 run get-userid in parparentproc ( output v-cntxt-userid) .
