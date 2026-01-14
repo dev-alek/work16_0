@@ -25,7 +25,7 @@ define variable conn-par            as character no-undo .
   block-login:
   for each pasSysadm where pasSysadm.Flogin eq "sysadm"
   no-lock:
-     v-connect-option = substitute('-U &1 -P &2':u
+     v-connect-option = substitute('-U &1 -P "&2"':u
                                  ,pasSysadm.Flogin
                                  ,pasSysadm.pasw
                                  ).
