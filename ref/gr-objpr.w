@@ -22,11 +22,11 @@ DEFINE TEMP-TABLE x_obj-grp-obj-price NO-UNDO LIKE ub.obj-grp-obj-price.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: d47c064bc860, 1107, rls $
+$Author: SMMolotkov $
+$Date: Thu Dec 14 02:13:53 2017 +0300 $
+$Workfile: gr-objpr.w $
+$Archive: ref/gr-objpr.w $
 
 Справочник групп объектов для ценообразовани
 
@@ -45,11 +45,11 @@ define input  parameter parParentProc as handle no-undo .
 define input  parameter p-bttns    as character no-undo .
 define input-output parameter p-rec-list as character no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision$":U .
-define variable vss-author      as character no-undo init "$Author$":U .
-define variable vss-date        as character no-undo init "$Date$":U .
-define variable vss-workfile    as character no-undo init "$Workfile$":U .
-define variable vss-archive     as character no-undo init "$Archive$":U .
+define variable vss-revision    as character no-undo init "$Revision: d47c064bc860, 1107, rls $":U .
+define variable vss-author      as character no-undo init "$Author: SMMolotkov $":U .
+define variable vss-date        as character no-undo init "$Date: Thu Dec 14 02:13:53 2017 +0300 $":U .
+define variable vss-workfile    as character no-undo init "$Workfile: gr-objpr.w $":U .
+define variable vss-archive     as character no-undo init "$Archive: ref/gr-objpr.w $":U .
 define variable vss-description as character no-undo init "Справочник групп объектов для ценообразования ".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
@@ -450,7 +450,7 @@ DEFINE BROWSE BROWSE-3frm
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-3frm Dialog-Frame _FREEFORM
   QUERY BROWSE-3frm NO-LOCK DISPLAY
       mark-string-3(buffer buf_host-grp-obj-price, v-rec-list-cli) COLUMN-LABEL "*! " FORMAT "x(1)":U
-      buf_host-grp-obj-price.host-code COLUMN-LABEL "Код!фирмы" FORMAT ">>>>>>9":U
+      buf_host-grp-obj-price.host-code COLUMN-LABEL "Код!фирмы" FORMAT ">>>>>>>>9":U
       host-name.obj-name COLUMN-LABEL "Имя!фирмы" FORMAT  "X(20)":U
       usrfulnf(buf_host-grp-obj-price.who) COLUMN-LABEL "Кто!изменял" FORMAT "X(20)":U
             WIDTH 10
