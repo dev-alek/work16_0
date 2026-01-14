@@ -291,6 +291,11 @@ for each gds-list:
     end.
   
 end.
+for each tt-dateZakaz:
+    periodDay = periodDay + (tt-dateZakaz.dateEnd - tt-dateZakaz.dateStart + 1) .
+    v-period = v-period + ", " + "c " + string(tt-dateZakaz.dateStart,"99/99/9999") + " по " + string (tt-dateZakaz.dateEnd,"99/99/9999") .
+end.
+v-period = trim (v-period,", ") .
 if not p-ok then do:
 
 run get-full-path-RepViewer(output v-full-path-RepView).    /* Перед работой с "Просмотровщиком отчёта" (main.exe) - убедимся, что он существует и получим полный путь к нему. */
@@ -385,12 +390,6 @@ put stream OutStr-html unformatted
     '<td colspan="5" text_wrap="true" style="text-align: left;">заказ формируется на : ' + string(vDaySale) + ' дней(дня), с учетом гарантийного запаса на ' + string(pGarantDay) + ' дней(дня)</td>' skip
     '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Рекомендованный объем заказа с учетом минимального и гарантийного запасов, шт (Vзг)</b> Vзг = Vз + М + G  (7).</td>' skip
     '</tr>' skip .
-
-for each tt-dateZakaz:
-    periodDay = periodDay + (tt-dateZakaz.dateEnd - tt-dateZakaz.dateStart + 1) .
-    v-period = v-period + ", " + "c " + string(tt-dateZakaz.dateStart,"99/99/9999") + " по " + string (tt-dateZakaz.dateEnd,"99/99/9999") .
-end.
-v-period = trim (v-period,", ") .
   
 put stream OutStr-html unformatted   
     '<tr style="font-size:11px;">' skip
