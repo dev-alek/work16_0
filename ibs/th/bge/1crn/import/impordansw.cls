@@ -79,7 +79,8 @@ class ibs.th.bge.1crn.import.impordansw implements ibs.th.bge.1crn.import.iimpsu
     if ( vNewSts = orderStatus:Corrected:KeyIntDB and buf_order-doc.sts <> orderStatus:Corrected:KeyIntDB )
     or ( vNewSts = orderStatus:Cancelled:KeyIntDB and buf_order-doc.sts <> orderStatus:Cancelled:KeyIntDB ) then
     do:
-      Notification = substitute("&1Заказ № &2 &3 - &4.&5", Notification, buf_order-doc.order-item, 
+      Notification = substitute("&1Заказ № &2 &3 - &4.&5", Notification, 
+                                if buf_order-doc.order-item <> "" then buf_order-doc.order-item else (string(buf_order-doc.doc-code) + " в TH"), 
                                 buf_order-doc.cli-name, orderStatus:GetLabel(vNewSts),
                                 "~n").
     end.
