@@ -947,29 +947,34 @@ function addGs2Mark return character
 (iMark as char):
    define variable vDM   as character no-undo.
    define variable vIdx  as integer   no-undo.
-   
+                                     
+   if index(iMark,chr(29),1) > 0 
+   then return iMark.              
+                        
    if substring(iMark,26,4) = "8005" then
    do:   /* табак блок */
-     vIdx = index(iMark,"93",26).
-     if vIdx > 1 then
+     vIdx = index(iMark,"93",26 + 4 + 5). /* по правилам надо бы 6, а не 5, но бывают кривые марки */
+     if vIdx > 1 then do:
        vDM = substitute("&1&4&2&4&3",
                         substring(iMark,1,25),
                         substring(iMark,26,vIdx - 25 - 1),
                         substring(iMark,vIdx),
                         chr(29)) no-error.
+                      
+       vIdx = index(vDm,"240",vIdx + 4).
+       if vIdx > 0 then
+       do:
+         vDM = substitute("&1&3&2",
+                          substring(vDm,1,vIdx - 1),
+                          substring(vDm,vIdx),
+                          chr(29)) no-error.
+       end.                  
+     end.                   
      else 
        vDM = substitute("&1&3&2",
                         substring(iMark,1,25),
                         substring(iMark,26),
-                        chr(29)) no-error.
-     vIdx = index(vDm,"240",vIdx).
-     if vIdx > 0 then
-     do:
-       vDM = substitute("&1&3&2",
-                        substring(vDm,1,vIdx - 1),
-                        substring(vDm,vIdx),
-                        chr(29)) no-error.
-     end.    
+                        chr(29)) no-error.        
    end.
    else if substring(iMark,32,2) = "91" then
    do:  /* легпром, духи, обувь, шины, лекарства, велосипеды, кресла-коляски, консервы  */
@@ -1031,7 +1036,7 @@ function addGs2Mark return character
            substring(iMark,32),
            chr(29)) no-error.
    end.
-   
+                                    
    return if vDM <> "" then vDm else iMark.
 end.
 
