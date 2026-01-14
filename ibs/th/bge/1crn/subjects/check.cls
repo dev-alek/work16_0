@@ -611,21 +611,34 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
     insw:write-data-element (  "tot-doc", left-trim(string(p-buf_chk-doc.tot-doc, "->>>>>>>>9.9<"))  ). /* Сумма брутто по чеку в валюте продаж. Сумма по текущей розничной цене (Число) */
 
     /* обязательность 0-1 */
+    if p-buf_chk-doc.chk-type <> 13 and p-buf_chk-doc.chk-type <> 40     then
+     do:
         find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
                                   and buf_chk-doc-attr.attr-code eq "CHMgrKey"
              no-lock no-error.
-    if avail buf_chk-doc-attr
-    then
+       if avail buf_chk-doc-attr
+       then
        insw:write-data-element( "CHMgrKey",  buf_chk-doc-attr.attr-value).
+
+    end.
+
+
     /* Тип возвратных операций */
-    find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
-      and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
-    if available chk-doc-attr then 
-    do:   
-      insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
-      if chk-doc-attr.attr-value = "0" then
-        insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
-    end. 
+
+    if p-buf_chk-doc.chk-type <> 13 and p-buf_chk-doc.chk-type <> 40     then
+     do:
+
+	  find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
+	    and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
+	    if available chk-doc-attr then 
+	    do:   
+	      insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
+	      if chk-doc-attr.attr-value = "0" then
+	        insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
+	    end. 
+    end.
+
+
     /* 28/XI-2017 term-num будет строкой, поэтому пустой можно, и необязательный. */
     find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
                                   and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
