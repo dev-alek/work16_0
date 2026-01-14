@@ -182,13 +182,17 @@ DEFINE VARIABLE auto-log AS longchar
      VIEW-AS EDITOR SCROLLBAR-VERTICAL LARGE
      SIZE 96 BY 20 NO-UNDO.
 
-
+DEFINE VARIABLE mPort AS integer FORMAT ">>>>9"
+     LABEL "Порт"
+     VIEW-AS FILL-IN
+     SIZE 6 BY 1 NO-UNDO.
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
      b-help AT ROW 1.17 COL 89 WIDGET-ID 4
      b-exit AT ROW 1.25 COL 2.5 WIDGET-ID 2
      Btn-st AT ROW 1.25 COL 12.5 WIDGET-ID 6
+     mPort AT ROW 1.25 COL 24 
      auto-log AT ROW 3 COL 2.5 NO-LABEL WIDGET-ID 8
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
          SIDE-LABELS NO-UNDERLINE THREE-D
@@ -338,6 +342,22 @@ ON CLOSE OF THIS-PROCEDURE
 /* Best default for GUI applications is...                              */
 PAUSE 0 BEFORE-HIDE.
 
+IF v-connect-param > '' 
+then do:
+   if (trim(v-connect-param)begins "-S")
+   then do:
+      mPort = int(substring (trim(v-connect-param), 3)).
+   end.
+   
+end.
+if mPort eq 0 
+then do:
+  RUN write-to-log-event('Не указаны параметры подключения!').
+  RUN write-to-log-event('Параметры задаются -param "Sock:-S <Port>" или -param "M:<h+>Sock:<Port>" ').
+  mPort = 8080.
+  RUN write-to-log-event('Задаем порт по умочанию 8080').
+  
+END.
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
@@ -705,9 +725,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY auto-log
+  DISPLAY auto-log mport
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE b-help b-exit Btn-st auto-log
+  ENABLE b-help b-exit Btn-st auto-log mport
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
   VIEW C-Win.
@@ -726,26 +746,19 @@ PROCEDURE proc-start-srv :
 ------------------------------------------------------------------------------*/
   /*Инициализация сокет-сервера*/
 DEF VAR vl-cnt AS LOG NO-UNDO.
-IF v-connect-param > '' THEN.
-ELSE DO:
-  RUN write-to-log-event('Не указаны параметры подключения!').
-  RUN write-to-log-event('Параметры задаются -param "Sock:-S <Port>" или -param "M:<h+>Sock:<Port>" ').
-  v-connect-param = "-S 8080".
-  RUN write-to-log-event('Задаем порт по умочанию 8080').
-  
-END.
-/* v-connect-param = 'sdj78'. */
+
 CREATE SERVER-SOCKET hServerSocket.
 
 hServerSocket:SET-CONNECT-PROCEDURE ("connProc":U).
-vl-cnt = hServerSocket:ENABLE-CONNECTIONS(v-connect-param) NO-ERROR.
+vl-cnt = hServerSocket:ENABLE-CONNECTIONS("-S " + mPort:screen-value in FRAME DEFAULT-FRAME ) NO-ERROR.
 if vl-cnt = NO THEN do:
   RUN write-to-log-event(substitute('Ошибка запуска сервера &1!',error-status:get-message(1) )).
   return.
 end.
 v-srv-connected = YES.
 /* IF VALID-HANDLE(hServerSocket) AND hServerSocket:CONNECTED() THEN */
-RUN write-to-log-event(substitute('Запущен сокет-сервер с параметрами: &1 ',v-connect-param)).
+RUN write-to-log-event(substitute('Запущен сокет-сервер с параметрами: -S &1 ', mPort:screen-value)).
+mport:sensitive  in FRAME DEFAULT-FRAME = false.
 btn-st:LABEL IN FRAME {&FRAME-NAME} = 'Стоп'.
 sktserv  = new SktServer(this-procedure, us-tmo).
 END PROCEDURE.
