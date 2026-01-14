@@ -821,8 +821,8 @@ run print-table2 no-error .
 put stream OutStr-html unformatted    
 
   '<tfoot>' skip
-  '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip             
-  '<TR><TD colspan="18" style="height: 14px;"></TD></TR>' skip
+  '<TR><TD colspan="14" style="height: 12px;"></TD></TR>' skip             
+  '<TR><TD colspan="18" style="height: 12px;"></TD></TR>' skip
                     
   '<TR><TD text_wrap="true" colspan="18" style="">6. Прилагаемые к акту документы ________________________________________________________________________</TD></TR>' skip
                     
@@ -1042,9 +1042,8 @@ procedure print-table2:
   put stream OutStr-html unformatted
     '</tbody>' skip
     '<thead>' skip
-    '<TR><TD colspan="18" style="height: 14px;">Расшифровка поступления по СУГ:</TD></TR>' skip
-    '<TR><TD colspan="14" style="height: 14px;"></TD></TR>' skip
-    '<TR><TD colspan="4" style="height: 14px;"></TD></TR>' skip
+    '<TR><TD colspan="12" style="height: 14px;">Расшифровка поступления по СУГ:</TD></TR>' skip
+    '<TR><TD colspan="12" style="height: 14px;"></TD></TR>' skip
     '</thead>' skip
     '<tbody>' skip
     '<TR>' skip
@@ -1052,13 +1051,13 @@ procedure print-table2:
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Наименование, №АЦ, марка, вместительность, л</TD>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">№ резервуара</TD>' skip
     '<TD text_wrap="true" rowspan="2" style="text-align: center;">Наименование</TD>' skip
-    '<TD text_wrap="true" colspan="8" style="text-align: center;">СУГ</TD>' skip
+    '<TD text_wrap="true" colspan="10" style="text-align: center;">СУГ</TD>' skip
     '</TR>'skip       
                     
     '<TR>' skip
-    '<TD text_wrap="true" colspan="3" style="text-align: center;">Объем, л</TD>' skip
+    '<TD text_wrap="true" colspan="4" style="text-align: center;">Объем, л</TD>' skip
 /*    '<TD text_wrap="true" colspan="2" style="text-align: center;">Плотность, г/см3</TD>' skip*/
-    '<TD text_wrap="true" colspan="3" style="text-align: center;">Температура, °С</TD>' skip
+    '<TD text_wrap="true" colspan="4" style="text-align: center;">Температура, °С</TD>' skip
     '<TD text_wrap="true" colspan="2" style="text-align: center;">Масса СУГ, подлежащая оприходыванию, кг</TD>' skip
     '</TR>'skip   
 
@@ -1067,8 +1066,8 @@ procedure print-table2:
     '<TD style="text-align: center;">2</TD>' skip
     '<TD style="text-align: center;">3</TD>' skip
     '<TD style="text-align: center;">4</TD>' skip
-    '<TD colspan="3" style="text-align: center;">5</TD>' skip
-    '<TD colspan="3" style="text-align: center;">6</TD>' skip
+    '<TD colspan="4" style="text-align: center;">5</TD>' skip
+    '<TD colspan="4" style="text-align: center;">6</TD>' skip
     '<TD colspan="2" style="text-align: center;">7</TD>' skip
 /*    '<TD colspan="2" style="text-align: center;">8</TD>' skip*/
     '</TR>'skip     
@@ -1080,14 +1079,15 @@ procedure print-table2:
       '<TD text_wrap="true" style="text-align: center;">' + v-num-ac + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.num-pl + '</TD>' skip
       '<TD text_wrap="true" style="text-align: center;">' + tt-petrol.name-gds + '</TD>' skip
-      '<TD text_wrap="true" colspan="3" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '</TD>' skip           
+      '<TD text_wrap="true" colspan="4" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.vol-TH,"->>>>>>>>>>9.999",3) + '</TD>' skip           
 /*      '<TD text_wrap="true" colspan="2" num="0.0000" val="' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>9.9999",4) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.density-TH,"->>>>>>>>>>9.9999",4) + '</TD>' skip*/
-      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '</TD>' skip
+      '<TD text_wrap="true" colspan="4" num="0.0" val="' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.temp-TH,"->>>>>>>>>>9.9",1) + '</TD>' skip
       '<TD text_wrap="true" colspan="2" num="0.000" val="' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>9.999",3) + '" style="text-align: center;">' + fnc-convert-dot-to-colon(tt-petrol.weight-TH,"->>>>>>>>>>9.999",3) + '</TD>' skip
       '</TR>'skip   
-      '</tbody>'  
-      .
+     .
   end.
-     
+      put stream OutStr-html unformatted
+      '</tbody>'  skip .     
+
 end procedure .
 
