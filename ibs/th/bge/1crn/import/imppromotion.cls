@@ -439,7 +439,7 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
       else valuemin = v-threshold:value_ .
 
       valueupto = v-threshold:valueupto . 
-      logupto = true .
+
       assign
         v-promo-crit:mincrit = valuemin
         v-promo-crit:maxcrit = v-threshold:valueupto

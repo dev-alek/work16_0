@@ -1302,15 +1302,26 @@ end . /* end_of низ таблицы и html-файла */
            by tt-PromoCriterionnext.mincrit:
               leave block-next.
            end.  
+
+           if tt-PromoCriterion.maxcrit <> 0 then do:
            if CritgoodsFl then 
-           tt-PromoCriterion.span = "От " +   trim(string (0,">>>>>>>9.99")) .
+           assign
+           tt-PromoCriterion.span = "От " +   trim(string (0,">>>>>>>9.99")) 
+           tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99")) .
            else 
-           tt-PromoCriterion.span = "От " +   trim(string (tt-PromoCriterion.mincrit,">>>>>>>9.99")) 
-                                  + if available tt-PromoCriterionnext  
-                                    then ( " до " +   trim(string (tt-PromoCriterionnext.mincrit - 0.01 ,">>>>>>>9.99")))
-                                    else "".
-           if tt-PromoCriterion.maxcrit = 0 then tt-PromoCriterion.spanBef = " " .
-           else tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99")) 
+           assign
+           tt-PromoCriterion.span = "От " +   trim(string (tt-PromoCriterion.mincrit,">>>>>>>9.99")) .
+           tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99")) .
+           .
+           end.
+           else do:
+           tt-PromoCriterion.span = "От " +   trim(string (tt-PromoCriterion.mincrit,">>>>>>>9.99")) .
+           if available tt-PromoCriterionnext  then tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterionnext.mincrit - 0.01 ,">>>>>>>9.99")) .
+           else "".
+           end.
+
+/*           if tt-PromoCriterion.maxcrit = 0 then tt-PromoCriterion.spanBef = " " .                          */
+/*           else tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99"))*/
                                   .                                   
        end. 
    end.
