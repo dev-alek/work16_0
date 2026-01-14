@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 971568bb50e0, 1502, rls $
+$Author: obrezanova $
+$Date: Thu Aug 30 10:41:48 2018 +0300 $
+$Workfile: promocriterionsub.cls $
+$Archive: ibs/th/ref/promo/promocriterionsub.cls $
  
 Объект критерий акции
 
@@ -22,11 +22,11 @@ USING ibs.th.ref.promo.*.
 block-level on error undo, throw.
 
 class ibs.th.ref.promo.PromoCriterionSub implements ithsub: 
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 971568bb50e0, 1502, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: obrezanova $":U .
+define variable vss-date        as character no-undo initial "$Date: Thu Aug 30 10:41:48 2018 +0300 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: promocriterionsub.cls $":U .
+define variable vss-archive     as character no-undo initial "$Archive: ibs/th/ref/promo/promocriterionsub.cls $":U .
 define variable vss-description as character no-undo initial "Объект критерий акции.". 
   
   { cmp/str-glbl.i class}
@@ -73,7 +73,17 @@ define variable vss-description as character no-undo initial "Объект критерий ак
         setFlagChange (true).
       end.
     END.  
-  
+
+  define property maxcrit as dec no-undo
+    get.
+    SET (arg as dec):
+      if arg <> maxcrit
+      then do:
+        maxcrit = arg.
+        setFlagChange (true).
+      end.
+    END. 
+      
   define property idAction as int64 no-undo
     get.
     set(arg as int64):

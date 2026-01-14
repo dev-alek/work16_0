@@ -264,18 +264,18 @@ CLASS ibs.th.ref.promo.uc_Tab_Presents INHERITS UserControl:
                     
                     if tttypeCond.code = 1 // "Количество по строке"  
                     then do:
-                        ucMain7:PublicEvent("CritLable", "Количество, ед#Диапозон действия,ед#?").
+                        ucMain7:PublicEvent("CritLable", "Количество, ед#Диапазон действия,ед#?").
                     end.
                     else if tttypeCond.code = 2 // "Сумма по строке"   
                     then do:
-                        ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапозон действия, Руб#?").
+                        ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапазон действия, Руб#?").
                     end.
                     else if tttypeCond.code = 3 // "Итог чека"  
                     then do:
-                        ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапозон действия, Руб#?").
+                        ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапазон действия, Руб#?").
                     end.
                     else
-                        ucMain7:PublicEvent("CritLable", "Количество / сумма#Диапозон действия#?"). 
+                        ucMain7:PublicEvent("CritLable", "Количество / сумма#Диапазон действия#?"). 
                 end.    
                 END.
                 

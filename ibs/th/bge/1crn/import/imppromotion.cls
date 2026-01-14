@@ -419,16 +419,30 @@ end.
 
     
 if valid-object(v-objlist2) then do: // threshold - пороговые значения
+
+    define variable valueupto as decimal no-undo init 0 .
+    define variable logupto as logical no-undo .
+    define variable valuemin  as decimal no-undo init 0 .
     v-promo-crits = v-promo-action:Criterion .
 
     v-i-counter = v-objlist2:iCounter .
     do v-i-num = 1 to v-i-counter :
+         
+      if logupto then leave .
+      else do: 
+        
       v-stub = v-objlist2:Get(v-i-num) . // возвращает кол-во элементов и переключает currItem
       v-threshold = cast(v-objlist2:SubjectObjCurr, ibs.th.bge.1crn.subjects.promotion_threshold) .
       v-promo-crit = new ibs.th.ref.promo.promoCriterionsub () .
       v-promo-crit:refreshChildObj().
+      if v-threshold:value_ = ? then valuemin = 0 .
+      else valuemin = v-threshold:value_ .
+
+      valueupto = v-threshold:valueupto . 
+      logupto = true .
       assign
-        v-promo-crit:mincrit = v-threshold:value_
+        v-promo-crit:mincrit = valuemin
+        v-promo-crit:maxcrit = v-threshold:valueupto
         v-promo-crit:discont = v-threshold:dscnt
         v-promo-crit:Mode    = {&h-create}
         v-promo-gifts        = v-promo-crit:Gifts
@@ -484,7 +498,8 @@ if valid-object(v-objlist2) then do: // threshold - пороговые значения
         end . // end_of_threshold:gifts[]
       end .
       v-promo-crits:AddItem (v-promo-crit) .
-    end. // end_of_objImp:thresholds[]
+      end.
+   end. // end_of_objImp:thresholds[]
 //    v-promo-action:Criterion = v-promo-crits .
 end. // end_of_threshold        
       

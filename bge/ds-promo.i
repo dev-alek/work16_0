@@ -97,6 +97,8 @@ define temp-table tt-PromoCriterion no-undo
   field span as character  
   field sub  as Progress.Lang.Object serialize-hidden
   FIELD mode AS char
+  field spanBef as character
+  field maxcrit as decimal
   .
 
 define temp-table tt-PromoGift no-undo

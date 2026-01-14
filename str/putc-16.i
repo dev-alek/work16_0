@@ -346,6 +346,8 @@ do:
         , input string(v-subGDCrite:id), input 1 ).
       run bgelib-tag-put in this-procedure ( input 4, input "PACAmount":U
         , input string(v-subGDCrite:mincrit), input 1 ).
+      run bgelib-tag-put in this-procedure ( input 4, input "PACUPAmount":U
+        , input string(v-subGDCrite:maxcrit), input 1 ).        
       run bgelib-tag-put in this-procedure ( input 4, input "PACDiscount":U
         , input string(v-subGDCrite:discont), input 1 ).
       run bgelib-tag-put in this-procedure ( input 4, input "PACMessage":U

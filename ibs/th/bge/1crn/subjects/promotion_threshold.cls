@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: b10ceb95d184, 3329, rls $
+$Author: DRuban $
+$Date: 2023/05/19 13:37:08 $
+$Workfile: promotion_threshold.cls $
+$Archive: ibs/th/bge/1crn/subjects/promotion_threshold.cls $
 
 Структура данных promotion:threshold в 1С
 
@@ -27,6 +27,7 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
   define override public property vss-archive     as character no-undo init "$Archive:$":U get.
   
   define property value_      as decimal    no-undo get. private set.
+  define property valueupto   as decimal    no-undo get. private set.
   define property dscnt       as decimal    no-undo get. private set.
   define property message_    as character  no-undo get. private set.
   define property message-gks as character  no-undo get. private set.
@@ -47,8 +48,10 @@ class ibs.th.bge.1crn.subjects.promotion_threshold inherits ibs.th.bge.1crn.subj
   &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
   &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char):
+
     case inTag:
       when "value"   then value_   = {&attr-dec} .
+      when "valueupto"   then valueupto   = {&attr-dec} .
       when "dscnt"   then dscnt    = {&attr-dec} .
       when "message" then message_ = {&attr-str} .
       when "message-gks" then message-gks = {&attr-str} .

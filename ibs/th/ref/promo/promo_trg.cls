@@ -79,6 +79,9 @@ define temp-table gds-list no-undo like ub.goods
   define property ModeView as logical no-undo
   get.
   private set.
+  define property typeCond as integer no-undo
+  get.
+  private set.
   define property ModeChangeStatus as logical no-undo
   get.
   private set.
@@ -92,7 +95,7 @@ define temp-table gds-list no-undo like ub.goods
   define private variable m-storage as class promoactionstorage no-undo .
   define private variable m-goodsStorage as class promogoodsstorage no-undo . 
   define variable dialog1 as class ibs.th.ref.promo.dPromoActions no-undo .
-  
+  define variable CritgoodsFl as logical no-undo .
   define private variable m-local-sec as int64 no-undo init -1.
   
   define temp-table tt-obj no-undo
@@ -745,6 +748,8 @@ end . /* end_of низ таблицы и html-файла */
                     end .
                     
                 end case.
+                if available (tt-promoaction) then typeCond = tt-promoaction.typecond .
+    
                 hQuery:query-open.
 
                 if vFirst 
@@ -1221,6 +1226,7 @@ end . /* end_of низ таблицы и html-файла */
     if v-sched-sub:schedType = 0 then CreateTableForSchedw0 (p-mode, p-sub:ScheduleWeek).
                                  else CreateTableForSchedw1 (p-mode, p-sub:ScheduleWeek).
      //if p-mode = {&update} then temp-table tt-promoaction-one:tracking-changes = true .
+     CritgoodsFl = p-sub:CritgoodsFl .
      CreateTableForGoodsCrits(p-mode, p-sub:GoodsCrits).
      CreateTableForGoodsAppl (p-mode, p-sub:GoodsAppl ).
      CreateTableForCardsBin  (p-mode, p-sub:CardsBin ).
@@ -1296,11 +1302,16 @@ end . /* end_of низ таблицы и html-файла */
            by tt-PromoCriterionnext.mincrit:
               leave block-next.
            end.  
+           if CritgoodsFl then 
+           tt-PromoCriterion.span = "От " +   trim(string (0,">>>>>>>9.99")) .
+           else 
            tt-PromoCriterion.span = "От " +   trim(string (tt-PromoCriterion.mincrit,">>>>>>>9.99")) 
                                   + if available tt-PromoCriterionnext  
                                     then ( " до " +   trim(string (tt-PromoCriterionnext.mincrit - 0.01 ,">>>>>>>9.99")))
                                     else "".
-                                   
+           if tt-PromoCriterion.maxcrit = 0 then tt-PromoCriterion.spanBef = " " .
+           else tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99")) 
+                                  .                                   
        end. 
    end.
   method public void CreateTableForGoodsAppl
@@ -1501,6 +1512,7 @@ end . /* end_of низ таблицы и html-файла */
            tt-PromoCriterion.idAction       = p-sub:idAction
            tt-PromoCriterion.discont        = p-sub:discont
            tt-PromoCriterion.mincrit        = p-sub:mincrit
+           tt-PromoCriterion.maxcrit        = p-sub:maxcrit
            tt-PromoCriterion.sub            = p-subs:SubjectObjCurr
            tt-PromoCriterion.mode           = p-sub:Mode
            tt-PromoCriterion.db-num         = p-sub:db-num
@@ -1902,7 +1914,8 @@ end . /* end_of низ таблицы и html-файла */
            v-sub:ID       = tt-PromoCriterion.id              
            v-sub:idAction = tt-PromoCriterion.idAction        
            v-sub:discont  = tt-PromoCriterion.discont         
-           v-sub:mincrit  = tt-PromoCriterion.mincrit         
+           v-sub:mincrit  = tt-PromoCriterion.mincrit       
+           v-sub:maxcrit  = tt-PromoCriterion.maxcrit  
            v-sub:Mode     = tt-PromoCriterion.mode            
            
            
@@ -2728,7 +2741,7 @@ method public void printgds(input iName as character ):
          end.   
      end.             
   end  method.
-  method public void GetCrit(output oMinCrit as character,output oDiscont as character ):
+  method public void GetCrit(output oMinCrit as character, output oDiscont as character ):
     if available tt-promocriterion
     then assign 
        oMinCrit = string(tt-promocriterion.mincrit)

@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 296f0acf624c, 1503, rls $
+$Author: SMMolotkov $
+$Date: Thu Aug 30 10:41:48 2018 +0300 $
+$Workfile: promocriterionstorage.cls $
+$Archive: ibs/th/gbl/storage/promocriterionstorage.cls $
  
 Storage Criterion Action
 
@@ -23,11 +23,11 @@ using ibs.th.ref.promo.*.
 block-level on error undo, throw.
 
 class ibs.th.gbl.storage.promoCriterionstorage: 
-  define variable vss-revision    as character no-undo initial "$Revision$":U .
-  define variable vss-author      as character no-undo initial "$Author$":U .
-  define variable vss-date        as character no-undo initial "$Date$":U .
-  define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-  define variable vss-archive     as character no-undo initial "$Archive$":U . 
+  define variable vss-revision    as character no-undo initial "$Revision: 296f0acf624c, 1503, rls $":U .
+  define variable vss-author      as character no-undo initial "$Author: SMMolotkov $":U .
+  define variable vss-date        as character no-undo initial "$Date: Thu Aug 30 10:41:48 2018 +0300 $":U .
+  define variable vss-workfile    as character no-undo initial "$Workfile: promocriterionstorage.cls $":U .
+  define variable vss-archive     as character no-undo initial "$Archive: ibs/th/gbl/storage/promocriterionstorage.cls $":U . 
   define variable vss-description as character no-undo initial "Storage Criterion Action". 
 
   { cmp/str-glbl.i class }
@@ -184,7 +184,7 @@ class ibs.th.gbl.storage.promoCriterionstorage:
   
     
   method private void setDataStorage (input inpromoCriterionObj as class promoCriterionsub, buffer inbf_promoCriterion for ub.promoCriterion ):
-    
+    define buffer buf_promoAttr for ub.PromoAttr .
     assign
         inbf_promoCriterion.mincrit         = inpromoCriterionObj:mincrit
         inbf_promoCriterion.discont         = inpromoCriterionObj:discont
@@ -193,6 +193,20 @@ class ibs.th.gbl.storage.promoCriterionstorage:
         
     .
     validate inbf_promoCriterion.
+
+    find first buf_promoAttr no-lock where buf_promoAttr.attr-code = "maxcrit" and
+    buf_promoAttr.p-key = string(inbf_promoCriterion.id) + {&delim-key} + 
+                          string(inbf_promoCriterion.db-num)  and
+    buf_promoAttr.tablename = "promoCriterion" no-error .
+    if not available (buf_promoAttr) then do:
+      create buf_promoAttr .
+      assign
+      buf_promoAttr.attr-code = "maxcrit"
+      buf_promoAttr.p-key = string(inbf_promoCriterion.id) + {&delim-key} + string(inbf_promoCriterion.db-num)
+      buf_promoAttr.tablename = "promoCriterion"
+      .
+    end.  
+     buf_promoAttr.attr-value = string(inpromoCriterionObj:maxcrit).
     end.
   
   method private class promoCriterionsub getDataStorage ( buffer inbf_promoCriterion for ub.promoCriterion ):
@@ -203,6 +217,13 @@ class ibs.th.gbl.storage.promoCriterionstorage:
   end.
   
   method private class promoCriterionsub getDataStorage (inpromoCriterionSubObj as class promoCriterionsub,buffer inbf_promoCriterion for ub.promoCriterion ): 
+    define buffer buf_promoAttr for ub.PromoAttr .
+  
+    find first buf_promoAttr no-lock where buf_promoAttr.attr-code = "maxcrit" and
+    buf_promoAttr.p-key = string(inbf_promoCriterion.id) + {&delim-key} + 
+                          string(inbf_promoCriterion.db-num)  and
+    buf_promoAttr.tablename = "promoCriterion" no-error .
+    if available (buf_promoAttr) then inpromoCriterionSubObj:maxcrit       = decimal(buf_promoAttr.attr-value) .
     assign 
       inpromoCriterionSubObj:ID            = inbf_promoCriterion.id
       inpromoCriterionSubObj:mincrit       = inbf_promoCriterion.mincrit
