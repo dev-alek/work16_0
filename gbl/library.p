@@ -9795,7 +9795,7 @@ procedure getListTaxRateValue :
           and buf_tax.status_  = {&current-status} no-lock,
         each buf_tax-rate where 
              buf_tax-rate.tax-code = buf_tax.tax-code
-         and buf_tax-rate.status_ = {&current-status}
+         and buf_tax-rate.status_ <> {&deleted-status}
         no-lock,
         last buf_tax-rate-value where
              buf_tax-rate-value.tax-code = buf_tax-rate.tax-code 
