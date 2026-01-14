@@ -555,8 +555,12 @@ end.*/
            copylog(ttrun.task ,ttrun.num, ttrun.filelog).
           /* os-delete value(vFile).*/
           writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WorkEnd").
+          if     ttrun.fstatusItem ne "WaitReadLog"
+             and ttrun.fstatusItem ne "WorkEnd"
+          then
+             mRunProc = mRunProc - 1.
           ttrun.fstatusItem = "WorkEnd".
-          mRunProc = mRunProc - 1.
+          
           
           
         end. 
@@ -881,8 +885,12 @@ Phase 1 of Load completed.  Working.  Please wait ...~
 /*                 return no.                                                                                       */
 /*            end.                                                                                                  */
             writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WaitReadLog").
+            if     ttrun.fstatusItem ne "WaitReadLog"
+               and ttrun.fstatusItem ne "WorkEnd"
+            then
+               mRunProc = mRunProc - 1.
             ttrun.fstatusItem = "WaitReadLog".
-            mRunProc = mRunProc - 1.
+            
          end.
          else do:
             vOk = no.
@@ -903,8 +911,12 @@ Phase 1 of Load completed.  Working.  Please wait ...~
             if termprc(MyWorkDir,ttrun.task , ttrun.num, ttRun.fpid)
             then do:
                writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WaitReadLog").
+               if     ttrun.fstatusItem ne "WaitReadLog"
+                  and ttrun.fstatusItem ne "WorkEnd"
+               then
+                  mRunProc = mRunProc - 1.
                ttrun.fstatusItem = "WaitReadLog".
-               mRunProc = mRunProc - 1.
+               
             end.
          end.
          PubFileLog(ttrun.task, ttrun.num, yes).
@@ -1034,8 +1046,13 @@ end.
          if FileExists(vFile)
          then do:
             writeStatusProces("Change status", ttrun.task, ttrun.num, ttrun.fstatusItem + " -> " + "WaitReadLog").
+            if     ttrun.fstatusItem ne "WaitReadLog"
+               and ttrun.fstatusItem ne "WorkEnd"
+            then
+               mRunProc = mRunProc - 1.
+            
             ttrun.fstatusItem = "WaitReadLog".
-            mRunProc = mRunProc - 1.
+            
          end. 
       end.
       block-run:
