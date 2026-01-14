@@ -371,6 +371,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
         this-object:tableLayoutPanel7:RowStyles:Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType:Absolute, Progress.Util.CastUtil:ToSingle(20))).
         this-object:tableLayoutPanel7:Size = new System.Drawing.Size(448, 59).
         this-object:tableLayoutPanel7:TabIndex = 1.
+        this-object:tableLayoutPanel7:Paint:Subscribe(this-object:tableLayoutPanel7_Paint).
         /*  */
         /* checkBox1 */
         /*  */
@@ -711,6 +712,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
         else    
           m-promo-trg:ViewPage6(yes). 
         case ttMethodCalc.code: 
+            
           when 1 then 
             do: // "Скидка процентом" 
               Show_Panet_SelectConditonItem(1).
@@ -814,7 +816,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                   then 
                 do:
                   ucMain7:INIT_Panel(checkBox1:Checked, yes, yes, no).
-                  ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапазон действия, руб#Скидка, %").
+                  ucMain7:PublicEvent("CritLable", string(checkBox1:checked) + "#Сумма, руб#Диапазон действия, руб#Диапазон действия, руб#Скидка, %").
                   assign
                     label5:Visible    = true
                     checkBox1:Visible = label5:Visible
@@ -874,7 +876,7 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                 then 
               do:           
                 ucMain7:INIT_Panel(checkBox1:Checked, yes, yes, no).
-                ucMain7:PublicEvent("CritLable", "Сумма, руб#Диапазон действия, руб#Скидка, руб").
+                ucMain7:PublicEvent("CritLable", string(checkBox1:checked) + "#Сумма, руб#Диапазон действия, руб#Диапазон действия, руб#Скидка, руб").
                 vLoadForm = yes.
               end.
               else if tttypeCond.code = 4 // "Скидка по ШК"
@@ -1057,5 +1059,16 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
     RETURN.
 
   END METHOD.
+
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	@VisualDesigner.
+	method private void tableLayoutPanel7_Paint( input sender as System.Object, input e as System.Windows.Forms.PaintEventArgs ):
+		
+		return.
+
+	end method.
 
 END CLASS.

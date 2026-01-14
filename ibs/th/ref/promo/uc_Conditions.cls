@@ -219,7 +219,7 @@ CLASS ibs.th.ref.promo.uc_Conditions INHERITS UserControl:
             button1:enabled = not iModeview 
             button2:enabled = not iModeview
             button3:enabled = not iModeview .
-        if m-promo-trg:typeCond <> 1 then THIS-OBJECT:dataGridView1:Columns[2]:Visible = no .
+        if m-promo-trg:typeCond <> 1 and m-promo-trg:typeCond <> 2 then THIS-OBJECT:dataGridView1:Columns[2]:Visible = no .
         else THIS-OBJECT:dataGridView1:Columns[2]:Visible = true .
             /*   THIS-OBJECT:dataGridView1:Columns[0]:ReadOnly = iModeview
                THIS-OBJECT:dataGridView1:Columns[2]:ReadOnly = iModeview */
