@@ -60,9 +60,9 @@ define variable v-fact-order-end    as decimal   no-undo .
 define variable ostatok             as decimal   no-undo .
 define variable v-full-path-RepView as character no-undo.   /* Полный путь к файлу Просмотровщика (отчётов) */
 define variable v-file-name-rep-htm as character no-undo.   /* Полный путь к файлу отчёта */
-define variable g#report-num        as integer   no-undo.            /* Номер отчёта (получим стандартной процедурой ТН) */
-define variable v-report-name       as character no-undo.         /* Наименование отчёта */
-define variable v-period            as character no-undo.              /* Период за который формируется отчёт */
+define variable g#report-num        as integer   no-undo.   /* Номер отчёта (получим стандартной процедурой ТН) */
+define variable v-report-name       as character no-undo.   /* Наименование отчёта */
+define variable v-period            as character no-undo.   /* Период за который формируется отчёт */
 define variable vDocType            as character no-undo .
 define variable vDaySale            as integer   no-undo .
 define variable vDateStart          as date      no-undo .
@@ -154,7 +154,7 @@ run factord-end-day in this-procedure ( input vdateEnd
 
 /* Сбор данных */
 for each gds-list:
-    find first tt-zakaz no-lock where tt-zakaz.gds-code = gds-list.gds-code no-error .
+    find first tt-zakaz no-lock where tt-zakaz.gds-code = gds-list.gds-code and tt-zakaz.contract-code = gds-list.contract-code no-error .
     if available (tt-zakaz) then next .
     create tt-zakaz .
     assign
@@ -178,7 +178,7 @@ for each gds-list:
         tt-zakaz.contract-prn-code = gds-list.contract
         tt-zakaz.contract-code     = gds-list.contract-code
         .
-  
+
     /*Остаток на текущий день*/
     for each buf_cli-gds no-lock where buf_cli-gds.artic = gds-list.artic and
         buf_cli-gds.prod-code = gds-list.prod-code and

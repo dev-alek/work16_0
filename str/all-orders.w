@@ -60,17 +60,17 @@ define variable vss-description as character no-undo init "Список Заказов".
 { rep/tt-zakaz.i new }
 { str/edo.i }
 /* Local Variable Definitions ---                                       */
-define variable v-rid-list   as character no-undo .
-define variable row_order    as rowid     no-undo .
-define variable recid_order  as integer   no-undo .
-define variable ii           as integer   no-undo .
-define variable v-cli        as logical   no-undo .
-define variable filter-point as character no-undo.
-define variable Status_      as character no-undo .
+define variable v-rid-list      as character no-undo .
+define variable row_order       as rowid     no-undo .
+define variable recid_order     as integer   no-undo .
+define variable ii              as integer   no-undo .
+define variable v-cli           as logical   no-undo .
+define variable filter-point    as character no-undo.
+define variable Status_         as character no-undo .
 DEFINE buffer buf_order for ub.order-doc.
 define buffer buf_goods for ub.goods .
-define variable bcol          as handle    extent no-undo.
-define variable hBrowse       as handle    no-undo.
+define variable bcol    as handle extent no-undo.
+define variable hBrowse as handle no-undo.
 define buffer db-attr for ub.db-attr .
 define variable StatusOrder as class ibs.th.str.order.sts.order no-undo .
 { rep/crt-orderLine.i }
@@ -156,7 +156,7 @@ FUNCTION cli-name RETURNS character
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD prep-nameorcode d-order
 FUNCTION prep-nameorcode RETURNS CHARACTER
-  ( input p-nameorcode as character )  FORWARD.
+    ( input p-nameorcode as character )  FORWARD.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -167,166 +167,166 @@ FUNCTION prep-nameorcode RETURNS CHARACTER
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON b-add 
-     LABEL "&Добавить" 
-     SIZE 10 BY 1.
+    LABEL "&Добавить" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-cli 
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "..." 
-     SIZE 3.5 BY 1.04.
+    IMAGE-UP FILE "btn-down-arrow":U
+    IMAGE-DOWN FILE "btn-down-arrow":U
+    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+    LABEL "..." 
+    SIZE 3.5 BY 1.04.
 
 DEFINE BUTTON b-copy 
-     LABEL "&Копия" 
-     SIZE 10 BY 1.
+    LABEL "&Копия" 
+    SIZE 10 BY 1.
 
 DEFINE VARIABLE statusNotif AS LOGICAL INITIAL true 
-  LABEL "Уведомления о статусах" 
-  VIEW-AS TOGGLE-BOX
-  SIZE 27.5 BY 1
-  FONT 1 NO-UNDO.
+    LABEL "Уведомления о статусах" 
+    VIEW-AS TOGGLE-BOX
+    SIZE 27.5 BY 1
+    FONT 1 NO-UNDO.
      
 DEFINE BUTTON b-date-End 
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "..." 
-     SIZE 3.5 BY 1.04.
+    IMAGE-UP FILE "btn-down-arrow":U
+    IMAGE-DOWN FILE "btn-down-arrow":U
+    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+    LABEL "..." 
+    SIZE 3.5 BY 1.04.
 
 DEFINE BUTTON b-date-Start 
-     IMAGE-UP FILE "btn-down-arrow":U
-     IMAGE-DOWN FILE "btn-down-arrow":U
-     IMAGE-INSENSITIVE FILE "btn-down-arrow":U
-     LABEL "..." 
-     SIZE 3.5 BY 1.04.
+    IMAGE-UP FILE "btn-down-arrow":U
+    IMAGE-DOWN FILE "btn-down-arrow":U
+    IMAGE-INSENSITIVE FILE "btn-down-arrow":U
+    LABEL "..." 
+    SIZE 3.5 BY 1.04.
 
 DEFINE BUTTON b-del 
-     LABEL "&Удалить" 
-     SIZE 10 BY 1.
+    LABEL "&Удалить" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-exit AUTO-GO 
-     LABEL "&Выход" 
-     SIZE 10 BY 1.
+    LABEL "&Выход" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-help 
-     LABEL "Помощь":L 
-     SIZE 7 BY 1.
+    LABEL "Помощь":L 
+    SIZE 7 BY 1.
 
 DEFINE BUTTON b-hist 
-     IMAGE-UP FILE "cmp/b-hist.bmp":U
-     IMAGE-DOWN FILE "cmp/b-hist.bmp":U
-     IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
-     LABEL "&История" 
-     SIZE 3 BY 1.
+    IMAGE-UP FILE "cmp/b-hist.bmp":U
+    IMAGE-DOWN FILE "cmp/b-hist.bmp":U
+    IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
+    LABEL "&История" 
+    SIZE 3 BY 1.
 
 DEFINE BUTTON b-lookup 
-     LABEL "&Просмотр" 
-     SIZE 10 BY 1.
+    LABEL "&Просмотр" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-mark 
-     LABEL "&*" 
-     SIZE 3 BY 1.
+    LABEL "&*" 
+    SIZE 3 BY 1.
 
 DEFINE BUTTON b-markGoods 
-     LABEL "&Сбросить" 
-     SIZE 10 BY 1 TOOLTIP "Сбросить фильтры".
+    LABEL "&Сбросить" 
+    SIZE 10 BY 1 TOOLTIP "Сбросить фильтры".
 
 DEFINE BUTTON b-reset 
-     LABEL "&Обновить" 
-     SIZE 10 BY 1 TOOLTIP "Сбросить фильтры".
+    LABEL "&Обновить" 
+    SIZE 10 BY 1 TOOLTIP "Сбросить фильтры".
 
 DEFINE BUTTON b-sch 
-     LABEL "&Фильтр" 
-     SIZE 7 BY 1.
+    LABEL "&Фильтр" 
+    SIZE 7 BY 1.
 
 DEFINE BUTTON b-sel 
-     LABEL "&Выбор" 
-     SIZE 10 BY 1.
+    LABEL "&Выбор" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-send 
-     LABEL "&Отправить" 
-     SIZE 10 BY 1.
+    LABEL "&Отправить" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON b-update 
-     LABEL "&Изменить" 
-     SIZE 10 BY 1.
+    LABEL "&Изменить" 
+    SIZE 10 BY 1.
 
 DEFINE BUTTON bt-no-sel-all 
-     LABEL "+" 
-     SIZE 3 BY 1.
+    LABEL "+" 
+    SIZE 3 BY 1.
 
 DEFINE BUTTON bt-not-sel-desel-all 
-     LABEL "-" 
-     SIZE 3 BY 1.
+    LABEL "-" 
+    SIZE 3 BY 1.
 
-DEFINE VARIABLE c-status AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
-     LABEL "Статус" 
-     VIEW-AS COMBO-BOX INNER-LINES 5
-     LIST-ITEM-PAIRS "Все","0",
-                     "Новый","1",
-                     "Отправлен","2",
-                     "Подтверждено без изменений","3",
-                     "Есть изменения","4",
-                     "Отклонен","5",
-                     "Ожидает поставку","6",
-                     "Поставка принята","7",
-                     "Получено поставщиком","8"
-     DROP-DOWN-LIST
-     SIZE 32 BY 1 NO-UNDO.
+DEFINE VARIABLE c-status     AS CHARACTER FORMAT "X(256)":U INITIAL "0" 
+    LABEL "Статус" 
+    VIEW-AS COMBO-BOX INNER-LINES 5
+    LIST-ITEM-PAIRS "Все","0",
+    "Новый","1",
+    "Отправлен","2",
+    "Подтверждено без изменений","3",
+    "Есть изменения","4",
+    "Отклонен","5",
+    "Ожидает поставку","6",
+    "Поставка принята","7",
+    "Получено поставщиком","8"
+    DROP-DOWN-LIST
+    SIZE 32 BY 1 NO-UNDO.
 
-DEFINE VARIABLE cli-code AS CHARACTER FORMAT "x(20)" 
-     LABEL "Поставщик" 
-     VIEW-AS FILL-IN 
-     SIZE 10.88 BY 1.
+DEFINE VARIABLE cli-code     AS CHARACTER FORMAT "x(20)" 
+    LABEL "Поставщик" 
+    VIEW-AS FILL-IN 
+    SIZE 10.88 BY 1.
 
-DEFINE VARIABLE cli-name AS CHARACTER FORMAT "x(40)" 
-     VIEW-AS FILL-IN 
-     SIZE 47 BY 1.
+DEFINE VARIABLE cli-name     AS CHARACTER FORMAT "x(40)" 
+    VIEW-AS FILL-IN 
+    SIZE 47 BY 1.
 
-DEFINE VARIABLE cli-type AS CHARACTER FORMAT "x(3)" 
-     VIEW-AS FILL-IN 
-     SIZE 4 BY 1.
+DEFINE VARIABLE cli-type     AS CHARACTER FORMAT "x(3)" 
+    VIEW-AS FILL-IN 
+    SIZE 4 BY 1.
 
-DEFINE VARIABLE Date-End AS DATE FORMAT "99/99/9999":U 
-     LABEL "по" 
-     VIEW-AS FILL-IN 
-     SIZE 10.88 BY 1 NO-UNDO.
+DEFINE VARIABLE Date-End     AS DATE      FORMAT "99/99/9999":U 
+    LABEL "по" 
+    VIEW-AS FILL-IN 
+    SIZE 10.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE date-Start AS DATE FORMAT "99/99/9999":U 
-     LABEL "За период с" 
-     VIEW-AS FILL-IN 
-     SIZE 10.88 BY 1 NO-UNDO.
+DEFINE VARIABLE date-Start   AS DATE      FORMAT "99/99/9999":U 
+    LABEL "За период с" 
+    VIEW-AS FILL-IN 
+    SIZE 10.88 BY 1 NO-UNDO.
 
-DEFINE VARIABLE f-mark AS CHARACTER FORMAT "X(256)":U 
-     VIEW-AS FILL-IN 
-     SIZE 56.38 BY 1 NO-UNDO.
+DEFINE VARIABLE f-mark       AS CHARACTER FORMAT "X(256)":U 
+    VIEW-AS FILL-IN 
+    SIZE 56.38 BY 1 NO-UNDO.
 
-DEFINE VARIABLE mark-num AS INTEGER FORMAT "->>>9":U INITIAL 0 
-      VIEW-AS TEXT 
-     SIZE 4 BY 1 NO-UNDO.
+DEFINE VARIABLE mark-num     AS INTEGER   FORMAT "->>>9":U INITIAL 0 
+    VIEW-AS TEXT 
+    SIZE 4 BY 1 NO-UNDO.
 
 DEFINE VARIABLE num-contract AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Номер договора" 
-     VIEW-AS FILL-IN 
-     SIZE 32 BY 1 NO-UNDO.
+    LABEL "Номер договора" 
+    VIEW-AS FILL-IN 
+    SIZE 32 BY 1 NO-UNDO.
 
-DEFINE VARIABLE num-order AS CHARACTER FORMAT "X(256)":U 
-     LABEL "Номер заказа" 
-     VIEW-AS FILL-IN 
-     SIZE 32 BY 1 NO-UNDO.
+DEFINE VARIABLE num-order    AS CHARACTER FORMAT "X(256)":U 
+    LABEL "Номер заказа" 
+    VIEW-AS FILL-IN 
+    SIZE 32 BY 1 NO-UNDO.
 
-DEFINE VARIABLE r-goods AS INTEGER 
-     VIEW-AS RADIO-SET HORIZONTAL
-     RADIO-BUTTONS 
-          "Код товара", 0,
-"Название товара", 1
-     SIZE 35 BY 1 NO-UNDO.
+DEFINE VARIABLE r-goods      AS INTEGER 
+    VIEW-AS RADIO-SET HORIZONTAL
+    RADIO-BUTTONS 
+    "Код товара", 0,
+    "Название товара", 1
+    SIZE 35 BY 1 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY br-order FOR 
-      X_order SCROLLING.
+    X_order SCROLLING.
 &ANALYZE-RESUME
 
 /* Browse definitions                                                   */
@@ -352,42 +352,42 @@ DEFINE BROWSE br-order
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-order
-     b-exit AT ROW 1 COL 1.5 WIDGET-ID 4
-     b-add AT ROW 1 COL 11.5 WIDGET-ID 28
-     b-sel AT ROW 1 COL 11.5 WIDGET-ID 8
-     b-update AT ROW 1 COL 21.5 WIDGET-ID 6
-     b-lookup AT ROW 1 COL 31.5 WIDGET-ID 10
-     b-copy AT ROW 1 COL 41.5 WIDGET-ID 12
-     b-del AT ROW 1 COL 51.5 WIDGET-ID 14
-     b-send AT ROW 1 COL 61.5 WIDGET-ID 30
-     b-reset AT ROW 1 COL 71.5 WIDGET-ID 30
-     b-sch AT ROW 1 COL 114 WIDGET-ID 16
-     b-help AT ROW 1 COL 121 WIDGET-ID 18
-     b-hist AT ROW 1 COL 128 WIDGET-ID 18
-     b-date-Start AT ROW 2.46 COL 26.13 WIDGET-ID 252
-     date-Start AT ROW 2.5 COL 13.13 COLON-ALIGNED WIDGET-ID 238
-     Date-End AT ROW 2.5 COL 32.5 COLON-ALIGNED WIDGET-ID 36
-     b-date-End AT ROW 2.5 COL 45.75 WIDGET-ID 250
-     c-status AT ROW 2.5 COL 97 COLON-ALIGNED WIDGET-ID 228
-     b-cli AT ROW 3.61 COL 26.13 WIDGET-ID 240
-     statusNotif AT ROW 1 COL 99 WIDGET-ID 240
-     cli-code AT ROW 3.67 COL 13.13 COLON-ALIGNED WIDGET-ID 244
-     cli-type AT ROW 3.67 COL 27.75 COLON-ALIGNED NO-LABEL WIDGET-ID 248
-     cli-name AT ROW 3.67 COL 80.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 246
-     num-order AT ROW 3.67 COL 97 COLON-ALIGNED WIDGET-ID 254
-     num-contract AT ROW 4.79 COL 97 COLON-ALIGNED WIDGET-ID 256
-     r-goods AT ROW 4.96 COL 15.38 NO-LABEL WIDGET-ID 260
-     bt-no-sel-all AT ROW 6 COL 5 WIDGET-ID 22 NO-TAB-STOP 
-     bt-not-sel-desel-all AT ROW 6 COL 8 WIDGET-ID 24 NO-TAB-STOP 
-     b-mark AT ROW 6 COL 11 WIDGET-ID 26 NO-TAB-STOP 
-     f-mark AT ROW 6 COL 13.13 COLON-ALIGNED NO-LABEL WIDGET-ID 258
-     b-markGoods AT ROW 6 COL 71.5 WIDGET-ID 266
-     br-order AT ROW 7 COL 1.5 WIDGET-ID 200
-     mark-num AT ROW 6 COL 1 NO-LABEL WIDGET-ID 20
-     SPACE(127.12) SKIP(23.10)
+    b-exit AT ROW 1 COL 1.5 WIDGET-ID 4
+    b-add AT ROW 1 COL 11.5 WIDGET-ID 28
+    b-sel AT ROW 1 COL 11.5 WIDGET-ID 8
+    b-update AT ROW 1 COL 21.5 WIDGET-ID 6
+    b-lookup AT ROW 1 COL 31.5 WIDGET-ID 10
+    b-copy AT ROW 1 COL 41.5 WIDGET-ID 12
+    b-del AT ROW 1 COL 51.5 WIDGET-ID 14
+    b-send AT ROW 1 COL 61.5 WIDGET-ID 30
+    b-reset AT ROW 1 COL 71.5 WIDGET-ID 30
+    b-sch AT ROW 1 COL 114 WIDGET-ID 16
+    b-help AT ROW 1 COL 121 WIDGET-ID 18
+    b-hist AT ROW 1 COL 128 WIDGET-ID 18
+    b-date-Start AT ROW 2.46 COL 26.13 WIDGET-ID 252
+    date-Start AT ROW 2.5 COL 13.13 COLON-ALIGNED WIDGET-ID 238
+    Date-End AT ROW 2.5 COL 32.5 COLON-ALIGNED WIDGET-ID 36
+    b-date-End AT ROW 2.5 COL 45.75 WIDGET-ID 250
+    c-status AT ROW 2.5 COL 97 COLON-ALIGNED WIDGET-ID 228
+    b-cli AT ROW 3.61 COL 26.13 WIDGET-ID 240
+    statusNotif AT ROW 1 COL 99 WIDGET-ID 240
+    cli-code AT ROW 3.67 COL 13.13 COLON-ALIGNED WIDGET-ID 244
+    cli-type AT ROW 3.67 COL 27.75 COLON-ALIGNED NO-LABEL WIDGET-ID 248
+    cli-name AT ROW 3.67 COL 80.5 RIGHT-ALIGNED NO-LABEL WIDGET-ID 246
+    num-order AT ROW 3.67 COL 97 COLON-ALIGNED WIDGET-ID 254
+    num-contract AT ROW 4.79 COL 97 COLON-ALIGNED WIDGET-ID 256
+    r-goods AT ROW 4.96 COL 15.38 NO-LABEL WIDGET-ID 260
+    bt-no-sel-all AT ROW 6 COL 5 WIDGET-ID 22 NO-TAB-STOP 
+    bt-not-sel-desel-all AT ROW 6 COL 8 WIDGET-ID 24 NO-TAB-STOP 
+    b-mark AT ROW 6 COL 11 WIDGET-ID 26 NO-TAB-STOP 
+    f-mark AT ROW 6 COL 13.13 COLON-ALIGNED NO-LABEL WIDGET-ID 258
+    b-markGoods AT ROW 6 COL 71.5 WIDGET-ID 266
+    br-order AT ROW 7 COL 1.5 WIDGET-ID 200
+    mark-num AT ROW 6 COL 1 NO-LABEL WIDGET-ID 20
+    SPACE(127.12) SKIP(23.10)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
-         TITLE "Реестр заказов" WIDGET-ID 100.
+    SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+    TITLE "Реестр заказов" WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -412,11 +412,11 @@ DEFINE FRAME d-order
    FRAME-NAME                                                           */
 /* BROWSE-TAB br-order b-markGoods d-order */
 ASSIGN 
-       FRAME d-order:SCROLLABLE       = FALSE
-       FRAME d-order:HIDDEN           = TRUE.
+    FRAME d-order:SCROLLABLE = FALSE
+    FRAME d-order:HIDDEN     = TRUE.
 
 ASSIGN 
-       br-order:COLUMN-RESIZABLE IN FRAME d-order       = TRUE.
+    br-order:COLUMN-RESIZABLE IN FRAME d-order = TRUE.
 
 /* SETTINGS FOR BUTTON bt-no-sel-all IN FRAME d-order
    NO-ENABLE                                                            */
@@ -453,7 +453,7 @@ ASSIGN
 &Scoped-define SELF-NAME d-order
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL d-order d-order
 ON WINDOW-CLOSE OF FRAME d-order /* Список заказов */
-DO:
+    DO:
         APPLY "END-ERROR":U TO SELF.
     END.
 
@@ -464,9 +464,9 @@ DO:
 &Scoped-define SELF-NAME b-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-add d-order
 ON CHOOSE OF b-add IN FRAME d-order /* Добавить */
-DO:
-    define variable varlog as logical no-undo .
-    { gbl/chk-actg.i
+    DO:
+        define variable varlog as logical no-undo .
+        { gbl/chk-actg.i
                   v-cntxt-db-num
                   v-cntxt-userid
                   {&action-head-code-main}
@@ -493,7 +493,7 @@ DO:
 &Scoped-define SELF-NAME b-cli
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cli d-order
 ON CHOOSE OF b-cli IN FRAME d-order /* ... */
-DO:
+    DO:
         define variable v-types   as character no-undo .
         define variable ref-list  as character no-undo .
         define variable ref-rec   as integer   no-undo .
@@ -533,7 +533,7 @@ DO:
 &Scoped-define SELF-NAME b-copy
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-copy d-order
 ON CHOOSE OF b-copy IN FRAME d-order /* Копия */
-DO:
+    DO:
         define variable Log-Res as logical no-undo .
         define buffer bf_order           for ub.order-doc .
         define buffer bf_order-line      for ub.order-line .
@@ -542,11 +542,11 @@ DO:
         define buffer buf_X_order        for X_order.
 
         if num-entries(v-rid-list) = 1 then
-           find first buf_X_order no-lock where
-                      recid(buf_X_order) = int(v-rid-list) no-error.
+            find first buf_X_order no-lock where
+                recid(buf_X_order) = int(v-rid-list) no-error.
         else if available (X_order) then 
-           find first buf_X_order no-lock where
-                      recid(buf_X_order) = recid(X_order) no-error.
+                find first buf_X_order no-lock where
+                    recid(buf_X_order) = recid(X_order) no-error.
 
         if available (buf_X_order) then 
         do:
@@ -568,70 +568,70 @@ DO:
            
             if not log-res then return no-apply .
             empty temp-table tt-zakaz .
-                create bf_order .
-                assign 
-                    bf_order.doc-code = next-value (s-order-code, {&db-name_schema}) 
-                    bf_order.db-num   = v-cntxt-db-num.
+            create bf_order .
+            assign 
+                bf_order.doc-code = next-value (s-order-code, {&db-name_schema}) 
+                bf_order.db-num   = v-cntxt-db-num.
 
-                buffer-copy buf_X_order except doc-code db-num order-item to bf_order .
-                assign
-                    bf_order.user-id  = v-cntxt-userid
-                    bf_order.sts      = 1
-                    bf_order.doc-date = now
-                    bf_order.order-date = today + 1
-                    .
-                    date(entry(1,bf_order.params,{&delim-par})) = today .
-                empty temp-table gds-list.
-                for each ub.order-line no-lock where 
-                         ub.order-line.db-num = buf_X_order.db-num and
-                         ub.order-line.doc-code = buf_X_order.doc-code:
-                    find first buf_goods no-lock where buf_goods.gds-code = ub.order-line.gds-code no-error .
-                    if available (buf_goods) then 
+            buffer-copy buf_X_order except doc-code db-num order-item to bf_order .
+            assign
+                bf_order.user-id    = v-cntxt-userid
+                bf_order.sts        = 1
+                bf_order.doc-date   = now
+                bf_order.order-date = today + 1
+                .
+            date(entry(1,bf_order.params,{&delim-par})) = today .
+            empty temp-table gds-list.
+            for each ub.order-line no-lock where 
+                ub.order-line.db-num = buf_X_order.db-num and
+                ub.order-line.doc-code = buf_X_order.doc-code:
+                find first buf_goods no-lock where buf_goods.gds-code = ub.order-line.gds-code no-error .
+                if available (buf_goods) then 
+                do:
+                    find first gds-list where gds-list.gds-code = buf_goods.gds-code and gds-list.contract = buf_X_order.contract-prn-code no-error .
+                    if not available (gds-list) then
                     do:
-                        find first gds-list where gds-list.gds-code = buf_goods.gds-code and gds-list.contract = buf_X_order.contract-prn-code no-error .
-                        if not available (gds-list) then
-                        do:
-                            create gds-list .
-                            buffer-copy buf_goods to gds-list .
-                            gds-list.contract = buf_X_order.contract-prn-code .
-                            gds-list.contract-code = buf_X_order.contract-code .
-                        end.                    
-                    end.
-                
+                        create gds-list .
+                        buffer-copy buf_goods to gds-list .
+                        gds-list.contract = buf_X_order.contract-prn-code .
+                        gds-list.contract-code = buf_X_order.contract-code .
+                    end.                    
                 end.
                 
-                /* Применение параметров */
-                if bf_order.params <> "" then
-                    run crt-orderLine (
-                        input bf_order.params,
-                        input bf_order.doc-code,
-                        input bf_order.db-num,
-                        input table tt-gds-list) no-error .
+            end.
+                
+            /* Применение параметров */
+            if bf_order.params <> "" then
+                run crt-orderLine (
+                    input bf_order.params,
+                    input bf_order.doc-code,
+                    input bf_order.db-num,
+                    input table tt-gds-list) no-error .
             
-                for each ub.order-doc-attr no-lock where 
-                         ub.order-doc-attr.db-num = buf_X_order.db-num and 
-                         ub.order-doc-attr.doc-code = buf_X_order.doc-code and 
-                         ub.order-doc-attr.attr-code <> "copyOrder":
-                    create bf_order-attr .
-                    bf_order-attr.doc-code = bf_order.doc-code .
-                    buffer-copy ub.order-doc-attr except doc-code to bf_order-attr .
-                
-                end.
-                for each ub.order-line-attr no-lock where 
-                         ub.order-line-attr.db-num   = buf_X_order.db-num and
-                         ub.order-line-attr.doc-code = buf_X_order.doc-code:
-                    create bf_order-line-attr .
-                    bf_order-line-attr.doc-code = bf_order.doc-code .
-                    buffer-copy ub.order-line-attr except doc-code to bf_order-line-attr .
-                end. 
+            for each ub.order-doc-attr no-lock where 
+                ub.order-doc-attr.db-num = buf_X_order.db-num and 
+                ub.order-doc-attr.doc-code = buf_X_order.doc-code and 
+                ub.order-doc-attr.attr-code <> "copyOrder":
                 create bf_order-attr .
-                assign
-                    bf_order-attr.doc-code   = bf_order.doc-code
-                    bf_order-attr.db-num     = bf_order.db-num
-                    bf_order-attr.attr-code  = "copyOrder"
-                    bf_order-attr.attr-value = string(buf_X_order.doc-code)
-                    .        
-                {&OPEN-QUERY-br-order}
+                bf_order-attr.doc-code = bf_order.doc-code .
+                buffer-copy ub.order-doc-attr except doc-code to bf_order-attr .
+                
+            end.
+            for each ub.order-line-attr no-lock where 
+                ub.order-line-attr.db-num   = buf_X_order.db-num and
+                ub.order-line-attr.doc-code = buf_X_order.doc-code:
+                create bf_order-line-attr .
+                bf_order-line-attr.doc-code = bf_order.doc-code .
+                buffer-copy ub.order-line-attr except doc-code to bf_order-line-attr .
+            end. 
+            create bf_order-attr .
+            assign
+                bf_order-attr.doc-code   = bf_order.doc-code
+                bf_order-attr.db-num     = bf_order.db-num
+                bf_order-attr.attr-code  = "copyOrder"
+                bf_order-attr.attr-value = string(buf_X_order.doc-code)
+                .        
+            {&OPEN-QUERY-br-order}
 
             release bf_order .  
             release bf_order-line .  
@@ -654,7 +654,7 @@ DO:
 &Scoped-define SELF-NAME b-date-End
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-date-End d-order
 ON CHOOSE OF b-date-End IN FRAME d-order /* ... */
-DO:
+    DO:
         run sel-date in this-procedure
             (input Date-End :handle
             ,input ""
@@ -680,7 +680,7 @@ DO:
 &Scoped-define SELF-NAME b-date-Start
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-date-Start d-order
 ON CHOOSE OF b-date-Start IN FRAME d-order /* ... */
-DO:
+    DO:
         run sel-date in this-procedure
             (input Date-Start :handle
             ,input ""
@@ -706,13 +706,14 @@ DO:
 &Scoped-define SELF-NAME b-del
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-del d-order
 ON CHOOSE OF b-del IN FRAME d-order /* Удалить */
-DO:
+    DO:
         define buffer bf_order for ub.order-doc .
 
-        define variable Log-Res  as logical no-undo init yes.
-        define variable undelete as logical no-undo .
+        define variable Log-Res  as logical   no-undo init yes.
+        define variable undelete as logical   no-undo .
+        define variable zakazNum as character no-undo .
         
-    { gbl/chk-actg.i
+        { gbl/chk-actg.i
                   v-cntxt-db-num
                   v-cntxt-userid
                   {&action-head-code-main}
@@ -727,18 +728,19 @@ DO:
                   true
                   log-res
                 }  
-    if not log-res then return no-apply .
-        if v-rid-list = "" then do:
-        if AVAILABLE (X_order) then 
+        if not log-res then return no-apply .
+        if v-rid-list = "" then 
         do:
+            if AVAILABLE (X_order) then 
+            do:
                 if X_order.sts = 1 then
                 do:
-                    message "Удалить заказ " + string (X_order.doc-code) + "?"
+                    message "Удалить заказ с кодом ТН №" + string (X_order.doc-code) + "?"
                         view-as alert-box question buttons yes-no update undelete.
                     if undelete then
                     do:
                         find first bf_order exclusive-lock where bf_order.doc-code = X_order.doc-code and 
-                        bf_order.db-num = X_order.db-num no-error .
+                            bf_order.db-num = X_order.db-num no-error .
                         delete bf_order .
                         delete X_order .
                     end. /*if undelete then*/
@@ -748,25 +750,43 @@ DO:
                     message "Заказ №" + string (X_order.order-item) + " не может быть удален"
                         view-as alert-box.
                 end.
-        end.
+            end.
 
-        else
+            else
+            do:
+                message "Не выбран заказ для удаления"
+                    view-as alert-box.
+            end.
+        end.
+        if v-rid-list <> "" then 
         do:
-            message "Не выбран заказ для удаления"
-                view-as alert-box.
-        end.
-        end.
-        do ii = 0 to num-entries (v-rid-list):
+            do ii = 0 to num-entries (v-rid-list):
                 find first X_order where recid(X_order) = integer(entry (ii,v-rid-list)) and 
                     X_order.sts = StatusOrder:NewStatus:KeyIntDB no-error .    
-                    if available (X_order) then do:        
-                        find first bf_order exclusive-lock where bf_order.doc-code = X_order.doc-code and
-                        bf_order.db-num = X_order.db-num no-error .
-                        delete bf_order .
-                     end.   
+                if available (X_order) then 
+                do:   
+                    if zakazNum = "" then zakazNum = string(X_order.doc-code) .
+                    else zakazNum = zakazNum + ", " + string(X_order.doc-code) .     
+
+                end.   
+            end .               
+            message "Удалить заказы с кодом ТН №" + zakazNum + "?"
+                view-as alert-box question buttons yes-no update undelete.
+            if not undelete then return .
+         
+        end.
+        do ii = 0 to num-entries (v-rid-list):
+            find first X_order where recid(X_order) = integer(entry (ii,v-rid-list)) and 
+                X_order.sts = StatusOrder:NewStatus:KeyIntDB no-error .    
+            if available (X_order) then 
+            do:        
+                find first bf_order exclusive-lock where bf_order.doc-code = X_order.doc-code and
+                    bf_order.db-num = X_order.db-num no-error .
+                delete bf_order .
+            end.   
         end .    
-    v-rid-list = "" .
-    run init-sort .
+        v-rid-list = "" .
+        run init-sort .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -776,7 +796,7 @@ DO:
 &Scoped-define SELF-NAME b-hist
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist d-order
 ON CHOOSE OF b-hist IN FRAME d-order /* История */
-DO:
+    DO:
         define variable v-rid-list as character no-undo.
         if available (X_order) then
         do:
@@ -805,10 +825,10 @@ DO:
 &Scoped-define SELF-NAME b-lookup
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-lookup d-order
 ON CHOOSE OF b-lookup IN FRAME d-order /* Просмотр */
-DO:
+    DO:
         define variable Log-Res as logical no-undo .
 
-            { gbl/chk-actg.i
+        { gbl/chk-actg.i
                   v-cntxt-db-num
                   v-cntxt-userid
                   {&action-head-code-main}
@@ -823,22 +843,22 @@ DO:
                   true
                   log-res
                 }  
-            if not log-res then return no-apply .
+        if not log-res then return no-apply .
             
         if available (X_order) then 
         do:
      
-                run str/order-doc.w (input parparentproc,
-                    input X_order.doc-code,
-                    input {&lookup}
-                    )  .
-            end.
-            else 
-            do: 
-                message "Не выбран заказ"
-                    view-as alert-box.  
-                return no-apply .
-            end.
+            run str/order-doc.w (input parparentproc,
+                input X_order.doc-code,
+                input {&lookup}
+                )  .
+        end.
+        else 
+        do: 
+            message "Не выбран заказ"
+                view-as alert-box.  
+            return no-apply .
+        end.
      
     END.
 
@@ -849,7 +869,7 @@ DO:
 &Scoped-define SELF-NAME b-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-order
 ON CHOOSE OF b-mark IN FRAME d-order /* * */
-DO:
+    DO:
         define variable loc#log as logical no-undo .
       
         if available X_order then 
@@ -887,24 +907,24 @@ DO:
 &Scoped-define SELF-NAME b-reset
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-reset d-order
 ON CHOOSE OF b-reset IN FRAME d-order /* Обновить */
-DO:
-    Date-Start = today - 14 .
-    Date-End = today .
-    cli-code = "" .
-    cli-type = "" .
-    cli-name = "" .
-    c-status = "-1" .
-    num-order = "" .
-    v-cli = false .
-    f-mark = "" .
-    r-goods = 0 .
-    num-contract = "" .
-    b-markGoods:visible = false .
-    r-goods:sensitive = true . 
-    f-mark:sensitive = true .
-display Date-Start Date-End cli-code
-    cli-type cli-name c-status num-order f-mark num-contract with frame d-order .
-    run init-sort .
+    DO:
+        Date-Start = today - 14 .
+        Date-End = today .
+        cli-code = "" .
+        cli-type = "" .
+        cli-name = "" .
+        c-status = "-1" .
+        num-order = "" .
+        v-cli = false .
+        f-mark = "" .
+        r-goods = 0 .
+        num-contract = "" .
+        b-markGoods:visible = false .
+        r-goods:sensitive = true . 
+        f-mark:sensitive = true .
+        display Date-Start Date-End cli-code
+            cli-type cli-name c-status num-order f-mark num-contract with frame d-order .
+        run init-sort .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -914,7 +934,7 @@ display Date-Start Date-End cli-code
 &Scoped-define SELF-NAME b-sel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sel d-order
 ON CHOOSE OF b-sel IN FRAME d-order /* Выбор */
-DO:
+    DO:
         define buffer buf_order for ub.order-doc .
         if v-rid-list = "" then 
         do:
@@ -934,15 +954,20 @@ DO:
 &Scoped-define SELF-NAME b-send
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-send d-order
 ON CHOOSE OF b-send IN FRAME d-order /* Отправить */
-DO:
-    define variable ii      as integer no-undo .
-    define variable log-res as logical no-undo .
-    define buffer bf_order for ub.order-doc .
-    define variable p-ok as logical no-undo .
-    define buffer buf_X_order  for X_order .    
-    define buffer X_order-line for ub.order-line .    
+    DO:
+        define variable ii           as integer   no-undo .
+        define variable log-res      as logical   no-undo .
+        define variable p-ok         as logical   no-undo .
+        define variable qntyNew      as integer   no-undo .
+        define variable qntyNull     as integer   no-undo .
+        define variable errorRidList as character no-undo .
+        define variable ridList      as character no-undo .
+        
+        define buffer bf_order     for ub.order-doc .
+        define buffer buf_X_order  for X_order .    
+        define buffer X_order-line for ub.order-line .    
     
-    { gbl/chk-actg.i
+        { gbl/chk-actg.i
           v-cntxt-db-num
           v-cntxt-userid
           {&action-head-code-main}
@@ -957,7 +982,7 @@ DO:
           true
           log-res
     }   
-    if not log-res then return no-apply .  
+        if not log-res then return no-apply .  
 
         if v-rid-list = "" then 
         do:
@@ -968,7 +993,7 @@ DO:
                 return no-apply .
             end.  
             find first X_order-line no-lock where X_order-line.doc-code = X_order.doc-code and
-            X_order-line.db-num = X_order.db-num and X_order-line.order-qnty <= 0 no-error .
+                X_order-line.db-num = X_order.db-num and X_order-line.order-qnty <= 0 no-error .
             if not available (X_order-line) then 
             do:  
                 message "Вы уверены, что хотите отправить заказ поставщику?"
@@ -993,68 +1018,114 @@ DO:
                         bf_order.db-num = X_order.db-num no-error .
                     if available (bf_order) then
                     do:
-                      bf_order.sts = X_order.sts .
-                      release bf_order.
+                        bf_order.sts = X_order.sts .
+                        release bf_order.
                     end.  
                 end.
                 else return no-apply.
             end.
-            else do:
-            message "Количество товара в заказе не может быть отрицательным или равным нулю"
-            view-as alert-box .
-            return no-apply . 
+            else 
+            do:
+                message "Количество товара в заказе не может быть отрицательным или равным нулю"
+                    view-as alert-box .
+                return no-apply . 
             end.
         end.
         else 
         do:
             do ii = 1 to num-entries (v-rid-list):
-              find first buf_X_order no-lock where recid(buf_X_order) = integer(entry (ii,v-rid-list)) no-error .
-              if buf_X_order.sts <> StatusOrder:NewStatus:KeyIntDB then
-              do:
-                message "Отправлять можно только новые заказы."
-                    view-as alert-box.
-                return no-apply .
-              end.
-              find first X_order-line no-lock where 
-                         X_order-line.db-num = buf_X_order.db-num and
-                         X_order-line.doc-code = buf_X_order.doc-code and
-                         X_order-line.order-qnty <= 0 no-error .
-              if available (X_order-line) then 
-              do:
+                find first buf_X_order no-lock where recid(buf_X_order) = integer(entry (ii,v-rid-list)) no-error .
+                if buf_X_order.sts <> StatusOrder:NewStatus:KeyIntDB then
+                do:
+                    qntyNew = qntyNew + 1 .
+                    next .
+                end.
+
+                find first X_order-line no-lock where
+                    X_order-line.db-num = buf_X_order.db-num and
+                    X_order-line.doc-code = buf_X_order.doc-code and
+                    X_order-line.order-qnty <= 0 no-error .
+                if available (X_order-line) then
+                do:
+                    qntyNull = qntyNull + 1 .
+                    if errorRidList = "" then errorRidList = string(recid(buf_X_order)) .
+                    else errorRidList = errorRidList + "," + string(recid(buf_X_order)) .
+                    next .
+                end.
+                    if ridList = "" then ridList = string(recid(buf_X_order)) .
+                    else ridList = ridList + "," + string(recid(buf_X_order)) .
+            end.
+ 
+            if qntyNull = (ii - 1) then 
+            do:
                 message "Отправлять можно заказы только c положительным количеством товара."
                     view-as alert-box.
                 return no-apply .
-              end.  
+            end. 
+            if qntyNew = (ii - 1) then 
+            do:
+                message "Отправлять можно только новые заказы."
+                    view-as alert-box. 
+                return no-apply .               
+            end. 
+            if (qntyNew + qntyNull) = (ii - 1) then 
+            do:
+                message "Отправлять можно заказы только c положительным количеством товара."
+                    view-as alert-box.     
+                message "Отправлять можно только новые заказы."
+                    view-as alert-box. 
+                return no-apply .                                   
+            end.     
+            if errorRidList <> "" then do:
+                do ii = 1 to num-entries (errorRidList):
+                    find first buf_X_order no-lock where recid(buf_X_order) = integer(entry (ii,errorRidList)) no-error .
+                   message "В заказе кодом ТН " + string(buf_X_order.doc-code) + " не должно быть строк с количеством <= 0"
+                    view-as alert-box. 
+                end.                    
+            end. 
+            if qntyNew > 0 then do:
+                message "Отправлять можно только новые заказы."
+                    view-as alert-box.                 
             end.
+            if ridList <> "" then do:    
             message "Вы уверены, что хотите отправить выбранные заказы поставщику?"
-                    view-as alert-box question buttons yes-no update p-ok.      
+                view-as alert-box question buttons yes-no update p-ok.     
+            end.
             if p-ok then 
             do: 
-              do ii = 1 to num-entries (v-rid-list):
-                find first buf_X_order no-lock where recid(buf_X_order) = integer(entry (ii,v-rid-list)) no-error .
-  
-                run bge\send1cerp.p (parparentproc,
-                    this-procedure,
-                    this-procedure,
-                    "order",
-                    (buffer buf_X_order:handle),
-                    ?,                       
-                    ?) no-error.
-                if  error-status:error then 
-                do: 
-                  message return-value
-                          view-as alert-box.  
-                  return .
-                end.
-                buf_X_order.sts = StatusOrder:Sended:KeyIntDB .      
-                find first bf_order exclusive-lock where bf_order.doc-code = buf_X_order.doc-code and
-                    bf_order.db-num = buf_X_order.db-num no-error .
-                if available (bf_order) then 
+                do ii = 1 to num-entries (ridList):
+                    find first buf_X_order no-lock where recid(buf_X_order) = integer(entry (ii,ridList)) no-error .
+                find first X_order-line no-lock where
+                    X_order-line.db-num = buf_X_order.db-num and
+                    X_order-line.doc-code = buf_X_order.doc-code and
+                    X_order-line.order-qnty <= 0 no-error .
+                if available (X_order-line) then
                 do:
-                  bf_order.sts = X_order.sts .
-                  release bf_order.
-                end.              
-              end.
+                    qntyNull = qntyNull + 1 .
+                    next .
+                end.  
+                    run bge\send1cerp.p (parparentproc,
+                        this-procedure,
+                        this-procedure,
+                        "order",
+                        (buffer buf_X_order:handle),
+                        ?,                       
+                        ?) no-error.
+                    if  error-status:error then 
+                    do: 
+                        message return-value
+                            view-as alert-box.  
+                        next .
+                    end.
+                    buf_X_order.sts = StatusOrder:Sended:KeyIntDB .      
+                    find first bf_order exclusive-lock where bf_order.doc-code = buf_X_order.doc-code and
+                        bf_order.db-num = buf_X_order.db-num no-error .
+                    if available (bf_order) then 
+                    do:
+                        bf_order.sts = buf_X_order.sts .
+                        release bf_order.
+                    end.              
+                end.
             end.
             else return no-apply.
         end.
@@ -1069,8 +1140,8 @@ DO:
 &Scoped-define SELF-NAME b-update
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-update d-order
 ON CHOOSE OF b-update IN FRAME d-order /* Изменить */
-DO:
-        define variable Log-Res    as logical no-undo init "true".
+    DO:
+        define variable Log-Res as logical no-undo init "true".
         
         if available (X_order) then 
         do:
@@ -1091,26 +1162,28 @@ DO:
                 }             
             if not log-res then return no-apply .
 
-                if X_order.sts = StatusOrder:NewStatus:KeyIntDB then do:
+            if X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
+            do:
                 run str/order-doc.w (input parparentproc,
                     input X_order.doc-code,
                     input {&update}
                     )  .
                 run init-sort . 
-                end.
-                else do:
-                    message "Редактировать заказ можно только в статусе: 'Новый'"
-                    view-as alert-box.
-                    return .
-                end. 
-  
             end.
             else 
-            do: 
-                message "Не выбран заказ"
-                    view-as alert-box.  
-                return no-apply .
-            end.
+            do:
+                message "Редактировать заказ можно только в статусе: 'Новый'"
+                    view-as alert-box.
+                return .
+            end. 
+  
+        end.
+        else 
+        do: 
+            message "Не выбран заказ"
+                view-as alert-box.  
+            return no-apply .
+        end.
 
     END.
 
@@ -1122,7 +1195,7 @@ DO:
 &Scoped-define SELF-NAME br-order
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-order d-order
 ON ROW-DISPLAY OF br-order IN FRAME d-order
-DO:
+    DO:
         if  X_order.sts = StatusOrder:DeliveryCompleted:KeyIntDB then 
         do:
       
@@ -1168,7 +1241,7 @@ DO:
 &Scoped-define SELF-NAME bt-no-sel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-no-sel-all d-order
 ON CHOOSE OF bt-no-sel-all IN FRAME d-order /* + */
-DO:
+    DO:
         define variable loc#log as logical no-undo .
 
         if available X_order then 
@@ -1196,10 +1269,10 @@ DO:
 &Scoped-define SELF-NAME bt-not-sel-desel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-desel-all d-order
 ON CHOOSE OF bt-not-sel-desel-all IN FRAME d-order /* - */
-DO:
+    DO:
         define variable loc#log as logical no-undo .
         v-rid-list = "" .
-        loc#log = {&browse-name}:refresh() .
+        loc#log = {&browse-name}:refresh() no-error .
         enable b-copy with frame {&frame-name} .
         hide mark-num in frame {&frame-name}.
     END.
@@ -1211,7 +1284,7 @@ DO:
 &Scoped-define SELF-NAME c-status
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL c-status d-order
 ON VALUE-CHANGED OF c-status IN FRAME d-order /* Статус */
-DO:
+    DO:
         assign c-status .
         run init-sort .
     END.
@@ -1222,22 +1295,23 @@ DO:
 &Scoped-define SELF-NAME statusNotif
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL statusNotif d-order
 ON VALUE-CHANGED OF statusNotif IN FRAME d-order /* Уведомления о статусе */
-DO:
+    DO:
 
-    assign statusNotif .
+        assign statusNotif .
 
-    find first db-attr exclusive-lock where db-attr.db-num = v-cntxt-db-num and
-        db-attr.attr-code = "orderStatusNitif" no-error .
-    if not available (db-attr) then do:
-        create db-attr .
-        assign
-            db-attr.db-num    = v-cntxt-db-num
-            db-attr.attr-code = "orderStatusNitif"
-            .
-     end.       
-    db-attr.attr-value = string(statusNotif) .
+        find first db-attr exclusive-lock where db-attr.db-num = v-cntxt-db-num and
+            db-attr.attr-code = "orderStatusNitif" no-error .
+        if not available (db-attr) then 
+        do:
+            create db-attr .
+            assign
+                db-attr.db-num    = v-cntxt-db-num
+                db-attr.attr-code = "orderStatusNitif"
+                .
+        end.       
+        db-attr.attr-value = string(statusNotif) .
 
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1245,7 +1319,7 @@ END.
 &Scoped-define SELF-NAME cli-code
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cli-code d-order
 ON LEAVE OF cli-code IN FRAME d-order /* Поставщик */
-DO:
+    DO:
         apply "TAB":U to self .
         return no-apply .
     END.
@@ -1256,7 +1330,7 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cli-code d-order
 ON RETURN OF cli-code IN FRAME d-order /* Поставщик */
-DO:
+    DO:
         apply "TAB":U to self .
         return no-apply .
     END.
@@ -1267,13 +1341,13 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cli-code d-order
 ON TAB OF cli-code IN FRAME d-order /* Поставщик */
-DO:
+    DO:
         define variable ref-list as character no-undo .
         define variable ref-rec  as integer   no-undo .
 
         v-cli = false .
-            assign cli-code .
-            run init-sort .
+        assign cli-code .
+        run init-sort .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1283,7 +1357,7 @@ DO:
 &Scoped-define SELF-NAME cli-name
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cli-name d-order
 ON LEAVE OF cli-name IN FRAME d-order
-DO:
+    DO:
         apply "TAB":U to self .
         return no-apply .
     END.
@@ -1294,7 +1368,7 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cli-name d-order
 ON RETURN OF cli-name IN FRAME d-order
-DO:
+    DO:
         apply "TAB":U to self .
         return no-apply .
     END.
@@ -1305,10 +1379,10 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL cli-name d-order
 ON TAB OF cli-name IN FRAME d-order
-DO:
+    DO:
         v-cli = false .
-            assign cli-name .
-            run init-sort .
+        assign cli-name .
+        run init-sort .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1318,7 +1392,7 @@ DO:
 &Scoped-define SELF-NAME Date-End
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Date-End d-order
 ON return,LEAVE OF Date-End IN FRAME d-order /* по */
-DO:
+    DO:
         apply "TAB":U to self .
     END.
 
@@ -1328,7 +1402,7 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Date-End d-order
 ON TAB OF Date-End IN FRAME d-order /* по */
-DO:
+    DO:
         date(Date-End:screen-value) no-error.
         if error-status:error then 
         do:
@@ -1369,7 +1443,7 @@ DO:
 &Scoped-define SELF-NAME date-Start
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL date-Start d-order
 ON return,LEAVE OF date-Start IN FRAME d-order /* За период с */
-DO:
+    DO:
         apply "TAB":U to self .
     END.
 
@@ -1379,7 +1453,7 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL date-Start d-order
 ON TAB OF date-Start IN FRAME d-order /* За период с */
-DO:
+    DO:
         date(Date-Start:screen-value) no-error.
         if error-status:error then 
         do:
@@ -1419,20 +1493,20 @@ DO:
 &Scoped-define SELF-NAME f-mark
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-mark d-order
 ON LEAVE,return,tab OF f-mark IN FRAME d-order
-DO:
-   if f-mark = f-mark:screen-value
-   then
-      return .
-   assign
-      f-mark
-   .
+    DO:
+        if f-mark = f-mark:screen-value
+            then
+            return .
+        assign
+            f-mark
+            .
         f-mark:sensitive    = f-mark = "".
         b-markGoods:visible   = f-mark <> "".
         b-markGoods:sensitive = b-markGoods:visible.
         r-goods:sensitive = false . 
         apply "entry" to b-markGoods IN FRAME d-order .
         run init-sort .
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1440,19 +1514,19 @@ END.
 &Scoped-define SELF-NAME b-markGoods
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-markGoods IN FRAME d-order
 ON CHOOSE OF b-markGoods  IN FRAME d-order /* Сбросить */
-DO:
-   f-mark:screen-value = "".
-   assign
-      f-mark
-   .
-   f-mark:sensitive    = f-mark = "".
-   b-markGoods:visible   = f-mark <> "".
-   b-markGoods:sensitive = b-markGoods:visible.
-   r-goods:sensitive = true . 
-   apply "entry" to f-mark IN FRAME d-order .
-   run init-sort .
+    DO:
+        f-mark:screen-value = "".
+        assign
+            f-mark
+            .
+        f-mark:sensitive    = f-mark = "".
+        b-markGoods:visible   = f-mark <> "".
+        b-markGoods:sensitive = b-markGoods:visible.
+        r-goods:sensitive = true . 
+        apply "entry" to f-mark IN FRAME d-order .
+        run init-sort .
    
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1461,7 +1535,7 @@ END.
 &Scoped-define SELF-NAME num-contract
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL num-contract d-order
 ON leave OF num-contract IN FRAME d-order /* Номер договора */
-DO:
+    DO:
         apply "TAB":U to self .
     END.
 
@@ -1471,7 +1545,7 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL num-contract d-order
 ON RETURN OF num-contract IN FRAME d-order /* Номер договора */
-DO:
+    DO:
         apply "TAB":U to self .
     END.
 
@@ -1481,7 +1555,7 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL num-contract d-order
 ON TAB OF num-contract IN FRAME d-order /* Номер договора */
-DO:
+    DO:
         assign num-contract .
         run init-sort .
     END.
@@ -1493,7 +1567,7 @@ DO:
 &Scoped-define SELF-NAME num-order
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL num-order d-order
 ON leave OF num-order IN FRAME d-order /* Номер заказа */
-DO:
+    DO:
         apply "TAB":U to self .
     END.
 
@@ -1503,7 +1577,7 @@ DO:
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL num-order d-order
 ON RETURN OF num-order IN FRAME d-order /* Номер заказа */
-DO:
+    DO:
         apply "TAB":U to self .
     END.
 
@@ -1525,7 +1599,7 @@ ON mouse-select-dblclick OF br-order IN FRAME d-order
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL num-order d-order
 ON TAB OF num-order IN FRAME d-order /* Номер заказа */
-DO:
+    DO:
         assign num-order .
         run init-sort .
     END.
@@ -1537,10 +1611,10 @@ DO:
 &Scoped-define SELF-NAME r-goods
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL r-goods d-order
 ON VALUE-CHANGED OF r-goods IN FRAME d-order
-DO:
-  assign r-goods .
+    DO:
+        assign r-goods .
   
-END.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1564,35 +1638,35 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
     { gbl/ed_date.i Date-Start }  
-    { gbl/ed_date.i Date-End }
+{ gbl/ed_date.i Date-End }
 
-    { gbl/brwrepos.i
+{ gbl/brwrepos.i
   &line-num= 9
 }
-    /*run init-temp .*/
-    find first db-attr no-lock where db-attr.db-num = v-cntxt-db-num and
-        db-attr.attr-code = "orderStatusNitif" no-error .
-    if not available (db-attr) then statusNotif = true .
-    else statusNotif = logical (db-attr.attr-value) .
+/*run init-temp .*/
+find first db-attr no-lock where db-attr.db-num = v-cntxt-db-num and
+    db-attr.attr-code = "orderStatusNitif" no-error .
+if not available (db-attr) then statusNotif = true .
+else statusNotif = logical (db-attr.attr-value) .
     
-    StatusOrder =  new ibs.th.str.order.sts.order().
+StatusOrder =  new ibs.th.str.order.sts.order().
 
-    Date-Start = today - 14 .
-    Date-End = today .
-    for each buf_order exclusive-lock where buf_order.obj-code = v-cntxt-obj-code and 
-        buf_order.obj-type = v-cntxt-obj-type and
-        buf_order.db-num = v-cntxt-db-num and 
-        buf_order.sts = StatusOrder:NewStatus:KeyIntDB and
-        buf_order.doc-date < datetime (today - 1):
-        delete buf_order .
-    end.    
+Date-Start = today - 14 .
+Date-End = today .
+for each buf_order exclusive-lock where buf_order.obj-code = v-cntxt-obj-code and 
+    buf_order.obj-type = v-cntxt-obj-type and
+    buf_order.db-num = v-cntxt-db-num and 
+    buf_order.sts = StatusOrder:NewStatus:KeyIntDB and
+    buf_order.doc-date < datetime (today - 1):
+    delete buf_order .
+end.    
     
-    for each buf_order no-lock where buf_order.obj-code = v-cntxt-obj-code and 
-        buf_order.obj-type = v-cntxt-obj-type and
-        buf_order.db-num = v-cntxt-db-num:
-        create X_order .
-        buffer-copy buf_order to X_order .
-    end.
+for each buf_order no-lock where buf_order.obj-code = v-cntxt-obj-code and 
+    buf_order.obj-type = v-cntxt-obj-type and
+    buf_order.db-num = v-cntxt-db-num:
+    create X_order .
+    buffer-copy buf_order to X_order .
+end.
 extent (bcol) = ?.
 hbrowse = browse {&BROWSE-NAME}:handle.
 extent (bcol) = hbrowse:num-columns.
@@ -1601,10 +1675,10 @@ do ii = 1 to extent (bcol).
     bcol[ii] = hbrowse:get-browse-column (ii).
 end.
 
-    run init-temp .
-    RUN enable_UI.
-    run init-sort .
-    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+run init-temp .
+RUN enable_UI.
+run init-sort .
+WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.
 RUN disable_UI.
 
@@ -1625,8 +1699,8 @@ PROCEDURE init-temp :
 
     do ii = 1 to StatusOrder:mapType:GetItemByLab(ii):
         if StatusOrder:CurrProp:KeyIntDB >= 50
-        and StatusOrder:CurrProp:KeyIntDB < 60
-        then next . /* Вывод из оборота */
+            and StatusOrder:CurrProp:KeyIntDB < 60
+            then next . /* Вывод из оборота */
         Status_ = Status_ + {&comma-char} + StatusOrder:CurrProp:Label_ + {&comma-char} + string(StatusOrder:CurrProp:KeyIntDB) .
     end.
 
@@ -1634,23 +1708,23 @@ PROCEDURE init-temp :
         c-status:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_ .
 
     c-status = "-1" .
- END PROCEDURE.
+END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI d-order  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     DISABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide 
-               frames.  This procedure is usually called when
-               we are ready to "clean-up" after running.
-------------------------------------------------------------------------------*/
-  /* Hide all frames. */
-  HIDE FRAME d-order.
+    /*------------------------------------------------------------------------------
+      Purpose:     DISABLE the User Interface
+      Parameters:  <none>
+      Notes:       Here we clean-up the user-interface by deleting
+                   dynamic widgets we have created and/or hide 
+                   frames.  This procedure is usually called when
+                   we are ready to "clean-up" after running.
+    ------------------------------------------------------------------------------*/
+    /* Hide all frames. */
+    HIDE FRAME d-order.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1658,27 +1732,27 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-order  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
-/*------------------------------------------------------------------------------
-  Purpose:     ENABLE the User Interface
-  Parameters:  <none>
-  Notes:       Here we display/view/enable the widgets in the
-               user-interface.  In addition, OPEN all queries
-               associated with each FRAME and BROWSE.
-               These statements here are based on the "Other 
-               Settings" section of the widget Property Sheets.
-------------------------------------------------------------------------------*/
-  DISPLAY date-Start Date-End c-status cli-code cli-type cli-name num-order 
-          num-contract r-goods f-mark mark-num statusNotif
-      WITH FRAME d-order.
-  ENABLE b-exit b-add b-update b-lookup b-copy b-del b-send b-reset b-sch 
-         b-help b-hist b-date-Start date-Start Date-End b-date-End c-status statusNotif
-         b-cli cli-code cli-type cli-name num-order num-contract r-goods b-mark 
-         f-mark b-markGoods br-order mark-num bt-not-sel-desel-all bt-no-sel-all
-      WITH FRAME d-order.
-  hide b-markGoods b-sch b-sel in frame d-order .    
-  VIEW FRAME d-order.
+    /*------------------------------------------------------------------------------
+      Purpose:     ENABLE the User Interface
+      Parameters:  <none>
+      Notes:       Here we display/view/enable the widgets in the
+                   user-interface.  In addition, OPEN all queries
+                   associated with each FRAME and BROWSE.
+                   These statements here are based on the "Other 
+                   Settings" section of the widget Property Sheets.
+    ------------------------------------------------------------------------------*/
+    DISPLAY date-Start Date-End c-status cli-code cli-type cli-name num-order 
+        num-contract r-goods f-mark mark-num statusNotif
+        WITH FRAME d-order.
+    ENABLE b-exit b-add b-update b-lookup b-copy b-del b-send b-reset b-sch 
+        b-help b-hist b-date-Start date-Start Date-End b-date-End c-status statusNotif
+        b-cli cli-code cli-type cli-name num-order num-contract r-goods b-mark 
+        f-mark b-markGoods br-order mark-num bt-not-sel-desel-all bt-no-sel-all
+        WITH FRAME d-order.
+    hide b-markGoods b-sch b-sel in frame d-order .    
+    VIEW FRAME d-order.
   
-  {&OPEN-BROWSERS-IN-QUERY-d-order}
+    {&OPEN-BROWSERS-IN-QUERY-d-order}
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1697,22 +1771,22 @@ PROCEDURE init-sort :
     define variable vDbNumCur as integer   no-undo.
     define variable vCodeCur  as integer   no-undo.
     
-    define buffer goods             for ub.goods.
-    define buffer bar-code          for ub.bar-code.
-    define buffer prod-bc           for ub.prod-bc.
-    define buffer marking           for ub.marking .    
-    define buffer order-line        for ub.order-line .
-    define buffer buf_X_order       for X_order .
+    define buffer goods       for ub.goods.
+    define buffer bar-code    for ub.bar-code.
+    define buffer prod-bc     for ub.prod-bc.
+    define buffer marking     for ub.marking .    
+    define buffer order-line  for ub.order-line .
+    define buffer buf_X_order for X_order .
     
     if avail X_order then
-      assign
-        vDbNumCur = X_order.db-num
-        vCodeCur  = X_order.doc-code
-      .
-for each X_order:
-    delete X_order .
-end.
-/*if AVAILABLE (X_order) then empty temp-table X_order .*/
+        assign
+            vDbNumCur = X_order.db-num
+            vCodeCur  = X_order.doc-code
+            .
+    for each X_order:
+        delete X_order .
+    end.
+    /*if AVAILABLE (X_order) then empty temp-table X_order .*/
 
     mark-num = 0.
     display mark-num with frame {&frame-name}.
@@ -1724,109 +1798,125 @@ end.
         create X_order .
         buffer-copy buf_order to X_order .
     end.
-    if f-mark <> "" then do:
-    case r-goods:
-        when 0 then do:
-       int(f-mark) no-error.
-       vInt = not error-status:error.
-       if vInt
-       then
-          find first goods where goods.gds-code eq int(f-mark) no-lock no-error.
-       if available goods
-       then do:
-          vGdsCode  = goods.gds-code.
-       end.
-       else do:
-          if vInt
-          then
-             find first bar-code where bar-code.b-code eq int(f-mark) no-lock no-error.
-          if available bar-code
-          then do:
-             vGdsCode  = bar-code.gds-code.
-          end.
-          else do:
-             block-fill:
-             do vi = 0 to 10:
-                find first prod-bc where prod-bc.b-str eq fill("0",vi) + f-mark no-lock no-error.
-                if available prod-bc
-                then
-                   leave block-fill.
-             end. 
-             if available prod-bc
-             then do:    
-                if prod-bc.bc-on-type = {&gtin}
-                then
-                   vGdsCode = prod-bc.b-code.
-                else do:
-                    find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
-                    if available bar-code
-                    then
-                       vGdsCode  = bar-code.gds-code.
-                end.
-             end.
-             else do:
-                vMark     = getcodeident(f-mark).
-                vMarkGtin = getGtinByDM (f-mark).
-  
-                if vMark = ? and vMarkGtin = "" then do:
-                    for each X_order:
-                        delete X_order .
+    if f-mark <> "" then 
+    do:
+        case r-goods:
+            when 0 then 
+                do:
+                    int(f-mark) no-error.
+                    vInt = not error-status:error.
+                    if vInt
+                        then
+                        find first goods where goods.gds-code eq int(f-mark) no-lock no-error.
+                    if available goods
+                        then 
+                    do:
+                        vGdsCode  = goods.gds-code.
                     end.
-                end.
-             end.
-          end.
-       end.
+                    else 
+                    do:
+                        if vInt
+                            then
+                            find first bar-code where bar-code.b-code eq int(f-mark) no-lock no-error.
+                        if available bar-code
+                            then 
+                        do:
+                            vGdsCode  = bar-code.gds-code.
+                        end.
+                        else 
+                        do:
+                            block-fill:
+                            do vi = 0 to 10:
+                                find first prod-bc where prod-bc.b-str eq fill("0",vi) + f-mark no-lock no-error.
+                                if available prod-bc
+                                    then
+                                    leave block-fill.
+                            end. 
+                            if available prod-bc
+                                then 
+                            do:    
+                                if prod-bc.bc-on-type = {&gtin}
+                                    then
+                                    vGdsCode = prod-bc.b-code.
+                                else 
+                                do:
+                                    find first bar-code where bar-code.b-code eq prod-bc.b-code no-lock no-error.
+                                    if available bar-code
+                                        then
+                                        vGdsCode  = bar-code.gds-code.
+                                end.
+                            end.
+                            else 
+                            do:
+                                vMark     = getcodeident(f-mark).
+                                vMarkGtin = getGtinByDM (f-mark).
+  
+                                if vMark = ? and vMarkGtin = "" then 
+                                do:
+                                    for each X_order:
+                                        delete X_order .
+                                    end.
+                                end.
+                            end.
+                        end.
+                    end.
             
-        end.
-        otherwise do:
-            vGdsName = prep-nameorcode(f-mark) .
-        end.
-    end case .
+                end.
+            otherwise 
+            do:
+                vGdsName = prep-nameorcode(f-mark) .
+            end.
+        end case .
     end.
 
-        if vMark <> ""
-        then do:
-           find first marking where marking.mark     begins vMark
-           no-lock no-error.
-           if not available marking
-           then
-              find first marking where marking.mark     begins "02" + vMarkGtin + "37"
-              no-lock no-error.
+    if vMark <> ""
+        then 
+    do:
+        find first marking where marking.mark     begins vMark
+            no-lock no-error.
+        if not available marking
+            then
+            find first marking where marking.mark     begins "02" + vMarkGtin + "37"
+                no-lock no-error.
            
-           if available marking
-           then do :
-              vGdsCode = marking.gds-code .
-           end .
-        end.
-        if vGdsCode <> 0 then do:
-           for each X_order:
+        if available marking
+            then 
+        do :
+            vGdsCode = marking.gds-code .
+        end .
+    end.
+    if vGdsCode <> 0 then 
+    do:
+        for each X_order:
             find first order-line where order-line.db-num  = X_order.db-num
-                                  and order-line.doc-code   = X_order.doc-code
-                                  and order-line.gds-code = vGdsCode
-           no-lock no-error.
-           if available (order-line) then next .
-           else delete X_order .    
-           end.       
-        end.
-        if vGdsName <> "" then do:
-            for each X_order:
-             vOkGoods = false .    
+                and order-line.doc-code   = X_order.doc-code
+                and order-line.gds-code = vGdsCode
+                no-lock no-error.
+            if available (order-line) then next .
+            else delete X_order .    
+        end.       
+    end.
+    if vGdsName <> "" then 
+    do:
+        for each X_order:
+            vOkGoods = false .    
             for each order-line where order-line.db-num  = X_order.db-num
-                                  and order-line.doc-code   = X_order.doc-code no-lock,
-            first goods where goods.gds-code = order-line.gds-code and 
-            goods.gds-name contains vGdsName no-lock :
+                and order-line.doc-code   = X_order.doc-code no-lock,
+                first goods where goods.gds-code = order-line.gds-code and 
+                goods.gds-name contains vGdsName no-lock :
                 vOkGoods = true .    
                 leave .
  
             end.
-             if not vOkGoods then delete X_order .  
-           end.               
-        end.
-    if num-contract <> "" then do:
-             for each X_order :
+            if not vOkGoods then delete X_order .  
+        end.               
+    end.
+    if num-contract <> "" then 
+    do:
+        for each X_order :
             if X_order.contract-prn-code begins num-contract then next .
             else delete X_order .
-            end.         
+        end.         
     end.
     if c-status <> "-1" then 
     do:
@@ -1860,8 +1950,8 @@ end.
         if cli-name <> "" then 
         do:
             for each X_order :
-            if X_order.cli-name begins cli-name then next .
-            else delete X_order .
+                if X_order.cli-name begins cli-name then next .
+                else delete X_order .
             end.            
         end.           
     end.
@@ -1880,14 +1970,14 @@ end.
     {&OPEN-QUERY-br-order} 
     br-order:refresh () in frame d-order no-error .
     if vCodeCur <> 0 then
-      find first buf_X_order no-lock where
-                 buf_X_order.db-num   = vDbNumCur
-             and buf_X_order.doc-code = vCodeCur
-           no-error.
+        find first buf_X_order no-lock where
+            buf_X_order.db-num   = vDbNumCur
+            and buf_X_order.doc-code = vCodeCur
+            no-error.
     if avail buf_X_order then
-      reposition {&browse-name} to rowid rowid(buf_X_order).
+        reposition {&browse-name} to rowid rowid(buf_X_order).
     else         
-      reposition {&browse-name} to row 1.
+        reposition {&browse-name} to row 1.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1956,36 +2046,38 @@ end function.
 &ANALYZE-RESUME
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION prep-nameorcode d-order 
 FUNCTION prep-nameorcode RETURNS CHARACTER
-  ( input p-nameorcode as character ) :
-define variable v-nameorcode as character no-undo .
-define variable nameorcode as character no-undo .
+    ( input p-nameorcode as character ) :
+    define variable v-nameorcode as character no-undo .
+    define variable nameorcode   as character no-undo .
 
-if trim(p-nameorcode) = '' then  return ''.
-v-nameorcode = trim( trim( p-NameOrCode) , "*" ) .
-if index(v-NameOrCode, {&double-quote} ,1 ) = 1
-and R-index(v-NameOrCode, {&double-quote} ,1 ) = 1 then do:
-  assign
-  v-NameOrCode = trim(v-NameOrCode, {&double-quote})
-  .
-  nameorcode = v-nameorcode.
-  display NameOrCode with frame {&frame-name}.
-end.
-/*
-v-NameOrCode = right-trim( v-NameOrCode, "o" ) .    /* lat "o" */
-v-NameOrCode = right-trim( v-NameOrCode , "о" ) /* rus "о" */ + "*" .
-*/
-define variable v-dopi as character no-undo .
-assign
-v-dopi = substring(v-NameOrCode, length(v-NameOrCode), 1)
-.
-if index("abcdefghijklmnopqrstuvwxyzабвгдеёжзийклмнопрстуфхцчшщъыьэюя", v-dopi) > 0
-or index("1234567890", v-dopi) > 0
-then do:
-  v-NameOrCode = v-NameOrCOde + "*".
-end.
-v-NameOrCode = LC(v-NameOrCode).
+    if trim(p-nameorcode) = '' then  return ''.
+    v-nameorcode = trim( trim( p-NameOrCode) , "*" ) .
+    if index(v-NameOrCode, {&double-quote} ,1 ) = 1
+        and R-index(v-NameOrCode, {&double-quote} ,1 ) = 1 then 
+    do:
+        assign
+            v-NameOrCode = trim(v-NameOrCode, {&double-quote})
+            .
+        nameorcode = v-nameorcode.
+/*        display NameOrCode with frame {&frame-name}.*/
+    end.
+    /*
+    v-NameOrCode = right-trim( v-NameOrCode, "o" ) .    /* lat "o" */
+    v-NameOrCode = right-trim( v-NameOrCode , "о" ) /* rus "о" */ + "*" .
+    */
+    define variable v-dopi as character no-undo .
+    assign
+        v-dopi = substring(v-NameOrCode, length(v-NameOrCode), 1)
+        .
+    if index("abcdefghijklmnopqrstuvwxyzабвгдеёжзийклмнопрстуфхцчшщъыьэюя", v-dopi) > 0
+        or index("1234567890", v-dopi) > 0
+        then 
+    do:
+        v-NameOrCode = v-NameOrCOde + "*".
+    end.
+    v-NameOrCode = LC(v-NameOrCode).
 
-RETURN v-nameorcode.   /* Function return value. */
+    RETURN v-nameorcode.   /* Function return value. */
 
 END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
