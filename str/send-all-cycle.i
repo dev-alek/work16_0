@@ -205,7 +205,7 @@ procedure   for-cash-cycle:
       mQuery:set-buffers(buffer for-cash-desk:HANDLE).
       vqry = substitute("for each for-cash-desk no-lock where
                                   for-cash-desk.db-num   eq &1 
-                              and for-cash-desk.pos-type eq &2      
+                              and for-cash-desk.pos-type eq '&2'      
                               and for-cash-desk.obj-code eq &3 " 
                            ,  g#db-num, ub.cash-desk.pos-type,i-obj-code).
       if mCashNum ne ?
