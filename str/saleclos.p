@@ -753,11 +753,11 @@ on error undo, return error return-value
       /* нужно заново снять резервы и перерезервировать с учётом автопроизводства    */
       doc-fbr-gds_ :
       for each bf_doc-fbr-gds no-lock where bf_doc-fbr-gds.out-code = p-inkas-code,
-      first buf_goods no-lock where buf_goods.gds-code = bf_doc-fbr-gds.gds-code,
-      first out-dtl no-lock where out-dtl.doc-code  = bf_doc-fbr-gds.out-code
-                              and out-dtl.artic     = buf_goods.artic
-                              and out-dtl.prod-type = buf_goods.prod-type
-                              and out-dtl.prod-code = buf_goods.prod-code
+        first buf_goods no-lock where buf_goods.gds-code = bf_doc-fbr-gds.gds-code,
+        first out-dtl no-lock where out-dtl.doc-code  = bf_doc-fbr-gds.out-code
+                                and out-dtl.artic     = buf_goods.artic
+                                and out-dtl.prod-type = buf_goods.prod-type
+                                and out-dtl.prod-code = buf_goods.prod-code
       :
         if out-dtl.doc-qnty <> out-dtl.fact-qnty
         then do :
@@ -781,7 +781,7 @@ on error undo, return error return-value
               assign
                 rdoc-line = recid (buf_doc-line)
                 rgds-dtl = recid(ret-dtl)
-                r-qnty = out-dtl.doc-qnty - out-dtl.fact-qnty
+                r-qnty =  - ret-dtl.fact-qnty
                 r-b-code = ?
                 r-or-v = {&TDEDT_vozvrat_vnesh_kass}
                 r-office = {&gds-goods}
