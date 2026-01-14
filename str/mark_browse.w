@@ -3063,6 +3063,7 @@ PROCEDURE checkPriPerem :
     
     define buffer buf_trn-doc          for ub.trn-doc. 
     define buffer buf_marking          for ub.marking. 
+    define buffer parent_marking       for ub.marking. 
     define buffer buf_marking-child    for ub.marking. 
     define buffer buf_marking-lines    for ub.marking-lines. 
     define buffer buf_tt-marking       for tt-marking-lines.
@@ -3117,6 +3118,21 @@ PROCEDURE checkPriPerem :
                and buf_marking-lines.obj-code  = X_marking.obj-code 
                and buf_marking-lines.gds-code  = X_marking.gds-code 
                and buf_marking-lines.out-code  = X_marking.out-code no-error .
+
+        if buf_marking-lines.doc-level > 1 and 
+           avail buf_marking
+        then do:
+          /*смотрим входит ли марка в состав блока со статусом Серая зона или Разгруппирован*/
+          for first parent_marking no-lock where 
+                    parent_marking.mark = buf_marking.mark-parent 
+                and parent_marking.sts <> Marking:GrayZone:KeyIntDB 
+                and parent_marking.sts <> Marking:Ungrouped:KeyIntDB
+          :
+            oMsg = "Марка входит в состав упаковки, просканируйте марку упаковки.".
+            return.
+          end.
+        end.
+        
         assign
           buf_marking.sts       = Marking:Checked_:KeyIntDB
 /*          buf_marking.sts       = Marking:DeliveryControl:KeyIntDB*/
