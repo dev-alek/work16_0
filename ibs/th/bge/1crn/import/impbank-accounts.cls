@@ -98,8 +98,9 @@ class ibs.th.bge.1crn.import.impbank-accounts implements ibs.th.bge.1crn.import.
         else return true .
       end .
       else do :
-        Msg = substitute("отсутствует счёт &1 у держателя с кодом cont-code = &2", objBank-Accounts:r-schet, objBank-Accounts:cont-code) .
-        return false.
+        /*Msg = substitute("отсутствует счёт &1 у держателя с кодом cont-code = &2", objBank-Accounts:r-schet, objBank-Accounts:cont-code) .
+        return false.*/
+        return true.
       end .
     end.
 
