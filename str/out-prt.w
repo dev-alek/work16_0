@@ -821,7 +821,14 @@ DO:
   if prt-mode = {&lookup} then do:
     return no-apply.
   end.
-
+      if t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
+      do:
+        if can-find(first buf_marking-lines where 
+                          buf_marking-lines.out-code = t-doc.doc-code
+                      and buf_marking-lines.gds-code = buf_goods.gds-code) then 
+          return .
+      end. 
+    
   run check-fact-qnty in this-procedure no-error .
   if error-status :error then return no-apply.
 
