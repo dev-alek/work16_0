@@ -160,7 +160,7 @@ DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(256)":U
   VIEW-AS FILL-IN 
   SIZE 80 BY 1 
   BGCOLOR 15 NO-UNDO.
-
+define variable mWork as logical no-undo.
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -244,6 +244,7 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
 ON return OF b-exit IN FRAME Dialog-Frame /* Выход */
   DO:
+     mWork = false.
     if p-mode = {&add-def} then 
     do:
       run save_update .
@@ -491,9 +492,18 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     else do:
         v-manual = no .
         v-mark:READ-ONLY IN FRAME {&frame-name}        = TRUE .
-    end.    
-
-  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+    end. 
+    mWork = true.
+/*    run gbl\inidebug.p.*/
+  do while mWork:
+     WAIT-FOR GO OF FRAME {&FRAME-NAME} pause 1.
+     run gbl/readcom.p.
+     if length(return-value) > 0
+     then do:
+        v-scan-str = return-value.
+        v-mark:screen-value in frame {&frame-name} = v-scan-str.
+     end.
+  end.
 END.
 RUN disable_UI.
 
