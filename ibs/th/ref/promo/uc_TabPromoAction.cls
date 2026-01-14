@@ -923,6 +923,17 @@ CLASS ibs.th.ref.promo.uc_TabPromoAction INHERITS UserControl:
                   .
                 vLoadForm = yes.
               end.
+              if tttypeCond.code = 5 // "Скидка по картам лояльности"
+                then 
+              do:
+                ucMain7:INIT_GoodsFix(SelectItem). 
+                ucMain7:PublicEvent("NotOneLable", "").
+                assign
+                  label5:Visible    = false
+                  checkBox1:Visible = false
+                  .
+                vLoadForm = yes.     
+              end.              
             end .
             else do:
                 ucMain7:INIT_GoodsFix(SelectItem). 

@@ -119,4 +119,32 @@
   <metadata name="bindGoods.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <data mimetype="application/x-microsoft.net.object.bytearray.base64" name="button6.Image" type="System.Drawing.Bitmap, System.Drawing">
+    <value>
+        Qk2qBAAAAAAAADYAAAAoAAAAFAAAABMAAAABABgAAAAAAAAAAADEDgAAxA4AAAAAAAAAAAAAztPWztPW
+        ztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPW
+        ztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPW
+        ztPWztPWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAztPWztPWztPWztPWztPWztPWztPW
+        ztPWAAAAxsPGxsPGxsPGxsPGxsPGxsPGxsPGxsPGxsPGAAAAxsPGAAAAztPWztPWztPWztPWztPWztPW
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxsPGAAAAztPWztPWztPWztPWztPW
+        AAAAxsPGxsPGxsPGxsPGxsPGxsPGAP//AP//AP//xsPGxsPGAAAAAAAAAAAAztPWztPWztPWztPWztPW
+        AAAAxsPGxsPGxsPGxsPGxsPGxsPGhIKEhIKEhIKExsPGxsPGAAAAxsPGAAAAztPWztPWztPWztPWztPW
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxsPGxsPGAAAAztPWztPWztPWztPW
+        AAAAxsPGxsPGxsPGxsPGxsPGxsPGxsPGxsPGxsPGxsPGAAAAxsPGAAAAxsPGAAAAztPWztPWztPWztPW
+        ztPWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxsPGAAAAxsPGAAAAAAAAztPWztPWztPWztPW
+        ztPWztPWAAAA////////////////////////////////AAAAxsPGAAAAxsPGAAAAztPWztPWztPWztPW
+        ztPWztPWztPWAAAA////AAAAAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAztPWztPWztPWztPWztPW
+        ztPWztPWztPWAAAA////////////////////////////////AAAAztPWztPWztPWztPWztPWztPWztPW
+        ztPWztPWztPWztPWAAAA////AAAAAAAAAAAAAAAAAAAA////AAAAztPWztPWztPWztPWztPWztPWztPW
+        ztPWztPWztPWztPWAAAA////////////////////////////////AAAAztPWztPWztPWztPWztPWztPW
+        ztPWztPWztPWztPWztPWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAztPWztPWztPWztPWztPWztPW
+        ztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPW
+        ztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPW
+        ztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPWztPW
+</value>
+  </data>
+  <metadata name="bindGoods.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
 </root>

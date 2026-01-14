@@ -206,6 +206,24 @@ define variable mStatus as integer  no-undo.
                
    end.          
 
+   method public void changeRowAll(input iAll as logical):
+       define variable vFlag as logical no-undo.
+       vFlag = if     available tt-PromoGoodsAppl
+                  and tt-PromoGoodsAppl.Chang
+               then no
+               else yes.
+       if iAll 
+       then
+           for each   tt-PromoGoodsAppl:
+               tt-PromoGoodsAppl.Chang = vFlag.
+           end.
+       else
+            if avail tt-PromoGoodsAppl
+            then
+                tt-PromoGoodsAppl.Chang = vFlag.
+               
+   end.     
+   
 /*  method public class promoGoodsSubs ReturnSubsPromoGoods():                  */
 /*      define variable vSubs  as class promoGoodsSubs  no-undo .               */
 /*      define variable vSub   as class PromoGoodsSub   no-undo .               */
@@ -443,7 +461,8 @@ end . /* end_of низ таблицы и html-файла */
         then
             hQuery = buffer tt-promoaction-one:handle.*/
         else do:
-*/          
+*/  
+  
             find first tt-Query where tt-Query.NameQuery eq iNameQuery
             no-error.
             if     available tt-Query
@@ -496,6 +515,14 @@ end . /* end_of низ таблицы и html-файла */
                                                  "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
                                              )).
                     end.                    
+                    when "PromoGoodsFix" 
+                    then do:
+                        hQuery:set-buffers(buffer tt-PromoGoodsAppl:HANDLE). 
+                        hQuery:query-prepare("FOR EACH tt-PromoGoodsAppl " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoGoodsAppl.idaction eq " + string(tt-promoaction-one.id)  +
+                                                 "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
+                                             )).
+                    end.     
                     when "PromoCardsBin" 
                     then do:
                         hQuery:set-buffers(buffer tt-PromoCardsBin:HANDLE). 
@@ -2452,6 +2479,7 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
   end.         
 method public void printgds(input iName as character ):
   define buffer buf_PromoBc for tt-PromoBc .
+  define buffer buf_PromoGoodsAppl for tt-PromoGoodsAppl .
     case iName:
        when "PromoBarCode" or when "PromoBarCodeFix" 
        then do:
@@ -2486,6 +2514,37 @@ method public void printgds(input iName as character ):
         end.
          
        end. 
+       when "PromoGoodsFix"
+       then do:
+         empty temp-table gds-list .
+      if not tt-PromoGoodsAppl.Chang then do:
+               find first ub.goods no-lock where
+                  ub.goods.gds-code = tt-PromoGoodsAppl.gds-code no-error .
+               create gds-list.
+               buffer-copy goods to gds-list.
+               assign
+                  gds-list.ActionId   = tt-PromoGoodsAppl.idAction
+                  gds-list.db-num     = tt-PromoGoodsAppl.db-num
+                  .
+        end.
+        else do:
+          for each buf_PromoGoodsAppl where buf_PromoGoodsAppl.Chang:
+               find first ub.goods no-lock where
+                  ub.goods.gds-code = buf_PromoGoodsAppl.gds-code no-error .
+               create gds-list.
+               buffer-copy goods to gds-list.
+               assign
+                  gds-list.ActionId   = buf_PromoGoodsAppl.idAction
+                  gds-list.db-num     = buf_PromoGoodsAppl.db-num
+                  .           
+          end.
+        end.
+        run ibs/th/rep/tick-lst.p (input parparentproc, input v-cntxt-obj-type, input v-cntxt-obj-code, input table gds-list).
+        for each tt-PromoGoodsAppl where tt-PromoGoodsAppl.Chang:
+          tt-PromoGoodsAppl.Chang = false .
+        end.
+         
+       end.        
     end case.
   end.     
   method public void addgds(input iname  as char):
