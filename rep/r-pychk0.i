@@ -605,7 +605,10 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
         pychk_dop-sumg = pychk_dop-sumg - pychk_dop-sumk        
         pychk_sum-promo = GetPromoPriceSum(ub.chk-doc.doc-code)
         .           
-                                    
+        if pychk_sum-promo <> 0 then 
+           vPromoLineNum = GetPromoPriceLine(ub.chk-doc.doc-code).
+        else vPromoLineNum = 0.
+                                      
         for each buf_temp-chk-gds where
                 buf_temp-chk-gds.doc-code = ub.chk-doc.doc-code
             and buf_temp-chk-gds.b-code = temp-chk-gds.b-code
@@ -622,10 +625,7 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
               pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
             end.
           end case.
-          if pychk_sum-promo <> 0 then 
-             vPromoLineNum = GetPromoPriceLine(buf_temp-chk-gds.doc-code).
-          else vPromoLineNum = 0.   
-          
+                       
           /* если на промоцену уже распределили оплату, то пропускаем */
           if  vPromoLineNum <> 0 and 
               temp-chk-gds.num-lines > 1 and 
@@ -646,7 +646,8 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
               end.
               else if vPromoLineNum <> 0 and 
                       temp-chk-gds.num-lines > 1 and 
-                      pychk_sum-promo <> 0 
+                      pychk_sum-promo <> 0 and
+                      ChkPromoLine(buf_temp-chk-gds.doc-code, buf_temp-chk-gds.line-num)
               then do:
                   /* если уже учли оплату промо, то больше не учитываем */
                   if can-find(first buf_chk-gds-pay no-lock where 
