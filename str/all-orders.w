@@ -859,7 +859,11 @@ ON CHOOSE OF b-lookup IN FRAME d-order /* Просмотр */
                 view-as alert-box.  
             return no-apply .
         end.
-     
+        if X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
+        do:
+            enable b-del with frame {&frame-name} .
+        end.
+        else disable b-del with frame {&frame-name} .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -925,6 +929,11 @@ ON CHOOSE OF b-reset IN FRAME d-order /* Обновить */
         display Date-Start Date-End cli-code
             cli-type cli-name c-status num-order f-mark num-contract with frame d-order .
         run init-sort .
+        if X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
+        do:
+            enable b-del with frame {&frame-name} .
+        end.
+        else disable b-del with frame {&frame-name} .
     END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1130,6 +1139,7 @@ ON CHOOSE OF b-send IN FRAME d-order /* Отправить */
             else return no-apply.
         end.
         v-rid-list = "" .
+        disable b-del with frame {&frame-name} .
         run init-sort .
     END.
 
@@ -1184,59 +1194,42 @@ ON CHOOSE OF b-update IN FRAME d-order /* Изменить */
                 view-as alert-box.  
             return no-apply .
         end.
-
+        if X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
+        do:
+            enable b-del with frame {&frame-name} .
+        end.
+        else disable b-del with frame {&frame-name} .
     END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
-&Scoped-define BROWSE-NAME br-order
-&Scoped-define SELF-NAME br-order
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-order d-order
-ON ROW-DISPLAY OF br-order IN FRAME d-order
+ON ROW-DISPLAY OF {&BROWSE-name} IN FRAME d-order
     DO:
-        if  X_order.sts = StatusOrder:DeliveryCompleted:KeyIntDB then 
+        if X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
         do:
-      
-            do ii = 1 to extent (bcol):  
-                if valid-handle (bcol[ii]) 
-                    then 
-                do:
-                    assign
-                        bcol[ii]:fgcolor = 8.
-                end.
-            end.
-        end.   
-        if  X_order.sts = StatusOrder:Corrected:KeyIntDB then 
-        do:
-      
-            do ii = 1 to extent (bcol):  
-                if valid-handle (bcol[ii]) 
-                    then 
-                do:
-                    assign
-                        bcol[ii]:fgcolor = 5.
-                end.
-            end.
-        end.        
-        if  X_order.sts = StatusOrder:Cancelled:KeyIntDB then 
-        do:
-      
-            do ii = 1 to extent (bcol):  
-                if valid-handle (bcol[ii]) 
-                    then 
-                do:
-                    assign
-                        bcol[ii]:fgcolor = 12.
-                end.
-            end.
-        end. 
+            enable b-del with frame {&frame-name} .
+        end.
+        else disable b-del with frame {&frame-name} .
     END .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-order d-order
+on value-changed OF {&BROWSE-name} IN FRAME d-order
+    DO:
+        if X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
+        do:
+            enable b-del with frame {&frame-name} .
+        end.
+        else disable b-del with frame {&frame-name} .
+    END .
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME bt-no-sel-all
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-no-sel-all d-order
@@ -1974,10 +1967,18 @@ PROCEDURE init-sort :
             buf_X_order.db-num   = vDbNumCur
             and buf_X_order.doc-code = vCodeCur
             no-error.
-    if avail buf_X_order then
+    if avail buf_X_order then do:
         reposition {&browse-name} to rowid rowid(buf_X_order).
-    else         
+        if buf_X_order.sts = StatusOrder:NewStatus:KeyIntDB then 
+        do:
+            enable b-del with frame {&frame-name} .
+        end.
+        else disable b-del with frame {&frame-name} .
+    end .    
+    else do:        
         reposition {&browse-name} to row 1.
+        enable b-del with frame {&frame-name} .
+    end.    
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
