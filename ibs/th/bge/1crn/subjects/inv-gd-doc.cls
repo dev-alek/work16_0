@@ -68,6 +68,17 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
     get.
     set.
   
+  define public property sendTableName as character no-undo init "trn-doc"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define variable rvsinvObj        as class rvsinvsub no-undo .
   
   define variable sw               as handle    no-undo.
@@ -114,6 +125,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
     
     if valid-handle (BufTableHndlNew)
     then do:
+      sendNewRowid  = BufTableHndlNew:rowid.
       v-bufhnd:buffer-copy (BufTableHndlNew) no-error.
       if error-status:error
       then do:
@@ -128,6 +140,7 @@ class ibs.th.bge.1crn.subjects.inv-gd-doc implements iexpsubject:
         Msg = "Ошибка выгрузки inv-gd-doc, неопеределен ни старый ни новый буфер".
         undo, return error Msg.
       end.
+      sendOldRowid  = BufTableHndlOld:rowid.
       v-bufhnd:buffer-copy (BufTableHndlOld) no-error.
       if error-status:error
       then do:

@@ -677,6 +677,17 @@ define variable vss-description as character no-undo init "Информация об объекте
 
 { gbl/menuload.i
   {&bef-menuload_adm_function}
+  "'Перевыгрузка не подтвержденных сообщений 1С ERP'"
+  "'utl/reload-1C.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
   "'Выгрузка данных в Президентский Мониторинг  '"
   "'utl/run-exp-is_PM.w'"
   " "

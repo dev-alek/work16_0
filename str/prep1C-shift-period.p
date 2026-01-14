@@ -204,7 +204,7 @@ procedure exp1C :
                               input this-procedure,
                               input this-procedure,
                               input expData,
-                              input "shift-periods") 
+                              input "shift-periods" + {&delim-par} + substitute("shift-obj&1&2",{&delim-key},string(rowid(buf_shift-obj))) ) 
                               no-error .
   if error-status:error
   then do :

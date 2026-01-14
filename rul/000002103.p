@@ -189,12 +189,22 @@ if v-newbh:table <> "chk-doc" then do:
     subObj = new shift ().
     subObj:KeyRowid = v-doc-rowid.
     expObj = new expsubject ().
-    expObj:GetContent(subObj).
+    expObj:GetContent(subObj) no-error.
+    if error-status:error then
+    do:
+      undo _main, return error expObj:Msg .  
+    end.
         
     IF not ExpData1:esys-add-dump-data ( INPUT expObj:Data
                                        , INPUT v-esys-cmd-proc-handle
                                        , INPUT v-esys-cmd-code
-                                      , '+update' + {&delim-par} + expObj:InitSecTag) THEN
+                                       , '+update' + {&delim-par} + expObj:InitSecTag +
+                                       (if expObj:sendTableName <> "" 
+                                          then substitute("&1&2&3&4",{&delim-par},
+                                                          expObj:sendTableName,
+                                                          if expObj:sendOldRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendOldRowid) else "",
+                                                          if expObj:sendNewRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendNewRowid) else "") 
+                                        else "")) THEN
       undo _main, return error v-last-error-message .
     
   IF not context_set-custom-esys-pck-name(  input v-esys-cmd-proc-handle, input v-esys-cmd-code, input v-custom-pack-name) THEN
@@ -223,7 +233,11 @@ if v-newbh:table <> "chk-doc" then do:
       undo _main, return error v-last-error-message .
     
     subObj2:BufHandle = buffer buf_shift-obj:HANDLE .
-    expObj:GetContent(subObj2).
+    expObj:GetContent(subObj2) no-error.
+    if error-status:error then
+    do:
+      undo _main, return error expObj:Msg .  
+    end.
 
 /* 16/VIII-2018 - вокруг чеков добавлена секция <shift>, отличная от секции, в которой выгружаются смены.
                   Обход таблицы с продажами убран внутрь экспорта чеков.
@@ -244,7 +258,13 @@ define buffer buf_inkas       for ub.inkas .
     IF not ExpData1:esys-add-dump-data ( INPUT expObj:Data
                                        , INPUT v-esys-cmd-proc-handle
                                        , INPUT v-esys-cmd-code
-                                      , '+update' + {&delim-par} + expObj:InitSecTag) THEN
+                                       , '+update' + {&delim-par} + expObj:InitSecTag +
+                                         (if expObj:sendTableName <> "" 
+                                            then substitute("&1&2&3&4",{&delim-par},
+                                                          expObj:sendTableName,
+                                                          if expObj:sendOldRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendOldRowid) else "",
+                                                          if expObj:sendNewRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendNewRowid) else "") 
+                                          else "")) THEN
       undo _main, return error v-last-error-message .
     IF not context_set-custom-esys-pck-name(  input v-esys-cmd-proc-handle
                                             , input v-esys-cmd-code
@@ -287,7 +307,13 @@ if v-has-newbh and v-newbh:table = "chk-doc" then do:  /* выгрузка чеков открыти
     IF not ExpData1:esys-add-dump-data ( INPUT expObj:Data
                                        , INPUT v-esys-cmd-proc-handle
                                        , INPUT v-esys-cmd-code
-                                      , '+update' + {&delim-par} + expObj:InitSecTag) THEN
+                                       , '+update' + {&delim-par} + expObj:InitSecTag +
+                                         (if expObj:sendTableName <> "" 
+                                            then substitute("&1&2&3&4",{&delim-par},
+                                                          expObj:sendTableName,
+                                                          if expObj:sendOldRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendOldRowid) else "",
+                                                          if expObj:sendNewRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendNewRowid) else "") 
+                                          else "")) THEN
     undo _main, return error v-last-error-message . 
 
     v-dump-ord-int64 = context_send-esys-command( input v-esys-id-list

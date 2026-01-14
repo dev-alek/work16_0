@@ -1094,9 +1094,11 @@ class Ibs.Th.Rul.route-data_
     define buffer buf_temp-xml-tables for temp-xml-tables.
     
     v-dump-name = "" .
-    if num-entries(p-action, {&delim-par}) = 2
+    if num-entries(p-action, {&delim-par}) >= 2
     then do :
         v-dump-name = entry(2, p-action, {&delim-par}) no-error.
+        if num-entries(p-action, {&delim-par}) = 3
+          then v-dump-name = substitute("&1&2&3", v-dump-name, {&delim-par}, entry(3, p-action, {&delim-par})) no-error.
         p-action = entry(1, p-action, {&delim-par}) no-error.
     end.
 

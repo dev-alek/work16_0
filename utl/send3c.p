@@ -24,6 +24,7 @@ block-level on error undo, throw.
 
 { cmp/trg-def.i  }
 { cmp/library.i  }
+{ utl/tt-test-1c.i}
 
 
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
@@ -39,6 +40,13 @@ if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn4)
 define temp-table tt-rvs like ub.rvs-doc.
 define var v-doc-code as char no-undo.
 
+if testId <> ? then
+do:
+  find first ub.rvs-doc where rowid(ub.rvs-doc) = testId no-lock no-error.
+  if not avail ub.rvs-doc then return.  
+end.
+else
+do:
 DEFINE FRAME frame1
   v-doc-code format "x(15)"
   with view-as dialog-box
@@ -54,7 +62,7 @@ if not available (ub.rvs-doc)
     message "Документ сверки не найден: номер " v-doc-code view-as alert-box.
     return.
   end.
-
+end.
 
 buffer-copy rvs-doc except rvs-doc.status_ to tt-rvs  assign tt-rvs.status_ = "накл". /* для имитации изменения статуса на факт */
 
@@ -73,5 +81,10 @@ then do:
   message return-value view-as alert-box.
 end.
 else do:
-  message rvs-doc.rvs-code " отправлен" view-as alert-box.
+  if testId <> ? then
+    put stream vProtTest unformatted 
+      "Документ сверки " rvs-doc.rvs-code " отправлен"
+      skip. 
+  else
+    message rvs-doc.rvs-code " отправлен" view-as alert-box.
 end.

@@ -34,7 +34,10 @@ class ibs.th.bge.1crn.subjects.exp-order inherits send1cerpsub:
   &scop tag-interface 'orders':U
   define override public property InitSecTag as character no-undo init {&tag-interface}
   get.
-    
+
+  define override public property sendTableName as character no-undo init "order-doc"
+    get.
+   
    method override public void CheckParam(  ):
     define buffer buf_order-doc  for ub.order-doc .
     define buffer buf_order-line for ub.order-line .
@@ -89,6 +92,7 @@ class ibs.th.bge.1crn.subjects.exp-order inherits send1cerpsub:
                buf_order-doc.db-num   = int(oldbh:buffer-field( "db-num":U  ):buffer-value )
            and buf_order-doc.doc-code = int(oldbh:buffer-field( "doc-code":U  ):buffer-value ) no-error .
 
+    sendOldRowid = rowid(buf_order-doc) .
     insw:start-element ({&tag-message}) .
     
     insw:write-data-element (  "order-item":U,  string(buf_order-doc.doc-code)  ).

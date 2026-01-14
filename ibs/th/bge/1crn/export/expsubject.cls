@@ -28,6 +28,18 @@ class ibs.th.bge.1crn.export.expsubject:
     get.
     private set.
 
+   define property sendTableName  as character  no-undo
+     get.
+     private set.
+   
+   define property sendOldRowid as rowid  no-undo
+     get.
+     private set.
+
+   define property sendNewRowid as rowid  no-undo
+     get.
+     private set.
+
   method public void GetContent (expsubject as class ibs.th.bge.1crn.subjects.iexpsubject, inType as char, inFileName as char):
 
     define variable sw as handle no-undo.
@@ -45,6 +57,15 @@ class ibs.th.bge.1crn.export.expsubject:
     sw:start-document () .
     expsubject:CrContentToSW (sw).
     InitSecTag = expsubject:InitSecTag.
+    sendTableName = expsubject:sendTableName.
+    sendOldRowid  = expsubject:sendOldRowid.
+    sendNewRowid  = expsubject:sendNewRowid.
+    if inType = "memptr" and get-size(Data) > 0 and sendTableName = "" or 
+      (sendTableName <> "code" and sendTableName <> "Cash-param-histand" and sendOldRowid = ? and sendNewRowid = ?) then
+    do:
+      Msg = "ƒолжны быть установлены об€зательные свойства класса экспорта: охватывающий тег, таблица и rowid выгружаемой записи.".
+      return error.
+    end.
     sw:end-document () .
     
    end.

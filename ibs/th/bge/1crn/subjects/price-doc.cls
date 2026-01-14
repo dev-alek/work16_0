@@ -29,6 +29,17 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
     get.
     private set.
       
+  define public property sendTableName as character no-undo init "price-doc"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define property DocNum as character no-undo
     get.
     set. 
@@ -45,7 +56,8 @@ class ibs.th.bge.1crn.subjects.price-doc implements iexpsubject:
   define variable sw               as handle    no-undo.  
   
   method public void CrContentToSW (insw as handle):
-    
+
+    sendOldRowid  = pr-doc-hndl:rowid.
     sw = insw .
     
     if ToDel

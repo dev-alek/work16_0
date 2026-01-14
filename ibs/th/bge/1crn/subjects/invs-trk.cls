@@ -39,6 +39,17 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
     get.
     private set.
 
+  define property sendTableName  as character  no-undo init "icnt-doc"
+  get.
+   
+  define property sendOldRowid as rowid  no-undo
+  get.
+  set.
+
+  define property sendNewRowid as rowid  no-undo
+  get.
+  set.
+
   define variable sw as handle no-undo.
   
   method public void CrContentToSW (insw as handle):
@@ -49,6 +60,7 @@ class ibs.th.bge.1crn.subjects.invs-trk implements iexpsubject:
     if not available (buf_icnt-doc)
       then return.
           
+    sendOldRowid = rowid(buf_icnt-doc).
     /*    sw:start-element ("invs-trk") .*/
     sw:start-element ("inv-trk") .
     sw:write-data-element ("doc-num", if buf_icnt-doc.doc-code = ? then "" else string(buf_icnt-doc.doc-code)).

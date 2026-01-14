@@ -39,6 +39,9 @@ class ibs.th.bge.1crn.subjects.exp-delChk-doc inherits send1cerpsub:
 define override public property InitSecTag as character no-undo init {&tag-interface}
   get.
 
+define override public property sendTableName  as character no-undo init "c-chk-doc"
+  get.
+   
 
 method override public void CheckParam(  ):
       
@@ -64,6 +67,7 @@ method override public void CrContentToSW (insw as handle):
   if available c-chk-doc
     then 
   do:
+    sendOldRowid  = rowid(c-chk-doc).
 
     do ii = 1 to num-entries(c-chk-doc.office):
     if ENTRY(ii,c-chk-doc.office) <> "" then office = office + "," + ENTRY(ii,c-chk-doc.office)  .

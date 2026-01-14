@@ -44,7 +44,10 @@ class ibs.th.bge.1crn.subjects.exp-mark inherits send1cerpsub:
 
   define override public property InitSecTag as character no-undo init {&tag-interface}
   get.
-  
+
+  define override public property sendTableName as character no-undo init "marking"
+    get.
+   
    method override public void CheckParam(  ):
       if not valid-handle (oldbh)
       then
@@ -67,6 +70,7 @@ method override public void CrContentToSW (insw as handle):
    no-lock no-error.
    if available marking
    then do:
+      sendOldRowid = rowid(marking).
 /*      insw:start-element ({&tag-marks}) .*/
       insw:start-element ({&tag-mark}) .
       insw:write-data-element (  "mark-code":U,     repSpecSimbforXlm(   addBracketForCode(marking.mark))   ).

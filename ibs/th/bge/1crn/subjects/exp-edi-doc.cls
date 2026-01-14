@@ -50,7 +50,10 @@ class ibs.th.bge.1crn.subjects.exp-edi-doc inherits send1cerpsub:
   
   define override public property InitSecTag as character no-undo init {&tag-interface}
   get.
-  
+
+  define override public property sendTableName  as character  no-undo init "utd"
+  get.
+   
    method override public void CheckParam(  ):
       if not valid-handle (oldbh)
       then
@@ -84,6 +87,7 @@ method override public void CrContentToSW (insw as handle):
  
    if available utd
    then do:
+      sendOldRowid  = rowid(utd).
 /*      insw:start-element ({&tag-edi-docs}) .*/
       insw:start-element ({&tag-edi-doc}) .
       

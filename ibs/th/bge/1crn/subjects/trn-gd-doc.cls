@@ -101,6 +101,18 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     get.
     set.
   
+  define public property sendTableName as character no-undo init "trn-doc"
+    get.
+    set.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define variable sw               as handle    no-undo.
   define variable v-doc-type-ERPRN as character no-undo.
   define variable v-is-petrol-trn  as logical   no-undo.
@@ -132,6 +144,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
     if valid-handle (BufTableHndlNew)
     then do:
+      sendNewRowid  = BufTableHndlNew:rowid.
       v-bufhnd:buffer-copy (BufTableHndlNew) no-error.
       if error-status:error
       then do:
@@ -146,6 +159,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         Msg = "Ошибка выгрузки trn-gd-code, неопеределен ни старый ни новый буфер".
         undo, return error Msg.
       end.
+      sendOldRowid  = BufTableHndlOld:rowid.
       v-bufhnd:buffer-copy (BufTableHndlOld) no-error.
       if error-status:error
       then do:

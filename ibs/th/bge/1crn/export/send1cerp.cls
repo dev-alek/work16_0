@@ -220,12 +220,19 @@ class ibs.th.bge.1crn.export.send1cerp
          expObj:GetContent(subObj) no-error.
          if error-status:error
          then do:
+            Msg = expObj:msg.
             undo _main, retry .
          end.
          if ExpData:esys-add-dump-data ( input expObj:Data, 
                                          input v-esys-cmd-proc-handle, 
                                          input v-esys-cmd-code, 
-                                        ('+update' + {&delim-par} + expObj:InitSecTag)) = false  
+                                        ('+update' + {&delim-par} + expObj:InitSecTag) + 
+                                         (if expObj:sendTableName <> "" 
+                                          then substitute("&1&2&3&4",{&delim-par},
+                                                          expObj:sendTableName,
+                                                          if expObj:sendOldRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendOldRowid) else "",
+                                                          if expObj:sendNewRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendNewRowid) else "") 
+                                          else "")) = false  
          then do:
             undo _main, retry .
          end.

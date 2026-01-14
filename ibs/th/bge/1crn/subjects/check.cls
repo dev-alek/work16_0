@@ -72,6 +72,18 @@ define private temp-table tt-recid-TranFuel no-undo
   define property InitSecTag as character no-undo init {&tag-interface}
     get.
 
+  define public property sendTableName  as character  no-undo
+    get.
+    private set.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define property BufHandle as handle no-undo
     get.
     set.
@@ -156,6 +168,8 @@ define private temp-table tt-recid-TranFuel no-undo
     Msg = "" .
     if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись СМЕНЫ shift_obj с документами продажи") .
     
+    sendTableName = BufHandle:table.
+    sendOldRowid  = BufHandle:rowid.
   if BufHandle:table <> "chk-doc" then do:  
     assign
       v-fld-host-code  = BufHandle:buffer-field( "host-code":U  ) 

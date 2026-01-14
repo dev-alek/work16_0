@@ -156,7 +156,16 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   end.
 
         
-  if ExpData1:esys-add-dump-data ( input p-data, input v-esys-cmd-proc-handle, input v-esys-cmd-code, ('+update' + {&delim-par} + p-init-sec-tag) ) = false
+  if ExpData1:esys-add-dump-data ( input p-data, 
+                                   input v-esys-cmd-proc-handle, 
+                                   input v-esys-cmd-code, 
+                                   ('+update' + {&delim-par} + entry(1,p-init-sec-tag,{&delim-par})  + 
+                                    (if num-entries(p-init-sec-tag,{&delim-par}) > 1 
+                                     then substitute("&1&2&3&4",
+                                                     {&delim-par},
+                                                     entry(2,p-init-sec-tag,{&delim-par})
+                                                     ) 
+                                     else "")) ) = false
   then do:
     undo _main, return error v-last-error-message .
   end.
