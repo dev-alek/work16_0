@@ -5373,6 +5373,8 @@ define output parameter p-cur-date-error-code   as integer          no-undo.
             .
             
             run proc-check-RVD in this-procedure .
+            
+            run proc-check-place-imp in this-procedure .
         end.
 
         run proc-fi-close-date in this-procedure
@@ -6424,6 +6426,83 @@ PROCEDURE menu-item-open-in-multiedit :
 
 END PROCEDURE.
 
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-check-place-imp C-Win
+procedure proc-check-place-imp :
+  define buffer buf_place for ub.place .
+  define buffer buf_place-attr for ub.place-attr .
+  define buffer buf_pl-gds for ub.pl-gds .
+  define buffer buf_goods for ub.goods .
+  
+  define variable v-pending-message as character no-undo .
+  define variable v-applied-message as character no-undo .
+  define variable v-ok-pending as logical no-undo .
+  define variable v-ok-applied as logical no-undo .
+  define variable v-place-mess as character no-undo .
+  
+  assign
+    v-ok-pending = no
+    v-ok-applied = no
+    v-pending-message = "Внимание! После закрытия смены будет осуществлен переход на новые градуировочные таблицы для резервуаров:"
+    v-applied-message = "Внимание! Новые градуировочные таблицы применены для резервуаров:"
+  .
+  
+  for each buf_place-attr no-lock where buf_place-attr.obj-type = v-cntxt-obj-type
+                                    and buf_place-attr.obj-code = v-cntxt-obj-code
+                                    and buf_place-attr.attr-code = {&message-table-version}
+  :
+    find first buf_place no-lock where buf_place.obj-type = buf_place-attr.obj-type
+                                   and buf_place.obj-code = buf_place-attr.obj-code
+                                   and buf_place.pl-code  = buf_place-attr.pl-code
+                                   no-error .
+    find first buf_pl-gds no-lock where buf_pl-gds.obj-type = buf_place-attr.obj-type
+                                    and buf_pl-gds.obj-code = buf_place-attr.obj-code
+                                    and buf_pl-gds.pl-code  = buf_place-attr.pl-code
+                                    no-error .
+    if available buf_pl-gds
+    then do :
+      find first buf_goods no-lock where buf_goods.gds-code = buf_pl-gds.gds-code no-error .
+    end .
+    if buf_place-attr.attr-value = "pending"
+    then do :
+      assign
+        v-place-mess = "Резервуар " + (if available buf_place then buf_place.loc1 else "?") +
+                       " код " + string(buf_place-attr.pl-code) +
+                       " " + (if available buf_place then buf_place.pl-name else "") +
+                       " c " + (if available buf_goods then buf_goods.gds-name else "?")
+        v-ok-pending = yes
+        v-pending-message = v-pending-message + {&new-line} + v-place-mess 
+      .
+    end .
+    if buf_place-attr.attr-value = "applied"
+    then do :
+      assign
+        v-place-mess = "Резервуар " + (if available buf_place then buf_place.loc1 else "?") +
+                       " код " + string(buf_place-attr.pl-code) + 
+                       " " + (if available buf_place then buf_place.pl-name else "") +
+                       " c " + (if available buf_goods then buf_goods.gds-name else "?")
+        v-ok-applied = yes
+        v-applied-message = v-applied-message + {&new-line} + v-place-mess 
+      .
+    end .
+  end .
+  if v-ok-pending
+  then do :
+    run ref/message_place-imp.w (input v-pending-message) .
+  end .
+  if v-ok-applied
+  then do :
+    run ref/message_place-imp.w (input v-applied-message) .
+  end .
+  for each buf_place-attr exclusive-lock where buf_place-attr.obj-type = v-cntxt-obj-type
+                                           and buf_place-attr.obj-code = v-cntxt-obj-code
+                                           and buf_place-attr.attr-code = {&message-table-version}
+  :
+    delete buf_place-attr .
+  end .
+end procedure .
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 

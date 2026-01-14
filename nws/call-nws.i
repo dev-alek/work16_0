@@ -200,6 +200,8 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,c-pump-attr~
 ,place~
 ,place-attr~
+,place-imp~
+,place-imp-attr~
 ,c-place-attr~
 ,c-plc-hist~
 ,c-place~
@@ -266,7 +268,9 @@ define variable v-rdb-0-not-news as character no-undo initial
 ,factur-connect~
 ,pl-level~
 ,c-pl-level~
+,pl-level-imp~
 ,pl-level-mm~
+,pl-level-mm-imp~
 ,prod-bc-db~
 ,cd-clu~
 ,c-cd-clu~
@@ -1081,12 +1085,17 @@ v-custom-except-list-erprn =
 ,pl-gds-pump-attr~
 ,pl-level~
 ,pl-level-attr~
+,pl-level-imp~
+,pl-level-mm~
+,pl-level-mm-imp~
 ,pl-pump~
 ,pl-pump-attr~
 ,pl-pump-nozzle~
 ,pl-pump-nozzle-attr~
 ,place~
 ,place-attr~
+,place-imp~
+,place-imp-attr~
 ,place-io~
 ,place-io-attr~
 ,price-all~

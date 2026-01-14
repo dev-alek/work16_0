@@ -446,7 +446,19 @@ DEFINE VARIABLE varstate-water-qnty AS DECIMAL FORMAT "->>,>>>,>>9":U INITIAL 0
 DEFINE VARIABLE v-sec-num AS character FORMAT "X(3)":U
      LABEL "Номер секции" 
      VIEW-AS FILL-IN 
-     SIZE 3 BY 1 NO-UNDO.     
+     SIZE 3 BY 1 NO-UNDO.   
+     
+define variable t-tank-cleaning as logical
+     view-as toggle-box
+     size 2 by 1 no-undo .  
+     
+DEFINE VARIABLE t-tank-cleaning-text1 AS character FORMAT "X(9)":U
+     VIEW-AS FILL-IN 
+     SIZE 9 BY 0.7 NO-UNDO init "Зачистка".   
+     
+DEFINE VARIABLE t-tank-cleaning-text2 AS character FORMAT "X(11)":U
+     VIEW-AS FILL-IN 
+     SIZE 11 BY 0.7 NO-UNDO init "резервуара".    
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -486,6 +498,9 @@ DEFINE FRAME Dialog-Frame
      v-mi-tmp at row 5.25 col 76 label "T"
      v-mi-tmp-name at row 5.25 col 76 label "T"
      b-mi-tmp at row 5.25 col 90  
+     t-tank-cleaning at row 5.25 col 94 no-label
+     t-tank-cleaning-text1 at row 4.95 col 96.1 no-label
+     t-tank-cleaning-text2 at row 5.55 col 96 no-label
      tt-rvs-line.system-qnty AT ROW 2.25 COL 34 COLON-ALIGNED
           FORMAT "->>,>>>,>>9":U 
           LABEL "Объем расчетно-книжный (л)"
@@ -1473,6 +1488,22 @@ do:
   apply "leave" to tt-rvs-line.state-level-total in frame Dialog-Frame .
 end .
 
+on value-changed of t-tank-cleaning in frame Dialog-Frame
+do :
+  assign t-tank-cleaning .
+  find first rvs-line-attr exclusive-lock
+     where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+       and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+       and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+       and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+       and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+       and rvs-line-attr.attr-code = "is-calc" no-error.
+  if available rvs-line-attr
+  then do :
+    rvs-line-attr.attr-value = string(no) .
+  end .
+end .
+
 &Scoped-define SELF-NAME b-calc
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-calc Dialog-Frame
 ON CHOOSE OF b-calc IN FRAME Dialog-Frame /* Рассчитать */
@@ -1741,6 +1772,11 @@ define buffer bf_place for ub.place .
     end .  
     CalibTable = CalibTable + Substitute("&1=&2", total1_pl-level.pl-level, (total1_pl-level.pl-qnty / 1000)) + {&new-line} . 
     CalibTable = CalibTable + Substitute("&1=&2", total2_pl-level.pl-level, (total2_pl-level.pl-qnty / 1000)) .
+    
+    if t-tank-cleaning
+    then do :
+      CalibTable = "0=0" + {&new-line} + "1=0" .
+    end .
 
     /*..........................................*/
 
@@ -2172,8 +2208,12 @@ define buffer bf_place for ub.place .
             tt-rvs-line.state-level-total,
             if tt-rvs-line.state-level-water <> ? then tt-rvs-line.state-level-water else 0
         ).
+        if not t-tank-cleaning
+        then do :
+          assign v-mm:CalibrationBelt = CalibBelt .
+        end .
+        
         assign
-          v-mm:CalibrationBelt        = CalibBelt
           v-mm:ToolAutomationLevel_H  = ToolAutomationLevel_H
           v-mm:ToolAutomationLevel_H_Water = ToolAutomationLevel_H_Water
           v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
@@ -3443,6 +3483,32 @@ DO:
     else do :
       rvs-line-attr.attr-value = string(v-mi-tmp) .
     end.
+    
+    if t-tank-cleaning
+    then do :
+      find first rvs-line-attr exclusive-lock
+           where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+             and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+             and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+             and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+             and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+             and rvs-line-attr.attr-code = "tank-cleaning" no-error.
+      if not available rvs-line-attr then do :
+        create rvs-line-attr.
+        assign
+          rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+          rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+          rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+          rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+          rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+          rvs-line-attr.attr-code = "tank-cleaning"
+          rvs-line-attr.attr-value = string(t-tank-cleaning)
+        .
+      end.
+      else do :
+        rvs-line-attr.attr-value = string(t-tank-cleaning) .
+      end.
+    end .
   end .
   
   find first rvs-line-attr exclusive-lock
@@ -4419,6 +4485,17 @@ DO:
         disable b-density with frame {&frame-name} .
       end .
     end .
+    if v-revision-mode
+    and input frame {&frame-name} tt-rvs-line.state-level-total < 1
+    and t-tank-cleaning:visible
+    then do :
+      enable t-tank-cleaning with frame {&frame-name} .
+    end .
+    else do :
+      assign t-tank-cleaning = no .
+      display t-tank-cleaning with frame {&frame-name} .
+      disable t-tank-cleaning with frame {&frame-name} .
+    end .
   end .
   else do :
     disable b-temperature with frame {&frame-name} .
@@ -4987,6 +5064,42 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
         undo, return error.
      end.
   end.
+  
+  if buf_rvs-doc.rvs-type = {&rvs-control}
+  and buf_rvs-doc.status_ = {&permitted}
+  then do :
+    find first rvs-line-attr no-lock
+          where rvs-line-attr.obj-code  = tt-rvs-line.obj-code
+            and rvs-line-attr.obj-type  = tt-rvs-line.obj-type
+            and rvs-line-attr.gds-code  = tt-rvs-line.gds-code
+            and rvs-line-attr.pl-code   = tt-rvs-line.pl-code
+            and rvs-line-attr.rvs-code  = tt-rvs-line.rvs-code
+            and rvs-line-attr.attr-code = "tank-cleaning" no-error.
+    if available rvs-line-attr
+    then do :
+      t-tank-cleaning = logical(rvs-line-attr.attr-value) .
+    end .
+    
+    display
+      t-tank-cleaning
+      t-tank-cleaning-text1
+      t-tank-cleaning-text2
+    with frame {&frame-name} .
+    if v-revision-mode
+    and tt-rvs-line.state-level-total > 0 
+    and tt-rvs-line.state-level-total < 1
+    and parmode = {&update}
+    then do :
+      enable t-tank-cleaning with frame {&frame-name} .
+    end .
+  end .
+  else do :
+    hide
+      t-tank-cleaning
+      t-tank-cleaning-text1
+      t-tank-cleaning-text2
+    in frame {&frame-name} .
+  end .
   
   run placelib_get-attr  ( input {&place-SI}
                           ,input tt-rvs-line.obj-code

@@ -968,13 +968,17 @@ Creation date: 04/05/06
 &glob table_pl-gds-pump-attr 'pl-gds-pump-attr':U
 &glob table_pl-level 'pl-level':U
 &glob table_pl-level-attr 'pl-level-attr':U
+&glob table_pl-level-imp 'pl-level-imp':U
 &glob table_pl-level-mm 'pl-level-mm':U
+&glob table_pl-level-mm-imp 'pl-level-mm-imp':U
 &glob table_pl-pump 'pl-pump':U
 &glob table_pl-pump-attr 'pl-pump-attr':U
 &glob table_pl-pump-nozzle 'pl-pump-nozzle':U
 &glob table_pl-pump-nozzle-attr 'pl-pump-nozzle-attr':U
 &glob table_place 'place':U
 &glob table_place-attr 'place-attr':U
+&glob table_place-imp 'place-imp':U
+&glob table_place-imp-attr 'place-imp-attr':U
 &glob table_place-io 'place-io':U
 &glob table_place-io-attr 'place-io-attr':U
 &glob table_point-io 'point-io':U

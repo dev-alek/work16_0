@@ -68,8 +68,8 @@ class ibs.th.bge.1crn.subjects.tank-imp_cal-tbl inherits ibs.th.bge.1crn.subject
          when lvl_ = ?
          v-str = v-str + ",amnt" 
          when amnt = ?
-         v-str = v-str + ",comp-er"
-         when comp-err = ?
+/*         v-str = v-str + ",comp-err"*/
+/*         when comp-err = ?          */
          .
       v-str = trim (v-str, ",").
       if v-str > ''

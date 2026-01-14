@@ -708,6 +708,17 @@ define variable vss-description as character no-undo init "Информация об объекте
   "yes"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Утилита применения новых градуировочных таблиц'"
+  "'utl/apply_place-imp_utl.w'"
+  " "
+  " "
+  " "
+  " "
+  "yes"
+}
+
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_adm_check}                                                      */
 /* АРМ Администратор   Утилиты/Проверки                                       */

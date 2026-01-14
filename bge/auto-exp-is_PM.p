@@ -189,11 +189,12 @@ on error undo, return error
     
     is_PM:exec_1c() .
    
-    run str/is_PM-send1c.p (input parparentproc,
-                            input this-procedure,
-                            input parparentproc,
-                            input is_PM:Data) 
-                            no-error .
+    run str/send1C-some-data.p (input parparentproc,
+                                input this-procedure,
+                                input parparentproc,
+                                input is_PM:Data,
+                                input "operating-balances") 
+                                no-error .
     if error-status:error
     then do :
       run write-to-log( "Ошибка при отправке в 1С. " + return-value ).
@@ -203,11 +204,12 @@ on error undo, return error
     then do :
       is_PM:exec_1c() .
      
-      run str/is_PM-send1c.p (input parparentproc,
-                              input this-procedure,
-                              input parparentproc,
-                              input is_PM:Data) 
-                              no-error .
+      run str/send1C-some-data.p (input parparentproc,
+                                  input this-procedure,
+                                  input parparentproc,
+                                  input is_PM:Data,
+                                  input "operating-balances") 
+                                  no-error .
       if error-status:error
       then do :
         run write-to-log( "Ошибка при отправке в 1С. " + return-value ).

@@ -47,6 +47,7 @@ define input parameter p-obj-code      as integer        no-undo .
 define input parameter p-pl-code       as integer        no-undo .
 /* Local Variable Definitions ---                                       */
 define variable v_ok as LOGICAL no-undo .
+define variable v-new as LOGICAL no-undo init no .
 define buffer buf_pl-level for ub.pl-level .
 define buffer buf_pl-level-mm for ub.pl-level-mm .
 define buffer buf_pl-level-attr for ub.pl-level-attr .
@@ -484,6 +485,23 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
     DO:
         define variable v-gap as character no-undo.
         define variable v-ok  as logical   no-undo.
+        
+        if v-new
+        then do :
+          find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                            and buf_pl-level.obj-code = p-obj-code
+                                            and buf_pl-level.pl-code  = p-pl-code
+                                            no-error .
+          if available buf_pl-level
+          then do :
+            message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в 1С: ERP. Подтвердите завершение работы!"
+            view-as alert-box question buttons yes-no update v-ok .
+            if not v-ok
+            then do :
+              return no-apply .
+            end .
+          end .
+        end .
 
         run check-pl-level in this-procedure ( OUTPUT v-gap ).
         IF v-gap <> ""
@@ -644,6 +662,17 @@ DO:
         
     ).
     run enable_UI in this-procedure.
+    
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      disable
+        b-add b-chg b-del b-load b-delete
+      with frame {&frame-name} .
+    end .
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -705,33 +734,48 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                              , p-obj-code
                                              , p-obj-type
                                              )
-   .
+    .
    
-   for each buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
-                                   and buf_pl-level.obj-code = p-obj-code
-                                   and buf_pl-level.pl-code  = p-pl-code
-                                   :
-     find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
-                                            and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
-                                            and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
-                                            and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
-                                            and buf_pl-level-attr.attr-code = "tarir-delta"
-                                            no-error .
-     if not available buf_pl-level-attr
-     then do :
-       create buf_pl-level-attr .
-       assign
-         buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
-         buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
-         buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
-         buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
-         buf_pl-level-attr.attr-code = "tarir-delta"        
-         buf_pl-level-attr.attr-value = (if v-place-type = 2 then string(0.25) else string(0.20))
-       .
-     end .                                                                      
-   end .
+    for each buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                    and buf_pl-level.obj-code = p-obj-code
+                                    and buf_pl-level.pl-code  = p-pl-code
+                                    :
+      find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                             and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                             and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
+                                             and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                             and buf_pl-level-attr.attr-code = "tarir-delta"
+                                             no-error .
+      if not available buf_pl-level-attr
+      then do :
+        create buf_pl-level-attr .
+        assign
+          buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+          buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+          buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
+          buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+          buf_pl-level-attr.attr-code = "tarir-delta"        
+          buf_pl-level-attr.attr-value = (if v-place-type = 2 then string(0.25) else string(0.20))
+        .
+      end .                                                                      
+    end .
 
     RUN enable_UI.
+    
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      disable
+        b-add b-chg b-del b-load b-delete
+      with frame {&frame-name} .
+    end .
+    else do :
+      assign v-new = yes .
+    end .
+    
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 
 END.

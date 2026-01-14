@@ -791,6 +791,15 @@ then do :
   end .
 end .
 
+if p-mode = {&add-def}
+then do :
+  message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка контролируемых параметров резервуара будет возможна только в 1С: ERP. Подтвердите завершение работы!"
+  view-as alert-box question buttons yes-no update vOk .
+  if not vOk
+  then
+    return no-apply .
+end .
+
 run ref/place01.p
   ( input-output p-rep-rec
   , input p-mode
@@ -3305,6 +3314,30 @@ PROCEDURE Myenable :
   apply "value-changed" to place-type .
   
   hide t-com-vessel com-tanks b-com-tanks v-is-main gate-valve-tanks t-gate-valve b-gate-valve-tanks t-auto-gate-valve in frame {&frame-name} .
+  
+  if p-mode = {&update}
+  then do :
+    disable
+      place-locat
+      tt-place.max-qnty
+      dead-balance
+      place-si
+      place-si-name
+      r-sr-izm
+      place-diameter
+      place-dead-high
+      place-temp-coef
+      dens-prov
+    with frame {&frame-name} .
+    if place-type = 1
+    then do :
+      disable
+        t-ponton
+        ponton-mass
+        ponton-height
+      with frame {&frame-name} .
+    end .
+  end .
   
   run check-sug-NP-par .
   
