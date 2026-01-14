@@ -68,22 +68,23 @@ class ibs.th.bge.1crn.import.impordansw implements ibs.th.bge.1crn.import.iimpsu
       return error.
     end.
 
-    vNewSts = statusMapping(vOrdansw:sts).
-    if ( vNewSts = orderStatus:Corrected:KeyIntDB and buf_order-doc.sts <> orderStatus:Corrected:KeyIntDB )
-    or ( vNewSts = orderStatus:Cancelled:KeyIntDB and buf_order-doc.sts <> orderStatus:Cancelled:KeyIntDB ) then
-    do:
-      Notification = substitute("&1Заказ № &2 &3 - &4.&5", Notification, buf_order-doc.doc-code, 
-                                buf_order-doc.cli-name, orderStatus:GetLabel(vNewSts),
-                                "~n").
-    end.
-
     assign
-      buf_order-doc.sts        = if vOrdansw:sts <> 6 then statusMapping(vOrdansw:sts) else buf_order-doc.sts
       buf_order-doc.order-item = if vOrdansw:order-item-ext <> ? 
                                  then vOrdansw:order-item-ext 
                                  else buf_order-doc.order-item
       buf_order-doc.info       = if vOrdansw:mess <> "" then vOrdansw:mess else buf_order-doc.info
     .
+
+    vNewSts = statusMapping(vOrdansw:sts).
+    if ( vNewSts = orderStatus:Corrected:KeyIntDB and buf_order-doc.sts <> orderStatus:Corrected:KeyIntDB )
+    or ( vNewSts = orderStatus:Cancelled:KeyIntDB and buf_order-doc.sts <> orderStatus:Cancelled:KeyIntDB ) then
+    do:
+      Notification = substitute("&1Заказ № &2 &3 - &4.&5", Notification, buf_order-doc.order-item, 
+                                buf_order-doc.cli-name, orderStatus:GetLabel(vNewSts),
+                                "~n").
+    end.
+    buf_order-doc.sts        = if vOrdansw:sts <> 6 then statusMapping(vOrdansw:sts) else buf_order-doc.sts.
+
     if buf_order-doc.sts = orderStatus:Cancelled:KeyIntDB then
     do: /* при отклонении заказа обнуляем фактическое кол-во */
       for each buf_order-line exclusive-lock where
@@ -126,6 +127,7 @@ class ibs.th.bge.1crn.import.impordansw implements ibs.th.bge.1crn.import.iimpsu
 /*    end.                                                                     */
     if Notification <> "" then
     do:
+      Notification = "ВНИМАНИЕ!~n" + Notification.
       find first buf_db-attr no-lock where 
                  buf_db-attr.db-num = DbNum 
              and buf_db-attr.attr-code = "orderStatusNitif" no-error.

@@ -100,7 +100,7 @@ procedure runBatFile:
    vBatFile = substitute("orderstat&1.bat", iNumber).
    output stream sBat to value (vBatFile).
 
-   put stream sBat unformatted "(echo ÂÍÈÌÀÍÈÅ!&".
+   put stream sBat unformatted "(".
    do vCount = 1 to num-entries(iMsg, "~n"):
       if entry(vCount, iMsg, "~n") <> "" then
         put stream sBat unformatted
