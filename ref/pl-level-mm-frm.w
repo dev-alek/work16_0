@@ -196,10 +196,10 @@ DO:
              bf_pl-level-mm.obj-type  = p-obj-type
          and bf_pl-level-mm.obj-code  = p-obj-code
          and bf_pl-level-mm.pl-code   = p-pl-code
+         and (if p-rid <> ? then recid(bf_pl-level-mm) <> p-rid else true)
          and ((bf_pl-level-mm.min-level = f-min-level and
                bf_pl-level-mm.max-level = f-max-level and
-               bf_pl-level-mm.level     = f-level and
-               if p-rid <> ? then recid(bf_pl-level-mm) <> p-rid else true) or
+               bf_pl-level-mm.level     = f-level) or
               (bf_pl-level-mm.min-level <= f-min-level and
                bf_pl-level-mm.max-level >= f-min-level and
                bf_pl-level-mm.zone <> f-zone) or
