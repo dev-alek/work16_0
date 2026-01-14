@@ -42,8 +42,6 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand,CashSend,FileSend,Help". /*список клиентов через запятую, с которыми работает сокет-сервер*/
-
   
   define private variable hLog          as handle no-undo.
   define public property LogMsg as character no-undo
@@ -101,45 +99,45 @@ class ibs.th.skt.SktServer:
     run gbl/conf-rd.p ("is-tsd", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       tsdCommand = new TSDCommand().
-      clientControl:SetCommandForClient(lookup("TSD",clientList), tsdCommand).
+      clientControl:SetCommandForClient("TSD", tsdCommand).
     end.
     run gbl/conf-rd.p ("ser-wth", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       tickedCommand = new TickedCommand().
-      clientControl:SetCommandForClient(lookup("Ticked",clientList), tickedCommand).
+      clientControl:SetCommandForClient("Ticked", tickedCommand).
     end.
     tmCommand = new TableMenuCommand().
-    clientControl:SetCommandForClient(lookup("TableMenu",clientList), tmCommand).
+    clientControl:SetCommandForClient("TableMenu", tmCommand).
     run gbl/conf-rd.p ("is-byscr", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       kioskCommand = new KioskCommand().
-      clientControl:SetCommandForClient(lookup("kiosk",clientList), kioskCommand).
+      clientControl:SetCommandForClient("kiosk", kioskCommand).
     end.
     run gbl/conf-rd.p ("is-wbsrv", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       webCommand = new webCommand().
-      clientControl:SetCommandForClient(lookup("websrv",clientList), webCommand).
+      clientControl:SetCommandForClient("websrv", webCommand).
     end.
     atdclientcmd = new atdclientcmd ().
-    clientControl:SetCommandForClient(lookup("atdclient",clientList), atdclientcmd).
+    clientControl:SetCommandForClient("atdclient", atdclientcmd).
     
     THGetInfoCmd = new THGetInfoCmd ().
-    clientControl:SetCommandForClient(lookup("ThGetInfo",clientList), THGetInfoCmd).
+    clientControl:SetCommandForClient("ThGetInfo", THGetInfoCmd).
     
     AuthMarking = new markingcmd ().
-    clientControl:SetCommandForClient(lookup("AuthMarking",clientList), AuthMarking).
+    clientControl:SetCommandForClient("AuthMarking", AuthMarking).
     
     DeferredCommand = new DeferredCommand ().
-    clientControl:SetCommandForClient(lookup("DeferredCommand",clientList), DeferredCommand).
+    clientControl:SetCommandForClient("DeferredCommand", DeferredCommand).
     
     CashSend = new CashSend (hLog).
-    clientControl:SetCommandForClient(lookup("CashSend",clientList), CashSend).
+    clientControl:SetCommandForClient("CashSend", CashSend).
     
     FileSend = new FileSend ().
-    clientControl:SetCommandForClient(lookup("FileSend",clientList), FileSend).
+    clientControl:SetCommandForClient("FileSend", FileSend).
     
     HelpSkt = new HelpSkt ().
-    clientControl:SetCommandForClient(lookup("Help",clientList), HelpSkt).
+    clientControl:SetCommandForClient("Help", HelpSkt).
     
     
   end constructor.
@@ -164,7 +162,7 @@ class ibs.th.skt.SktServer:
       client_ = identifyClients(req).
       if client_ <> ? then 
       do:
-         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
+         vDelete = clientControl:SendRequest(client_, req, resp) no-error.
          if error-status:error then 
          do:
             logWrite:LogStr = return-value.
@@ -229,7 +227,7 @@ class ibs.th.skt.SktServer:
          client_ = "tsd".
       if client_ <> ? then 
       do:
-         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
+         vDelete = clientControl:SendRequest(client_, req, resp, lpar) no-error.
          if error-status:error then 
          do:
             logWrite:LogStr = return-value.
@@ -282,7 +280,7 @@ class ibs.th.skt.SktServer:
     if req:HeadHTTP:queryAdr <> ""
     then do:
       client_ = entry(1,req:HeadHTTP:queryAdr,"/").
-      if     lookup (client_,clientList) = 0
+      if     not clientControl:availClient(client_)
          and num-entries (req:HeadHTTP:queryAdr,".") eq 2
       then
          client_= "FileSend".
@@ -314,7 +312,7 @@ class ibs.th.skt.SktServer:
     end.
     
     /*далее случаи не по стандарту*/    
-    if lookup (client_,clientList) = 0 then 
+    if not clientControl:availClient(client_) then 
     do:
       if    req:Content matches '*<data req="gds"*' 
          or req:Content matches '*<data req="grp"*' 

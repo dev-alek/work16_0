@@ -23,7 +23,7 @@ block-level on error undo, throw.
 class ibs.th.skt.ClientControl: 
 
   define private temp-table ttCommands no-undo
-    field numCmd as integer 
+    field CmdCode    as char 
     field objCommand as class Progress.Lang.Object 
     .
   define private temp-table ttDeferredCommands no-undo
@@ -31,7 +31,6 @@ class ibs.th.skt.ClientControl:
     field objreq     as class Progress.Lang.Object
     field objResp    as class Progress.Lang.Object 
     .
-  define private variable ii       as integer no-undo.
   define private variable logWrite as class   LogWrite no-undo.
   define private variable hLog     as handle  no-undo.	
    /*------------------------------------------------------------------------------
@@ -50,8 +49,8 @@ class ibs.th.skt.ClientControl:
    end constructor.
 
 
-  method public logical SendRequest ( numcmd as int, req as class IRequest, resp as class IResponse ):
-    find first ttCommands where ttCommands.numCmd = numcmd no-lock no-error.
+  method public logical SendRequest ( iCmdCode as char, req as class IRequest, resp as class IResponse ):
+    find first ttCommands where ttCommands.CmdCode = iCmdCode no-lock no-error.
     if not available (ttCommands) then 
     do:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
@@ -87,8 +86,8 @@ class ibs.th.skt.ClientControl:
        
   end method.
   
-  method public logical SendRequest ( numcmd as int, req as IRequest, resp as class IResponse, lpar as character ):
-    find first ttCommands where ttCommands.numCmd = numcmd no-lock no-error.
+  method public logical SendRequest ( iCmdCode as char, req as IRequest, resp as class IResponse, lpar as character ):
+    find first ttCommands where ttCommands.CmdCode = iCmdCode no-lock no-error.
     if not available (ttCommands) then 
     do:
       logWrite:LogStr = "Для данного клиента не создана комманда.".
@@ -123,15 +122,19 @@ class ibs.th.skt.ClientControl:
   end method.
 
 
-  method public void SetCommandForClient ( numcmd as int, cmd as class ICommand ):
-    ii = ii + 1.
+  method public void SetCommandForClient ( iCmdCode as char, cmd as class ICommand ):
     create ttCommands.
     assign
-      ttCommands.numCmd = numcmd
+      ttCommands.CmdCode = iCmdCode
       ttCommands.objCommand = cmd
       .
   end method.
-
+  
+  method public logical availClient ( iCmdCode as char ):
+    find first ttCommands where ttCommands.CmdCode = iCmdCode no-error. 
+    return available ttCommands. 
+  end method.
+  
   method public logical checkEnd ():
      define variable req  as ibs.th.skt.Commands.IRequest  no-undo.
      define variable resp as ibs.th.skt.Commands.IResponse no-undo.
