@@ -217,7 +217,12 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       then
          undo, throw new Progress.Lang.AppError(substitute("В договоре &1 и в УПД разные контр агенты",utd.contract-code)) .
       Utd.BaseDocumentNumber = contract.contract-prn-code.
-      utd.BaseDocumentDate       = contract-date.                      
+      utd.BaseDocumentDate       = contract-date.
+      
+      if objImp:order-item ne ?
+      then
+        setattrutd(utd.db-num, utd.doc-id, "order-item", objImp:order-item).
+                            
       /*define variable VContractEdo as logical no-undo init yes.
       VContractEdo = contract.whole-send-news eq 1. /* договор Едо*/
       if not VContractEdo

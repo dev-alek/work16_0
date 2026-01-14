@@ -512,6 +512,11 @@ Creation date: 04/05/06
 &glob table_c-utd-lines-attr 'c-utd-lines-attr':U
 &glob table_c-utd-marking-lines 'c-utd-marking-lines':U
 &glob table_c-utd-marking-lines-attr 'c-utd-marking-lines-attr':U
+&glob table_c-order-doc 'c-order-doc':U
+&glob table_c-order-doc-attr 'c-order-doc-attr':U
+&glob table_c-order-head 'c-order-head':U
+&glob table_c-order-line 'c-order-line':U
+&glob table_c-order-line-attr 'c-order-line-attr':U
 &glob table_c-var-deliv-gr-per-val 'c-var-deliv-gr-per-val':U
 &glob table_c-variant-delivery 'c-variant-delivery':U
 &glob table_c-varianty-delivery-gds-obj 'c-varianty-delivery-gds-obj':U
@@ -1276,6 +1281,10 @@ Creation date: 04/05/06
 &glob table_utd-lines-attr 'utd-lines-attr':U
 &glob table_utd-marking-lines 'utd-marking-lines':U
 &glob table_utd-marking-lines-attr 'utd-marking-lines-attr':U
+&glob table_order-doc 'order-doc':U
+&glob table_order-doc-attr 'order-doc-attr':U
+&glob table_order-line 'order-line':U
+&glob table_order-line-attr 'order-line-attr':U
 &glob table_var-deliv-gr-per-val 'var-deliv-gr-per-val':U
 &glob table_var-deliv-gr-per-val-attr 'var-deliv-gr-per-val-attr':U
 &glob table_variant-delivery 'variant-delivery':U

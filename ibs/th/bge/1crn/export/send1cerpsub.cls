@@ -76,7 +76,7 @@ class ibs.th.bge.1crn.export.send1cerpsub abstract
    get:
       return trim (Msg, {&new-line}).
    end.
-   private set (inArg as char):
+   protected set (inArg as char):
       Msg = Msg + {&new-line} + inArg.
    end.
     

@@ -143,6 +143,12 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable imptrn-fuel-docEventHndlrObj   as class imptrn-fuel-doc no-undo.
   define variable trn-fuel-doc-inlistSubjectsObj as class subjects        no-undo.
 
+  define variable ordrspSubjectObj                         as class ordrsp                      no-undo.
+  define variable order-goodSubjectObj                     as class order-good                  no-undo.
+  define variable impordrspEventHndlrObj                   as class impordrsp                   no-undo.
+  define variable order-goodlistSubjectsObj                as class subjects                    no-undo.
+  define variable ordanswSubjectObj                        as class ordansw                     no-undo.
+  define variable impordanswEventHndlrObj                  as class impordansw                  no-undo.
   
   /*---------------- ќбъекты дл€ скидок ----------*/  
   define variable promotionSubjectObj                   as class promotion               no-undo. // <promotion>
@@ -331,6 +337,11 @@ class ibs.th.bge.1crn.import.parsesub:
     tank-imp_cal-tbllistSubjectsObj = new subjects ("cal-tbl").
     tank-imp_belt-tbllistSubjectsObj = new subjects ("belt-tbl").
 		    
+    ordrspSubjectObj = new ordrsp ().
+    impordrspEventHndlrObj = new impordrsp ().
+    order-goodlistSubjectsObj = new subjects ("order-good").
+    ordanswSubjectObj = new ordansw ().
+    impordanswEventHndlrObj = new impordansw ().
     /* перенесено внутрь парсинга создание экземпл€ров объектов:
        - стран
        - фирм
@@ -720,6 +731,36 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
+        when "ordrsp" then do:
+          if not valid-object(ordrspSubjectObj) then ordrspSubjectObj = new ordrsp ().
+          if not valid-object(impordrspEventHndlrObj) then do :
+            impordrspEventHndlrObj = new impordrsp ().
+          end .
+          v-iSubject = ordrspSubjectObj .
+          v-iImpSub  = impordrspEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "ordansws" then do:
+          GetChildren(hNoderef, (level + 1)).
+          if valid-object(impordanswEventHndlrObj) then
+          do:
+            impordanswEventHndlrObj:sendNotification().
+            delete object impordanswEventHndlrObj.
+          end.
+        end.
+        when "ordansw" then do:
+          if not valid-object(ordanswSubjectObj) then ordanswSubjectObj = new ordansw ().
+          if not valid-object(impordanswEventHndlrObj) then do :
+            impordanswEventHndlrObj = new impordansw ().
+          end .
+          v-iSubject = ordanswSubjectObj .
+          v-iImpSub  = impordanswEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
         
         when "business-unit" then do:
           GetChildrenSub (hNoderef, (level + 1), businessUnitsSubjectObj).
@@ -897,7 +938,7 @@ class ibs.th.bge.1crn.import.parsesub:
         /* ----- имена секций любого уровн€ вложенности ----- */
         when "sections" or when "calibration-table" or
         when "cal-tbl" or when "belt-tbl" or
-        when "nb-carriers" or when "nb-suppliers" or when "prts"
+        when "nb-carriers" or when "nb-suppliers" or when "prts" 
         then do:
           GetChildrenSub (hNoderef, (level + 1), ?).
           /* только проваливаетс€ дальше в секцию;
@@ -1544,6 +1585,29 @@ class ibs.th.bge.1crn.import.parsesub:
             unitaddsSubjectsObj:Add(  new unit-add-code()  ).
             good_unitaddSubjectObj = cast (unitaddsSubjectsObj:SubjectObjCurr, unit-add-code).
             GetChildrenSub (hNoderef, (level + 1), good_unitaddSubjectObj).
+        end.
+        when "order-goods" then do :
+          v-need-parse = true . 
+          if v-need-parse and valid-object (ordrspSubjectObj) then do:
+            if ordrspSubjectObj:IsInitSubForWrite then do:
+              order-goodListSubjectsObj = new subjects ("order-good") .
+              GetChildrenSub (hNoderef, (level + 1), ?).
+              ordrspSubjectObj:SetProp (order-goodListSubjectsObj).
+              v-need-parse = false .
+            end .
+          end .
+          if v-need-parse then GetChildrenSub (hNoderef, (level + 1), ?).
+        end.
+        when "order-good" then do:
+          v-need-parse = true . 
+          if v-need-parse and valid-object (ordrspSubjectObj) then do:
+            if ordrspSubjectObj:IsInitSubForWrite then do: 
+              order-goodListSubjectsObj:Add(  new order-good()  ).
+              order-goodSubjectObj = cast (order-goodListSubjectsObj:SubjectObjCurr, order-good).
+              GetChildrenSub (hNoderef, (level + 1), order-goodSubjectObj).
+              v-need-parse = false .
+            end .
+          end .
         end.
         
         

@@ -36,6 +36,7 @@ class ibs.th.bge.1crn.subjects.edi-doc inherits ibs.th.bge.1crn.subjects.asubjec
   define property orig-edoc-id    as character    no-undo get. private set.
   define property sum             as decimal      no-undo get. private set.
   define property sum-nonds       as decimal      no-undo get. private set.
+  define property order-item      as character    no-undo get. private set.
  
   define property comment         as character    no-undo get. private set.
 
@@ -72,6 +73,7 @@ class ibs.th.bge.1crn.subjects.edi-doc inherits ibs.th.bge.1crn.subjects.asubjec
   &scoped-define attr-dec      if inValue >= "" then decimal (inValue) else 0.0
   &scoped-define attr-date     if inValue >= "" then date-mth (inValue) else ?
   method override protected void SetPropProtected (inTag as char, inValue as char):
+ 
     case inTag:
       when "edoc-id"      then edoc-id         = {&attr-str} .
       when "edoc-num"     then edoc-num         = {&attr-str} .
@@ -86,6 +88,7 @@ class ibs.th.bge.1crn.subjects.edi-doc inherits ibs.th.bge.1crn.subjects.asubjec
       when "comment"      then comment          = {&attr-str} .
       when "sum"          then sum              = {&attr-dec} .
       when "sum-nonds"    then sum-nonds        = {&attr-dec} .
+      when "order-item"   then order-item         = {&attr-str} .
       
       
     end case.
@@ -143,6 +146,7 @@ class ibs.th.bge.1crn.subjects.edi-doc inherits ibs.th.bge.1crn.subjects.asubjec
       comment            = ?
       sum                = ?
       sum-nonds          = ?
+      order-item         = ?
     .
     if valid-object(gds)          then delete object gds .
     

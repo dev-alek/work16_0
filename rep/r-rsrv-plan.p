@@ -49,6 +49,7 @@ define variable vss-description as character no-undo init "Отчет по планированию
 { gbl/getcntxt.i def }
 { gbl/getcntxt.i get }
 { trg/prdoclib.i   }
+{ rep/tt-zakaz.i new }
 
 define variable ii                  as integer   no-undo .
 define variable kk                  as integer   no-undo .
@@ -100,39 +101,7 @@ function round-minDec returns decimal
 function fnc-DD-MM-YYYY returns character
   (input p-dat-date as date) forward.
 
-define temp-table tt-zakaz no-undo 
-  field artic        as character
-  field gds-code     as integer
-  field gds-name     as character
-  field prod-type    as character
-  field prod-code    as integer
-  field ostatokToday as decimal
-  field tempSale     as decimal
-  field minZapas     as decimal
-  field volTemp      as integer
-  field volSale      as decimal
-  field volMinZapas  as integer
-  field volMinGarant as integer
-  field ostatokDay   as decimal
-  field promo        as logical 
-  field qntyDaySale  as integer
-  field qntyDayGoods as integer
-  field garantZapas  as integer
-  field ostatokGoods as decimal
-  field qntyDay      as integer
-  field contract     as character
-  index pi    gds-code contract
-  index artic artic    prod-type prod-code 
-  index contr contract.
 
-define temp-table temp-gds-qnty no-undo
-  field day      as date
-  field ost      as decimal
-  field gds-code as integer
-  index pi is unique primary day gds-code
-  index by-ost               ost .
-  
- 
 define variable qnty-lib-v-fact-order-2 as decimal no-undo .
 define buffer buf_temp-gds-qnty for temp-gds-qnty .
 
@@ -203,6 +172,7 @@ for each gds-list:
     tt-zakaz.volSale      = 0
     tt-zakaz.volTemp      = 0
     tt-zakaz.contract     = gds-list.contract
+    tt-zakaz.contract-code = gds-list.contract-code
     .
   
   /*Остаток на текущий день*/
@@ -581,6 +551,8 @@ for each tt-zakaz no-lock break by tt-zakaz.contract by tt-zakaz.gds-code:
       . 
   end.
 end.
+
+run rep/crt-order.p (parparentproc, pDateOrder, buf_clients.obj-type, buf_clients.obj-code,"").
 
 run prn-lib-reportviewer-report-name in this-procedure (
   input THIS-PROCEDURE

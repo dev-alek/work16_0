@@ -913,8 +913,10 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
                     if not available (gds-list) then 
                     do:
                       create gds-list .
-                      buffer-copy buf_goods to gds-list .      
-                      gds-list.contract = ub.contract.contract-prn-code .                
+                      buffer-copy buf_goods to gds-list assign      
+                        gds-list.contract-code = ub.contract.contract-code                
+                        gds-list.contract      = ub.contract.contract-prn-code
+                      .                
                     end.
                   end.
                 end.
@@ -948,8 +950,10 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
                   if available (buf_goods) then 
                   do:
                     create gds-list .
-                    buffer-copy buf_goods to gds-list .
-                    gds-list.contract = ub.contract.contract-prn-code .
+                    buffer-copy buf_goods to gds-list assign
+                      gds-list.contract-code = ub.contract.contract-code                
+                      gds-list.contract = ub.contract.contract-prn-code 
+                    .
                   end.
                 end.
               end.

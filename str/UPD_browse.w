@@ -117,7 +117,8 @@ define variable v-manual    as logical   no-undo .
 define variable v-barcode   as logical   no-undo .
 DEFINE VARIABLE v-timedelay as integer   no-undo .
 define variable mflagscan   as logical   no-undo.
-define variable mMarkUtdLine    as logical   no-undo.
+define variable mMarkUtdLine as logical   no-undo.
+define variable mOrderItem  as character   no-undo.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -365,6 +366,10 @@ DEFINE BUTTON b-exit AUTO-GO
 DEFINE BUTTON b-save AUTO-GO 
    LABEL "&Ввод ":L 
    SIZE 15 BY 1.
+
+DEFINE BUTTON b-order 
+   LABEL "Заказ" 
+   SIZE 20 BY 1.
 
 DEFINE BUTTON b-servis 
    LABEL "Сервис" 
@@ -807,6 +812,7 @@ DEFINE FRAME d-utd
    b-cancel AT ROW 1 COL 2
    b-exit AT ROW 1 COL 2
    b-save AT ROW 1 COL 17
+   b-order AT ROW 1 COL 79.88 WIDGET-ID 288
    b-servis AT ROW 1 COL 99.88 WIDGET-ID 288
    b_error AT ROW 1 COL 114.88 WIDGET-ID 282
 /*   B_BarCode AT ROW 1 COL 148.88 RIGHT-ALIGNED WIDGET-ID 354*/
@@ -1157,6 +1163,33 @@ ON leave, return OF a-n-c-name IN FRAME d-utd
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&Scoped-define SELF-NAME b-lookup
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-order d-utd
+ON CHOOSE OF b-order IN FRAME d-utd /* Просмотр */
+DO:
+    define buffer buf_order-doc for ub.order-doc. 
+    
+    find first buf_order-doc where
+               buf_order-doc.order-item = mOrderItem
+         no-lock no-error.
+    if available (buf_order-doc) then 
+    do:
+       run str/order-doc.w (input parparentproc,
+                            input buf_order-doc.doc-code,
+                            input {&lookup}
+                           )  .
+    end.
+    else 
+    do: 
+        message "Заказ не найден."
+            view-as alert-box.  
+        return no-apply .
+    end.
+END.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-cancel
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel d-utd
@@ -3949,6 +3982,20 @@ PROCEDURE enable_UI :
       X_utd-lines.stts         :visible IN BROWSE br-utd = false.
       X_utd-lines.UnitCliQnty  :visible IN BROWSE br-utd = false.
    end.   
+
+   if mOrderItem <> "" then
+   do:
+     b-order:label = substitute("Заказ № &1", mOrderItem).
+     enable
+       b-order
+       with frame {&frame-name} .
+   end.
+   else 
+     hide
+       b-order
+       in frame {&frame-name} .
+   
+   
    case p-mode:
       when {&update} then 
          do:
@@ -4742,6 +4789,10 @@ PROCEDURE init-temp :
                do:
                   f-boss = integer(buf_utd-attr.attr-value) .
                   boss-name = CliName(integer(buf_utd-attr.attr-value), {&prs}) .
+               end.  
+            when "order-item" then 
+               do:
+                  mOrderItem = buf_utd-attr.attr-value .
                end.  
 
          end case .  

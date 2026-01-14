@@ -1271,6 +1271,15 @@ v-custom-except-list-erprn =
 ,tran-fuel~
 ,chk-slip-head~
 ,chk-slip-string~
+,order-doc~
+,order-line~
+,order-doc-attr~
+,order-line-attr~
+,c-order-head~
+,c-order-doc~
+,c-order-line~
+,c-order-doc-attr~
+,c-order-line-attr~
 ":U.
 
 /*-------------на параметре is-erpRN таблицы будут ходить только из ГБД*/

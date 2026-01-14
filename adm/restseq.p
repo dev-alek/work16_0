@@ -5530,3 +5530,59 @@ procedure restore-{&sequence-name} :
   end.
 end procedure. /* restore-s-c-mark-chip-num */
 
+procedure restore-s-order-code :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+
+    {&init-validation}
+
+    &scoped-define sequence-name   s-order-code
+
+    &scoped-define table-name      order-doc
+    &scoped-define seq-field-name  doc-code
+    &scoped-define not-include-in-seq-records if restseq.{&table-name}.db-num <> p-curr-db-num then NEXT.
+    &scoped-define seq-expresstion assign v-new-seq-value = restseq.{&table-name}.{&seq-field-name} .
+    {&validate-sequence}
+
+    &undefine not-include-in-seq-records
+    {&update-sequence}
+  end.
+end procedure.
+
+&scoped-define sequence-name s-c-order-chip-num
+procedure restore-{&sequence-name} :
+  define input parameter p-curr-db-num as integer no-undo.
+
+  do
+  on error undo, return error
+  :
+    {&init-validation}
+
+    &scoped-define seq-field-name  chip-num
+    
+    &scoped-define table-name      c-order-doc
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-order-line
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-order-doc-attr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-order-line-attr
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    &scoped-define table-name      c-order-head
+    &scoped-define seq-expresstion assign v-new-seq-value = int64(restseq.{&table-name}.{&seq-field-name}) no-error .
+    {&validate-sequence}
+
+    {&update-sequence}
+  end.
+end procedure. /* restore-s-c-order-chip-num */
