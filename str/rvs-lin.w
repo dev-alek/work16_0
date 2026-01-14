@@ -4483,20 +4483,30 @@ DO:
       end .
     end .
     if v-revision-mode
-    and input frame {&frame-name} tt-rvs-line.state-level-total < 1
     and t-tank-cleaning:visible
     then do :
-      enable t-tank-cleaning with frame {&frame-name} .
-    end .
-    else do :
-      assign t-tank-cleaning = no .
-      display t-tank-cleaning with frame {&frame-name} .
-      disable t-tank-cleaning with frame {&frame-name} .
+      if input frame {&frame-name} tt-rvs-line.state-level-total < 1
+      then do :
+        enable t-tank-cleaning with frame {&frame-name} .
+      end .
+      else do :
+        assign t-tank-cleaning = no .
+        display t-tank-cleaning with frame {&frame-name} .
+        disable t-tank-cleaning with frame {&frame-name} .
+      end .
     end .
   end .
   else do :
     disable b-temperature with frame {&frame-name} .
     disable b-density with frame {&frame-name} .
+    
+    if v-revision-mode
+    and t-tank-cleaning:visible
+    then do :
+      assign t-tank-cleaning = no .
+      display t-tank-cleaning with frame {&frame-name} .
+      disable t-tank-cleaning with frame {&frame-name} .
+    end .
   end .
   if input frame {&frame-name} {&self-name} <> {&self-name} then do:
     assign v-hand-input-lvl = true .
