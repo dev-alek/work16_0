@@ -6332,6 +6332,8 @@ procedure calc-all :
       assign
         tt-fr-doc-line.cli-base-rate = varcli-base-rate
       .
+      if tt-fr-doc-line.doc-density = ?
+      then
       display tt-fr-doc-line.cli-base-rate with frame {&frame-name} .
     end.
   end.
