@@ -1,11 +1,11 @@
 block-level on error undo, throw.
 /*
 
-$Revision: 7fd4558db973, 297, rls $
-$Author: EShklyar $
-$Date: Tue Dec 01 19:11:39 2015 +0300 $
-$Workfile: cd-inf.p $
-$Archive: str/cd-inf.p $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Информация по имеющимся отложенным заданиям отсылки на кассу
 
@@ -20,11 +20,11 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-interface as logical no-undo.
 define input parameter p-run as logical no-undo .
 
-define variable vss-revision    as character no-undo init "$Revision: 7fd4558db973, 297, rls $":U .
-define variable vss-author      as character no-undo init "$Author: EShklyar $":U .
-define variable vss-date        as character no-undo init "$Date: Tue Dec 01 19:11:39 2015 +0300 $":U .
-define variable vss-workfile    as character no-undo init "$Workfile: cd-inf.p $":U .
-define variable vss-archive     as character no-undo init "$Archive: str/cd-inf.p $":U .
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Информация по имеющимся отложенным заданиям отсылки на кассу".
 { cmp/vssrevis.i }
 
@@ -58,14 +58,15 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
-    find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
+    find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID no-error.
+
   assign
   v-gds-note = "Самое старое задание на пересылку товара на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_user-login.User-login
+               (if available buf_user-login then buf_user-login.User-login else "Логин удален с user-id = " + buf_BatchProcess.User_ID)
   v-gds-date = buf_BatchProcess.BP_SysDate
   v-gds-time = buf_BatchProcess.BP_SysTimeInt
   v-gds = yes
@@ -85,14 +86,14 @@ if avail buf_BatchProcess then do:
   if buf_BatchProcess.BP_SysDate < v-gds-date
   OR (buf_BatchProcess.BP_SysDate = v-gds-date
   AND buf_BatchProcess.BP_SysTimeInt < v-gds-time) then do:
-      find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
+      find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID no-error.
     assign
     v-gds-note = "Самое старое задание на пересылку товара на кассу" + {&new-line} +
                 "от" + {&space-char} +
                 string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                 buf_BatchProcess.BP_SysTime  + {&new-line} +
                 "Пользователь" + {&space-char} +
-                buf_user-login.User-login
+                (if available buf_user-login then buf_user-login.User-login else "Логин удален с user-id = " + buf_BatchProcess.User_ID)
     .
   end.
   assign
@@ -105,14 +106,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
-        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID no-error.
   assign
   v-dcard-note = "Самое старое задание на пересылку информации о клиенте (карте) на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_user-login.User-login
+               (if available buf_user-login then buf_user-login.User-login else "Логин удален с user-id = " + buf_BatchProcess.User_ID)
   v-dcard = yes
                .
 end.
@@ -127,14 +128,15 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
-        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID no-error.
   assign
   v-seller-note = "Самое старое задание на пересылку информации о продавце на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_user-login.User-login
+               (if available buf_user-login then buf_user-login.User-login else "Логин удален с user-id = " + buf_BatchProcess.User_ID)
+               .
   v-seller = yes
                .
 end.
@@ -149,14 +151,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
-        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID no-error.
   assign
   v-cashier-note = "Самое старое задание на пересылку информации о кассире на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_user-login.User-login
+               (if available buf_user-login then buf_user-login.User-login else "Логин удален с user-id =" + buf_BatchProcess.User_ID)
   v-cashier = yes
                .
 end.
@@ -171,14 +173,14 @@ find first  buf_BatchProcess no-lock
         and buf_BatchProcess.bp_status     = {&btpr-normal}
         use-INDEX XPKN477 no-error .
 if avail buf_BatchProcess then do:
-        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID.
+        find first buf_user-login where buf_user-login.user-id = buf_BatchProcess.User_ID no-error.
   assign
   v-fgrp-note = "Самое старое задание на пересылку информации о группе блюд на кассу" + {&new-line} +
                "от" + {&space-char} +
                string(buf_BatchProcess.BP_SysDate, "99/99/9999":U) + {&space-char} +
                buf_BatchProcess.BP_SysTime  + {&new-line} +
                "Пользователь" + {&space-char} +
-               buf_user-login.User-login
+               (if available buf_user-login then buf_user-login.User-login else "Логин удален с user-id =" + buf_BatchProcess.User_ID)
   v-fgrp = yes
                .
 end.
