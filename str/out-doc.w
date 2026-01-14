@@ -512,7 +512,7 @@ b-notes b-attr b-cnt b-fixprice b-re-price b-rsrv-doc-list b-dopinf ~
 b-history b-help b-print b-prev b-next r-clients r-sht r-outs r-acc varpurch-chs ~
 r-pay is-repay r-wrkr is-cons r-agnt is-storage is-oldcons r-boss r-reas ~
 a-n-c loc-code loc-name loc-art varcontract-prn-code b-contr-lkp b-mark ~
-b-add b-bc b-prt b-parts b-lkp b-chg b-del b-notes-line br-dtl sum-base ~
+b-add b-prt b-parts b-lkp b-chg b-del b-notes-line br-dtl sum-base ~
 sum-rubl wrkr-name fact-base fact-rubl TEXT-RUBL agnt-name pay-rubl ~
 boss-name rsn-name flora-PS
 &Scoped-Define DISPLAYED-FIELDS t-doc.cli-code t-doc.cli-type ~
@@ -3006,19 +3006,19 @@ ON VALUE-CHANGED OF edo-return IN FRAME d-out-doc /* возврат по ЭДО */
           return no-apply .
        end.      
     end.    
-    else do:                             
-       /*накл- запр- разр+ для всех внешних и внутреннего расхода*/
-       if ((not t-doc.flag_ and t-doc.status_ = {&inquiry}  or
-            not t-doc.flag_ and t-doc.status_ = {&wayb}     or
-            t-doc.flag_ and t-doc.status_ = {&permitted}   ) and
-            (not t-doc.internal or t-doc.doc-type = {&expense} and t-doc.internal)) or
-            /*накл+ внутреннего прихода*/
-            (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&wayb} and t-doc.flag_) or
-            /*запр- внутреннего прихода*/
-            (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&inquiry} and not t-doc.flag_)
-            then               
-         enable b-bc with frame {&frame-name}.
-    end.
+/*    else do:                                                                                                  */
+/*       /*накл- запр- разр+ для всех внешних и внутреннего расхода*/                                           */
+/*       if ((not t-doc.flag_ and t-doc.status_ = {&inquiry}  or                                                */
+/*            not t-doc.flag_ and t-doc.status_ = {&wayb}     or                                                */
+/*            t-doc.flag_ and t-doc.status_ = {&permitted}   ) and                                              */
+/*            (not t-doc.internal or t-doc.doc-type = {&expense} and t-doc.internal)) or                        */
+/*            /*накл+ внутреннего прихода*/                                                                     */
+/*            (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&wayb} and t-doc.flag_) or    */
+/*            /*запр- внутреннего прихода*/                                                                     */
+/*            (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&inquiry} and not t-doc.flag_)*/
+/*            then                                                                                              */
+/*         enable b-bc with frame {&frame-name}.                                                                */
+/*    end.                                                                                                      */
     assign edo-return .
     { str/tdat-wrt.i
       t-doc.doc-code
@@ -5859,7 +5859,7 @@ PROCEDURE enable_UI :
          t-doc.tot-calc t-doc.discnt-rubl varpurch-chs t-doc.pay-code r-pay
          is-repay t-doc.wrkr r-wrkr is-cons t-doc.agnt r-agnt is-storage
          is-oldcons t-doc.boss r-boss r-reas a-n-c loc-code loc-name loc-art
-         varcontract-prn-code b-contr-lkp b-mark b-add b-bc b-prt b-parts b-lkp
+         varcontract-prn-code b-contr-lkp b-mark b-add b-prt b-parts b-lkp
          b-chg b-del b-notes-line br-dtl t-doc.doc-qnty t-doc.fact-qnty
          sum-base sum-rubl ub.pay-type.obj-name t-doc.VAT-base t-doc.VAT-rubl
          wrkr-name fact-base fact-rubl TEXT-RUBL agnt-name t-doc.tot-cli
@@ -8351,19 +8351,19 @@ if fnc = "enable" then do:
           enable t-doc.shift-date t-doc.shift-num t-doc.shift-name r-sht with frame {&frame-name}.
          end.
       end.
-      if bcvalue <> "no" and
-         /*накл- запр- разр+ для всех внешних и внутреннего расхода*/
-         ((not t-doc.flag_ and t-doc.status_ = {&inquiry}  or
-           not t-doc.flag_ and t-doc.status_ = {&wayb}     or
-               t-doc.flag_ and t-doc.status_ = {&permitted}   ) and
-          (not t-doc.internal or t-doc.doc-type = {&expense} and t-doc.internal)) or
-         /*накл+ внутреннего прихода*/
-         (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&wayb} and t-doc.flag_) or
-         /*запр- внутреннего прихода*/
-         (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&inquiry} and not t-doc.flag_)
-         then do:
-         enable b-bc with frame {&frame-name}.
-      end.
+/*      if bcvalue <> "no" and                                                                               */
+/*         /*накл- запр- разр+ для всех внешних и внутреннего расхода*/                                      */
+/*         ((not t-doc.flag_ and t-doc.status_ = {&inquiry}  or                                              */
+/*           not t-doc.flag_ and t-doc.status_ = {&wayb}     or                                              */
+/*               t-doc.flag_ and t-doc.status_ = {&permitted}   ) and                                        */
+/*          (not t-doc.internal or t-doc.doc-type = {&expense} and t-doc.internal)) or                       */
+/*         /*накл+ внутреннего прихода*/                                                                     */
+/*         (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&wayb} and t-doc.flag_) or    */
+/*         /*запр- внутреннего прихода*/                                                                     */
+/*         (t-doc.doc-type = {&income} and t-doc.internal and t-doc.status_ = {&inquiry} and not t-doc.flag_)*/
+/*         then do:                                                                                          */
+/*         enable b-bc with frame {&frame-name}.                                                             */
+/*      end.                                                                                                 */
       if not t-doc.internal then enable t-doc.print-rubl with frame {&frame-name}.
       if t-doc.status_ = {&wayb} and
          t-doc.flag_   = no      then do:
