@@ -141,7 +141,7 @@ class ibs.th.ref.ostcashbook inherits UserControl:
       /*  */
       this-object:cashbooknameDataGridViewTextBoxColumn:AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode:Fill.
       this-object:cashbooknameDataGridViewTextBoxColumn:DataPropertyName = "cashbookname".
-      this-object:cashbooknameDataGridViewTextBoxColumn:HeaderText = "Касовая книга".
+      this-object:cashbooknameDataGridViewTextBoxColumn:HeaderText = "Кассовая книга".
       this-object:cashbooknameDataGridViewTextBoxColumn:Name = "cashbooknameDataGridViewTextBoxColumn".
       this-object:cashbooknameDataGridViewTextBoxColumn:ReadOnly = true.
       /*  */
@@ -172,7 +172,7 @@ class ibs.th.ref.ostcashbook inherits UserControl:
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 4 no-undo.
       arrayvar2[1] = new Progress.Data.ColumnPropDesc("chang", "", Progress.Data.DataType:LOGICAL).
-      arrayvar2[2] = new Progress.Data.ColumnPropDesc("cashbookname", "Касовая книга", Progress.Data.DataType:CHARACTER).
+      arrayvar2[2] = new Progress.Data.ColumnPropDesc("cashbookname", "Кассовая книга", Progress.Data.DataType:CHARACTER).
       arrayvar2[3] = new Progress.Data.ColumnPropDesc("ost", "Текущий остаток", Progress.Data.DataType:DECIMAL).
       arrayvar2[4] = new Progress.Data.ColumnPropDesc("ostrasch", "Расчетный остаток", Progress.Data.DataType:DECIMAL).
       tableDesc1:Columns = arrayvar2.
