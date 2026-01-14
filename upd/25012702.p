@@ -8,6 +8,7 @@ define variable vBufPlace as handle no-undo.
 define variable vBufPlaceAttr as handle no-undo.
 define variable vBufPlGds as handle no-undo.
 define variable vBufGoodsAttr as handle no-undo.
+define variable vBufRvsLine as handle no-undo.
 
 create buffer vBufSysCtrl for table "sys-ctrl".
 vBufSysCtrl:find-first ("" , no-lock) no-error.
@@ -35,7 +36,7 @@ then do:
   if not oOK
   then do :
 
-    /* если газ то OK  */
+    /* если газ, то OK  */
     create buffer vBufPlGds for table "pl-gds" .
     vBufPlGds:find-first (substitute ("where pl-gds.pl-code eq &1", vBufPlace:buffer-field("pl-code"):buffer-value), no-lock) no-error.
     if vBufPlGds:available
@@ -58,9 +59,30 @@ then do:
       oOK = true .
     
     delete object vBufPlGds .
+    
+    /* если не было сверок, то OK  */
+    create buffer vBufRvsLine for table "rvs-line" .
+    vBufRvsLine:find-first (substitute ("where rvs-line.pl-code eq &1", vBufPlace:buffer-field("pl-code"):buffer-value), no-lock) no-error.
+    if not vBufRvsLine:available
+    then
+      oOK = true .
+      
+    delete object vBufRvsLine .
   end .
 end .
 else
   oOK = true .
   
 delete object vBufPlace .
+
+find first _file no-lock where _file._file-name = "db"  no-error.
+if available _file
+then do:
+  find first _field of _file where _field._Field-Name =  "reserve1-char" exclusive-lock no-error.
+  if available (_field)
+  then do :
+    _field._initial = "45" .
+    release _field.
+  end .
+  release _file.
+end .
