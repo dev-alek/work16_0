@@ -86,6 +86,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    define buffer marking                for ub.marking .
    define buffer marking-attr           for ub.marking-attr .
    define buffer contract               for ub.contract .
+   define buffer order-doc              for ub.order-doc .
 
     objImp = cast (subjectObj, {&impclass}).
 
@@ -219,8 +220,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       Utd.BaseDocumentNumber = contract.contract-prn-code.
       utd.BaseDocumentDate       = contract-date.
       
-      if objImp:order-item ne ?
-      then
+      if objImp:order-item ne ? and 
+         can-find(first order-doc where order-doc.order-item = objImp:order-item)
+      then  /* не связываем УПД с заказом, если заказ не найден */
         setattrutd(utd.db-num, utd.doc-id, "order-item", objImp:order-item).
                             
       /*define variable VContractEdo as logical no-undo init yes.
