@@ -222,6 +222,7 @@ ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Сканирование марок */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit Dialog-Frame
 ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
   DO:
+    mWork = false.
     if p-mode = {&add-def} then 
     do:
       run save_update  no-error.
