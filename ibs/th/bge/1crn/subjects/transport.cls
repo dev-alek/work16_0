@@ -171,8 +171,8 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
       def var v-str as char no-undo.
     
       assign
-         v-str = "code" 
-         when code_ = ?
+/*         v-str = "code" 
+         when code_ = ?                */
          v-str = v-str + ",ac-type"
          when ac-type = ?
 /*         v-str = v-str + ",mark"     */
