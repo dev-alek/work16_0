@@ -554,7 +554,12 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
     define variable v-parts-qnty   as decimal no-undo .
     define variable v-marking      as character no-undo .
     define variable v-sum-promo    as decimal no-undo . /* сумма скидки по промо НП */
-    define variable v-pcnt-promo   as decimal no-undo . /* процент скидки по промо НП */
+    define variable v-pcnt-promo   as decimal no-undo . /* процент скидки по промо НП */    
+    define variable v-b-code       as integer no-undo. /* код топливного товара */
+    define variable v-gds-qnty     as decimal no-undo. /* кол-во топливного товара */
+    define variable v-disc-promo-id as integer no-undo. /* код промоакции */
+    define variable v-disc-promo-count as int no-undo. /* сработала ли промоакция */
+    define variable v-line-num-promo as int no-undo. /* код строки чека с промоакцией */
     
     insw:start-element ({&tag-message}) .
 
@@ -718,7 +723,11 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
     /* 21/XII-2018 несмотря на обязательность секции с товарами,
                    1с не может проглотить файл с секцией по товарам, если в ней нет товаров
                    Поэтому секцию с товарами при отсутствии товаров не выгружаем. */
-    v-ex-Nds = no.
+    assign               
+       v-ex-Nds = no
+       v-b-code = 0
+       v-gds-qnty = 0
+       .
     if can-find (first buf_chk-gds where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code) then do:
     insw:start-element ({&tag-section1}) .
       for each buf_chk-gds no-lock
@@ -744,6 +753,11 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
               v-is-petrolium
               v-is-pieces
             }
+            if v-is-petrolium then
+            assign 
+               v-b-code = buf_chk-gds.b-code
+               v-gds-qnty = buf_chk-gds.src-qnty
+               .
             /* 3. внутри is-petrl.i не используется поле gds-code для поиска товара в goods */
           end .
           else v-is-petrolium = false .
@@ -1103,12 +1117,33 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
     define variable vflg0 as logical no-undo.
     define variable v-discnt-value-abs as decimal no-undo.
     define variable v-promocode-list as character no-undo.
+    define variable vflg-disc as logical no-undo.
     assign
        vflg  = no
        vflg0 = no
        v-discnt-value-abs = 0
-       v-promocode-list = ""
+       v-promocode-list = ""       
+       v-disc-promo-id = 0
+       vflg-disc = no
        .
+    /* для возвратного чека возможно надо скидку по промоакции взять из прямого чека  */   
+    if p-buf_chk-doc.chk-type = integer({&rcpt-return}) 
+      and v-b-code <> 0
+      and not can-find(first buf_chk-discnt no-lock
+                       where buf_chk-discnt.doc-code    = p-buf_chk-doc.doc-code
+                         and buf_chk-discnt.record-type    = 5
+                         and buf_chk-discnt.promo-id <> "" ) 
+    then do:
+       v-disc-promo-id = get-chk-promo-id(p-buf_chk-doc.obj-code, 
+                                          p-buf_chk-doc.obj-type, 
+                                          p-buf_chk-doc.pay-desk, 
+                                          p-buf_chk-doc.doc-num2, 
+                                          v-b-code,
+                                          v-gds-qnty,
+                                          output v-line-num-promo,
+                                          output v-disc-promo-count).
+    end.    
+    
     if not can-find (first chk-discnt where chk-discnt.doc-code = p-buf_chk-doc.doc-code
                                         and chk-discnt.discnt-type       = 23
                                         and chk-discnt.discnt-value-pcnt = 0) then do :    
@@ -1120,7 +1155,10 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
                buf_chk-discnt.record-type = 2 
                or buf_chk-discnt.value-type = 14)
     break by buf_chk-discnt.doc-code :
-      if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section3}) .
+      if first-of(buf_chk-discnt.doc-code) then do:
+         vflg-disc = yes. 
+         insw:start-element ({&tag-section3}) .
+      end.   
       if buf_chk-discnt.promo-id > "" and 
          not can-do(v-promocode-list,buf_chk-discnt.promo-id) then 
             v-promocode-list = if v-promocode-list = "" 
@@ -1239,8 +1277,24 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section3}) .
     end . /* end_of for each buf_chk-discnt */
     end . /* end_of if chk-discnt.discnt-type <> 23 or chk-discnt.discnt-value-pcnt <> 0 */
+    
+    if v-disc-promo-id <> 0 and     
+       vflg-disc = no
+    then do:
+        insw:start-element ({&tag-section3}) .    
+        insw:start-element ({&tag-item3}) .
+        insw:write-data-element (  "discnt-num",       "1"    ) . /* Номер строки скидки (Число) */
+        insw:write-data-element (  "line-num",         string(v-line-num-promo)  ) . /* Номер строки чека на которую предоставлена скидка (Число) */
+        insw:write-data-element (  "discnt-type",      "0"    ) . /* Тип скидки (Строка) */
+        insw:write-data-element (  "discntValueAbs",   "0.0"  ) . /* Абсолютное значение скидки - сумма (Число) */
+        insw:write-data-element (  "discntValuePcnt",  "0.0"  ) . /* % скидки (Число) */
 
-
+        find first PromoAction where PromoAction.id =  v-disc-promo-id no-lock no-error.         
+        insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else string(v-disc-promo-id)  ) . /* Код промо-акции (Строка) */        
+        insw:end-element ({&tag-item3}) .  
+        insw:end-element ({&tag-section3}) .     
+    end.                                         
+    
     /* section4 обязательность 0-1 */
     for each buf_chk-discnt no-lock
        where buf_chk-discnt.doc-code    = p-buf_chk-doc.doc-code
@@ -1289,8 +1343,19 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section7}) .
     end . /* end_of for each buf_chk-discnt */
     /* section5 исключена */
-
-
+            
+   /* если возвратный чек по топливу и скидок нет, то проверяем не было ли промоакции в чеке продажи */ 
+   if v-disc-promo-id <> 0
+   then do:            
+      insw:start-element ({&tag-section7}) .    
+      insw:start-element ({&tag-item7}) .   
+      find first PromoAction where PromoAction.id =  v-disc-promo-id no-lock no-error.                    
+      insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  string(v-disc-promo-id)  ) . /* Код промо-акции (Строка) */        
+      insw:write-data-element (  "promotion-count",     left-trim(string(v-disc-promo-count, "->>>>>>>>9.99"))   ) . /* признак, что сработала промоакция (Число 0,1) */            
+      insw:end-element ({&tag-item7}) .
+      insw:end-element ({&tag-section7}) .                                    
+   end. 
+   
     /* section6 обязательность 0-1 */
     for each buf_chk-gds-pay no-lock
        where buf_chk-gds-pay.doc-code = p-buf_chk-doc.doc-code
@@ -1422,6 +1487,57 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
     
     return v-base64-encode .
   end.
-
+  
+  /* вычисление кода промоакции для возвратного чека по чеку продажи */
+  method private integer get-chk-promo-id ( 
+     input p-obj-code as integer, 
+     input p-obj-type as character, 
+     input p-pay-desk as integer, 
+     input p-doc-num2 as character, 
+     input p-b-code as integer,
+     input p-gds-qnty as decimal,
+     output o-disc-promo-line as integer,
+     output o-disc-promo-count as integer ) :
+    
+    define buffer buf2_chk-doc for ub.chk-doc.
+    define buffer buf2_chk-gds for ub.chk-gds.
+    define buffer buf2_chk-discnt for ub.chk-discnt.
+    
+    define variable v-promo-id as character no-undo .
+        
+    v-promo-id = "".
+    /* ищем чек продажи */
+    for first buf2_chk-doc no-lock where 
+             buf2_chk-doc.obj-code = p-obj-code 
+         and buf2_chk-doc.obj-type = p-obj-type
+         and buf2_chk-doc.pay-desk = p-pay-desk
+         and buf2_chk-doc.chk-type = int({&rcpt-sale})
+         and buf2_chk-doc.chk-num  = int(entry(1,p-doc-num2,":"))
+         and buf2_chk-doc.z-number = int(entry(2,p-doc-num2,":"))
+       :
+       /* ищем этот товар в чеке продажи */    
+       find first buf2_chk-gds no-lock where                 
+                  buf2_chk-gds.doc-code = buf2_chk-doc.doc-code
+             and  buf2_chk-gds.b-code   = p-b-code
+       no-error.
+       if avail buf2_chk-gds then do:                                           
+           find first buf2_chk-discnt no-lock where 
+                      buf2_chk-discnt.doc-code =  buf2_chk-doc.doc-code and
+                      buf2_chk-discnt.record-type = 1 and 
+                      buf2_chk-discnt.object-line-num = buf2_chk-gds.line-num and
+                      buf2_chk-discnt.promo-id > "" 
+           no-error .
+           if avail buf2_chk-discnt
+           then do:
+               assign
+                 v-promo-id = buf2_chk-discnt.promo-id
+                 o-disc-promo-line = buf2_chk-gds.line-num
+                 o-disc-promo-count = if buf2_chk-gds.src-qnty <> -1 * p-gds-qnty then 1 else 0 /* если весь товар вернули, то акция перестала действовать */
+                 .                  
+           end.   
+       end.       
+    end.                  
+    return int(v-promo-id) .
+  end.
   
 end class.
