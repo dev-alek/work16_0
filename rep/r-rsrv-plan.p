@@ -278,7 +278,7 @@ for each gds-list:
         if tt-zakaz.qntyDaySale <> 0 then 
         do:   
             tt-zakaz.volMinZapas = round-maxInt(tt-zakaz.volume-goods + tt-zakaz.min-stock) . /* Vçì */
-            tt-zakaz.garant-stock = pGarantDay * tt-zakaz.average-sales . /* G */
+            tt-zakaz.garant-stock = round-maxInt(pGarantDay * tt-zakaz.average-sales) . /* G */
             tt-zakaz.order-qnty = round-maxInt(tt-zakaz.volume-goods + tt-zakaz.min-stock + tt-zakaz.garant-stock) . /* Vçã */
 
             if tt-zakaz.average-sales <> 0 then tt-zakaz.ostatokGoods = round-minInt(tt-zakaz.rest / tt-zakaz.average-sales) . /* Îä */
