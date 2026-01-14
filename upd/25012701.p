@@ -9,7 +9,7 @@ find first sys-ctrl no-lock no-error.
 if not avail sys-ctrl
 or sys-ctrl.db-num eq 0
 then 
-  quit
+  return
 .
 
 for each buf_thbj-attr exclusive-lock where buf_thbj-attr.prop-code = "sec-fields" :
@@ -24,5 +24,3 @@ for each buf_thbj-attr exclusive-lock where buf_thbj-attr.prop-code = "temp-for-
 end .
 
 run utl/init-shift-period.p (input "all") .
-
-quit .

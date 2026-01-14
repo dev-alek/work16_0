@@ -31,49 +31,62 @@ define variable vss-description as character no-undo init "Триггер на удаление a
 { cmp/trg-def.i  }
 { gbl/cur-time.i }
 
-define buffer buf_action-role-item-gds       for ub.action-role-item-gds .
-define buffer buf_action-role-item-gds-grp   for ub.action-role-item-gds-grp .
+define buffer buf_action-role-item         for ub.action-role-item .
+define buffer buf_action-role-item-gds     for ub.action-role-item-gds .
+define buffer buf_action-role-item-gds-grp for ub.action-role-item-gds-grp .
 
-define variable v-date    as date      no-undo .
-define variable v-time    as integer   no-undo .
+define variable v-date as date    no-undo .
+define variable v-time as integer no-undo .
 
 define buffer buf_c-action-role-item for ub.c-action-role-item .
-define buffer buf_c-action-role     for ub.c-action-role .
+define buffer buf_c-action-role      for ub.c-action-role .
 main-block:
 do transaction
-on error   undo main-block, return error substitute('actnrtd error main-block,&1', return-value )
-on end-key undo main-block, return error substitute('actnrtd end-key main-block,&1', return-value )
-:
+    on error   undo main-block, return error substitute('actnrtd error main-block,&1', return-value )
+    on end-key undo main-block, return error substitute('actnrtd end-key main-block,&1', return-value )
+    :
+    define VARIABLE v-db-list as character no-undo .
+    if ub.action-role-item.db-num = 0 then 
+    do:
+        v-db-list = "0" .
+    end. 
+    if g#db-num <> 0 then 
+    do:
+        v-db-list = "0" .
+    end.   
+    else v-db-list = STRING (ub.action-role-item.db-num) .
 
-  define VARIABLE v-db-list   as character no-undo .
-  if ub.action-role-item.db-num = 0 then do:
-    v-db-list = "0" .
-  end. 
-  if g#db-num <> 0 then do:
-    v-db-list = "0" .
-  end.   
-  else v-db-list = STRING (ub.action-role-item.db-num) .
+    FOR EACH  buf_action-role-item-gds-grp
+        where buf_action-role-item-gds-grp.db-num                = ub.action-role-item.db-num
+        and   buf_action-role-item-gds-grp.action-head-code      = ub.action-role-item.action-head-code
+        and   buf_action-role-item-gds-grp.action-role-code      = ub.action-role-item.action-role-code
+        and   buf_action-role-item-gds-grp.action-role-item-code = ub.action-role-item.action-role-item-code
+        exclusive-lock
+        :
+        DELETE buf_action-role-item-gds-grp.
+    end.
 
-  FOR EACH  buf_action-role-item-gds-grp
-      where buf_action-role-item-gds-grp.db-num                = ub.action-role-item.db-num
-      and   buf_action-role-item-gds-grp.action-head-code      = ub.action-role-item.action-head-code
-      and   buf_action-role-item-gds-grp.action-role-code      = ub.action-role-item.action-role-code
-      and   buf_action-role-item-gds-grp.action-role-item-code = ub.action-role-item.action-role-item-code
-      exclusive-lock
-      :
-      DELETE buf_action-role-item-gds-grp.
-  end.
+    FOR EACH  buf_action-role-item-gds
+        where buf_action-role-item-gds.db-num                = ub.action-role-item.db-num
+        and   buf_action-role-item-gds.action-head-code      = ub.action-role-item.action-head-code
+        and   buf_action-role-item-gds.action-role-code      = ub.action-role-item.action-role-code
+        and   buf_action-role-item-gds.action-role-item-code = ub.action-role-item.action-role-item-code
+        exclusive-lock
+        :
+        DELETE buf_action-role-item-gds.
+    end.
+    FOR EACH  buf_action-role-item
+        where buf_action-role-item.db-num                = ub.action-role-item.db-num
+        and   buf_action-role-item.action-head-code      = ub.action-role-item.action-head-code
+        and   buf_action-role-item.action-role-code      = ub.action-role-item.action-role-code
+        and   buf_action-role-item.action-item-code      = ub.action-role-item.action-item-code
+        exclusive-lock
+        :
+        delete buf_action-role-item .
+    end.  
 
-  FOR EACH  buf_action-role-item-gds
-      where buf_action-role-item-gds.db-num                = ub.action-role-item.db-num
-      and   buf_action-role-item-gds.action-head-code      = ub.action-role-item.action-head-code
-      and   buf_action-role-item-gds.action-role-code      = ub.action-role-item.action-role-code
-      and   buf_action-role-item-gds.action-role-item-code = ub.action-role-item.action-role-item-code
-      exclusive-lock
-      :
-      DELETE buf_action-role-item-gds.
-  end.
-if not g#news then do:
+    if not g#news then 
+    do:
         run cur-time in this-procedure(output v-date, output v-time).
         create buf_c-action-role-item.
         buffer-copy ub.action-role-item to buf_c-action-role-item
@@ -89,10 +102,10 @@ if not g#news then do:
             .
         create buf_c-action-role.
         buffer-copy buf_c-action-role-item to buf_c-action-role
-        assign
-        buf_c-action-role.subject            = {&table_action-role-item}
-        buf_c-action-role.action             = integer({&hn-delete})
-        .    
+            assign
+            buf_c-action-role.subject            = {&table_action-role-item}
+            buf_c-action-role.action             = integer({&hn-delete})
+            .    
 
         run trg/userlog.p (
             input {&nwsdochs_action_delete}
@@ -111,59 +124,57 @@ if not g#news then do:
                 , error-status :get-message ( 1 ) ).
         end.
     
-end.  
-  find first ub.global-state-attr no-lock where ub.global-state-attr.attr-code = "action-gbl" and ub.global-state-attr.attr-value = "yes" and ub.global-state-attr.gls-id = ub.action-role-item.db-num no-error .
-  if available (ub.global-state-attr) then 
-  do:
-    if not g#news then 
+    end.  
+    find first ub.global-state-attr no-lock where ub.global-state-attr.attr-code = "action-gbl" and ub.global-state-attr.attr-value = "yes" and ub.global-state-attr.gls-id = ub.action-role-item.db-num no-error .
+    if available (ub.global-state-attr) then 
     do:
-      run nws/cmd-del.p
-        ( input {&table_action-role-item}
-        ,input (buffer ub.action-role-item:handle)
-        ,input v-db-list
-        ) no-error .
-      if error-status :error then 
-      do:
-        undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
-      end.
+        if not g#news then 
+        do:
+            run nws/cmd-del.p
+                ( input {&table_action-role-item}
+                ,input (buffer ub.action-role-item:handle)
+                ,input v-db-list
+                ) no-error .
+            if error-status :error then 
+            do:
+                undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+            end.
+        end.
     end.
-  end.
-  else 
-  do:
+    else 
+    do:
      
-    if not g#news and ub.action-role-item.db-num <> 0 then 
-    do:
-      run nws/cmd-del.p
-        ( input {&table_action-role-item}
-        ,input (buffer ub.action-role-item:handle)
-        ,input v-db-list
-        ) no-error .
-      if error-status :error then 
-      do:
-        undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
-      end.
+        if not g#news and ub.action-role-item.db-num <> 0 then 
+        do:
+            run nws/cmd-del.p
+                ( input {&table_action-role-item}
+                ,input (buffer ub.action-role-item:handle)
+                ,input v-db-list
+                ) no-error .
+            if error-status :error then 
+            do:
+                undo, return error substitute( "&1. Ошибка при отправке в новости команды на удаление записи. &2&3&2&4", vss-workfile, {&new-line}, return-value, error-status :get-message ( error-status :num-messages ) ).
+            end.
+        end.
     end.
-  end.
-
-
-
-
 
     
     if g#oxml = yes
-    then do:
-    run str/calloxml.p (
-          input {&nwsdochs_action_delete}
-        , input {&table_action-role-item}
-        , input ( buffer ub.action-role-item:handle )
-    ) no-error.
-    if error-status :error
-    then do:
-        undo, return error substitute( "&2&1Ошибка при отправке в систему OpenXML команды на удаление записи&1&3&1&4"
-                            , {&new-line}
-                            , vss-workfile
-                            , return-value
-                            , error-status :get-message ( 1 ) ).
-    end.
+        then 
+    do:
+        run str/calloxml.p (
+            input {&nwsdochs_action_delete}
+            , input {&table_action-role-item}
+            , input ( buffer ub.action-role-item:handle )
+            ) no-error.
+        if error-status :error
+            then 
+        do:
+            undo, return error substitute( "&2&1Ошибка при отправке в систему OpenXML команды на удаление записи&1&3&1&4"
+                , {&new-line}
+                , vss-workfile
+                , return-value
+                , error-status :get-message ( 1 ) ).
+        end.
     end.
 end.
