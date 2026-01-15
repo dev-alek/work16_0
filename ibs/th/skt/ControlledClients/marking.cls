@@ -933,39 +933,17 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      p-obj-code  AS INTEGER,
      p-param-code AS CHARACTER,
      p-type-mark AS CHARACTER
-     ):
-      DEFINE VARIABLE v-tth             AS HANDLE    NO-UNDO .
+     ):      
       DEFINE VARIABLE v-value-character AS CHARACTER NO-UNDO.
-      DEFINE VARIABLE v-value-date      AS DATE      NO-UNDO.
-      DEFINE VARIABLE v-value-decimal   AS DECIMAL   NO-UNDO.
-      DEFINE VARIABLE v-value-integer   AS INTEGER   NO-UNDO.
-      DEFINE VARIABLE v-param-type      AS CHARACTER NO-UNDO.
-      DEFINE VARIABLE v-param-logical   AS LOGICAL   NO-UNDO.
-      
-      RUN adm/shattri.p (
-         INPUT "get":U
-        ,INPUT  p-obj-type
-        ,INPUT  p-obj-code
-        ,INPUT  {&attr-marking}
-        ,INPUT  p-param-code
-        ,OUTPUT v-value-character
-        ,OUTPUT v-value-date
-        ,OUTPUT v-value-decimal
-        ,OUTPUT v-value-integer
-        ,OUTPUT v-param-logical
-        ,OUTPUT v-param-type
-        ,INPUT-OUTPUT table-handle v-tth
-        ) NO-ERROR .
-        
+              
+      v-value-character = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-marking},p-param-code,"character").
       dbgPrint("marking.log", SUBSTITUTE("Тип маркировки: p-param-code &1 v-value-character &2 тип маркировки &3", 
                                          p-param-code, 
                                          v-value-character,
                                          p-type-mark)).
-      
       IF LOOKUP (p-type-mark,v-value-character) > 0
-      THEN RETURN YES.
-        
-      RETURN NO.
+      THEN RETURN YES.        
+      ELSE RETURN NO.
   END METHOD.
   
   /* Проверка марки в ГИС МТ */
