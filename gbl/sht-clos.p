@@ -38,24 +38,27 @@ define variable vss-description as char    no-undo init "«акрытие смены".
 { gbl/key-rec.i }
 { rul/ruleset_.i }
 
-define variable s-date                  as date         no-undo.    /* дата начала смены дл€ документа */
-define variable e-date                  as date         no-undo.
-define variable s-time                  as integer      no-undo.    /* врем€ начала смены дл€ документа */
-define variable e-time                  as integer      no-undo.
-define variable s-num                   as integer      no-undo.    /* пор€док смены дл€ документа */
-define variable s-name                  as character    no-undo.    /* номер смены дл€ документа */
-define variable is-super                as log          no-undo.    /* €вл€етс€ ли пользователь менеджером */
-define variable v-cancel                as logical      no-undo.
+define variable s-date                  as date         no-undo .    /* дата начала смены дл€ документа */
+define variable e-date                  as date         no-undo .
+define variable s-time                  as integer      no-undo .    /* врем€ начала смены дл€ документа */
+define variable e-time                  as integer      no-undo .
+define variable s-num                   as integer      no-undo .    /* пор€док смены дл€ документа */
+define variable s-name                  as character    no-undo .    /* номер смены дл€ документа */
+define variable is-super                as logical      no-undo .    /* €вл€етс€ ли пользователь менеджером */
+define variable v-cancel                as logical      no-undo .
 define variable glog                    as logical      no-undo .
-define variable v-cur-date-error-code   as integer      no-undo.
+define variable v-cur-date-error-code   as integer      no-undo .
 define variable v-err-msg               as character    no-undo .
-define variable v-rum-err               as logical no-undo .
-define variable v-shift-date            as date no-undo .
-define variable v-shift-num             as integer no-undo .
-define variable v-obj-date              as date         no-undo.
+define variable v-rum-err               as logical      no-undo .
+define variable v-shift-date            as date         no-undo .
+define variable v-shift-num             as integer      no-undo .
+define variable v-obj-date              as date         no-undo .
+define variable ii                      as integer      no-undo .
 
 define buffer buf_pl-gds    for ub.pl-gds .
 define buffer buf_shift-obj for ub.shift-obj .
+define buffer buf_place-attr for ub.place-attr .
+define buffer buf_place-imp for ub.place-imp .
 
 { gbl/getcntxt.i get }
 /* провер€ем права на работу со сменами */
@@ -431,6 +434,45 @@ if error-status:error then do:
   end.
 /*  undo, return error v-err-msg .*/
 end.
+
+/* Ќовые параметры резервуаров и √“, импортированные из 1— */
+for each buf_place-attr exclusive-lock where buf_place-attr.obj-type = p-curr-obj-type
+                                         and buf_place-attr.obj-code = p-curr-obj-code
+                                         and buf_place-attr.attr-code = "pending-table-version"
+:
+  do ii = 1 to num-entries(buf_place-attr.attr-value) :
+    find first buf_place-imp no-lock where buf_place-imp.obj-type = buf_place-attr.obj-type
+                                       and buf_place-imp.obj-code = buf_place-attr.obj-code
+                                       and buf_place-imp.pl-code  = buf_place-attr.pl-code
+                                       and buf_place-imp.table-version = integer(entry(ii, buf_place-attr.attr-value))
+                                       no-error .
+    if available buf_place-imp
+    and buf_place-imp.status_ = 0
+    then do :
+      run str/apply_place-imp.p (input buf_place-imp.obj-type,
+                                 input buf_place-imp.obj-code,
+                                 input buf_place-imp.pl-code,
+                                 input buf_place-imp.table-version)
+                                 no-error .
+      if error-status:error
+      then do :
+        assign
+          v-err-msg = substitute( "&1.&2&3&2&4&2"
+                                  , vss-workfile
+                                  , {&new-line}
+                                  , return-value
+                                  , "ќшибка при применении новых параметров резервуара "
+                                ).
+        if p-silent <> true then do:
+          message
+            v-err-msg
+            view-as alert-box error.
+        end.
+      end .
+    end .
+  end .
+  delete buf_place-attr .
+end .
 
 if p-silent <> true then do:
   run mainmenu-disp-mutable in parparentproc (

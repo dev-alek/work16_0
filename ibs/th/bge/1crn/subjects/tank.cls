@@ -134,16 +134,26 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
     get.
     private set.
   
+  define public property sendTableName as character no-undo init "place"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
 
   method public void CrContentToSW (insw as handle):
     sw = insw .
-    
     placelib = new placelib().
     /*    sw:start-element ("tanks") .*/
     find first buf_place no-lock where buf_place.pl-code = INTEGER (pl-code) no-error .
     if AVAILABLE buf_place then 
     do:
       v-del = no .
+      sendOldRowid = rowid(buf_place).
       create tt-place .
       BUFFER-COPY buf_place to tt-place .
       find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
@@ -157,6 +167,7 @@ class ibs.th.bge.1crn.subjects.tank implements iexpsubject:
       if AVAILABLE buf_c-place then 
       do:
         v-del = yes .
+        sendOldRowid = rowid(buf_c-place).
         create tt-place .
         BUFFER-COPY buf_c-place to tt-place .
         find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_c-place.pl-code no-error .

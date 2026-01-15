@@ -288,6 +288,7 @@ procedure add-dump-data :
     create for-route-dump .
     assign
       for-route-dump.dump-name    = entry(1, p-dump-name, {&delim-par})
+      for-route-dump.uniq-key-rec = if num-entries(p-dump-name, {&delim-par}) > 1 then  entry(2, p-dump-name, {&delim-par}) else ""
       for-route-dump.action       = p-action
       for-route-dump.dump-ord     = p-command-code
       for-route-dump.rec-ord      = v-rec-ord

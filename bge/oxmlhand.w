@@ -1,6 +1,6 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
 &ANALYZE-RESUME
-/* Connected Databases
+/* Connected Databases 
           ub               PROGRESS
 */
 &Scoped-define WINDOW-NAME CURRENT-WINDOW
@@ -8,13 +8,13 @@
 
 
 /* Temp-Table and Buffer definitions                                    */
-DEFINE BUFFER X_esys-pck-rcvd FOR ub.esys-pck-rcvd.
-DEFINE BUFFER X_esys-pck-sent FOR ub.esys-pck-sent.
-DEFINE BUFFER X_ext-system FOR ub.ext-system.
+DEFINE BUFFER X_esys-pck-rcvd FOR esys-pck-rcvd.
+DEFINE BUFFER X_esys-pck-sent FOR esys-pck-sent.
+DEFINE BUFFER X_ext-system FOR ext-system.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS oxmlhand 
 /*
 
 $Revision$
@@ -87,7 +87,7 @@ define buffer buf_sys-ctrl for ub.sys-ctrl.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -102,8 +102,8 @@ define buffer buf_sys-ctrl for ub.sys-ctrl.
 &Scoped-define INTERNAL-TABLES X_ext-system X_esys-pck-rcvd X_esys-pck-sent
 
 /* Definitions for BROWSE br-esys                                       */
-&Scoped-define FIELDS-IN-QUERY-br-esys X_ext-system.esys-id (X_ext-system.esys-type > integer({&openxml-type-ordinal})) (X_ext-system.esys-have-export and X_ext-system.esys-db-num-exp = v-db-num) (X_ext-system.esys-have-import and X_ext-system.esys-db-num-imp = v-db-num) X_ext-system.esys-name /*X_ext-system.db-num*/
-&Scoped-define ENABLED-FIELDS-IN-QUERY-br-esys
+&Scoped-define FIELDS-IN-QUERY-br-esys X_ext-system.esys-id (X_ext-system.esys-type > integer({&openxml-type-ordinal})) (X_ext-system.esys-have-export and X_ext-system.esys-db-num-exp = v-db-num) (X_ext-system.esys-have-import and X_ext-system.esys-db-num-imp = v-db-num) X_ext-system.esys-name /*X_ext-system.db-num*/   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-br-esys   
 &Scoped-define SELF-NAME br-esys
 &Scoped-define QUERY-STRING-br-esys FOR EACH X_ext-system NO-LOCK by X_ext-system.esys-id    INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-br-esys OPEN QUERY br-esys FOR EACH X_ext-system NO-LOCK by X_ext-system.esys-id    INDEXED-REPOSITION .
@@ -112,8 +112,8 @@ define buffer buf_sys-ctrl for ub.sys-ctrl.
 
 
 /* Definitions for BROWSE pck-rcvd                                      */
-&Scoped-define FIELDS-IN-QUERY-pck-rcvd X_esys-pck-rcvd.espr-pack-num X_esys-pck-rcvd.espr-rcvd X_esys-pck-rcvd.espr-total-recs X_esys-pck-rcvd.custom-pack-name
-&Scoped-define ENABLED-FIELDS-IN-QUERY-pck-rcvd
+&Scoped-define FIELDS-IN-QUERY-pck-rcvd X_esys-pck-rcvd.espr-pack-num X_esys-pck-rcvd.espr-rcvd X_esys-pck-rcvd.espr-total-recs X_esys-pck-rcvd.custom-pack-name   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-pck-rcvd   
 &Scoped-define SELF-NAME pck-rcvd
 &Scoped-define QUERY-STRING-pck-rcvd FOR EACH X_esys-pck-rcvd       WHERE X_esys-pck-rcvd.esys-id = X_ext-system.esys-id       and X_esys-pck-rcvd.db-num = X_ext-system.db-num  NO-LOCK     BY X_esys-pck-rcvd.esys-id DESCENDING     BY X_esys-pck-rcvd.db-num DESCENDING     BY X_esys-pck-rcvd.espr-cr-db-num DESCENDING     BY X_esys-pck-rcvd.espr-pack-num DESCENDING INDEXED-REPOSITION
 &Scoped-define OPEN-QUERY-pck-rcvd OPEN QUERY {&SELF-NAME} FOR EACH X_esys-pck-rcvd       WHERE X_esys-pck-rcvd.esys-id = X_ext-system.esys-id       and X_esys-pck-rcvd.db-num = X_ext-system.db-num  NO-LOCK     BY X_esys-pck-rcvd.esys-id DESCENDING     BY X_esys-pck-rcvd.db-num DESCENDING     BY X_esys-pck-rcvd.espr-cr-db-num DESCENDING     BY X_esys-pck-rcvd.espr-pack-num DESCENDING INDEXED-REPOSITION.
@@ -122,8 +122,8 @@ define buffer buf_sys-ctrl for ub.sys-ctrl.
 
 
 /* Definitions for BROWSE pck-sent                                      */
-&Scoped-define FIELDS-IN-QUERY-pck-sent X_esys-pck-sent.esps-pack-num X_esys-pck-sent.esps-rcvd X_esys-pck-sent.esps-total-recs X_esys-pck-sent.custom-pack-name
-&Scoped-define ENABLED-FIELDS-IN-QUERY-pck-sent
+&Scoped-define FIELDS-IN-QUERY-pck-sent X_esys-pck-sent.esps-pack-num X_esys-pck-sent.esps-rcvd X_esys-pck-sent.esps-total-recs X_esys-pck-sent.custom-pack-name   
+&Scoped-define ENABLED-FIELDS-IN-QUERY-pck-sent   
 &Scoped-define SELF-NAME pck-sent
 &Scoped-define QUERY-STRING-pck-sent FOR EACH X_esys-pck-sent
 &Scoped-define OPEN-QUERY-pck-sent OPEN QUERY pck-sent FOR EACH X_esys-pck-sent.
@@ -137,10 +137,10 @@ define buffer buf_sys-ctrl for ub.sys-ctrl.
     ~{&OPEN-QUERY-pck-sent}
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-quit b-create b-help br-esys pck-sent ~
-b-send b-send-all b-con-pckf b-info pck-rcvd b-get-pck b-send-new b-unsend ~
-b-get b-proc-pck b-other oxml-log
-&Scoped-Define DISPLAYED-OBJECTS oxml-log
+&Scoped-Define ENABLED-OBJECTS b-quit b-create b-packlist b-help br-esys ~
+pck-sent b-send b-send-all b-conf-pck b-info pck-rcvd b-get-pck b-send-new ~
+b-unsend b-get b-proc-pck b-other oxml-log 
+&Scoped-Define DISPLAYED-OBJECTS oxml-log 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -155,81 +155,85 @@ b-get b-proc-pck b-other oxml-log
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-b-other
+DEFINE MENU MENU-b-other 
        MENU-ITEM m_send-ora-rcpt LABEL "Квитанц. для ВС типа Oracle Retail".
 
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON b-conf-pck DEFAULT
-     LABEL "Под&тверд."
+DEFINE BUTTON b-conf-pck DEFAULT 
+     LABEL "Под&тверд." 
      SIZE 10 BY 1 TOOLTIP "Подтвердить пакет".
 
-DEFINE BUTTON b-create DEFAULT
-     LABEL "Под&готовить новые"
+DEFINE BUTTON b-create DEFAULT 
+     LABEL "Под&готовить новые" 
      SIZE 20 BY 1 TOOLTIP "Подготовка новых пакетов для всех ВС"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-get DEFAULT
-     LABEL "При&нять"
+DEFINE BUTTON b-get DEFAULT 
+     LABEL "При&нять" 
      SIZE 10 BY 1 TOOLTIP "Принять почту не разбирая пакет".
 
-DEFINE BUTTON b-get-pck DEFAULT
-     LABEL "&Принять/Разобрать"
+DEFINE BUTTON b-get-pck DEFAULT 
+     LABEL "&Принять/Разобрать" 
      SIZE 20 BY 1 TOOLTIP "Принять и затем разобрать пришедшую почту".
 
-DEFINE BUTTON b-help
-     LABEL "Помо&щь"
+DEFINE BUTTON b-help 
+     LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
 
-DEFINE BUTTON b-info DEFAULT
-     LABEL "&Доп.инфо"
+DEFINE BUTTON b-info DEFAULT 
+     LABEL "&Доп.инфо" 
      SIZE 10 BY 1 TOOLTIP "Дополнительная информация о пакете".
 
-DEFINE BUTTON b-other DEFAULT
-     LABEL "&Другое"
+DEFINE BUTTON b-other DEFAULT 
+     LABEL "&Другое" 
      SIZE 10 BY 1 TOOLTIP "Другие действия".
 
-DEFINE BUTTON b-proc-pck DEFAULT
-     LABEL "&Разобрать"
+DEFINE BUTTON b-packlist DEFAULT 
+     LABEL "&Сообщения" 
+     SIZE 16 BY 1 TOOLTIP "Список соббщений в отправленном пакете".
+
+DEFINE BUTTON b-proc-pck DEFAULT 
+     LABEL "&Разобрать" 
      SIZE 10 BY 1 TOOLTIP "Только разобрать пакет, не принимая новых".
 
-DEFINE BUTTON b-quit AUTO-GO DEFAULT
-     LABEL "Вы&ход "
+DEFINE BUTTON b-quit AUTO-GO DEFAULT 
+     LABEL "Вы&ход " 
      SIZE 10 BY 1 TOOLTIP "Выход из новостей"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-send DEFAULT
-     LABEL "&Отправить"
+DEFINE BUTTON b-send DEFAULT 
+     LABEL "&Отправить" 
      SIZE 10 BY 1 TOOLTIP "Отправить конкретный пакет с его переформированием".
 
-DEFINE BUTTON b-send-all DEFAULT
-     LABEL "Отпр. в&cе"
+DEFINE BUTTON b-send-all DEFAULT 
+     LABEL "Отпр. в&cе" 
      SIZE 10 BY 1 TOOLTIP "Отправить все неподтвержденные пакеты с их переформированием".
 
-DEFINE BUTTON b-send-new DEFAULT
-     LABEL "Отпр&авить новые"
+DEFINE BUTTON b-send-new DEFAULT 
+     LABEL "Отпр&авить новые" 
      SIZE 20 BY 1 TOOLTIP "Отправка новых и некоторых неподтвержденных пакетов"
      BGCOLOR 8 .
 
-DEFINE BUTTON b-unsend DEFAULT
-     LABEL "&Данные"
+DEFINE BUTTON b-unsend DEFAULT 
+     LABEL "&Данные" 
      SIZE 10 BY 1 TOOLTIP "Неотправленнная или неподтвержденая информация".
 
-DEFINE VARIABLE oxml-log AS CHARACTER INITIAL ?
+DEFINE VARIABLE oxml-log AS CHARACTER INITIAL ? 
      VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL LARGE
      SIZE 98 BY 6 TOOLTIP "Просмотр файла с сообщениями о работе OpenXML"
      FONT 4 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
-DEFINE QUERY br-esys FOR
+DEFINE QUERY br-esys FOR 
       X_ext-system SCROLLING.
 
-DEFINE QUERY pck-rcvd FOR
+DEFINE QUERY pck-rcvd FOR 
       X_esys-pck-rcvd SCROLLING.
 
-DEFINE QUERY pck-sent FOR
+DEFINE QUERY pck-sent FOR 
       X_esys-pck-sent SCROLLING.
 &ANALYZE-RESUME
 
@@ -245,7 +249,7 @@ X_ext-system.esys-name
 /*X_ext-system.db-num*/
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 50 BY 14.5 FIT-LAST-COLUMN TOOLTIP "Рабочие ВС".
+    WITH SEPARATORS SIZE 50 BY 14.52 FIT-LAST-COLUMN TOOLTIP "Рабочие ВС".
 
 DEFINE BROWSE pck-rcvd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS pck-rcvd oxmlhand _FREEFORM
@@ -256,7 +260,7 @@ DEFINE BROWSE pck-rcvd
   X_esys-pck-rcvd.custom-pack-name COLUMN-LABEL "Имя пакета в ВС" FORMAT "X(255)":U WIDTH 30
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ASSIGN NO-ROW-MARKERS SEPARATORS SIZE 46.5 BY 6.5
+    WITH NO-ASSIGN NO-ROW-MARKERS SEPARATORS SIZE 46.6 BY 6.52
          FONT 4
          TITLE "Полученные пакеты" FIT-LAST-COLUMN TOOLTIP "Полученные пакеты от данной ВС".
 
@@ -269,7 +273,7 @@ DEFINE BROWSE pck-sent
       X_esys-pck-sent.custom-pack-name COLUMN-LABEL "Имя пакета в ВС" FORMAT "X(255)":U WIDTH 30
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ASSIGN NO-ROW-MARKERS SEPARATORS SIZE 46.5 BY 7
+    WITH NO-ASSIGN NO-ROW-MARKERS SEPARATORS SIZE 46.6 BY 7
          FONT 4
          TITLE "Отправленные пакеты" FIT-LAST-COLUMN TOOLTIP "Отправленные пакеты в данную ВС".
 
@@ -279,6 +283,7 @@ DEFINE BROWSE pck-sent
 DEFINE FRAME oxmlhand
      b-quit AT ROW 1 COL 1
      b-create AT ROW 1 COL 11
+     b-packlist AT ROW 1 COL 77 WIDGET-ID 6
      b-help AT ROW 1 COL 95
      br-esys AT ROW 2 COL 1
      pck-sent AT ROW 2 COL 52
@@ -287,16 +292,16 @@ DEFINE FRAME oxmlhand
      b-conf-pck AT ROW 9 COL 72 WIDGET-ID 2
      b-info AT ROW 9 COL 86.8
      pck-rcvd AT ROW 10 COL 52 WIDGET-ID 100
-     b-get-pck AT ROW 16.5 COL 1
-     b-send-new AT ROW 16.5 COL 21
-     b-unsend AT ROW 16.5 COL 41
-     b-get AT ROW 16.5 COL 52
-     b-proc-pck AT ROW 16.5 COL 62
-     b-other AT ROW 16.5 COL 72 WIDGET-ID 4
-     oxml-log AT ROW 17.5 COL 1 NO-LABEL
-     SPACE(0.29) SKIP(0.26)
-    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER
-         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE
+     b-get-pck AT ROW 16.52 COL 1
+     b-send-new AT ROW 16.52 COL 21
+     b-unsend AT ROW 16.52 COL 41
+     b-get AT ROW 16.52 COL 52
+     b-proc-pck AT ROW 16.52 COL 62
+     b-other AT ROW 16.52 COL 72 WIDGET-ID 4
+     oxml-log AT ROW 17.52 COL 1 NO-LABEL
+     SPACE(0.29) SKIP(0.24)
+    WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "".
 
 
@@ -324,16 +329,16 @@ DEFINE FRAME oxmlhand
 /* BROWSE-TAB br-esys b-help oxmlhand */
 /* BROWSE-TAB pck-sent br-esys oxmlhand */
 /* BROWSE-TAB pck-rcvd b-info oxmlhand */
-ASSIGN
+ASSIGN 
        FRAME oxmlhand:SCROLLABLE       = FALSE.
 
-ASSIGN
+ASSIGN 
        b-other:POPUP-MENU IN FRAME oxmlhand       = MENU MENU-b-other:HANDLE.
 
-ASSIGN
+ASSIGN 
        oxml-log:READ-ONLY IN FRAME oxmlhand        = TRUE.
 
-ASSIGN
+ASSIGN 
        pck-rcvd:HIDDEN  IN FRAME oxmlhand                = TRUE.
 
 /* _RUN-TIME-ATTRIBUTES-END */
@@ -388,7 +393,7 @@ OPEN QUERY pck-sent FOR EACH X_esys-pck-sent
 */  /* BROWSE pck-sent */
 &ANALYZE-RESUME
 
-
+ 
 
 
 
@@ -572,7 +577,29 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-other
+&Scoped-define SELF-NAME b-packlist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-packlist oxmlhand
+ON CHOOSE OF b-packlist IN FRAME oxmlhand /* Сообщения */
+DO:
+    if not available X_esys-pck-sent THEN do:
+        message "Не выбран пакет для просмотра." view-as alert-box .
+        return no-apply.
+    end.
+
+    run bge/viewpack.w ( X_ext-system.esys-id
+                        ,X_ext-system.db-num
+                        ,X_esys-pck-sent.esps-cr-db-num
+                        ,X_esys-pck-sent.esps-pack-num
+                        ) no-error.
+    run refresh-brws
+      ( input yes )
+    .
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME b-proc-pck
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-proc-pck oxmlhand
 ON CHOOSE OF b-proc-pck IN FRAME oxmlhand /* Разобрать */
@@ -799,7 +826,7 @@ END.
 
 &Scoped-define SELF-NAME m_send-ora-rcpt
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_send-ora-rcpt oxmlhand
-ON CHOOSE OF MENU-ITEM m_send-ora-rcpt /* Квит. для Oracle Retail */
+ON CHOOSE OF MENU-ITEM m_send-ora-rcpt /* Квитанц. для ВС типа Oracle Retail */
 DO:
 DEFINE VARIABLE glog AS LOGICAL NO-UNDO.
 MESSAGE
@@ -863,7 +890,7 @@ END.
 &Scoped-define BROWSE-NAME br-esys
 &UNDEFINE SELF-NAME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK oxmlhand 
 
 
 /* ***************************  Main Block  *************************** */
@@ -951,7 +978,7 @@ PROCEDURE disable_UI :
   Purpose:     DISABLE the User Interface
   Parameters:  <none>
   Notes:       Here we clean-up the user-interface by deleting
-               dynamic widgets we have created and/or hide
+               dynamic widgets we have created and/or hide 
                frames.  This procedure is usually called when
                we are ready to "clean-up" after running.
 ------------------------------------------------------------------------------*/
@@ -970,14 +997,14 @@ PROCEDURE enable_UI :
   Notes:       Here we display/view/enable the widgets in the
                user-interface.  In addition, OPEN all queries
                associated with each FRAME and BROWSE.
-               These statements here are based on the "Other
+               These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY oxml-log
+  DISPLAY oxml-log 
       WITH FRAME oxmlhand.
-  ENABLE b-quit b-create b-help br-esys pck-sent b-send b-send-all b-conf-pck
-         b-info pck-rcvd b-get-pck b-send-new b-unsend b-get b-proc-pck b-other
-         oxml-log
+  ENABLE b-quit b-create b-packlist b-help br-esys pck-sent b-send b-send-all 
+         b-conf-pck b-info pck-rcvd b-get-pck b-send-new b-unsend b-get 
+         b-proc-pck b-other oxml-log 
       WITH FRAME oxmlhand.
   {&OPEN-BROWSERS-IN-QUERY-oxmlhand}
 END PROCEDURE.
@@ -985,7 +1012,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE esys-key oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE esys-key oxmlhand 
 PROCEDURE esys-key :
 define input-output parameter p-key-passed-date as date no-undo .
 define variable v-key-ok as logical no-undo .
@@ -1026,8 +1053,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MyEnable oxmlhand 
 PROCEDURE MyEnable :
 b-other:MENU-MOUSE IN FRAME {&FRAME-NAME} = 1.
 DISPLAY oxml-log
@@ -1037,6 +1063,7 @@ b-quit b-create b-help
 br-esys
 pck-sent
 b-send
+b-packlist
 b-send-all
 b-conf-pck
 b-info
@@ -1057,7 +1084,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr-esys oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr-esys oxmlhand 
 PROCEDURE Openbr-esys :
 OPEN QUERY br-esys FOR EACH X_ext-system NO-LOCK where
 (X_ext-system.esys-have-export and
@@ -1074,7 +1101,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr-pck-rcvd oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr-pck-rcvd oxmlhand 
 PROCEDURE Openbr-pck-rcvd :
 OPEN QUERY pck-rcvd FOR EACH X_esys-pck-rcvd
       WHERE X_esys-pck-rcvd.esys-id = X_ext-system.esys-id
@@ -1092,7 +1119,7 @@ OPEN QUERY pck-rcvd FOR EACH X_esys-pck-rcvd
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr-pck-sent oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE Openbr-pck-sent oxmlhand 
 PROCEDURE Openbr-pck-sent :
 OPEN QUERY pck-sent FOR EACH X_esys-pck-sent
       WHERE X_esys-pck-sent.esys-id = X_ext-system.esys-id
@@ -1108,7 +1135,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-brws oxmlhand
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refresh-brws oxmlhand 
 PROCEDURE refresh-brws :
 define input parameter p-with-esys as logical no-undo .
 
@@ -1139,3 +1166,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+

@@ -277,9 +277,18 @@ if v-sht-status = {&fact} then do:
     expObj:GetContent(subCash) no-error.
     if error-status:error
     then
-       undo _main, return error return-value  .
+       undo _main, return error if expObj:Msg <> "" then expObj:Msg else return-value  .
     
-    IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag)) = false  THEN 
+    IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, 
+                                     INPUT v-esys-cmd-proc-handle, 
+                                     INPUT v-esys-cmd-code, 
+                                     ('+update' + {&delim-par} + expObj:InitSecTag 
+                                      + (if expObj:sendTableName <> "" 
+                                         then substitute("&1&2&3&4",{&delim-par},
+                                                          expObj:sendTableName,
+                                                          if expObj:sendOldRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendOldRowid) else "",
+                                                          if expObj:sendNewRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendNewRowid) else "") 
+                                         else ""))) = false  THEN 
     do:
       undo _main, return error v-last-error-message .
     end.

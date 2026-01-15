@@ -32,6 +32,17 @@ class ibs.th.bge.1crn.subjects.shift implements iexpsubject:
   define property InitSecTag as character no-undo init {&tag-interface}
     get.
     
+  define public property sendTableName as character no-undo init "shift-obj"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define property KeyRowid as rowid no-undo
     get.
     set.
@@ -51,13 +62,13 @@ class ibs.th.bge.1crn.subjects.shift implements iexpsubject:
     define variable v-dt-shift-start as datetime no-undo .
     define variable v-dt-shift-end   as datetime no-undo .
     
-    
     Msg = "" .
     find first buf_shift-obj no-lock where rowid(buf_shift-obj) = KeyRowid no-error .
     if not available buf_shift-obj then undo, throw new Progress.Lang.AppError(
       substitute("Не найдена запись СМЕНА shift-obj rowid [&1]", KeyRowid)
     ) .
     
+    sendOldRowid  = KeyRowid.
     insw:start-element ({&tag-message}) .
 
     

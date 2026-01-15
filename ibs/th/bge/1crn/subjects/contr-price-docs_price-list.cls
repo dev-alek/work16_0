@@ -67,19 +67,18 @@ class ibs.th.bge.1crn.subjects.contr-price-docs_price-list inherits ibs.th.bge.1
 
 
   method override protected void CheckData ():
-   /* def var v-str as char no-undo.
+    def var v-str as char no-undo.
     assign
       v-str = ",gds-code" when gds-code = ?
       v-str = v-str + ",price-sale" when price-sale = ?
-      v-str = v-str + ",nds-code" when nds-code = ?
-      v-str = v-str + ",min-otkl" when min-otkl = ?
-      v-str = v-str + ",max-otkl" when max-otkl = ?
+/*      v-str = v-str + ",nds-code" when nds-code = ?*/
+/*      v-str = v-str + ",min-otkl" when min-otkl = ?*/
+/*      v-str = v-str + ",max-otkl" when max-otkl = ?*/
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
     ) .
-*/
   end.
   
   method override protected void ClearSub():

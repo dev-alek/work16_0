@@ -47,6 +47,17 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     get.
     private set.
       
+  define public property sendTableName  as character  no-undo init "fin-doc"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define property fin-doc as character no-undo
     get.
     set.
@@ -73,6 +84,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
     find first buf_fin-doc no-lock where buf_fin-doc.fin-doc-code = INTEGER (fin-doc) no-error .
     if AVAILABLE buf_fin-doc then 
     do:
+      sendOldRowid  = rowid(buf_fin-doc).
       create tt-fin-doc .
       BUFFER-COPY buf_fin-doc to tt-fin-doc .
       for each buf_fin-doc-tax no-lock where buf_fin-doc-tax.fin-doc-code = buf_fin-doc.fin-doc-code:
@@ -85,6 +97,7 @@ class ibs.th.bge.1crn.subjects.cash-doc implements iexpsubject:
       find FIRST buf_c-fin-doc no-lock where buf_c-fin-doc.fin-doc-code = INTEGER (fin-doc) no-error .
       if AVAILABLE buf_c-fin-doc then 
       do:
+        sendOldRowid  = rowid(buf_c-fin-doc).
         create tt-fin-doc .
         BUFFER-COPY buf_c-fin-doc to tt-fin-doc .
         for first buf_c-fin-doc-tax no-lock where buf_c-fin-doc-tax.fin-doc-code = buf_c-fin-doc.fin-doc-code:

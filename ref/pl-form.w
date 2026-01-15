@@ -791,6 +791,15 @@ then do :
   end .
 end .
 
+if p-mode = {&add-def}
+then do :
+  message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка контролируемых параметров резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+  view-as alert-box question buttons yes-no update vOk .
+  if not vOk
+  then
+    return no-apply .
+end .
+
 run ref/place01.p
   ( input-output p-rep-rec
   , input p-mode
@@ -2158,13 +2167,16 @@ ON value-changed OF place-type IN FRAME d-pl-form
 DO:
   if place-type:screen-value = "1"
   then do :
-    enable t-ponton with frame {&frame-name} .
-    if t-ponton:screen-value = "yes"
+    if p-mode = {&add-def}
     then do :
-      enable ponton-mass ponton-height with frame {&frame-name} .
-    end .
-    else do :
-      disable ponton-mass ponton-height with frame {&frame-name} .
+      enable t-ponton with frame {&frame-name} .
+      if t-ponton:screen-value = "yes"
+      then do :
+        enable ponton-mass ponton-height with frame {&frame-name} .
+      end .
+      else do :
+        disable ponton-mass ponton-height with frame {&frame-name} .
+      end .
     end .
   end .
   if place-type:screen-value = "2"
@@ -2925,11 +2937,31 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
   THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 { gbl/app_help.i }
 /* Add Trigger to equate WINDOW-CLOSE to END-ERROR                      */
-ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} 
+ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} do :
+  define variable vlog as logical no-undo .
+  message "Все введенные данные будут утеряны. Вы уверены, что хотите отказаться от внесенных изменений?"
+  view-as alert-box question buttons yes-no update vlog .
+  if not vlog then return no-apply .
+  p-rep-rec = ?.
   APPLY "END-ERROR":U TO SELF.
+end .
 
-on end-error of frame {&frame-name} 
-  apply "choose" to b-quit in frame {&frame-name}.
+on "F2" ANYWHERE do:
+  define variable vlog as logical no-undo .
+  message "Все введенные данные будут утеряны. Вы уверены, что хотите отказаться от внесенных изменений?"
+  view-as alert-box question buttons yes-no update vlog .
+  if not vlog then return no-apply .
+  p-rep-rec = ?.
+end .
+
+on "ESC" ANYWHERE do:
+  define variable vlog as logical no-undo .
+  message "Все введенные данные будут утеряны. Вы уверены, что хотите отказаться от внесенных изменений?"
+  view-as alert-box question buttons yes-no update vlog .
+  if not vlog then return no-apply .
+  p-rep-rec = ?.
+end .
+
 { ref/tabhndmv.i v-tab-order underline-tb }
 { gbl/rethndmv.i v-tab-order underline-tb "APPLY 'CHOOSE' TO b-exit in frame {&frame-name}." }
 
@@ -3305,6 +3337,30 @@ PROCEDURE Myenable :
   apply "value-changed" to place-type .
   
   hide t-com-vessel com-tanks b-com-tanks v-is-main gate-valve-tanks t-gate-valve b-gate-valve-tanks t-auto-gate-valve in frame {&frame-name} .
+  
+  if p-mode = {&update}
+  then do :
+    disable
+      place-locat
+      tt-place.max-qnty
+      dead-balance
+      place-si
+      place-si-name
+      r-sr-izm
+      place-diameter
+      place-dead-high
+      place-temp-coef
+      dens-prov
+    with frame {&frame-name} .
+    if place-type = 1
+    then do :
+      disable
+        t-ponton
+        ponton-mass
+        ponton-height
+      with frame {&frame-name} .
+    end .
+  end .
   
   run check-sug-NP-par .
   

@@ -253,9 +253,22 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   subPriceObj:DocNum = v-doc-num.
   subPriceObj:ToDel = (v-has-oldbh and not v-has-newbh) .
   subPriceObj:pr-doc-hndl = v-oldbh .
-  expObj:GetContent(subPriceObj).
+  expObj:GetContent(subPriceObj) no-error.
+  if error-status:error then
+  do:
+    undo _main, return error expObj:Msg .  
+  end.
         
-      IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, INPUT v-esys-cmd-proc-handle, INPUT v-esys-cmd-code, ('+update' + {&delim-par} + expObj:InitSecTag) ) = false  THEN do:
+      IF ExpData1:esys-add-dump-data ( INPUT expObj:Data, 
+                                       INPUT v-esys-cmd-proc-handle, 
+                                       INPUT v-esys-cmd-code, 
+                                       ('+update' + {&delim-par} + expObj:InitSecTag 
+                                       + (if expObj:sendTableName <> "" 
+                                          then substitute("&1&2&3&4",{&delim-par},
+                                                          expObj:sendTableName,
+                                                          if expObj:sendOldRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendOldRowid) else "",
+                                                          if expObj:sendNewRowid <> ? then substitute("&1&2",{&delim-key},expObj:sendNewRowid) else "") 
+                                          else "")) ) = false  THEN do:
         undo _main, return error v-last-error-message .
       end.
       

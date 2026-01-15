@@ -42,6 +42,8 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
       private set.        
    define property gs-code as character no-undo get. 
       private set.
+   define property table-version as integer no-undo get. 
+      private set.
    define property tank-type as integer no-undo get. 
       private set.
    define property pl-qnty as decimal no-undo get. 
@@ -88,6 +90,12 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
       private set. 
    define property passport-type as character no-undo get. 
       private set. 
+   define property pontoon as integer no-undo get. 
+      private set. 
+   define property wght-pntn as decimal no-undo get. 
+      private set.  
+   define property srfcng-pntn as decimal no-undo get. 
+      private set.  
 
    define property cal-tbl as subjects no-undo get. 
       private set.
@@ -134,6 +142,11 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
             do:
                assign 
                   gs-code = inValue.
+            end.
+         when "table-version" then 
+            do:
+               assign 
+                  table-version = integer(inValue).
             end.
          when "tank-type" then 
             do:
@@ -250,6 +263,21 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
                assign 
                   passport-type = inValue.
             end.
+         when "pontoon" then 
+            do:
+               assign 
+                  pontoon = integer(inValue).
+            end.
+         when "wght-pntn" then 
+            do:
+               assign 
+                  wght-pntn = decimal(inValue).
+            end.
+         when "srfcng-pntn" then 
+            do:
+               assign 
+                  srfcng-pntn = decimal(inValue).
+            end.
       end case.
    end.
 
@@ -268,9 +296,19 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
    end.
   
    method override protected void CheckData ():
-      /*
+
       def var v-str as char no-undo.
-    
+      
+      assign
+         v-str = "tank-code"
+         when tank-code = ?
+         v-str = v-str + ",gs-code"
+         when gs-code = ?
+         v-str = v-str + ",table-version"
+         when table-version = ?
+      .
+      
+      /*
       assign
          v-str = "tank-code"
          when tank-code = ?
@@ -324,13 +362,13 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
       if rvd-tmp = 1 then
          assign
             v-str = v-str + ",tmp-mi-code" when tmp-mi-code = ? .
-     
+      */
                      
       v-str = trim (v-str, ",").
       if v-str > ''
          then 
          undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-     */
+
    end.
   
    method override protected void ClearSub():
@@ -341,6 +379,7 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
          del-f         = ?
          name_         = ?
          gs-code       = ?
+         table-version = ?
          tank-type     = ?
          pl-qnty       = ?
          max-qnty      = ?
@@ -364,9 +403,13 @@ class ibs.th.bge.1crn.subjects.tank-imp inherits ibs.th.bge.1crn.subjects.asubje
          izm-pr        = ?
          passport-num  = ?
          passport-type = ?
+         pontoon       = ?
+         wght-pntn     = ?
+         srfcng-pntn   = ?
          .
 
       delete object cal-tbl no-error .
+      delete object belt-tbl no-error .
  
    end.
 

@@ -23,4 +23,21 @@ DEFINE TEMP-TABLE tt-typeDocChoose NO-UNDO
 define temp-table gds-list like ub.goods
   field minZapas as decimal 
   field contract as character
+  field contract-code as integer
+  field price as decimal
+  field doc-qnty as decimal 
   index pi contract gds-code.
+  
+ define temp-table choose-gds-list like ub.goods
+  field minZapas as decimal 
+  field contract as character
+  field contract-code as integer
+  field price as decimal
+  field doc-qnty as decimal 
+  index pi contract gds-code.
+   
+  define temp-table tt-gds-list like ub.goods
+  field contract-code as integer
+  field price as decimal
+  field doc-qnty as decimal 
+  index pi gds-code.

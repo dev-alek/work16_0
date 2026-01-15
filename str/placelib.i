@@ -53,6 +53,9 @@ Creation date: 12/22/11
 &global-define place-current      "place-current"      /* Текущий резервуар для СР с автоматической задвижкой (в список не добавлять!) */
 &global-define place-need-RVD-rvs "place-need-RVD-rvs" /* Необходимо сделать сверку с РВД (в список не добавлять!) */
 &global-define init-shift-period-rvs "init-shift-period-rvs" /* Номер сменной сверки для инициализации функционала контроля плотности НП (в список не добавлять!) */
+&global-define pending-table-version "pending-table-version" /* Номера версий ГТ (и др. параметров), ожидающих применения (в список не добавлять!) */
+&global-define current-table-version "current-table-version" /* Текущий номер версии ГТ (и др. параметров) (в список не добавлять!) */
+&global-define message-table-version "message-table-version" /* Необходим вывод сообщения об ожидании/применении новой версии ГТ (и др. параметров) (в список не добавлять!) */
 
 &global-define list-place-attr    'place-type,place-SI,place-diameter,dead-balance,water-level,dens-prov,place-virtual,place-twice-code,place-sert-urov,place-local,place-error-mass,place-asi-sertif,place-rvd-dnsty,place-rvd-lvl,place-rvd-tmp,place-SI-dens,place-SI-level,place-SI-temp,place-passp-num,place-passp-type,place-dead-high,place-temp-coef,disable-water-alarm,disable-level-alarm,place-ponton,place-ponton-mass,place-ponton-height,place-com-vessel,place-com-tanks,place-is-main,place-gate-valve,place-gate-valve-tanks,place-auto-gate-valve':u /*список атрибутов резервуара*/
 

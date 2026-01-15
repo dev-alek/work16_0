@@ -75,6 +75,74 @@ AND p-mode <> {&update} then do:
   return error '':u.
 end.
 
+
+define variable t-loc as integer no-undo .
+
+if p-loc1 <> '' THEN DO:
+	t-loc = integer(p-loc1) NO-ERROR.  
+	IF ERROR-STATUS:ERROR THEN DO:
+		 MESSAGE "коорд1 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+
+	IF t-loc > 999 THEN DO:
+		 MESSAGE "коорд1 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+
+END.
+
+
+if p-loc2 <> '' THEN DO:
+	t-loc = integer(p-loc2) NO-ERROR.  
+	IF ERROR-STATUS:ERROR THEN DO:
+		 MESSAGE "коорд2 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+
+	IF t-loc > 999 THEN DO:
+		 MESSAGE "коорд2 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+
+END.
+
+if p-loc3 <> '' THEN DO:
+	t-loc = integer(p-loc3) NO-ERROR.  
+	IF ERROR-STATUS:ERROR THEN DO:
+		 MESSAGE "коорд3 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+	IF t-loc > 999 THEN DO:
+		 MESSAGE "коорд3 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+
+END.
+
+if p-loc4 <> '' THEN DO:
+	t-loc = integer(p-loc4) NO-ERROR.  
+	IF ERROR-STATUS:ERROR THEN DO:
+		 MESSAGE "коорд4 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+	IF t-loc > 999 THEN DO:
+		 MESSAGE "коорд4 должна быть числом от 1 до 999 "
+         	 view-as alert-box error .
+        return error '':u.
+        END.
+
+END.
+
+
+
 if p-pl-name = '':U
 or p-pl-name = ? then do:
   v-mess = "Название складского места не может быть пустым".

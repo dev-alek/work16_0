@@ -35,6 +35,8 @@ define variable vss-description as character no-undo init "Повторная выгрузка да
 /* Includes */
 
 { cmp/vssrevis.i }
+{ utl/tt-test-1c.i new}
+
 
 /* Parameters Definitions ---                                           */
 

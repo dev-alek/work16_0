@@ -60,7 +60,7 @@ class ibs.th.bge.1crn.subjects.tank-imp_cal-tbl inherits ibs.th.bge.1crn.subject
 
  
    method override protected void CheckData ():
-      /*
+
       def var v-str as char no-undo.
     
       assign
@@ -68,14 +68,14 @@ class ibs.th.bge.1crn.subjects.tank-imp_cal-tbl inherits ibs.th.bge.1crn.subject
          when lvl_ = ?
          v-str = v-str + ",amnt" 
          when amnt = ?
-         v-str = v-str + ",comp-er"
-         when comp-err = ?
+/*         v-str = v-str + ",comp-err"*/
+/*         when comp-err = ?          */
          .
       v-str = trim (v-str, ",").
       if v-str > ''
          then 
          undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-      */
+
    end.
   
    method override protected void ClearSub():

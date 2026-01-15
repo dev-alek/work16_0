@@ -47,6 +47,7 @@ define input parameter p-obj-code      as integer        no-undo .
 define input parameter p-pl-code       as integer        no-undo .
 /* Local Variable Definitions ---                                       */
 define variable v_ok as LOGICAL no-undo .
+define variable v-new as LOGICAL no-undo init no .
 define buffer buf_pl-level for ub.pl-level .
 define buffer buf_pl-level-mm for ub.pl-level-mm .
 define buffer buf_pl-level-attr for ub.pl-level-attr .
@@ -251,8 +252,263 @@ ASSIGN
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
 ON WINDOW-CLOSE OF FRAME Dialog-Frame /* Градуировочная таблица */
 DO:
+  define variable v-gap as character no-undo.
+  define variable v-ok  as logical   no-undo.
+  
+  if v-new
+  then do :
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+  end .
+
+  run check-pl-level in this-procedure ( OUTPUT v-gap ).
+  IF v-gap <> ""
+      THEN 
+  DO:
+      message
+          "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
+          skip v-gap
+          SKIP 
+          "Выйти и оставить пропуски?"
+          view-as alert-box information
+          BUTTONS YES-NO
+          update v-ok
+          .
+      IF NOT v-ok THEN 
+      DO:
+          RETURN NO-APPLY.
+      END.
+  END.
+
+  if AVAILABLE (buf_pl-level) and v-ok-level then 
+  do:
+/*запуск машины правил для выгрузки резервуара*/
+  { gbl/rum-runa.i
+  ?
+  this-procedure:handle
+  ?
+  {&thref-proc_ref-event}
+  " buffer buf_pl-level:handle "
+  " buffer buf_pl-level:handle "
+  ''
+  ''
+  no-error
+  }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+  if v-ok-level then 
+  do:
+      run trg/userlog.p (
+          input {&nwsdochs_action_create}
+          , input {&table_pl-level}
+          , input ( buffer buf_pl-level :handle )
+          , input ?
+          , input ""
+          ) no-error.
+      if error-status :error
+          then 
+      do:
+          undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+              , {&new-line}
+              , vss-workfile
+              , return-value
+              , error-status :get-message ( 1 ) ).
+      end.
+  end.
   APPLY "END-ERROR":U TO SELF.
 END.
+
+on "ESC" ANYWHERE do:
+  define variable v-gap as character no-undo.
+  define variable v-ok  as logical   no-undo.
+  
+  if v-new
+  then do :
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+  end .
+
+  run check-pl-level in this-procedure ( OUTPUT v-gap ).
+  IF v-gap <> ""
+      THEN 
+  DO:
+      message
+          "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
+          skip v-gap
+          SKIP 
+          "Выйти и оставить пропуски?"
+          view-as alert-box information
+          BUTTONS YES-NO
+          update v-ok
+          .
+      IF NOT v-ok THEN 
+      DO:
+          RETURN NO-APPLY.
+      END.
+  END.
+
+  if AVAILABLE (buf_pl-level) and v-ok-level then 
+  do:
+/*запуск машины правил для выгрузки резервуара*/
+  { gbl/rum-runa.i
+  ?
+  this-procedure:handle
+  ?
+  {&thref-proc_ref-event}
+  " buffer buf_pl-level:handle "
+  " buffer buf_pl-level:handle "
+  ''
+  ''
+  no-error
+  }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+  if v-ok-level then 
+  do:
+      run trg/userlog.p (
+          input {&nwsdochs_action_create}
+          , input {&table_pl-level}
+          , input ( buffer buf_pl-level :handle )
+          , input ?
+          , input ""
+          ) no-error.
+      if error-status :error
+          then 
+      do:
+          undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+              , {&new-line}
+              , vss-workfile
+              , return-value
+              , error-status :get-message ( 1 ) ).
+      end.
+  end.
+end.
+
+on "F2" ANYWHERE do:
+  define variable v-gap as character no-undo.
+  define variable v-ok  as logical   no-undo.
+  
+  if v-new
+  then do :
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+  end .
+
+  run check-pl-level in this-procedure ( OUTPUT v-gap ).
+  IF v-gap <> ""
+      THEN 
+  DO:
+      message
+          "В тарировочной таблице имеются пропуски. Пропущены следующие уровни:"
+          skip v-gap
+          SKIP 
+          "Выйти и оставить пропуски?"
+          view-as alert-box information
+          BUTTONS YES-NO
+          update v-ok
+          .
+      IF NOT v-ok THEN 
+      DO:
+          RETURN NO-APPLY.
+      END.
+  END.
+
+  if AVAILABLE (buf_pl-level) and v-ok-level then 
+  do:
+/*запуск машины правил для выгрузки резервуара*/
+  { gbl/rum-runa.i
+  ?
+  this-procedure:handle
+  ?
+  {&thref-proc_ref-event}
+  " buffer buf_pl-level:handle "
+  " buffer buf_pl-level:handle "
+  ''
+  ''
+  no-error
+  }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+  if v-ok-level then 
+  do:
+      run trg/userlog.p (
+          input {&nwsdochs_action_create}
+          , input {&table_pl-level}
+          , input ( buffer buf_pl-level :handle )
+          , input ?
+          , input ""
+          ) no-error.
+      if error-status :error
+          then 
+      do:
+          undo, return substitute( "&2&1Ошибка при записи истории пользователя&1&3&1&4"
+              , {&new-line}
+              , vss-workfile
+              , return-value
+              , error-status :get-message ( 1 ) ).
+      end.
+  end.
+end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -484,6 +740,23 @@ ON CHOOSE OF b-exit IN FRAME Dialog-Frame /* Выход */
     DO:
         define variable v-gap as character no-undo.
         define variable v-ok  as logical   no-undo.
+        
+        if v-new
+        then do :
+          find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                            and buf_pl-level.obj-code = p-obj-code
+                                            and buf_pl-level.pl-code  = p-pl-code
+                                            no-error .
+          if available buf_pl-level
+          then do :
+            message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка градуировочной таблицы резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+            view-as alert-box question buttons yes-no update v-ok .
+            if not v-ok
+            then do :
+              return no-apply .
+            end .
+          end .
+        end .
 
         run check-pl-level in this-procedure ( OUTPUT v-gap ).
         IF v-gap <> ""
@@ -643,7 +916,8 @@ DO:
         {&update}
         
     ).
-    run enable_UI in this-procedure.
+    
+    {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -705,33 +979,48 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                              , p-obj-code
                                              , p-obj-type
                                              )
-   .
+    .
    
-   for each buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
-                                   and buf_pl-level.obj-code = p-obj-code
-                                   and buf_pl-level.pl-code  = p-pl-code
-                                   :
-     find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
-                                            and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
-                                            and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
-                                            and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
-                                            and buf_pl-level-attr.attr-code = "tarir-delta"
-                                            no-error .
-     if not available buf_pl-level-attr
-     then do :
-       create buf_pl-level-attr .
-       assign
-         buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
-         buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
-         buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
-         buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
-         buf_pl-level-attr.attr-code = "tarir-delta"        
-         buf_pl-level-attr.attr-value = (if v-place-type = 2 then string(0.25) else string(0.20))
-       .
-     end .                                                                      
-   end .
+    for each buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                    and buf_pl-level.obj-code = p-obj-code
+                                    and buf_pl-level.pl-code  = p-pl-code
+                                    :
+      find first buf_pl-level-attr no-lock where buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+                                             and buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+                                             and buf_pl-level-attr.pl-code   = buf_pl-level.pl-code
+                                             and buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+                                             and buf_pl-level-attr.attr-code = "tarir-delta"
+                                             no-error .
+      if not available buf_pl-level-attr
+      then do :
+        create buf_pl-level-attr .
+        assign
+          buf_pl-level-attr.obj-type  = buf_pl-level.obj-type
+          buf_pl-level-attr.obj-code  = buf_pl-level.obj-code
+          buf_pl-level-attr.pl-code   = buf_pl-level.pl-code 
+          buf_pl-level-attr.pl-level  = buf_pl-level.pl-level
+          buf_pl-level-attr.attr-code = "tarir-delta"        
+          buf_pl-level-attr.attr-value = (if v-place-type = 2 then string(0.25) else string(0.20))
+        .
+      end .                                                                      
+    end .
 
     RUN enable_UI.
+    
+    find first buf_pl-level no-lock where buf_pl-level.obj-type = p-obj-type
+                                      and buf_pl-level.obj-code = p-obj-code
+                                      and buf_pl-level.pl-code  = p-pl-code
+                                      no-error .
+    if available buf_pl-level
+    then do :
+      disable
+        b-add b-chg b-del b-load b-delete
+      with frame {&frame-name} .
+    end .
+    else do :
+      assign v-new = yes .
+    end .
+    
     WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 
 END.

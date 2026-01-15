@@ -19,7 +19,9 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
   define override public property InitSecTag as character no-undo init "techlosses"
   get.
    
-
+  define override public property sendTableName as character no-undo init "trn-doc"
+  get.
+   
   define override public property vss-archive as character no-undo 
   get.
    
@@ -78,6 +80,7 @@ class ibs.th.bge.1crn.subjects.exp-techlosses inherits send1cerpsub:
    find first buf_trn-doc no-lock where buf_trn-doc.doc-code = string(oldbh:buffer-field ("doc-code":U):buffer-value) no-error .
    if available buf_trn-doc
    then do:
+     sendOldRowid = rowid(buf_trn-doc).
      for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code:
       find first ub.goods no-lock where ub.goods.artic = buf_doc-line.artic and
       ub.goods.prod-code = buf_doc-line.prod-code and

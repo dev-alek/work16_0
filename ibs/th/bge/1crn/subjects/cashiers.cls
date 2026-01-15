@@ -58,7 +58,7 @@ method override protected void CheckData ():
 
     def var v-str as char no-undo.
     
-/*    assign
+    assign
       v-str = "code" when code_ = ?
       v-str = v-str + ",name" when name_ = ?
       /*v-str = v-str + ",role-code" when role-code = ?*/
@@ -67,7 +67,7 @@ method override protected void CheckData ():
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-  */
+
   end.
   
   method override protected void ClearSub():

@@ -733,6 +733,15 @@ ON CHOOSE OF B-mark IN FRAME d-pl-list /* * */
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME br-pl
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-pl d-pl-list
+ON MOUSE-SELECT-DBLCLICK OF br-pl IN FRAME d-pl-list
+  DO:
+    if (lookup("b-sel", bttns) > 0 and lookup("b-mark", bttns) = 0) then APPLY "CHOOSE" to b-sel.
+  END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME b-print
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-print d-pl-list
@@ -1127,6 +1136,7 @@ PROCEDURE enable_UI :
     b-del 
     when lookup ("b-add", bttns) > 0
     b-ATD
+    when lookup ("b-sel", bttns) = 0
     b-level 
     when lookup ("b-add", bttns) > 0
     b-sch

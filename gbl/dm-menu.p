@@ -8371,6 +8371,16 @@ procedure m-host-exe :
 
 end procedure. /* m-host-exe */
 
+procedure m-rsrvPlan-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    run rep/g-rsrvPlan.p (input parparentproc, input no) no-error .
+  end.
+
+end procedure. /* m-rsrvPlan-exe */
+
 procedure m-fbrpr-exe :
 
   do
@@ -12849,6 +12859,17 @@ procedure m-mark_collect-exe :
   end.
 
 end procedure. /* m-mark_collect-exe */
+
+procedure m-zakaz-exe :
+
+  do
+  on error undo, return error return-value
+  :
+    define variable v-rec-list as character no-undo .
+    run str/all-orders.w ( parparentproc, "", output v-rec-list) .
+  end.
+
+end procedure. /* m-zakaz-exe */
 
 procedure m-docs-pricelists-exe :
 define variable v-ok as logical   no-undo .

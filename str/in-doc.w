@@ -443,7 +443,7 @@ t-doc.reason-code
 b-add-doc b-cnt b-attr b-in-attr-fuel b-notes b-history b-print b-help ~
 varcontract-prn-code b-contr-lkp r-clients r-currency r-acc r-outs r-pay ~
 varpurch-code-name r-wrkr r-agnt r-boss r-sht ov-pc b-add-doc-yes m-inc ~
-r-reas a-n-c loc-art loc-name loc-code b-mark b-add b-bc b-prt b-parts ~
+r-reas a-n-c loc-art loc-name loc-code b-mark b-add b-prt b-parts ~
 b-lkp b-chg b-del b-live b-renum b-marks varinplnsum br-dtl wrkr-name agnt-name ~
 boss-name rsn-name b-calc-tp
 &Scoped-Define DISPLAYED-FIELDS t-doc.cli-code t-doc.cli-type ~
@@ -4944,7 +4944,7 @@ PROCEDURE enable_UI :
          t-doc.shift-name t-doc.shift-num r-sht t-doc.SLT-type t-doc.VAT-type
          ov-pc b-add-doc-yes t-doc.tot-transp t-doc.tot-other m-inc
          t-doc.ship-num t-doc.ship-date r-reas a-n-c loc-art loc-name loc-code
-         b-mark b-add b-bc b-prt b-parts b-lkp b-chg b-del b-live b-renum b-marks
+         b-mark b-add b-prt b-parts b-lkp b-chg b-del b-live b-renum b-marks
          varinplnsum br-dtl ub.currency.curr-abbr t-doc.tot-calc t-doc.road-tax
          ub.pay-type.obj-name t-doc.tot-sale wrkr-name t-doc.tot-fact
          t-doc.VAT-rubl agnt-name t-doc.VAT-base boss-name t-doc.cli-qnty
@@ -6992,7 +6992,7 @@ if lookup( fnc, "enable" ) > 0 then do:
       enable b-chg b-renum r-outs
              t-doc.wrkr t-doc.agnt t-doc.boss r-wrkr r-agnt r-boss r-outs m-inc
              with frame {&frame-name}.
-      if bcvalue    <> "no" then enable b-bc with frame {&frame-name}.
+/*      if bcvalue    <> "no" then enable b-bc with frame {&frame-name}.*/
       if not t-doc.flag_ then do:
         /*хмбния*/
         if inv-shipvalue = true then do:

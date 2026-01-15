@@ -42,8 +42,6 @@ class ibs.th.skt.SktServer:
   ------------------------------------------------------------------------------*/
 
   define private variable clientControl as class     ClientControl no-undo.
-  define private variable clientList    as character no-undo init "TSD,TableMenu,Ticked,kiosk,websrv,atdclient,ThGetInfo,AuthMarking,DeferredCommand". /*список клиентов через запятую, с которыми работает сокет-сервер*/
-
   
   define private variable hLog          as handle no-undo.
   define public property LogMsg as character no-undo
@@ -92,43 +90,55 @@ class ibs.th.skt.SktServer:
     define variable THGetInfoCmd  as class THGetInfoCmd.
     define variable AuthMarking   as class markingcmd.
     define variable DeferredCommand   as class DeferredCommand.
-		
+    define variable CashSend      as class CashSend.
+    define variable FileSend      as class FileSend.
+    define variable HelpSkt       as class HelpSkt.	
     clientControl = new ClientControl(hLog). /*количество возможных комманд соответсвует кол-ву клиентов*/
     logWrite = new LogWrite().
     /*создадим объекты конкретных комманд для клиентов сокет-сервера. вешаем комманду на порядковый номер клиента в списке*/
     run gbl/conf-rd.p ("is-tsd", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       tsdCommand = new TSDCommand().
-      clientControl:SetCommandForClient(lookup("TSD",clientList), tsdCommand).
+      clientControl:SetCommandForClient("TSD", tsdCommand).
     end.
     run gbl/conf-rd.p ("ser-wth", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       tickedCommand = new TickedCommand().
-      clientControl:SetCommandForClient(lookup("Ticked",clientList), tickedCommand).
+      clientControl:SetCommandForClient("Ticked", tickedCommand).
     end.
     tmCommand = new TableMenuCommand().
-    clientControl:SetCommandForClient(lookup("TableMenu",clientList), tmCommand).
+    clientControl:SetCommandForClient("TableMenu", tmCommand).
     run gbl/conf-rd.p ("is-byscr", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       kioskCommand = new KioskCommand().
-      clientControl:SetCommandForClient(lookup("kiosk",clientList), kioskCommand).
+      clientControl:SetCommandForClient("kiosk", kioskCommand).
     end.
     run gbl/conf-rd.p ("is-wbsrv", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if logical (conf-par) then do:
       webCommand = new webCommand().
-      clientControl:SetCommandForClient(lookup("websrv",clientList), webCommand).
+      clientControl:SetCommandForClient("websrv", webCommand).
     end.
     atdclientcmd = new atdclientcmd ().
-    clientControl:SetCommandForClient(lookup("atdclient",clientList), atdclientcmd).
+    clientControl:SetCommandForClient("atdclient", atdclientcmd).
     
     THGetInfoCmd = new THGetInfoCmd ().
-    clientControl:SetCommandForClient(lookup("ThGetInfo",clientList), THGetInfoCmd).
+    clientControl:SetCommandForClient("ThGetInfo", THGetInfoCmd).
     
     AuthMarking = new markingcmd ().
-    clientControl:SetCommandForClient(lookup("AuthMarking",clientList), AuthMarking).
+    clientControl:SetCommandForClient("AuthMarking", AuthMarking).
     
     DeferredCommand = new DeferredCommand ().
-    clientControl:SetCommandForClient(lookup("DeferredCommand",clientList), DeferredCommand).
+    clientControl:SetCommandForClient("DeferredCommand", DeferredCommand).
+    
+    CashSend = new CashSend (hLog).
+    clientControl:SetCommandForClient("CashSend", CashSend).
+    
+    FileSend = new FileSend ().
+    clientControl:SetCommandForClient("FileSend", FileSend).
+    
+    HelpSkt = new HelpSkt ().
+    clientControl:SetCommandForClient("Help", HelpSkt).
+    
     
   end constructor.
 
@@ -152,7 +162,7 @@ class ibs.th.skt.SktServer:
       client_ = identifyClients(req).
       if client_ <> ? then 
       do:
-         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp) no-error.
+         vDelete = clientControl:SendRequest(client_, req, resp) no-error.
          if error-status:error then 
          do:
             logWrite:LogStr = return-value.
@@ -217,7 +227,7 @@ class ibs.th.skt.SktServer:
          client_ = "tsd".
       if client_ <> ? then 
       do:
-         vDelete = clientControl:SendRequest(lookup (client_,clientList), req, resp, lpar) no-error.
+         vDelete = clientControl:SendRequest(client_, req, resp, lpar) no-error.
          if error-status:error then 
          do:
             logWrite:LogStr = return-value.
@@ -270,6 +280,10 @@ class ibs.th.skt.SktServer:
     if req:HeadHTTP:queryAdr <> ""
     then do:
       client_ = entry(1,req:HeadHTTP:queryAdr,"/").
+      if     not clientControl:availClient(client_)
+         and num-entries (req:HeadHTTP:queryAdr,".") eq 2
+      then
+         client_= "FileSend".
       return client_.
     end.
     else
@@ -298,7 +312,7 @@ class ibs.th.skt.SktServer:
     end.
     
     /*далее случаи не по стандарту*/    
-    if lookup (client_,clientList) = 0 then 
+    if not clientControl:availClient(client_) then 
     do:
       if    req:Content matches '*<data req="gds"*' 
          or req:Content matches '*<data req="grp"*' 
@@ -433,7 +447,7 @@ class ibs.th.skt.SktServer:
                   v-header = get-string (mbuffer-hdr, 1).
                   v-str = "".
                   v-pos-buf = 0.
-                  logWrite:WriteFileToLog('REQUEST-HEADER:' + v-header ).
+                  logWrite:WriteFileToLog('REQUEST-HEADER:' + {&CRLF} + v-header ).
                   HeadHttp = new HeadHttp(v-header).
 /*          run parseheader(input v-header).*/
                   set-size (mbuffer-in) = 0.
@@ -442,6 +456,19 @@ class ibs.th.skt.SktServer:
                   leave dwhdr_.
                end.
             end.
+         end.
+         if v-header eq ""
+         then do:
+            logWrite:WriteFileToLog("Test request").
+            resp-head =  substitute("HTTP/1.0 200 OK &1Server: 4GL&2",{&CRLF},{&HdEnd}).
+            SET-SIZE(mbuffer-out) = 0.
+            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+            PUT-STRING(mbuffer-out,1) = resp-head.
+            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+            hsocket:disconnect ().
+            logWrite:WriteFileToLog("Response: OK").
+            
+            leave ContBlock.
          end.
          if not valid-object (HeadHttp)
          then do:
@@ -513,7 +540,7 @@ class ibs.th.skt.SktServer:
             leave ContBlock.
          end.
          if     HeadHttp:contentLength = 0 
-            and not num-entries (HeadHttp:queryReq, "?") > 1 
+            and HeadHttp:queryReq eq "" 
          then do:  /* Если запрос c нулевой длиной тела, то создаем ответ об успешном выполнении запроса */
             resp-head = substitute("HTTP/1.0 411 No Content&1Server: 4GL&2",{&CRLF},{&HdEnd}).
             SET-SIZE(mbuffer-out) = 0.
@@ -585,7 +612,14 @@ class ibs.th.skt.SktServer:
                RequestProcessing(HeadHttp,mbuffer-in, hsocket, HeadHttp:userAgent) no-error.
                resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
             end.
-             
+            otherwise do:
+               resp-head =  substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).
+               SET-SIZE(mbuffer-out) = 0.
+               SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+               PUT-STRING(mbuffer-out,1) = resp-head.
+               hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+               hsocket:disconnect ().
+            end.
          end case.
           
          logWrite:LogStr = "".

@@ -79,14 +79,14 @@ CLASS ibs.th.bge.1crn.subjects.currency inherits ibs.th.bge.1crn.subjects.asubje
   end.
 
   method override protected void CheckData ():
-    /*
+
     def var v-str as char no-undo.
     
     assign
       v-str = "code" when code_ = ?
       v-str = v-str + ",name" when name_ = ?
-      v-str = v-str + ",sym-name" when sym-name = ?
-      /*v-str = v-str + ",name-in-words-1" when name-in-words-1 = ?
+      /*v-str = v-str + ",sym-name" when sym-name = ?
+      v-str = v-str + ",name-in-words-1" when name-in-words-1 = ?
       v-str = v-str + ",name-in-words-2" when name-in-words-2 = ?
       v-str = v-str + ",name-in-words-3" when name-in-words-3 = ?
       v-str = v-str + ",name-in-words-4" when name-in-words-4 = ?
@@ -97,7 +97,7 @@ CLASS ibs.th.bge.1crn.subjects.currency inherits ibs.th.bge.1crn.subjects.asubje
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-      */
+
   end.
   
   method override protected void ClearSub():

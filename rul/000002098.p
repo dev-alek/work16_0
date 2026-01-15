@@ -255,7 +255,7 @@ procedure MySeqTable:
    return.
 end.
 
-
+define stream sReadfile.
 procedure proc-main :
 define variable v-ii as integer   no-undo .
 define variable v-current-b-code as integer no-undo .
@@ -304,7 +304,7 @@ run write-log  in p-log-handle (
     subscribe "getNextseq" anywhere run-procedure "MySeqTable".
     subscribe "startStopGroupRec" anywhere run-procedure "startStop".
     MySeqUtd = ?.
-    
+    output to "oxmerrprogres.log".
     parseSubObj = new parsesub ().
     parseSubObj:setParent(parparentproc, p-parent-handle, p-log-handle) .
 
@@ -314,9 +314,8 @@ run write-log  in p-log-handle (
     unsubscribe "getNextseq" .
 
      
-    &scop my-message substitute("пакет из файла &1 обработан без ошибок", file-name)
-    {&display-message}.
-  
+       &scop my-message substitute("пакет из файла &1 обработан без ошибок", file-name)
+       {&display-message}.
     // ack_ со статусом Ok отправится только если всё выполнилось без ошибок 
     run rul/send-ack_1c.p ( input v-sender-id
                           , input v-pack-num
@@ -342,6 +341,15 @@ run write-log  in p-log-handle (
       v-err-message = trim(parseSubObj:Msg, ";") .
       v-err-message = trim(v-err-message) .
       v-err-message = trim(v-err-message, ";") .
+      put skip.
+      output close.
+      define variable vStr as character no-undo.
+      input STREAM sReadfile FROM  "oxmerrprogres.log".
+      repeat:
+         import stream sReadfile unformatted vStr.
+         &scop my-message vStr
+         {&display-message}.
+      end. 
       run rul/send-ack_1c.p ( input v-sender-id
                             , input v-pack-num
                               ,input 4
@@ -368,6 +376,9 @@ run write-log  in p-log-handle (
     end catch .
     finally :
       delete object parseSubObj no-error.
+      
+      put skip.
+      output close.
       delete object impSubObj no-error.
       if valid-object(v-pkcs) then delete object v-pkcs .
       if v-err-message > "" then return error v-err-message .

@@ -415,7 +415,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
           .
         putStat(MSG).
         IsErr = true.
-        return.
+/*        return.*/
       end.
       connect value(substitute(ConPar + " &1", m-user-passwd-upd)).
     end.
@@ -634,7 +634,7 @@ define variable vss-description as character no-undo init "Обновление БД.".
              or vtext3 = "error"
           then do:
              IsErr = yes.
-             leave block-read.
+/*             leave block-read.*/
           end.
        end.
        input stream sReadfile close.

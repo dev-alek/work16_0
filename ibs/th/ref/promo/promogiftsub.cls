@@ -157,7 +157,17 @@ define variable vss-description as character no-undo initial "Объект подаркок ак
         setFlagChange (true).
       end.
     END.
-    
+
+    define property mess-gks as char no-undo
+    get.
+    set(arg as char):
+      if arg <> mess-gks
+      then do:
+        mess-gks = arg.
+        setFlagChange (true).
+      end.
+    END.
+        
     define property Mode as char no-undo init {&h-update}
     get.
     set.

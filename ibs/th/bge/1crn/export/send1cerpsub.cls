@@ -45,7 +45,7 @@ class ibs.th.bge.1crn.export.send1cerpsub abstract
    define property params        as class paramCol  no-undo
    get.
    private set.
-   
+
    method public void setContext (input  i-parparentproc   as handle,
                                   input  i-parent-handle   as handle,
                                   input  i-log-handle      as handle,
@@ -71,18 +71,31 @@ class ibs.th.bge.1crn.export.send1cerpsub abstract
    
    method abstract public void CrContentToSW (hSaxWriter as handle).
    method abstract public void CheckParam    ().
+   /* метод setSubjectId - обязатеьный                                                                 */
+   /* устанавливает sendTableName - имя таблицы и sendOldRowid,sendNewRowid - rowid выгружаемых записи */
 
    define property Msg as character no-undo
    get:
       return trim (Msg, {&new-line}).
    end.
-   private set (inArg as char):
+   protected set (inArg as char):
       Msg = Msg + {&new-line} + inArg.
    end.
     
    define abstract property InitSecTag as character no-undo
    get.
       
+   define abstract property sendTableName  as character  no-undo
+     get.
+   
+   define public property sendOldRowid as rowid  no-undo
+     get.
+     set.
+
+   define public property sendNewRowid as rowid  no-undo
+     get.
+     set.
+   
    constructor protected send1cerpsub (  ):
       super ().
    end constructor.

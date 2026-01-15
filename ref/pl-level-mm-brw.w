@@ -65,6 +65,8 @@ define variable isUpdate            as logical no-undo init no.
 define variable v-chk-act-host-code as integer no-undo.
 define variable ri                  as recid   no-undo.
 define variable isRights            as logical no-undo.
+define variable v-new               as logical no-undo init no .
+define variable v-ok                as logical no-undo .
 define buffer buf_pl-level-mm for ub.pl-level-mm.
 define buffer buf_place       for ub.place.
 
@@ -240,18 +242,28 @@ ON CHOOSE OF b-exit IN FRAME f-pl-level-mm /* Выход */
     DO:
         if AVAILABLE (buf_pl-level-mm) and isUpdate then
         do:
-      /*запуск машины правил для выгрузки резервуара*/
-        { gbl/rum-runa.i
-        ?
-        this-procedure:handle
-        ?
-        {&thref-proc_ref-event}
-        " buffer buf_pl-level-mm:handle "
-        " buffer buf_pl-level-mm:handle "
-        ''
-        ''
-        no-error
-        }
+          if v-new
+          then do :
+            message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка таблицы поясов резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+            view-as alert-box question buttons yes-no update v-ok .
+            if not v-ok
+            then do :
+              return no-apply .
+            end .
+          end .
+          
+          /*запуск машины правил для выгрузки резервуара*/
+            { gbl/rum-runa.i
+            ?
+            this-procedure:handle
+            ?
+            {&thref-proc_ref-event}
+            " buffer buf_pl-level-mm:handle "
+            " buffer buf_pl-level-mm:handle "
+            ''
+            ''
+            no-error
+            }
             if error-status :error
                 then
             do:
@@ -493,9 +505,121 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 { gbl/app_help.i }
 
 /* Add Trigger to equate WINDOW-CLOSE to END-ERROR                      */
-ON WINDOW-CLOSE OF FRAME {&FRAME-NAME}
-  APPLY "END-ERROR":U TO SELF.
+ON WINDOW-CLOSE OF FRAME {&frame-name} /* Градуировочная таблица */
+DO:
+  if AVAILABLE (buf_pl-level-mm) and isUpdate then
+  do:
+    if v-new
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка таблицы поясов резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+    
+    /*запуск машины правил для выгрузки резервуара*/
+      { gbl/rum-runa.i
+      ?
+      this-procedure:handle
+      ?
+      {&thref-proc_ref-event}
+      " buffer buf_pl-level-mm:handle "
+      " buffer buf_pl-level-mm:handle "
+      ''
+      ''
+      no-error
+      }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
 
+          return no-apply .
+      end.
+  end.
+  APPLY "END-ERROR":U TO SELF.
+END.
+
+on "ESC" ANYWHERE do:
+  if AVAILABLE (buf_pl-level-mm) and isUpdate then
+  do:
+    if v-new
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка таблицы поясов резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+    
+    /*запуск машины правил для выгрузки резервуара*/
+      { gbl/rum-runa.i
+      ?
+      this-procedure:handle
+      ?
+      {&thref-proc_ref-event}
+      " buffer buf_pl-level-mm:handle "
+      " buffer buf_pl-level-mm:handle "
+      ''
+      ''
+      no-error
+      }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+end.
+
+on "F2" ANYWHERE do:
+  if AVAILABLE (buf_pl-level-mm) and isUpdate then
+  do:
+    if v-new
+    then do :
+      message "Внимание! После подтверждения завершения работы по вводу данных дальнейшая корректировка таблицы поясов резервуара будет возможна только в ИС УРТ. Подтвердите завершение работы!"
+      view-as alert-box question buttons yes-no update v-ok .
+      if not v-ok
+      then do :
+        return no-apply .
+      end .
+    end .
+    
+    /*запуск машины правил для выгрузки резервуара*/
+      { gbl/rum-runa.i
+      ?
+      this-procedure:handle
+      ?
+      {&thref-proc_ref-event}
+      " buffer buf_pl-level-mm:handle "
+      " buffer buf_pl-level-mm:handle "
+      ''
+      ''
+      no-error
+      }
+      if error-status :error
+          then
+      do:
+          message
+              error-status:get-message(1) skip
+              return-value
+              view-as alert-box error .
+
+          return no-apply .
+      end.
+  end.
+end.
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
@@ -516,7 +640,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     0
     0
     0
-    true
+    false
     isRights
   }
 
@@ -534,6 +658,18 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                              ).
 
   run enable_UI in this-procedure .
+  
+  find first buf_pl-level-mm where 
+             buf_pl-level-mm.obj-type = p-obj-type
+         and buf_pl-level-mm.obj-code = p-obj-code
+         and buf_pl-level-mm.pl-code = p-pl-code
+       no-lock no-error.
+  if available buf_pl-level-mm
+  then do :
+    disable
+      b-load b-add b-upd b-del b-clear
+    WITH FRAME {&frame-name} .
+  end .
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME} focus {&browse-name}.
 END.
@@ -599,6 +735,7 @@ PROCEDURE enable_UI :
       b-del
       b-clear WITH FRAME {&frame-name}
     .
+    assign v-new = yes .
     ri = ?.
   end.
   
@@ -612,7 +749,7 @@ PROCEDURE enable_UI :
     reposition br-pl-level-mm to recid ri.
   else if avail b_pl-level-mm then 
     reposition br-pl-level-mm to row 1.
-  else 
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

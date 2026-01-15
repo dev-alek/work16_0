@@ -83,20 +83,19 @@ class ibs.th.bge.1crn.subjects.recipe-gd inherits ibs.th.bge.1crn.subjects.asubj
 
 
   method override protected void CheckData ():
-    /* 
     def var v-str as char no-undo.
     
     assign
       v-str = ",gd-code" when gd-code = ?
-      v-str = v-str + ",unit-code" when unit-code = ?
-      v-str = v-str + ",qnty-net" when qnty-net = ?
-      v-str = v-str + ",qnty-gross" when qnty-gross = ?
+/*      v-str = v-str + ",unit-code" when unit-code = ?  */
+/*      v-str = v-str + ",qnty-net" when qnty-net = ?    */
+/*      v-str = v-str + ",qnty-gross" when qnty-gross = ?*/
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
     ) .
-    */
+
   end method.
   
   method override protected void ClearSub():

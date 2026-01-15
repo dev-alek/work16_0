@@ -100,7 +100,7 @@ class ibs.th.bge.1crn.subjects.good-grps inherits ibs.th.bge.1crn.subjects.asubj
   end .
 
   method override protected void CheckData ():
-    /*
+
     def var v-str as char no-undo.
     
     assign
@@ -118,7 +118,7 @@ class ibs.th.bge.1crn.subjects.good-grps inherits ibs.th.bge.1crn.subjects.asubj
     if v-str > ''
       then 
       undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-      */
+
   end.
   
   method override protected void ClearSub():

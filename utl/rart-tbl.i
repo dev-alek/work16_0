@@ -20,11 +20,13 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 &glob TABLE-RART_IGNORE ~
 "c-goods~
+,c-order-line~
 ":U
 &glob TABLE-RART_SPECIAL ~
 "goods~
 ,ot-line~
 ,stk-line~
+,order-line~
 ":U
 
 &glob TABLE-RART_LIST ~

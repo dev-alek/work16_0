@@ -156,7 +156,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
   end.
 
   method override protected void CheckData ():
-    /*
+
     def var v-str as char no-undo.
     
     assign
@@ -171,7 +171,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc-in inherits ibs.th.bge.1crn.subjects.a
     if v-str > ''
     then 
       undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-    */
+
   end.
   
   method override protected void ClearSub():

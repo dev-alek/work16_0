@@ -26,6 +26,9 @@ class ibs.th.bge.1crn.subjects.exp-CashParamControl inherits send1cerpsub implem
    &scop tag-interface 'Control-etalon-params':U
    define override public property InitSecTag as character no-undo init {&tag-interface}
    get.
+ 
+   define override public property sendTableName  as character  no-undo init "code"
+   get.
    
    method override public void CheckParam(  ):
       return.

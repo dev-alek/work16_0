@@ -89,7 +89,6 @@ then do:
                              )
                                              ).
         v-view-log = yes.
-        next _for.
      end.
      else do:
         run write-log-and-file in p-log-handle (

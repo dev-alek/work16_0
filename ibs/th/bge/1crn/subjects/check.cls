@@ -72,6 +72,18 @@ define private temp-table tt-recid-TranFuel no-undo
   define property InitSecTag as character no-undo init {&tag-interface}
     get.
 
+  define public property sendTableName  as character  no-undo
+    get.
+    private set.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define property BufHandle as handle no-undo
     get.
     set.
@@ -156,17 +168,18 @@ define private temp-table tt-recid-TranFuel no-undo
     Msg = "" .
     if not valid-handle(BufHandle) then undo, throw new Progress.Lang.AppError("Отсутствует запись СМЕНЫ shift_obj с документами продажи") .
     
-    
-    
+    sendTableName = BufHandle:table.
+    sendOldRowid  = BufHandle:rowid.
+  if BufHandle:table <> "chk-doc" then do:  
     assign
-      v-fld-host-code  = BufHandle:buffer-field( "host-code":U  )
+      v-fld-host-code  = BufHandle:buffer-field( "host-code":U  ) 
       v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
       v-fld-obj-code   = BufHandle:buffer-field( "obj-code":U  )
       v-fld-shift-date = BufHandle:buffer-field( "shift-date":U  )
       v-fld-shift-num  = BufHandle:buffer-field( "shift-num":U  )
     .
     assign
-      v-host-code  = v-fld-host-code:buffer-value
+      v-host-code  = v-fld-host-code:buffer-value  
       v-obj-type   = v-fld-obj-type:buffer-value
       v-obj-code   = v-fld-obj-code:buffer-value
       v-shift-date = v-fld-shift-date:buffer-value
@@ -240,6 +253,52 @@ define private temp-table tt-recid-TranFuel no-undo
   insw:end-element ({&tag-checks}) .
   insw:end-element ({&tag-shift}) .
 
+ END.   /*   if BufHandle:table <> "chk-doc" then do:   */
+
+
+if BufHandle:table = "chk-doc" then do:    /* отдельная выгрузка чеков  открытия и закрытия с типом 40 и 13 */ 
+      define variable v-curr-sv-date as date no-undo .
+      run gbl/getcurdt.p  (output v-curr-sv-date ) .
+
+    assign
+      v-fld-obj-type   = BufHandle:buffer-field( "obj-type":U  )
+      v-fld-obj-code   = BufHandle:buffer-field( "obj-code":U  )
+      v-fld-shift-num  = BufHandle:buffer-field( "shift-num":U  )
+    .
+
+    assign
+      v-obj-type   = v-fld-obj-type:buffer-value
+      v-obj-code   = v-fld-obj-code:buffer-value
+      v-shift-date = v-curr-sv-date
+      v-shift-num  = v-fld-shift-num:buffer-value
+    .
+
+    find first shift-obj where shift-obj.status_ = "ТЕК" and shift-obj.obj-code = v-obj-code no-error.
+    IF AVAILABLE shift-obj THEN v-shift-num = shift-obj.shift-num.
+    else v-shift-num = 0.
+    insw:start-element ({&tag-shift}) .
+
+    insw:write-data-element (  "shift-date":U,  iso-date(v-shift-date) ).
+    insw:write-data-element (  "shift-num":U,   string(v-shift-num)    ).
+
+    insw:start-element ({&tag-checks}) .
+    for each over_buf_chk-doc
+       where over_buf_chk-doc.chk-type eq 40 or over_buf_chk-doc.chk-type eq 13 :
+       FIND FIRST ub.chk-doc-attr WHERE over_buf_chk-doc.doc-code = chk-doc-attr.doc-code and ub.chk-doc-attr.attr-code  = "CHFlag1S" and ub.chk-doc-attr.attr-value = "no" NO-ERROR. 
+       IF AVAILABLE ub.chk-doc-attr THEN 
+            DO:
+               v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error . 
+               if not error-status:error then 
+               CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
+              v-host-code, v-obj-type, v-obj-code) .
+            delete chk-doc-attr.
+            end .   
+    end .   
+insw:end-element ({&tag-checks}) . 
+insw:end-element ({&tag-shift}) . 
+
+END. /*   if BufHandle:table = "chk-doc" then do:   */
+
 
     catch exAppErrors as class Progress.Lang.AppError :
       Msg = exAppErrors:ReturnValue .
@@ -254,7 +313,7 @@ define private temp-table tt-recid-TranFuel no-undo
       Msg = "Unexpected error occurred..." .
       undo, throw exAnyErrors .
     end catch .
-    
+
     
   end method . /* end_of CrContentToSW */
 
@@ -495,7 +554,12 @@ define private temp-table tt-recid-TranFuel no-undo
     define variable v-parts-qnty   as decimal no-undo .
     define variable v-marking      as character no-undo .
     define variable v-sum-promo    as decimal no-undo . /* сумма скидки по промо НП */
-    define variable v-pcnt-promo   as decimal no-undo . /* процент скидки по промо НП */
+    define variable v-pcnt-promo   as decimal no-undo . /* процент скидки по промо НП */    
+    define variable v-b-code       as integer no-undo. /* код топливного товара */
+    define variable v-gds-qnty     as decimal no-undo. /* кол-во топливного товара */
+    define variable v-disc-promo-id as integer no-undo. /* код промоакции */
+    define variable v-disc-promo-count as int no-undo. /* сработала ли промоакция */
+    define variable v-line-num-promo as int no-undo. /* код строки чека с промоакцией */
     
     insw:start-element ({&tag-message}) .
 
@@ -565,21 +629,34 @@ define private temp-table tt-recid-TranFuel no-undo
     insw:write-data-element (  "tot-doc", left-trim(string(p-buf_chk-doc.tot-doc, "->>>>>>>>9.9<"))  ). /* Сумма брутто по чеку в валюте продаж. Сумма по текущей розничной цене (Число) */
 
     /* обязательность 0-1 */
+    if p-buf_chk-doc.chk-type <> 13 and p-buf_chk-doc.chk-type <> 40     then
+     do:
         find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
                                   and buf_chk-doc-attr.attr-code eq "CHMgrKey"
              no-lock no-error.
-    if avail buf_chk-doc-attr
-    then
+       if avail buf_chk-doc-attr
+       then
        insw:write-data-element( "CHMgrKey",  buf_chk-doc-attr.attr-value).
+
+    end.
+
+
     /* Тип возвратных операций */
-    find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
-      and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
-    if available chk-doc-attr then 
-    do:   
-      insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
-      if chk-doc-attr.attr-value = "0" then
-        insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
-    end. 
+
+    if p-buf_chk-doc.chk-type <> 13 and p-buf_chk-doc.chk-type <> 40     then
+     do:
+
+	  find first chk-doc-attr where chk-doc-attr.doc-code = p-buf_chk-doc.doc-code
+	    and chk-doc-attr.attr-code = 'CHFlag1' no-lock no-error.
+	    if available chk-doc-attr then 
+	    do:   
+	      insw:write-data-element (  "CHFlag1",  string(chk-doc-attr.attr-value)  ) . /* Тип возвратных операций */  
+	      if chk-doc-attr.attr-value = "0" then
+	        insw:write-data-element (  "Dry-chk-th",  string(chk-doc-attr.attr-value)  ) . /* Сухой чек */      
+	    end. 
+    end.
+
+
     /* 28/XI-2017 term-num будет строкой, поэтому пустой можно, и необязательный. */
     find first buf_chk-doc-attr where buf_chk-doc-attr.doc-code  eq p-buf_chk-doc.doc-code
                                   and buf_chk-doc-attr.attr-code eq "CHNumberKKT"
@@ -613,8 +690,8 @@ define private temp-table tt-recid-TranFuel no-undo
       insw:write-data-element (  "operator":U,   p-inkas-operator           ). /* Оператор создавший документ (Строка) */
     if p-buf_chk-doc.out-code > "" then // chk-doc.out-code хранит значение из inkas.inkas-code
       insw:write-data-element (  "prdoc-num":U,  p-buf_chk-doc.out-code     ). /* Номер документа продажи в GC (Строка) */
-    if p-inkas-dtime = ? then . else
-      insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
+    if p-inkas-dtime = ? then insw:write-data-element ("prdoc-date":U, SUBSTITUTE("&1T&2", iso-date(p-buf_chk-doc.chk-date), timeFormat(p-buf_chk-doc.chk-time) )). 
+    else  insw:write-data-element (  "prdoc-date":U, iso-date(p-inkas-dtime)    ). /* Дата документа продажи в GC со временем в формате ISO (Дата) */ 
 
 
     /* 19/II-2019  Если в чеке есть платеж, с is-nds = 1, то в товарных строках НДС выгружать,
@@ -646,7 +723,11 @@ define private temp-table tt-recid-TranFuel no-undo
     /* 21/XII-2018 несмотря на обязательность секции с товарами,
                    1с не может проглотить файл с секцией по товарам, если в ней нет товаров
                    Поэтому секцию с товарами при отсутствии товаров не выгружаем. */
-    v-ex-Nds = no.
+    assign               
+       v-ex-Nds = no
+       v-b-code = 0
+       v-gds-qnty = 0
+       .
     if can-find (first buf_chk-gds where buf_chk-gds.doc-code = p-buf_chk-doc.doc-code) then do:
     insw:start-element ({&tag-section1}) .
       for each buf_chk-gds no-lock
@@ -672,6 +753,11 @@ define private temp-table tt-recid-TranFuel no-undo
               v-is-petrolium
               v-is-pieces
             }
+            if v-is-petrolium then
+            assign 
+               v-b-code = buf_chk-gds.b-code
+               v-gds-qnty = buf_chk-gds.src-qnty
+               .
             /* 3. внутри is-petrl.i не используется поле gds-code для поиска товара в goods */
           end .
           else v-is-petrolium = false .
@@ -1031,12 +1117,33 @@ define private temp-table tt-recid-TranFuel no-undo
     define variable vflg0 as logical no-undo.
     define variable v-discnt-value-abs as decimal no-undo.
     define variable v-promocode-list as character no-undo.
+    define variable vflg-disc as logical no-undo.
     assign
        vflg  = no
        vflg0 = no
        v-discnt-value-abs = 0
-       v-promocode-list = ""
+       v-promocode-list = ""       
+       v-disc-promo-id = 0
+       vflg-disc = no
        .
+    /* для возвратного чека возможно надо скидку по промоакции взять из прямого чека  */   
+    if p-buf_chk-doc.chk-type = integer({&rcpt-return}) 
+      and v-b-code <> 0
+      and not can-find(first buf_chk-discnt no-lock
+                       where buf_chk-discnt.doc-code    = p-buf_chk-doc.doc-code
+                         and buf_chk-discnt.record-type    = 5
+                         and buf_chk-discnt.promo-id <> "" ) 
+    then do:
+       v-disc-promo-id = get-chk-promo-id(p-buf_chk-doc.obj-code, 
+                                          p-buf_chk-doc.obj-type, 
+                                          p-buf_chk-doc.pay-desk, 
+                                          p-buf_chk-doc.doc-num2, 
+                                          v-b-code,
+                                          v-gds-qnty,
+                                          output v-line-num-promo,
+                                          output v-disc-promo-count).
+    end.    
+    
     if not can-find (first chk-discnt where chk-discnt.doc-code = p-buf_chk-doc.doc-code
                                         and chk-discnt.discnt-type       = 23
                                         and chk-discnt.discnt-value-pcnt = 0) then do :    
@@ -1048,7 +1155,10 @@ define private temp-table tt-recid-TranFuel no-undo
                buf_chk-discnt.record-type = 2 
                or buf_chk-discnt.value-type = 14)
     break by buf_chk-discnt.doc-code :
-      if first-of(buf_chk-discnt.doc-code) then insw:start-element ({&tag-section3}) .
+      if first-of(buf_chk-discnt.doc-code) then do:
+         vflg-disc = yes. 
+         insw:start-element ({&tag-section3}) .
+      end.   
       if buf_chk-discnt.promo-id > "" and 
          not can-do(v-promocode-list,buf_chk-discnt.promo-id) then 
             v-promocode-list = if v-promocode-list = "" 
@@ -1167,8 +1277,24 @@ define private temp-table tt-recid-TranFuel no-undo
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section3}) .
     end . /* end_of for each buf_chk-discnt */
     end . /* end_of if chk-discnt.discnt-type <> 23 or chk-discnt.discnt-value-pcnt <> 0 */
+    
+    if v-disc-promo-id <> 0 and     
+       vflg-disc = no
+    then do:
+        insw:start-element ({&tag-section3}) .    
+        insw:start-element ({&tag-item3}) .
+        insw:write-data-element (  "discnt-num",       "1"    ) . /* Номер строки скидки (Число) */
+        insw:write-data-element (  "line-num",         string(v-line-num-promo)  ) . /* Номер строки чека на которую предоставлена скидка (Число) */
+        insw:write-data-element (  "discnt-type",      "0"    ) . /* Тип скидки (Строка) */
+        insw:write-data-element (  "discntValueAbs",   "0.0"  ) . /* Абсолютное значение скидки - сумма (Число) */
+        insw:write-data-element (  "discntValuePcnt",  "0.0"  ) . /* % скидки (Число) */
 
-
+        find first PromoAction where PromoAction.id =  v-disc-promo-id no-lock no-error.         
+        insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else string(v-disc-promo-id)  ) . /* Код промо-акции (Строка) */        
+        insw:end-element ({&tag-item3}) .  
+        insw:end-element ({&tag-section3}) .     
+    end.                                         
+    
     /* section4 обязательность 0-1 */
     for each buf_chk-discnt no-lock
        where buf_chk-discnt.doc-code    = p-buf_chk-doc.doc-code
@@ -1217,8 +1343,19 @@ define private temp-table tt-recid-TranFuel no-undo
       if last-of(buf_chk-discnt.doc-code) then insw:end-element ({&tag-section7}) .
     end . /* end_of for each buf_chk-discnt */
     /* section5 исключена */
-
-
+            
+   /* если возвратный чек по топливу и скидок нет, то проверяем не было ли промоакции в чеке продажи */ 
+   if v-disc-promo-id <> 0
+   then do:            
+      insw:start-element ({&tag-section7}) .    
+      insw:start-element ({&tag-item7}) .   
+      find first PromoAction where PromoAction.id =  v-disc-promo-id no-lock no-error.                    
+      insw:write-data-element (  "promotion-code", if available PromoAction and PromoAction.ext-code > '' then PromoAction.ext-code else  string(v-disc-promo-id)  ) . /* Код промо-акции (Строка) */        
+      insw:write-data-element (  "promotion-count",     left-trim(string(v-disc-promo-count, "->>>>>>>>9.99"))   ) . /* признак, что сработала промоакция (Число 0,1) */            
+      insw:end-element ({&tag-item7}) .
+      insw:end-element ({&tag-section7}) .                                    
+   end. 
+   
     /* section6 обязательность 0-1 */
     for each buf_chk-gds-pay no-lock
        where buf_chk-gds-pay.doc-code = p-buf_chk-doc.doc-code
@@ -1350,6 +1487,57 @@ define private temp-table tt-recid-TranFuel no-undo
     
     return v-base64-encode .
   end.
-
+  
+  /* вычисление кода промоакции для возвратного чека по чеку продажи */
+  method private integer get-chk-promo-id ( 
+     input p-obj-code as integer, 
+     input p-obj-type as character, 
+     input p-pay-desk as integer, 
+     input p-doc-num2 as character, 
+     input p-b-code as integer,
+     input p-gds-qnty as decimal,
+     output o-disc-promo-line as integer,
+     output o-disc-promo-count as integer ) :
+    
+    define buffer buf2_chk-doc for ub.chk-doc.
+    define buffer buf2_chk-gds for ub.chk-gds.
+    define buffer buf2_chk-discnt for ub.chk-discnt.
+    
+    define variable v-promo-id as character no-undo .
+        
+    v-promo-id = "".
+    /* ищем чек продажи */
+    for first buf2_chk-doc no-lock where 
+             buf2_chk-doc.obj-code = p-obj-code 
+         and buf2_chk-doc.obj-type = p-obj-type
+         and buf2_chk-doc.pay-desk = p-pay-desk
+         and buf2_chk-doc.chk-type = int({&rcpt-sale})
+         and buf2_chk-doc.chk-num  = int(entry(1,p-doc-num2,":"))
+         and buf2_chk-doc.z-number = int(entry(2,p-doc-num2,":"))
+       :
+       /* ищем этот товар в чеке продажи */    
+       find first buf2_chk-gds no-lock where                 
+                  buf2_chk-gds.doc-code = buf2_chk-doc.doc-code
+             and  buf2_chk-gds.b-code   = p-b-code
+       no-error.
+       if avail buf2_chk-gds then do:                                           
+           find first buf2_chk-discnt no-lock where 
+                      buf2_chk-discnt.doc-code =  buf2_chk-doc.doc-code and
+                      buf2_chk-discnt.record-type = 1 and 
+                      buf2_chk-discnt.object-line-num = buf2_chk-gds.line-num and
+                      buf2_chk-discnt.promo-id > "" 
+           no-error .
+           if avail buf2_chk-discnt
+           then do:
+               assign
+                 v-promo-id = buf2_chk-discnt.promo-id
+                 o-disc-promo-line = buf2_chk-gds.line-num
+                 o-disc-promo-count = if buf2_chk-gds.src-qnty <> -1 * p-gds-qnty then 1 else 0 /* если весь товар вернули, то акция перестала действовать */
+                 .                  
+           end.   
+       end.       
+    end.                  
+    return int(v-promo-id) .
+  end.
   
 end class.

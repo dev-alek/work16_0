@@ -24,6 +24,7 @@ block-level on error undo, throw.
 
 { cmp/trg-def.i  }
 { cmp/library.i  }
+{ utl/tt-test-1c.i}
 
 
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
@@ -45,6 +46,13 @@ define variable v-sht-num  as integer no-undo .
 define button btnOk auto-go label "Ok" .
 define button btnCancel auto-endkey label "Cancel".
 
+if testId ne ? then
+do:
+  find first buf_shift-obj where rowid(buf_shift-obj) = testId no-lock no-error.
+  if not avail buf_shift-obj then return.  
+end.
+else
+do:
 DEFINE FRAME frame1
   skip
                    v-obj-code format ">>>>>>>>9"  label "Код магазина"
@@ -61,12 +69,13 @@ DEFINE FRAME frame1
 .
 
 update v-obj-code v-sht-date v-sht-num btnOk btnCancel with frame frame1.
-
 find first buf_shift-obj no-lock
      where buf_shift-obj.obj-type = 'маг'
        and buf_shift-obj.obj-code = v-obj-code
        and buf_shift-obj.shift-date = v-sht-date
        and buf_shift-obj.shift-num  = v-sht-num no-error .
+end.
+
 if not available (buf_shift-obj) then do:
     message substitute("Отсутствует смена №&1 от &2 в магазине &3",
                        v-sht-num, v-sht-date, v-obj-code) view-as alert-box.
@@ -91,6 +100,12 @@ if error-status:error then do :
   message "Ошибка маршрутизации записи в машину правил" skip return-value skip error-status:get-message(1) view-as alert-box.
 end.
 else do:
-  message substitute("Cмена №&1 от &2 в магазине &3 отправлена",
+  if testId <> ? then
+    put stream vProtTest unformatted 
+      substitute("Cмена №&1 от &2 в магазине &3 отправлена",
+                 buf_shift-obj.shift-num, buf_shift-obj.shift-date, buf_shift-obj.obj-code)
+      skip. 
+  else
+    message substitute("Cмена №&1 от &2 в магазине &3 отправлена",
                      v-sht-num, v-sht-date, v-obj-code) view-as alert-box.
 end.

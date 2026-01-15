@@ -45,6 +45,17 @@ class ibs.th.bge.1crn.subjects.exp-user-action inherits ibs.th.gbl.sys.objth imp
   define property InitSecTag as character no-undo init 'user-actions':U
     get.
 
+  define public property sendTableName as character no-undo init "c-user-log"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define property BufHandle as handle no-undo
     get.
     set.
@@ -94,6 +105,8 @@ method public void CrContentToSW (insw as handle):
                           no-lock no-error.
   if available c-user-log
   then do:
+    sendOldRowid = rowid(c-user-log).
+    
     case c-user-log.head-table :
       when "rvd-reasons"
       then do :

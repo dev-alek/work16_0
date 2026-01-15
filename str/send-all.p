@@ -126,14 +126,20 @@ i-Title    = entry(5, p-parameter, {&delim-par})
 i-value    = entry(6, p-parameter, {&delim-par})
 no-error
 .
+if i-Type eq "?"
+then
+   return error "Незадан тип для send-all.p".
 define variable mValue   as character no-undo.
 define variable mNumPar  as integer no-undo.
 define variable mSendAll as logical no-undo.
+define variable mCashNum as integer no-undo init ?.
 mValue = replace(i-value,",","=").
 mNumPar = lookup("cash-send",mValue,"=").
 if mNumPar > 0
-then
+then do:
    mSendAll = entry(mNumPar + 1,mValue,"=") eq "all" no-error.
+   mCashNum = int(entry(mNumPar + 1,mValue,"=")) no-error.
+end.
 mNumPar = lookup("SocetLog",mValue,"=").
 if mNumPar > 0
 then

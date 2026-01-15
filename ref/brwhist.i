@@ -15,7 +15,7 @@
 &glob brwhistparam yes
 &if defined ( objtt) ne 0
 &then
-define temp-table X_c-obj-hist like {&buf_obj-hist}.
+define temp-table X_c-obj-hist like {&buf_obj-hist} {&addFields}.
 DEFINE BUFFER find_c-obj-hist FOR X_c-obj-hist.
 &else
 DEFINE BUFFER X_c-obj-hist FOR {&buf_obj-hist}.

@@ -113,11 +113,12 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
    FIELD reason       AS CHAR
    .
   DEFINE TEMP-TABLE ttlocal-mark-code  no-undo serialize-name  "codes"    
-   FIELD code-reqid   AS RECID
-   FIELD printView    AS CHAR 
+   FIELD code-reqid   AS RECID   
    FIELD isBlocked    AS LOG INIT NO
+   FIELD sold         AS LOG INIT NO
    FIELD gtin         AS CHAR 
    FIELD cis          AS CHAR
+   FIELD mrp          AS CHAR
    INDEX reqidpar code-reqid 
    .  
          
@@ -932,39 +933,17 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      p-obj-code  AS INTEGER,
      p-param-code AS CHARACTER,
      p-type-mark AS CHARACTER
-     ):
-      DEFINE VARIABLE v-tth             AS HANDLE    NO-UNDO .
+     ):      
       DEFINE VARIABLE v-value-character AS CHARACTER NO-UNDO.
-      DEFINE VARIABLE v-value-date      AS DATE      NO-UNDO.
-      DEFINE VARIABLE v-value-decimal   AS DECIMAL   NO-UNDO.
-      DEFINE VARIABLE v-value-integer   AS INTEGER   NO-UNDO.
-      DEFINE VARIABLE v-param-type      AS CHARACTER NO-UNDO.
-      DEFINE VARIABLE v-param-logical   AS LOGICAL   NO-UNDO.
-      
-      RUN adm/shattri.p (
-         INPUT "get":U
-        ,INPUT  p-obj-type
-        ,INPUT  p-obj-code
-        ,INPUT  {&attr-marking}
-        ,INPUT  p-param-code
-        ,OUTPUT v-value-character
-        ,OUTPUT v-value-date
-        ,OUTPUT v-value-decimal
-        ,OUTPUT v-value-integer
-        ,OUTPUT v-param-logical
-        ,OUTPUT v-param-type
-        ,INPUT-OUTPUT table-handle v-tth
-        ) NO-ERROR .
-        
+              
+      v-value-character = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-marking},p-param-code,"character").
       dbgPrint("marking.log", SUBSTITUTE("Тип маркировки: p-param-code &1 v-value-character &2 тип маркировки &3", 
                                          p-param-code, 
                                          v-value-character,
                                          p-type-mark)).
-      
       IF LOOKUP (p-type-mark,v-value-character) > 0
-      THEN RETURN YES.
-        
-      RETURN NO.
+      THEN RETURN YES.        
+      ELSE RETURN NO.
   END METHOD.
   
   /* Проверка марки в ГИС МТ */
@@ -1015,6 +994,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     DEFINE VARIABLE vRetCdn    AS LOGICAL     NO-UNDO.
     DEFINE VARIABLE vNumRep AS INT64 NO-UNDO.
     DEFINE VARIABLE vNumMax AS INT64 NO-UNDO.
+    DEFINE VARIABLE vVerLM  AS INT64 NO-UNDO.
     
     DEFINE VARIABLE vMarkShort    AS CHARACTER   NO-UNDO CASE-SENSITIVE.
     DEFINE VARIABLE vFileBatOf    AS CHARACTER   NO-UNDO.
@@ -1093,12 +1073,20 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
        vMarkShort = REPLACE(vMarkShort, '\', '\\') 
        vMarkShort = REPLACE(vMarkShort, '/', '\/') 
        vMarkShort = REPLACE(vMarkShort, '"', '\"') .
-        
-    dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)). 
+      
+    dbgPrint("marking.log", SUBSTITUTE("Сконвертированная КИ: &1 ", vMarkShort)).
+    
+    IF R-INDEX(gismt-OflineAdress,"/v2") > 0 
+    THEN vVerLM = 2. 
+    ELSE vVerLM = 1. 
                
-    OUTPUT STREAM out_data TO value(vDataMarkLM).        
-    PUT STREAM out_data UNFORMATTED  
-      '~{"cis_list":["' vMarkShort '"]~}' .
+    OUTPUT STREAM out_data TO value(vDataMarkLM).
+    IF vVerLM = 2 THEN
+       PUT STREAM out_data UNFORMATTED  
+          '~{"cis_list":[~{"cis":"' vMarkShort '"~}]~}' .
+    ELSE               
+       PUT STREAM out_data UNFORMATTED  
+          '~{"cis_list":["' vMarkShort '"]~}' .
     OUTPUT STREAM out_data CLOSE.
     
     /* если установлен параметр, обозначающий наличие аварии в ГИС МТ, выходим */
@@ -1888,10 +1876,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
               FOR EACH ttlocal-mark-code:
                   PUT STREAM out_s UNFORMATTED  
                      NOW " ttlocal-mark-code " SKIP
-                     "ttlocal-mark-code.printview: " ttlocal-mark-code.printView     SKIP
+                     "ttlocal-mark-code.sold: " ttlocal-mark-code.sold     SKIP
                      "ttlocal-mark-code.isBlocked: " ttlocal-mark-code.isBlocked     SKIP                     
-                     "ttlocal-mark-code.gtin: " ttlocal-mark-code.gtin SKIP
-                     "ttlocal-mark-code.cis: " ttlocal-mark-code.cis       SKIP                                                        
+                     "ttlocal-mark-code.gtin: " ttlocal-mark-code.gtin     SKIP
+                     "ttlocal-mark-code.cis: " ttlocal-mark-code.cis       SKIP
+                     "ttlocal-mark-code.mrp: " ttlocal-mark-code.mrp       SKIP                                                          
                      .                        
               END.              
           END.    
@@ -2270,6 +2259,19 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                  vErrSts = vErrTxt.
               dbgPrint("marking.log", SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Ошибка Code &1 Описание &2", ttlocal-mark.code, ttlocal-mark.description)).
            END.
+           IF mReqId = "" OR 
+              mReqTimestamp = "" OR 
+              mInst = "" OR 
+              mVersion = "" 
+           THEN DO:
+              ASSIGN                              
+                 mCheckSts = 0
+                 mCheckStsOff = 3              
+                 vErrSts = vErrTxt.
+              dbgPrint("marking.log", 
+                       SUBSTITUTE("Ошибка проверки КИ в ЛМ ЧЗ. Не определился один из обязательных параметров: ReqId &1 ReqTimestamp &2 Inst &3 Version &4 ",
+                                  mReqId, mReqTimestamp, mInst, mVersion)).
+           END.
            ELSE IF NOT AVAIL ttlocal-mark-code THEN DO:
               ASSIGN                              
                  mCheckSts = 0
@@ -2614,7 +2616,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   ------------------------------------------------------------------------------*/
   METHOD PRIVATE VOID setOnlineResult(buffer buf_marking for ub.marking):
    
-    IF mCheckSts = 0 OR mCheckSts = 3    /* Оборот запрещен ошибки errorcode (1, …11) */
+    IF (mCheckSts = 0 AND mCheckGisMT = 1) OR mCheckSts = 3    /* Оборот запрещен ошибки errorcode (1, …11) */
     THEN
       buf_marking.online-result = 0.  
     ELSE IF mCheckSts = 2 AND mCheckGisMT = 1  /* нет срока годности, а проверка его включена */
@@ -2623,6 +2625,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
     ELSE IF mCheckSts = 1 AND mCheckGisMT = 1  /* Оборот разрешен */
     THEN
       buf_marking.online-result = 1.
+    dbgprint("marking.log", SUBSTITUTE("Установка марке &1 результата проверки онлайн &2, mCheckSts &3 mCheckGisMT &4 ",
+                                       buf_marking.mark, buf_marking.online-result, mCheckSts, mCheckGisMT )). 
   END METHOD.
       
 	/*------------------------------------------------------------------------------

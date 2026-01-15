@@ -17,11 +17,11 @@ DEFINE BUFFER X_chk-doc FOR chk-doc.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: eb58aa57459c, 2002, rls $
+$Author: EShklyar $
+$Date: Wed Sep 18 21:01:08 2019 +0300 $
+$Workfile: cchkdocs.w $
+$Archive: str/cchkdocs.w $
 
 Список истории чеков
 
@@ -50,11 +50,11 @@ define input parameter p-obj-code like ub.chk-doc.obj-code no-undo.
 define input-output param p-rid-list    as  char no-undo . /* список recid'ов выбранных c-chk-doc */
 
 /* Local Variable Definitions ---                                       */
-define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision$":U.
-define variable vss-author      AS CHAR NO-UNDO INIT "$Author$":U.
-define variable vss-date        AS CHAR NO-UNDO INIT "$Date$":U.
-define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile$":U.
-define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive$":U.
+define variable vss-revision    AS CHAR NO-UNDO INIT "$Revision: eb58aa57459c, 2002, rls $":U.
+define variable vss-author      AS CHAR NO-UNDO INIT "$Author: EShklyar $":U.
+define variable vss-date        AS CHAR NO-UNDO INIT "$Date: Wed Sep 18 21:01:08 2019 +0300 $":U.
+define variable vss-workfile    AS CHAR NO-UNDO INIT "$Workfile: cchkdocs.w $":U.
+define variable vss-archive     AS CHAR NO-UNDO INIT "$Archive: str/cchkdocs.w $":U.
 define variable vss-description AS CHAR NO-UNDO INIT "Список истории чеков":U.
 { cmp/vssrevis.i }
 
@@ -577,7 +577,7 @@ THEN FRAME {&FRAME-NAME}:PARENT = ACTIVE-WINDOW.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-
+ 
 { gbl/getcntxt.i get }
 
 if p-mode <> "one":U
@@ -589,17 +589,19 @@ then do:
   view-as alert-box ERROR.
   return.
 end.
+  define variable n_MyEnable AS LOGICAL no-undo .
   if p-mode = "one":U then do:
     FIND FIRST X_c-chk-doc No-LOCK where
-                X_c-chk-doc.doc-code = p-doc-code No-ERROR.
+                X_c-chk-doc.doc-code = p-doc-code 
+                No-ERROR.
     if not avail X_c-chk-doc then do:
-      message
-      vss-workfile vss-revision vss-description skip
-      "Неверное значение параметра вызова p-doc-code" p-doc-code
-      view-as alert-box error .
-      return error.
+    n_MyEnable = yes .
+      message "История изменений для чека " p-doc-code " не найдена." view-as alert-box .
     end.
   end.
+
+if not n_MyEnable then do: 
+
   v-rid-list = p-rid-list.
   if v-rid-list <> "" then do:
       FIND FIRST find_c-chk-doc No-LOCK where
@@ -640,17 +642,21 @@ on error undo, return error return-value :
     end.
   end case.
 end.
-  run MyEnable in this-procedure .
-  RUn OpenBR in this-procedure ( input yes, input no, input '':U).
-  HIDE mark-num in frame {&frame-name} .
-  REPOSITION br-docs to row 1 No-ERROR.
-  run diasize_add_browse in this-procedure
+
+    run MyEnable in this-procedure .
+    RUn OpenBR in this-procedure ( input yes, input no, input '':U).
+    HIDE mark-num in frame {&frame-name} .
+    REPOSITION br-docs to row 1 No-ERROR.
+    run diasize_add_browse in this-procedure
     (input  'width':u
     ,input  browse br-changes :handle
     ) .
-  run diasize_init in this-procedure .
-  WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+    run diasize_init in this-procedure .
+    WAIT-FOR GO OF FRAME {&FRAME-NAME}.
+end.
+
 END.
+
 RUN disable_UI.
 
 /* _UIB-CODE-BLOCK-END */

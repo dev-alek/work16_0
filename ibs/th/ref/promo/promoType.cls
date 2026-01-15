@@ -1,10 +1,10 @@
 /*
 
-$Revision$
-$Author$
-$Date$
-$Workfile$
-$Archive$
+$Revision: 38e7c64866ed, 3182, rls $
+$Author: EShklyar $
+$Date: 2022/12/27 12:54:25 $
+$Workfile: promoType.cls $
+$Archive: ibs/th/ref/promo/promoType.cls $
  
 Типы для акций.
 
@@ -19,11 +19,11 @@ using Progress.Lang.*.
 block-level on error undo, throw.
 
 class ibs.th.ref.promo.promoType:  
-define variable vss-revision    as character no-undo initial "$Revision$":U .
-define variable vss-author      as character no-undo initial "$Author$":U .
-define variable vss-date        as character no-undo initial "$Date$":U .
-define variable vss-workfile    as character no-undo initial "$Workfile$":U .
-define variable vss-archive     as character no-undo initial "$Archive$":U .
+define variable vss-revision    as character no-undo initial "$Revision: 38e7c64866ed, 3182, rls $":U .
+define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
+define variable vss-date        as character no-undo initial "$Date: 2022/12/27 12:54:25 $":U .
+define variable vss-workfile    as character no-undo initial "$Workfile: promoType.cls $":U .
+define variable vss-archive     as character no-undo initial "$Archive: ibs/th/ref/promo/promoType.cls $":U .
 define variable vss-description as character no-undo initial "Типы для акций.". 
   
 {ibs/th/ref/promo/promoType.def tt-type} 
@@ -44,7 +44,7 @@ end.
 }
 {ibs/th/ref/promo/promotype.i
     &NameType = typecond
-    &ListType = "Количество по строке,Сумма по строке,Сумма в документе,Скидка по ШК"
+    &ListType = "Количество по строке,Сумма по строке,Сумма в документе,Скидка по ШК,Скидка по картам лояльности"
 } 
 
 {ibs/th/ref/promo/promotype.i
@@ -106,7 +106,7 @@ method public void CangeTypeDiscontAndMethodCalc (input iTypeDiscont as int,inpu
             TypeCondList = "Количество по строке,Сумма по строке,Скидка по ШК". 
         else if  iMethodCalc eq 5
         then
-            TypeCondList = ",Скидка по ШК". 
+            TypeCondList = ",Скидка по ШК,Скидка по картам лояльности". 
         else        
             TypeCondList = "".     
     end.

@@ -1,6 +1,6 @@
 
 /*------------------------------------------------------------------------
-    File        : send1C-shift-period.p
+    File        : prep1C-shift-period.p
     Purpose     : 
 
     Syntax      :
@@ -200,11 +200,12 @@ procedure create-esys-data :
 end procedure .
 
 procedure exp1C :
-  run str/send1C-shift-period.p (input parparentproc,
-                                 input this-procedure,
-                                 input this-procedure,
-                                 input expData) 
-                                 no-error .
+  run str/send1C-some-data.p (input parparentproc,
+                              input this-procedure,
+                              input this-procedure,
+                              input expData,
+                              input "shift-periods" + {&delim-par} + substitute("shift-obj&1&2",{&delim-key},string(rowid(buf_shift-obj))) ) 
+                              no-error .
   if error-status:error
   then do :
     run write-to-log( "Ошибка при отправке в 1С. " + return-value ).

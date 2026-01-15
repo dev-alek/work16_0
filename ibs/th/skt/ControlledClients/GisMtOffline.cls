@@ -29,8 +29,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
   define temp-table ttstatus-body  no-undo /*serialize-name  "bodys" */
   xml-node-name "body"
    field f_version        as character XML-NODE-NAME "version"
-   field f_status         as character XML-NODE-NAME "status"
-   field requiresDownload as log 
+   field f_status         as character XML-NODE-NAME "status"   
    field operationMode    as character
    field name             as character
    field lastSync         as character
@@ -44,7 +43,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    .
    
   define temp-table ttstatus no-undo    
-   xml-node-name "replicationstatus"
+  xml-node-name "dbState"
    field reqid        as recid serialize-hidden
    field cis     as char 
    field blocked_series     as char
@@ -52,44 +51,40 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
    field blocked_cis as char 
    index reqidpar reqid 
    .   
-  
-    define temp-table ttcis no-undo    
-   xml-node-name "cis"
+
+  define temp-table ttcis no-undo    
+  xml-node-name "cis"
    field s-reqid        as recid serialize-hidden           
-   field timeLag as char 
-   field serverDocCount as char
+   field timeLag as char    
    field localDocCount as char
    index reqidpar s-reqid 
    .
    
-   define temp-table ttblocked_series no-undo    
-   xml-node-name "blocked_series"
+  define temp-table ttblocked_series no-undo    
+  xml-node-name "blocked_series"
    field s-reqid        as recid serialize-hidden           
    field timeLag as char 
-   field serverDocCount as char
    field localDocCount as char
    index reqidpar s-reqid 
    .   
-   define temp-table ttblocked_gtin no-undo    
-   xml-node-name "blocked_gtin"
+  define temp-table ttblocked_gtin no-undo    
+  xml-node-name "blocked_gtin"
    field s-reqid        as recid serialize-hidden           
-   field timeLag as char 
-   field serverDocCount as char
+   field timeLag as char    
    field localDocCount as char
    index reqidpar s-reqid 
    .   
-   define temp-table ttblocked_cis no-undo    
-   xml-node-name "blocked_cis"
+  define temp-table ttblocked_cis no-undo    
+  xml-node-name "blocked_cis"
    field s-reqid        as recid serialize-hidden           
-   field timeLag as char 
-   field serverDocCount as char
+   field timeLag as char    
    field localDocCount as char
    index reqidpar s-reqid 
    . 
 
   define dataset gismt-mark-body  xml-node-name "bodys" for ttstatus-body, ttstatus, ttcis, ttblocked_series, ttblocked_gtin, ttblocked_cis 
   data-relation gismt-mark-cis for ttstatus-body, ttstatus relation-fields (reqid,reqid) nested
- .
+  .
 
   define stream out_data.
     
@@ -263,8 +258,9 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
             if file-info:file-size <> 0 then do:
                copy-lob from file vFileResult to vlongJson no-error.          
                /*vlongJson = '~{"bodys":[' + vlongJson + "]}" .*/
-               vlongJsonCh = REPLACE(vlongJson, 'null', '"unknown"').               
-               vlongJsonCh = REPLACE(vlongJsonCh, '"replicationStatus":~{}', '"replicationStatus":""') no-error.               
+               vlongJsonCh = REPLACE(vlongJson, 'null', '"unknown"').  
+               vlongJsonCh = REPLACE(vlongJsonCh, '"replicationStatus":~{}', '"replicationStatus":""') no-error.              
+               vlongJsonCh = REPLACE(vlongJsonCh, '"dbState":~{}', '"dbState":""') no-error.                                  
                copy-lob from vlongJsonCh to file vFileResult no-error.               
                cmd = substitute ('&1 -file=&2 >&3',
                                       search("exe/json2xml.exe"),

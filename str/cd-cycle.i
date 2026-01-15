@@ -57,7 +57,12 @@ FOR EACH for-cash-desk NO-LOCK WHERE
         for-cash-desk.db-num = g#db-num AND
         for-cash-desk.pos-type = ub.cash-desk.pos-type AND
         for-cash-desk.obj-code = i-obj-code AND
-        for-cash-desk.cash-on  = yes
+&if defined(onecash ) ne 0
+&then
+        for-cash-desk.cash-num eq onecash 
+&else      
+ for-cash-desk.cash-on  = yes
+&endif
     BREAK
     BY for-cash-desk.db-num
     BY for-cash-desk.obj-code

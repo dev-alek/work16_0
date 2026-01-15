@@ -127,24 +127,23 @@ class ibs.th.bge.1crn.subjects.recipe inherits ibs.th.bge.1crn.subjects.asubject
   end method.
 
   method override protected void CheckData ():
-    /*
     def var v-str as char no-undo.
     
     assign
       v-str = ",recipe-code" when recipe-code = ?
       v-str = v-str + ",gd-code" when gd-code = ?
-      v-str = v-str + ",qnty" when qnty = ?
-      v-str = v-str + ",recipe-name" when recipe-name = ?
-      v-str = v-str + ",recipe-type" when recipe-type = ?
-      v-str = v-str + ",recipe-num" when recipe-num = ?
-      v-str = v-str + ",weight" when weight = ?
+/*      v-str = v-str + ",qnty" when qnty = ?              */
+/*      v-str = v-str + ",recipe-name" when recipe-name = ?*/
+/*      v-str = v-str + ",recipe-type" when recipe-type = ?*/
+/*      v-str = v-str + ",recipe-num" when recipe-num = ?*/
+/*      v-str = v-str + ",weight" when weight = ?*/
       v-str = v-str + ",recipe-gds" when not valid-object(recipe-gds)
     .
     v-str = substring(v-str, 2).
     if v-str > "" then undo, throw new Progress.Lang.AppError(
       substitute("Теги [&1] отсутствуют в сообщении [&2]", v-str, InitTag)
     ) .
-    */
+
   end method.
   
   method override protected void ClearSub():

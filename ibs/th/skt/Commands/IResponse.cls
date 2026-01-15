@@ -42,14 +42,25 @@ class ibs.th.skt.Commands.IResponse abstract:
    get.
    set.
    
+   define public property content-disposition as character  no-undo 
+   get.
+   set.
+  
+   define public property saveFile as character  no-undo 
+   set (arg as char):
+      content-disposition = substitute ('attachment; filename="&1"',arg).
+   end.
+   
+   define variable mAddctrf as logical no-undo.
+   
    define public property Content as memptr no-undo 
    get.
    set(arg as memptr):
       Content = arg.
+      mAddctrf = no.
    end.
-
    define public property ContentLength as int64 no-undo 
-   get : return get-size(Content). end.
+   get : return get-size(Content) - if mAddctrf then 2 else 0 . end.
    
    define public property ParamWait as char no-undo 
    get.
@@ -61,7 +72,8 @@ class ibs.th.skt.Commands.IResponse abstract:
       set-size(Content) = length(arg,"raw").
       copy-lob
       from object arg
-      to object Content.
+      to object Content convert target codepage "UTF-8".
+      mAddctrf = yes.
    end.
    
    method public void setContent(arg as char ):
@@ -72,6 +84,47 @@ class ibs.th.skt.Commands.IResponse abstract:
       copy-lob
       from object VStr
       to object Content.
+      mAddctrf = yes.
+   end.
+   method public void setFile(arg as char ):
+      setFile(arg,"").
+   end.
+   method public void setFile(arg as char,iparam as char ):
+      define variable vtype    as character no-undo.
+      define variable vConType as character no-undo.
+      define variable vRas     as character no-undo.
+      file-information:file-name = "cmp/" + arg.
+      vtype = file-information:file-type.
+      if    file-information:file-name eq "" 
+         or vtype eq ?
+         or index( vtype, "F") = 0
+      then
+         file-information:file-name = "cmp/dontknow.jpg".
+      vRas = entry(2,file-information:file-name,".").
+      case vRas:
+         when "icon" then vConType = "image/vnd.microsoft.icon". 
+         when "jpg"  then vConType = "image/jpeg".
+         when "jpeg" then vConType = "image/jpeg".
+         when "png"  then vConType = "image/png". 
+         when "txt" 
+      or when "xml"  then vConType = "text/xml".
+         when "json" then vConType = "application/json".
+         when "html" then vConType = "text/html".
+      end.
+      set-size(Content) = 0.
+      set-size(Content) = file-information:file-size + 1.    
+      copy-lob from file file-information:full-pathname to Content.
+      Content-Type = vConType.
+      if iparam = "savefile"
+      then do:
+         define variable vSaveFile  as character no-undo.
+         define variable vpos       as integer no-undo.
+         vSaveFile = replace (file-information:file-name,"\","/").
+         vpos = index(vSaveFile,"/").
+         vSaveFile = substring (vSaveFile,vpos + 1).
+         vSaveFile = replace (vSaveFile,"/","_").
+         saveFile = vSaveFile.
+      end.
    end.
 	/*------------------------------------------------------------------------------
 	 Purpose:

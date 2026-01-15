@@ -113,6 +113,44 @@
     </procParam>
   </procAsunc>  
 
+  <procAsunc>
+    <procid>SendCash</procid>
+    <procval>utl/proc-cashsend.p</procval>
+    <procname>Отправка данных на кассу</procname>
+    <procParam>
+      <procid>SendCash</procid>
+      <paramName>лог файл</paramName>
+      <numparam>1</numparam>
+      <ParamValue>SendCashLog.txt</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>SendCash</procid>
+      <paramName>Что отправляем</paramName>
+      <numparam>2</numparam>
+      <ParamValue>goods</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>SendCash</procid>
+      <paramName>Номер магазина</paramName>
+      <numparam>3</numparam>
+      <ParamValue>38</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>SendCash</procid>
+      <paramName>Номер кассы</paramName>
+      <numparam>4</numparam>
+      <ParamValue>1</ParamValue>
+    </procParam>
+    <procParam>
+      <procid>SendCash</procid>
+      <paramName>Количество товаров</paramName>
+      <numparam>5</numparam>
+      <ParamValue>20</ParamValue>
+    </procParam>
+    
+      
+  </procAsunc>
+  
   <SesParam>
     <parCheck>false</parCheck>
     <parCode>clientlog</parCode>

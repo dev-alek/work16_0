@@ -170,7 +170,7 @@ class ibs.th.gbl.storage.promoGiftstorage:
     return promoGiftsubsObj.
   end method.
   
-  method private void setDataStorage (input inpromoGiftObj as class promoGiftsub, buffer inbf_promoGift for ub.promoGift ):
+  method private void setDataStorage (input inpromoGiftObj as class promoGiftsub, buffer inbf_promoGift for ub.PromoGift):
     
     assign
         inbf_promoGift.idCrit        = inpromoGiftObj:idCrit
@@ -180,7 +180,21 @@ class ibs.th.gbl.storage.promoGiftstorage:
         inbf_promoGift.mess          = inpromoGiftObj:mess
        // inbf_promoGift.db-num        = inpromoGiftObj:db-num
         .
-    
+
+      for first ub.PromoAction no-lock where ub.PromoAction.id = inpromoGiftObj:idaction:  
+      find first ub.PromoAttr exclusive-lock where ub.PromoAttr.attr-code = "mess-gks" and
+      ub.PromoAttr.p-key = string(ub.PromoAction.id) + {&delim-key} + string(ub.PromoAction.db-num) and
+      ub.PromoAttr.tablename = "PromoGift" no-error .
+      if not available (ub.PromoAttr) then do:
+          create ub.PromoAttr .
+          assign
+          ub.PromoAttr.attr-code = "mess-gks"
+          ub.PromoAttr.p-key = string(ub.PromoAction.id) + {&delim-key} + string(ub.PromoAction.db-num)
+          ub.PromoAttr.tablename = "PromoGift"
+          .
+      end. 
+      ub.PromoAttr.attr-value = inpromoGiftObj:mess-gks .
+      end.
       validate inbf_promoGift.
     end.
   
@@ -212,7 +226,16 @@ class ibs.th.gbl.storage.promoGiftstorage:
       inpromoGiftSubObj:db-num    = inbf_promoGift.db-num      
       inpromoGiftSubObj:objCode   = obj-code         
     .  
-       
+
+      for first ub.PromoAction no-lock where ub.PromoAction.id = inbf_promoGift.idaction:  
+      find first ub.PromoAttr no-lock where ub.PromoAttr.attr-code = "mess-gks" and
+      ub.PromoAttr.p-key = string(ub.PromoAction.id) + {&delim-key} + string(ub.PromoAction.db-num) and
+      ub.PromoAttr.tablename = "PromoGift" no-error .
+      if available (ub.PromoAttr) then do:
+        inpromoGiftSubObj:mess-gks = ub.PromoAttr.attr-value .
+      end. 
+      
+      end.
     return inpromoGiftSubObj.
     
   end.

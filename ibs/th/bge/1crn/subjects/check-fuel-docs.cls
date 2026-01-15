@@ -98,6 +98,17 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
     get.
     private set.
       
+  define public property sendTableName  as character  no-undo init "rvs-doc"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define variable sw as handle no-undo.
   define private variable libFindtank as class ibs.th.str.findtank no-undo . /* обёртка для findtank.i */
   
@@ -113,6 +124,7 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
       buffer-copy buf_rvs-doc to tt-rvs-doc .
       tt-rvs-doc.del-f = 0 .
       tt-rvs-doc.fact-time = buf_rvs-doc.fact-time .
+      sendOldRowid  = rowid(buf_rvs-doc).
     end.  
     else 
     do:
@@ -121,10 +133,11 @@ class ibs.th.bge.1crn.subjects.check-fuel-docs implements iexpsubject:
       do:
         buffer-copy buf_c-rvs-doc to tt-rvs-doc .
         tt-rvs-doc.del-f = 1 .
+        sendOldRowid  = rowid(buf_c-rvs-doc).
       end.
       else return.
     end. 
-     
+
     find first buf_doc-attr no-lock where tt-rvs-doc.rvs-code = buf_doc-attr.doc-code and buf_doc-attr.attr-code = "rvs-auto" and buf_doc-attr.attr-value = "Yes" no-error. 
     if available buf_doc-attr then 
     do :

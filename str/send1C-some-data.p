@@ -1,15 +1,15 @@
 block-level on error undo, throw.
 
 /*------------------------------------------------------------------------
-    File        : is_PM-send1c.p
+    File        : send1C-some-data.p
     Purpose     : 
 
     Syntax      :
 
-    Description : Ёкспорт is_PM 1C ERP RN
+    Description : Ёкспорт любых данных в 1C ERP RN
 
     Author(s)   : SSlivenko
-    Created     : 02/12/20
+    Created     : 23/03/25
     Notes       :
   ----------------------------------------------------------------------*/
 
@@ -24,13 +24,14 @@ define input parameter parparentproc as widget-handle no-undo .
 define input parameter p-parent-handle as handle no-undo .
 define input parameter p-log-handle  as handle no-undo .
 define input parameter p-data as memptr no-undo .
+define input parameter p-init-sec-tag as character no-undo .
 
 define variable vss-revision    as character no-undo init "$Revision: fc55a7295616, 2779, rls $":U .
 define variable vss-author      as character no-undo init "$Author: SSlivenko $":U .
 define variable vss-date        as character no-undo init "$Date: „т апр 08 19:52:17 2021 +0300 $":U .
-define variable vss-workfile    as character no-undo init "$Workfile: is_PM-send1c.p $":U .
-define variable vss-archive     as character no-undo init "$Archive: str/is_PM-send1c.p $":U .
-define variable vss-description as character no-undo init "Ѕиблиотека процедур дл€ работы с кодексом 18, набор 2".
+define variable vss-workfile    as character no-undo init "$Workfile: send1C-some-data.p $":U .
+define variable vss-archive     as character no-undo init "$Archive: str/send1C-some-data.p $":U .
+define variable vss-description as character no-undo init "Ёкспорт любых данных в 1C ERP RN".
 { cmp/vssrevis.i }
 { cmp/trg-def.i }
 { rul/garbcoll.i }
@@ -155,14 +156,20 @@ on error undo, return error substitute( "&1&2&3&2&4", return-value, {&new-line},
   end.
 
         
-  if ExpData1:esys-add-dump-data ( input p-data, input v-esys-cmd-proc-handle, input v-esys-cmd-code, ('+update' + {&delim-par} + "operating-balances") ) = false
+  if ExpData1:esys-add-dump-data ( input p-data, 
+                                   input v-esys-cmd-proc-handle, 
+                                   input v-esys-cmd-code, 
+                                   ('+update' + {&delim-par} + entry(1,p-init-sec-tag,{&delim-par})  + 
+                                    (if num-entries(p-init-sec-tag,{&delim-par}) > 1 
+                                     then substitute("&1&2&3&4",
+                                                     {&delim-par},
+                                                     entry(2,p-init-sec-tag,{&delim-par})
+                                                     ) 
+                                     else "")) ) = false
   then do:
     undo _main, return error v-last-error-message .
   end.
   
-/*  IF  context_set-custom-esys-pck-name(  input v-esys-cmd-proc-handle, input v-esys-cmd-code, input v-custom-pack-name) = false  THEN do:*/
-/*    undo _main, return error v-last-error-message .                                                                                      */
-/*  end.                                                                                                                                   */
   v-dump-ord-int64 = context_send-esys-command( input v-esys-id-list
                               , input v-esys-cmd-proc-handle
                               , input v-esys-cmd-code

@@ -1719,7 +1719,7 @@ def var v-slt-pc        like ub.doc-line.slt-pc    no-undo.
 def var v-host-code     like ub.sysconf.host-code  no-undo.
 do on error undo, return error return-value :
 find ub.sysconf where ub.sysconf.host-code = v-cntxt-host-code-obj no-lock.
-IF t-doc.pay-code = ub.sysconf.cash-pay then t-doc.slt-type = {&inc-slt}.
+if t-doc.pay-code = ub.sysconf.cash-pay then t-doc.slt-type = {&inc-slt}.
 { gbl/hostcode.i t-doc.obj-type t-doc.obj-code v-host-code }
 for each ub.doc-line where ub.doc-line.doc-code = t-doc.doc-code exclusive,
     each ub.goods where ub.goods.artic     = ub.doc-line.artic and
@@ -1858,7 +1858,15 @@ do transaction on error undo, return error :
    &endif
    &if "{1}" = "out"
    &then
-   run recalc-slt in this-procedure.
+   if t-doc.ext-doc-type = {&TDEDT_Pri_Perem}
+   then do :
+     for each ub.parts where ub.parts.out-code = t-doc.doc-code:
+       assign ub.parts.pay-code = t-doc.pay-code.
+     end.
+   end .
+   else do :
+     run recalc-slt in this-procedure.
+   end .
    &endif
 end.
 &if "{1}" = "out"

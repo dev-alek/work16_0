@@ -24,6 +24,7 @@ block-level on error undo, throw.
 
 { cmp/trg-def.i  }
 { cmp/library.i  }
+{ utl/tt-test-1c.i}
 
 
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
@@ -41,6 +42,12 @@ if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
 define temp-table tt-utd like ub.utd.
 define var v-doc-code as integer no-undo.
 
+if testId <> ? then
+do:
+  find first ub.utd where rowid(ub.utd) = testId no-lock no-error.
+end.
+else
+do:
 DEFINE FRAME frame1
   v-doc-code format ">>>>>>>>>>>>>>9"
   with view-as dialog-box
@@ -58,8 +65,10 @@ if not available (ub.utd)
     message "Документ электронного документооборота не найден: номер " v-doc-code view-as alert-box.
     return.
   end.
-                                find last ub.c-utd no-lock where ub.c-utd.doc-code = ub.utd.doc-code
-                                                             and ub.c-utd.db-num = ub.c-utd.db-num no-error .
+end.
+
+find last ub.c-utd no-lock where ub.c-utd.doc-code = ub.utd.doc-code
+                             and ub.c-utd.db-num = ub.c-utd.db-num no-error .
 buffer-copy ub.utd except ub.utd.sts ub.utd.sts-edi to tt-utd  .
 if available (ub.c-utd) then do:
 assign 
@@ -80,5 +89,8 @@ then do:
   message return-value view-as alert-box.
 end.
 else do:
+  if testId <> ? then
+    put stream vProtTest unformatted "Документ ЭД " ub.utd.doc-id " отправлен" skip. 
+  else
   message ub.utd.doc-id " отправлен" view-as alert-box.
 end.

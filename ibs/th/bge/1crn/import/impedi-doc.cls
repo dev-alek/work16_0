@@ -37,7 +37,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
   .
-/*  define stream myProt.*/
+  define stream myProt.
 /*  define private temp-table tt-operserv no-undo like ub.OperServ .*/
   
   define property Msg as character no-undo
@@ -86,6 +86,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    define buffer marking                for ub.marking .
    define buffer marking-attr           for ub.marking-attr .
    define buffer contract               for ub.contract .
+   define buffer order-doc              for ub.order-doc .
 
     objImp = cast (subjectObj, {&impclass}).
 
@@ -217,7 +218,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       then
          undo, throw new Progress.Lang.AppError(substitute("В договоре &1 и в УПД разные контр агенты",utd.contract-code)) .
       Utd.BaseDocumentNumber = contract.contract-prn-code.
-      utd.BaseDocumentDate       = contract-date.                      
+      utd.BaseDocumentDate       = contract-date.
+      
+      if objImp:order-item ne ? and 
+         can-find(first order-doc where order-doc.order-item = objImp:order-item)
+      then  /* не связываем УПД с заказом, если заказ не найден */
+        setattrutd(utd.db-num, utd.doc-id, "order-item", objImp:order-item).
+                            
       /*define variable VContractEdo as logical no-undo init yes.
       VContractEdo = contract.whole-send-news eq 1. /* договор Едо*/
       if not VContractEdo
@@ -321,9 +328,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   delete utd-marking-lines.
                end.
                
-/*output stream myProt to c:\wrk\16_0\oxml_imp\oxml\heap\ES00002-038\myprot2.txt.*/
-/*define buffer buf_utd-marking-lines for ub.utd-marking-lines.                  */
-/*run gbl/inidebug.p.                                                            */
                do v-i-num2 = 1 to v-i-counter2 :
                   v-objlistmark:Get(v-i-num2) .
                   v-marks-mark = cast(v-objlistmark:SubjectObjCurr, ibs.th.bge.1crn.subjects.mark) .
@@ -395,14 +399,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                  then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
                                  else ub.marking.sts.
                   
-/*put stream myProt unformatted                                */
-/*  utd-marking-lines.gds-code " "                             */
-/*  utd-marking-lines.doc-level " "                            */
-/*  marking.mark " "                                           */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(marking.sts) " "      */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(utd-marking-lines.sts)*/
-/*  skip                                                       */
-/*.                                                            */
                   if     v-marks-mark:stts-desc ne ?
                      and available marking
                   then
@@ -439,22 +435,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                           and marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
                           marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB.
                        end. 
-/*for each marking where marking.mark-parent eq utd-marking-lines.mark no-lock:                     */
-/*find first buf_utd-marking-lines where buf_utd-marking-lines.mark = marking.mark no-lock no-error.*/
-/*put stream myProt unformatted                                                                     */
-/*  buf_utd-marking-lines.gds-code " "                                                              */
-/*  buf_utd-marking-lines.doc-level " "                                                             */
-/*  marking.mark " "                                                                                */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(marking.sts) " "                                           */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(buf_utd-marking-lines.sts)                                 */
-/*  skip                                                                                            */
-/*.                                                                                                 */
-/*end.                                                                                              */
+/*out2log(utd.db-num, utd.doc-id, utd-marking-lines.mark, 0).*/
                   end.
                      
                end.
-/*output stream myProt close.*/
-/*run gbl/inidebug.p.        */
+/*run gbl/inidebug.p.*/
                if     vGdsCode     eq ?
                   and v-i-counter2 > 0
                then
@@ -821,6 +806,46 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
      end.    
   end method.
   
+  method private void out2log (iDbNum as integer, iDocId as integer, imark as char, iLevel as int):
+    /* Для отладки: пишет в файл статусы марок после обработки */
+    define buffer bf_utd-marking-lines for ub.utd-marking-lines.
+    define buffer bf_marking for ub.marking.
+
+    if iLevel = 0 then
+      output stream myProt to c:\wrk\impedi-doc.log.
+    else
+      output stream myProt to c:\wrk\impedi-doc.log append.
+    
+    for first bf_utd-marking-lines no-lock where 
+              bf_utd-marking-lines.db-num = iDbNum
+          and bf_utd-marking-lines.doc-id = iDocId
+          and bf_utd-marking-lines.mark   = imark,
+        first bf_marking no-lock where 
+              bf_marking.mark = imark
+    :
+      put stream myProt unformatted
+        fill(" ", iLevel)
+        bf_utd-marking-lines.gds-code " "
+        bf_utd-marking-lines.doc-level " "
+        bf_marking.mark " "
+        objSrv:Env:Marking:Sts:Mark:GetLabel(bf_marking.sts) " "
+        objSrv:Env:Marking:Sts:Mark:GetLabel(bf_utd-marking-lines.sts)
+        skip
+      .
+    end.
+    output stream myProt close.
+
+    for each bf_marking no-lock where
+             bf_marking.mark-parent eq iMark,
+        first bf_utd-marking-lines no-lock where 
+              bf_utd-marking-lines.db-num = iDbNum
+          and bf_utd-marking-lines.doc-id = iDocId
+          and bf_utd-marking-lines.mark = bf_marking.mark
+    :
+      out2log(iDbNum, iDocId, bf_marking.mark, iLevel + 2).
+    end.
+  end method.
+
 end class.
 
      

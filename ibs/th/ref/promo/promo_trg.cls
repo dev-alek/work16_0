@@ -79,6 +79,9 @@ define temp-table gds-list no-undo like ub.goods
   define property ModeView as logical no-undo
   get.
   private set.
+  define property typeCond as integer no-undo
+  get.
+  private set.
   define property ModeChangeStatus as logical no-undo
   get.
   private set.
@@ -92,7 +95,7 @@ define temp-table gds-list no-undo like ub.goods
   define private variable m-storage as class promoactionstorage no-undo .
   define private variable m-goodsStorage as class promogoodsstorage no-undo . 
   define variable dialog1 as class ibs.th.ref.promo.dPromoActions no-undo .
-  
+  define variable CritgoodsFl as logical no-undo .
   define private variable m-local-sec as int64 no-undo init -1.
   
   define temp-table tt-obj no-undo
@@ -206,6 +209,24 @@ define variable mStatus as integer  no-undo.
                
    end.          
 
+   method public void changeRowAll(input iAll as logical):
+       define variable vFlag as logical no-undo.
+       vFlag = if     available tt-PromoGoodsAppl
+                  and tt-PromoGoodsAppl.Chang
+               then no
+               else yes.
+       if iAll 
+       then
+           for each   tt-PromoGoodsAppl:
+               tt-PromoGoodsAppl.Chang = vFlag.
+           end.
+       else
+            if avail tt-PromoGoodsAppl
+            then
+                tt-PromoGoodsAppl.Chang = vFlag.
+               
+   end.     
+   
 /*  method public class promoGoodsSubs ReturnSubsPromoGoods():                  */
 /*      define variable vSubs  as class promoGoodsSubs  no-undo .               */
 /*      define variable vSub   as class PromoGoodsSub   no-undo .               */
@@ -443,7 +464,8 @@ end . /* end_of низ таблицы и html-файла */
         then
             hQuery = buffer tt-promoaction-one:handle.*/
         else do:
-*/          
+*/  
+  
             find first tt-Query where tt-Query.NameQuery eq iNameQuery
             no-error.
             if     available tt-Query
@@ -496,6 +518,14 @@ end . /* end_of низ таблицы и html-файла */
                                                  "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
                                              )).
                     end.                    
+                    when "PromoGoodsFix" 
+                    then do:
+                        hQuery:set-buffers(buffer tt-PromoGoodsAppl:HANDLE). 
+                        hQuery:query-prepare("FOR EACH tt-PromoGoodsAppl " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoGoodsAppl.idaction eq " + string(tt-promoaction-one.id)  +
+                                                 "  and tt-PromoGoodsAppl.mode ne {&h-delete}"
+                                             )).
+                    end.     
                     when "PromoCardsBin" 
                     then do:
                         hQuery:set-buffers(buffer tt-PromoCardsBin:HANDLE). 
@@ -626,6 +656,30 @@ end . /* end_of низ таблицы и html-файла */
                                                  "  and tt-PromoGift.mode     ne {&h-delete}"
                                             )).
                     end.
+                    when "PromoMes1" 
+                    then do: 
+                        vFirst = yes.
+                        if     available tt-PromoCriterion 
+                           and not can-find( first tt-PromoGift  where tt-PromoGift.idaction eq tt-PromoCriterion.idaction 
+                                                   and tt-PromoGift.idCrit   eq tt-PromoCriterion.id   
+                                                   and tt-PromoGift.mode     ne {&h-delete})
+                        then do:
+                            create tt-PromoGift.
+                            assign 
+                            tt-PromoGift.idCrit   = tt-PromoCriterion.id
+                            tt-PromoGift.idaction = tt-PromoCriterion.idaction
+                            tt-PromoGift.mode     = {&h-create}
+                            tt-PromoGift.id       = m-local-sec
+                            m-local-sec           = m-local-sec - 1.
+                            
+                        end.  
+                        hQuery:set-buffers(buffer tt-PromoGift:HANDLE). 
+                        hQuery:query-prepare("FOR each tt-PromoGift " + if not available tt-promoaction-one then "" else (
+                                                 "where tt-PromoGift.idaction eq " + string(tt-PromoCriterion.idaction) +
+                                                 "  and tt-PromoGift.idCrit   eq " + string(tt-PromoCriterion.id)       +
+                                                 "  and tt-PromoGift.mode     ne {&h-delete}"
+                                            )).
+                    end.
                     when "PromoGiftForCrit" 
                     then do: 
                         hQuery:set-buffers(buffer tt-PromoGift:HANDLE). 
@@ -694,6 +748,8 @@ end . /* end_of низ таблицы и html-файла */
                     end .
                     
                 end case.
+                if available (tt-promoaction) then typeCond = tt-promoaction.typecond .
+    
                 hQuery:query-open.
 
                 if vFirst 
@@ -1170,6 +1226,7 @@ end . /* end_of низ таблицы и html-файла */
     if v-sched-sub:schedType = 0 then CreateTableForSchedw0 (p-mode, p-sub:ScheduleWeek).
                                  else CreateTableForSchedw1 (p-mode, p-sub:ScheduleWeek).
      //if p-mode = {&update} then temp-table tt-promoaction-one:tracking-changes = true .
+     CritgoodsFl = p-sub:CritgoodsFl .
      CreateTableForGoodsCrits(p-mode, p-sub:GoodsCrits).
      CreateTableForGoodsAppl (p-mode, p-sub:GoodsAppl ).
      CreateTableForCardsBin  (p-mode, p-sub:CardsBin ).
@@ -1245,11 +1302,27 @@ end . /* end_of низ таблицы и html-файла */
            by tt-PromoCriterionnext.mincrit:
               leave block-next.
            end.  
-           tt-PromoCriterion.span = "От " +   trim(string (tt-PromoCriterion.mincrit,">>>>>>>9.99")) 
-                                  + if available tt-PromoCriterionnext  
-                                    then ( " до " +   trim(string (tt-PromoCriterionnext.mincrit - 0.01 ,">>>>>>>9.99")))
-                                    else "".
-                                   
+
+           if tt-PromoCriterion.maxcrit <> 0 then do:
+           if CritgoodsFl then 
+           assign
+           tt-PromoCriterion.span = "От " +   trim(string (0,">>>>>>>9.99")) 
+           tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99")) .
+           else 
+           assign
+           tt-PromoCriterion.span = "От " +   trim(string (tt-PromoCriterion.mincrit,">>>>>>>9.99")) .
+           tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99")) .
+           .
+           end.
+           else do:
+           tt-PromoCriterion.span = "От " +   trim(string (tt-PromoCriterion.mincrit,">>>>>>>9.99")) .
+           if available tt-PromoCriterionnext  then tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterionnext.mincrit - 0.01 ,">>>>>>>9.99")) .
+           else "".
+           end.
+
+/*           if tt-PromoCriterion.maxcrit = 0 then tt-PromoCriterion.spanBef = " " .                          */
+/*           else tt-PromoCriterion.spanBef = "До " +   trim(string (tt-PromoCriterion.maxcrit,">>>>>>>9.99"))*/
+                                  .                                   
        end. 
    end.
   method public void CreateTableForGoodsAppl
@@ -1450,6 +1523,7 @@ end . /* end_of низ таблицы и html-файла */
            tt-PromoCriterion.idAction       = p-sub:idAction
            tt-PromoCriterion.discont        = p-sub:discont
            tt-PromoCriterion.mincrit        = p-sub:mincrit
+           tt-PromoCriterion.maxcrit        = p-sub:maxcrit
            tt-PromoCriterion.sub            = p-subs:SubjectObjCurr
            tt-PromoCriterion.mode           = p-sub:Mode
            tt-PromoCriterion.db-num         = p-sub:db-num
@@ -1488,6 +1562,7 @@ end . /* end_of низ таблицы и html-файла */
            tt-PromoGift.sub            = p-subs:SubjectObjCurr
            tt-PromoGift.mode           = p-sub:Mode
            tt-PromoGift.db-num         = p-sub:db-num
+           tt-PromoGift.mess-gks       = p-sub:mess-gks
          . 
          if p-mode = {&add-def} 
          then do:
@@ -1850,7 +1925,8 @@ end . /* end_of низ таблицы и html-файла */
            v-sub:ID       = tt-PromoCriterion.id              
            v-sub:idAction = tt-PromoCriterion.idAction        
            v-sub:discont  = tt-PromoCriterion.discont         
-           v-sub:mincrit  = tt-PromoCriterion.mincrit         
+           v-sub:mincrit  = tt-PromoCriterion.mincrit       
+           v-sub:maxcrit  = tt-PromoCriterion.maxcrit  
            v-sub:Mode     = tt-PromoCriterion.mode            
            
            
@@ -1877,7 +1953,8 @@ end . /* end_of низ таблицы и html-файла */
            v-sub:GdsCode  = tt-PromoGift.gds-code        
            v-sub:mess     = tt-PromoGift.mess        
            v-sub:qnty     = tt-PromoGift.qnty        
-           v-sub:Mode     = tt-PromoGift.mode        
+           v-sub:Mode     = tt-PromoGift.mode   
+           v-sub:mess-gks = tt-PromoGift.mess-gks     
          . 
      end.
   end method. // end_of_updateObjForGift
@@ -2426,6 +2503,7 @@ temp-table tt-promo-schedule-week:WRITE-XML ( "FILE", dsXmlFileName, true, "UTF-
   end.         
 method public void printgds(input iName as character ):
   define buffer buf_PromoBc for tt-PromoBc .
+  define buffer buf_PromoGoodsAppl for tt-PromoGoodsAppl .
     case iName:
        when "PromoBarCode" or when "PromoBarCodeFix" 
        then do:
@@ -2460,6 +2538,37 @@ method public void printgds(input iName as character ):
         end.
          
        end. 
+       when "PromoGoodsFix"
+       then do:
+         empty temp-table gds-list .
+      if not tt-PromoGoodsAppl.Chang then do:
+               find first ub.goods no-lock where
+                  ub.goods.gds-code = tt-PromoGoodsAppl.gds-code no-error .
+               create gds-list.
+               buffer-copy goods to gds-list.
+               assign
+                  gds-list.ActionId   = tt-PromoGoodsAppl.idAction
+                  gds-list.db-num     = tt-PromoGoodsAppl.db-num
+                  .
+        end.
+        else do:
+          for each buf_PromoGoodsAppl where buf_PromoGoodsAppl.Chang:
+               find first ub.goods no-lock where
+                  ub.goods.gds-code = buf_PromoGoodsAppl.gds-code no-error .
+               create gds-list.
+               buffer-copy goods to gds-list.
+               assign
+                  gds-list.ActionId   = buf_PromoGoodsAppl.idAction
+                  gds-list.db-num     = buf_PromoGoodsAppl.db-num
+                  .           
+          end.
+        end.
+        run ibs/th/rep/tick-lst.p (input parparentproc, input v-cntxt-obj-type, input v-cntxt-obj-code, input table gds-list).
+        for each tt-PromoGoodsAppl where tt-PromoGoodsAppl.Chang:
+          tt-PromoGoodsAppl.Chang = false .
+        end.
+         
+       end.        
     end case.
   end.     
   method public void addgds(input iname  as char):
@@ -2643,7 +2752,7 @@ method public void printgds(input iName as character ):
          end.   
      end.             
   end  method.
-  method public void GetCrit(output oMinCrit as character,output oDiscont as character ):
+  method public void GetCrit(output oMinCrit as character, output oDiscont as character ):
     if available tt-promocriterion
     then assign 
        oMinCrit = string(tt-promocriterion.mincrit)

@@ -154,6 +154,7 @@ procedure putc-16 :
   define variable v-sizeGif       as integer   no-undo .
   define variable vPricePromoSets as decimal   no-undo.
   define variable v-mess          as character no-undo . 
+  define variable v-mess-gks      as character no-undo . 
   define variable vgift           as logical   no-undo.
   define variable vSetGoods       as logical   no-undo.  
   define variable producer-int    as integer   no-undo . 

@@ -50,7 +50,7 @@ mCodeTrg:parparentproc = Parparentproc.
 
 mCodeTrg:menuHandle = this-procedure.
 
-mCodeTrg:addMenu(1, "Экспорт и импорт", "Экспорт в xml,Импорт из xml").
+mCodeTrg:addMenu(1, "Экспорт и импорт", "Экспорт в xml,Экспорт дерева,Импорт из xml").
 
 mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).
 mCodeTrg:startlevel = num-entries(mCodeTrg:parent,{&delim-par}).
@@ -72,8 +72,17 @@ procedure menuitem_1_1:
               error-status:get-message (1)
       view-as alert-box.
 end.
-
 procedure menuitem_1_2: 
+   define input  parameter iBuff as handle no-undo.
+   run bge/cashobjtreeexp.p no-error.
+   if error-status:error
+   then
+      message return-value skip
+              error-status:get-message (1)
+      view-as alert-box.
+end.
+
+procedure menuitem_1_3: 
    define input  parameter iBuff as handle no-undo.
    define variable VError as character no-undo.
    run bge/codeimp.p no-error.

@@ -1463,7 +1463,7 @@ end.
       end.    
       v-prop-code = "{&bef-attr-gisMT_cdnTurnOn}".
 &scop ptype logical
-&scop prop-value no
+&scop prop-value yes
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
@@ -1505,7 +1505,7 @@ end.
       end.      
       v-prop-code = "{&bef-attr-gisMT_OflineAdress}".
 &scop ptype character
-&scop prop-value 'http://127.0.0.1:5995/api/v1'
+&scop prop-value 'http://127.0.0.1:5995/api/v2'
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.

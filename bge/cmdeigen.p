@@ -1028,10 +1028,10 @@ define buffer buf_rec-fld for temp_xmllib_rec-fld.
           ,input yes /*p-save*/
           ) no-error .
         if error-status:error then do:
-          v-my-message = substitute("Ошибка при импорте данных по схеме &2:&3 профайл правил &1&3&4&3&5"
+          v-my-message = substitute("Ошибка при импорте данных по схеме &2: профайл правил &1&3&4&3&5"
                                       ,buf_temp-param-name.profile_id
                                       ,v-schema-name
-                                      ,{&new-line}
+                                      , {&new-line}
                                       , error-status:get-message(1)
                                       , return-value
                                       ) .
@@ -1289,6 +1289,7 @@ end.
   end.
   run gate-clear in this-procedure ( input v_dataseth, input v-xmlh).
   run send-to-cash in this-procedure no-error.
+  return.
 end. /*doe*/
 
 procedure set-err-type :

@@ -43,6 +43,9 @@ class ibs.th.bge.1crn.subjects.exp-DTSeasons inherits send1cerpsub:
   define override public property vss-workfile as character no-undo 
   get.
   
+  define override public property sendTableName as character no-undo init "gds-obj-attr"
+  get.
+   
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -77,6 +80,7 @@ class ibs.th.bge.1crn.subjects.exp-DTSeasons inherits send1cerpsub:
       buf_gds-obj-attr.obj-type = oldbh:buffer-field( "obj-type":U  ):buffer-value no-error .
     if available (buf_gds-obj-attr) then 
     do:
+      sendOldRowid = rowid(buf_gds-obj-attr).
       find first buf_goods-attr no-lock where buf_goods-attr.gds-code = buf_gds-obj-attr.gds-code and
         buf_goods-attr.attr-code = "fuel-type" no-error .
       find first buf_code no-lock where buf_code.parent = "DTseasons" and buf_code.code = buf_gds-obj-attr.attr-value no-error .

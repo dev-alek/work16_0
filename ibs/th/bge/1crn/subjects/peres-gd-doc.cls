@@ -158,6 +158,17 @@ index sum-type is primary unique sum-type.
     get.
     set.
   
+  define public property sendTableName as character no-undo init "trn-doc"
+    get.
+   
+  define public property sendOldRowid as rowid  no-undo
+    get.
+    set.
+
+  define public property sendNewRowid as rowid  no-undo
+    get.
+    set.
+
   define variable sw               as handle    no-undo.
   define variable isDel            as logical   no-undo.
   define variable varinvclcwt      as logical   no-undo.
@@ -173,7 +184,7 @@ index sum-type is primary unique sum-type.
   define variable v-bufhnd         as handle    no-undo.
 
   method public void CrContentToSW (insw as handle):
-    
+
     sw = insw.
     
     create bf_trn-doc.
@@ -182,6 +193,7 @@ index sum-type is primary unique sum-type.
     
     if valid-handle (BufTableHndlNew)
     then do:
+      sendNewRowid  = BufTableHndlNew:rowid.
       v-bufhnd:buffer-copy (BufTableHndlNew) no-error.
       if error-status:error
       then do:
@@ -196,6 +208,7 @@ index sum-type is primary unique sum-type.
         Msg = "Ошибка выгрузки peres-gd-doc, неопеределен ни старый ни новый буфер".
         undo, return error Msg.
       end.
+      sendOldRowid  = BufTableHndlOld:rowid.
       v-bufhnd:buffer-copy (BufTableHndlOld) no-error.
       if error-status:error
       then do:

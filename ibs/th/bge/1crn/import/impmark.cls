@@ -43,7 +43,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     get. 
     set.
 
-/*  define stream myProt.*/
+  define stream myProt.
 
   method public logical Excute( subjectObj as class ibs.th.bge.1crn.subjects.isubject ):
     define variable objImp    as class ibs.th.bge.1crn.subjects.mark no-undo.
@@ -229,7 +229,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       copyMark2DB(buffer tt-marking, ?).
     end.
 
-/*output stream myProt to c:\wrk\16_0\oxml_imp\oxml\heap\myprot.txt.*/
     for each tt-marking where
              tt-marking.unit-ext <> "UNIT"
           or tt-marking.box-qnty > 1
@@ -247,12 +246,13 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
         if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) or
            can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts)) then
         do:
+          /* если в составе ГУ есть ПУ, с которой что-то делали, то разгруппировываем ГУ и выходим */
           tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+          leave mark_CHIlD.
         end.  
         if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
         do: /* меняем статус родетеля и всех потреб упаковок на Ошибка */
           setStatusGroupMark(buffer tt-marking, objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB).
-          leave mark_CHIlD.
         end.
       end.
         /* перенесено из trndocmv-1c.p (ТЗ 7700183344 помарочное движение п.3.1.5.) */
@@ -310,22 +310,9 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
           end.     
         end.
       end.
-      
-/*      for first buf_marking no-lock where                                                */
-/*                buf_marking.mark = tt-marking.mark:                                      */
-/*        put stream myProt unformatted                                                    */
-/*          buf_marking.mark " " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip*/
-/*        .                                                                                */
-/*      end.                                                                               */
-/*      for each buf_marking no-lock where                                                 */
-/*               buf_marking.mark-parent = tt-marking.mark:                                */
-/*        put stream myProt unformatted                                                    */
-/*          buf_marking.mark " " objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip*/
-/*        .                                                                                */
-/*      end.                                                                               */
     end.
-/*output stream myProt close.*/
-/*run gbl/inidebug.p.        */
+/*out2log("", 1).    */
+/*run gbl/inidebug.p.*/
   end method.
   
   method private void copyMark2DB 
@@ -401,4 +388,31 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     end.
   end method.    
     
+  method private void out2log (iMark as character, iLevel as int):
+    /* Для отладки: пишет в файл статусы марок после обработки */
+    define variable vKM as character no-undo.
+    define buffer buf_marking for ub.marking.
+
+    if iLevel = 1 then
+    do:
+      output stream myProt to c:\wrk\impmark.log.
+      output stream myProt close.
+    end.
+    for each tt-marking no-lock where
+        tt-marking.mark-parent = iMark
+    :
+        vKM = GetCodeIdent(tt-marking.mark).
+        find first buf_marking no-lock where
+                   buf_marking.mark begins vKM no-error.
+        output stream myProt to c:\wrk\impmark.log append.
+        put stream myProt unformatted
+          fill(" ", iLevel + 1)
+          tt-marking.gds-code " "
+          buf_marking.mark " " 
+          objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts) skip
+        .
+        output stream myProt close.
+        out2log(tt-marking.mark, iLevel + 1).
+    end.
+  end method.
 end class.

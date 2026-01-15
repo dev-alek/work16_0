@@ -347,6 +347,11 @@
 &glob c-ord-dtl_primary_key doc-code artic prod-type prod-code node-code corr-user-db-num chip-num 
 &glob c-ord-line_primary_key doc-code artic prod-type prod-code corr-user-db-num chip-num 
 &glob c-ord-line-attr_primary_key doc-code gds-code attr-code corr-user-db-num chip-num 
+&glob c-order-doc_primary_key db-num doc-code corr-user-db-num chip-num 
+&glob c-order-doc-attr_primary_key db-num doc-code attr-code corr-user-db-num chip-num 
+&glob c-order-head_primary_key db-num doc-code corr-user-db-num chip-num subject 
+&glob c-order-line_primary_key db-num doc-code line-num corr-user-db-num chip-num 
+&glob c-order-line-attr_primary_key db-num doc-code line-num attr-code corr-user-db-num chip-num 
 &glob c-parts_primary_key obj-type obj-code artic prod-type prod-code in-code out-code part-code prt-code corr-user-db-num chip-num 
 &glob c-parts-add_primary_key in-code gds-code part-code prt-code add-doc-code add-gds-code cli-type cli-code host-code contract-code corr-user-db-num chip-num 
 &glob c-parts-attr_primary_key in-code gds-code part-code prt-code corr-user-db-num chip-num 
@@ -913,6 +918,10 @@
 &glob ord-line-rcv_primary_key doc-code rcv-code artic prod-type prod-code 
 &glob ord-rcv-attr_primary_key doc-code rcv-code attr-code 
 &glob ord-rcv-line-attr_primary_key doc-code rcv-code gds-code attr-code 
+&glob order-doc_primary_key db-num doc-code 
+&glob order-doc-attr_primary_key db-num doc-code attr-code 
+&glob order-line_primary_key db-num doc-code line-num 
+&glob order-line-attr_primary_key db-num doc-code line-num attr-code 
 &glob ot-line_primary_key doc-code artic prod-type prod-code sum-type cat-id 
 &glob ot-line-attr_primary_key doc-code artic prod-type prod-code sum-type cat-id attr-code 
 &glob ot-supp-line_primary_key doc-code cli-type cli-code artic prod-type prod-code sum-type cat-id 

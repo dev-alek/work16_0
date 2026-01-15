@@ -27,6 +27,9 @@ class ibs.th.bge.1crn.subjects.exp-CashParamHist inherits send1cerpsub implement
    define override public property InitSecTag as character no-undo init {&tag-interface}
    get.
     
+   define override public property sendTableName  as character  no-undo init "Cash-param-hist"
+   get.
+   
    method override public void CheckParam(  ):
       
       return.

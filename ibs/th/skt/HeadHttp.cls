@@ -57,9 +57,11 @@ class ibs.th.skt.HeadHttp inherits objth:
     Notes:
    ------------------------------------------------------------------------------*/
    define variable paramCol as ParamColection no-undo.
+   define variable queryParamCol as ParamColection no-undo.
    constructor public HeadHttp (  ):
       super ().
-      paramCol = new ParamColection().
+      paramCol      = new ParamColection().
+      
    end constructor.
    
    constructor public HeadHttp (iHeader as character):
@@ -102,4 +104,38 @@ class ibs.th.skt.HeadHttp inherits objth:
    method public void setParam(iParam as char, iValue as char):
       paramCol:setParam(iParam, iValue).
    end method.
+   
+   method public character getQueryParam(iParam as char):
+      define variable vi as integer no-undo.
+      define variable par as character no-undo.
+      define variable val as character no-undo.
+      define variable str as character no-undo.
+      if not valid-object (queryParamCol)
+      then do:
+         queryParamCol = new ParamColection().
+         do vi = 1 to num-entries (QueryPar,"&"):
+            assign
+              str = entry (vi, QueryPar, "&")
+              par = entry (1, str, "=")
+              val = if num-entries (str,"=") > 1 then entry (2, str, "=") else ""
+            no-error.
+            queryParamCol:setParam(par, Val).
+         end.
+      end.
+      return queryParamCol:getValue(iParam).
+   end method.
+    
+   method private void setQueryParam(iParam as char, iValue as char):
+      queryParamCol:setParam(iParam, iValue).
+   end method.
+   
+	/*------------------------------------------------------------------------------
+	 Purpose:
+	 Notes:
+	------------------------------------------------------------------------------*/
+	destructor public HeadHttp ( ):
+      delete object paramCol no-error.
+	end destructor.
+
+
 end class.

@@ -167,12 +167,12 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
    end.
   
    method override protected void CheckData ():
-  /*
+
       def var v-str as char no-undo.
     
       assign
-         v-str = "code" 
-         when code_ = ?
+/*         v-str = "code" 
+         when code_ = ?                */
          v-str = v-str + ",ac-type"
          when ac-type = ?
 /*         v-str = v-str + ",mark"     */
@@ -196,7 +196,7 @@ class ibs.th.bge.1crn.subjects.transport inherits ibs.th.bge.1crn.subjects.asubj
       if v-str > ''
          then 
          undo, throw new Progress.Lang.AppError( substitute ("“еги &1 не могут иметь неопределное значение", v-str)).
-    */
+
    end.
   
    method override protected void ClearSub():

@@ -199,21 +199,35 @@ procedure   for-cash-cycle:
    
 /*   do vi = 1 to num-entries(v-cash-types): */
 /*      v-cash-type = entry(vi,v-cash-types).*/
-      _for:
-      for each for-cash-desk no-lock where
-               for-cash-desk.db-num   eq g#db-num         and
-               for-cash-desk.pos-type eq ub.cash-desk.pos-type      and
-               for-cash-desk.obj-code eq i-obj-code       and
-               for-cash-desk.is-del   ne  true           and
-               for-cash-desk.autonomy ne {&bef-cd-slave}  and
-              (for-cash-desk.cash-on  eq yes or mSendAll)  
-               
-      break
-          by for-cash-desk.db-num
-          by for-cash-desk.obj-code
-          by for-cash-desk.pos-type
-          by for-cash-desk.cash-on
-      :
+      define variable mQuery as handle    no-undo.
+      define variable vqry   as character no-undo.
+      create query mQuery.
+      mQuery:set-buffers(buffer for-cash-desk:HANDLE).
+      vqry = substitute("for each for-cash-desk no-lock where
+                                  for-cash-desk.db-num   eq &1 
+                              and for-cash-desk.pos-type eq '&2'      
+                              and for-cash-desk.obj-code eq &3 " 
+                           ,  g#db-num, ub.cash-desk.pos-type,i-obj-code).
+      if mCashNum ne ?
+      then
+         vqry = vqry + substitute("for-cash-desk.cash-num eq &1", mCashNum).
+      else
+         vqry = vqry + " and for-cash-desk.is-del   ne  true
+                         and for-cash-desk.autonomy ne {&bef-cd-slave}". 
+      if not mSendAll 
+      then
+         vqry = vqry + " and for-cash-desk.cash-on  eq yes".
+         
+      vqry = vqry + "   
+ by for-cash-desk.db-num
+ by for-cash-desk.obj-code
+ by for-cash-desk.pos-type
+ by for-cash-desk.cash-on ". 
+      mQuery:query-prepare(vqry).
+      mQuery:query-open ().
+      mQuery:get-first ().
+                                                                         
+      do while not mQuery:query-off-end:
         if lookup("set-cash-info", v-work-handle:internal-entries) >  0
         then do:
             run set-cash-info in v-work-handle (for-cash-desk.db-num,
@@ -285,8 +299,9 @@ procedure   for-cash-cycle:
         }
       
       
-      
+         mQuery:get-next ().
       end . /*for each for-cash-desk*/
+      delete object mQuery.
    end.
    run write-log-and-file in p-log-handle (
                      input 1

@@ -24,6 +24,7 @@ block-level on error undo, throw.
 
 { cmp/trg-def.i  }
 { cmp/library.i  }
+{ utl/tt-test-1c.i}
 
 
 if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn)
@@ -39,6 +40,12 @@ if not valid-handle (ibs.th.gbl.gbl-hndllib:g#lib-trn4)
 define temp-table tt-fin like ub.fin-doc.
 define var v-doc-code as char no-undo.
 
+if testId ne ? then
+do:
+  find first ub.fin-doc where rowid(ub.fin-doc) = testId no-lock no-error.
+end.
+else
+do:
 DEFINE FRAME frame1
   v-doc-code format "x(15)"
   with view-as dialog-box
@@ -48,6 +55,7 @@ DEFINE FRAME frame1
 update v-doc-code with frame frame1.
 
 find first ub.fin-doc where ub.fin-doc.fin-doc-code = integer(v-doc-code) no-error.
+end.
 
 if not available (ub.fin-doc)
   then do:
@@ -74,5 +82,8 @@ then do:
   message return-value view-as alert-box.
 end.
 else do:
-  message fin-doc.prn-doc-code " отправлен" view-as alert-box.
+  if testId ne ? then
+    put stream vProtTest unformatted "Фин.документ " fin-doc.prn-doc-code " отправлен" skip. 
+  else
+    message fin-doc.prn-doc-code " отправлен" view-as alert-box.
 end.

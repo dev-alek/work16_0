@@ -23,6 +23,7 @@ block-level on error undo, throw.
 
 
 { cmp/trg-def.i  }
+{ utl/tt-test-1c.i}
 /*{ cmp/library.i  }                                     */
 /*                                                       */
 /*                                                       */
@@ -45,6 +46,13 @@ define variable v-sht-num  as integer no-undo .
 define button btnOk auto-go label "Ok" .
 define button btnCancel auto-endkey label "Cancel".
 
+if testId ne ? then
+do:
+  find first buf_shift-obj where rowid(buf_shift-obj) = testId no-lock no-error.
+  if not avail buf_shift-obj then return.  
+end.
+else
+do:
 DEFINE FRAME frame1
   skip
                    v-obj-code format ">>>>>>>>9"  label "Код магазина"
@@ -78,6 +86,7 @@ then do :
                      v-sht-num, v-sht-date, v-obj-code) view-as alert-box.
   return.
 end .
+end.
 
 run str/prep1C-shift-period.p (input ?,
                                input buf_shift-obj.obj-type,
@@ -90,6 +99,12 @@ then do:
   message return-value view-as alert-box.
 end.
 else do:
-  message substitute("Контрольная плотность НП по Cмене №&1 от &2 в магазине &3 отправлена",
+  if testId <> ? then
+    put stream vProtTest unformatted 
+      substitute("Контрольная плотность НП по cмене №&1 от &2 в магазине &3 отправлена",
+                 buf_shift-obj.shift-num, buf_shift-obj.shift-date, buf_shift-obj.obj-code)
+      skip. 
+  else
+    message substitute("Контрольная плотность НП по Cмене №&1 от &2 в магазине &3 отправлена",
                      v-sht-num, v-sht-date, v-obj-code) view-as alert-box.
 end.

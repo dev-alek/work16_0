@@ -510,7 +510,7 @@ define variable v-err               as logical    no-undo .
                &if defined (debug) ne 0
                &then
                    output to "rkoincas.log" append.
-                   put unformatted "Кассовая книга " CashBook.id " остаток " tt-cashBookOst.ostrasch skip.
+                   put unformatted "Кассовая книга " CashBook.id " остаток " tt-cashBookOst.ostrasch " статус " CashBook.Status_ skip.
                    output close.
                &endif
           end.
@@ -581,7 +581,8 @@ define variable v-err               as logical    no-undo .
              delete buf_chk-gds-pay.
           end.
     end.
-
+    
+    cashb:
     for each cashbook no-lock:
        find first tt-cashBookOst where tt-cashBookOst.cashbookid eq CashBook.id
        no-error.
@@ -607,7 +608,15 @@ define variable v-err               as logical    no-undo .
                   ,output  tt-cashBookOst.ostrasch
                   ,output  Fact-order)
                  no-error .
-                 tt-cashBookOst.ost = tt-cashBookOst.ostrasch.
+                           
+          /* если кассова книга удалена и нет остатка, то убираем ее из списка */
+          if ub.CashBook.Status_ = 1 and tt-cashBookOst.ostrasch = 0 then 
+          do:
+              delete tt-cashBookOst.
+              next cashb.
+          end.    
+          
+          tt-cashBookOst.ost = tt-cashBookOst.ostrasch.                 
           find first buf_temp-fin-sum
                where buf_temp-fin-sum.curr-code = 0
                  and buf_temp-fin-sum.cashbookid = (if available ub.CashBook then ub.CashBook.id else 0)
@@ -633,7 +642,9 @@ define variable v-err               as logical    no-undo .
        else
           tt-cashBookOst.ostrasch = round(tt-cashBookOst.ostrasch,2).
     end.
+    
     define variable mSumAll as decimal no-undo.
+    
     for each tt-cashBookOst where tt-cashBookOst.ostrasch > 0:
        mSumAll = mSumAll + tt-cashBookOst.ostrasch.
        tt-cashBookOst.chang = yes.
