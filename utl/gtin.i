@@ -350,7 +350,9 @@ function GetCodeIdent return character
    define variable oCodeIdent as character no-undo.
    define variable vteg as character no-undo.
    define variable vtegval as character no-undo.
+   define variable vGtin as character no-undo.
    define buffer marking for ub.marking.
+   vGtin  = getGtinByDM (iDm ).
    ChekTypeMarkByDm(idm).
    if iDm begins {&tech-mark-prefix}
    then
@@ -386,7 +388,7 @@ function GetCodeIdent return character
             
    then
       oCodeIdent = substring(iDm,1,21).
-   else if checkGtin(substring(iDm,1,14)) and ( length(idm) eq 21 or (length(idm) eq 25 and substring(iDm,22,1) eq "A"))
+   else if vGtin = substring(iDm,1,14) and checkGtin(substring(iDm,1,14)) and ( length(idm) eq 21 or (length(idm) eq 25 and substring(iDm,22,1) eq "A"))
    then 
       oCodeIdent = substring(iDm,1,21).
    else do while Velement ne "" and idm ne "":
