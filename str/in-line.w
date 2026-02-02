@@ -2680,7 +2680,11 @@ do:
       return no-apply.
   end.            
 
-  disable b-rvs-af with frame {&frame-name} .
+  disable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
   run action-rvs-line in this-procedure
       ( input {&update}
       ,input "meas":U
@@ -2689,7 +2693,11 @@ do:
       ) no-error .
   if error-status :error then 
   do:
-    enable b-rvs-af with frame {&frame-name} .
+    enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+    if v-is-lgas or v-is-lgas-corr
+    then do:
+      hide b-addinf in frame {&frame-name}.
+    end .
     return.
   end.
 
@@ -2745,34 +2753,46 @@ do:
         no-error.
     if error-status :error then 
     do:
-      enable b-rvs-af with frame {&frame-name} .
+      enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+      if v-is-lgas or v-is-lgas-corr
+      then do:
+        hide b-addinf in frame {&frame-name}.
+      end .
       return no-apply .
     end.
      
 
-     if return-value begins "Для кассы" then 
-     do:
-       message return-value
-         view-as alert-box question buttons yes-no update v-ok as logical  .
-       if v-ok then run block-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
-       else do:
-         message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
-           view-as alert-box.
-         enable b-rvs-af with frame {&frame-name} .
-         return no-apply.
-       end.
-     end.
-     else 
-     do:
-       message "Блокировка пистолетов прошла успешно"
-         view-as alert-box.
-     end.   
+    if return-value begins "Для кассы" then 
+    do:
+      message return-value
+      view-as alert-box question buttons yes-no update v-ok as logical  .
+      if v-ok then run block-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
+      else do:
+        message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
+        view-as alert-box.
+        enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+        if v-is-lgas or v-is-lgas-corr
+        then do:
+          hide b-addinf in frame {&frame-name}.
+        end .
+        return no-apply.
+      end.
+    end.
+    else 
+    do:
+      message "Блокировка пистолетов прошла успешно"
+      view-as alert-box.
+    end.   
   end.
 
   run display-measure in this-procedure
     no-error .
 
-  enable b-rvs-af with frame {&frame-name} .
+  enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
   if b-save :sensitive in frame {&frame-name} then do:
     apply "ENTRY":U to b-save in frame {&frame-name} .
   end.
@@ -2789,6 +2809,11 @@ do:
   if not chk-asi-polling (no)
     then return no-apply .
 
+  disable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "meas":U
@@ -2796,27 +2821,33 @@ do:
      ,output var-code-temp
     ) no-error .
   if error-status :error then do:
+    enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+    if v-is-lgas or v-is-lgas-corr
+    then do:
+      hide b-addinf in frame {&frame-name}.
+    end .
     return no-apply .
   end.
-run adm/shattri.p (
-   input "get":U
-   ,input  v-cntxt-obj-type
-   ,input  v-cntxt-obj-code
-   ,input  {&attr-petrol}
-   ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
-   ,output v-value-character
-   ,output v-value-date
-   ,output v-value-decimal
-   ,output v-value-integer
-   ,output v-value-logical
-   ,output v-param-type
-   ,INPUT-OUTPUT table-handle v-tth
-   ) no-error .
-
-if v-value-logical then 
-do:
-   list-pl = "" .
-   for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
+  
+  run adm/shattri.p (
+     input "get":U
+     ,input  v-cntxt-obj-type
+     ,input  v-cntxt-obj-code
+     ,input  {&attr-petrol}
+     ,input  {&attr-petrol_block-nozzle} /*p-param-code*/
+     ,output v-value-character
+     ,output v-value-date
+     ,output v-value-decimal
+     ,output v-value-integer
+     ,output v-value-logical
+     ,output v-param-type
+     ,INPUT-OUTPUT table-handle v-tth
+     ) no-error .
+  
+  if v-value-logical then 
+  do:
+    list-pl = "" .
+    for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
       each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
       ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
       ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
@@ -2830,10 +2861,10 @@ do:
                    ub.pl-pump-nozzle.nozzle-code,
                    ub.pl-pump-nozzle.pump-code,
                    ub.pl-pump-nozzle.pl-code).
-   end.
+    end.
 
 
-   run str/diallog.w ( input parparentproc
+    run str/diallog.w ( input parparentproc
       ,input this-procedure
       ,input 'str/get-block-nozzle.p':U
       ,input (v-cntxt-obj-type + {&delim-par} +
@@ -2849,8 +2880,8 @@ do:
       ,input yes
       ,input ''
       ,input 'Разблокировка выбранных пистолетов') .
-   if not error-status:error then 
-   do:
+    if not error-status:error then 
+    do:
       if return-value begins "Для кассы" then 
       do:
          message return-value
@@ -2866,17 +2897,27 @@ do:
            view-as alert-box.
       end.   
 
-   end.
-   else 
-   do:
+    end.
+    else 
+    do:
+      enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+      if v-is-lgas or v-is-lgas-corr
+      then do:
+        hide b-addinf in frame {&frame-name}.
+      end .
       return no-apply .   
-   end.
+    end.
       
-end.
+  end.
 
   run display-measure in this-procedure
     no-error .
 
+  enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
   if b-save :sensitive in frame {&frame-name} then do:
     apply "entry" to b-save in frame {&frame-name} .
   end.
@@ -2922,7 +2963,11 @@ end.
 on choose of menu-item m-rvs-bf-3 in menu m-rvs-bf
 do:
   { gbl/stdbtn.i b-rvs-bf }
-  disable b-rvs-af with frame {&frame-name} .
+  disable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "edit":U
@@ -2930,11 +2975,15 @@ do:
      ,output var-code-temp
     ) no-error .
   if error-status :error then do:
-    enable b-rvs-af with frame {&frame-name} .
+    enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+    if v-is-lgas or v-is-lgas-corr
+    then do:
+      hide b-addinf in frame {&frame-name}.
+    end .
     return no-apply .
   end.
   
-   run adm/shattri.p (
+  run adm/shattri.p (
       input "get":U
       ,input  v-cntxt-obj-type
       ,input  v-cntxt-obj-code
@@ -2949,75 +2998,85 @@ do:
       ,INPUT-OUTPUT table-handle v-tth
       ) no-error .
 
-   if v-value-logical then 
-   do:
+  if v-value-logical then 
+  do:
   
-      list-pl = "" .
-      for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
-         each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
-         ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
-         ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
-         ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
-         each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
-         ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
-         ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
-         ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
-        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
-                   if list-pl = "" then "" else ";",
-                   ub.pl-pump-nozzle.nozzle-code,
-                   ub.pl-pump-nozzle.pump-code,
-                   ub.pl-pump-nozzle.pl-code).
-      end.
+    list-pl = "" .
+    for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
+       each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+       ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+       ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+       ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+       each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+       ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+       ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+       ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+      list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                 if list-pl = "" then "" else ";",
+                 ub.pl-pump-nozzle.nozzle-code,
+                 ub.pl-pump-nozzle.pump-code,
+                 ub.pl-pump-nozzle.pl-code).
+    end.
 
-      run str/diallog.w ( input parparentproc
-         ,input this-procedure
-         ,input 'str/get-block-nozzle.p':U
-         ,input (v-cntxt-obj-type + {&delim-par} +
-         string(v-cntxt-obj-code) + {&delim-par} +
-         string(0) + {&delim-par} +  /*p-remote */
-         string(0) + {&delim-par} + /*p-shft-close*/
-         {&delim-par} +
-         {&delim-par} +
-         {&delim-par} +
-         substitute("&1,&2"
-         ,"block"
-         ,list-pl))
-         ,input yes
-         ,input ''
-         ,input 'Блокировка пистолетов') .
-      if not error-status:error then 
+    run str/diallog.w ( input parparentproc
+       ,input this-procedure
+       ,input 'str/get-block-nozzle.p':U
+       ,input (v-cntxt-obj-type + {&delim-par} +
+       string(v-cntxt-obj-code) + {&delim-par} +
+       string(0) + {&delim-par} +  /*p-remote */
+       string(0) + {&delim-par} + /*p-shft-close*/
+       {&delim-par} +
+       {&delim-par} +
+       {&delim-par} +
+       substitute("&1,&2"
+       ,"block"
+       ,list-pl))
+       ,input yes
+       ,input ''
+       ,input 'Блокировка пистолетов') .
+    if not error-status:error then 
+    do:
+      if return-value begins "Для кассы" then 
       do:
-         if return-value begins "Для кассы" then 
-         do:
-            message return-value
-               view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run block-nozzle  in this-procedure ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
-            else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
-                  view-as alert-box.
-               
-         end.
-         else 
-         do:
-            message if return-value begins "Ошибка" then return-value else "Блокировка пистолетов прошла успешно" 
+        message return-value
+           view-as alert-box question buttons yes-no update v-ok as logical  .
+        if v-ok then run block-nozzle  in this-procedure ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
+        else message "Сообщите в службу поддержки о неуспешной попытке блокировки пистолетов"
               view-as alert-box.
-         end.   
-
       end.
       else 
       do:
-         enable b-rvs-af with frame {&frame-name} .
-         return no-apply .   
-      end.
-   end.
+        message if return-value begins "Ошибка" then return-value else "Блокировка пистолетов прошла успешно" 
+        view-as alert-box.
+      end.   
+    end.
+    else 
+    do:
+      enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+      if v-is-lgas or v-is-lgas-corr
+      then do:
+        hide b-addinf in frame {&frame-name}.
+      end .
+      return no-apply .   
+    end.
+  end.
   run display-measure in this-procedure
     no-error .
-  enable b-rvs-af with frame {&frame-name} .
+  enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
 end.
 
 on choose of menu-item m-rvs-af-3 in menu m-rvs-af
 do:
   { gbl/stdbtn.i b-rvs-af }
-  
+  disable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
   run action-rvs-line in this-procedure
     ( input {&update}
      ,input "edit":U
@@ -3025,10 +3084,15 @@ do:
      ,output var-code-temp
     ) no-error .
   if error-status :error then do:
+    enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+    if v-is-lgas or v-is-lgas-corr
+    then do:
+      hide b-addinf in frame {&frame-name}.
+    end .
     return no-apply .
   end.
   
-   run adm/shattri.p (
+  run adm/shattri.p (
       input "get":U
       ,input  v-cntxt-obj-type
       ,input  v-cntxt-obj-code
@@ -3043,68 +3107,75 @@ do:
       ,INPUT-OUTPUT table-handle v-tth
       ) no-error .
 
-   if v-value-logical then 
-   do:
+  if v-value-logical then 
+  do:
   
-      list-pl = "" .
-      for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
-         each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
-         ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
-         ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
-         ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
-         each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
-         ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
-         ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
-         ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
-        list-pl = substitute("&1&2&3:&4:&5", list-pl, 
-                   if list-pl = "" then "" else ";",
-                   ub.pl-pump-nozzle.nozzle-code,
-                   ub.pl-pump-nozzle.pump-code,
-                   ub.pl-pump-nozzle.pl-code).
-      end.
+    list-pl = "" .
+    for each tt-doc-pl where tt-doc-pl.pl-code = var-code-temp,
+       each ub.pl-gds-pump no-lock where ub.pl-gds-pump.gds-code = tt-doc-pl.gds-code and
+       ub.pl-gds-pump.obj-code = tt-doc-pl.obj-code and
+       ub.pl-gds-pump.obj-type = tt-doc-pl.obj-type and
+       ub.pl-gds-pump.pl-code = tt-doc-pl.pl-code,
+       each ub.pl-pump-nozzle  no-lock where ub.pl-pump-nozzle.obj-code = ub.pl-gds-pump.obj-code and
+       ub.pl-pump-nozzle.obj-type = ub.pl-gds-pump.obj-type and
+       ub.pl-pump-nozzle.pl-code = ub.pl-gds-pump.pl-code and
+       ub.pl-pump-nozzle.pump-code = ub.pl-gds-pump.pump-code:
+      list-pl = substitute("&1&2&3:&4:&5", list-pl, 
+                 if list-pl = "" then "" else ";",
+                 ub.pl-pump-nozzle.nozzle-code,
+                 ub.pl-pump-nozzle.pump-code,
+                 ub.pl-pump-nozzle.pl-code).
+    end.
 
-      run str/diallog.w ( input parparentproc
-         ,input this-procedure
-         ,input 'str/get-block-nozzle.p':U
-         ,input (v-cntxt-obj-type + {&delim-par} +
-         string(v-cntxt-obj-code) + {&delim-par} +
-         string(0) + {&delim-par} +  /*p-remote */
-         string(0) + {&delim-par} + /*p-shft-close*/
-         {&delim-par} +
-         {&delim-par} +
-         {&delim-par} +
-         substitute("&1,&2"
-         ,"unblock"
-         ,list-pl))
-         ,input yes
-         ,input ''
-         ,input 'Разблокировка выбранных пистолетов') .
-      if not error-status:error then 
+    run str/diallog.w ( input parparentproc
+       ,input this-procedure
+       ,input 'str/get-block-nozzle.p':U
+       ,input (v-cntxt-obj-type + {&delim-par} +
+       string(v-cntxt-obj-code) + {&delim-par} +
+       string(0) + {&delim-par} +  /*p-remote */
+       string(0) + {&delim-par} + /*p-shft-close*/
+       {&delim-par} +
+       {&delim-par} +
+       {&delim-par} +
+       substitute("&1,&2"
+       ,"unblock"
+       ,list-pl))
+       ,input yes
+       ,input ''
+       ,input 'Разблокировка выбранных пистолетов') .
+    if not error-status:error then 
+    do:
+      if return-value begins "Для кассы" then 
       do:
-         if return-value begins "Для кассы" then 
-         do:
-            message return-value
-               view-as alert-box question buttons yes-no update v-ok as logical  .
-            if v-ok then run unblock-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
-            else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
-                  view-as alert-box.
-               
-         end.
-         else 
-         do: 
-            message if return-value begins "Ошибка" then return-value else "Разблокировка пистолетов прошла успешно" 
+        message return-value
+           view-as alert-box question buttons yes-no update v-ok as logical  .
+        if v-ok then run unblock-nozzle ( parparentproc, v-cntxt-obj-type, v-cntxt-obj-code, list-pl ).
+        else message "Сообщите в службу поддержки о неуспешной попытке разблокировки пистолетов"
               view-as alert-box.
-         end.   
-
       end.
       else 
-      do:
-         return no-apply .   
-      end.
-   end.
+      do: 
+        message if return-value begins "Ошибка" then return-value else "Разблокировка пистолетов прошла успешно" 
+          view-as alert-box.
+      end.   
+    end.
+    else 
+    do:
+      enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+      if v-is-lgas or v-is-lgas-corr
+      then do:
+        hide b-addinf in frame {&frame-name}.
+      end .
+      return no-apply .   
+    end.
+  end.
   run display-measure in this-procedure
     no-error .
-
+  enable b-rvs-bf b-rvs-af b-save b-quit b-parts b-addinf b-place with frame {&frame-name} .
+  if v-is-lgas or v-is-lgas-corr
+  then do:
+    hide b-addinf in frame {&frame-name}.
+  end .
 end.
 
 on choose of b-parts in frame d-in-line /* Партии */ do:
