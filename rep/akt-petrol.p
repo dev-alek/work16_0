@@ -1143,10 +1143,10 @@ procedure print-table1:
     then do :
       put stream OutStr-html unformatted
       '<TD text_wrap="true" colspan="2" style="text-align: center;"> </TD>' skip
-      '<TD text_wrap="true" num="0.000" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.999",3) + '" colspan="2"  style="text-align: center;"> </TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;"> </TD>' skip        
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>>9.9",1) + '" colspan="2"  style="text-align: center;"> </TD>' skip
+      '<TD colspan="2";></TD>' skip
+      '<TD colspan="2";></TD>' skip        
+      '<TD></TD>' skip
+      '<TD colspan="2";></TD>' skip
       '</TR>'skip     
       .
     end .
@@ -1216,9 +1216,9 @@ procedure print-table2:
     if tt-petrol.urov-AC = "SGDKK"
     then do :
       put stream OutStr-html unformatted
-      '<TD text_wrap="true" colspan="3" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip
-      '<TD text_wrap="true" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip
-      '<TD text_wrap="true" colspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(0,"->>>>>>>>>>9.9",1) + '" style="text-align: center;"> </TD>' skip           
+      '<TD colspan="3";></TD>' skip
+      '<TD></TD>' skip
+      '<TD colspan="2";></TD>' skip           
       .
     end .
     else do :

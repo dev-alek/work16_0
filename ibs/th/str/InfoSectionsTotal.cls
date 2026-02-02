@@ -1775,6 +1775,14 @@ class ibs.th.str.InfoSectionsTotal:
               view-as alert-box error.
               undo _trpomi, return no-apply  .
             end.
+            if InfoSectionCurr:DensTemp = ? then do :
+              message
+                "Заполнены не все поля, необходимые " skip
+                "для работы библиотеки ПОкМИ"         skip
+                "Введите Температуру"  skip
+              view-as alert-box error.
+              undo _trpomi, return no-apply  .
+            end.
             if InfoSectionCurr:TankDensity = ? or InfoSectionCurr:TankDensity = 0 then do :
               message
                 "Заполнены не все поля, необходимые " skip
