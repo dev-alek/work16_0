@@ -79,8 +79,7 @@ define variable bcol              as handle    extent 37 no-undo.
      , first ub.place                where ~
              ub.place.obj-type        = ub.rvs-line.obj-type and ~
              ub.place.obj-code        = ub.rvs-line.obj-code and ~
-             ub.place.pl-code         = ub.rvs-line.pl-code  and ~
-             ub.place.status_ <>      {&deleted-status}
+             ub.place.pl-code         = ub.rvs-line.pl-code 
              
 
 &scop open-query-{&browse-name}-default {&open-query-{&browse-name}}.

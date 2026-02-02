@@ -501,19 +501,6 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                    pychk_dop-sumk = temp-chk-pay.tot-r-b.
                 temp-chk-dp.all-sum           = temp-chk-dp.all-sum - pychk_dop-sumk.
                 
-                if can-find (first buf_chk-gds-pay no-lock where 
-                                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code 
-                               and buf_chk-gds-pay.algo-num = {&current-algo-1}
-                               and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
-                               and buf_chk-gds-pay.cpline-num = int(temp-chk-pay.line-num)  
-                                   )
-                then undo create-block, return error substitute("Уже есть платеж: чек &1 &2&3 строка &4 строка &5"
-                                                    , temp-chk-pay.doc-code
-                                                    , ub.chk-doc.obj-type
-                                                    , ub.chk-doc.obj-code 
-                                                    , buf_temp-chk-gds.line-num                                                                                                       
-                                                    , temp-chk-pay.line-num).
-                                                    
                 create buf_chk-gds-pay.
                   assign
                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
@@ -794,18 +781,6 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
             pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
           end.
         end case.
-        if can-find (first buf_chk-gds-pay no-lock where 
-                           buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code 
-                       and buf_chk-gds-pay.algo-num = {&current-algo-1}
-                       and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
-                       and buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num  
-                           )
-        then undo create-block, return error substitute("Уже есть платеж: чек &1 &2&3 строка &4 строка &5"
-                                            , temp-chk-pay.doc-code
-                                            , ub.chk-doc.obj-type
-                                            , ub.chk-doc.obj-code 
-                                            , buf_temp-chk-gds.line-num                                                                                                       
-                                            , temp-chk-pay.line-num).
         create buf_chk-gds-pay.
         assign
         buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code

@@ -1077,6 +1077,7 @@ ON LEAVE OF Date-Start IN FRAME Dialog-Frame /* Ñ */
 ON leave OF garant_day IN FRAME Dialog-Frame
     DO:
         assign garant_day .
+        if garant_day = ? then return no-apply .
     END.
 
 /* _UIB-CODE-BLOCK-END */

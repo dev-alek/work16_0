@@ -556,7 +556,7 @@ DO:
       end.
    IF v-ok then do:
       run enable_UI in this-procedure.
-      v_ok = yes .
+      v-ok-level = yes .
    end.
 END.
 
@@ -609,7 +609,7 @@ DO:
    end.
    IF v-ok THEN DO:
       run enable_UI in this-procedure.
-      v_ok = yes .
+      v-ok-level = yes .
    end.
 END.
 

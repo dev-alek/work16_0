@@ -1593,26 +1593,7 @@ find first t-gds
         buf_chk-gds-pay.out-code = ink-doc.inkas-code
         .
       end.
-      
-      if pay-gds-algo <> '' then do:
-        if lookup(string(X_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then do:
-        end.
-        else do:
-          run r-pychk0 in this-procedure ( input ub.sysconf.base-code
-                                          ,input X_chk-doc.doc-code) no-error.
-          if error-status:error then do:              
-              &scop my-message substitute("Чек &1 возникла ошибка при формировании платежей. Чек не будет закачан в продажу&2&3"  ~
-                                  , X_chk-doc.doc-code             ~
-                                  , ~{&new-line~}                  ~
-                                  , return-value                   ~
-                                  )
 
-              {&display-message-laud} .               
-              undo _one-check, leave _one-check.
-          end.                                    
-        end.
-      end.
-      
       /*чек в целом*/
       assign
       X_chk-doc.out-code = ink-doc.inkas-code
@@ -1628,7 +1609,14 @@ find first t-gds
       accum-chk-doc-netto = accum-chk-doc-netto + X_chk-doc.netto
       accum-chk-doc-sub-discnt = accum-chk-doc-sub-discnt + X_chk-doc.sub-discnt
       .
-      
+      if pay-gds-algo <> '' then do:
+        if lookup(string(X_chk-doc.chk-type), {&no-sale-receipt-codes}) > 0 then do:
+        end.
+        else do:
+          run r-pychk0 in this-procedure ( input ub.sysconf.base-code
+                                          ,input X_chk-doc.doc-code) no-error.
+        end.
+      end.
       if p-ii < 10
       or (p-ii < 1000 and chk-amount modulo 10 = 0)
       or (p-ii < 10000 and chk-amount modulo 100 = 0)

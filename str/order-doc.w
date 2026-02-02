@@ -828,9 +828,13 @@ DO:
 ON row-leave OF br-line IN FRAME Dialog-Frame
 DO:
         find current X_order-line exclusive-lock. 
+        
         assign
             browse br-line X_order-line.order-qnty 
             .  
+            if X_order-line.order-qnty = ? then do:
+                return no-apply .
+            end.
             X_order-line.fact-qnty = X_order-line.order-qnty .
         find current X_order-line no-lock. 
 

@@ -1195,6 +1195,10 @@ class utl.gpwdfrm inherits Form:
             cmbTimeEnd:Focus().
             undo, throw new ValidateError("Не указано время окончания техпролива",-1).
          end. 
+         if cmbTimeBeg:text > cmbTimeEnd:text then do:
+            cmbTimeEnd:Focus().
+            undo, throw new ValidateError("Время начала позже времени конца",-1).
+         end.
       end.
       
       ValidateTimes(cmbTimeBeg).
