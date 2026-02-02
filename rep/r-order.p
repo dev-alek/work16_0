@@ -52,6 +52,7 @@ define variable vDaySale            as character no-undo .
 define variable vGarantDay          as character no-undo .
 define variable vDelDayGoods        as logical   no-undo .
 define variable periodDay           as character no-undo .
+define variable vDateOrder          as date      no-undo .
 define stream OutStr-html.
 
 define buffer buf_goods   for ub.goods .
@@ -128,7 +129,7 @@ find first bf_clients no-lock where bf_clients.obj-code = buf_order-doc.obj-code
 
 find first buf_clients no-lock where buf_clients.obj-code = buf_order-doc.cli-code and
     buf_clients.obj-type = buf_order-doc.cli-type no-error .
-
+vDateOrder = date(entry(1,p-param,{&delim-par})) no-error .  
 vDaySale = entry(3,p-param,{&delim-par}) no-error .  
 vGarantDay = entry(4,p-param,{&delim-par}) no-error .
 periodDay = entry(8,p-param,{&delim-par}) no-error.
@@ -140,7 +141,7 @@ put stream OutStr-html unformatted
     '<td colspan="13" style="text-align: left; font-weight:bold;">Отчет по планированию заказа товаров Магазина и готовой продукции Кафе</td>' skip
     '</tr>' skip
     '<tr style="font-size:11px;">' skip
-    '<td colspan="5" text_wrap="true" style="text-align: left;">на ' + string(buf_order-doc.doc-date,"99/99/9999") + '</td>' skip
+    '<td colspan="5" text_wrap="true" style="text-align: left;">на ' + string(vDateOrder,"99/99/9999") + '</td>' skip
     '<td colspan="8" text_wrap="true" style="text-align: left; font-style: italic;"><b>Остаток товара, шт (О)</b> Количество товара на остатке в штуках на текущий момент (4).</td>' skip
     '</tr>' skip
     '<tr style="font-size:11px;">' skip
