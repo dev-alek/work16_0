@@ -315,6 +315,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn-st C-Win
 ON CHOOSE OF Btn-st IN FRAME DEFAULT-FRAME /* Старт */
 DO:
+assign mPort.
 IF v-srv-connected = NO THEN
   RUN proc-start-srv IN THIS-PROCEDURE NO-ERROR.
 ELSE  RUN proc-stop-srv IN THIS-PROCEDURE NO-ERROR.
@@ -547,15 +548,15 @@ DEF VAR vl-cnt AS LOG NO-UNDO.
 CREATE SERVER-SOCKET hServerSocket.
 
 hServerSocket:SET-CONNECT-PROCEDURE ("connProc":U).
-vl-cnt = hServerSocket:ENABLE-CONNECTIONS("-S " + mPort:screen-value in FRAME DEFAULT-FRAME ) NO-ERROR.
+vl-cnt = hServerSocket:ENABLE-CONNECTIONS("-S " + string(mPort)) NO-ERROR.
 if vl-cnt = NO THEN do:
   RUN write-to-log-event(substitute('Ошибка запуска сервера &1!',error-status:get-message(1) )).
   return.
 end.
 v-srv-connected = YES.
 /* IF VALID-HANDLE(hServerSocket) AND hServerSocket:CONNECTED() THEN */
-RUN write-to-log-event(substitute('Запущен сокет-сервер с параметрами: -S &1 ', mPort:screen-value)).
-RUN write-to-log-event(substitute ("http://localhost:&1/help - описание запросов",mPort:screen-value)).
+RUN write-to-log-event(substitute('Запущен сокет-сервер с параметрами: -S &1 ', mPort)).
+RUN write-to-log-event(substitute ("http://localhost:&1/help - описание запросов",mPort)).
 mport:sensitive  in FRAME DEFAULT-FRAME = false.
 btn-st:LABEL IN FRAME {&FRAME-NAME} = 'Стоп'.
 sktserv  = new SktServer(this-procedure, us-tmo).
