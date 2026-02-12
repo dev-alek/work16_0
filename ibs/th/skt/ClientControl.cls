@@ -241,6 +241,8 @@ class ibs.th.skt.ClientControl:
        LogWrite:WriteFileToLog("Клиент отключился.").
        return false.
     end.
+    logWrite:WriteDebugLog("Отправляем ответ:").
+    logWrite:WriteDebugLog(VOK).
     glog = hndlsocket:write(VrespOK,1,get-size(VrespOK)).
     if    not glog
        or hndlsocket:bytes-written ne get-size(VrespOK)
@@ -250,6 +252,7 @@ class ibs.th.skt.ClientControl:
        return false.
     end.
     set-size(VrespOK) = 0.
+    logWrite:WriteDebugLog("Заголовок отправлен.").
     
     if not hndlSocket:connected()
     then do:
@@ -263,6 +266,18 @@ class ibs.th.skt.ClientControl:
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
        return false.
     end.
+    if    resp:Content-Type begins "text"
+       or resp:Content-Type begins "application/json"
+    then do:
+       logWrite:WriteDebugLog("Тело:").
+       define variable vlogStr as longchar no-undo.
+       copy-lob
+         from object resp:Content
+         to object vlogStr.
+       logWrite:WriteDebugLog(vlogStr).
+    end.
+    logWrite:WriteDebugLog("Тело отправлено.").
+    
     return true.
       
   end method.

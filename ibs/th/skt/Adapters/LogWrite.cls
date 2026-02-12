@@ -24,13 +24,27 @@ class ibs.th.skt.Adapters.LogWrite:
     set (str as char):
       run ibs/th/skt/Adapters/SetLogStrProc.p (input str).
     end.
-    
+
+    method public void WriteDebugLog(ifile as char) :
+      if session:debug-alert
+      then
+         WriteFileToLog (ifile).
+    end.
+
+    method public void WriteDebugLog(iText as longchar) :
+      if session:debug-alert
+      then
+         WriteFileToLog (iText).
+    end.
+
     method public void WriteFileToLog(ifile as char, icodepage as char) :
       run ibs/th/skt/Adapters/WriteFileToLog.p (ifile,icodepage).
     end.
+   
     method public void WriteFileToLog(ifile as char) :
       run ibs/th/skt/Adapters/WriteFileToLog.p (ifile,?).
     end.
+    
     method public void WriteFileToLog(iText as longchar) :
        if length (iText) < 1000
        then do:
@@ -42,7 +56,7 @@ class ibs.th.skt.Adapters.LogWrite:
           os-delete "filewrireLog.txt".
           copy-lob iText to
                    file "filewrireLog.txt".
-          run ibs/th/skt/Adapters/WriteFileToLog.p ("filewrireLog.txt").
+          WriteFileToLog ("filewrireLog.txt").
        end.
     end.
 

@@ -141,7 +141,7 @@ end.
 &Scoped-define FRAME-NAME DEFAULT-FRAME
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-help b-exit Btn-st auto-log
+&Scoped-Define ENABLED-OBJECTS b-help b-exit Btn-st Btn-log auto-log
 &Scoped-Define DISPLAYED-OBJECTS auto-log
 
 /* Custom List Definitions                                              */
@@ -178,6 +178,10 @@ DEFINE BUTTON Btn-st
      LABEL "Старт"
      SIZE 10 BY 1.
 
+DEFINE BUTTON Btn-log
+     LABEL "Вкл. расширеный лог."
+     SIZE 22 BY 1.
+
 DEFINE VARIABLE auto-log AS longchar
      VIEW-AS EDITOR SCROLLBAR-VERTICAL LARGE
      SIZE 96 BY 20 NO-UNDO.
@@ -192,6 +196,7 @@ DEFINE FRAME DEFAULT-FRAME
      b-help AT ROW 1.17 COL 89 WIDGET-ID 4
      b-exit AT ROW 1.25 COL 2.5 WIDGET-ID 2
      Btn-st AT ROW 1.25 COL 12.5 WIDGET-ID 6
+     Btn-log AT ROW 1.25 COL 37
      mPort AT ROW 1.25 COL 24 
      auto-log AT ROW 3 COL 2.5 NO-LABEL WIDGET-ID 8
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
@@ -319,6 +324,22 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Btn-log
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn-log C-Win
+ON CHOOSE OF Btn-log IN FRAME DEFAULT-FRAME /* Старт */
+DO:
+   session:debug-alert = not session:debug-alert.
+   if session:debug-alert
+   then
+      btn-log:LABEL IN FRAME {&FRAME-NAME} = "Выкл. расширеный лог.".
+   else
+      btn-log:LABEL IN FRAME {&FRAME-NAME} = "Вкл. расширеный лог.".
+
+
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &UNDEFINE SELF-NAME
 
@@ -371,7 +392,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   define variable sktserv  as class SktServer no-undo.
   define variable logWrite as class LogWrite  no-undo.
-
+  if session:debug-alert
+   then
+      btn-log:LABEL IN FRAME {&FRAME-NAME} = "Выкл. расширеный лог.".
+   else
+      btn-log:LABEL IN FRAME {&FRAME-NAME} = "Вкл. расширеный лог.".
+  
   { gbl/curdbnum.i
       g#db-num
     }
@@ -497,7 +523,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY auto-log mport
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE b-help b-exit Btn-st auto-log mport
+  ENABLE b-help b-exit Btn-st Btn-log auto-log mport
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
   VIEW C-Win.
@@ -598,7 +624,12 @@ else do:
       str = cur-time-string-sec() + {&tabulation} + "Файл: " +  itext + {&new-line}.
       auto-log:insert-string(str) NO-ERROR.
       auto-log:insert-file(search(itext)) no-error.
-      RUN write-to-log-file(str).
+   end.
+   else do:
+      str = cur-time-string-sec() + {&new-line}.
+      auto-log:insert-string(str) NO-ERROR.
+      
+      auto-log:insert-file(search(itext)) no-error.
    end.
    if    iSourcePage eq ""
       or iSourcePage eq ?

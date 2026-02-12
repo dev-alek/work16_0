@@ -79,10 +79,17 @@ class ibs.th.skt.Commands.IResponse abstract:
          copy-lob
          from object arg
          to object Content.
-      else
+      else do:
+         define variable pagecode as character no-undo.
+         if ConvertPage begins "windows-"
+         then
+            pagecode = substring (ConvertPage,9).
+         else
+            pagecode = ConvertPage.
          copy-lob
          from object arg
-         to object Content convert target codepage ConvertPage.
+         to object Content convert target codepage pagecode.
+      end.
       mAddctrf = yes.
    end.
    
@@ -96,10 +103,17 @@ class ibs.th.skt.Commands.IResponse abstract:
          copy-lob
          from object VStr
          to object Content.
-      else
+      else do:
+         define variable pagecode as character no-undo.
+         if ConvertPage begins "windows-"
+         then
+            pagecode = substring (ConvertPage,9).
+         else
+            pagecode = ConvertPage.
          copy-lob
          from object VStr
          to object Content convert target codepage ConvertPage.
+      end.
       mAddctrf = yes.
    end.
    method public void setFile(arg as char ):
