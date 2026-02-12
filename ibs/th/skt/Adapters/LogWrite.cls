@@ -14,6 +14,9 @@ block-level on error undo, throw.
 
 
 class ibs.th.skt.Adapters.LogWrite: 
+  define public static property isDebugMod as logical init yes
+  get.
+  set. 
 
   define public property LogStr as character no-undo
     get ():
@@ -26,13 +29,13 @@ class ibs.th.skt.Adapters.LogWrite:
     end.
 
     method public void WriteDebugLog(ifile as char) :
-      if session:debug-alert
+      if isDebugMod
       then
          WriteFileToLog (ifile).
     end.
 
     method public void WriteDebugLog(iText as longchar) :
-      if session:debug-alert
+      if isDebugMod
       then
          WriteFileToLog (iText).
     end.

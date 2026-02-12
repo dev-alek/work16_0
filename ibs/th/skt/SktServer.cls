@@ -162,12 +162,7 @@ class ibs.th.skt.SktServer:
       client_ = identifyClients(req).
       if client_ <> ? then 
       do:
-         vDelete = clientControl:SendRequest(client_, req, resp) no-error.
-         if error-status:error then 
-         do:
-            logWrite:LogStr = return-value.
-            vDelete = yes.
-         end.
+         vDelete = clientControl:SendRequest(client_, req, resp).
       end.
       
       define variable v-err-msg as character no-undo .  
@@ -228,12 +223,7 @@ class ibs.th.skt.SktServer:
          client_ = "tsd".
       if client_ <> ? then 
       do:
-         vDelete = clientControl:SendRequest(client_, req, resp, lpar) no-error.
-         if error-status:error then 
-         do:
-            logWrite:LogStr = return-value.
-            vDelete = yes.
-         end.
+         vDelete = clientControl:SendRequest(client_, req, resp, lpar).
       end.
     
       define variable v-err-msg as character no-undo .  
@@ -442,6 +432,11 @@ class ibs.th.skt.SktServer:
                assign
                   v-read = false
                .
+               if v-pos-buf + v-bytes > HeadHttp:contentLength
+               then do:
+                  logWrite:WriteFileToLog(substitute ('Error:  В Сontent-Length : &1 Пришло: &2 Проигнорировано &3 поледних байт',HeadHttp:contentLength, v-pos-buf + v-bytes, v-pos-buf + v-bytes - HeadHttp:contentLength)).
+                  v-bytes = HeadHttp:contentLength - v-pos-buf.
+               end.
                v-read = hSocket:read(mbuffer-in, v-pos-buf + 1, v-bytes) .
                if v-read
                then

@@ -1,3 +1,4 @@
+using ibs.th.skt.Adapters.LogWrite.
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Procedure
@@ -328,8 +329,8 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn-log C-Win
 ON CHOOSE OF Btn-log IN FRAME DEFAULT-FRAME /* Старт */
 DO:
-   session:debug-alert = not session:debug-alert.
-   if session:debug-alert
+   ibs.th.skt.Adapters.LogWrite:isDebugMod = not ibs.th.skt.Adapters.LogWrite:isDebugMod.
+   if ibs.th.skt.Adapters.logWrite:isDebugMod
    then
       btn-log:LABEL IN FRAME {&FRAME-NAME} = "Выкл. расширеный лог.".
    else
@@ -392,7 +393,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   define variable sktserv  as class SktServer no-undo.
   define variable logWrite as class LogWrite  no-undo.
-  if session:debug-alert
+  if ibs.th.skt.Adapters.logWrite:isDebugMod
    then
       btn-log:LABEL IN FRAME {&FRAME-NAME} = "Выкл. расширеный лог.".
    else

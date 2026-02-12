@@ -240,44 +240,73 @@ class ibs.th.skt.ClientControl:
     end.
     logWrite:WriteDebugLog("Отправляем ответ:").
     logWrite:WriteDebugLog(VOK).
-    glog = hndlsocket:write(VrespOK,1,get-size(VrespOK)).
+    glog = writeSock(hndlsocket,VrespOK).
     if    not glog
-       or hndlsocket:bytes-written ne get-size(VrespOK)
     then do:
        set-size(VrespOK) = 0.
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
        return false.
     end.
     set-size(VrespOK) = 0.
-    logWrite:WriteDebugLog("Заголовок отправлен.").
     
+    
+    logWrite:WriteDebugLog("Заголовок отправлен:").
+    logWrite:WriteDebugLog(VOK).
     if not hndlSocket:connected()
     then do:
        LogWrite:WriteFileToLog("Клиент отключился.").
        return false.
     end.
-    glog = hndlsocket:write(resp:Content,1,get-size(resp:Content)).
+    logWrite:WriteDebugLog("Отправляем тело.").
+    glog = writeSock(hndlsocket,resp:Content).
     if    not glog
        or hndlsocket:bytes-written ne get-size(resp:Content)
     then do:
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
        return false.
     end.
-    if    resp:Content-Type begins "text"
-       or resp:Content-Type begins "application/json"
+    if    resp:ContentLongChar ne ""
     then do:
        logWrite:WriteDebugLog("Тело:").
-       define variable vlogStr as longchar no-undo.
-       copy-lob
-         from object resp:Content
-         to object vlogStr.
-       logWrite:WriteDebugLog(vlogStr).
+/*       run gbl\inidebug.p.                         */
+/*       define variable vlogStr as longchar no-undo.*/
+/*       copy-lob                                    */
+/*         from object resp:Content                  */
+/*         to object vlogStr.                        */
+       logWrite:WriteDebugLog(resp:ContentLongChar).
     end.
     logWrite:WriteDebugLog("Тело отправлено.").
     
     return true.
       
   end method.
+  
+  method private logical writeSock (hndlsocket as handle, mbuffer as memptr):
+   define variable VSize as int64 no-undo.
+   define variable VPosBeg as int64 no-undo init 1.
+   define variable VWriteByte as int64 no-undo.
+   define variable glog as logical no-undo.
+   VSize = get-size(mbuffer).
+      
+   block-wh:
+   do while     hndlsocket:connected ()
+            and VSize > VWriteByte:
+      glog = hndlsocket:write(mbuffer,VPosBeg,
+      VSize - VWriteByte
+      ) no-error.
+      if not glog
+      then do:
+        logWrite:WriteFileToLog( "Ошибка при отправке сообщения удаленному клиенту.").
+        return false.
+      end.   
+        
+      VWriteByte =  VWriteByte + hndlsocket:bytes-written.
+      logWrite:WriteFileToLog( substitute ("Отправлено &1 байт из &2.",VWriteByte, VSize)).
+      VPosBeg = VPosBeg + hndlsocket:bytes-written.
+   end.
+   return true.
+end.
+  
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:

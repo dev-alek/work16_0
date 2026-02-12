@@ -56,7 +56,9 @@ class ibs.th.skt.Commands.IResponse abstract:
    define public property ConvertPage as character  no-undo 
    get.
    set.
-   
+   define public property ContentLongChar as longchar no-undo 
+   get.
+   private set .
    define public property Content as memptr no-undo 
    get.
    set(arg as memptr):
@@ -75,6 +77,7 @@ class ibs.th.skt.Commands.IResponse abstract:
    method public void setContent(arg as longchar, addNull as logical ):
       set-size(Content) = 0.
       arg = arg + chr(13) + chr(10).
+      ContentLongChar = arg.
       set-size(Content) = length(arg,"raw") + if addNull then 1 else 0.
       if ConvertPage eq ""
       then
@@ -96,14 +99,13 @@ class ibs.th.skt.Commands.IResponse abstract:
    end.
    
    method public void setContent(arg as char ):
-      define variable VStr as longchar no-undo.
       set-size(Content) = 0.
-      VStr = arg + chr(13) + chr(10).
-      set-size(Content) = length(VStr,"raw").
+      ContentLongChar = arg + chr(13) + chr(10).
+      set-size(Content) = length(ContentLongChar,"raw").
       if ConvertPage eq ""
       then
          copy-lob
-         from object VStr
+         from object ContentLongChar
          to object Content.
       else do:
          define variable pagecode as character no-undo.
@@ -113,7 +115,7 @@ class ibs.th.skt.Commands.IResponse abstract:
          else
             pagecode = ConvertPage.
          copy-lob
-         from object VStr
+         from object ContentLongChar
          to object Content convert target codepage ConvertPage.
       end.
       mAddctrf = yes.
