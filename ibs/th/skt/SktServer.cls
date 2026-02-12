@@ -132,7 +132,7 @@ class ibs.th.skt.SktServer:
     clientControl:SetCommandForClient("FileSend", FileSend).
     run gbl/conf-rd.p ("is-tsd", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
     if not error-status:error  and  logical (conf-par) then do:
-      tsdCommand = new TSDCommand(FileSend).
+      tsdCommand = new TSDCommand().
       clientControl:SetCommandForClient("TSD", tsdCommand).
     end.
     
