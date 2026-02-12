@@ -69,11 +69,13 @@ class ibs.th.skt.Commands.IResponse abstract:
    define public property ParamWait as char no-undo 
    get.
    set.
-   
    method public void setContent(arg as longchar ):
+      setContent(arg, false).
+   end.
+   method public void setContent(arg as longchar, addNull as logical ):
       set-size(Content) = 0.
       arg = arg + chr(13) + chr(10).
-      set-size(Content) = length(arg,"raw").
+      set-size(Content) = length(arg,"raw") + if addNull then 1 else 0.
       if ConvertPage eq ""
       then
          copy-lob
@@ -88,9 +90,9 @@ class ibs.th.skt.Commands.IResponse abstract:
             pagecode = ConvertPage.
          copy-lob
          from object arg
-         to object Content convert target codepage pagecode.
+         to object Content OVERLAY AT 1 convert target codepage pagecode.
       end.
-      mAddctrf = yes.
+      mAddctrf = not addNull.
    end.
    
    method public void setContent(arg as char ):
