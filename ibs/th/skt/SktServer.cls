@@ -96,25 +96,20 @@ class ibs.th.skt.SktServer:
     clientControl = new ClientControl(hLog). /*количество возможных комманд соответсвует кол-ву клиентов*/
     logWrite = new LogWrite().
     /*создадим объекты конкретных комманд для клиентов сокет-сервера. вешаем комманду на порядковый номер клиента в списке*/
-    run gbl/conf-rd.p ("is-tsd", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
-    if logical (conf-par) then do:
-      tsdCommand = new TSDCommand().
-      clientControl:SetCommandForClient("TSD", tsdCommand).
-    end.
     run gbl/conf-rd.p ("ser-wth", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
-    if logical (conf-par) then do:
+    if not error-status:error  and logical (conf-par) then do:
       tickedCommand = new TickedCommand().
       clientControl:SetCommandForClient("Ticked", tickedCommand).
     end.
     tmCommand = new TableMenuCommand().
     clientControl:SetCommandForClient("TableMenu", tmCommand).
     run gbl/conf-rd.p ("is-byscr", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
-    if logical (conf-par) then do:
+    if  not error-status:error  and logical (conf-par) then do:
       kioskCommand = new KioskCommand().
       clientControl:SetCommandForClient("kiosk", kioskCommand).
     end.
     run gbl/conf-rd.p ("is-wbsrv", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
-    if logical (conf-par) then do:
+    if  not error-status:error  and logical (conf-par) then do:
       webCommand = new webCommand().
       clientControl:SetCommandForClient("websrv", webCommand).
     end.
@@ -135,6 +130,11 @@ class ibs.th.skt.SktServer:
     
     FileSend = new FileSend ().
     clientControl:SetCommandForClient("FileSend", FileSend).
+    run gbl/conf-rd.p ("is-tsd", "", "", 0, "", "", "", no, output conf-par, output par-type) no-error.
+    if not error-status:error  and  logical (conf-par) then do:
+      tsdCommand = new TSDCommand(FileSend).
+      clientControl:SetCommandForClient("TSD", tsdCommand).
+    end.
     
     HelpSkt = new HelpSkt ().
     clientControl:SetCommandForClient("Help", HelpSkt).

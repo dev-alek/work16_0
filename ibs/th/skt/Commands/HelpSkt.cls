@@ -39,9 +39,18 @@ class ibs.th.skt.Commands.HelpSkt inherits ICommand:
       addMethod("ThInfo",    "getcashdesk", "Список касс").
       addMethod("ThInfo",    "VerifyRest",  "Выгрузка остатков").
       
-      addMethod("",          "TSD",         "ТСД").
-      addMethod("TSD",       "Descr",       "Запрос справочников").
-      addMethod("TSD",       "Doc",         "Обмен документами").
+      addMethod("",          "TSD",                   "ТСД").
+      addMethod("TSD",       "Descr",                 "Запрос справочников").
+      addMethod("TSD",       "Doc",                   "Обмен документами (база mysql)").
+      addMethod("TSD",       "Users" ,                "Пользователи").
+      addMethod("TSD",       "Object" ,               "Обекты (магазины)").
+      addMethod("TSD",       "Client" ,               "Клиенты(организации и люди)").
+      addMethod("TSD",       "goods" ,                "Товары").
+      addMethod("TSD",       "TH_barcodes" ,          "Баркоды").
+      addMethod("TSD",       "TH_goodsAndBarcodes" ,  "Товары и баркоды").
+      addMethod("TSD",       "documents" ,            "Запрос документов (xml)").
+      addMethod("TSD",       "Setting" ,              "Настройки и версии").
+      addMethod("TSD",       "getnewversion" ,        "Получить файл версии").
       
    end constructor.
 
@@ -55,6 +64,7 @@ class ibs.th.skt.Commands.HelpSkt inherits ICommand:
    method override public void Execute_( input req as ibs.th.skt.Commands.IRequest, input resp as class IResponse ):
       define variable vAdr as character no-undo.
       vAdr = "http://" + req:HndlSocket:local-host + ":" + string(req:HndlSocket:local-port).
+      resp:ConvertPage = "utf-8".
       if req:queryPar ne ""
       then
          resp:setContent(MainHelp(req:queryPar,vAdr)).
