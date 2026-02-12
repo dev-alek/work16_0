@@ -200,9 +200,10 @@ class ibs.th.skt.SktServer:
       finally:
          if vDelete
          then do:
+            socketDisconnect(hndlSocket).
             delete object req no-error.
             delete object resp no-error.
-            hndlSocket:disconnect ().
+            
          end.       
       end finally.
   end.
@@ -265,9 +266,9 @@ class ibs.th.skt.SktServer:
       finally:
          if vDelete
          then do:
+            socketDisconnect(hndlSocket).
             delete object req no-error.
             delete object resp no-error.
-            hndlSocket:disconnect ().
          end.       
       end finally.
    end.
@@ -345,27 +346,17 @@ class ibs.th.skt.SktServer:
 	&scop CRLF chr(13) + chr(10)
    &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
 	method public void connproc(hSocket as handle) :
+	   logWrite:WriteDebugLog(substitute ("Подключено устройстов id подключения &1 Ip: &2 Port: &3",hSocket,hSocket:REMOTE-HOST,hSocket:REMOTE-PORT)).
       def var n as int no-undo.
       define variable v-header      as character no-undo.
-/*  define variable mbuffer       as memptr   no-undo.                        */
-      define variable mbuffer-out   as memptr   no-undo.
       define variable mbuffer-in    as memptr   no-undo.
       define variable mbuffer-hdr   as memptr   no-undo.
-/*  define variable us-tmp-etime  as INTEGER  no-undo.                        */
       define variable v-bytes       as integer  no-undo.
       define variable v-str         as char     no-undo init "".
-/*  define variable i             AS INT      NO-UNDO.                        */
-/*  define variable s             AS CHAR     no-undo.                        */
       define variable resp-head     as longchar no-undo. /*ответ сокет-сервера*/
-/*  define variable lsocket       as logical  no-undo.                        */
       define variable v-read        as logical  no-undo.
       define variable v-content     as longchar no-undo.
-/*  define variable v-step        as integer  no-undo.                        */
       define variable v-pos-buf     as integer  no-undo.
-/*  define variable v-cont-read   as integer  no-undo.                        */
-/*  define variable v-hdr-lenth   as integer  no-undo.                        */
-/*  define variable v-is-hdr-rcvs as logical  no-undo.                        */
-/*  def var offscont as int no-undo.                                                                          */
       define variable HeadHttp as HeadHttp no-undo.
   
       fix-codepage(v-content) = "1251" .
@@ -375,49 +366,20 @@ class ibs.th.skt.SktServer:
       hSocket:set-socket-option('SO-REUSEADDR', 'true').
   
       assign 
-/*     S = '':U*/
          v-content = '':U
          v-header  = '':U
-/*         v-str     = ''*/
          v-bytes   = 0
-/*    offscont = 0.*/
          n         = 0
          v-str     = ""
-/*     v-cont-length = 0*/
-/*     v-hd-line = ""*/
-/*     v-cont-type = ""*/
-/*     v-user-agent = ""*/
-      .
-    
       resp-head = substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).  /* Возвращаемая по умолчанию ошибка */
-/*  contObj = new content ().*/
       
       ContBlock: 
       do:
 
-  /* читаем сокет и разбираем полученую информацию. */
-/*    v-bytes = hSocket:get-bytes-available().*/
-/*    if v-bytes = 0 then leave ContBlock.*/
-
-
-/*    v-str = GET-STRING(mbuffer-in,1).*/
     /*ждем окончание передачи шапки. Признак конца шапки - двойной перевод строки*/
     
          etime(yes).
-/*         assign        */
-/*            v-bytes = 0*/
-/*/*    offscont = 0.*/  */
-/*            n       = 0*/
-/*            v-str = "" */
-/*         .             */
-/*    v-cont-length = 0.*/
-/*    v-querypar = "".*/
-/*    v-path = "".    */
          set-size (mbuffer-in) = 0.
-         set-size (mbuffer-out) = 0.
-/*    set-size (mbuffer) = 0.*/
-         mbuffer-out = ?.
-/*    mbuffer = ?.*/
          mbuffer-in = ?.
          set-size (mbuffer-hdr) = 33000. 
     
@@ -461,45 +423,31 @@ class ibs.th.skt.SktServer:
          then do:
             logWrite:WriteFileToLog("Test request").
             resp-head =  substitute("HTTP/1.0 200 OK &1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            SET-SIZE(mbuffer-out) = 0.
-            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
-            PUT-STRING(mbuffer-out,1) = resp-head.
-            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
-            hsocket:disconnect ().
-            logWrite:WriteFileToLog("Response: OK").
-            
+            writeResponse (hSocket , resp-head).
             leave ContBlock.
          end.
          if not valid-object (HeadHttp)
          then do:
             resp-head =  substitute("HTTP/1.0 408 Request Timeout or bad request &1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            SET-SIZE(mbuffer-out) = 0.
-            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
-            PUT-STRING(mbuffer-out,1) = resp-head.
-            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
-            hsocket:disconnect ().
+            writeResponse (hSocket , resp-head).
             leave ContBlock.
          end.
          dw_:
          do while    /*  HeadHttp:contentLength > 0 
            and*/ HeadHttp:contentLength > v-pos-buf 
-           and etime < us-tmo * 1000 :
+           and etime < us-tmo * 1000 
+           and hSocket:connected () :
    /* читаем сокет и разбираем полученую информацию. */
-            if n = v-bytes
-            then do:
-               n = 0.
                v-bytes = hsocket:get-bytes-available().
-            end.
-            do while n < v-bytes :
                assign
-                  n = n + 1
-                  v-pos-buf = v-pos-buf + 1
+                  v-read = false
                .
-               v-read = hSocket:read(mbuffer-in, v-pos-buf, 1, 2) no-error .
-               if not v-read 
-               then 
-                  leave.
-            end.
+               v-read = hSocket:read(mbuffer-in, v-pos-buf + 1, v-bytes) .
+               if v-read
+               then
+               assign 
+                  v-pos-buf = v-pos-buf + v-bytes
+               .
          end.
          if not (              mbuffer-in = ? 
                   or get-size (mbuffer-in) = ? 
@@ -516,11 +464,7 @@ class ibs.th.skt.SktServer:
             and HeadHttp:queryReq = "")
          then do:
             resp-head =  substitute("HTTP/1.0 408 Request Timeout or bad request &1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            SET-SIZE(mbuffer-out) = 0.
-            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
-            PUT-STRING(mbuffer-out,1) = resp-head.
-            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
-            hsocket:disconnect ().
+            writeResponse (hSocket , resp-head).
             leave ContBlock.
          end.
  
@@ -532,22 +476,14 @@ class ibs.th.skt.SktServer:
          then do:
   /* resp-head = "HTTP/1.1 501 Not Implemented ~nServer: 4GL ~nConnection: close ~n~n".*/
             resp-head = substitute("HTTP/1.0 501 Not Implemented&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            SET-SIZE(mbuffer-out) = 0.
-            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
-            PUT-STRING(mbuffer-out,1) = resp-head.
-            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
-            hsocket:disconnect ().
+            writeResponse (hSocket , resp-head).
             leave ContBlock.
          end.
          if     HeadHttp:contentLength = 0 
             and HeadHttp:queryReq eq "" 
          then do:  /* Если запрос c нулевой длиной тела, то создаем ответ об успешном выполнении запроса */
             resp-head = substitute("HTTP/1.0 411 No Content&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            SET-SIZE(mbuffer-out) = 0.
-            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
-            PUT-STRING(mbuffer-out,1) = resp-head.
-            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
-            hsocket:disconnect ().
+            writeResponse (hSocket , resp-head).
             leave ContBlock.
          end.
       /*ожидаем полной передачи тела запроса*/
@@ -568,11 +504,7 @@ class ibs.th.skt.SktServer:
             HeadHttp:contentLength > v-pos-buf)  
          then do:
             resp-head =  substitute("HTTP/1.0 408 Request Timeout&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-            SET-SIZE(mbuffer-out) = 0.
-            SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
-            PUT-STRING(mbuffer-out,1) = resp-head.
-            hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
-            hsocket:disconnect ().
+            writeResponse (hSocket , resp-head).
             leave ContBlock.
          end.
       /*Если тело не пустое*/
@@ -614,11 +546,8 @@ class ibs.th.skt.SktServer:
             end.
             otherwise do:
                resp-head =  substitute("HTTP/1.0 400 Bad Request&1Server: 4GL&2",{&CRLF},{&HdEnd}).
-               SET-SIZE(mbuffer-out) = 0.
-               SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
-               PUT-STRING(mbuffer-out,1) = resp-head.
-               hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
-               hsocket:disconnect ().
+               writeResponse (hSocket , resp-head).
+            
             end.
          end case.
           
@@ -635,6 +564,19 @@ class ibs.th.skt.SktServer:
       end. /* ContBlock */
       logWrite:WriteFileToLog('RESPONSE: ' + resp-head).
    end.
-
+   method public logical writeResponse (hSocket as handle, resp-head as longchar ):
+      define variable mbuffer-out   as memptr   no-undo.
+      
+      SET-SIZE(mbuffer-out) = 0.
+      SET-SIZE(mbuffer-out) = length(resp-head,'RAW') + 2.
+      PUT-STRING(mbuffer-out,1) = resp-head.
+      hsocket:write(mbuffer-out,1,length(resp-head,'RAW':U)) no-error.
+      socketDisconnect(hsocket).
+      set-size (mbuffer-out) = 0.
+   end.
+   
+   method public logical socketDisconnect (hSocket as handle):
+      clientControl:socketDisconnect (hSocket).
+   end.
 
 end class.

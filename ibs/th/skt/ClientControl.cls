@@ -148,7 +148,6 @@ class ibs.th.skt.ClientControl:
         do transaction:
            cast(ttDeferredCommands.objCommand, ibs.th.skt.Commands.ICommand):ContinueExecution (req,resp). 
            if     resp:condition eq resp:STSlist:WriteResponse:NameProp
-              and req:HndlSocket:CONNECTED()
            then do:
               if not writeSock(req:HndlSocket,resp)
               then
@@ -207,13 +206,11 @@ class ibs.th.skt.ClientControl:
          finally:
            if vdelete
            then do:
-              if 
-                     valid-handle (hlog)
-                 and logWrite:LogStr > ""
+              if logWrite:LogStr > ""
               then
-                 publish "write-to-log" from hLog (substitute ("Error: Class: &1 end result: &2",resp ,logWrite:LogStr)).
+                 logWrite:WriteFileToLog(substitute ("Error: Class: &1 end result: &2",resp ,logWrite:LogStr)).
               
-              req:HndlSocket:disconnect().
+              socketDisconnect(req:HndlSocket).
               delete object req.
               delete object resp.
               delete ttDeferredCommands.
@@ -287,7 +284,8 @@ class ibs.th.skt.ClientControl:
 	------------------------------------------------------------------------------*/
 	destructor public ClientControl ( ):
 	 for each ttDeferredCommands:
-	    cast(ttDeferredCommands.objreq,IRequest):HndlSocket:disconnect().
+	    
+	    socketDisconnect(cast(ttDeferredCommands.objreq,IRequest):HndlSocket).
 	    delete object ttDeferredCommands.objreq no-error.
        delete object ttDeferredCommands.objResp no-error.
        delete ttDeferredCommands.
@@ -298,6 +296,22 @@ class ibs.th.skt.ClientControl:
     end.
     delete object logWrite.
 	end destructor.
+
+   method public logical socketDisconnect (hSocket as handle):
+      define variable vHost as character no-undo.
+      define variable vPort as integer   no-undo.
+      assign
+         vHost = hSocket:remote-host
+         vPort = hSocket:remote-port
+      .
+      hSocket:disconnect().
+      if vhost eq ?
+      then
+         logWrite:WriteDebugLog(substitute ("Устройстов id подключения &1 уже отключено.",hSocket,vHOST,vPORT)).
+      else
+         logWrite:WriteDebugLog(substitute ("Отключено устройстов id подключения &1 Ip: &2 Port: &3",hSocket,vHOST,vPORT)).
+   end.
+
 
 
 end class.
