@@ -53,6 +53,12 @@ class ibs.th.skt.Commands.IResponse abstract:
    
    define variable mAddctrf as logical no-undo.
    
+   define public property ConvertPage as character  no-undo 
+   get.
+   set.
+   define public property ContentLongChar as longchar no-undo 
+   get.
+   private set .
    define public property Content as memptr no-undo 
    get.
    set(arg as memptr):
@@ -65,25 +71,53 @@ class ibs.th.skt.Commands.IResponse abstract:
    define public property ParamWait as char no-undo 
    get.
    set.
-   
    method public void setContent(arg as longchar ):
+      setContent(arg, false).
+   end.
+   method public void setContent(arg as longchar, addNull as logical ):
       set-size(Content) = 0.
       arg = arg + chr(13) + chr(10).
-      set-size(Content) = length(arg,"raw").
-      copy-lob
-      from object arg
-      to object Content convert target codepage "UTF-8".
-      mAddctrf = yes.
+      ContentLongChar = arg.
+      set-size(Content) = length(arg,"raw") + if addNull then 1 else 0.
+      if ConvertPage eq ""
+      then
+         copy-lob
+         from object arg
+         to object Content.
+      else do:
+         define variable pagecode as character no-undo.
+         if ConvertPage begins "windows-"
+         then
+            pagecode = substring (ConvertPage,9).
+         else
+            pagecode = ConvertPage.
+         copy-lob
+         from object arg
+         to object Content OVERLAY AT 1 convert target codepage pagecode.
+      end.
+      mAddctrf = not addNull.
    end.
    
    method public void setContent(arg as char ):
-      define variable VStr as longchar no-undo.
       set-size(Content) = 0.
-      VStr = arg + chr(13) + chr(10).
-      set-size(Content) = length(VStr,"raw").
-      copy-lob
-      from object VStr
-      to object Content.
+      ContentLongChar = arg + chr(13) + chr(10).
+      set-size(Content) = length(ContentLongChar,"raw").
+      if ConvertPage eq ""
+      then
+         copy-lob
+         from object ContentLongChar
+         to object Content.
+      else do:
+         define variable pagecode as character no-undo.
+         if ConvertPage begins "windows-"
+         then
+            pagecode = substring (ConvertPage,9).
+         else
+            pagecode = ConvertPage.
+         copy-lob
+         from object ContentLongChar
+         to object Content convert target codepage ConvertPage.
+      end.
       mAddctrf = yes.
    end.
    method public void setFile(arg as char ):

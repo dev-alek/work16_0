@@ -26,7 +26,7 @@ define variable vss-author      as character no-undo init "$Author$":U .
 define variable vss-date        as character no-undo init "$Date$":U .
 define variable vss-workfile    as character no-undo init "$Workfile$":U .
 define variable vss-archive     as character no-undo init "$Archive$":U .
-define variable vss-description as character no-undo init "Окно входа в экран продавца (Остатки товаров)".
+define variable vss-description as character no-undo init "Окно входа в  Socet Server".
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { cmp/showinf.i }
@@ -128,7 +128,7 @@ DEFINE FRAME FRAME-A
 IF SESSION:DISPLAY-TYPE = "GUI":U and not session:batch-mode THEN
   CREATE WINDOW w-login ASSIGN
          HIDDEN             = YES
-         TITLE              = "TH Остатки товаров"
+         TITLE              = "TH Socet Server"
          COLUMN             = 27
          ROW                = 7.58
          HEIGHT             = 9.13

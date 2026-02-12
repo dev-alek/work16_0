@@ -14,6 +14,9 @@ block-level on error undo, throw.
 
 
 class ibs.th.skt.Adapters.LogWrite: 
+  define public static property isDebugMod as logical init yes
+  get.
+  set. 
 
   define public property LogStr as character no-undo
     get ():
@@ -24,10 +27,27 @@ class ibs.th.skt.Adapters.LogWrite:
     set (str as char):
       run ibs/th/skt/Adapters/SetLogStrProc.p (input str).
     end.
-    
-    method public void WriteFileToLog(ifile as char) :
-      run ibs/th/skt/Adapters/WriteFileToLog.p (ifile).
+
+    method public void WriteDebugLog(ifile as char) :
+      if isDebugMod
+      then
+         WriteFileToLog (ifile).
     end.
+
+    method public void WriteDebugLog(iText as longchar) :
+      if isDebugMod
+      then
+         WriteFileToLog (iText).
+    end.
+
+    method public void WriteFileToLog(ifile as char, icodepage as char) :
+      run ibs/th/skt/Adapters/WriteFileToLog.p (ifile,icodepage).
+    end.
+   
+    method public void WriteFileToLog(ifile as char) :
+      run ibs/th/skt/Adapters/WriteFileToLog.p (ifile,?).
+    end.
+    
     method public void WriteFileToLog(iText as longchar) :
        if length (iText) < 1000
        then do:
@@ -39,7 +59,7 @@ class ibs.th.skt.Adapters.LogWrite:
           os-delete "filewrireLog.txt".
           copy-lob iText to
                    file "filewrireLog.txt".
-          run ibs/th/skt/Adapters/WriteFileToLog.p ("filewrireLog.txt").
+          WriteFileToLog ("filewrireLog.txt").
        end.
     end.
 

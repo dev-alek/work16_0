@@ -148,7 +148,6 @@ class ibs.th.skt.ClientControl:
         do transaction:
            cast(ttDeferredCommands.objCommand, ibs.th.skt.Commands.ICommand):ContinueExecution (req,resp). 
            if     resp:condition eq resp:STSlist:WriteResponse:NameProp
-              and req:HndlSocket:CONNECTED()
            then do:
               if not writeSock(req:HndlSocket,resp)
               then
@@ -207,13 +206,11 @@ class ibs.th.skt.ClientControl:
          finally:
            if vdelete
            then do:
-              if 
-                     valid-handle (hlog)
-                 and logWrite:LogStr > ""
+              if logWrite:LogStr > ""
               then
-                 publish "write-to-log" from hLog (substitute ("Error: Class: &1 end result: &2",resp ,logWrite:LogStr)).
+                 logWrite:WriteFileToLog(substitute ("Error: Class: &1 end result: &2",resp ,logWrite:LogStr)).
               
-              req:HndlSocket:disconnect().
+              socketDisconnect(req:HndlSocket).
               delete object req.
               delete object resp.
               delete ttDeferredCommands.
@@ -241,9 +238,10 @@ class ibs.th.skt.ClientControl:
        LogWrite:WriteFileToLog("Клиент отключился.").
        return false.
     end.
-    glog = hndlsocket:write(VrespOK,1,get-size(VrespOK)).
+    logWrite:WriteDebugLog("Отправляем ответ:").
+    logWrite:WriteDebugLog(VOK).
+    glog = writeSock(hndlsocket,VrespOK).
     if    not glog
-       or hndlsocket:bytes-written ne get-size(VrespOK)
     then do:
        set-size(VrespOK) = 0.
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
@@ -251,28 +249,72 @@ class ibs.th.skt.ClientControl:
     end.
     set-size(VrespOK) = 0.
     
+    
+    logWrite:WriteDebugLog("Заголовок отправлен:").
+    logWrite:WriteDebugLog(VOK).
     if not hndlSocket:connected()
     then do:
        LogWrite:WriteFileToLog("Клиент отключился.").
        return false.
     end.
-    glog = hndlsocket:write(resp:Content,1,get-size(resp:Content)).
+    logWrite:WriteDebugLog("Отправляем тело.").
+    glog = writeSock(hndlsocket,resp:Content).
     if    not glog
        or hndlsocket:bytes-written ne get-size(resp:Content)
     then do:
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
        return false.
     end.
+    if    resp:ContentLongChar ne ""
+    then do:
+       logWrite:WriteDebugLog("Тело:").
+/*       run gbl\inidebug.p.                         */
+/*       define variable vlogStr as longchar no-undo.*/
+/*       copy-lob                                    */
+/*         from object resp:Content                  */
+/*         to object vlogStr.                        */
+       logWrite:WriteDebugLog(resp:ContentLongChar).
+    end.
+    logWrite:WriteDebugLog("Тело отправлено.").
+    
     return true.
       
   end method.
+  
+  method private logical writeSock (hndlsocket as handle, mbuffer as memptr):
+   define variable VSize as int64 no-undo.
+   define variable VPosBeg as int64 no-undo init 1.
+   define variable VWriteByte as int64 no-undo.
+   define variable glog as logical no-undo.
+   VSize = get-size(mbuffer).
+      
+   block-wh:
+   do while     hndlsocket:connected ()
+            and VSize > VWriteByte:
+      glog = hndlsocket:write(mbuffer,VPosBeg,
+      VSize - VWriteByte
+      ) no-error.
+      if not glog
+      then do:
+        logWrite:WriteFileToLog( "Ошибка при отправке сообщения удаленному клиенту.").
+        return false.
+      end.   
+        
+      VWriteByte =  VWriteByte + hndlsocket:bytes-written.
+      logWrite:WriteFileToLog( substitute ("Отправлено &1 байт из &2.",VWriteByte, VSize)).
+      VPosBeg = VPosBeg + hndlsocket:bytes-written.
+   end.
+   return true.
+end.
+  
 	/*------------------------------------------------------------------------------
 	 Purpose:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public ClientControl ( ):
 	 for each ttDeferredCommands:
-	    cast(ttDeferredCommands.objreq,IRequest):HndlSocket:disconnect().
+	    
+	    socketDisconnect(cast(ttDeferredCommands.objreq,IRequest):HndlSocket).
 	    delete object ttDeferredCommands.objreq no-error.
        delete object ttDeferredCommands.objResp no-error.
        delete ttDeferredCommands.
@@ -283,6 +325,22 @@ class ibs.th.skt.ClientControl:
     end.
     delete object logWrite.
 	end destructor.
+
+   method public logical socketDisconnect (hSocket as handle):
+      define variable vHost as character no-undo.
+      define variable vPort as integer   no-undo.
+      assign
+         vHost = hSocket:remote-host
+         vPort = hSocket:remote-port
+      .
+      hSocket:disconnect().
+      if vhost eq ?
+      then
+         logWrite:WriteDebugLog(substitute ("Устройстов id подключения &1 уже отключено.",hSocket,vHOST,vPORT)).
+      else
+         logWrite:WriteDebugLog(substitute ("Отключено устройстов id подключения &1 Ip: &2 Port: &3",hSocket,vHOST,vPORT)).
+   end.
+
 
 
 end class.
