@@ -392,6 +392,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   apply 'choose':U to Btn-st.
   mWork = yes.
   subscribe "write-to-log" anywhere run-procedure "write-to-log-event".
+  subscribe "write-to-log-codepage" anywhere run-procedure "write-to-log-event-codepage".
   subscribe "runCDn" anywhere.
   subscribe "runLmStatus" anywhere.
   
@@ -437,6 +438,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   end.
   delete object mAsyncHelper no-error.
   unsubscribe "write-to-log".
+  unsubscribe "write-to-log-codePage".
   unsubscribe "runCDN".
   unsubscribe "runLmStatus".  
 END.
@@ -774,6 +776,7 @@ PROCEDURE proc-stop-srv :
   Notes:
 ------------------------------------------------------------------------------*/
 DEF VAR vl-dis AS LOG NO-UNDO.
+mport:sensitive  in FRAME DEFAULT-FRAME = true.
 vl-dis = hServerSocket:disable-CONNECTIONS() NO-ERROR.
 IF NOT vl-dis THEN DO:
   RUN write-to-log-event(substitute('Ошибка остановки сервера &1!',error-status:get-message(1) )).
@@ -793,12 +796,20 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-to-log-event C-Win
 PROCEDURE write-to-log-event :
+   DEFINE INPUT PARAMETER itext       AS character NO-UNDO.
+   run write-to-log-event-codepage(itext, ?).
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE write-to-log-event-codepage C-Win
+PROCEDURE write-to-log-event-codepage :
 /*------------------------------------------------------------------------------
   Purpose:
   Parameters:  <none>
   Notes:
 ------------------------------------------------------------------------------*/
-DEFINE INPUT PARAMETER itext AS character NO-UNDO.
+DEFINE INPUT PARAMETER itext       AS character NO-UNDO.
+define input parameter iSourcePage as character no-undo.
 
 define variable str as char no-undo.
 
@@ -820,10 +831,18 @@ else do:
       auto-log:insert-file(search(itext)) no-error.
       RUN write-to-log-file(str).
    end.
-   copy-lob
-      file itext
-      to object varfile-str
-   no-error.
+   if    iSourcePage eq ""
+      or iSourcePage eq ?
+   then
+      copy-lob
+         file itext
+         to object varfile-str
+      no-error.
+   else
+      copy-lob
+         file itext
+         to object varfile-str convert source codepage iSourcePage
+      no-error.
    RUN write-to-log-file(varfile-str + {&new-line}).
 end.
 

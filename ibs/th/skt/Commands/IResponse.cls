@@ -53,6 +53,10 @@ class ibs.th.skt.Commands.IResponse abstract:
    
    define variable mAddctrf as logical no-undo.
    
+   define public property ConvertPage as character  no-undo 
+   get.
+   set.
+   
    define public property Content as memptr no-undo 
    get.
    set(arg as memptr):
@@ -70,9 +74,15 @@ class ibs.th.skt.Commands.IResponse abstract:
       set-size(Content) = 0.
       arg = arg + chr(13) + chr(10).
       set-size(Content) = length(arg,"raw").
-      copy-lob
-      from object arg
-      to object Content convert target codepage "UTF-8".
+      if ConvertPage eq ""
+      then
+         copy-lob
+         from object arg
+         to object Content.
+      else
+         copy-lob
+         from object arg
+         to object Content convert target codepage ConvertPage.
       mAddctrf = yes.
    end.
    
@@ -81,9 +91,15 @@ class ibs.th.skt.Commands.IResponse abstract:
       set-size(Content) = 0.
       VStr = arg + chr(13) + chr(10).
       set-size(Content) = length(VStr,"raw").
-      copy-lob
-      from object VStr
-      to object Content.
+      if ConvertPage eq ""
+      then
+         copy-lob
+         from object VStr
+         to object Content.
+      else
+         copy-lob
+         from object VStr
+         to object Content convert target codepage ConvertPage.
       mAddctrf = yes.
    end.
    method public void setFile(arg as char ):

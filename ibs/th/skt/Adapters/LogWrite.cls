@@ -25,8 +25,11 @@ class ibs.th.skt.Adapters.LogWrite:
       run ibs/th/skt/Adapters/SetLogStrProc.p (input str).
     end.
     
+    method public void WriteFileToLog(ifile as char, icodepage as char) :
+      run ibs/th/skt/Adapters/WriteFileToLog.p (ifile,icodepage).
+    end.
     method public void WriteFileToLog(ifile as char) :
-      run ibs/th/skt/Adapters/WriteFileToLog.p (ifile).
+      run ibs/th/skt/Adapters/WriteFileToLog.p (ifile,?).
     end.
     method public void WriteFileToLog(iText as longchar) :
        if length (iText) < 1000
