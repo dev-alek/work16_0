@@ -38,11 +38,13 @@ define variable mverinfile   as integer   no-undo.
 define variable v-md5-signature  as character no-undo.
 
 define variable mfile        as character no-undo.
+define variable mfilename    as character no-undo.
 define variable mfileNew     as character no-undo.
 define variable mFileRes     as character no-undo.
+define variable mDirUpdCk    as character no-undo.
 
 define stream sOut.
-
+define stream dir-stream.
 
 
 define temp-table tt-file-ver
@@ -165,6 +167,33 @@ then do:
       put stream sOut unformatted {utl/chekmd5.i v-md5-signature }  skip.
       output stream sOut close.
    end.
+
+   mDirUpdCk = objExists("updck","D").
+   if mDirUpdCk <> ? then do:
+       input stream dir-stream from os-dir( mDirUpdCk ) no-attr-list no-echo .
+       block-updck:
+       repeat:
+          import stream dir-stream mfilename mfile .
+      
+          file-info :file-name = mfile.
+          if caps( file-info :file-type ) begins "F":U and
+             entry(2, file-info:file-name, ".") = "xml" then 
+          do:
+             mfileNew = mFile.
+             entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
+             run SaveFileList (mfile,mfileNew).
+             mfile = search(mfile).
+             mfileNew = mFile.
+             entry(num-entries(mfileNew,"."),mfileNew,".")= "md5".
+             run gbl/md5.p(mfile,output v-md5-signature).
+             output stream sOut to value(mfileNew).
+             put stream sOut unformatted {utl/chekmd5ck.i v-md5-signature }  skip.
+             output stream sOut close.
+          end.
+       end.
+       input stream dir-stream close.
+   end.
+
    
    mliststrfile = "cmp/actn.txt,cmp/menu.txt".
    do mi = 1 to num-entries(mliststrfile):

@@ -443,6 +443,18 @@ on error undo, return error return-value
 end.  /*  for each upgfile-tbl where  */
 
 
+/* запускаем обновления из /updck */
+run waitfram-show in this-procedure ("Выполнение xml-файлов обновления" ).
+run gbl/code-updck.p(input  this-procedure)  no-error .
+if error-status:error then
+do:
+   run write-to-log (substitute(
+                       "&1&2", 
+                       {&PREFIX_LOG}, 
+                       return-value)
+                     ).
+end.
+
 def var v-file-name as character no-undo.
 def var v-msg       as character no-undo.
 mRunFile = SearchFile ("!upd-rc-after.bat").

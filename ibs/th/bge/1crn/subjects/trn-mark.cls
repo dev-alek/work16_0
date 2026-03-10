@@ -81,10 +81,10 @@ class ibs.th.bge.1crn.subjects.trn-mark inherits ibs.th.bge.1crn.subjects.asubje
 
     def var v-str as char no-undo.
     
-    assign
-     /*  v-str = "prt-id" when prt-id = ? */
-      v-str = v-str + ",mark-code" when mark-code = ?
-    .
+/*    assign                                           */
+/*      v-str = "prt-id" when prt-id = ?               */
+/*      v-str = v-str + ",mark-code" when mark-code = ?*/
+/*    .                                                */
     v-str = trim (v-str, ",").
     if v-str > ''
     then 

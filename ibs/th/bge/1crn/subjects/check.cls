@@ -225,7 +225,7 @@ define private temp-table tt-recid-TranFuel no-undo
                       ) .
                       
     v-inkas-dtime = datetime(buf_inkas.fact-date, buf_inkas.sys-time-int * 1000) .
-    for each over_buf_chk-doc /*no-lock */
+    for each over_buf_chk-doc no-lock
        where over_buf_chk-doc.out-code = buf_inkas.inkas-code:
       /* 19/XII-2017 выгружаем только те типы, которые указаны в протоколе */
       v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error .
@@ -282,17 +282,18 @@ if BufHandle:table = "chk-doc" then do:    /* отдельная выгрузка чеков  открытия
     insw:write-data-element (  "shift-num":U,   string(v-shift-num)    ).
 
     insw:start-element ({&tag-checks}) .
-    for each over_buf_chk-doc
-       where over_buf_chk-doc.chk-type eq 40 or over_buf_chk-doc.chk-type eq 13 :
-       FIND FIRST ub.chk-doc-attr WHERE over_buf_chk-doc.doc-code = chk-doc-attr.doc-code and ub.chk-doc-attr.attr-code  = "CHFlag1S" and ub.chk-doc-attr.attr-value = "no" NO-ERROR. 
-       IF AVAILABLE ub.chk-doc-attr THEN 
-            DO:
-               v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error . 
-               if not error-status:error then 
-               CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
-              v-host-code, v-obj-type, v-obj-code) .
-            delete chk-doc-attr.
-            end .   
+    for each chk-doc-attr where chk-doc-attr.attr-code = 'CHFlag1S' and chk-doc-attr.attr-value = 'no' exclusive-lock:
+       for each over_buf_chk-doc  no-lock  where 
+                over_buf_chk-doc.doc-code = chk-doc-attr.doc-code:
+          if over_buf_chk-doc.chk-type eq 40 or over_buf_chk-doc.chk-type eq 13 then
+          do:
+             v-en-chktype = enum-chk-type:GetEnum(over_buf_chk-doc.chk-type) no-error . 
+             if not error-status:error then 
+             CrContentInterfaceToSW (insw, buffer over_buf_chk-doc, v-inkas-dtime, v-user-name,
+             v-host-code, v-obj-type, v-obj-code) .
+             delete chk-doc-attr.
+          end.
+       end. 
     end .   
 insw:end-element ({&tag-checks}) . 
 insw:end-element ({&tag-shift}) . 

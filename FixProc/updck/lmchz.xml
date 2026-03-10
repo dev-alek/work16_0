@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<Root>
+   <After-Imp-Run After-Imp-Run-Procedure= "upd/inst_lmchz.p">
+	<Address>http://127.0.0.1:5995/api/v2</Address>
+	<Command>start /wait msiexec /I "C:\Trade_House16x\Settings\rc\regime-sa-2.1.0-627.msi" /qn APPLICATIONFOLDER="C:\Program Files\regime" AUTOSERVICE=1 ADMINUSER=%Логин ЛМ ЧЗ% ADMINPASSWORD=%Пароль ЛМ ЧЗ% SERVERURL=https://rsapi.crpt.ru PROXYURL="%Адрес прокси%" PROXYPORT="%Порт прокси%" /l*v C:\Trade_House16x\Logs\install.log</Cmd>
+   </After-Imp-Run>
+</Root>
