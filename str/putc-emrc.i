@@ -26,6 +26,7 @@ define input  parameter i-action   as character  no-undo .
 define input  parameter i-value    as character  no-undo .
 define output parameter oOK       as logical no-undo.
 define buffer code for ub.code.
+define buffer code-emc for ub.code.
 define variable vi as integer no-undo.
   define variable vDate  as character no-undo.
   if i-action ne "U"
@@ -33,33 +34,35 @@ define variable vi as integer no-undo.
      run putc-emrcdel(iSAXWriter).
   end.
   else do:                
-     for each code where Code.parent = "EMC"  
+     for each code-emc where Code-emc.parent = "EMC"  
      on error undo, return error
      : 
          iSAXWriter:start-element("EMRC_Type") .
-            iSAXWriter:insert-attribute("ctrl",   if Code.status_ eq {&bef-current-status-int} then "ADD" else "DEL").
-            iSAXWriter:insert-attribute("tsm",    "0").
-            iSAXWriter:insert-attribute("code",    string(int(Code.code))).
+         iSAXWriter:insert-attribute("ctrl",   if Code-emc.status_ eq {&bef-current-status-int} then "ADD" else "DEL").
+         iSAXWriter:insert-attribute("tsm",    "0").
+         iSAXWriter:insert-attribute("code",    string(int(Code-emc.code))).
    
-            iSAXWriter:write-data-element("EMRC_TypeName" , Code.CodeName ) .
+         iSAXWriter:write-data-element("EMRC_TypeName" , Code-emc.CodeName ) .
          iSAXWriter:end-element("EMRC_Type" ).
-      end.
-     vdate = iso-date(today - 93).
-     find last code where Code.parent begins "EMC" + {&delim-par} and code.code < vdate
-     no-lock no-error.
-     if avail code
-     then
-        vdate = code.code.
-     for each code where Code.parent begins "EMC" + {&delim-par} and code.code >= vdate 
-     on error undo, return error
-     : 
-         define variable vcode as character no-undo.
-         define variable vEMRCDate as character no-undo.
+      
+         vdate = iso-date(today - 93).
+         find last code where Code.parent eq Code-emc.parent + {&delim-par} + Code-emc.code 
+                          and code.code < vdate
+         no-lock no-error.
+         if avail code
+         then
+            vdate = code.code.
+         for each code where Code.parent eq Code-emc.parent + {&delim-par} + Code-emc.code 
+                         and code.code >= vdate 
+         on error undo, return error
+         : 
+            define variable vcode as character no-undo.
+            define variable vEMRCDate as character no-undo.
        /*  vEMRCDate =  trim(string( ( (date(Code.misc1) - date( "01/01/1970" ) )* 24 * 3600 + 1 ), ">>>>>>>>>9" )). */
-         vEMRCDate = Code.code + " 00:00:00".
-         vcode = entry(2,Code.parent,{&delim-par}).
-         vi = vi + 1.
-         iSAXWriter:start-element("EMRC_Value") .
+            vEMRCDate = Code.code + " 00:00:00".
+            vcode = Code-emc.code.
+            vi = vi + 1.
+            iSAXWriter:start-element("EMRC_Value") .
             iSAXWriter:insert-attribute("ctrl",   if Code.status_ eq {&bef-current-status-int} then "ADD" else "DEL").
             iSAXWriter:insert-attribute("tsm",    "0").
             iSAXWriter:insert-attribute("code",    string(vi)).
@@ -67,7 +70,8 @@ define variable vi as integer no-undo.
             iSAXWriter:write-data-element("EMRC_ValueType" , trim(string(dec(vcode),">>>>9.9")) ) .
             iSAXWriter:write-data-element("EMRC_ValueData" , vEMRCDate).
             iSAXWriter:write-data-element("EMRC_ValuePrice" , Code.CodeValue).
-         iSAXWriter:end-element("EMRC_Value" ).
+            iSAXWriter:end-element("EMRC_Value" ).
+         end. 
       end.
    end.
    oOK = true.
