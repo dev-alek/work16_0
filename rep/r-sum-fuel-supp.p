@@ -501,6 +501,9 @@ procedure processTrn :
   define buffer buf_rvs-line-pump for ub.rvs-line-pump .
   define buffer buf_c-place-attr  for ub.c-place-attr .
   define buffer buf2_c-place-attr for ub.c-place-attr .
+  define buffer buf_pl-gds-pump   for ub.pl-gds-pump .
+  define buffer buf_c-pl-gds-pump for ub.c-pl-gds-pump .
+  define buffer buf2_c-pl-gds-pump for ub.c-pl-gds-pump .
   
   define variable v-ok                  as logical   no-undo.
   define variable is-petrolium          as logical   no-undo.
@@ -545,6 +548,7 @@ procedure processTrn :
 /*  define variable v-pl-sum-col24        as decimal   no-undo .*/
 /*  define variable v-pl-sum-col25        as decimal   no-undo .*/
 /*  define variable v-pl-sum-col41        as decimal   no-undo .*/
+  define variable v-pl-gds-pump-status_ as character no-undo .
   
   is-ptrl-trn = no .
   is-sug-trn = no .
@@ -1297,15 +1301,61 @@ procedure processTrn :
                                                    and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
                                                    and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
               :
-                create tt-rvs-line-pump-delta .
-                buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
-                assign
-                  tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
-                .
-                if tt-rvs-line-pump-delta.state-el-cnt = ?
-                or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                find last buf_c-pl-gds-pump no-lock where buf_c-pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_c-pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_c-pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                                                      and buf_c-pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_c-pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and (buf_c-pl-gds-pump.corr-date < buf_trn-doc.fact-date
+                                                        or buf_c-pl-gds-pump.corr-date = buf_trn-doc.fact-date and buf_c-pl-gds-pump.corr-time < buf_trn-doc.fact-time)
+                                                      no-error .
+                if available buf_c-pl-gds-pump
                 then do :
-                  tt-rvs-line-pump-delta.is-err = yes .
+                  find first buf2_c-pl-gds-pump no-lock where buf2_c-pl-gds-pump.obj-type = buf_c-pl-gds-pump.obj-type
+                                                          and buf2_c-pl-gds-pump.obj-code = buf_c-pl-gds-pump.obj-code
+                                                          and buf2_c-pl-gds-pump.pl-code  = buf_c-pl-gds-pump.pl-code
+                                                          and buf2_c-pl-gds-pump.gds-code = buf_c-pl-gds-pump.gds-code
+                                                          and buf2_c-pl-gds-pump.pump-code = buf_c-pl-gds-pump.pump-code
+                                                          and buf2_c-pl-gds-pump.chip-num > buf_c-pl-gds-pump.chip-num
+                                                          no-error .
+                  if available buf2_c-pl-gds-pump
+                  then do :
+                    v-pl-gds-pump-status_ = buf2_c-pl-gds-pump.status_ .
+                  end .
+                  else do :
+                    for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                        and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                        and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                        and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                        and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                    :
+                      v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                    end .
+                  end .
+                end .
+                else do :
+                  for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                  :
+                    v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                  end .
+                end .
+                
+                if v-pl-gds-pump-status_ = {&current-status}
+                then do :
+                  create tt-rvs-line-pump-delta .
+                  buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                  assign
+                    tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                  .
+                  if tt-rvs-line-pump-delta.state-el-cnt = ?
+                  or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                  then do :
+                    tt-rvs-line-pump-delta.is-err = yes .
+                  end .
                 end .
               end. /* for each bf_rvs-line-pump */
             end .
@@ -1377,31 +1427,77 @@ procedure processTrn :
                                                    and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
                                                    and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
               :
-                find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
-                                                    and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
-                                                    and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
-                                                    and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
-                                                    and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
-                                                    and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
-                                                    and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
-                                                    no-error .
-                if not available tt-rvs-line-pump-delta
+                find last buf_c-pl-gds-pump no-lock where buf_c-pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_c-pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_c-pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                                                      and buf_c-pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_c-pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and (buf_c-pl-gds-pump.corr-date < buf_trn-doc.fact-date
+                                                        or buf_c-pl-gds-pump.corr-date = buf_trn-doc.fact-date and buf_c-pl-gds-pump.corr-time < buf_trn-doc.fact-time)
+                                                      no-error .
+                if available buf_c-pl-gds-pump
                 then do :
-                  create tt-rvs-line-pump-delta .
-                  buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
-                  assign
-                    tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
-                    tt-rvs-line-pump-delta.is-err = yes
-                  .
-                end .
-                else do :
-                  tt-rvs-line-pump-delta.find-pair = yes .
-                  if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                  find first buf2_c-pl-gds-pump no-lock where buf2_c-pl-gds-pump.obj-type = buf_c-pl-gds-pump.obj-type
+                                                          and buf2_c-pl-gds-pump.obj-code = buf_c-pl-gds-pump.obj-code
+                                                          and buf2_c-pl-gds-pump.pl-code  = buf_c-pl-gds-pump.pl-code
+                                                          and buf2_c-pl-gds-pump.gds-code = buf_c-pl-gds-pump.gds-code
+                                                          and buf2_c-pl-gds-pump.pump-code = buf_c-pl-gds-pump.pump-code
+                                                          and buf2_c-pl-gds-pump.chip-num > buf_c-pl-gds-pump.chip-num
+                                                          no-error .
+                  if available buf2_c-pl-gds-pump
                   then do :
-                    tt-rvs-line-pump-delta.is-err = yes .
+                    v-pl-gds-pump-status_ = buf2_c-pl-gds-pump.status_ .
                   end .
                   else do :
-                    tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                    for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                        and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                        and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                        and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                        and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                    :
+                      v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                    end .
+                  end .
+                end .
+                else do :
+                  for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                  :
+                    v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                  end .
+                end .
+                
+                if v-pl-gds-pump-status_ = {&current-status}
+                then do :
+                  find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                                                      and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                      and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                      and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                      and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                      and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                      and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                      no-error .
+                  if not available tt-rvs-line-pump-delta
+                  then do :
+                    create tt-rvs-line-pump-delta .
+                    buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                    assign
+                      tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                      tt-rvs-line-pump-delta.is-err = yes
+                    .
+                  end .
+                  else do :
+                    tt-rvs-line-pump-delta.find-pair = yes .
+                    if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                    then do :
+                      tt-rvs-line-pump-delta.is-err = yes .
+                    end .
+                    else do :
+                      tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                    end .
                   end .
                 end .
               end . /* for each buf_rvs-line-pump */
@@ -1516,15 +1612,61 @@ procedure processTrn :
                                                    and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
                                                    and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
               :
-                create tt-rvs-line-pump-delta .
-                buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
-                assign
-                  tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
-                .
-                if tt-rvs-line-pump-delta.state-el-cnt = ?
-                or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                find last buf_c-pl-gds-pump no-lock where buf_c-pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_c-pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_c-pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                                                      and buf_c-pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_c-pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and (buf_c-pl-gds-pump.corr-date < buf_trn-doc.fact-date
+                                                        or buf_c-pl-gds-pump.corr-date = buf_trn-doc.fact-date and buf_c-pl-gds-pump.corr-time < buf_trn-doc.fact-time)
+                                                      no-error .
+                if available buf_c-pl-gds-pump
                 then do :
-                  tt-rvs-line-pump-delta.is-err = yes .
+                  find first buf2_c-pl-gds-pump no-lock where buf2_c-pl-gds-pump.obj-type = buf_c-pl-gds-pump.obj-type
+                                                          and buf2_c-pl-gds-pump.obj-code = buf_c-pl-gds-pump.obj-code
+                                                          and buf2_c-pl-gds-pump.pl-code  = buf_c-pl-gds-pump.pl-code
+                                                          and buf2_c-pl-gds-pump.gds-code = buf_c-pl-gds-pump.gds-code
+                                                          and buf2_c-pl-gds-pump.pump-code = buf_c-pl-gds-pump.pump-code
+                                                          and buf2_c-pl-gds-pump.chip-num > buf_c-pl-gds-pump.chip-num
+                                                          no-error .
+                  if available buf2_c-pl-gds-pump
+                  then do :
+                    v-pl-gds-pump-status_ = buf2_c-pl-gds-pump.status_ .
+                  end .
+                  else do :
+                    for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                        and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                        and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                        and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                        and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                    :
+                      v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                    end .
+                  end .
+                end .
+                else do :
+                  for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                  :
+                    v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                  end .
+                end .
+                
+                if v-pl-gds-pump-status_ = {&current-status}
+                then do :
+                  create tt-rvs-line-pump-delta .
+                  buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                  assign
+                    tt-rvs-line-pump-delta.rvs-code = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                  .
+                  if tt-rvs-line-pump-delta.state-el-cnt = ?
+                  or tt-rvs-line-pump-delta.state-el-cnt <= 0
+                  then do :
+                    tt-rvs-line-pump-delta.is-err = yes .
+                  end .
                 end .
               end. /* for each bf_rvs-line-pump */
             end .
@@ -1619,31 +1761,77 @@ procedure processTrn :
                                                    and buf_rvs-line-pump.pl-code  = buf_rvs-line.pl-code
                                                    and buf_rvs-line-pump.gds-code = buf_rvs-line.gds-code
               :
-                find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
-                                                    and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
-                                                    and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
-                                                    and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
-                                                    and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
-                                                    and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
-                                                    and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
-                                                    no-error .
-                if not available tt-rvs-line-pump-delta
+                find last buf_c-pl-gds-pump no-lock where buf_c-pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_c-pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_c-pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                                                      and buf_c-pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_c-pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and (buf_c-pl-gds-pump.corr-date < buf_trn-doc.fact-date
+                                                        or buf_c-pl-gds-pump.corr-date = buf_trn-doc.fact-date and buf_c-pl-gds-pump.corr-time < buf_trn-doc.fact-time)
+                                                      no-error .
+                if available buf_c-pl-gds-pump
                 then do :
-                  create tt-rvs-line-pump-delta .
-                  buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
-                  assign
-                    tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
-                    tt-rvs-line-pump-delta.is-err = yes
-                  .
-                end .
-                else do :
-                  tt-rvs-line-pump-delta.find-pair = yes .
-                  if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                  find first buf2_c-pl-gds-pump no-lock where buf2_c-pl-gds-pump.obj-type = buf_c-pl-gds-pump.obj-type
+                                                          and buf2_c-pl-gds-pump.obj-code = buf_c-pl-gds-pump.obj-code
+                                                          and buf2_c-pl-gds-pump.pl-code  = buf_c-pl-gds-pump.pl-code
+                                                          and buf2_c-pl-gds-pump.gds-code = buf_c-pl-gds-pump.gds-code
+                                                          and buf2_c-pl-gds-pump.pump-code = buf_c-pl-gds-pump.pump-code
+                                                          and buf2_c-pl-gds-pump.chip-num > buf_c-pl-gds-pump.chip-num
+                                                          no-error .
+                  if available buf2_c-pl-gds-pump
                   then do :
-                    tt-rvs-line-pump-delta.is-err = yes .
+                    v-pl-gds-pump-status_ = buf2_c-pl-gds-pump.status_ .
                   end .
                   else do :
-                    tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                    for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                        and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                        and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                        and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                        and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                    :
+                      v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                    end .
+                  end .
+                end .
+                else do :
+                  for first buf_pl-gds-pump no-lock where buf_pl-gds-pump.obj-type = buf_rvs-line-pump.obj-type
+                                                      and buf_pl-gds-pump.obj-code = buf_rvs-line-pump.obj-code
+                                                      and buf_pl-gds-pump.gds-code = buf_rvs-line-pump.gds-code
+                                                      and buf_pl-gds-pump.pump-code = buf_rvs-line-pump.pump-code
+                                                      and buf_pl-gds-pump.pl-code  = buf_rvs-line-pump.pl-code
+                  :
+                    v-pl-gds-pump-status_ = buf_pl-gds-pump.status_ .
+                  end .
+                end .
+                
+                if v-pl-gds-pump-status_ = {&current-status}
+                then do :
+                  find first tt-rvs-line-pump-delta where tt-rvs-line-pump-delta.rvs-code    = "before-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                                                      and tt-rvs-line-pump-delta.obj-type    = buf_rvs-line-pump.obj-type
+                                                      and tt-rvs-line-pump-delta.obj-code    = buf_rvs-line-pump.obj-code
+                                                      and tt-rvs-line-pump-delta.pl-code     = buf_rvs-line-pump.pl-code
+                                                      and tt-rvs-line-pump-delta.gds-code    = buf_rvs-line-pump.gds-code
+                                                      and tt-rvs-line-pump-delta.pump-code   = buf_rvs-line-pump.pump-code
+                                                      and tt-rvs-line-pump-delta.nozzle-code = buf_rvs-line-pump.nozzle-code
+                                                      no-error .
+                  if not available tt-rvs-line-pump-delta
+                  then do :
+                    create tt-rvs-line-pump-delta .
+                    buffer-copy buf_rvs-line-pump to tt-rvs-line-pump-delta
+                    assign
+                      tt-rvs-line-pump-delta.rvs-code = "after-doc" + entry(2, buf_rvs-line-pump.rvs-code, "-")
+                      tt-rvs-line-pump-delta.is-err = yes
+                    .
+                  end .
+                  else do :
+                    tt-rvs-line-pump-delta.find-pair = yes .
+                    if tt-rvs-line-pump-delta.state-el-cnt > buf_rvs-line-pump.state-el-cnt
+                    then do :
+                      tt-rvs-line-pump-delta.is-err = yes .
+                    end .
+                    else do :
+                      tt-rvs-line-pump-delta.deltaVol = buf_rvs-line-pump.state-el-cnt - tt-rvs-line-pump-delta.state-el-cnt .
+                    end .
                   end .
                 end .
               end . /* for each buf_rvs-line-pump */
