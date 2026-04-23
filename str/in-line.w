@@ -1989,8 +1989,8 @@ do:
              ,input infoSectionsTotal:GdsCode
              ,input tt-fr-doc-line.unit-cli
              ,input tt-fr-doc-line.cli-base-rate
-             ,input pl_doc-density
-             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
              ,input pl_cli-qnty
              ,input pl_doc-qnty
              ,input pl_fact-qnty
@@ -2417,8 +2417,8 @@ do:
              ,input infoSectionsTotal:GdsCode
              ,input tt-fr-doc-line.unit-cli
              ,input tt-fr-doc-line.cli-base-rate
-             ,input pl_doc-density
-             ,input (if pl_fact-density > 0 then pl_fact-density else pl_doc-density)
+             ,input tt-fr-doc-line.doc-density
+             ,input tt-fr-doc-line.fact-density
              ,input pl_cli-qnty
              ,input pl_doc-qnty
              ,input pl_fact-qnty
@@ -2460,8 +2460,8 @@ do:
             
           assign
             pl_cli-qnty   = pl_cli-qnty + (infoSectionsTotal:InfoSectionCurr:DocDensity * infoSectionsTotal:InfoSectionCurr:DocQnty)
-            pl_doc-qnty   = pl_doc-qnty + infoSectionsTotal:InfoSectionCurr:DocQnty
-            pl_fact-qnty  = pl_fact-qnty + infoSectionsTotal:InfoSectionCurr:FactQnty
+            pl_doc-qnty   = pl_doc-qnty + (infoSectionsTotal:InfoSectionCurr:DocDensity * infoSectionsTotal:InfoSectionCurr:DocQnty / tt-fr-doc-line.doc-density)
+            pl_fact-qnty  = pl_fact-qnty + (infoSectionsTotal:InfoSectionCurr:FactDensity * infoSectionsTotal:InfoSectionCurr:FactQnty / tt-fr-doc-line.fact-density)
           .
         end . 
         pl_doc-density = pl_cli-qnty / pl_doc-qnty .
