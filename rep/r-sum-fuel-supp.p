@@ -793,7 +793,6 @@ procedure processTrn :
     end .
     
     v-is-sug-gds = no .
-    is-com-tanks = no .
     if is-sug(buf_goods.gds-code)
     then do :
       v-is-sug-gds = yes .
@@ -865,6 +864,7 @@ procedure processTrn :
       
       v-InfoSection = v-InfoSectionsTotal:GetInfoSectionProp(iNum) .
       v-SectionName = if v-is-sug-gds then "1" else v-InfoSection:SectionName .
+      is-com-tanks  = no .
       
       if v-is-sug-gds
       then do :
@@ -1540,8 +1540,12 @@ procedure processTrn :
           if available buf_rvs-doc
           then do :
             for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                                            and buf_rvs-line.gds-code = buf_goods.gds-code
+                                            and buf_rvs-line.gds-code = buf_goods.gds-code,
+              first buf_place no-lock where buf_place.obj-type = buf_rvs-line.obj-type
+                                        and buf_place.obj-code = buf_rvs-line.obj-code
+                                        and buf_place.pl-code  = buf_rvs-line.pl-code
             :
+              if not can-do(v-place-num, buf_place.loc1) then next .
               assign
                 tt-rep.col29  = tt-rep.col29 + buf_rvs-line.state-measure-qnty
                 tt-rep.col30  = tt-rep.col30 + buf_rvs-line.state-measure-cli-qnty
@@ -1689,8 +1693,12 @@ procedure processTrn :
           if available buf_rvs-doc
           then do :
             for each buf_rvs-line no-lock where buf_rvs-line.rvs-code = buf_rvs-doc.rvs-code
-                                            and buf_rvs-line.gds-code = buf_goods.gds-code
+                                            and buf_rvs-line.gds-code = buf_goods.gds-code,
+              first buf_place no-lock where buf_place.obj-type = buf_rvs-line.obj-type
+                                        and buf_place.obj-code = buf_rvs-line.obj-code
+                                        and buf_place.pl-code  = buf_rvs-line.pl-code
             :
+              if not can-do(v-place-num, buf_place.loc1) then next .
               assign
                 tt-rep.col36  = tt-rep.col36 + buf_rvs-line.state-measure-qnty
                 tt-rep.col37  = tt-rep.col37 + buf_rvs-line.state-measure-cli-qnty
