@@ -391,7 +391,6 @@ class ibs.th.bge.is_PM.is_PM:
     for each buf_place  no-lock
       where buf_place.obj-type = obj-type
         and buf_place.obj-code = obj-code
-        and buf_place.status_  = ""
     on error undo, return error return-value
     :
       
@@ -1217,38 +1216,6 @@ class ibs.th.bge.is_PM.is_PM:
           next end_rvs-doc_ .
         end .
         
-/*        doc-line_ :                                                                                                                                                                */
-/*        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type                                                                                                      */
-/*                                        and buf_doc-line.obj-code  = obj-code                                                                                                      */
-/*                                        and buf_doc-line.artic     = buf_goods.artic                                                                                               */
-/*                                        and buf_doc-line.prod-type = buf_goods.prod-type                                                                                           */
-/*                                        and buf_doc-line.prod-code = buf_goods.prod-code                                                                                           */
-/*                                        and buf_doc-line.status_   = {&fact}                                                                                                       */
-/*                                        ,                                                                                                                                          */
-/*        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code                                                                                               */
-/*                                    and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})*/
-/*                                    and (( ((buf_trn-doc.fact-date > end_rvs-doc.fact-date)                                                                                        */
-/*                                      or (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time >= end_rvs-doc.fact-time))                                       */
-/*                                    and ((buf_trn-doc.fact-date < date-end)                                                                                                        */
-/*                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end)) )                                                               */
-/*                                    or (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num = end_rvs-doc.shift-num))                                        */
-/*                                    by buf_trn-doc.fact-order                                                                                                                      */
-/*                                    :                                                                                                                                              */
-/*          if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}                                                                                                                              */
-/*          then                                                                                                                                                                     */
-/*          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type                                                                               */
-/*                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code                                                                               */
-/*                                               and buf_clients-attr.attr-code = {&attr-shftrep2}                                                                                   */
-/*                                               :                                                                                                                                   */
-/*            /* ТехПролив */                                                                                                                                                        */
-/*            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next doc-line_ .                                                                                         */
-/*          end .                                                                                                                                                                    */
-/*          if integer(entry(1, end_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))                                                                           */
-/*          then do :                                                                                                                                                                */
-/*            next end_rvs-doc_ .                                                                                                                                                    */
-/*          end .                                                                                                                                                                    */
-/*        end .                                                                                                                                                                      */
-        
         tt-place.rvs-doc-code = end_rvs-doc.rvs-code .                               
         
         tt-place.end-rvs-fact-qnty = end_rvs-line.state-measure-cli-qnty + (end_rvs-line.state-add-qnty * end_rvs-line.state-density) .
@@ -1475,7 +1442,6 @@ class ibs.th.bge.is_PM.is_PM:
                                      and end_rvs-doc.obj-code = obj-code
                                      and end_rvs-doc.rvs-type = {&rvs-control}
                                      and end_rvs-doc.status_  = {&fact}
-/*                                     and ((end_rvs-doc.fact-date < tt-place.income-date)*/
                                      and ((integer(entry(1, end_rvs-doc.rvs-code, "-")) < tt-place.rvs-doc-num)
                                        or (end_rvs-doc.fact-date = tt-place.income-date and end_rvs-doc.fact-time <= tt-place.income-time))
                                      by end_rvs-doc.fact-order
@@ -1509,7 +1475,6 @@ class ibs.th.bge.is_PM.is_PM:
           chk-gds_ :
           for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
-/*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
             if buf_chk-doc.out-code = ?
             then do :
@@ -1897,21 +1862,11 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})
-/*                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or                                                  */
-/*                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-start) or
                                          (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
-                                    :
-/*          { str/tdat-val.i            */
-/*              buf_trn-doc.doc-code    */
-/*              {&trdcattr-othermoves}  */
-/*              vIsOtherMoves           */
-/*              vType                 } */
-/*          if vIsOtherMoves > ""       */
-/*          and logical(vIsOtherMoves)  */
-/*          then next income-doc-line_ .*/
+        :
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -1940,21 +1895,11 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
-/*                                    and ((buf_trn-doc.fact-date > start_rvs-doc.fact-date) or                                                  */
-/*                                         (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time > start_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-start) or
                                          (buf_trn-doc.fact-date = date-start and buf_trn-doc.fact-time <= time-start))
                                     and ((buf_trn-doc.shift-date > start_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num > start_rvs-doc.shift-num))
-                                    :
-/*          { str/tdat-val.i             */
-/*              buf_trn-doc.doc-code     */
-/*              {&trdcattr-othermoves}   */
-/*              vIsOtherMoves            */
-/*              vType                 }  */
-/*          if vIsOtherMoves > ""        */
-/*          and logical(vIsOtherMoves)   */
-/*          then next expense-doc-line_ .*/
+        :
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2002,41 +1947,11 @@ class ibs.th.bge.is_PM.is_PM:
                                      and start_rvs-line.pl-code   = tt-place.pl-code
                                      and start_rvs-line.gds-code  = tt-place.gds-code
                                      by start_rvs-doc.fact-order desc
-                                     :
+      :
         if start_rvs-doc.fact-date < date-start - 2
         then do :
           leave start_rvs-doc_ .
         end .
-        
-/*        doc-line_ :                                                                                                                             */
-/*        for each buf_doc-line no-lock where buf_doc-line.obj-type  = obj-type                                                                   */
-/*                                        and buf_doc-line.obj-code  = obj-code                                                                   */
-/*                                        and buf_doc-line.artic     = buf_goods.artic                                                            */
-/*                                        and buf_doc-line.prod-type = buf_goods.prod-type                                                        */
-/*                                        and buf_doc-line.prod-code = buf_goods.prod-code                                                        */
-/*                                        and buf_doc-line.status_   = {&fact}                                                                    */
-/*                                        ,                                                                                                       */
-/*        first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code                                                            */
-/*                                    and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh}                                                           */
-/*                                    and (( ((buf_trn-doc.fact-date > start_rvs-doc.fact-date)                                                   */
-/*                                      or (buf_trn-doc.fact-date = start_rvs-doc.fact-date and buf_trn-doc.fact-time >= start_rvs-doc.fact-time))*/
-/*                                    and ((buf_trn-doc.fact-date < date-end)                                                                     */
-/*                                      or (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end)) )                            */
-/*                                    or (buf_trn-doc.shift-date = start_rvs-doc.shift-date and buf_trn-doc.shift-num = start_rvs-doc.shift-num) )*/
-/*                                    by buf_trn-doc.fact-order                                                                                   */
-/*                                    :                                                                                                           */
-/*          for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type                                            */
-/*                                               and buf_clients-attr.obj-code  = buf_trn-doc.cli-code                                            */
-/*                                               and buf_clients-attr.attr-code = {&attr-shftrep2}                                                */
-/*                                               :                                                                                                */
-/*            /* ТехПролив */                                                                                                                     */
-/*            if lookup(buf_clients-attr.attr-value, 'true,yes':u) > 0 then next doc-line_ .                                                      */
-/*          end .                                                                                                                                 */
-/*          if integer(entry(1, start_rvs-doc.rvs-code, "-")) > integer(entry(1, buf_trn-doc.doc-code, "-"))                                      */
-/*          then do :                                                                                                                             */
-/*            next start_rvs-doc_ .                                                                                                               */
-/*          end .                                                                                                                                 */
-/*        end .                                                                                                                                   */
         
         tt-place.rvs-doc-code = start_rvs-doc.rvs-code . 
         rvs-time-diff = time-start - start_rvs-doc.fact-time .
@@ -2075,7 +1990,6 @@ class ibs.th.bge.is_PM.is_PM:
             chk-gds_ :
             for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                            and buf_chk-gds.b-code   = buf_bar-code.b-code
-/*                                           and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                            :
               if buf_chk-doc.out-code = ?
               then do :
@@ -2797,7 +2711,6 @@ class ibs.th.bge.is_PM.is_PM:
           chk-gds_ :
           for each buf_chk-gds no-lock where buf_chk-gds.doc-code = buf_chk-doc.doc-code
                                          and buf_chk-gds.b-code   = buf_bar-code.b-code
-/*                                         and buf_chk-gds.pl-code  = tt-place.pl-code*/
                                          :
             if buf_chk-doc.out-code = ?
             then do :
@@ -2897,21 +2810,11 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Inv})
-/*                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or                                                */
-/*                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
-                                    :
-/*          { str/tdat-val.i            */
-/*              buf_trn-doc.doc-code    */
-/*              {&trdcattr-othermoves}  */
-/*              vIsOtherMoves           */
-/*              vType                 } */
-/*          if vIsOtherMoves > ""       */
-/*          and logical(vIsOtherMoves)  */
-/*          then next income-doc-line_ .*/
+        :
           if buf_trn-doc.ext-doc-type <> {&TDEDT_Inv}
           then                            
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
@@ -2940,21 +2843,11 @@ class ibs.th.bge.is_PM.is_PM:
                                         ,
         first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_doc-line.doc-code
                                     and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Vnesh_VP} or buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh})
-/*                                    and ((buf_trn-doc.fact-date > end_rvs-doc.fact-date) or                                                */
-/*                                         (buf_trn-doc.fact-date = end_rvs-doc.fact-date and buf_trn-doc.fact-time > end_rvs-doc.fact-time))*/
                                     and ((buf_trn-doc.fact-date < date-end) or
                                          (buf_trn-doc.fact-date = date-end and buf_trn-doc.fact-time <= time-end))
                                     and ((buf_trn-doc.shift-date > end_rvs-doc.shift-date) or
                                          (buf_trn-doc.shift-date = end_rvs-doc.shift-date and buf_trn-doc.shift-num > end_rvs-doc.shift-num))
-                                    :
-/*          { str/tdat-val.i             */
-/*              buf_trn-doc.doc-code     */
-/*              {&trdcattr-othermoves}   */
-/*              vIsOtherMoves            */
-/*              vType                 }  */
-/*          if vIsOtherMoves > ""        */
-/*          and logical(vIsOtherMoves)   */
-/*          then next expense-doc-line_ .*/
+        :
           for first buf_clients-attr no-lock where buf_clients-attr.obj-type  = buf_trn-doc.cli-type
                                                and buf_clients-attr.obj-code  = buf_trn-doc.cli-code
                                                and buf_clients-attr.attr-code = {&attr-shftrep2}
@@ -2997,12 +2890,6 @@ class ibs.th.bge.is_PM.is_PM:
     
     for each tt-result where tt-result.change-place :
       if tt-result.wght-doc-end = 0 then tt-result.wght-fact-end = 0 .
-
-/*      if tt-result.wght-doc-start = 0                     */
-/*      and tt-result.wght-fact-start = 0                   */
-/*      then do :                                           */
-/*        tt-result.wght-fact-end = tt-result.wght-doc-end .*/
-/*      end .                                               */
     end .
     
     /* START Расчет расхода на прочие нужды */
