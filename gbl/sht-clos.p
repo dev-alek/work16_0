@@ -54,11 +54,18 @@ define variable v-shift-date            as date         no-undo .
 define variable v-shift-num             as integer      no-undo .
 define variable v-obj-date              as date         no-undo .
 define variable ii                      as integer      no-undo .
+define variable place-list              as character no-undo .
 
 define buffer buf_pl-gds    for ub.pl-gds .
 define buffer buf_shift-obj for ub.shift-obj .
 define buffer buf_place-attr for ub.place-attr .
 define buffer buf_place-imp for ub.place-imp .
+define buffer cur_rvs-doc for ub.rvs-doc .
+define buffer cur_rvs-line for ub.rvs-line .
+define buffer prev_shift-obj for ub.shift-obj .
+define buffer prev_rvs-doc for ub.rvs-doc .
+define buffer prev_rvs-line for ub.rvs-line .
+define buffer buf_place for ub.place .
 
 { gbl/getcntxt.i get }
 /* проверяем права на работу со сменами */
@@ -434,6 +441,64 @@ if error-status:error then do:
   end.
 /*  undo, return error v-err-msg .*/
 end.
+
+find first cur_rvs-doc no-lock
+  where cur_rvs-doc.obj-type   = p-curr-obj-type
+    and cur_rvs-doc.obj-code   = p-curr-obj-code
+    and cur_rvs-doc.shift-date = v-shift-date
+    and cur_rvs-doc.shift-num  = v-shift-num
+    and cur_rvs-doc.status_    = {&fact}
+    and cur_rvs-doc.rvs-type   = {&rvs-shift}
+no-error.
+
+find last prev_shift-obj no-lock
+  where prev_shift-obj.obj-type = p-curr-obj-type
+    and prev_shift-obj.obj-code = p-curr-obj-code
+    and prev_shift-obj.status_  = {&sht-closed}
+    and ( prev_shift-obj.shift-date < v-shift-date
+          or prev_shift-obj.shift-date = v-shift-date
+            and prev_shift-obj.shift-num  < v-shift-num
+        )
+use-index stts
+no-error.
+
+if available prev_shift-obj
+then do :
+  find first prev_rvs-doc no-lock
+    where prev_rvs-doc.obj-type   = prev_shift-obj.obj-type
+      and prev_rvs-doc.obj-code   = prev_shift-obj.obj-code
+      and prev_rvs-doc.shift-date = prev_shift-obj.shift-date
+      and prev_rvs-doc.shift-num  = prev_shift-obj.shift-num
+      and prev_rvs-doc.status_    = {&fact}
+      and prev_rvs-doc.rvs-type   = {&rvs-shift}
+  no-error.
+end .
+
+if available cur_rvs-doc
+and available prev_rvs-doc
+then do :
+  for each cur_rvs-line no-lock where cur_rvs-line.rvs-code = cur_rvs-doc.rvs-code
+                                  and cur_rvs-line.obj-type = cur_rvs-doc.obj-type
+                                  and cur_rvs-line.obj-code = cur_rvs-doc.obj-code,
+  first buf_place no-lock where buf_place.pl-code = cur_rvs-line.pl-code
+  :
+    find first prev_rvs-line no-lock where prev_rvs-line.rvs-code = prev_rvs-doc.rvs-code
+                                       and prev_rvs-line.obj-type = prev_rvs-doc.obj-type
+                                       and prev_rvs-line.obj-code = prev_rvs-doc.obj-code
+                                       and prev_rvs-line.pl-code  = cur_rvs-line.pl-code
+    no-error .
+    if not available prev_rvs-line
+    or (available prev_rvs-line and prev_rvs-line.gds-code <> cur_rvs-line.gds-code)
+    then do :
+      place-list = place-list + string(recid(buf_place)) + "," .
+    end .
+  end .
+  place-list = trim(place-list, ",") .
+  if place-list > ""
+  then do :
+    run utl/init-shift-period.p (input place-list) .
+  end .
+end .
 
 /* Новые параметры резервуаров и ГТ, импортированные из 1С */
 for each buf_place-attr exclusive-lock where buf_place-attr.obj-type = p-curr-obj-type

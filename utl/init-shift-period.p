@@ -44,6 +44,7 @@ then do :
   for each buf_place no-lock :
     find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
     if not available buf_pl-gds then next .
+    
     &scop proc-name gds-attr-value
     {&run_proc_attr-lib}
       (input  buf_pl-gds.gds-code
@@ -88,6 +89,17 @@ else do :
     for first buf_place no-lock where recid(buf_place) = integer(entry(ii, p-rid-list)) :
       find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
       if not available buf_pl-gds then next .
+      
+      &scop proc-name gds-attr-value
+      {&run_proc_attr-lib}
+        (input  buf_pl-gds.gds-code
+        ,input  {&attr-fuel-type}
+        ,output v-value
+        ,output par-type) no-error.
+      if v-value = "lgas"
+      or v-value = "metan"
+      or v-value = "propan"
+      then next .
       
       run placelib_get-attr  ( input {&place-com-tanks}
                               ,input buf_place.obj-code
