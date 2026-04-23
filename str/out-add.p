@@ -65,6 +65,7 @@ define buffer bf-parts   for ub.parts .
 define buffer bf_doc-pl  for ub.doc-pl .
 define buffer bf_parts   for ub.parts.
 define buffer bf_marking-lines for ub.marking-lines .
+define buffer in_parts   for ub.parts.
 
 define variable part-list                                 as   character initial ""       no-undo. /* список бар-кодов партий для привязки места       */
 define variable add-sens                                  as   logical                    no-undo. /* активна ли кнопка добавить в документе : yes / no - вызов из документа*/
@@ -640,13 +641,27 @@ on error undo, return error return-value
           p-doc-line.cli-base-rate  = p-goods.cli-base-rate
           parline-rec                = recid(p-doc-line)
         .
-      { str/is-petrl.i
-        p-doc-line.artic
-        p-doc-line.prod-type
-        p-doc-line.prod-code
-        is-petrol
-        is-pieces
-      }
+        if v-is-return
+        and t-doc.reason-code = 25
+        and varpart-rec > 0
+        then do :
+          find first in_parts no-lock where recid(in_parts) = varpart-rec no-error .
+          if available in_parts
+          then do :
+            assign
+              p-doc-line.VAT-pc = in_parts.VAT-pc
+              p-doc-line.SLT-pc = in_parts.SLT-pc
+            .
+          end .
+        end .
+        
+        { str/is-petrl.i
+          p-doc-line.artic
+          p-doc-line.prod-type
+          p-doc-line.prod-code
+          is-petrol
+          is-pieces
+        }
 
       end.
       assign

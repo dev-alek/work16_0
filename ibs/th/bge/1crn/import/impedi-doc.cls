@@ -480,7 +480,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
      then do:
         v-msg = "".
         if return-value matches "*ошибка*"
-        then v-msg = substitute ('Документ № &1 от &2. Сформирована ПН: &3. &4', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, return-value).
+        or return-value begins "need-user-action"
+        then v-msg = substitute ('Документ № &1 от &2. Сформирована ПН: &3. &4', utd.DocumentNumber, string (utd.DocumentDate) , utd.doc-code, trim(return-value, "need-user-action")).
         else do:
            if     utd.sts ne objSrv:Env:Utd:Sts:TH:Confirmed           :KeyIntDB
            then    v-msg = substitute ('Получен УПД. Документ № &1 от &2. Сформирована ПН: &3. &5 &6 &4', 

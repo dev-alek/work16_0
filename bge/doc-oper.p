@@ -81,6 +81,7 @@ define variable vss-description as character no-undo init "Экспорт документов по
 { gbl/thbjattr.i }
 { cmp/str-glbl.i }
 { ref/extclass.i }
+{ adm/auto-def.i    }
 
 &scoped-define version-string "15.0 " + replace( vss-revision + vss-date, "$", " " )
 
@@ -3238,7 +3239,14 @@ on error undo, return error
             , input yes /*p-services*/
         )no-error.
                 if ERROR-STATUS:error then do:
-                    run wp-XMLWriteLog(  sLogFile, 1, error-status:get-message(1) + string( p-doc-code ) ).
+                    run wp-XMLWriteLog(  
+                          sLogFile, 
+                          1, 
+                          substitute("&1 (Документ &2)", if return-value <> "" then return-value else error-status:get-message(1), p-doc-code) 
+                    ).
+                    run write-to-log( vss-workfile + {&space-char} +
+                                    substitute("&1 (Документ &2)", if return-value <> "" then return-value else error-status:get-message(1), p-doc-code) 
+                                    ) .
                 end.    
 /*        if p-pay-code = yes*/
 /*        then do:*/

@@ -6641,17 +6641,65 @@ procedure lib-rvs_anls-pmp : /* analysis-pump */
                tt-param-pump.strfrfile = 'VOL' .
     assign
       tt-pump-nozzle-file.meas-el-cnt = decimal( tt-param-pump.meaning )
-    .
+    no-error .
+    if error-status:error
+    then do :
+      find first tt-pump-nozzle where
+               tt-pump-nozzle.obj-type    = tt-pump-nozzle-file.obj-type    and
+               tt-pump-nozzle.obj-code    = tt-pump-nozzle-file.obj-code    and
+               tt-pump-nozzle.pump-code   = tt-pump-nozzle-file.pump-code   and
+               tt-pump-nozzle.nozzle-code = tt-pump-nozzle-file.nozzle-code no-error .
+      if not available tt-pump-nozzle
+      then do:
+        delete tt-pump-nozzle-file .
+        next main-cycle .
+      end .
+      else do :
+        return error return-value .
+      end .
+    end .
     find first tt-param-pump where
                tt-param-pump.strfrfile = 'VAL' .
     assign
       tt-pump-nozzle-file.meas-am-cnt = decimal( tt-param-pump.meaning )
-    .
+    no-error .
+    if error-status:error
+    then do :
+      find first tt-pump-nozzle where
+               tt-pump-nozzle.obj-type    = tt-pump-nozzle-file.obj-type    and
+               tt-pump-nozzle.obj-code    = tt-pump-nozzle-file.obj-code    and
+               tt-pump-nozzle.pump-code   = tt-pump-nozzle-file.pump-code   and
+               tt-pump-nozzle.nozzle-code = tt-pump-nozzle-file.nozzle-code no-error .
+      if not available tt-pump-nozzle
+      then do:
+        delete tt-pump-nozzle-file .
+        next main-cycle .
+      end .
+      else do :
+        return error return-value .
+      end .
+    end .
     find first tt-param-pump where
                tt-param-pump.strfrfile = 'CNT' .
     assign
       tt-pump-nozzle-file.meas-cf-cnt = decimal( tt-param-pump.meaning )
-    .
+    no-error .
+    if error-status:error
+    then do :
+      find first tt-pump-nozzle where
+               tt-pump-nozzle.obj-type    = tt-pump-nozzle-file.obj-type    and
+               tt-pump-nozzle.obj-code    = tt-pump-nozzle-file.obj-code    and
+               tt-pump-nozzle.pump-code   = tt-pump-nozzle-file.pump-code   and
+               tt-pump-nozzle.nozzle-code = tt-pump-nozzle-file.nozzle-code no-error .
+      if not available tt-pump-nozzle
+      then do:
+        delete tt-pump-nozzle-file .
+        next main-cycle .
+      end .
+      else do :
+        return error return-value .
+      end .
+    end .
   end. /* конец чтения из файла */
  
 

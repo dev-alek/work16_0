@@ -3401,6 +3401,12 @@ if avail buf_bar-code then do:
               and accum-pay = 0
               )
           )
+        and not 
+          (accum-pay < 0 
+           and buf_chk-doc.chk-type = int({&rcpt-return})
+           and round(buf_chk-doc.netto,8) = 0
+           and {&prefix}is-100-discnt
+          )  
         then do:
           assign
           for-chk-type = for-chk-type + {&summa-err} + {&comma-char}

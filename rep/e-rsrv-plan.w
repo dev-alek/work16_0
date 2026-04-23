@@ -833,6 +833,10 @@ ON LEAVE OF Date-Start IN FRAME Dialog-Frame /* с */
 ON CHOOSE OF btn_ok IN FRAME Dialog-Frame
     DO:
         define buffer buf_clients for ub.clients .
+            define buffer buf_trn-doc         for ub.trn-doc . 
+    define buffer buf_doc-line        for ub.doc-line .
+    define buffer buf_goods           for ub.goods .
+    define buffer buf_contract-specif for ub.contract-specif .
         if text-cliname = "" then 
         do:
             message "Выберите контрагента!"
@@ -884,7 +888,67 @@ ON CHOOSE OF btn_ok IN FRAME Dialog-Frame
             RADIO-SET-1
             rs_period
             .
-
+        if not p-ok and (SelectGood = 0 or SelectGood = 1) then 
+        do:
+           block-trn-doc: 
+           for each buf_trn-doc no-lock where buf_trn-doc.obj-code = v-cntxt-obj-code and
+                buf_trn-doc.obj-type = v-cntxt-obj-type and
+                buf_trn-doc.cli-code = buf_clients.obj-code and
+                buf_trn-doc.cli-type = buf_clients.obj-type and
+                buf_trn-doc.ext-doc-type = {&tdedt_pri_vnesh} and
+                buf_trn-doc.status_ = {&fact}:
+                   if buf_trn-doc.contract-code <> 0 then do:
+                      find first ub.contract no-lock where ub.contract.host-code = buf_trn-doc.host-code and
+                            ub.contract.cli-code = buf_trn-doc.cli-code and
+                            ub.contract.cli-type = buf_trn-doc.cli-type and
+                            ub.contract.status_ = {&current-contr} and 
+                            ub.contract.contract-code = buf_trn-doc.contract-code no-error.
+                            if available ub.contract and
+                            (ub.contract.contract-date-end > today or ub.contract.contract-date-end = ?) and
+                                ub.contract.contract-date-beg <= today then 
+                            do:
+                            end.
+                            else
+                               next block-trn-doc.
+                   end.
+                   else release ub.contract .
+                for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code,
+                    first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
+                    buf_goods.prod-code = buf_doc-line.prod-code and
+                    buf_goods.prod-type = buf_doc-line.prod-type:
+                    if available ub.contract then 
+                    do:
+                            for first buf_contract-specif no-lock where
+                            buf_contract-specif.host-code = ub.contract.host-code and
+                            buf_contract-specif.contract-num = ub.contract.contract-code and
+                            buf_contract-specif.gds-code = buf_goods.gds-code:
+                                find first gds-list where gds-list.gds-code = buf_contract-specif.gds-code and
+                                    gds-list.contract = ub.contract.contract-prn-code and
+                                    gds-list.contract-code = buf_contract-specif.contract-num no-error .
+                                if not available (gds-list) then
+                                do:
+                                    create gds-list .
+                                    buffer-copy buf_goods to gds-list
+                                        assign
+                                        gds-list.contract-code = ub.contract.contract-code
+                                        gds-list.contract      = ub.contract.contract-prn-code
+                                        .
+                                end.
+                          
+                        end.
+                    end.
+                    else 
+                    do:
+                        find first gds-list where gds-list.gds-code = buf_goods.gds-code no-error .
+                        if not available (gds-list) then
+                        do:
+                            create gds-list .
+                            buffer-copy buf_goods to gds-list .
+                        end.
+                    end.
+                end.
+            end.
+        end .
         if p-ok and customer-name = "БЕЗ ДОГОВОРА" then 
         do:
             message "Внимание! Формирование заказа невозможно, выберите договор(-ы)"
@@ -1113,12 +1177,8 @@ ON VALUE-CHANGED OF rs_period IN FRAME Dialog-Frame
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL SelectGood Dialog-Frame
 ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
     DO:
-        /*      define buffer buf_trn-doc         for ub.trn-doc .*/
         define buffer buf_clients    for ub.clients .
-        /*      define buffer buf_doc-line        for ub.doc-line .       */
-        /*      define buffer buf_goods           for ub.goods .          */
         define buffer buf_goods-attr for ub.gds-obj-attr .
-        /*      define buffer buf_contract-specif for ub.contract-specif .*/
         define buffer bf_contract    for ub.contract .
         define buffer cli-post       for ub.clients .
         define buffer buf_contract   for ub.contract .
@@ -1179,21 +1239,6 @@ ON VALUE-CHANGED OF SelectGood IN FRAME Dialog-Frame
                             hide b-chooseContract b-chooseGoods b-contract in frame {&frame-name} .
                             return no-apply .
                         end.                        
-/*                        if list-Dogovor = "" and listDogovor = "" then                             */
-/*                        do:                                                                        */
-/*                            SelectGood = 1 .                                                       */
-/*                            if p-ok then customer-name = {&ALL_DOG_EDI} .                          */
-/*                            else customer-name = {&ALL_DOG} .                                      */
-/*                            display SelectGood with frame {&frame-name} .                          */
-/*                            hide b-chooseContract b-chooseGoods b-contract in frame {&frame-name} .*/
-/*                            return no-apply .                                                      */
-/*                        end.                                                                       */
-/*                        if listDogovor = "" and list-dogovor <> "" then do:                        */
-/*                            SelectGood = 2 .                                                       */
-/*                            display SelectGood with frame {&frame-name} .                          */
-/*                            hide b-chooseContract b-chooseGoods in frame {&frame-name} .           */
-/*                            return no-apply .                                                      */
-/*                        end.                                                                       */
                         APPLY "choose" TO b-chooseGoods .
                         find first gds-list no-error .
                         if not available (gds-list) then 
@@ -1673,49 +1718,6 @@ PROCEDURE getGoods :
             do:
                 if not p-ok then 
                 do:
-                    for each buf_trn-doc no-lock where buf_trn-doc.obj-code = v-cntxt-obj-code and
-                        buf_trn-doc.obj-type = v-cntxt-obj-type and
-                        buf_trn-doc.cli-code = p-obj-code and
-                        buf_trn-doc.cli-type = p-obj-type and
-                        buf_trn-doc.ext-doc-type = {&tdedt_pri_vnesh} and
-                        buf_trn-doc.status_ = {&fact}:
-                        for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code and
-                            buf_doc-line.obj-code = buf_trn-doc.obj-code and
-                            buf_doc-line.obj-type = buf_trn-doc.obj-type,
-                            first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
-                            buf_goods.prod-code = buf_doc-line.prod-code and
-                            buf_goods.prod-type = buf_doc-line.prod-type:
-
-                            for each ub.contract no-lock where ub.contract.cli-code = p-obj-code and
-                                ub.contract.cli-type = p-obj-type and
-                                (ub.contract.contract-date-end > today or ub.contract.contract-date-end = ?) and
-                                ub.contract.contract-date-beg <= today and
-                                ub.contract.status_ = {&current-contr}:
-
-                                for each buf_contract-specif no-lock where
-                                    buf_contract-specif.contract-num = ub.contract.contract-code and
-                                    buf_contract-specif.gds-code = buf_goods.gds-code:
-                                    find first gds-list where gds-list.gds-code = buf_goods.gds-code and
-                                        gds-list.contract = ub.contract.contract-prn-code no-error .
-                                    if not available (gds-list) then
-                                    do:
-                                        create gds-list .
-                                        buffer-copy buf_goods to gds-list assign
-                                            gds-list.contract-code = ub.contract.contract-code
-                                            gds-list.contract      = ub.contract.contract-prn-code
-                                            .
-                                    end.
-                                end.
-                            end.
-
-                            find first gds-list where gds-list.gds-code = buf_goods.gds-code no-error .
-                            if not available (gds-list) then
-                            do:
-                                create gds-list .
-                                buffer-copy buf_goods to gds-list .
-                            end.
-                        end.
-                    end.
                     if list-dogovor <> "" then
                     do:
                         list-dogovor = "".

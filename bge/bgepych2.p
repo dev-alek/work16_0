@@ -81,8 +81,9 @@ on error undo, return error
                       ,input ? /*p-shift-num-start*/
                       ,input ? /*p-shift-num-end*/
                       ,input buf_inkas.inkas-code /*p-inkas-code*/
-                      ).
-
+                      ) no-error.
+  if error-status:error then
+    return error return-value.
  _chk-doc:
  FOR EACH ub.chk-doc No-LOCK WHERE
           ub.chk-doc.obj-type = buf_inkas.obj-type AND

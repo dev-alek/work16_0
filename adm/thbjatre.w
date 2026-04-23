@@ -70,6 +70,11 @@ DEFINE VARIABLE v-value AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-2value AS CHARACTER NO-UNDO.
 define variable add-region as character no-undo .
 
+define temp-table ttLoad 
+  field fName as character label "Параметр" format "X(50)"
+  field fValue as character label "Значение" format "X(420)"
+.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -135,7 +140,7 @@ X_thbj-attr_v
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit B-exp B-Help I-tooltip BR-section ~
-b-copy B-add B-chg B-del B-lkp B-1 b-hist1 br-tree BR-values BR-2values 
+b-copy b-load B-add B-chg B-del B-lkp B-1 b-hist1 br-tree BR-values BR-2values 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -194,6 +199,14 @@ DEFINE BUTTON B-del
 DEFINE BUTTON B-exp 
      LABEL "Экспорт в формате пакета СПН" 
      SIZE 40 BY 1.
+
+DEFINE BUTTON b-load 
+     IMAGE-UP FILE "cmp/b-print.bmp":U
+     IMAGE-DOWN FILE "cmp/b-print.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/b-print.bmp":U  NO-CONVERT-3D-COLORS
+     LABEL "Выгрузить"
+     SIZE 3 BY 1 TOOLTIP "Выгрузить значения параметров в Excel".
+
 
 DEFINE BUTTON B-Help 
      LABEL "Помо&щь" 
@@ -287,6 +300,7 @@ DEFINE FRAME Dialog-Frame
      B-chg AT ROW 12.75 COL 21 WIDGET-ID 2
      B-del AT ROW 12.75 COL 31 WIDGET-ID 4
      B-lkp AT ROW 12.75 COL 41 WIDGET-ID 6
+     b-load AT ROW 12.75 COL 108 WIDGET-ID 102
      B-1 AT ROW 12.75 COL 114 WIDGET-ID 94
      b-hist1 AT ROW 12.75 COL 120 WIDGET-ID 100
      br-tree AT ROW 14 COL 1 WIDGET-ID 300
@@ -341,7 +355,7 @@ DEFINE FRAME Dialog-Frame
 /* BROWSE-TAB BR-values br-tree Dialog-Frame */
 /* BROWSE-TAB BR-2values BR-values Dialog-Frame */
 ASSIGN 
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
+       FRAME Dialog-Frame:SCROLLABLE       = TRUE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 ASSIGN 
@@ -599,6 +613,75 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME b-load
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-load Dialog-Frame
+ON CHOOSE OF b-load IN FRAME Dialog-Frame /* Выгрузка в Excel */
+DO:
+  define variable vFile      as character  no-undo.
+  define variable vCurRow    as integer no-undo.
+  define variable vSelectRow as logical no-undo.
+  define variable exlim      as class ibs.th.bge.execlimpexp no-undo.
+  define variable vExcelApp  as component-handle no-undo.
+  
+  empty temp-table ttLoad.
+
+  vCurRow = br-values:focused-row.
+  
+  if vCurRow = ? then
+  do:
+    message "Нет параметров для выгрузки." view-as alert-box.
+    return no-apply.
+  end.
+  vSelectRow = br-values:select-row(1).
+  do while vSelectRow:
+    if br-values:get-browse-column(1):screen-value <> "" then 
+    do:
+      create ttLoad.
+      assign
+        ttLoad.fName  = br-values:get-browse-column(1):screen-value
+        ttLoad.fValue = br-values:get-browse-column(2):screen-value
+      .
+    end.
+    vSelectRow = br-values:select-next-row().
+  end.
+   
+  br-values:select-row(vCurRow). 
+
+  vFile = substitute(
+    "sec_&1_&2&3.txt",
+    section_thbj-attr.upper-prop-code,
+    X_thbj-attr.obj-type,
+    X_thbj-attr.obj-code
+  ).
+  output to value(vFile).
+  output close.
+  vFile = search(vFile).
+  
+  exlim = new ibs.th.bge.execlimpexp ().
+  exlim:expToExcel(temp-table ttLoad:handle, vFile).
+  
+  os-delete vFile value(vFile).
+  os-delete vFile value(search("last.dir")).
+
+  vFile = replace(vFile, ".txt", ".xlsx").
+  if search(vFile) <> ? then do:
+    create "Excel.Application":U vExcelApp no-error.
+    if error-status :error then do:
+      message "Не удалось открыть выгруженный файл" vFile "." view-as alert-box.
+    end.    
+    else do:
+      vExcelApp:Workbooks:Open(vFile).
+      vExcelApp:Visible = TRUE.
+      release object vExcelApp.
+    end.  
+  end.  
+  else
+    message "Неизвестная ошибка при выгрузке." view-as alert-box.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME B-lkp
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-lkp Dialog-Frame
@@ -672,20 +755,28 @@ DO:
   AND X_thbj-attr_v.prop-value-type = {&abl-datatype-void} THEN DO:
    ASSIGN
    br-values:HEIGHT = 6.87.
+   BR-values:SCROLL-TO-CURRENT-ROW().
+   br-values:REFRESH().
    RUN OpenBr2Values IN THIS-PROCEDURE (
                                         INPUT X_thbj-attr_v.prop-code
                                          ,INPUT X_thbj-attr_v.obj-type
                                          ,INPUT X_thbj-attr_v.obj-code) NO-ERROR.
+      br-2values:VISIBLE = TRUE.
+      br-2values:REFRESH().
+      br-2values:move-to-top().
+
   END.
   ELSE DO:
-      ASSIGN
-      br-values:HEIGHT = 12.87.
-      br-values:move-to-top().
-      RUN OpenBr2Values IN THIS-PROCEDURE (
+/*      message FRAME {&FRAME-NAME}:HEIGHT-CHARS view-as alert-box.*/
+         ASSIGN
+         br-values:HEIGHT-CHARS = FRAME {&FRAME-NAME}:HEIGHT-CHARS - 15. 
+         br-values:move-to-top().
+         br-2values:VISIBLE = FALSE.
+
+         RUN OpenBr2Values IN THIS-PROCEDURE (
                                            INPUT ''
                                            ,INPUT ?
                                            ,INPUT ?) no-error.
-
   END.
 END.
 
@@ -793,14 +884,19 @@ run diasize_add_browse in this-procedure
   ,input  browse BR-2values :handle
   ) .
 run diasize_add_browse in this-procedure
+  (input  'height':u
+  ,input  browse BR-2values :handle
+  ) .
+/*run diasize_add_browse in this-procedure
   (input  'width':u
   ,input  browse BR-section :handle
   ) .
+
 run diasize_add_browse in this-procedure
   (input  'height':u
   ,input  browse br-tree :handle
-  ) .
-/*run diasize_init in this-procedure .*/
+  ) . */
+run diasize_init in this-procedure .
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
@@ -848,7 +944,7 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   ENABLE b-quit B-exp B-Help I-tooltip BR-section b-copy B-add B-chg B-del 
-         B-lkp B-1 b-hist1 br-tree BR-values BR-2values 
+         B-lkp B-1 b-hist1 br-tree BR-values BR-2values b-load
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -984,7 +1080,9 @@ DO v-ii = 1 TO BROWSE br-2values:NUM-COLUMNS:
   BROWSE br-2values:GET-BROWSE-COLUMN(v-ii):RESIZABLE = YES.
 END.
 
-br-values:height IN FRAME {&FRAME-NAME} = 12.87.
+br-values:height IN FRAME {&FRAME-NAME} = 12.85. 
+/*br-values:height IN FRAME {&FRAME-NAME} = 14.25.*/
+
 ENABLE
 b-quit
 B-Help
@@ -1001,6 +1099,7 @@ BR-values
 br-2values
 br-tree
 i-tooltip
+b-load
 WITH FRAME {&frame-name}.
 VIEW FRAME {&frame-name}.
 {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
@@ -1040,7 +1139,7 @@ END PROCEDURE.
 PROCEDURE OpenBrtree :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 define variable v-label as character no-undo .         /*лабел атрибута */
-define variable v-user-can-edit as logical no-undo .  /*пользователь может изменять в броусе*/
+define variable v-user-can-edit as logical no-undo .   /*пользователь может изменять в броусе*/
 define variable v-output-display as logical no-undo .  /*виден в броусе*/
 define variable v-other as char no-undo .              /*еще чего - нибудь*/
 define variable v-host as logical no-undo .
@@ -1107,6 +1206,18 @@ ELSE DO:
 
 END.
 APPLY "VALUE-CHANGED" TO br-values IN FRAME {&FRAME-NAME}.
+
+CLOSE QUERY BR-values.
+OPEN QUERY BR-values
+FOR EACH X_thbj-attr_v NO-LOCK WHERE
+       X_thbj-attr_v.upper-prop-code = p-upper-prop-code
+    AND X_thbj-attr_v.obj-type = p-obj-type
+    AND X_thbj-attr_v.obj-code = p-obj-code
+    AND X_thbj-attr_v.prop-code > ''
+    INDEXED-REPOSITION.
+APPLY "VALUE-CHANGED" TO br-values IN FRAME {&FRAME-NAME}.
+
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

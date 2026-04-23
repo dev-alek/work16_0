@@ -184,12 +184,24 @@ for each bf-in_doc-line where bf-in_doc-line.doc-code = bf-in_trn-doc.doc-code o
                                   bf-minus_parts.part-code = bf-in_parts.part-code and
                                   bf-minus_parts.fact-qnty < 0
           :
-            create tt-minus-parts.
-            buffer-copy bf-minus_parts to tt-minus-parts.
-            assign
-              tt-minus-parts.minus-qnty    = - bf-minus_parts.fact-qnty
-              tt-minus-doc-line.minus-qnty = tt-minus-doc-line.minus-qnty + tt-minus-parts.minus-qnty
-            .
+            find first tt-minus-parts where tt-minus-parts.out-code  = bf-minus_parts.out-code
+                                        and tt-minus-parts.obj-type  = bf-minus_parts.obj-type
+                                        and tt-minus-parts.obj-code  = bf-minus_parts.obj-code
+                                        and tt-minus-parts.artic     = bf-minus_parts.artic
+                                        and tt-minus-parts.prod-type = bf-minus_parts.prod-type
+                                        and tt-minus-parts.prod-code = bf-minus_parts.prod-code
+                                        and tt-minus-parts.part-code = bf-minus_parts.part-code
+                                        and tt-minus-parts.prt-code  = bf-minus_parts.prt-code
+            no-error .
+            if not available tt-minus-parts
+            then do :
+              create tt-minus-parts.
+              buffer-copy bf-minus_parts to tt-minus-parts.
+              assign
+                tt-minus-parts.minus-qnty    = - bf-minus_parts.fact-qnty
+                tt-minus-doc-line.minus-qnty = tt-minus-doc-line.minus-qnty + tt-minus-parts.minus-qnty
+              .
+            end .
           end .
         end .
         else do :

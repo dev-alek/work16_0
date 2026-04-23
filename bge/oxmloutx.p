@@ -448,10 +448,8 @@ on error undo, return error
           and buf_esys-pck-sent.esps-cr-db-num = v-cur-db-num
       on error undo, leave
       :
-        /*пакет в отправленном списке не подтвержден или пакет из этого списка есть в роуте*/
-        if not ( buf_esys-pck-sent.esps-rcvd = no or
-                can-find( tt_esys-route where tt_esys-route.esr-last-pack = buf_esys-pck-sent.esps-pack-num ) )
-        then next _buf_esys-pck-sent.
+
+        if buf_esys-pck-sent.esps-rcvd = yes then next _buf_esys-pck-sent.   
 
         find first t-list-pack no-lock
           where t-list-pack.pack-num = buf_esys-pck-sent.esps-pack-num

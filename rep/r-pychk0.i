@@ -98,10 +98,10 @@ end.
 if pychk_create  /* and ub.chk-doc.doc-code eq "38/47470" */ then do:
 create-block:
 do transaction
-on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+/*on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))*/
 on stop   undo create-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile )
-:
+on error  undo, throw:
   find first buf2_chk-doc exclusive-lock where
          recid(buf2_chk-doc) = recid(ub.chk-doc).
 
@@ -501,6 +501,19 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                    pychk_dop-sumk = temp-chk-pay.tot-r-b.
                 temp-chk-dp.all-sum           = temp-chk-dp.all-sum - pychk_dop-sumk.
                 
+                /* из-за ошибок платежей в чеке такая запись уже может быть, тогда не добавляем чек в документ продажи */                               
+                if can-find (first buf_chk-gds-pay no-lock where 
+                                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code 
+                               and buf_chk-gds-pay.algo-num = {&current-algo-1}
+                               and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+                               and buf_chk-gds-pay.cpline-num = int(temp-chk-pay.line-num)  
+                                   )
+                then undo create-block, return error substitute("Уже есть платеж: чек &1 &2&3 строка &4 строка &5"
+                                                    , temp-chk-pay.doc-code
+                                                    , ub.chk-doc.obj-type
+                                                    , ub.chk-doc.obj-code 
+                                                    , buf_temp-chk-gds.line-num                                                                                                       
+                                                    , temp-chk-pay.line-num).                               
                 create buf_chk-gds-pay.
                   assign
                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
@@ -673,9 +686,39 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
                   and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
                   and buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
                   and buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card exclusive-lock no-error.
-                  if not available buf_chk-gds-pay then create buf_chk-gds-pay.
+                  if not available buf_chk-gds-pay then do:                     
+                     /* из-за ошибок платежей в чеке такая запись уже может быть, тогда не добавляем чек в документ продажи */                          
+                     if can-find (first buf_chk-gds-pay no-lock where 
+                                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code 
+                               and buf_chk-gds-pay.algo-num = {&current-algo-1}
+                               and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+                               and buf_chk-gds-pay.cpline-num = int(temp-chk-pay.line-num)  
+                                   )
+                     then undo create-block, return error substitute("Уже есть платеж: чек &1 &2&3 строка &4 строка &5"
+                                                    , temp-chk-pay.doc-code
+                                                    , ub.chk-doc.obj-type
+                                                    , ub.chk-doc.obj-code 
+                                                    , buf_temp-chk-gds.line-num                                                                                                       
+                                                    , temp-chk-pay.line-num).                            
+                     create buf_chk-gds-pay.
+                  end.   
               end.    
-              else create buf_chk-gds-pay.
+              else do:                  
+                   /* из-за ошибок платежей в чеке такая запись уже может быть, тогда не добавляем чек в документ продажи */                            
+                   if can-find (first buf_chk-gds-pay no-lock where 
+                                   buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code 
+                               and buf_chk-gds-pay.algo-num = {&current-algo-1}
+                               and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+                               and buf_chk-gds-pay.cpline-num = int(temp-chk-pay.line-num)  
+                                   )
+                   then undo create-block, return error substitute("Уже есть платеж: чек &1 &2&3 строка &4 строка &5"
+                                                    , temp-chk-pay.doc-code
+                                                    , ub.chk-doc.obj-type
+                                                    , ub.chk-doc.obj-code 
+                                                    , buf_temp-chk-gds.line-num                                                                                                       
+                                                    , temp-chk-pay.line-num).                              
+                   create buf_chk-gds-pay.
+              end.     
                      
               assign
               buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
@@ -781,37 +824,48 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
             pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
           end.
         end case.
-        create buf_chk-gds-pay.
-        assign
-        buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
-        buf_chk-gds-pay.algo-num = {&current-algo-1}
-        buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
-        buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
-        buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
-        buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
-        buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
-        buf_chk-gds-pay.tot-r-b = 0
-        buf_chk-gds-pay.eff-base-rate = pychk_exch
-        buf_chk-gds-pay.eff-doc-qnty = buf_temp-chk-gds.doc-qnty
-        buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
-        buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
-        buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
-        buf_chk-gds-pay.price-base = (if temp-chk-pay.tot-r-b = 0 and buf_temp-chk-gds.discnt = 0 then 0 else buf_temp-chk-gds.price-base)
-        buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
-        buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
-        buf_chk-gds-pay.line-type = pychk_line-type-chr
-        buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
-        buf_chk-gds-pay.density  = buf_temp-chk-gds.density
-        buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
-        buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
-        buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
-        buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
-        buf_chk-gds-pay.out-code = ub.chk-doc.out-code
-        buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
-        buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
-        buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
-        buf_temp-chk-gds.flag = yes
-        .
+        /* если уже распределяли этот платеж, то повторно не пытаемся его создать */
+        if can-find(first buf_chk-gds-pay no-lock where 
+                          buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+                      and buf_chk-gds-pay.algo-num = {&current-algo-1}
+                      and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+                      and buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num) 
+        then do:
+            buf_temp-chk-gds.flag = yes.
+        end.    
+        else do:
+            create buf_chk-gds-pay.
+            assign
+            buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+            buf_chk-gds-pay.algo-num = {&current-algo-1}
+            buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
+            buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
+            buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+            buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
+            buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
+            buf_chk-gds-pay.tot-r-b = 0
+            buf_chk-gds-pay.eff-base-rate = pychk_exch
+            buf_chk-gds-pay.eff-doc-qnty = buf_temp-chk-gds.doc-qnty
+            buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
+            buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
+            buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
+            buf_chk-gds-pay.price-base = (if temp-chk-pay.tot-r-b = 0 and buf_temp-chk-gds.discnt = 0 then 0 else buf_temp-chk-gds.price-base)
+            buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
+            buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
+            buf_chk-gds-pay.line-type = pychk_line-type-chr
+            buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+            buf_chk-gds-pay.density  = buf_temp-chk-gds.density
+            buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
+            buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
+            buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
+            buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
+            buf_chk-gds-pay.out-code = ub.chk-doc.out-code
+            buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
+            buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
+            buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
+            buf_temp-chk-gds.flag = yes
+            .
+        end.    
         if pychk_zero-n > pychk_zero-gds / pychk_zero-pay then leave.
       end. /*for each temp-chk-gds*/
       temp-chk-pay.flag = yes.

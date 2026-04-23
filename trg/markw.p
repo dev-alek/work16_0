@@ -52,66 +52,68 @@ then
 
 /*run gbl/inidebug.p.*/
 if not new(new-{&main-tbl}) then do:
-if (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
-  or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB)
-  and
-   not (new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB
-  or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB)
-then do:
+   if    (old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+      or old-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB)
+   and
+      not  (new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnLock:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:ReturnWaitLock:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:UsedInProduction:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:WrittenOff:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Moved:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:Returned:KeyIntDB
+         or new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:OutOfInventory:KeyIntDB)
+   then do:
 /*  new-{&main-tbl}.sts = old-{&main-tbl}.sts.*/
-  if old-{&main-tbl}.loc-key <> "" then
-    new-{&main-tbl}.loc-key = old-{&main-tbl}.loc-key.
-end.
-if new-{&main-tbl}.sts <> old-{&main-tbl}.sts then do:
-  new-{&main-tbl}.last-change = now.
-end .
-if new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB then do:
-  new-{&main-tbl}.loc-key = "".
-end .
+      if old-{&main-tbl}.loc-key <> "" then
+         new-{&main-tbl}.loc-key = old-{&main-tbl}.loc-key.
+   end.
+   if new-{&main-tbl}.sts <> old-{&main-tbl}.sts then do:
+      new-{&main-tbl}.last-change = now.
+   end .
+   if new-{&main-tbl}.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB then do:
+      new-{&main-tbl}.loc-key = "".
+   end .
 
-if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
-   for each marking-attr exclusive-lock 
-      where marking-attr.mark = old-{&main-tbl}.mark:
-      marking-attr.mark = new-{&main-tbl}.mark.
-   end.
-   for each marking-lines exclusive-lock 
-      where marking-lines.mark = old-{&main-tbl}.mark:
-      marking-lines.mark = new-{&main-tbl}.mark.
-   end.
-   for each marking-chk exclusive-lock 
-      where marking-chk.mark = old-{&main-tbl}.mark:
-      marking-chk.mark = new-{&main-tbl}.mark.
-   end.
-   for each c-marking where c-marking.mark eq old-{&main-tbl}.mark exclusive-lock:
-      c-marking.mark = new-{&main-tbl}.mark.
-   end.
-   for each c-marking-attr where c-marking-attr.mark eq old-{&main-tbl}.mark exclusive-lock:
-      c-marking.mark = new-{&main-tbl}.mark.
-   end.
-end .  
+   if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
+      for each marking-attr exclusive-lock 
+         where marking-attr.mark = old-{&main-tbl}.mark:
+               marking-attr.mark = new-{&main-tbl}.mark.
+      end.
+      for each marking-lines exclusive-lock 
+         where marking-lines.mark = old-{&main-tbl}.mark:
+               marking-lines.mark = new-{&main-tbl}.mark.
+      end.
+      for each marking-chk exclusive-lock 
+         where marking-chk.mark = old-{&main-tbl}.mark:
+               marking-chk.mark = new-{&main-tbl}.mark.
+      end.
+      for each c-marking where c-marking.mark eq old-{&main-tbl}.mark exclusive-lock:
+               c-marking.mark = new-{&main-tbl}.mark.
+      end.
+      for each c-marking-attr where c-marking-attr.mark eq old-{&main-tbl}.mark exclusive-lock:
+               c-marking.mark = new-{&main-tbl}.mark.
+      end.
+   end .  
 end. 
-  
+else
+   new-{&main-tbl}.last-change = now.
+     
 if new(new-{&main-tbl}) and new-{&main-tbl}.mark-parent <> "" then 
 do:   /* при создании новой дочерней марки меняем статус марки как у родителя, если родитель продан или возвращен на кассу */
   for first parentMarking where

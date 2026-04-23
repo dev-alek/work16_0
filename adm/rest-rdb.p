@@ -3504,6 +3504,19 @@ on endkey undo, return error substitute( "&1. endkey", vss-workfile )
     end.
   end.
 
+  if not can-find(first dst.db-attr where dst.db-attr.db-num = p-db-num and dst.db-attr.attr-code = {&attr-ver-met}) then
+  do:
+  /* BTS-2359 если нет атрибута,содержащего номер последнего обработанного файла upd\*.xml, для выгружаемой УБД */
+  /* подменяем номер БД для этого атрибута у записи ТБД */
+  /* если будут еще подобные корректировки, можно вынести в отдельную процедуру */
+    for first dst.db-attr exclusive-lock where 
+              dst.db-attr.db-num = 0 
+          and dst.db-attr.attr-code = {&attr-ver-met}
+    :
+      dst.db-attr.db-num = p-db-num.  
+    end.   
+  end.
+  
   disconnect dst.
 
   if not v-multi

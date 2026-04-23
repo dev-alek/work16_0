@@ -168,8 +168,8 @@ do
     do:
         if g#esys then 
         do:
-            v-mess.
-            return error.
+          v-mess = substitute("Уже существует Кассир с кодом &1. Физ лицо - код &2. Сохранение кода кассира &3 для кода физ лица &4 невозможно.", buf_staff.staff-code, buf_staff.psn-code, ub.staff.staff-code, ub.staff.psn-code) .
+          return error v-mess .
         end.
         else 
         do:  
