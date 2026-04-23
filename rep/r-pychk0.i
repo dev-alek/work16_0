@@ -98,10 +98,10 @@ end.
 if pychk_create  /* and ub.chk-doc.doc-code eq "38/47470" */ then do:
 create-block:
 do transaction
-on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))
+/*on error  undo create-block, return error substitute( "&1. &2&3&4", vss-workfile, return-value, {&new-line}, error-status :get-message (1))*/
 on stop   undo create-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile )
-:
+on error  undo, throw:
   find first buf2_chk-doc exclusive-lock where
          recid(buf2_chk-doc) = recid(ub.chk-doc).
 

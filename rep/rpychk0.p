@@ -58,7 +58,6 @@ if v-curr-r-b = {&r-b-rubl} or
 v-base-code = 0 then pychk_NO-exch-rubl = yes.
 else pychk_No-exch-rubl = no.
 
-
 case p-caller:
   when "r-shftc2" then do:
     _chk-doc:
@@ -198,3 +197,5 @@ case p-caller:
     view-as alert-box error .
   end.
 end case.
+
+{ gbl/catcherr.i }
