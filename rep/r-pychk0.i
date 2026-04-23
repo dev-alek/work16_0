@@ -781,37 +781,48 @@ on endkey undo create-block, return error substitute( "&1. endkey", vss-workfile
             pychk_line-type-chr = buf_temp-chk-gds.line-type +                {&delim-par} + string(temp-chk-pay.num-lines).
           end.
         end case.
-        create buf_chk-gds-pay.
-        assign
-        buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
-        buf_chk-gds-pay.algo-num = {&current-algo-1}
-        buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
-        buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
-        buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
-        buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
-        buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
-        buf_chk-gds-pay.tot-r-b = 0
-        buf_chk-gds-pay.eff-base-rate = pychk_exch
-        buf_chk-gds-pay.eff-doc-qnty = buf_temp-chk-gds.doc-qnty
-        buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
-        buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
-        buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
-        buf_chk-gds-pay.price-base = (if temp-chk-pay.tot-r-b = 0 and buf_temp-chk-gds.discnt = 0 then 0 else buf_temp-chk-gds.price-base)
-        buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
-        buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
-        buf_chk-gds-pay.line-type = pychk_line-type-chr
-        buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
-        buf_chk-gds-pay.density  = buf_temp-chk-gds.density
-        buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
-        buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
-        buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
-        buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
-        buf_chk-gds-pay.out-code = ub.chk-doc.out-code
-        buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
-        buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
-        buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
-        buf_temp-chk-gds.flag = yes
-        .
+        /* если уже распределяли этот платеж, то повторно не пытаемся его создать */
+        if can-find(first buf_chk-gds-pay no-lock where 
+                          buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+                      and buf_chk-gds-pay.algo-num = {&current-algo-1}
+                      and buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+                      and buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num) 
+        then do:
+            buf_temp-chk-gds.flag = yes.
+        end.    
+        else do:
+            create buf_chk-gds-pay.
+            assign
+            buf_chk-gds-pay.doc-code = temp-chk-pay.doc-code
+            buf_chk-gds-pay.algo-num = {&current-algo-1}
+            buf_chk-gds-pay.pay-code = temp-chk-pay.pay-code
+            buf_chk-gds-pay.curr-code = temp-chk-pay.curr-code
+            buf_chk-gds-pay.line-num = buf_temp-chk-gds.line-num
+            buf_chk-gds-pay.cpline-num = temp-chk-pay.line-num
+            buf_chk-gds-pay.pay-card = temp-chk-pay.pay-card
+            buf_chk-gds-pay.tot-r-b = 0
+            buf_chk-gds-pay.eff-base-rate = pychk_exch
+            buf_chk-gds-pay.eff-doc-qnty = buf_temp-chk-gds.doc-qnty
+            buf_chk-gds-pay.b-code = buf_temp-chk-gds.b-code
+            buf_chk-gds-pay.gds-code = buf_temp-chk-gds.gds-code
+            buf_chk-gds-pay.discnt = buf_temp-chk-gds.discnt
+            buf_chk-gds-pay.price-base = (if temp-chk-pay.tot-r-b = 0 and buf_temp-chk-gds.discnt = 0 then 0 else buf_temp-chk-gds.price-base)
+            buf_chk-gds-pay.price-service = buf_temp-chk-gds.price-service
+            buf_chk-gds-pay.line-sign = buf_temp-chk-gds.line-sign
+            buf_chk-gds-pay.line-type = pychk_line-type-chr
+            buf_chk-gds-pay.rec-type = buf_temp-chk-gds.rec-type
+            buf_chk-gds-pay.density  = buf_temp-chk-gds.density
+            buf_chk-gds-pay.chk-date = ub.chk-doc.chk-date
+            buf_chk-gds-pay.chk-time = ub.chk-doc.chk-time
+            buf_chk-gds-pay.obj-type = ub.chk-doc.obj-type
+            buf_chk-gds-pay.obj-code = ub.chk-doc.obj-code
+            buf_chk-gds-pay.out-code = ub.chk-doc.out-code
+            buf_chk-gds-pay.shift-date = ub.chk-doc.shift-date
+            buf_chk-gds-pay.shift-num = ub.chk-doc.shift-num
+            buf_chk-gds-pay.shift-name= ub.chk-doc.shift-name
+            buf_temp-chk-gds.flag = yes
+            .
+        end.    
         if pychk_zero-n > pychk_zero-gds / pychk_zero-pay then leave.
       end. /*for each temp-chk-gds*/
       temp-chk-pay.flag = yes.
