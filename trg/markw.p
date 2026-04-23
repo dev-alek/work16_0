@@ -111,7 +111,9 @@ if new-{&main-tbl}.mark <> old-{&main-tbl}.mark then do:
    end.
 end .  
 end. 
-  
+else
+   new-{&main-tbl}.last-change = now.
+     
 if new(new-{&main-tbl}) and new-{&main-tbl}.mark-parent <> "" then 
 do:   /* при создании новой дочерней марки меняем статус марки как у родителя, если родитель продан или возвращен на кассу */
   for first parentMarking where
