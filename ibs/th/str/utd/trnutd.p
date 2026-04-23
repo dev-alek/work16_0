@@ -1620,21 +1620,28 @@ end.
       v-in-doc-mode = {&lookup} + '{&delim-flt}':U + "corr-parts" .
     end .
     v-doc-rec = recid(new_trn-doc) .
-    message v-mess-in-doc view-as alert-box .
-    run str/in-doc.w
-      ( input        parparentproc
-      , input-output v-doc-rec
-      , input        v-in-doc-mode
-      , input        {&income}
-      , input        no
-      , input-output varnext-prev
-      , input        new_trn-doc.ext-doc-type
-      , input        no
-      , input-output varline-rec
-      , input        br-handle
-      , input        bf-handle
-      , input        new_trn-doc.status_)
-    .
+    if mBatchMode
+    then do :
+      p-msg = "need-user-action" + v-mess-in-doc .
+      return .
+    end .
+    else do :
+      message v-mess-in-doc view-as alert-box .
+      run str/in-doc.w
+        ( input        parparentproc
+        , input-output v-doc-rec
+        , input        v-in-doc-mode
+        , input        {&income}
+        , input        no
+        , input-output varnext-prev
+        , input        new_trn-doc.ext-doc-type
+        , input        no
+        , input-output varline-rec
+        , input        br-handle
+        , input        bf-handle
+        , input        new_trn-doc.status_)
+      .
+    end .
   end .
   
   run clos-trn2 in this-procedure (new_trn-doc.doc-code) no-error .
