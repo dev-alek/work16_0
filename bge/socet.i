@@ -230,7 +230,7 @@ procedure PostRequest:
    define input parameter iPostHost as char.
    define input parameter iPostData as longchar.
 
-   define variable vCRequest      as character.
+   define variable vCRequest      as longchar.
    define variable vMRequest       as memptr.
    if iPostUrl ne ?
    then do:
@@ -250,25 +250,26 @@ procedure PostRequest:
       iPostHost,
       iPostData).*/
       vCRequest =substitute( 
-      '&6 /&2 HTTP/1.1&1'                                   +
+      '&5 /&2 HTTP/1.1&1'                                   +
       'Host: &4&1'                                           +
       'User-Agent: Apache-HttpClient/4.1.1 (java 1.5)&1'    +
        
       'Accept: */*&1' +
       'Content-Type: text/xml&1'               +
       'Content-Length: &3&1'                                  +
-      '&1&5' 
+      '&1' 
       ,
       {&carriage-return} + {&new-line}, 
       iPostUrl, 
       length(iPostData),
       iPostHost,
-      iPostData,
-      mTypeResponse).
+      
+      mTypeResponse) + iPostData.
    end.
    else
       vCRequest = iPostData.
-   run writeLogSocet in this-procedure (substitute("Отправляем запрос &1&2.",{&carriage-return} + {&new-line},vCRequest )).
+   run writeLogSocet in this-procedure (substitute("Отправляем запрос &1.",{&carriage-return} + {&new-line} )).
+   run writeLogSocet in this-procedure (vCRequest).
    
    SET-SIZE(vMRequest)            = 0.
    SET-SIZE(vMRequest)            = length(vCRequest) + 1.
@@ -276,14 +277,14 @@ procedure PostRequest:
    PUT-STRING(vMRequest,1)        = vCRequest .
    if mHSocket:connected() = false then 
    do:
-      run writeLogSocet in this-procedure (substitute("Соединение было разорвано другой стороной getResponse")).
+      run writeLogSocet in this-procedure ("Соединение было разорвано другой стороной getResponse").
    
       oErrMsg = "Not connected".
       delete object mHSocket no-error.
       return oErrMsg.
    end.
    mHSocket:write(vMRequest, 1, length(vCRequest)).
-   run writeLogSocet in this-procedure (substitute("Запрос отправлен." )).
+   run writeLogSocet in this-procedure ("Запрос отправлен.").
    
 end procedure.
 
