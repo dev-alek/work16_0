@@ -341,7 +341,7 @@ DEFINE FRAME Dialog-Frame
 /* BROWSE-TAB BR-values br-tree Dialog-Frame */
 /* BROWSE-TAB BR-2values BR-values Dialog-Frame */
 ASSIGN 
-       FRAME Dialog-Frame:SCROLLABLE       = FALSE
+       FRAME Dialog-Frame:SCROLLABLE       = TRUE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
 ASSIGN 
@@ -672,20 +672,23 @@ DO:
   AND X_thbj-attr_v.prop-value-type = {&abl-datatype-void} THEN DO:
    ASSIGN
    br-values:HEIGHT = 6.87.
+   BR-values:SCROLL-TO-CURRENT-ROW().
    RUN OpenBr2Values IN THIS-PROCEDURE (
                                         INPUT X_thbj-attr_v.prop-code
                                          ,INPUT X_thbj-attr_v.obj-type
                                          ,INPUT X_thbj-attr_v.obj-code) NO-ERROR.
+      br-2values:move-to-top().
   END.
   ELSE DO:
+/*      message FRAME {&FRAME-NAME}:HEIGHT-CHARS view-as alert-box.*/
       ASSIGN
-      br-values:HEIGHT = 12.87.
+/*      br-values:HEIGHT = 15. */
+      br-values:HEIGHT-CHARS = FRAME {&FRAME-NAME}:HEIGHT-CHARS - 19.
       br-values:move-to-top().
       RUN OpenBr2Values IN THIS-PROCEDURE (
                                            INPUT ''
                                            ,INPUT ?
                                            ,INPUT ?) no-error.
-
   END.
 END.
 
@@ -793,14 +796,19 @@ run diasize_add_browse in this-procedure
   ,input  browse BR-2values :handle
   ) .
 run diasize_add_browse in this-procedure
+  (input  'height':u
+  ,input  browse BR-2values :handle
+  ) .
+/*run diasize_add_browse in this-procedure
   (input  'width':u
   ,input  browse BR-section :handle
   ) .
+
 run diasize_add_browse in this-procedure
   (input  'height':u
   ,input  browse br-tree :handle
-  ) .
-/*run diasize_init in this-procedure .*/
+  ) . */
+run diasize_init in this-procedure .
 /* Now enable the interface and wait for the exit condition.            */
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 MAIN-BLOCK:
@@ -984,7 +992,9 @@ DO v-ii = 1 TO BROWSE br-2values:NUM-COLUMNS:
   BROWSE br-2values:GET-BROWSE-COLUMN(v-ii):RESIZABLE = YES.
 END.
 
-br-values:height IN FRAME {&FRAME-NAME} = 12.87.
+br-values:height IN FRAME {&FRAME-NAME} = 12.85. 
+/*br-values:height IN FRAME {&FRAME-NAME} = 14.25.*/
+
 ENABLE
 b-quit
 B-Help
@@ -1040,7 +1050,7 @@ END PROCEDURE.
 PROCEDURE OpenBrtree :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 define variable v-label as character no-undo .         /*лабел атрибута */
-define variable v-user-can-edit as logical no-undo .  /*пользователь может изменять в броусе*/
+define variable v-user-can-edit as logical no-undo .   /*пользователь может изменять в броусе*/
 define variable v-output-display as logical no-undo .  /*виден в броусе*/
 define variable v-other as char no-undo .              /*еще чего - нибудь*/
 define variable v-host as logical no-undo .
@@ -1107,6 +1117,18 @@ ELSE DO:
 
 END.
 APPLY "VALUE-CHANGED" TO br-values IN FRAME {&FRAME-NAME}.
+
+CLOSE QUERY BR-values.
+OPEN QUERY BR-values
+FOR EACH X_thbj-attr_v NO-LOCK WHERE
+       X_thbj-attr_v.upper-prop-code = p-upper-prop-code
+    AND X_thbj-attr_v.obj-type = p-obj-type
+    AND X_thbj-attr_v.obj-code = p-obj-code
+    AND X_thbj-attr_v.prop-code > ''
+    INDEXED-REPOSITION.
+APPLY "VALUE-CHANGED" TO br-values IN FRAME {&FRAME-NAME}.
+
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
