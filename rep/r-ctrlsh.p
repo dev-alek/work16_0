@@ -111,7 +111,7 @@ define variable vss-description as character no-undo init "Отчет 'Контрольная ве
     sym6  {&sym-l}
     pol6  column-label "6":C12  format ">>>>>>>9.999":U   space( 0 )
     sym7  {&sym-l}
-    pol7  column-label "7":C12  format "->>>>>>9.999":U   space( 0 )
+    pol7  column-label "7":C12  format "->>>>>>>9.999":U   space( 0 )
     sym8  {&sym-l}
     pol8  column-label "8":C9   format ">>>>9.999":U      space( 0 )
     sym9  {&sym-l}
