@@ -126,7 +126,7 @@ on error undo, return error return-value
   end.
 
   assign
-  v-doc-code-parameter = {&sale-doc-kind-born} + (if p-office = {&gds-office} then "_s" else "":U)
+    v-doc-code-parameter = {&sale-doc-kind-born} + (if p-office = {&gds-office} then "_s" else "":U)
   no-error .
   if error-status:error then do:
     message
@@ -194,13 +194,14 @@ on error undo, return error return-value
     _ii:
     do ii = 1 to num-entries(v-value-character, ';':U):
       assign
-      v-entry =  ENTRY(ii, v-value-character, ';':U)
-      v-doc-kind = ENTRY(1, v-entry)
-      v-cli-type = ENTRY(2, v-entry)
-      v-cli-code = integer(ENTRY(3, v-entry))
+        v-entry =  ENTRY(ii, v-value-character, ';':U)
+        v-doc-kind = ENTRY(1, v-entry)
+        v-cli-type = ENTRY(2, v-entry)
+        v-cli-code = integer(ENTRY(3, v-entry))
       .
       assign
-      v-doc-kind-label = {&sale-doc-name} no-error .
+        v-doc-kind-label = {&sale-doc-name}
+      no-error .
 
       if v-doc-kind = p-doc-kind then do:
         leave _ii.
@@ -220,9 +221,9 @@ on error undo, return error return-value
         undo _main, return error v-mes.
       end.
     end.
-    find first buf_clients no-lock where
-              buf_clients.obj-type  = v-cli-type
-          AND buf_clients.obj-code  = v-cli-code no-error .
+    find first buf_clients no-lock where buf_clients.obj-type  = v-cli-type
+                                     and buf_clients.obj-code  = v-cli-code
+    no-error .
     if not available buf_clients then do:
       undo _main, return error v-mes.
     end.
@@ -236,35 +237,35 @@ on error undo, return error return-value
     when {&TDEDT_Ras_Vnesh_Kass} then do:
       v-mes = '':U.
       assign
-      v-ext-doc-type       = {&TDEDT_Ras_Vnesh_Kass}
-      v-doc-type           = {&expense}
-      v-cli-type = buf_main_trn-doc.cli-type
-      v-cli-code = buf_main_trn-doc.cli-code
-      v-cli-name           = buf_main_trn-doc.cli-name
-      v-internal = no
-      v-pay-code = buf_main_trn-doc.pay-code
-      v-status   = (if buf_main_trn-doc.status_ = {&inquiry}
-                    then {&inquiry}
-                    else {&cash-desk})
-      v-purch-code  = buf_main_trn-doc.purch-code
-      v-discnt-type = {&cash-desk}
+        v-ext-doc-type       = {&TDEDT_Ras_Vnesh_Kass}
+        v-doc-type           = {&expense}
+        v-cli-type = buf_main_trn-doc.cli-type
+        v-cli-code = buf_main_trn-doc.cli-code
+        v-cli-name           = buf_main_trn-doc.cli-name
+        v-internal = no
+        v-pay-code = buf_main_trn-doc.pay-code
+        v-status   = (if buf_main_trn-doc.status_ = {&inquiry}
+                      then {&inquiry}
+                      else {&cash-desk})
+        v-purch-code  = buf_main_trn-doc.purch-code
+        v-discnt-type = {&cash-desk}
       .
     end.
     when {&TDEDT_Vozvrat_Vnesh_Kass} then do:
       v-mes = '':U.
       assign
-      v-ext-doc-type       = {&TDEDT_Vozvrat_Vnesh_Kass}
-      v-doc-type           = {&return}
-      v-cli-type = buf_main_trn-doc.cli-type
-      v-cli-code = buf_main_trn-doc.cli-code
-      v-cli-name           = buf_main_trn-doc.cli-name
-      v-internal = no
-      v-pay-code = buf_main_trn-doc.pay-code
-      v-status   = (if buf_main_trn-doc.status_ = {&inquiry}
-                    then {&inquiry}
-                    else {&cash-desk})
-      v-purch-code  = buf_main_trn-doc.purch-code
-      v-discnt-type = {&cash-desk}
+        v-ext-doc-type       = {&TDEDT_Vozvrat_Vnesh_Kass}
+        v-doc-type           = {&return}
+        v-cli-type = buf_main_trn-doc.cli-type
+        v-cli-code = buf_main_trn-doc.cli-code
+        v-cli-name           = buf_main_trn-doc.cli-name
+        v-internal = no
+        v-pay-code = buf_main_trn-doc.pay-code
+        v-status   = (if buf_main_trn-doc.status_ = {&inquiry}
+                      then {&inquiry}
+                      else {&cash-desk})
+        v-purch-code  = buf_main_trn-doc.purch-code
+        v-discnt-type = {&cash-desk}
       .
     end.
     when {&sale-add-tech-refuell}
@@ -289,29 +290,31 @@ on error undo, return error return-value
       END CASE.
       v-mes = '':U.
       assign
-      v-ext-doc-type       = entry(lookup(p-doc-kind, {&sale-add-kinds}), {&sale-add-ext-doc-types})
-      v-cli-name           = if available(buf_clients) then buf_clients.obj-name else ''
-      v-internal = no
-      v-pay-code = v-down-pay
-      v-ps = '':U
-      v-status   = (if buf_main_trn-doc.status_ = {&inquiry}
-              then {&inquiry}
-              else {&doc-froze})
-      v-purch-code  = ?
-      v-discnt-type = {&row}.
+        v-ext-doc-type       = entry(lookup(p-doc-kind, {&sale-add-kinds}), {&sale-add-ext-doc-types})
+        v-cli-name           = if available(buf_clients) then buf_clients.obj-name else ''
+        v-internal = no
+        v-pay-code = v-down-pay
+        v-ps = '':U
+        v-status   = (if buf_main_trn-doc.status_ = {&inquiry}
+                then {&inquiry}
+                else {&doc-froze})
+        v-purch-code  = ?
+        v-discnt-type = {&row}
+      .
       v-doc-type = if p-doc-kind = {&sale-add-vir-res} then {&expense} else {&write-off}.
     end.
   END CASE.
   
   /* Контрагент при создании доп. док-та по атрибуту типа платежа */
   if p-cli-type <> "" and p-cli-code > 0 then do:
-    for first buf_clients no-lock
-      where buf_clients.obj-type = p-cli-type
-      and buf_clients.obj-code = p-cli-code:
-        assign
+    for first buf_clients no-lock where buf_clients.obj-type = p-cli-type
+                                    and buf_clients.obj-code = p-cli-code
+    :
+      assign
         v-cli-type = buf_clients.obj-type
         v-cli-code = buf_clients.obj-code
-        v-cli-name = buf_clients.obj-name.
+        v-cli-name = buf_clients.obj-name
+      .
     end.
   end. /*  if p-cli-type */
 
@@ -358,20 +361,20 @@ on error undo, return error return-value
 
   find buf_trn-doc where buf_trn-doc.doc-code = p-doc-code.
   assign
-  buf_trn-doc.fact-date  = buf_main_trn-doc.fact-date
-  buf_trn-doc.shift-date = buf_main_trn-doc.shift-date
-  buf_trn-doc.shift-num  = buf_main_trn-doc.shift-num
-  buf_trn-doc.shift-name = buf_main_trn-doc.shift-name
-  buf_trn-doc.exch-code  = buf_main_trn-doc.exch-code
-  buf_trn-doc.exch-rate  = buf_main_trn-doc.exch-rate
-  buf_trn-doc.exch-scale = buf_main_trn-doc.exch-scale
-  buf_trn-doc.print-rubl = buf_main_trn-doc.print-rubl
-  buf_trn-doc.out-code   = buf_main_trn-doc.doc-code
-  buf_trn-doc.office     = (if p-office = {&gds-office} then yes else no)
-  buf_main_trn-doc.out-code = (if p-doc-kind = {&TDEDT_Vozvrat_Vnesh_kass} then buf_trn-doc.doc-code else buf_main_trn-doc.out-code)
-  buf_trn-doc.wrkr = buf_main_trn-doc.wrkr
-  buf_trn-doc.agnt = buf_main_trn-doc.agnt
-  buf_trn-doc.boss = buf_main_trn-doc.boss
+    buf_trn-doc.fact-date  = buf_main_trn-doc.fact-date
+    buf_trn-doc.shift-date = buf_main_trn-doc.shift-date
+    buf_trn-doc.shift-num  = buf_main_trn-doc.shift-num
+    buf_trn-doc.shift-name = buf_main_trn-doc.shift-name
+    buf_trn-doc.exch-code  = buf_main_trn-doc.exch-code
+    buf_trn-doc.exch-rate  = buf_main_trn-doc.exch-rate
+    buf_trn-doc.exch-scale = buf_main_trn-doc.exch-scale
+    buf_trn-doc.print-rubl = buf_main_trn-doc.print-rubl
+    buf_trn-doc.out-code   = buf_main_trn-doc.doc-code
+    buf_trn-doc.office     = (if p-office = {&gds-office} then yes else no)
+    buf_main_trn-doc.out-code = (if (p-doc-kind = {&TDEDT_Vozvrat_Vnesh_kass} and p-office = {&gds-goods}) then buf_trn-doc.doc-code else buf_main_trn-doc.out-code)
+    buf_trn-doc.wrkr = buf_main_trn-doc.wrkr
+    buf_trn-doc.agnt = buf_main_trn-doc.agnt
+    buf_trn-doc.boss = buf_main_trn-doc.boss
   .
   /* для техпролива и списания ставим атрибут другое перемещение для доп.документа */
   if p-doc-kind = {&sale-add-write-off} or
