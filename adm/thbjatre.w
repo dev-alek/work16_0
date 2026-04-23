@@ -673,19 +673,24 @@ DO:
    ASSIGN
    br-values:HEIGHT = 6.87.
    BR-values:SCROLL-TO-CURRENT-ROW().
+   br-values:REFRESH().
    RUN OpenBr2Values IN THIS-PROCEDURE (
                                         INPUT X_thbj-attr_v.prop-code
                                          ,INPUT X_thbj-attr_v.obj-type
                                          ,INPUT X_thbj-attr_v.obj-code) NO-ERROR.
+      br-2values:VISIBLE = TRUE.
+      br-2values:REFRESH().
       br-2values:move-to-top().
+
   END.
   ELSE DO:
 /*      message FRAME {&FRAME-NAME}:HEIGHT-CHARS view-as alert-box.*/
-      ASSIGN
-/*      br-values:HEIGHT = 15. */
-      br-values:HEIGHT-CHARS = FRAME {&FRAME-NAME}:HEIGHT-CHARS - 19.
-      br-values:move-to-top().
-      RUN OpenBr2Values IN THIS-PROCEDURE (
+         ASSIGN
+         br-values:HEIGHT-CHARS = FRAME {&FRAME-NAME}:HEIGHT-CHARS - 15. 
+         br-values:move-to-top().
+         br-2values:VISIBLE = FALSE.
+
+         RUN OpenBr2Values IN THIS-PROCEDURE (
                                            INPUT ''
                                            ,INPUT ?
                                            ,INPUT ?) no-error.
