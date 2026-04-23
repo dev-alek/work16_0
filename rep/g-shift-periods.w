@@ -72,10 +72,12 @@ define variable vss-description as character no-undo init "Отчет Контроль плотно
 { str/placelib.i }
 
 define variable num-rvs as integer no-undo init 0 .
-define variable shoosed-shift-recid as recid no-undo init ? .
+define variable choosed-shift-recid as recid no-undo init ? .
 define variable shift-recid-list as character no-undo .
 define variable gds-recid-list as character no-undo .
 define variable pl-recid-list as character no-undo .
+define variable gds-recid-list-full as character no-undo .
+define variable pl-recid-list-full as character no-undo .
 
 define buffer buf_shift-obj for ub.shift-obj .
 define buffer prev_shift-obj for ub.shift-obj .
@@ -397,7 +399,7 @@ DO:
   assign rs-place = 2 .
   display rs-place with frame {&frame-name} .
   
-  assign tmp-pl-list = pl-recid-list .
+  assign tmp-pl-list = pl-recid-list-full .
   empty temp-table tt-place .
   run ref/pl-list.w (
      input parparentproc
@@ -410,7 +412,10 @@ DO:
   then do :
     return no-apply .
   end .
-  assign pl-recid-list = tmp-pl-list .
+  assign
+    pl-recid-list = tmp-pl-list
+    pl-recid-list-full = pl-recid-list
+  .
   
   do ii = 1 to num-entries(pl-recid-list) :
     find first buf_place no-lock where recid(buf_place) = integer(entry(ii, pl-recid-list)) no-error .
@@ -480,6 +485,7 @@ DO:
     if not available tt-place
     then delete tt-pl-gds .
   end .
+  run find-old-pl-gds .
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
 
@@ -520,8 +526,8 @@ DO:
     return no-apply .
   end.
   empty temp-table tt-shift-1 .
-  assign shoosed-shift-recid = integer (shift-recid-list) .
-  find first buf_shift-obj where recid (buf_shift-obj) = shoosed-shift-recid no-lock.
+  assign choosed-shift-recid = integer (shift-recid-list) .
+  find first buf_shift-obj where recid (buf_shift-obj) = choosed-shift-recid no-lock.
   if buf_shift-obj.status_ <> {&sht-closed}
   then do :
     message "Выберите закрытую смену!" view-as alert-box .
@@ -560,7 +566,7 @@ DO:
     create tt-shift .
     buffer-copy tt-shift-1 to tt-shift .
   end .
-  
+  run find-old-pl-gds .
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
 
@@ -627,7 +633,7 @@ DO:
     create tt-shift .
     buffer-copy tt-shift-2 to tt-shift .
   end .
-  
+  run find-old-pl-gds .
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
 
@@ -761,6 +767,7 @@ DO:
         end .
       end.
     end.
+    run find-old-pl-gds .
   end .
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
@@ -837,7 +844,10 @@ DO:
         end .
       end .
     end .
-    assign pl-recid-list = "" .
+    assign
+      pl-recid-list-full = pl-recid-list
+      pl-recid-list = ""
+    .
     for each tt-pl-gds no-lock break by tt-pl-gds.pl-code :
       if first-of(tt-pl-gds.pl-code)
       then do :
@@ -866,6 +876,8 @@ DO:
       then delete tt-pl-gds .
     end .
   end .
+  
+  run find-old-pl-gds .
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END.
 
@@ -972,6 +984,80 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE find-old-pl-gds Dialog-Frame 
+PROCEDURE find-old-pl-gds :
+  define variable ii as integer no-undo .
+  
+  define buffer buf_shift-period for ub.shift-period .
+  define buffer buf_goods for ub.goods .
+  define buffer buf_place for ub.place .
+   
+  for each tt-shift :
+    for each buf_shift-period no-lock where buf_shift-period.obj-type = p-obj-type
+                                        and buf_shift-period.obj-code = p-obj-code
+                                        and buf_shift-period.shift-date = tt-shift.shift-date
+                                        and buf_shift-period.shift-num  = tt-shift.shift-num
+    :
+      find first tt-pl-gds where tt-pl-gds.gds-code = buf_shift-period.gds-code
+                             and tt-pl-gds.pl-code  = buf_shift-period.pl-code
+                             no-error .
+      if available tt-pl-gds then next .
+      
+      do ii = 1 to num-entries(gds-recid-list-full):
+        find first buf_goods where recid(buf_goods) = integer(entry(ii, gds-recid-list-full)) no-lock no-error.
+        if available buf_goods
+        and buf_goods.gds-code = buf_shift-period.gds-code
+        then do :
+          create tt-pl-gds .
+          assign
+            tt-pl-gds.gds-code = buf_goods.gds-code
+            tt-pl-gds.gds-name = buf_goods.gds-name
+          .
+          for first buf_place no-lock where buf_place.obj-type = p-obj-type
+                                        and buf_place.obj-code = p-obj-code
+                                        and buf_place.pl-code  = buf_shift-period.pl-code
+          :
+            assign
+              tt-pl-gds.pl-code = buf_place.pl-code
+              tt-pl-gds.loc1    = buf_place.loc1
+            .
+          end .
+        end .
+      end . /*  do ii = 1 to num-entries(gds-recid-list-full) */
+      
+      find first tt-pl-gds where tt-pl-gds.gds-code = buf_shift-period.gds-code
+                             and tt-pl-gds.pl-code  = buf_shift-period.pl-code
+                             no-error .
+      if available tt-pl-gds then next .
+      
+      do ii = 1 to num-entries(pl-recid-list-full):
+        find first buf_place where recid(buf_place) = integer(entry(ii, pl-recid-list-full)) no-lock no-error.
+        if available buf_place
+        and buf_place.obj-type = buf_shift-period.obj-type
+        and buf_place.obj-code = buf_shift-period.obj-code
+        and buf_place.pl-code  = buf_shift-period.pl-code
+        then do :
+          create tt-pl-gds .
+          assign
+            tt-pl-gds.pl-code = buf_place.pl-code
+            tt-pl-gds.loc1    = buf_place.loc1
+          .
+          for first buf_goods no-lock where buf_goods.gds-code  = buf_shift-period.gds-code
+          :
+            assign
+              tt-pl-gds.gds-code = buf_goods.gds-code
+              tt-pl-gds.gds-name = buf_goods.gds-name
+            .
+          end .
+        end .
+      end . /*  do ii = 1 to num-entries(pl-recid-list-full) */
+    end .
+  end .  
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-pl-gds Dialog-Frame 
 PROCEDURE init-pl-gds :
   define variable v-value as character no-undo .
@@ -990,7 +1076,11 @@ PROCEDURE init-pl-gds :
                                and buf_place.obj-code = p-obj-code
   :
     find first buf_pl-gds no-lock where buf_pl-gds.pl-code = buf_place.pl-code no-error .
-    if not available buf_pl-gds then next .
+    if not available buf_pl-gds
+    then do :
+      assign pl-recid-list-full = pl-recid-list-full + string(recid(buf_place)) + "," .
+      next .
+    end .
     &scop proc-name gds-attr-value
     {&run_proc_attr-lib}
       (input  buf_pl-gds.gds-code
@@ -1027,6 +1117,8 @@ PROCEDURE init-pl-gds :
       end .
     end .
     
+    assign pl-recid-list-full = pl-recid-list-full + string(recid(buf_place)) + "," .
+    
     create tt-pl-gds .
     assign
       tt-pl-gds.pl-code  = buf_place.pl-code
@@ -1037,6 +1129,8 @@ PROCEDURE init-pl-gds :
       assign tt-pl-gds.gds-name = buf_goods.gds-name .
     end .
   end .
+  assign pl-recid-list-full = trim(pl-recid-list-full, ",") .
+  
   for each tt-pl-gds no-lock break by tt-pl-gds.pl-code :
     if first-of(tt-pl-gds.pl-code)
     then do :
@@ -1055,8 +1149,12 @@ PROCEDURE init-pl-gds :
       end .
     end .
   end .
-  assign gds-recid-list = trim(gds-recid-list, ",") .
+  assign
+    gds-recid-list = trim(gds-recid-list, ",")
+    gds-recid-list-full = gds-recid-list
+  .
   
+  run find-old-pl-gds .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1083,7 +1181,7 @@ PROCEDURE init_ :
     tt-shift-1.shift-date = buf_shift-obj.shift-date
     tt-shift-1.shift-num  = buf_shift-obj.shift-num
     tt-shift-1.shift-name = buf_shift-obj.shift-name
-    shoosed-shift-recid = recid(buf_shift-obj)
+    choosed-shift-recid = recid(buf_shift-obj)
     num-rvs = 1
   .
   
@@ -1222,9 +1320,15 @@ PROCEDURE select-gds :
       end .
     end .
   end .
-  assign pl-recid-list = trim(pl-recid-list, ",") .
+  assign
+    pl-recid-list = trim(pl-recid-list, ",")
+    pl-recid-list-full = pl-recid-list
+  .
   
-  assign gds-recid-list = "" .
+  assign
+    gds-recid-list-full = gds-recid-list
+    gds-recid-list = ""
+  .
   for each tt-pl-gds no-lock break by tt-pl-gds.gds-code :
     if first-of(tt-pl-gds.gds-code)
     then do :
@@ -1234,6 +1338,8 @@ PROCEDURE select-gds :
     end .
   end .
   assign gds-recid-list = trim(gds-recid-list, ",") .
+  
+  run find-old-pl-gds .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
