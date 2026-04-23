@@ -890,34 +890,38 @@ ON CHOOSE OF btn_ok IN FRAME Dialog-Frame
             .
         if not p-ok and (SelectGood = 0 or SelectGood = 1) then 
         do:
-            for each buf_trn-doc no-lock where buf_trn-doc.obj-code = v-cntxt-obj-code and
+           block-trn-doc: 
+           for each buf_trn-doc no-lock where buf_trn-doc.obj-code = v-cntxt-obj-code and
                 buf_trn-doc.obj-type = v-cntxt-obj-type and
                 buf_trn-doc.cli-code = buf_clients.obj-code and
                 buf_trn-doc.cli-type = buf_clients.obj-type and
                 buf_trn-doc.ext-doc-type = {&tdedt_pri_vnesh} and
                 buf_trn-doc.status_ = {&fact}:
-                for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code and
-                    buf_doc-line.obj-code = buf_trn-doc.obj-code and
-                    buf_doc-line.obj-type = buf_trn-doc.obj-type,
-                    first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
-                    buf_goods.prod-code = buf_doc-line.prod-code and
-                    buf_goods.prod-type = buf_doc-line.prod-type:
- 
-                    if buf_trn-doc.contract-code <> 0 then 
-                    do:
-                        for first ub.contract no-lock where ub.contract.host-code = buf_trn-doc.host-code and
+                   if buf_trn-doc.contract-code <> 0 then do:
+                      find first ub.contract no-lock where ub.contract.host-code = buf_trn-doc.host-code and
                             ub.contract.cli-code = buf_trn-doc.cli-code and
                             ub.contract.cli-type = buf_trn-doc.cli-type and
                             ub.contract.status_ = {&current-contr} and 
-                            ub.contract.contract-code = buf_trn-doc.contract-code,
-                            first buf_contract-specif no-lock where
+                            ub.contract.contract-code = buf_trn-doc.contract-code no-error.
+                            if available ub.contract and
+                            (ub.contract.contract-date-end > today or ub.contract.contract-date-end = ?) and
+                                ub.contract.contract-date-beg <= today then 
+                            do:
+                            end.
+                            else
+                               next block-trn-doc.
+                   end.
+                   else release ub.contract .
+                for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code,
+                    first buf_goods no-lock where buf_goods.artic = buf_doc-line.artic and
+                    buf_goods.prod-code = buf_doc-line.prod-code and
+                    buf_goods.prod-type = buf_doc-line.prod-type:
+                    if available ub.contract then 
+                    do:
+                            for first buf_contract-specif no-lock where
                             buf_contract-specif.host-code = ub.contract.host-code and
                             buf_contract-specif.contract-num = ub.contract.contract-code and
                             buf_contract-specif.gds-code = buf_goods.gds-code:
-
-                            if (ub.contract.contract-date-end > today or ub.contract.contract-date-end = ?) and
-                                ub.contract.contract-date-beg <= today then 
-                            do:
                                 find first gds-list where gds-list.gds-code = buf_contract-specif.gds-code and
                                     gds-list.contract = ub.contract.contract-prn-code and
                                     gds-list.contract-code = buf_contract-specif.contract-num no-error .
@@ -930,7 +934,7 @@ ON CHOOSE OF btn_ok IN FRAME Dialog-Frame
                                         gds-list.contract      = ub.contract.contract-prn-code
                                         .
                                 end.
-                            end.
+                          
                         end.
                     end.
                     else 
