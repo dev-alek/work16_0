@@ -221,7 +221,7 @@ define browse {&browse-name} query {&browse-name} no-lock display
   {&sort-clmn_1-br-line}  column-label {&label-clmn_1-br-line}  format "x(1)"
   {&sort-clmn_2-br-line}  column-label {&label-clmn_2-br-line}
   {&sort-clmn_3-br-line}  column-label {&label-clmn_3-br-line}  format "x(256)" width 29
-  {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  FORMAT "999999999":U width 12
+  {&sort-clmn_4-br-line}  column-label {&label-clmn_4-br-line}  FORMAT "9999999999":U width 12
   {&sort-clmn_5-br-line}  column-label {&label-clmn_5-br-line}  FORMAT "9999999999":U width 12
 with size 75.25 by 9 separators.
 
