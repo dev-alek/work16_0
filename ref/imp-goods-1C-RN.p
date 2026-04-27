@@ -1102,6 +1102,15 @@ end.
     RUN gds-attr-delete (v-nbc, {&attr-ban-bonus}, output v-attr-del).     
   end.
   
+  if p-GdsObj:weighed-product = 1
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-weighed-gds}, "yes").  
+  end.
+  else if p-GdsObj:weighed-product = 0
+  then do :
+    RUN gds-attr-delete (v-nbc, {&attr-weighed-gds}, output v-attr-del).     
+  end.
+  
   /* Картинки */
   {ref/imagelist.i}
   if trim(p-GdsObj:img) > ''

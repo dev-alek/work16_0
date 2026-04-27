@@ -397,6 +397,7 @@ DEFINE QUERY br-mark-item FOR
 /*  X_marking.gds-name COLUMN-LABEL "Наименование" FORMAT "x(210)":U width 55    */
 /*  X_marking.mark COLUMN-LABEL "Штрих-код" FORMAT "x(56)":U width 33            */
 /*  X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U              */
+/*  X_marking.weight COLUMN-LABEL "Вес" FORMAT "x(10)":U width 10           */
 /*/*  X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(30)":U width 20*/   */
 /*/*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20    */   */
 /*/*  X_marking.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U                  */   */
@@ -420,6 +421,7 @@ DEFINE BROWSE br-mark
   X_marking.mark COLUMN-LABEL "Марка/Штрих-код" FORMAT "x(56)":U width 33
   
   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
+  X_marking.weight COLUMN-LABEL "Вес" FORMAT "x(10)":U width 10
   if not ismark(X_marking.mark) then "" else getStatusName(X_marking.mark,X_marking.sts,X_marking.sts-utd) @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(50)":U width 20 
 /*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
@@ -445,6 +447,7 @@ DEFINE BROWSE br-mark-item
   else "АОД" @ typem COLUMN-LABEL "Тип!кода" FORMAT "x(3)":U
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
+  X_marking-line.weight COLUMN-LABEL "Вес" FORMAT "x(10)":U width 10
   getStatusName(X_marking.mark,X_marking-line.sts,X_marking-line.sts-utd) @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(50)":U width 20
 /*  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
@@ -866,7 +869,7 @@ DO:
       if X_marking.box-qnty ne vQnty then 
       do:
          message "Марки просканированы не полностью." skip
-          "Не просканировааные марки будут не приняты" skip
+          "Не просканированные марки будут не приняты" skip
           "Продолжить сканирование?" skip
           "Да – возврат к сканированию" skip
           "Нет" 
@@ -994,6 +997,7 @@ ON CHOOSE OF b-mark-2 IN FRAME d-mark /* * */
 /*                        X_marking.gds-name:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */
 /*                        X_marking.mark:fGCOLOR in browse br-bar-code = CYAN_COLOR.        */
 /*                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */
+/*                        X_marking.weight:fGCOLOR in browse br-bar-code = CYAN_COLOR.      */
 /*/*                        X_marking.unit:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */*/
 /*/*                        X_marking.stts:fGCOLOR in browse br-bar-code = CYAN_COLOR.    */*/
 /*/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = CYAN_COLOR.*/*/
@@ -1006,6 +1010,7 @@ ON CHOOSE OF b-mark-2 IN FRAME d-mark /* * */
 /*                        X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.     */
 /*                        X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.         */
 /*                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*                        X_marking.weigth:fGCOLOR in browse br-bar-code = red_COLOR.       */
 /*/*                        X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
 /*/*                        X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
 /*/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/ */
@@ -1019,6 +1024,7 @@ ON CHOOSE OF b-mark-2 IN FRAME d-mark /* * */
 /*                X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.             */
 /*                X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.                 */
 /*                X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.             */
+/*                X_marking.weight:fGCOLOR in browse br-bar-code = red_COLOR.               */
 /*/*                X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */         */
 /*/*                X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */         */
 /*/*                X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/         */
@@ -1035,6 +1041,7 @@ ON CHOOSE OF b-mark-2 IN FRAME d-mark /* * */
 /*                        X_marking.gds-name:fGCOLOR in browse br-bar-code = red_COLOR.     */
 /*                        X_marking.mark:fGCOLOR in browse br-bar-code = red_COLOR.         */
 /*                        X_marking.box-qnty:fGCOLOR in browse br-bar-code = red_COLOR.     */
+/*                        X_marking.weight:fGCOLOR in browse br-bar-code = red_COLOR.       */
 /*/*                        X_marking.unit:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
 /*/*                        X_marking.stts:fGCOLOR in browse br-bar-code = red_COLOR.    */ */
 /*/*                        X_marking.stts-utd:fGCOLOR in browse br-bar-code = red_COLOR.*/ */
@@ -1100,6 +1107,7 @@ ON ROW-DISPLAY OF br-mark IN FRAME d-mark
                         X_marking.gds-name:fGCOLOR in browse br-mark = CYAN_COLOR.
                         X_marking.mark:fGCOLOR in browse br-mark = CYAN_COLOR.
                         X_marking.box-qnty:fGCOLOR in browse br-mark = CYAN_COLOR.
+                        X_marking.weight:fGCOLOR in browse br-mark = CYAN_COLOR.
                         X_marking.unit:fGCOLOR in browse br-mark = CYAN_COLOR.
                         X_marking.stts:fGCOLOR in browse br-mark = CYAN_COLOR.
 /*                        X_marking.stts-utd:fGCOLOR in browse br-mark = CYAN_COLOR.*/
@@ -1114,6 +1122,7 @@ ON ROW-DISPLAY OF br-mark IN FRAME d-mark
                 /*            X_marking.gds-name:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
                 /*            X_marking.mark:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
                 /*            X_marking.box-qnty:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
+                /*            X_marking.weight:BGCOLOR in browse br-mark = YELLOW_COLOR.  */
                 /*            X_marking.unit:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
                 /*            X_marking.stts:BGCOLOR in browse br-mark = YELLOW_COLOR.    */
                 /*            X_marking.stts-utd:BGCOLOR in browse br-mark = YELLOW_COLOR.*/
@@ -1126,6 +1135,7 @@ ON ROW-DISPLAY OF br-mark IN FRAME d-mark
                         X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.weight:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
 /*                        X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.*/
@@ -1140,6 +1150,7 @@ ON ROW-DISPLAY OF br-mark IN FRAME d-mark
                 X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
                 X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
                 X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+                X_marking.weight:fGCOLOR in browse br-mark = red_COLOR.
                 X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
                 X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
 /*                X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.*/
@@ -1157,6 +1168,7 @@ ON ROW-DISPLAY OF br-mark IN FRAME d-mark
                         X_marking.gds-name:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.mark:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.box-qnty:fGCOLOR in browse br-mark = red_COLOR.
+                        X_marking.weight:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.unit:fGCOLOR in browse br-mark = red_COLOR.
                         X_marking.stts:fGCOLOR in browse br-mark = red_COLOR.
 /*                        X_marking.stts-utd:fGCOLOR in browse br-mark = red_COLOR.*/
@@ -1212,6 +1224,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                         X_marking-line.gds-name:fGCOLOR in browse br-mark-item = CYAN_COLOR.
                         X_marking-line.mark:fGCOLOR in browse br-mark-item = CYAN_COLOR.
                         X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = CYAN_COLOR.
+                        X_marking-line.weight:fGCOLOR in browse br-mark-item = CYAN_COLOR.
                         X_marking-line.unit:fGCOLOR in browse br-mark-item = CYAN_COLOR.
                         X_marking-line.stts:fGCOLOR in browse br-mark-item = CYAN_COLOR.
 /*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = CYAN_COLOR.*/
@@ -1226,6 +1239,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                 /*            X_marking-line.gds-name:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
                 /*            X_marking-line.mark:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
                 /*            X_marking-line.box-qnty:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
+                /*            X_marking-line.weight:BGCOLOR in browse br-mark-item = YELLOW_COLOR.  */
                 /*            X_marking-line.unit:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
                 /*            X_marking-line.stts:BGCOLOR in browse br-mark-item = YELLOW_COLOR.    */
                 /*            X_marking-line.stts-utd:BGCOLOR in browse br-mark-item = YELLOW_COLOR.*/
@@ -1238,6 +1252,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                         X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.weight:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
@@ -1252,6 +1267,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                 X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
                 X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
                 X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+                X_marking-line.weight:fGCOLOR in browse br-mark-item = red_COLOR.
                 X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
                 X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/
@@ -1270,6 +1286,7 @@ ON ROW-DISPLAY OF br-mark-item IN FRAME d-mark
                         X_marking-line.gds-name:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.mark:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.box-qnty:fGCOLOR in browse br-mark-item = red_COLOR.
+                        X_marking-line.weight:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.unit:fGCOLOR in browse br-mark-item = red_COLOR.
                         X_marking-line.stts:fGCOLOR in browse br-mark-item = red_COLOR.
 /*                        X_marking-line.stts-utd:fGCOLOR in browse br-mark-item = red_COLOR.*/

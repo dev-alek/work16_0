@@ -278,3 +278,52 @@ function CheckMarkForType return logical
       end.
    end.
 end.
+
+&if "{1}" = "class"
+&then
+method public logical WeighedProd
+&else
+function WeighedProd return logical 
+&endif
+   ( input p-gds-code as integer) :
+   /*------------------------------------------------------------------------------
+     Purpose:  
+       Notes:  
+   ------------------------------------------------------------------------------*/
+   define variable v-par-val  as character no-undo.
+   define variable v-par-type as character no-undo.
+   &scop proc-name gds-attr-value
+        {&run_proc_attr-lib}
+            ( p-gds-code,
+              {&attr-weighed-gds},
+               output v-par-val,
+               output v-par-type
+            ).
+  
+   return logical(v-par-val).   /* Function return value. */
+
+end.
+
+&if "{1}" = "class"
+&then
+method public decimal MarkWeight
+&else
+function MarkWeight return decimal 
+&endif
+   ( input p-mark as character) :
+              
+   define buffer  buf_marking-attr for  ub.marking-attr.
+   define variable vMarkWeight as decimal no-undo.
+   
+   vMarkWeight = 0.   
+   if p-mark <> "" and p-mark <> ?
+   then do:                    
+       find first buf_marking-attr where buf_marking-attr.mark      eq p-mark 
+                                     and buf_marking-attr.attr-code eq "weight"
+          no-lock no-error.
+       if avail buf_marking-attr
+       then vMarkWeight = dec(buf_marking-attr.attr-value).    
+   end.
+   
+   return vMarkWeight.
+end.                 

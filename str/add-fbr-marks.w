@@ -44,7 +44,7 @@ define variable vss-description as character no-undo init "Сканирование акцизных
 { gbl/waitfram.i noprocess }
 { str/tt-fbr-line.i }
 { gbl/getcntxt.i def }
-
+{ str/utd-typemark.i}
 
 /* Parameters Definitions ---                                           */
 
@@ -147,8 +147,8 @@ DEFINE BROWSE br-fbr-line
     tt-fbr-line.num format ">>>>>9" label "Номер"
     tt-fbr-line.gds-code format ">>>>>>>>>>>>>>9" label "Код"
     tt-fbr-line.gds-name format "X(150)" width 40 label "Наименование"
-    tt-fbr-line.ingr-qnty format ">>>>>>>>>>>9" label "Количество"
-    tt-fbr-line.unit format "X(17)" label "Единица измерения"
+    tt-fbr-line.ingr-qnty format ">>>>>>>>>>>9.999" label "Количество"
+    tt-fbr-line.unit format "X(13)" label "Ед. измерения"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH SEPARATORS SIZE 95 BY 8.
@@ -436,6 +436,8 @@ PROCEDURE CrCheckMark :
   define variable v-num-recipes as integer no-undo .
   define variable v-GTIN as character no-undo .
   define variable v-GTIN-qnty as decimal no-undo .
+  define variable v-mark-weight as decimal no-undo .
+  define variable v-isweighed as logical no-undo .
   define variable v-mark-child-qnty as decimal no-undo .
   define variable v-free-qnty as decimal no-undo .
   define variable v-old-sts as integer no-undo .
@@ -470,6 +472,12 @@ PROCEDURE CrCheckMark :
   end .
   v-gds-code = getGdsCodeByGtin(v-GTIN) .
   v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
+  v-isweighed = WeighedProd(v-gds-code) .
+  if v-isweighed and 
+     available buf_marking
+  then do :
+      v-mark-weight = MarkWeight(buf_marking.mark).
+  end.    
   
   if v-gds-code = ?
   then do :
@@ -672,9 +680,20 @@ PROCEDURE CrCheckMark :
       tt-fbr-line.recipe-type = {&alternative}
       tt-fbr-line.ingr-gds-code = v-ingr-gds-code
       tt-fbr-line.unit = buf_goods.unit-base
+      tt-fbr-line.weighed = v-isweighed
+      tt-fbr-line.mark-weight = v-mark-weight 
     .  
   end .
-  if (tt-fbr-line.ingr-qnty + v-GTIN-qnty) <= v-free-qnty
+  
+  if tt-fbr-line.weighed and 
+     (tt-fbr-line.ingr-qnty + v-mark-weight) <= v-free-qnty
+  then do :
+    assign
+      tt-fbr-line.qnty = tt-fbr-line.qnty + (v-mark-weight * v-koef-qnty)
+      tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty + v-mark-weight
+    .
+  end .
+  else if (tt-fbr-line.ingr-qnty + v-GTIN-qnty) <= v-free-qnty
   then do :
     assign
       tt-fbr-line.qnty = tt-fbr-line.qnty + (v-GTIN-qnty * v-koef-qnty)
@@ -720,6 +739,7 @@ PROCEDURE CrCheckMark :
     tt-marking-lines.old-sts  = v-old-sts
     tt-marking-lines.box-qnty = v-GTIN-qnty
     tt-marking-lines.doc-level = 1
+    tt-marking-lines.weight = if v-isweighed then string(v-mark-weight) else ""
   .
   
   for each buf_marking-child exclusive-lock where buf_marking-child.mark-parent = buf_marking.mark :

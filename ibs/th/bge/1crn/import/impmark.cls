@@ -32,7 +32,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
   /* { gbl/attr-lib.i class } gds-attr-write() заинлайнена */
   {utl\gtin.i class}
   define temp-table tt-marking like ub.marking
-    field mrc as integer  
+    field mrc as integer
+    field weight as decimal  
   .
   define private temp-table tt-mark no-undo 
      field mark as character case-sensitive 
@@ -128,6 +129,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
           tt-marking.unit-ext     = objImp:unit-ext
           tt-marking.sts          = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
           tt-marking.mrc          = objImp:mrc
+          tt-marking.weight       = objImp:weight
           tt-marking.expDate      = objImp:expDate
           tt-marking.expDateOther = objImp:expDateOther
           .
@@ -365,6 +367,27 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
         no-error.
       end.
       buf_marking-attr.attr-value = string(tt-marking.mrc).
+      release buf_marking-attr no-error.
+      if error-status:error then
+      do:
+        undo, throw new Progress.Lang.AppError(substitute("Ошибка создания марки &1 товар &2",buf_tt-marking.mark,buf_tt-marking.gds-code)) .
+      end.
+    end.
+    if tt-marking.weight ne 0 and 
+       tt-marking.weight ne ? then
+    do:
+      find first buf_marking-attr where buf_marking-attr.mark      eq buf_marking.mark
+                                    and buf_marking-attr.attr-code eq "weight"
+           exclusive-lock no-error.
+      if not avail buf_marking-attr
+      then do:
+        create buf_marking-attr.
+        assign
+          buf_marking-attr.mark =  buf_marking.mark
+          buf_marking-attr.attr-code = "weight"
+        no-error.
+      end.
+      buf_marking-attr.attr-value = string(tt-marking.weight).
       release buf_marking-attr no-error.
       if error-status:error then
       do:

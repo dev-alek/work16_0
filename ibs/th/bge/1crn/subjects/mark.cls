@@ -45,6 +45,8 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
         private set.
     define property mrc             as decimal      no-undo get. 
         private set.
+    define property weight          as decimal      no-undo get. 
+        private set.
     define property stts-desc             as character    no-undo get. 
         private set.
 
@@ -111,6 +113,8 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
                 gds-code         = {&attr-integer} .
             when "mrc"          then 
                 mrc              = {&attr-dec} .
+            when "weight"       then 
+                weight           = {&attr-dec} .
         end case.
         catch exProErrors as class Progress.Lang.ProError :
             case exProErrors:GetMessageNum(1):
@@ -165,6 +169,7 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
             gds-code     = ?
             mrc          = ?
             stts-desc    = ?
+            weight       = ?
             expDate      = ?
             expDateOther = ?
             .

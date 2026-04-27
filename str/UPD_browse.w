@@ -242,6 +242,7 @@ FUNCTION StatusName RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
@@ -756,15 +757,18 @@ DEFINE BROWSE br-utd
    X_utd-lines.ProductCode COLUMN-LABEL "Наименование!УПД" FORMAT "x(40)":U width 25
    X_utd-lines.gds-name COLUMN-LABEL "Наименование ТН" FORMAT "x(112)":U width 25
    X_utd-lines.Quantity COLUMN-LABEL "Кол-во в ед.!изм TH по!УПД" FORMAT "->>,>>9.999":U
-   X_utd-lines.qnty-scan COLUMN-LABEL "Факт!кол-во" FORMAT "->>>>>>>>>9":U
+   X_utd-lines.qnty-scan COLUMN-LABEL "Факт!кол-во" FORMAT "->>>>>>>>>9.999":U
    gdsunit (X_utd-lines.gds-code) @ mgdsunit COLUMN-LABEL "Ед.изм!TH" FORMAT "x(6)":U
-   
-   if X_utd-lines.IsMarking
+   if X_utd-lines.IsMarking and X_utd-lines.isWeight
+   then "вп"
+   else if X_utd-lines.IsArtic and X_utd-lines.isWeight
+   then "dо" 
+   else if X_utd-lines.IsMarking
    then "п"
    else if X_utd-lines.IsArtic
    then "о"
    else "-" @
-    much COLUMN-LABEL "У" FORMAT "X(1)":U
+    much COLUMN-LABEL "У" FORMAT "X(2)":U
    X_utd-lines.stts COLUMN-LABEL "Статус" FORMAT "x(20)":U WIDTH 18.13
    X_utd-lines.Price COLUMN-LABEL "Цена!(без НДC)" FORMAT "->>>>>>>>>>99.99":U width 10
    X_utd-lines.Total COLUMN-LABEL "Сумма!(с НДС)" FORMAT "->>>>>>>>>>>>>>99.99":U width 10
@@ -773,6 +777,8 @@ DEFINE BROWSE br-utd
 /*   X_utd-lines.qnty-mark COLUMN-LABEL "Кол-во!марок" FORMAT "->>>9":U*/
    X_utd-lines.UnitCliQnty COLUMN-LABEL "Кол-во в!ед.изм постав-ка" FORMAT "->>>>>9":U
 X_utd-lines.UnitCode COLUMN-LABEL "Ед.изм!постав-ка" FORMAT "x(5)":U
+   X_utd-lines.PieceTTH COLUMN-LABEL "Штуки ТТН" FORMAT "x(10)":U
+   X_utd-lines.PieceFact COLUMN-LABEL "Штуки факт" FORMAT "x(10)":U
    
 ENABLE
       X_utd-lines.qnty-scan
@@ -795,7 +801,7 @@ DEFINE BROWSE br-utd-nomark
    X_utd-lines.TaxRate_ COLUMN-LABEL "НДС" format "X(5)"
    X_utd-lines.fact-qnty COLUMN-LABEL "Остаток" FORMAT "->>>>>>>>>>>>>>9.99":U width 10
    X_utd-lines.qnty-mark COLUMN-LABEL "Кол-во!штрих-кодов" FORMAT "->>>9":U
-   X_utd-lines.qnty-scan COLUMN-LABEL "Факт.!кол-во" FORMAT "->>>9":U
+   X_utd-lines.qnty-scan COLUMN-LABEL "Факт.!кол-во" FORMAT "->>>9.999":U
    X_utd-lines.stts COLUMN-LABEL "Статус" FORMAT "X(20)":U WIDTH 18.13
    X_utd-lines.UnitCliQnty COLUMN-LABEL "Кол-во в!ед.изм !постав-ка" FORMAT "->>>>>9":U
    X_utd-lines.UnitCode COLUMN-LABEL "Ед.изм!постав-ка" FORMAT "x(5)":U 
@@ -1090,7 +1096,7 @@ ASSIGN
      _FldNameList[9]   > Temp-Tables.X_utd-lines.fact-qnty
 "fact-qnty" "Остаток" "->>>>>>>>>>>>>>9.99" "decimal" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[10]   > Temp-Tables.X_utd-lines.qnty-scan
-"qnty-scan" "Кол-во" "->>>9" "decimal" ? ? ? ? ? ? yes ? no no ? yes no yes "U" "" "" "" "" "" "" 0 no 0 no no
+"qnty-scan" "Кол-во" "->>>9.999" "decimal" ? ? ? ? ? ? yes ? no no ? yes no yes "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[11]   > Temp-Tables.X_utd-lines.stts
 "stts" "Статус" "X(20)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[12]   > Temp-Tables.X_utd-lines.UnitCliQnty
@@ -1498,7 +1504,7 @@ ON VALUE-CHANGED OF br-utd IN FRAME d-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
 ON row-leave OF br-utd IN FRAME d-utd
    DO:
-      define variable kk as integer no-undo .
+      define variable kk as decimal no-undo .
       if available (X_utd-lines) then 
       do:
          /*      if X_utd-lines.marking utd-mark
@@ -4880,8 +4886,6 @@ PROCEDURE add-filter :
        .
    end.
 end.
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE mark-temp d-utd 
 PROCEDURE mark-temp :
@@ -4901,8 +4905,10 @@ PROCEDURE mark-temp :
    define buffer buf_utd-lines-attr    for ub.utd-lines-attr .
    define buffer buf_goods             for ub.goods .
    define buffer buf_bar-code          for ub.bar-code .
+   define buffer buf_marking-attr for ub.marking-attr.
    define variable v-db-num       as integer   no-undo .
    define variable v-doc-id       as integer   no-undo .
+  
    empty temp-table  tt-utd-lines-filtr.
    run add-filter(?  ,
                   ?  ,
@@ -4914,6 +4920,7 @@ PROCEDURE mark-temp :
       define variable vper as logical no-undo.
       getMarkUtdLine(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,
       output x_utd-lines.isMarking, output x_utd-lines.isArtic, output vper).
+      X_utd-lines.isWeight = WeighedProd(X_utd-lines.gds-code).
       if not x_utd-lines.isArtic and not x_utd-lines.isMarking
       then do:
          run add-filter(buf_utd-lines.db-num  ,
@@ -4937,6 +4944,7 @@ PROCEDURE mark-temp :
          end.
       end.
       
+            
       if buf_utd.EdocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB 
       or (buf_utd.EdocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB
           and not x_utd-lines.isMarking)  
@@ -4962,7 +4970,7 @@ PROCEDURE mark-temp :
                buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
                buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
                buf_utd-lines-attr.attr-code = "QuantityBarCode":
-               X_utd-lines.qnty-scan = integer(buf_utd-lines-attr.attr-value) . 
+               X_utd-lines.qnty-scan = decimal(buf_utd-lines-attr.attr-value) . 
             end.            
             end.
          else do:   
@@ -4970,7 +4978,7 @@ PROCEDURE mark-temp :
                buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
                buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
                buf_utd-lines-attr.attr-code = "QuantityBarCode":
-               X_utd-lines.qnty-scan = integer(buf_utd-lines-attr.attr-value) . 
+               X_utd-lines.qnty-scan = decimal(buf_utd-lines-attr.attr-value) . 
             end.   
          end.
       /*   for first buf_goods no-lock where buf_goods.gds-code = buf_utd-lines.gds-code:*/
@@ -5024,7 +5032,9 @@ PROCEDURE mark-temp :
                   buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum and 
                   buf_utd-marking-lines.doc-level = 1 and 
                   can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) no-error .
-               if available (buf_utd-marking-lines) then  X_utd-lines.stts = "Проверен" .
+               if available (buf_utd-marking-lines) then do:
+                   X_utd-lines.stts = "Проверен" .
+               end.     
             end.  
          end.
 
@@ -5045,7 +5055,17 @@ PROCEDURE mark-temp :
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
                if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then
                do: 
-                 X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1.
+                 if X_utd-lines.isWeight
+                 and available buf_marking
+                 then do:                    
+                    find first buf_marking-attr where buf_marking-attr.mark      eq buf_marking.mark
+                                           and buf_marking-attr.attr-code eq "weight"
+                    no-lock no-error.
+                    if avail buf_marking-attr
+                    then X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + dec(buf_marking-attr.attr-value).
+                    /*else X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1.*/
+                 end.     
+                 else X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1.
                  find first buf_utd-lines-attr where 
                             buf_utd-lines-attr.db-num = X_utd-lines.db-num and
                             buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
@@ -5089,7 +5109,8 @@ PROCEDURE mark-temp :
             else X_utd-lines.stts = "Ожидает проверку" .
          end.
       end.    
-      X_utd-lines.gds-name = GdsName(X_utd-lines.gds-code) .
+      X_utd-lines.gds-name = GdsName(X_utd-lines.gds-code) .      
+      if x_utd-lines.isArtic and X_utd-lines.isWeight then X_utd-lines.PieceTTH = "101". /* кол-во из ОАД */
       X_utd-lines.taxRate_ = string(X_utd-lines.TaxRate) + " %" .
       if X_utd-lines.TaxRate = -1 then X_utd-lines.taxRate_ = "Без НДС" .
       if X_utd-lines.sts_err then X_utd-lines.stts = "Ошибка по строке" .
@@ -5117,6 +5138,7 @@ PROCEDURE temp-mark :
                             -------------------------------------------------------------------- */
    define input parameter p-id as integer no-undo .
    define buffer buf_marking for ub.marking .
+   define buffer buf_marking-attr for ub.marking-attr.
    empty temp-table tt-marking-lines .
    define variable mQuery as handle    no-undo.
    define variable vqry   as character no-undo.
@@ -5172,6 +5194,11 @@ PROCEDURE temp-mark :
                 tt-marking-lines.mark-parent = buf_marking.mark-parent
              .
              tt-marking-lines.stts        = StatusTHName(buf_marking.sts).
+             find first buf_marking-attr where buf_marking-attr.mark      eq buf_marking.mark
+                                           and buf_marking-attr.attr-code eq "weight"
+                no-lock no-error.
+             if avail buf_marking-attr
+             then tt-marking-lines.weight = buf_marking-attr.attr-value.
           end.
        end.   
        else 
@@ -5179,7 +5206,7 @@ PROCEDURE temp-mark :
 /*          if X_utd-lines.qnty-scan = X_utd-lines.Quantity then */
           tt-marking-lines.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
 /*          tt-marking-lines.box-qnty = X_utd-lines.qnty-scan .*/
-       end.
+       end.       
       mQuery:get-next ().
    end.
    delete object mQuery.
@@ -5269,12 +5296,15 @@ PROCEDURE save_mark :
    define buffer un_utd-marking-lines        for ub.utd-marking-lines .
    define buffer parent_marking              for ub.marking .
    define buffer parent_utd-marking-lines    for ub.utd-marking-lines .
+   define buffer buf_goods-attr              for ub.goods-attr.
+   define buffer buf_marking-attr            for ub.marking-attr.                  
    define VARIABLE v-qnty       as decimal   no-undo .
    define VARIABLE v-rowid      as rowid     no-undo .
    define VARIABLE v-tbl-name   as character no-undo .
    define variable v-ungroup_ok as logical   no-undo .
    define variable v-gds-code   as integer   no-undo.
    define variable vFlag        as logical   no-undo.
+   define variable v-gds-fl-wt  as logical   no-undo.
    
    b_cleaggds:sensitive in frame {&frame-name} = no.
    b_cleaggds:visible   in frame {&frame-name} = no.
@@ -5323,11 +5353,16 @@ PROCEDURE save_mark :
       /*                                                                                                                                                       */
       /*      f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .*/
       /*      if F-text = "" then do:                                               */
+      
+      
+      
+      /* код по созданию марки для весового товара */
+      
       find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
          and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
       if available (buf_utd-marking-lines) then
       do:
-         run checkEMRC(v-mark, output vFlag).
+         run checkEMRC(v-mark, output vFlag).         
          if not vFlag
          then do:
             F-text = "МРЦ на упаковке меньше ЕМЦ. Приемка товара запрещена." .
@@ -5504,11 +5539,35 @@ PROCEDURE save_mark :
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:OutZone:KeyIntDB
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleLock:KeyIntDB
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:SaleWaitLock:KeyIntDB
-                              then do: 
-                                 bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .
-                                 if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
-                                 do:
-                                    vCheck = tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                              then do:  
+                                 if X_utd-lines.isWeight                       
+                                 then do:
+                                       find first buf_marking-attr where buf_marking-attr.mark eq buf_utd-marking-lines.mark
+                                                                     and buf_marking-attr.attr-code eq "weight"
+                                       no-lock no-error.
+                                       if avail buf_marking-attr
+                                       then 
+                                       MESSAGE "Масса товара равна " buf_marking-attr.attr-value "?"
+                                          VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO
+                                          TITLE "" UPDATE lChoice AS LOGICAL.
+                                       if lChoice then do:
+                                           bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .
+                                           if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                           do:
+                                              vCheck = tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                                           end.
+                                       end.         
+                                       else do:
+                                           MESSAGE "Масса товара не совпадает с данными из ГИС МТ. Товар не подлежит приемке"
+                                           VIEW-AS ALERT-BOX.                                           
+                                       end.                           
+                                 end.    
+                                 else do:                                
+                                     bf_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB .
+                                     if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
+                                     do:
+                                        vCheck = tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                                     end.
                                  end.
                                  /* Проверим, если все марки упаковки проверены, то надо сменить статус упаковки на "Проверен" */
                                  if tree:checkedAllMarksOfUpakUTD(buf_marking.mark-parent, buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id)
@@ -7070,4 +7129,6 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
 

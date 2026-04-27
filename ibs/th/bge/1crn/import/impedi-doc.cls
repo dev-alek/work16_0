@@ -305,6 +305,14 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             if v-gds-gd:Qnty-accepted ne ?
             then
                setattrutdlines(utd-lines.db-num, utd-lines.doc-id, utd-lines.lineNum,"QuantityBarCode",string(v-gds-gd:Qnty-accepted)).
+               
+            /* разрешение ручного выбора */            
+            if v-gds-gd:manual-selection eq 1 or
+               v-gds-gd:manual-selection eq 0
+            then
+               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"manual-selection",string(v-gds-gd:manual-selection)).            
+            
+                
             define variable vqnty as integer no-undo.
             vqnty = 0.
             define variable vGdsCode as integer no-undo.
