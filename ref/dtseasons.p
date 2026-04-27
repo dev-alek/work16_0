@@ -24,9 +24,12 @@ define output parameter oId         as recid         no-undo init ? .
 
 define variable vFilter as character no-undo.
 define variable vTitle  as character no-undo.
+define variable vOk as logical no-undo .
 
+find first ub.Code no-lock where ub.Code.parent = "DTSeasons" and ub.Code.CodeValue <> ? no-error .
+if available (ub.Code) then vOk = true .
 assign
-  vFilter = if iGdsCode = 0 or iGdsCode = ? then ""
+  vFilter = if iGdsCode = 0 or iGdsCode = ? or not vOk then ""
             else ("and code.codeValue = " + quoter(iGdsCode))
   vTitle = if vFilter = "" then "Сезоны ДТ" else substitute("&1&3&2", "Сезоны ДТ", vFilter, {&delim-par})
 .
