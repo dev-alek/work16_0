@@ -36,7 +36,8 @@ mCodeTrg = new ibs.th.ref.code.code_trg(
 
 mCodeTrg:formLable(1, 1, "Код товара").
 mCodeTrg:formLable(1, 2, "Наименование").
-mCodeTrg:formLable(1, 3, ?).
+mCodeTrg:formLable(1, 3, "Кол-во").
+mCodeTrg:formLable(1, 4, ?).
 /*mCodeTrg:Mode = .*/
 mCodeTrg:parparentproc = Parparentproc.
 mCodeTrg:chek-erpRN = no.
@@ -102,3 +103,4 @@ procedure menuitem_2_2:
    end.
       
 end.
+

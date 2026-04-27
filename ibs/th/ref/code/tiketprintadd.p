@@ -47,7 +47,7 @@ THEN DO vi = 1 to num-entries(ref-list):
     no-lock no-error.
     if avail goods
     then do:
-       find first code where code.parent = {&CODE_PARENT}
+       find first code where code.parent = "TiketPrint" 
                       and code.code = string(goods.gds-code)
        no-lock no-error.
        if not avail code
@@ -56,10 +56,12 @@ THEN DO vi = 1 to num-entries(ref-list):
           assign 
              code.code     = string(goods.gds-code)
              code.CodeName = goods.gds-name
-             code.parent   = {&CODE_PARENT}
+             code.parent   = "TiketPrint" 
+             Code.CodeValue = "1"
           .
           osave = no.
       end.
+      else decimal(Code.CodeValue) = decimal(Code.CodeValue) + 1 .
    end.
 end.
           
