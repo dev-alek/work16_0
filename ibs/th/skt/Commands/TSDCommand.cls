@@ -548,6 +548,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
         when "PrintTiket" then 
         do:
+          for each ub.Code exclusive-lock where ub.Code.parent = "TiketPrint":
+              delete ub.Code .
+          end.   
           tsdmes = "".
           if parseXML(hRoot)
           then do:
@@ -1111,7 +1114,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
              end.
              else do:
                 define variable vmes as character no-undo.
-                vmes = tsd:addPrintBc(integer (hRow:get-attribute("GoodsID"))).
+                vmes = tsd:addPrintBc(integer (hRow:get-attribute("GoodsID")), decimal(hRow:get-attribute("quantity"))).
                 if vmes ne ? and vmes ne ""
                 then do:
                    TsdMes = tsdMes + "," + vmes no-error.  

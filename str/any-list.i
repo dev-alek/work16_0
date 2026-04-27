@@ -59,6 +59,7 @@ define variable vss-description as character no-undo init "Автоматизированное фо
 &scop all-options                                 ~
 "Текущая строка,single,                           ~
 Товар,goods,                                      ~
+Товар ТСД,tsd,                                      ~
 Товар-объект,gds-obj,                             ~
 Товар-объект-факт,gds-obj-fact,                   ~
 Товар-объект-своб,gds-obj-free,                   ~
@@ -1338,7 +1339,8 @@ case rs-list-method:
   when "goods" or
   when "gds-obj":U  or
   when "gds-obj-fact":U  or
-  when "gds-obj-free":U  then do:
+  when "gds-obj-free":U  or 
+  when "tsd" then do:
 
     for each buf_{1}-hist where
              buf_{1}-hist.id = p-id
@@ -3805,7 +3807,87 @@ on error undo, return error
         end.
       end.
 
+        when "tsd" then 
+            do:
+                define buffer buf_Code for ub.Code .    
+          
+                glog = yes.
+                message "Загрузить список товаров с ТСД?"
+                    skip stat-line(rs-status)
+                    view-as alert-box question buttons OK-Cancel update glog.
+                if not glog then 
+                do:
+                    run UI-on in this-procedure.
+                    return error.
+                end.
+                ref-list = "" .
+                grp-list = "". /* кажется, при выходе по Esc не снимается */
+                ref-list = "".
+                num-rec = 0 .
+             
+                for each buf_Code no-lock where buf_Code.parent = "TiketPrint" and 
+                    buf_code.status_ = {&bef-current-status-int}:
+                    find first ub.goods no-lock where ub.goods.gds-code = integer(buf_code.code) no-error .
+                    if available (ub.goods) then 
+                    do:
+                        num-rec = num-rec + 1 .
 
+                        if v-recs = 1 then 
+                        do:
+                            assign
+                                v-temp-seq = v-seq
+                                v-line     = 0
+                                dsp-rs     = substitute("Товар :&1 &2", ub.goods.gds-name, stat-line(rs-status))
+                                v-item     = '':U
+                                v-tbl-name = {&table_goods}
+                                v-bh       = buffer goods:handle
+                                v-tot-lns  = tot-lns
+                                .
+                        end.
+                        else 
+                        do:
+                            if num-rec = 0 then 
+                            do:
+                                assign
+                                    v-temp-seq = v-seq
+                                    v-line     = 0
+                                    dsp-rs     = substitute("Товары : &1", stat-line(rs-status))
+                                    v-item     = '':U
+                                    v-tbl-name = '':U
+                                    v-bh       = ?
+                                    v-tot-lns  = tot-lns
+                                    .
+                            end.
+                            else 
+                            do:
+                                assign
+                                    v-temp-seq = v-seq - 1
+                                    v-line     = num-rec
+                                    dsp-rs     = substitute("код &1 &2 &3&4 &5", goods.gds-code, goods.artic, goods.prod-type, goods.prod-code, goods.gds-name)
+                                    v-item     = '':U
+                                    v-tbl-name = {&table_goods}
+                                    v-bh       = buffer ub.goods:handle
+                                    v-tot-lns  = tot-lns + num-rec
+                                    .
+                            end.
+                        end.
+                        v-no-hist = (if num-rec = 1 then 0 else num-rec).
+                        run create-{1}-hist in this-procedure(input {&add-def}
+                            , input-output v-temp-seq
+                            , input v-line
+                            , input '':U
+                            , input dsp-rs
+                            , input v-tot-lns
+                            , input rs-list-method
+                            , input rs-status
+                            , input v-item
+                            , input v-tbl-name
+                            , input v-bh
+                            ).
+                        if num-rec = 0 or v-recs = 1 then v-seq  = v-temp-seq.
+                    end. /*do num-rec*/
+                end.
+            end.
       when "ass-matr" then do:
         glog = yes.
         message

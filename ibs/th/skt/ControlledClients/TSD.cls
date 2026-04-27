@@ -3471,7 +3471,7 @@ end.
       return if available tt-version then tt-version.FullPath else ?.
    end.
    
-   method public character addPrintBc(igds-code as integer):
+   method public character addPrintBc(igds-code as integer, iqnty as decimal):
       
       define buffer code for code.
       define buffer goods for goods.
@@ -3481,7 +3481,7 @@ end.
       then
          return substitute ("Не известный код товара &1", igds-code).
       find first code  where code.parent eq "TiketPrint" 
-                         and code.code   eq string(igds-code)  
+                         and code.code   eq string(igds-code)
       exclusive-lock no-error.
       if not available code
       then do:
@@ -3489,6 +3489,7 @@ end.
          assign
             code.parent = "TiketPrint" 
             code.code = string(igds-code)
+            Code.CodeValue = string(iqnty)  
          .
       end.
       assign
