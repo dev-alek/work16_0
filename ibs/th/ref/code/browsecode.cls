@@ -891,8 +891,13 @@ class ibs.th.ref.code.browsecode inherits Form final:
       
       menuNew:Text = Ilable.
       if Ilable begins "Печать"
-      then
+      then do :
          menuNew:image = imageList1:Images[0].
+         if trim(ilistMenu) eq ""
+         then do :
+            menuNew:Click:Subscribe(this-object:bMenuItem).
+         end .
+      end .
       else
          menuNew:image = imageList1:Images[1].
       define variable vi as integer no-undo.

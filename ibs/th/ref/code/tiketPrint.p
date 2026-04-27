@@ -42,7 +42,7 @@ mCodeTrg:parparentproc = Parparentproc.
 mCodeTrg:chek-erpRN = no.
 /*mCodeTrg:MaxLevel = mCodeTrg:startlevel.*/
 mCodeTrg:menuHandle = this-procedure.
-mCodeTrg:addMenu(1, "Печать", "Цеников").
+mCodeTrg:addMenu(1, "Печать", "").
 
 mCodeTrg:addMenu(2, "Меню", "Очистить список,Очистить список удаленных").
 mCodeTrg:parent = left-trim(iparent + {&delim-par} + icode,{&delim-par}).
@@ -60,7 +60,7 @@ finally:
    delete object mCodeTrg.
 end finally. 
 
-procedure menuitem_1_1: 
+procedure menuitem_1: 
    define input  parameter iBuff as handle no-undo.
    empty temp-table gds-list.
    for each code where code.parent eq icode
