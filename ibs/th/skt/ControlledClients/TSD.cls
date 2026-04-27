@@ -871,7 +871,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         decToString( 0 /*tt-goods.priceSale */) + {&delimiteFld} +
         decToString(0 /*tt-goods.vatPc */) + {&delimiteFld} +
         tt-goods.countryName  + {&delimiteFld} +
-        "Состав" /*tt-goods.struct*/ + {&delimiteFld} +
+                "Состав" /*tt-goods.struct*/ + {&delimiteFld} +
         decToString(tt-goods.factQnty) + {&delimiteFld} + 
         decToString(tt-goods.freeQnty) + {&delimiterLine}.
 
@@ -1153,6 +1153,174 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     
   end.
+ 
+    method public logical ImpMarksInv (table TempTrnDoc, table TempDocLine, table TempMarkLine):
+    
+        def    var      v-utd-db-num   as integer   no-undo.
+        def    var      v-utd-doc-id   as integer   no-undo.
+        def    var      v-ext-doc-code as character no-undo.
+        define variable vLineNumWith   as integer   no-undo .
+        define variable vLineNum       as integer   no-undo .  
+        define variable vError         as logical   no-undo .
+        
+        define buffer buf_utd-marking-lines for ub.utd-marking-lines.
+        define buffer buf_utd               for ub.utd .
+        define buffer bf_utd                for ub.utd .
+        define buffer buf_utd-attr          for ub.utd-attr .
+        define buffer bf_utd-attr           for ub.utd-attr .
+        define buffer buf_utd-lines         for ub.utd-lines .
+        define buffer bf_utd-lines          for ub.utd-lines .
+
+        define buffer bf_utd-marking-lines  for ub.utd-marking-lines .
+
+        for each TempTrnDoc :
+            find first ub.clients no-lock where ub.clients.obj-code = TempTrnDoc.obj-code and
+                ub.clients.obj-type = TempTrnDoc.obj-type no-error .
+            if error-status:error
+                then next.
+            
+            create buf_utd .
+      
+            assign
+                buf_utd.DocumentDate = today
+                buf_utd.sts          = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB
+                buf_utd.obj-code     = ub.clients.obj-code
+                buf_utd.obj-type     = ub.clients.obj-type
+                buf_utd.host-code    = ub.clients.host-code
+                buf_utd.EDocType     = objSrv:Env:Utd:EDocType:Mark_Collect:KeyIntDB
+                .
+
+            validate buf_utd .
+            assign 
+                buf_utd.DocumentNumber = string(buf_utd.doc-id) + "-" + string(ub.clients.obj-code) + substring(ub.clients.obj-type,1,1) .
+            create buf_utd-attr .
+            assign
+                buf_utd-attr.db-num     = buf_utd.db-num
+                buf_utd-attr.doc-id     = buf_utd.doc-id
+                buf_utd-attr.attr-code  = "is-initial-set"
+                buf_utd-attr.attr-value = string(true) .
+            .
+            release buf_utd-attr .      
+      
+            create bf_utd .
+      
+            assign
+                bf_utd.DocumentDate = today
+                bf_utd.sts          = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB
+                bf_utd.obj-code     = ub.clients.obj-code
+                bf_utd.obj-type     = ub.clients.obj-type
+                bf_utd.host-code    = ub.clients.host-code
+                bf_utd.EDocType     = objSrv:Env:Utd:EDocType:Mark_Collect:KeyIntDB
+                .
+
+            validate bf_utd .
+            assign 
+                bf_utd.DocumentNumber = string(bf_utd.doc-id) + "-" + string(ub.clients.obj-code) + substring(ub.clients.obj-type,1,1) .
+            create bf_utd-attr .
+            assign
+                bf_utd-attr.db-num     = bf_utd.db-num
+                bf_utd-attr.doc-id     = bf_utd.doc-id
+                bf_utd-attr.attr-code  = "is-initial-set"
+                bf_utd-attr.attr-value = string(false) .
+            .
+            release bf_utd-attr .     
+      
+            vLineNum = 0 .
+            vLineNumWith = 0 .
+
+            for each TempDocLine:
+                find first ub.goods no-lock where ub.goods.gds-code = TempDocLine.gds-code no-error . 
+                if error-status:error
+                    then  
+                do:
+                    LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Товар не найден &1", TempDocLine.gds-code).
+                    vError = true .
+                    next .
+                end.
+                find first ub.gds-obj-attr where ub.gds-obj-attr.gds-code = ub.goods.gds-code and
+                    ub.gds-obj-attr.obj-code = ub.clients.obj-code and ub.gds-obj-attr.obj-type = ub.clients.obj-type
+                    and ub.gds-obj-attr.attr-code = {&attr-mark-collect-type} and ub.gds-obj-attr.attr-value = "yes" no-lock no-error.
+                if not available (ub.gds-obj-attr) then 
+                do:
+                    find first bf_utd-lines no-lock where bf_utd-lines.doc-id = bf_utd.doc-id and bf_utd-lines.db-num = bf_utd.db-num and
+                        bf_utd-lines.gds-code = ub.goods.gds-code no-error .
+                    if not available (bf_utd-lines) then 
+                    do:
+
+                        assign 
+                            vLineNum = vLineNum + 1 .
+                        create bf_utd-lines .
+                        assign
+                            bf_utd-lines.db-num   = bf_utd.db-num
+                            bf_utd-lines.doc-id   = bf_utd.doc-id
+                            bf_utd-lines.gds-code = ub.goods.gds-code
+                            bf_utd-lines.LineNum  = vLineNum
+                            bf_utd-lines.Article  = ub.goods.artic
+                            bf_utd-lines.GdsName  = ub.goods.gds-name
+                            bf_utd-lines.UnitCode = ub.goods.unit-cli
+                            .
+
+                        tml_:
+                        for each TempMarkLine where TempMarkLine.PartIDTH = TempDocLine.PartIDTH and TempMarkLine.MarkCode <> "" :
+                            find first ub.utd-marking-lines where ub.utd-marking-lines.db-num = bf_utd-lines.db-num and ub.utd-marking-lines.doc-id = bf_utd-lines.doc-id 
+                                and ub.utd-marking-lines.mark = TempMarkLine.MarkCode 
+                                exclusive-lock no-error.
+                            if not available (ub.utd-marking-lines)
+                                then 
+                            do:
+                                def var v-GTIN       as char no-undo.
+                                def var v-mark-ident as char no-undo.
+                                v-GTIN = getGtinByDM(TempMarkLine.MarkCode) .
+                                v-mark-ident = GetCodeIdent(TempMarkLine.MarkCode).
+                                if v-GTIN <> "" then 
+                                do:
+                                    if ismark(v-mark-ident)
+                                        then 
+                                    do:
+                                        find first ub.marking where ub.marking.mark = v-mark-ident exclusive-lock no-error.
+                                        if not available (ub.marking) then 
+                                        do:
+                                            LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Марка &1 не найдена в базе ТН", v-mark-ident).
+                                            vError = true .
+                                            next .
+                                        end.
+                                        find first ub.marking-lines no-lock where ub.marking-lines.mark = v-mark-ident no-error .
+                                        create ub.utd-marking-lines .
+                                        assign
+                                            ub.utd-marking-lines.db-num    = bf_utd-lines.db-num
+                                            ub.utd-marking-lines.doc-id    = bf_utd-lines.doc-id
+                                            ub.utd-marking-lines.gds-code  = bf_utd-lines.gds-code
+                                            ub.utd-marking-lines.LineNum   = bf_utd-lines.LineNum
+                                            ub.utd-marking-lines.doc-level = if available (ub.marking-lines) then ub.marking-lines.doc-level else 1
+                                            ub.utd-marking-lines.mark      = v-mark-ident
+                                            .
+                                    end.
+                                end. /* if v-GTIN <> "" then  */
+                                else 
+                                do:
+                                    LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Неизвестный формат марки &1", v-mark-ident).
+                                    vError = true .       
+                                    next .  
+                                end.
+                            end. /* if not available (ub.utd-marking-lines) */
+                        end. /* tml_: */
+
+                    end. /* if not available (bf_utd-lines) then  */
+                end. /* if not available (ub.gds-obj-attr) then  */
+            end. /* for each TempDocLine: */
+
+            find first bf_utd-lines no-lock where bf_utd-lines.doc-id = bf_utd.doc-id and
+            bf_utd-lines.db-num = bf_utd.db-num no-error .
+            if not available (bf_utd-lines) then delete bf_utd .
+            find first buf_utd-lines no-lock where buf_utd-lines.doc-id = buf_utd.doc-id and
+            buf_utd-lines.db-num = bf_utd.db-num no-error .
+            if not available (buf_utd-lines) then delete buf_utd . 
+            if vError = true then  undo, return false.              
+        end. /* for each TempTrnDoc */
+    
+        
+    end.
+ 
   
   method public logical ImpInventory (table TempTrnDoc, table TempDocLine, userId_ as char):
 

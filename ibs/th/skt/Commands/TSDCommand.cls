@@ -719,7 +719,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        end. 
        input close.
     end.
-    for each TempTrnDocMT where TempTrnDocMT.Complete_ = true:
+    for each TempTrnDocMT 
+/*    where TempTrnDocMT.Complete_ = true*/
+        :
     
       empty temp-table TempTrnDoc.
       empty temp-table TempDocLine.
@@ -749,6 +751,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
         when "InvMarks" then do:
           docType = "invmark".
+        end.
+        when "MarksInv" then do:
+          docType = "MarksInv".
         end.
         when "InvIntroduce" then do:
           docType = "InvIntroduce".
@@ -838,7 +843,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
       end.
       
-      for each TempMarkLineMT where TempMarkLineMT.DocName = TempTrnDoc.ext-doc-code:
+      for each TempMarkLineMT 
+/*      where TempMarkLineMT.DocName = TempTrnDoc.ext-doc-code*/
+          :
       
         create TempMarkLine.
         assign
@@ -849,7 +856,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           TempMarkLine.MarkParent  =  TempMarkLineMT.MarkParent     
           .
       end.
-      
+
       case docType:
 
         when {&TDEDT_Inv} then 
@@ -883,6 +890,13 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         when "UTD_Introduce" then 
           do:
             if tsd:ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+         when "MarksInv" then 
+          do:
+            if tsd:ImpMarksInv (table TempTrnDoc, table TempDocLine, table TempMarkLine)
             then ErrStatus = false.
             else ErrStatus = true.
 
