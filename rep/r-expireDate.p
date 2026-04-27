@@ -352,7 +352,7 @@ put stream OutStr-html unformatted
     '<td colspan="5" text_wrap="true" style="text-align: left;">Период контроля: ' + string(p-period-control) + ' дней</td>' skip
     '</tr>' skip    
     '<tr>' skip
-    '<td colspan="5" text_wrap="true" style="text-align: left;">Показать просроченные товары: ' + if p-expired-goods then "Да" else "Нет" + '</td>' skip
+    '<td colspan="5" text_wrap="true" style="text-align: left;">Показать просроченные товары: ' + if p-expired-goods then "Да"  + '</td>' else "Нет" + '</td>' skip
     '</tr>' skip   
     .
 
