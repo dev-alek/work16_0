@@ -39,6 +39,8 @@ define variable vCPAgreement  as character no-undo.
 define variable vCPWithdrawal as character no-undo.
 define variable vsbpstat as character no-undo.
 define variable vsbprrn as character no-undo.
+define variable vqrpay  as character no-undo.
+
   _proc-03:
   do
   on error undo, return error
@@ -138,6 +140,7 @@ define variable vsbprrn as character no-undo.
           when "CPMisc" then do:
              vsbpstat = gettegjson(buf_temp-temp.field-value,"SBpStat").
              vsbprrn  = gettegjson(buf_temp-temp.field-value,"SBPRRN").
+             vqrpay   = gettegjson(buf_temp-temp.field-value,"QRPay").
           end.
           when "CPWithdrawal" then do:
              vCPWithdrawal = buf_temp-temp.field-value.
@@ -250,6 +253,16 @@ define variable vsbprrn as character no-undo.
                buf_chk-pay-attr.line-num   = lnp-spl
                buf_chk-pay-attr.attr-code  = "SBPRRN"
                buf_chk-pay-attr.attr-value = vsbprrn
+               no-error.
+            end.
+            if vqrpay ne "" and vqrpay ne ? 
+            then do:
+               create buf_chk-pay-attr.
+               assign 
+               buf_chk-pay-attr.doc-code   = buf_chk-doc.doc-code
+               buf_chk-pay-attr.line-num   = lnp-spl
+               buf_chk-pay-attr.attr-code  = "QRPay"
+               buf_chk-pay-attr.attr-value = vqrpay
                no-error.
             end.
             if vCPWithdrawal ne "" and vCPWithdrawal ne ? and dec(vCPWithdrawal) ne 0  
