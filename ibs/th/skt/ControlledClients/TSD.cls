@@ -550,9 +550,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           no-convert
        no-error .
   end.
-  method public void WriteUsers ():
+  method public void WriteUsers (idir as char):
      GetUsers ().
-     UsersPrint("TH_users.txt").
+     UsersPrint(idir + "\TH_users.txt").
   end.
   
   define temp-table tt-user no-undo serialize-name "User"
@@ -597,9 +597,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   end.
   end.
   
-  method public void WriteObjects ():
+  method public void WriteObjects (idir as char):
      getObjects().
-     ObjectsPrint("TH_objects.txt").
+     ObjectsPrint(idir + "\TH_objects.txt").
   end.
   
   define temp-table  tt-Objects no-undo namespace-prefix "Object" serialize-name "Object"
@@ -668,10 +668,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           setResult(type).
   end.
   
-  method public void WriteClients ():
+  method public void WriteClients (idir as character):
      ClientsClear().
      getClients().
-     ClientsPrint("TH_clients.txt").
+     ClientsPrint(idir + "\TH_clients.txt").
   end.
   
   
@@ -2922,8 +2922,8 @@ end.
       .
   end.
   
-  method public void docPrint():
-     tsdstreamopenapp("MT_documents.txt").
+  method public void docPrint(idir as char):
+     tsdstreamopenapp(idir + "\MT_documents.txt").
      for each tt-doc no-lock:  
         put stream tsdstream unformatted 
         tt-doc.doc-num + {&delimiteFld} + 
@@ -2937,7 +2937,7 @@ end.
         tt-doc.user-id + {&delimiteFld} + 
         tt-doc.user-login + {&delimiteFld} +
         decToString(tt-doc.FactSum) + {&delimiteFld} + 
-        string (iso-date (tt-doc.doc-date)) + {&delimiteFld} 
+        iso-date (tt-doc.doc-date) + {&delimiteFld} 
         + string(tt-doc.flags) + {&delimiterLine}.
      end. 
      tsdstreamclose().
@@ -3001,9 +3001,9 @@ end.
         tt-doc-line.jjm         = jjm
      . 
   end.
-  method public void docLinePrint():
+  method public void docLinePrint(idir as char):
   
-      tsdstreamopenapp("MT_lines.txt").
+      tsdstreamopenapp(idir + "\MT_lines.txt").
       for each tt-doc-line no-lock:  
         put stream tsdstream unformatted
           substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
@@ -3075,8 +3075,8 @@ end.
         tt-doc-line-mark.MarkQnty   = iMarkQnty
      .
   end.
-  method public void docLineMarkPrint():
-     tsdstreamopenapp("MT_MarkLines.txt").
+  method public void docLineMarkPrint(idir as char):
+     tsdstreamopenapp(idir + "\MT_MarkLines.txt").
      for each tt-doc-line-mark no-lock:
      put stream tsdstream unformatted 
          substitute ("&3&1&4&1&5&1&6&1&7&8&2",

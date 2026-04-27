@@ -45,10 +45,12 @@ class ibs.th.skt.Commands.CashSend inherits ICommand:
    method override public void ContinueExecution(input req as IRequest, input resp as IResponse ):
 /*      createfile().*/
       define variable vParam as longchar no-undo.
-      if EndProcShed(resp:ParamWait)
+      define variable vTask as character no-undo.
+      vTask = resp:ParamWait:getParamValue("task").
+      if EndProcShed(vTask)
       then do:
          define variable vlogfile as longchar no-undo.
-         vlogfile = Putlog(resp:ParamWait).
+         vlogfile = Putlog(vTask).
          
          resp:condition = resp:STSlist:WriteResponse:NameProp.
          if vlogfile eq ""
@@ -79,7 +81,7 @@ class ibs.th.skt.Commands.CashSend inherits ICommand:
                                                           req:getQueryParam("cash"),
                                                           req:getQueryParam("max-count")  )
                 ) .
-         resp:ParamWait = vTask.
+         resp:ParamWait:setParam("task",vTask).
       end.
       else do:
          resp:condition = resp:STSlist:WriteResponse:NameProp.

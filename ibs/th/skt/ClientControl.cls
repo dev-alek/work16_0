@@ -66,7 +66,7 @@ class ibs.th.skt.ClientControl:
        then do:
           if not writeSock(req:HndlSocket,resp)
           then
-             undo, return error. 
+             undo, return true. 
        end.
        else if    resp:condition eq resp:STSlist:WaitResult:NameProp
                or resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
@@ -77,7 +77,7 @@ class ibs.th.skt.ClientControl:
             ttDeferredCommands.objreq     = req
             ttDeferredCommands.objResp    = resp
           .
-          logWrite:LogStr = substitute ("Wait result Class: &1 Param: &2",resp, resp:ParamWait) .
+          logWrite:LogStr = substitute ("Wait result Class: &1 &2",resp, resp:ParamWait:getParams()) .
           resp:condition = resp:STSlist:WaitResult:NameProp.
           return false.
        end.
@@ -102,7 +102,7 @@ class ibs.th.skt.ClientControl:
        then do:
           if not writeSock(req:HndlSocket,resp)
           then
-             undo, return error. 
+             undo, return true. 
        end.
        else if    resp:condition eq resp:STSlist:WaitResult:NameProp
                or resp:condition eq resp:STSlist:WriteStatusAndWait:NameProp
@@ -113,7 +113,7 @@ class ibs.th.skt.ClientControl:
             ttDeferredCommands.objreq     = req
             ttDeferredCommands.objResp    = resp
           .
-          logWrite:LogStr = substitute ("Wait result Class: &1 Param: &2",resp, resp:ParamWait) .
+          logWrite:LogStr = substitute ("Wait result Class: &1 &2",resp, resp:ParamWait:getParams()) .
           resp:condition = resp:STSlist:WaitResult:NameProp.
           return false.
        end.
@@ -160,7 +160,7 @@ class ibs.th.skt.ClientControl:
         then do:
            if valid-handle (hlog)
            then
-              publish "write-to-log" from hLog (substitute ("Wait result Class: &1 Param: &2",resp, resp:ParamWait)) .
+              publish "write-to-log" from hLog (substitute ("Wait result Class: &1 &2",resp, resp:ParamWait:getParams())) .
            resp:condition = resp:STSlist:WaitResult:NameProp.
         end.
         
@@ -241,7 +241,6 @@ class ibs.th.skt.ClientControl:
        return false.
     end.
     logWrite:WriteDebugLog("Отправляем ответ:").
-    logWrite:WriteDebugLog(VOK).
     glog = writeSock(hndlsocket,VrespOK).
     if    not glog
     then do:

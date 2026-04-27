@@ -15,6 +15,8 @@ Creation date: 01/30/15
 
 */
 
+using ibs.th.gbl.collection.paramCol.
+using ibs.th.skt.Commands.ICommandStatus.
 block-level on error undo, throw.
 class ibs.th.skt.Commands.IResponse abstract: 
 
@@ -22,10 +24,15 @@ class ibs.th.skt.Commands.IResponse abstract:
     Purpose:
     Notes:
    ------------------------------------------------------------------------------*/
-   define public variable STSlist as ibs.th.skt.Commands.ICommandStatus no-undo.   
+   define public variable STSlist as class ICommandStatus no-undo.   
+   define public property ParamWait as class paramCol no-undo 
+   get.
+   set.
+   
    constructor public IResponse (  ):
       super ().
-      STSlist = new ibs.th.skt.Commands.ICommandStatus().
+      STSlist   = new ICommandStatus(). 
+      ParamWait = new paramCol().
    end constructor.
  
   
@@ -75,9 +82,6 @@ class ibs.th.skt.Commands.IResponse abstract:
    . 
    end.
    
-   define public property ParamWait as char no-undo 
-   get.
-   set.
    method public void setContent(arg as longchar ):
       setContent(arg, false).
    end.
@@ -161,8 +165,16 @@ class ibs.th.skt.Commands.IResponse abstract:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public IResponse ( ):
+	   define variable vFiles as character no-undo.
+	   define variable vi     as integer no-undo.
+	   vFiles = paramWait:getParamValue("DeleteFile").
+	   if vFiles ne ?
+	   then do vi = 1 to num-entries(vFiles):
+	      os-delete value(entry(vi,vFiles)) recursive.
+	   end.
+	   delete object ParamWait.
 	   set-size(Content) = 0.
-      delete object STSlist.
+           delete object STSlist.
 	end destructor.
  
     
