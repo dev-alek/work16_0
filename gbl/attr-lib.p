@@ -14946,6 +14946,7 @@ procedure gds-obj-dt-seasons :
   :
     run ref/dtseasons.p
       (input  parparentproc
+      , p-gds-code
       ,output rid
       ) no-error.
     if rid <> ? then 

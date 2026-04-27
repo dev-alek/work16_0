@@ -41,9 +41,11 @@ else do on error undo, leave:
    mCodeTrg:startlevel = num-entries(mCodeTrg:parent,{&delim-par}).
    mCodeTrg:parparentproc = Parparentproc.
    if ititle ne "" and ititle ne ?
-   then mCodeTrg:title = ititle.
+   then mCodeTrg:title = entry(1,ititle,{&delim-par}).
    else if available code
    then mCodeTrg:title = code.codename.
+   if num-entries(ititle,{&delim-par}) > 1 then
+     mCodeTrg:filter = entry(2,ititle,{&delim-par}).
    mCodeTrg:brwcode().
    finally:
        delete object mCodeTrg.

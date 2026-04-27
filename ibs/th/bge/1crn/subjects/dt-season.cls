@@ -67,6 +67,9 @@ class ibs.th.bge.1crn.subjects.dt-season inherits ibs.th.bge.1crn.subjects.code:
       when "unit-code" then do:
         assign misc3 = {&attr-str} .
       end.
+      when "parent-code" then do:
+        assign CodeValue = {&attr-str} .
+      end.
 
     end case.
   end.
@@ -81,6 +84,7 @@ class ibs.th.bge.1crn.subjects.dt-season inherits ibs.th.bge.1crn.subjects.code:
     assign
       v-str = "code" when code_ = ? 
       v-str = v-str + ",chk-name" when CodeName = ?
+      v-str = v-str + ",parent-code" when CodeValue = ?
     . 
     v-str = trim (v-str, ",").
     if v-str > ''
