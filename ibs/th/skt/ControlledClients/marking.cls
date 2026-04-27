@@ -359,11 +359,21 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                   RETURN.
               END.
               ELSE DO:
+                  /* Проверяем офлайн */
                   vAccMarkCheckOff = ChekLocalMark(mark-short).
                   vCheckLocalMark = TRUE.
-                  if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" then 
-                  vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
+                  /* Проверяем срок годности по дате из 1С */
+                  if vAccMarkCheckOff = "" and 
+                     mCheckSts = 2 and 
+                     available buf_marking 
+                  then 
+                     vAccMarkCheckOff = ChekExpirationDate({&shop},obj-code,buffer buf_marking).
+                     
+                  if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" 
+                  then vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
                   else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
+                  
+                  
               END.
               
            END.                 
@@ -2609,7 +2619,68 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                        oRunedOffLine)).  
     RETURN vChkScanSts.
   END METHOD.
-
+  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:  Проверка срока годности  
+  ------------------------------------------------------------------------------*/
+  METHOD PRIVATE CHARACTER ChekExpirationDate (       
+      p-obj-type  AS CHARACTER, 
+      p-obj-code  AS INTEGER,
+      buffer buf_marking for ub.marking):
+         
+      DEFINE VARIABLE vExpireDate AS DATETIME-TZ NO-UNDO.
+      DEFINE VARIABLE vCheckDate  AS LOGICAL     NO-UNDO.
+      DEFINE VARIABLE vRetProp    AS CHARACTER   NO-UNDO.
+      DEFINE VARIABLE vErrTxt     AS CHARACTER   NO-UNDO.      
+      
+      DEFINE BUFFER buf_sys-ctrl     FOR ub.sys-ctrl.            
+            
+      IF AVAILABLE buf_marking
+         AND buf_marking.expDate <> ?           
+      THEN DO: 
+         vExpireDate = datetime-tz(ENTRY(1,buf_marking.expDate,"Z")) NO-ERROR.
+         
+         ChekTypeMarkByDm(buf_marking.mark).
+         
+         IF mTypeMark <> "" THEN
+             vCheckDate = GetMarkProp (p-obj-type,
+                                       p-obj-code,
+                                       {&attr-marking_checkDate},
+                                       mTypeMark).
+         /* если по данному типу марки включена настройка проверять срок годности */                              
+         IF vCheckDate THEN DO:
+             /* могли еще не считывать настройки подключения к ГИС МТ (когда была проверка в ТС ПИоТ) */            
+             IF gismt-UpdateRequest THEN DO:
+                FIND FIRST buf_sys-ctrl NO-LOCK NO-ERROR.
+                IF AVAILABLE buf_sys-ctrl AND buf_sys-ctrl.db-num <> 0 
+                THEN          
+                    vRetProp = get-gismt-prop ({&db},
+                                               buf_sys-ctrl.db-num) NO-ERROR.                                          
+             END.                               
+             
+             /* срок годности прошел */
+             IF vExpireDate <> ? AND 
+                vExpireDate < NOW + gismt-BanDate * 60 * 1000
+             THEN DO:
+                ASSIGN
+                   vErrTxt   = substitute("Срок годности товара истек &1.", string(vExpireDate,"99/99/9999 HH:MM"))
+                   mCheckSts = 0
+                   .
+                LogWrite:WriteFileToLog(SUBSTITUTE("Проверка срока годности не прошла: марка &1 срок годности &2",buf_marking.mark,string(vExpireDate,"99/99/9999 HH:MM"))).   
+                dbgPrint("marking.log", SUBSTITUTE("Срок годности по данным из 1С: &1 . Товар просрочен, заблокирован к продаже.",
+                                                   vExpireDate)). 
+             END.
+             ELSE DO:
+                LogWrite:WriteFileToLog(SUBSTITUTE("Проверка срока годности прошла успешно: марка &1 срок годности &2",buf_marking.mark,string(vExpireDate,"99/99/9999 HH:MM"))). 
+                dbgPrint("marking.log", SUBSTITUTE("Срок годности по данным из 1С: &1 . Проверка прошла успешно.",
+                                                    vExpireDate)).
+             END.                                   
+         END.                                   
+      END.                                   
+      RETURN vErrTxt.
+  END METHOD.
+   
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:  устанавливает online-result 
