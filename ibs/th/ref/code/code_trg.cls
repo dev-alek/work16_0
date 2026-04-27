@@ -544,6 +544,16 @@ class ibs.th.ref.code.code_trg final:
              
           end.
 
+          else if icode eq "XML_BACKUP"
+          then do:
+             MaxLevel = MaxLevel + 2.
+             formLable(1, 1,"Êמה ").
+             formLable(1, 3,"Ôאיכ").
+             formLable(1, 4,"Õור "). 
+             formLable(1, 6, " ").
+           
+          end.
+
        end.
     end.
     

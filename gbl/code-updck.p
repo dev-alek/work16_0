@@ -20,6 +20,8 @@ define variable vss-date        as character no-undo init "$Date:$":U .
 define variable vss-workfile    as character no-undo init "$Workfile:$":U .
 define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
+
+
 { cmp/vssrevis.i }
 { cmp/str-glbl.i }
 { gbl/db-attr.i  }
@@ -50,14 +52,13 @@ define variable v-fullfilename as character no-undo.
 define stream md5in.
 define stream dir-stream.
 
-
 subscribe "RunProcXmlImp" anywhere run-procedure "RunProcAny". 
 subscribe "NotSendNwsForTable" anywhere run-procedure "DisableNws". 
 subscribe "DisableNwsTable" anywhere run-procedure "SetNwsTable".
 vimport= new ibs.th.bge.xmlimpexp().
 
 mDirUpdCk = objExists("updck","D").
-run waitfram-show in parparentproc (substitute("DEBUGER: mDirUpdCk:&1.", mDirUpdCk)).
+/*run waitfram-show in parparentproc (substitute("DEBUGER: mDirUpdCk:&1.", mDirUpdCk)). */
 if mDirUpdCk = ? then return.
 input stream dir-stream from os-dir( mDirUpdCk ) no-attr-list no-echo .
 
@@ -66,8 +67,9 @@ repeat:
    /* выгружаем во временную таблицу xml-файлы из updck      */
    /* вдруг понадобиться их выполнять в определенном порядке */
    /* тогда их надо нумеровать */
+
    import stream dir-stream v-filename v-fullfilename .
-run waitfram-show in parparentproc (substitute("DEBUGER: v-fullfilename:&1.", v-fullfilename)).
+/* run waitfram-show in parparentproc (substitute("DEBUGER: v-fullfilename:&1.", v-fullfilename)). */
 
    file-info :file-name = v-fullfilename.
    if caps( file-info :file-type ) begins "F":U and
@@ -79,7 +81,7 @@ run waitfram-show in parparentproc (substitute("DEBUGER: v-fullfilename:&1.", v-
          ttUpd.fNamePath = v-fullfilename
          ttUpd.fMd5      = entry(1, v-fullfilename, ".") + ".md5"
        .
-run waitfram-show in parparentproc (substitute("DEBUGER: ttUpd.fMd5:&1.", ttUpd.fMd5)).
+/* run waitfram-show in parparentproc (substitute("DEBUGER: ttUpd.fMd5:&1.", ttUpd.fMd5)). */
    end.
 end.
 input stream dir-stream close.
@@ -93,7 +95,8 @@ for each ttUpd by ttUpd.fName:
       then 
          leave block-for.
       
-      run waitfram-show in parparentproc ("Обработка " + mFile ).
+/*      run waitfram-show in parparentproc ("Обработка " + mFile ) no-error.  */
+/*      message "Обработка "  mFile  view-as alert-box.*/
       if search(mfilemd5) = ? then
       do:
         return error substitute("Не найден файл сигнатуры &1.", mfilemd5).  
@@ -111,10 +114,10 @@ for each ttUpd by ttUpd.fName:
       then do:
          vimport:xmldom-load-ver  ( mfile,? ) no-error.
 /*         mRunTransaction = vimport:mTransaction.*/
-
          if error-status:error
          then
             return error return-value.
+
 
 /*         if mRunTransaction then*/
 /*         do:                    */
@@ -124,6 +127,26 @@ for each ttUpd by ttUpd.fName:
                if error-status:error
                   then return error return-value.
             end.
+
+         CODE_UPD:                                                                                           
+         do transaction on error undo CODE_UPD, leave CODE_UPD:  
+         define variable lcXML as longchar no-undo.
+         copy-lob from file mfile to lcXML.
+            create code  no-error.
+            assign
+               code.parent    = substitute("XML_BACKUP")
+               code.code      = substitute("&1 &2",string(now), entry(num-entries(mfile, "\"),mfile, "\"))
+               code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
+               code.misc1     = v-md5-signature
+               code.misc2     = string(mdbver)
+               code.misc3     = lcXML
+               code.procview  = "ibs\th\ref\code\xmlbackup.p"
+               /*code.nwsgbd    = yes.*/
+               /*code.nwsubd    = yes. */
+            .
+         end.
+
+
 /*         end.                                                 */
 /*         else do:                                             */
 /*            vimport:updatetablefordb(this-procedure) no-error.*/
