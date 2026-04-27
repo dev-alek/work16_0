@@ -48,7 +48,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   define private variable hRoot       as handle    no-undo.
   define private variable hDoc        as handle    no-undo.
   define private variable hRow        as handle    no-undo.
-  define private variable tthDocument as handle    no-undo.
   define private variable i           as integer   no-undo.
   define private variable userId_     as character no-undo.
   define private variable sn          as character no-undo.
@@ -72,7 +71,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
                          chr(13) + chr(10) + chr(13) + chr(10) , 
                          "&1",
                          "&2").
-    os-command silent value( 'set pro >>procarch') .
+    os-command silent value( 'set processor_Architecture >procarch') .
     if search ("procarch") = ? 
     then do:
       logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
@@ -81,8 +80,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.    
 
     input from value (search('procarch')) no-convert.
-    if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
-      then assign is-ProcArch64 = true.
     import tempStr.
     if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
       then assign is-ProcArch64 = true.
@@ -146,15 +143,22 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
              
        define variable vobjtype as character no-undo.
        logWrite:LogStr = "".
-       
-       copy-lob
-          from  object req:ContentBuff
-          to file "documents.s3db"
-          no-convert
-       no-error .
+       if    get-size(req:ContentBuff) eq 0
+          or get-size(req:ContentBuff) eq ?
+       then
+          os-delete value (search ("documents_tsd.s3db")).
+       else 
+          copy-lob
+             from  object req:ContentBuff
+             to file "documents.s3db"
+             no-convert
+          no-error .
        if session:debug-alert
        then do:
           os-delete value (search ("documents_tsd.s3db")) no-error.
+          if    get-size(req:ContentBuff) ne 0
+            and get-size(req:ContentBuff) ne ?
+          then
           copy-lob
              from  object req:ContentBuff
              to file "documents_tsd.s3db"
@@ -256,13 +260,21 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define variable vStatus as character no-undo.
     vpos    = lookup("status",resp:ParamWait).
     vStatus = entry(vpos + 1,resp:ParamWait).
-    if vStatus eq "step1"
+    if vStatus eq "dictionaries"
+    then do:
+       run gbl/pause.p( 1000).
+       if writeSock(vStatus)
+       then
+          resp:condition = resp:STSlist:ReciveCommand:NameProp.
+    end.
+    else if vStatus eq "step1"
     then do transaction:
-       logWrite:WriteFileToLog("DBInitExpDoc.txt").
+       logWrite:WriteFileToLog("DBInitExpDoc.txt","IBM866").
        run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
        startStep('Начало загрузки документов.').
        parseCSV().
+       
        endStep('Завершена загрузки документов.').
        startStep('Начало выгрузки накладных.').
        tsd:clear().
@@ -271,6 +283,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        startStep('Начало выгрузки ЭДО.').
        tsd:getUTDDoc(req:HeadHTTP:getValue("TSD-protocol")).
        endStep('Завершена выгрузка ЭДО').
+       tsd:docPrint().
+       tsd:docLinePrint().
+       tsd:docLineMarkPrint().
        startStep('Начало загрузки документов в ТСД.').
        os-delete "documents_new.s3db".
        vpid = runProc('DBInit.exe Doc 30 31 >DBInitDoc.txt'  + {&new-line} + 'rename documents.s3db documents_new.s3db').
@@ -306,17 +321,17 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          then
             leave block-size.
       end.
-      if vsize eq ?
+      if vsize eq ? or vsize eq 0
       then do:
          set-size (mbuffer1) = 0.
-         logWrite:WriteFileToLog("DBInitDoc.txt").
+         logWrite:WriteFileToLog("DBInitDoc.txt","IBM866").
          logWrite:LogStr = "Не удалость произвести выгрузку".
       end.
       else do:
          set-size (mbuffer1) = 0.
          set-size (mbuffer1) = vsize.
          input from value (file-info:file-name) binary no-convert.
-         import mbuffer1.
+         import mbuffer1 no-error .
          input close.
       end.
       
@@ -355,7 +370,40 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
   end.
   
-
+  method private int64 dumpDistric(iprotocol as char):
+     define variable tempStr       as char     no-undo.
+      startStep("Начало конвертации справочника.").
+      if iprotocol > ""
+      then do:
+         define variable vfileDbInit as character no-undo.
+         vfileDbInit = "exe/DBInit_" + replace (iprotocol,".","_") +  ".exe".
+         if (search(vfileDbInit)) eq ?
+         then do:
+            define variable vMesForTsd as character no-undo.
+             vMesForTsd = "Не найден файл " + vfileDbInit + " для версии протокола " + iprotocol.
+             writeSockError (hndlsocket, vMesForTsd,  iprotocol).
+             logWrite:LogStr = vMesForTsd.
+             ErrStatus = true.
+             return error . 
+             
+          end. 
+          else
+             os-copy value(search(vfileDbInit)) value ("DBInit.exe").
+      end.
+      else
+         os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
+      if is-ProcArch64 
+      then do:
+         os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+      end.
+      else do:
+         os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
+      end.    
+    
+      return runProc( 'DBInit.exe Dict 30 31 >DBInitDict.txt') .
+       
+       
+   end.
   method public override void Execute_( input req as IRequest, resp as class IResponse ):
   ErrStatus = false.
   do transaction:
@@ -374,9 +422,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        return.
     end.
     
-    
-    logWrite = new logWrite().
-
     create x-document hDoc.
     create x-noderef  hRoot.
     create x-noderef  hRow.
@@ -400,9 +445,19 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       tsd:ObjCode = integer (substring (hRoot:get-attribute("to"), 4))
       tsd:ObjType = substring (hRoot:get-attribute("to"), 1, 3)
       tsd:ReqType = hRoot:get-attribute("item")
+      tsd:ResType = hRoot:get-attribute("responseType")
       tsd:CurrDecSeparator = hRoot:get-attribute("currDecSeparator")
       tsd:IsMarkOn = if hRoot:get-attribute("MarksReg") = "true" then true else false
       .
+      if tsd:ResType eq "xml"
+      then do:
+         resp:Content-Type = "text/xml; charset=UTF-8".
+         
+      end.
+      else if tsd:ResType eq "json"
+      then
+       resp:Content-Type = "application/json; charset=UTF-8".  
+       
     hndlsocket = req:HndlSocket.
     case tsd:ReqType :
       when "SETTINGS" then 
@@ -412,48 +467,72 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
       when "TH_ALL" then 
         do:
+          tsd:usersClear().
           startStep('Начало кеширования справочника пользователей.').
           tsd:WriteUsers().
           endStep('Завершено кеширование справочника пользователей.').
           startStep('Начало кеширования справочника объектов.').
+          tsd:objectsClear().
           tsd:WriteObjects().
           endStep('Завершено кеширование справочника объектов.').
           startStep('Начало кеширования справочника контрагентов.').          
           tsd:WriteClients().
           endStep('Завершено кеширование справочника контрагентов.').
-          startStep('Начало кеширования справочника товаров.').
-          tsd:WriteGoods().
-          endStep('Завершено кеширование справочника товаров.').
-          startStep('Начало кеширования справочника штрих-кодов.').
-          tsd:WriteBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
-          endStep('Завершено кеширование справочника штрих-кодов.').
+          startStep('Начало кеширования справочника товаров и штрих-кодов.').
+          tsd:getGoodsAndBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
+          endStep('Завершено кеширование справочника товаров и штрих-кодов.').
           str = 'dictionaries'.
+          define variable vpid as integer no-undo.
+          vpid = dumpDistric(req:HeadHTTP:getValue("TSD-protocol")).
+          resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
+          resp:ParamWait = substitute ("pid,&1,status,&2", vpid, str). 
         end.
       when "TH_WB" then 
         do:
+          tsd:docClear().
           startStep('Начало кеширования документов.').
           tsd:GetWB().
-          endStep('Завершено кеширование справочника штрих-кодов.').
+          tsd:getUTDDoc(req:HeadHTTP:getValue("TSD-protocol")).
+          endStep('Завершено кеширование документов.').
+          tsd:docWrite().
         end.
       when "TH_users" then 
         do:
-          tsd:WriteUsers().
+          tsd:usersClear(). 
+          tsd:GetUsers ().
+          tsd:UsersPrint(tsd:ResType).
         end.
       when "TH_objects" then 
         do:
-          tsd:WriteObjects().
+          tsd:objectsClear().
+          tsd:getObjects().
+          tsd:ObjectsPrint(tsd:ResType).
         end.
       when "TH_clients" then 
         do:
-          tsd:WriteClients().
+          tsd:ClientsClear ().
+          tsd:getClients().
+          tsd:ClientsPrint(tsd:ResType).
         end.
-      when "TH_goods" then 
+      when "TH_goods" then  
         do:
-          tsd:WriteGoods().
+          tsd:GoodsClear().
+          tsd:getGoods().
+          tsd:GoodsPrint(tsd:ResType).
         end.
       when "TH_barcodes" then 
         do:
-          tsd:WriteBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
+          tsd:BarcodesClear().
+          tsd:getBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
+          tsd:BarcodesPrint(tsd:ResType).
+          
+        end.
+     when "TH_goodsAndBarcodes" then 
+        do:
+          tsd:GoodsAndBarcodesClear().
+          tsd:getGoodsAndBarcodes(yes, yes, req:HeadHTTP:getValue("TSD-protocol")).
+          tsd:GoodsAndBarcodesPrint(tsd:ResType).
+          
         end.
       when "WAYBILL" then 
         do:
@@ -477,7 +556,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               if not available buf_bar-code then do:
                 logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
-                writeSock("",req:HeadHTTP:getValue("TSD-protocol")).
+                writeSock("").
               end.
               
             end.
@@ -555,14 +634,30 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
 
     if ErrStatus then 
     do:
-      writeSock("",req:HeadHTTP:getValue("TSD-protocol")).
+      writeSock("").
       if ErrStatus = true then undo.
     end.
     else do:
-      writeSock(str,req:HeadHTTP:getValue("TSD-protocol")).
-      if ErrStatus = true then undo.
+      if     resp:condition ne resp:STSlist:WriteStatusAndWait:NameProp
+         and resp:condition ne resp:STSlist:WaitResult:NameProp
+      then do:
+      if tsd:ResType eq "xml" or tsd:ResType eq "json" 
+      then do:
+         resp:condition = resp:STSlist:WriteResponse:NameProp.
+         resp:ConvertPage = "UTF-8".
+         resp:setContent(tsd:SomeStr). 
+      end.
+      else do:
+         writeSock(str).
+         if ErrStatus = true then undo.
+      end.
+      end.
     end.
-    
+    finally:
+        delete object hDoc no-error.
+        delete object  hRoot no-error.
+        delete object  hRow no-error.
+    end.
   end /*trans*/.
     
   end method.
@@ -866,7 +961,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
 
 
   /*------------------------------------------------------------------------------
-   Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
 
@@ -1043,64 +1137,18 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   end method.
 
   
-  method private logical writeSock ( arg as character, iprotocol as char ):
+  method private logical writeSock ( arg as character):
     
     define variable mbuffer       as memptr   no-undo.
     define variable mbuffer1      as memptr   no-undo.
     define variable tempLongCh    as longchar no-undo.
-    define variable tempStr       as char     no-undo.
     define variable glog          as logical  no-undo.
-    define variable is-ProcArch64 as logical  no-undo init no.
     
     define variable mTypeResp as character no-undo init "text/csv".
     
     if arg = "dictionaries" then 
     do:
-      os-command silent value( 'set pro >>procarch') .
-      if search ("procarch") = ? 
-      then do:
-         logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
-         return false.
-      end.    
-
-      input from value (search('procarch')) no-convert.
-      import tempStr.
-      if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
-      then assign is-ProcArch64 = true.
-      import tempStr.
-      if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
-      then assign is-ProcArch64 = true.
-      input close.
-      startStep("Начало конвертации справочника.").
-      if iprotocol > ""
-      then do:
-         define variable vfileDbInit as character no-undo.
-         vfileDbInit = "exe/DBInit_" + replace (iprotocol,".","_") +  ".exe".
-         if (search(vfileDbInit)) eq ?
-         then do:
-            define variable vMesForTsd as character no-undo.
-             vMesForTsd = "Не найден файл " + vfileDbInit + " для версии протокола " + iprotocol.
-             writeSockError (hndlsocket, vMesForTsd).
-             logWrite:LogStr = vMesForTsd.
-             ErrStatus = true.
-             return error . 
-             
-          end. 
-          else
-             os-copy value(search(vfileDbInit)) value ("DBInit.exe").
-      end.
-      else
-         os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
-      if is-ProcArch64 
-      then do:
-         os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-      end.
-      else do:
-         os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-      end.    
-    
-      os-command silent value( 'DBInit.exe Dict 30 31 >DBInitDict.txt') .
-      logWrite:WriteFileToLog("DBInitDict.txt").
+      logWrite:WriteFileToLog("DBInitDict.txt","IBM866").
       if search ("dictionaries.s3db") = ? 
       then do:
         logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
@@ -1118,54 +1166,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
     else 
     do:
-/*      
-    os-command silent value( 'set pro >>procarch') .
-    if search ("procarch") = ? 
-    then do:
-      logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
-      return false.
-    end.    
-
-    input from value (search('procarch')) no-convert.
-    import tempStr.
-    if not index ("PROCESSOR_ARCHITECTURE=AMD64", tempStr) = 0
-      then assign is-ProcArch64 = true.
-    import tempStr.
-    if not index ("PROCESSOR_ARCHITEW6432=AMD64", tempStr) = 0
-      then assign is-ProcArch64 = true.
-    input close.
-
-    if req:HeadHTTP:getValue("TSD-protocol") > ""
-      then
-         os-copy value(search("exe/DBInit_1_6_a.exe")) value ("DBInit.exe").
-      else
-         os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
-        
-    
-    if is-ProcArch64 
-    then do:
-      os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-    end.
-    else do:
-      os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
-    end.    
-    
-    
-    os-command silent value( 'DBInit.exe 30 31') .
-    if search ("documents.s3db") = ? 
-    then do:
-        logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
-      return false.
-    end.
-    assign
-      file-info:file-name = "documents.s3db"
-      .
-      set-size (mbuffer1) = file-info:file-size.
-      input from value (file-info:file-name) binary no-convert.
-      import mbuffer1.
-      input close.*/
-      
-      
       set-size(mbuffer1) = length (tsd:SomeStr, "RAW":U) + 1.
       put-string(mbuffer1,1) = tsd:SomeStr.        
     end.

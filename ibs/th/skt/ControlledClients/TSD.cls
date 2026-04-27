@@ -63,13 +63,22 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     
   define public property ObjType as character no-undo
     private get.
-    set.
+    set (arg as char):
+       ObjType = if arg eq "sho"
+                 then
+                    "маг"
+                 else
+                    arg.
+    end.
 
   define public property SN as character no-undo
     private get.
     set.
 
   define public property ReqType as character no-undo
+    get.
+    set.
+  define public property ResType as character no-undo
     get.
     set.
 
@@ -101,9 +110,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
+  define variable bc-frmt         as character no-undo .
+  define variable bc-pfx          as character no-undo .
 		
   constructor public TSD (  ):
-
+    define variable v-par-type as character no-undo.
     keyrec = new keyrec ().
     logWrite = new LogWrite().
     if not valid-handle (ibs.th.gbl.gbl-hndllib:g#trdcalib)
@@ -111,6 +122,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       run str/trdcalib.p persistent no-error.
     end.
     { str/trdcalib.i class}
+    /* нужны для bc-gnrti.i */
+    run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
+    run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.  
+    
     os-delete value (search ("MT_documents.txt")) no-error.
     os-delete value (search ("MT_lines.txt")) no-error.
     os-delete value (search ("MT_MarkLines.txt")) no-error.
@@ -120,17 +135,17 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
      os-delete value (search ("MT_documents.txt")) no-error.
     os-delete value (search ("MT_lines.txt")) no-error.
     os-delete value (search ("MT_MarkLines.txt")) no-error.
+    docClear().
   end.
 
-
-  define temp-table TempBCode no-undo
+  define temp-table TempBCode no-undo serialize-name "Barcode"
     field gds-code as integer
     field b-str as character
-    field priceSale as character
+    field priceSale as decimal 
     field unit-cli  as character
-    field cliBaseRate as character
+    field cliBaseRate as decimal 
     index pi is unique primary b-str.
-
+  
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
@@ -184,10 +199,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 /*    define variable cLine      as longchar no-undo. */
 /*    define variable cMarkLine  as longchar no-undo. */
     define variable dFactSum   as decimal   no-undo.
-    define variable factQnty   as character no-undo.
-    define variable docQnty    as character no-undo.
     define variable priceSale  as character no-undo.
-    define variable FactSum    as character no-undo.
     define variable docType    as character no-undo.
     define variable dPriceSale as decimal   no-undo.
     define variable hour     as integer no-undo.
@@ -196,6 +208,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable timeleft as integer no-undo. 
     define variable decDocQnty as decimal no-undo.
     define variable decFactQnty as decimal no-undo.
+    
     define variable jj as integer no-undo.
     define variable jjm as integer no-undo.
     define variable iim as integer no-undo.
@@ -211,18 +224,13 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     
     def    var      internal-b-code like ub.bar-code.b-code no-undo .
     def    var      full-b-code     as character init "" no-undo .
-    def    var      bc-frmt         as character no-undo .
-    def    var      bc-pfx          as character no-undo .
-    def    var      v-par-type      as character no-undo .
-
+    
     define variable myflagsDoc     as class flagsdoc     no-undo.
     define variable myflagsDocLine as class flagsdocline no-undo.
     
     myflagsDoc = new flagsdoc ().
     myflagsDocLine = new flagsdocline ().
     
-    run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
-    run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.  
     block-trn:
     for each buf_trn-doc where 
             buf_trn-doc.obj-type = ObjType 
@@ -242,7 +250,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     for each inv-doc-attr no-lock where (inv-doc-attr.doc-code = buf_trn-doc.doc-code 
                                 and inv-doc-attr.attr-code = "ItogInv") or ( inv-doc-attr.doc-code = buf_trn-doc.doc-code 
                                   and inv-doc-attr.attr-code = "ItogInvManual" ):
-    next block-trn.  
+       next block-trn.  
     end.
     find first inv-doc-attr no-lock where inv-doc-attr.doc-code = buf_trn-doc.doc-code and inv-doc-attr.attr-code = "invMultDevice" and inv-doc-attr.attr-value = string(true) no-error .
     if not available (inv-doc-attr) and buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then next .  
@@ -297,42 +305,51 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           
           assign
             priceSale   = if buf_doc-line.price-rubl <> 0 and buf_doc-line.price-rubl <> ? then string (buf_doc-line.price-rubl) else "0"
-            factQnty    = string (decFactQnty)
-            docQnty    = string (decDocQnty)
             .
           assign
             priceSale = if buf_doc-line.price-rubl > -1 and buf_doc-line.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-            factQnty  = if buf_doc-line.fact-qnty > -1 and buf_doc-line.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
-            docQnty  = if buf_doc-line.doc-qnty > -1 and buf_doc-line.doc-qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
             .
 /*          cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).*/
-        tsdstreamopenapp("MT_lines.txt"). 
-          jjm = jjm + 1.
-          put stream tsdstream unformatted 
-          substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
-                      {&delimiteFld},
-                      string (jjm),
+        addDocLine(jjm,
                       buf_trn-doc.doc-code,
-                      if docType = 'inv' then string (pos) else string (buf_doc-line.line-num),
+                       if docType = 'inv' then pos else buf_doc-line.line-num,
                       buf_goods.gds-code,
-                      buf_goods.gds-name,
+                       buf_goods.gds-name ,
                       buf_goods.unit-base,
                       full-b-code,
-                      priceSale
-                      
-                      
-                     )
-                     +
-           substitute ("&3&1&4&1&5&1&6&1&7&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      docQnty,
-                      "0",
+                       priceSale,
+                       decDocQnty,
+                       0,
                       "",
                       "",
-                      string (myflagsDocLine:FlagsToInt)
-)          
-          .
+                       myflagsDocLine:FlagsToInt  ).
+/*        tsdstreamopenapp("MT_lines.txt").                */
+/*          jjm = jjm + 1.                                 */
+/*          put stream tsdstream unformatted               */
+/*          substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",*/
+/*                      {&delimiteFld},                    */
+/*                      string (jjm),                      */
+/*                      buf_trn-doc.doc-code,              */
+/*                      buf_goods.gds-name,                */
+/*                      buf_goods.gds-code,                */
+/*                      buf_goods.gds-name,                */
+/*                      buf_goods.unit-base,               */
+/*                      full-b-code,                       */
+/*                      priceSale                          */
+/*                                                         */
+/*                                                         */
+/*                     )                                   */
+/*                     +                                   */
+/*           substitute ("&3&1&4&1&5&1&6&1&7&2",           */
+/*                      {&delimiteFld},                    */
+/*                      {&delimiterLine},                  */
+/*                      docQnty,                           */
+/*                      "0",                               */
+/*                      "",                                */
+/*                      "",                                */
+/*                      string (myflagsDocLine:FlagsToInt) */
+/*)                                                        */
+/*          .                                              */
           
         tsdstreamclose().
           
@@ -363,13 +380,13 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             decFactQnty = buf_parts.fact-qnty.
             assign
               priceSale   = if buf_parts.price-rubl <> 0 and buf_parts.price-rubl <> ? then string (buf_parts.price-rubl) else "0"
-              factQnty    = string (decFactQnty)
-              docQnty    = string (decDocQnty)
+/*              factQnty    = string (decFactQnty)*/
+/*              docQnty    = string (decDocQnty)  */
               .
             assign
               priceSale = if buf_parts.price-rubl > -1 and buf_parts.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-              factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
-              docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
+/*              factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")*/
+/*              docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")             */
               .
             keyrec:GenKeyRec({&table_parts}, buffer buf_parts:handle, output v-keyrec).
             v-alc-code = if num-entries  (buf_parts.alc-ref-ab-path, ",") < 3 then "" else entry (3, buf_parts.alc-ref-ab-path, ",").
@@ -379,86 +396,64 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
             pos = pos + 1.
             iim = 0.
-            tsdstreamopenapp("MT_MarkLines.txt").
             for each buf_gen-attr no-lock where buf_gen-attr.p-key = v-keyrec and buf_gen-attr.table-name = {&excise-mark}:
               iim = iim + 1.
               jj = jj + 1.
 /*              cMarkLine = cMarkLine + substitute ('<MarkLines DocName="&1"  MarkCode="&2" Sts="&3" PartIDTH="&4" />', buf_doc-line.doc-code, buf_gen-attr.attr-code, "TH", v-keyrec).*/
-              put stream tsdstream unformatted 
-              substitute ("&3&1&4&1&5&1&6&1&7&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      string (jj),
+              addDocLineMark(
+                    jj,
                       buf_trn-doc.doc-code,
+                    pos,
                       buf_gen-attr.attr-code,
                       v-keyrec,
-                      "TH"
-                      
-                     )             
-          .
-              
-              string (jj) + {&delimiteFld} + 
-              buf_trn-doc.doc-code + {&delimiteFld} + buf_gen-attr.attr-code + {&delimiteFld} 
-              + v-keyrec + {&delimiteFld} + "TH" + {&delimiterLine}.
+                    "TH",
+                    ?,
+                    ?
+                    ).
             end.
-            tsdstreamclose().
             
-            tsdstreamopenapp("MT_lines.txt"). 
               jjm = jjm + 1.
               if decimal (iim) = buf_parts.qnty
                 then myflagsDocLine:isEditManualFullQnty = true.
                 else myflagsDocLine:isNotEditManualQnty = true.
-              put stream tsdstream unformatted 
-              substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
-                      {&delimiteFld},
-                      string (jjm),
+             addDocLine(jjm,
                       buf_trn-doc.doc-code,
-                      string (pos),
-                      string (buf_goods.gds-code),
-                      buf_goods.gds-name,
+                       pos,
+                       buf_goods.gds-code,
+                       buf_goods.gds-name ,
                       buf_goods.unit-base,
                       full-b-code,
-                      priceSale
-                      
-                      
-                     )
-                     +
-             substitute ("&3&1&4&1&5&1&6&1&7&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      docQnty,
-                      "0",
+                       priceSale,
+                       decDocQnty,
+                       0,
                       "", /* v-alc-code */
                       v-keyrec,
-                      string (myflagsDocLine:FlagsToInt)
-                     )
-              
-          .
-            tsdstreamclose().
+                       myflagsDocLine:FlagsToInt  ).
             
 /*            dFactSum = buf_doc-line.fact-qnty + dFactSum.*/
           end.
         end.      
       end.
       
-      FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
       if buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then myflagsDoc:setFlagsToInt(1). /* Было решено сделать флаг 1 всегда для инвентаризаций на АКС от 22.04.2025 */
       
       find first buf_user-login where buf_user-login.user-id = buf_trn-doc.user-name  no-lock no-error.
+      addDoc(
+           buf_trn-doc.doc-code,
+           docType,
+           false,
+           buf_trn-doc.status_ + string (buf_trn-doc.flag, "+/-"),
+           buf_trn-doc.cli-code,
+           buf_trn-doc.cli-type,
+           buf_trn-doc.obj-code,
+           buf_trn-doc.obj-type,
+           buf_trn-doc.user-name,
+           if available (buf_user-login) then buf_user-login.user-login else "",
+           dFactSum,
+           datetime-tz (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000),
+           myflagsDoc:FlagsToInt
+      ).
       
-      tsdstreamopenapp("MT_documents.txt"). 
-        put stream tsdstream unformatted buf_trn-doc.doc-code + {&delimiteFld} + 
-        docType + {&delimiteFld} + "false" + {&delimiteFld} + buf_trn-doc.status_ + string (buf_trn-doc.flag, "+/-") + {&delimiteFld} + 
-        string (buf_trn-doc.cli-code) + {&delimiteFld} + buf_trn-doc.cli-type + {&delimiteFld} + 
-        string (buf_trn-doc.obj-code) + {&delimiteFld} + buf_trn-doc.obj-type + {&delimiteFld} + 
-        (if available (buf_user-login)
-        then buf_trn-doc.user-name + {&delimiteFld} + buf_user-login.user-login + {&delimiteFld} else {&delimiteFld} + {&delimiteFld}
-        ) +
-        string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (buf_trn-doc.doc-date, buf_trn-doc.real-time-create * 1000))) + {&delimiteFld} 
-        + string(myflagsDoc:FlagsToInt) + {&delimiterLine}.
-      
-      tsdstreamclose().
-
       
 /*      SomeStr = SomeStr + cHeader + cLine + cMarkLine.*/
 
@@ -485,72 +480,227 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       then statusOK = true. 
 	  else statusOK = false. 
     SomeStr = 
-      if true 
+      if true // Зачем неписать сообщение об ошибке если в ответ всеравно отправляется ошибка 
         then getStatusXml(statusOK, "") 
         else if lookup (SN, confPar) = 0 then getStatusXml(statusOK, "LIC") else getStatusXml(statusOK, "OBJ").
     
   end method.
-
-
+  
+  method public void setResult (iFile as char):
+  
+      copy-lob
+          from  file search(iFile)
+          to object SomeStr
+          no-convert
+       no-error .
+  end.
   method public void WriteUsers ():
+     GetUsers ().
+     UsersPrint("TH_users.txt").
+  end.
+  
+  define temp-table tt-user no-undo serialize-name "User"
+     field user-id    as char
+     field user-login as char
+  index user-id as unique user-id.
+  define dataset ds-user serialize-name "Users"
+  for tt-user.
+  
+  method public void usersClear ():
+     empty temp-table tt-user.
+  end.
+  
+  method public void GetUsers ():
     define variable dbNum as integer no-undo.
     define buffer buf_user-login for ub.user-login.
-    tsdstreamopen("TH_users.txt").
     dbNum = GetDbNum().
+    
     for each buf_user-login where buf_user-login.status_ = 0 and buf_user-login.db-num = dbNum no-lock:
-      put stream tsdstream unformatted buf_user-login.user-id + {&delimiteFld} + buf_user-login.user-login + {&delimiterLine}.
+      create tt-user.
+      assign 
+         tt-user.user-id = buf_user-login.user-id
+         tt-user.user-login = buf_user-login.user-login
+         .
+    end.
+  end.   
+  method public void UsersPrint (type as char):
+    if    type eq "xml"
+       or type eq "json"
+    then
+       ttprint(type, dataset ds-user :handle).
+    else do:
+       if type eq ""
+       then
+          type = "temp_tsd.txt".
+       tsdstreamopen(type).
+       for each tt-user no-lock:
+         put stream tsdstream unformatted tt-user.user-id + {&delimiteFld} + tt-user.user-login + {&delimiterLine}.
     end.
     tsdstreamclose().
+       if type = "temp_tsd.txt"
+       then
+          setResult(type).
+  end.
+  end.
+  
+  method public void WriteObjects ():
+     getObjects().
+     ObjectsPrint("TH_objects.txt").
+  end.
+  
+  define temp-table  tt-Objects no-undo namespace-prefix "Object" serialize-name "Object"
+     field obj-type as char
+     field obj-code as int
+     field obj-name as char
+  index pi as unique obj-type obj-code.
+  
+  define dataset ds-Objects serialize-name "Objects"
+  for tt-Objects.
+  
+  method public void ObjectsClear ():
+     empty temp-table tt-Objects.
+  end.
+  method public void getObjects ():
+    define buffer buf_clients   for ub.clients.
+    for each buf_clients where buf_clients.stts = 0 and (buf_clients.obj-type = "маг" or buf_clients.obj-type = "скл") no-lock:
+       create tt-Objects.
+       assign
+          tt-Objects.obj-type = buf_clients.obj-type
+          tt-Objects.obj-code = buf_clients.obj-code
+          tt-Objects.obj-name = buf_clients.obj-name
+       .
+       
+    end.
     
   end.
-
-
-  method public void WriteObjects ():
+  method public void ObjectsPrint (type as char):
     define buffer buf_clients   for ub.clients.
-    tsdstreamopen("TH_objects.txt").    
-    for each buf_clients where buf_clients.stts = 0 and (buf_clients.obj-type = "маг" or buf_clients.obj-type = "скл") no-lock:
+    if    type eq "xml"
+       or type eq "json"
+    then
+       ttprint(type, dataset ds-Objects :handle).
+    else do:
+       if type eq ""
+       then
+          type = "temp_tsd.txt".
+       tsdstreamopen(type).
+       for each tt-Objects no-lock:
      put stream tsdstream unformatted 
-      string (buf_clients.obj-code) + {&delimiteFld} + 
-      buf_clients.obj-type + {&delimiteFld} + 
-      buf_clients.obj-name + 
+         string (tt-Objects.obj-code) + {&delimiteFld} + 
+         tt-Objects.obj-type + {&delimiteFld} + 
+         tt-Objects.obj-name + 
       {&delimiterLine}.
     end.
+    end.
     tsdstreamclose().
-    
+       if type = "temp_tsd.txt"
+       then
+          setResult(type).
   end.
-
-
+  
   method public void WriteClients ():
+     ClientsClear().
+     getClients().
+     ClientsPrint("TH_clients.txt").
+  end.
+  
+  
+  define temp-table  tt-Clients no-undo serialize-name "Client"
+     field obj-type as char
+     field obj-code as int
+     field obj-name as char
+  index pi as unique obj-type obj-code.
+  
+  define dataset ds-Clients serialize-name "Clients"
+  for tt-Clients.
+  
+  method public void ClientsClear ():
+     empty temp-table tt-Clients.
+  end.
+  
+  method public void getClients ():
     define buffer buf_clients   for ub.clients.
-    tsdstreamopen("TH_clients.txt"). 
     for each buf_clients where buf_clients.stts = 0 and (buf_clients.obj-type = "орг" 
       or buf_clients.obj-type = "чел" or buf_clients.obj-type = {&shop} or buf_clients.obj-type = {&stock})
       and not (buf_clients.obj-type = ObjType and buf_clients.obj-code = ObjCode) no-lock:
-      put stream tsdstream unformatted string (buf_clients.obj-code) + {&delimiteFld} + buf_clients.obj-type + {&delimiteFld} + buf_clients.obj-name + {&delimiterLine}.
+      create tt-Clients.
+       assign
+          tt-Clients.obj-type = buf_clients.obj-type
+          tt-Clients.obj-code = buf_clients.obj-code
+          tt-Clients.obj-name = buf_clients.obj-name
+       .
     end.
-    tsdstreamclose().
-    
   end.
   
-
-  method public void WriteGoods ():
-
-    define variable factQnty    as character no-undo.
-    define variable freeQnty    as character no-undo.
-    define variable priceSale   as character no-undo.
-    define variable vatPc       as character no-undo.
+  method public void ClientsPrint (type as char):
+    if    type eq "xml"
+       or type eq "json"
+    then
+       ttprint(type, dataset ds-Clients :handle).
+    else do:
+       if type eq ""
+       then
+          type = "temp_tsd.txt".
+    
+    
+       tsdstreamopen(type). 
+       for each tt-Clients no-lock: 
+         put stream tsdstream unformatted string (tt-Clients.obj-code) + {&delimiteFld} + tt-Clients.obj-type + {&delimiteFld} + tt-Clients.obj-name + {&delimiterLine}.
+    end.
+    tsdstreamclose().
+       if type = "temp_tsd.txt"
+       then
+          setResult(type).
+     end.
+  end.
+  
+  define temp-table  tt-Goods no-undo serialize-name "Good"
+      field gds-code as int
+      field gds-name as char 
+      field unit-base as char
+/*      field priceSale as dec*/
+/*      field vatPc as dec    */
+      field countryName  as char
+/*      field struct  as char*/
+      field factQnty as dec 
+      field freeQnty as dec
+  index pi as unique gds-code.
+    
+  method public void GoodsClear ():
+     empty temp-table tt-Goods.
+  end.
+  
+  method public void getGoods ():
+     getGoodsAndBarcodes(yes,no,?).
+  end.   
+  method public void getGoodsAndBarcodes (iGoods as logical ,ibarcode as logical, input iprotocol as char):
+    define variable factQnty    as dec no-undo.
+    define variable freeQnty    as dec no-undo.
     define variable countryName as character no-undo.
     define variable dPriceSale  as decimal   no-undo.
     define variable dVatPc      as decimal   no-undo.
     define variable is-petrol   as logical no-undo.
-    define variable is-pieces   as logical no-undo.  
+    define variable is-pieces   as logical no-undo.
+    define variable priceSale   as decimal no-undo.
+    define variable cliBaseRate as decimal no-undo.  
     define buffer buf_goods     for ub.goods.
     define buffer buf_gds-obj   for ub.gds-obj.
+    define buffer buf_bar-code  for ub.bar-code.
+    define buffer buf_price-all for ub.price-all.
+    define buffer buf_prod-bc   for ub.prod-bc.
     define buffer utd-lines for ub.utd-lines.
     define buffer country for ub.country . 
-    tsdstreamopen("TH_goods.txt").
+    
+    define variable vMarkingType   as logical no-undo.
+    
+    define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+    if ibarcode
+    then
+       EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ObjType, ObjCode).
+    
     cicle:
-    for each buf_goods where buf_goods.stts = 0 and gds-type = 'т' no-lock use-index ists:
+    for each buf_goods where buf_goods.stts = 0 
+    and buf_goods.gds-type = 'т' no-lock :
       
       { str/is-petrl.i
           buf_goods.artic
@@ -572,100 +722,30 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           then next cicle.
       end.
       
-/*      find first buf_bar-code where buf_bar-code.gds-code = buf_goods.gds-code and buf_bar-code.stts = 0 no-lock use-index prt-parts no-error.*/
-      
-      /*run ibs\th\skt\Adapters\AdapteeProcBcprcex.p
-        (
-        input ObjType,
-        input ObjCode,
-        input buf_bar-code.b-code,
-        output dPriceSale,
-        output dVatPc
-        ) 
-        no-error.*/
+      if(igoods)
+      then do:
       find first country where country.alpha1 = buf_goods.alpha1 no-lock no-error. 
-
+   
       assign
-        priceSale   = if dPriceSale <> 0 and dPriceSale <> ? then string (dPriceSale) else "0"
-        vatPc       = if dVatPc <> 0 and vatPc <> ? then string (dVatPc) else "0"
-        factQnty    = if available buf_gds-obj then string (buf_gds-obj.fact-qnty) else "0"
-        freeQnty    = if available buf_gds-obj then string (buf_gds-obj.free-qnty) else "0"
-        countryName = if available country then country.long-name else ""
+           factQnty    = if available buf_gds-obj then buf_gds-obj.fact-qnty else 0
+           freeQnty    = if available buf_gds-obj then buf_gds-obj.free-qnty else 0
+           countryName = if available ub.country then ub.country.long-name else ""
         .
+         create tt-goods.  
       assign
-        priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0" + CurrDecSeparatorTH) else replace (priceSale, ".",  CurrDecSeparatorTH)
-        factQnty  = if available buf_gds-obj and buf_gds-obj.fact-qnty > -1 and buf_gds-obj.fact-qnty < 1 then replace (factQnty, ".", "0" + CurrDecSeparatorTH) else replace (factQnty, ".", CurrDecSeparatorTH)
-        freeQnty  = if available buf_gds-obj and buf_gds-obj.free-qnty > -1 and buf_gds-obj.free-qnty < 1 then replace (freeQnty, ".", "0" + CurrDecSeparatorTH) else replace (freeQnty, ".", CurrDecSeparatorTH)
+           tt-goods.gds-code  = buf_goods.gds-code
+           tt-goods.gds-name  = buf_goods.gds-name
+           tt-goods.unit-base = buf_goods.unit-base
+   /*        tt-goods.priceSale = priceSale*/
+   /*        tt-goods.vatPc     = vatPc    */
+           tt-goods.countryName = countryName
+   /*        tt-goods.struct    = "Состав"*/
+           tt-goods.factQnty  = factQnty 
+           tt-goods.freeQnty  = freeQnty 
         .
-        
-      put stream tsdstream unformatted 
-        string (buf_goods.gds-code) + {&delimiteFld} + 
-        trim (buf_goods.gds-name, chr (9)) + {&delimiteFld} + 
-        buf_goods.unit-base + {&delimiteFld} +
-        priceSale + {&delimiteFld} +
-        vatPc + {&delimiteFld} +
-        countryName  + {&delimiteFld} +
-        "Состав" + {&delimiteFld} +
-        factQnty + {&delimiteFld} + 
-        freeQnty + {&delimiterLine}.
-
-    end.
-    
-/*    put stream tsdstream unformatted                          */
-/*      string (9999) + {&delimiteFld} +                        */
-/*      trim ("Первоначальный ввод", chr (9)) + {&delimiteFld} +*/
-/*      "макра" + {&delimiteFld} +                              */
-/*      "0" + {&delimiteFld} +                                  */
-/*      "0" + {&delimiteFld} +                                  */
-/*      ""  + {&delimiteFld} +                                  */
-/*      "Состав" + {&delimiteFld} +                             */
-/*      "0" + {&delimiteFld} +                                  */
-/*      "0" + {&delimiterLine}.                                 */
-/*                                                              */
-    
-    tsdstreamclose().
-        
-  end.
-
-
-  method public void WriteBarcodes (input iprotocol as char):
-
-    define variable cliBaseRate     as character no-undo.
-    define variable priceSale       as character no-undo.
-    define variable internal-b-code like ub.bar-code.b-code no-undo .
-    define variable full-b-code     as character init "" no-undo .
-    define variable bc-frmt         as character no-undo .
-    define variable bc-pfx          as character no-undo .
-    define variable v-par-type      as character no-undo .
-    define variable is-petrol      as logical no-undo.
-    define variable is-pieces      as logical no-undo.    
-    define buffer buf_goods     for ub.goods.
-    define buffer buf_bar-code  for ub.bar-code.
-    define buffer buf_price-all for ub.price-all.
-    define buffer buf_prod-bc   for ub.prod-bc.
-    define buffer gds-obj for ub.gds-obj.
-    define buffer buf_prod-bc-attr for ub.prod-bc-attr.
-    define variable vMarkingType   as logical no-undo.
-    run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
-    run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.   
-    define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
-    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ObjType, ObjCode).
-    empty temp-table TempBCode.
-    tsdstreamopen("TH_barcodes.txt").
-    cicle:
-    for each buf_goods where buf_goods.stts = 0 and gds-type = 'т' no-lock use-index ists:
-      
-      { str/is-petrl.i
-          buf_goods.artic
-          buf_goods.prod-type
-          buf_goods.prod-code
-          is-petrol
-          is-pieces
-          no-error
-      }
-      if is-petrol = yes and is-pieces = no then do:
-        next cicle.
       end.
+      if ibarcode
+      then do:
       if iprotocol > "" then do:
       define variable v-value as character no-undo.
       define variable v-type  as character no-undo.
@@ -682,7 +762,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
        end.
        vMarkingType = (EDOParSec:GetIsEDOForType(v-value) or EDOParSec:GetIsArticForType(v-value)) and not EDOParSec:GetIsTransitionalForType(v-value).
       end.
-      for each buf_bar-code where buf_bar-code.in-code = "" and buf_bar-code.gds-code = buf_goods.gds-code and buf_bar-code.stts_ = 0 no-lock use-index prt-parts:
+         for each buf_bar-code where buf_bar-code.in-code = "" 
+                                 and buf_bar-code.gds-code = buf_goods.gds-code 
+                                 and buf_bar-code.stts_ = 0 
+         no-lock use-index prt-parts:
 
         find last buf_price-all where
           buf_price-all.b-code          = buf_bar-code.b-code and
@@ -693,53 +776,35 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           buf_price-all.last-pr         = true
           no-lock no-error.
 
-        internal-b-code = buf_bar-code.b-code.
+/*        internal-b-code = buf_bar-code.b-code.                */
+/*                                                              */
+/*                                                              */
+/*        { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}*/
 
-        
-        { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
-
-        find first gds-obj no-lock where 
-                      gds-obj.artic = buf_goods.artic
-                  and gds-obj.prod-type = buf_goods.prod-type
-                  and gds-obj.prod-code = buf_goods.prod-code no-error.
+            find first ub.gds-obj no-lock where 
+                         ub.gds-obj.artic = buf_goods.artic
+                     and ub.gds-obj.prod-type = buf_goods.prod-type
+                     and ub.gds-obj.prod-code = buf_goods.prod-code no-error.
         
         if available buf_price-all and not buf_price-all.price-sale = ?
-          then priceSale = string (buf_price-all.price-sale).
-          else if available (gds-obj) and not gds-obj.price-sale = ?
-            then priceSale = string (gds-obj.price-sale).
-            else priceSale = "0".
+            then priceSale = buf_price-all.price-sale.
+            else if available (ub.gds-obj) and not ub.gds-obj.price-sale = ?
+            then priceSale = ub.gds-obj.price-sale.
+            else priceSale = 0.
         if iprotocol > "" then do:
-        if priceSale = "0"
+               if priceSale = 0
         then
-           priceSale =  trim(string(1 / 100000,">>>>>>>>>>>9.99<<<<<<")).  
+                  priceSale =  1 / 100000.  
         end.
         assign
 /*          priceSale   = if available buf_price-all then string (buf_price-all.price-sale) else ().*/
-          cliBaseRate = string (buf_bar-code.cli-base-rate)
+                  cliBaseRate = buf_bar-code.cli-base-rate
           .
-        assign 
-          priceSale = if available buf_price-all and buf_price-all.price-sale > -1 and buf_price-all.price-sale < 1 then replace (priceSale, ".", "0" + CurrDecSeparatorTH) else replace (priceSale, ".", CurrDecSeparatorTH)
-          cliBaseRate = if buf_bar-code.cli-base-rate > -1 and buf_bar-code.cli-base-rate < 1 then replace (cliBaseRate, ".", "0" + CurrDecSeparatorTH) else replace (cliBaseRate, ".", CurrDecSeparatorTH)
-          .
-/*        create TempBCode.                                                                                                             */
-/*                                                                                                                                      */
-/*        assign                                                                                                                        */
-/*          TempBCode.gds-code = buf_goods.gds-code                                                                                     */
-/*          TempBCode.b-str = full-b-code                                                                                               */
-/*          TempBCode.priceSale = (if available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value) then "-" else "") + priceSale*/
-/*          TempBCode.unit-cli = buf_bar-code.unit-cli                                                                                  */
-/*          TempBCode.cliBaseRate = cliBaseRate                                                                                         */
-/*        no-error.                                                                                                                     */
-/*                                                                                                                                      */
-/*        if error-status:error                                                                                                         */
-/*        then do:                                                                                                                      */
-/*          delete TempBCode.                                                                                                           */
-/*          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибка передачи бар-кода &1 в ТСД.", full-b-code).          */
-/*        end.                                                                                                                          */
         
         for each buf_prod-bc no-lock where buf_prod-bc.b-code = buf_bar-code.b-code and buf_prod-bc.bc-on = yes:
         
         if iprotocol > "" then do:
+                     define buffer buf_prod-bc-attr for ub.prod-bc-attr.
         find first buf_prod-bc-attr where buf_prod-bc-attr.b-code eq buf_prod-bc.b-code
                               and buf_prod-bc-attr.b-str eq buf_prod-bc.b-str 
                               and buf_prod-bc-attr.attr-code eq {&mark}
@@ -761,37 +826,170 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибка передачи бар-кода &1 в ТСД.", buf_prod-bc.b-str).
           end.
           if iprotocol > "" then
-          TempBCode.priceSale = (if vMarkingType or (available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value)) then "-" else "") + priceSale .
+                     TempBCode.priceSale = (if vMarkingType or (available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value)) then (-1 * priceSale ) else priceSale)   .
           else TempBCode.priceSale = priceSale .
           
         end.
+         
+            end.
+       end.
       end.
+    
+    
+        
+  end.
+   
+  method public void GoodsPrint (type as char):
+    if    type eq "xml"
+       or type eq "json"
+    then do on error undo, leave:
+        define variable hDset as handle no-undo.
+        
+        create dataset hDset.
+
+        hDset:set-buffers(buffer tt-goods:handle).
+        hDset:serialize-name = "Goods".
+    
+       ttprint(type, hDset).
+       finally:
+           delete object hDset no-error.
+        end.   
+    end.
+    else do:
+       if type eq ""
+       then
+          type = "temp_tsd.txt".
+    
+    
+    tsdstreamopen( type).
+    cicle:
+    for each tt-goods:
+            put stream tsdstream unformatted 
+        string (tt-goods.gds-code) + {&delimiteFld} + 
+        trim (tt-goods.gds-name, chr (9)) + {&delimiteFld} + 
+        tt-goods.unit-base + {&delimiteFld} +
+        decToString( 0 /*tt-goods.priceSale */) + {&delimiteFld} +
+        decToString(0 /*tt-goods.vatPc */) + {&delimiteFld} +
+        tt-goods.countryName  + {&delimiteFld} +
+        "Состав" /*tt-goods.struct*/ + {&delimiteFld} +
+        decToString(tt-goods.factQnty) + {&delimiteFld} + 
+        decToString(tt-goods.freeQnty) + {&delimiterLine}.
 
     end.
     
-/*    create TempBCode.            */
-/*    assign                       */
-/*      TempBCode.gds-code = 9999  */
-/*      TempBCode.b-str = "9999"   */
-/*      TempBCode.priceSale = "0"  */
-/*      TempBCode.unit-cli = "шт"  */
-/*      TempBCode.cliBaseRate = "0"*/
-/*    .                            */
+    tsdstreamclose().
+     if type = "temp_tsd.txt"
+       then
+          setResult(type).
+     end.    
+  end.
+
+  method public void BarcodesClear ():
+     empty temp-table TempBCode.
+  end.
+  define temp-table tt-barcodes no-undo serialize-name "Barcodes"
+     field gds-code as integer  serialize-hidden
+     index gds-code gds-code.
     
+  method public void GoodsAndBarcodesClear ():
+     GoodsClear().
+     BarcodesClear().
+     empty temp-table tt-barcodes. 
+  end.
+  method public void getGoodsAndBarcodes (input iprotocol as char):
+     GoodsAndBarcodesClear().
+     getGoodsAndBarcodes (yes, yes, iprotocol).
+     GoodsAndBarcodesPrint("all").
+  end.
+  
+  method public void GoodsAndBarcodesPrint (input type as char):
+     if    type eq "xml"
+        or type eq "json"
+     then do on error undo, leave:
+        define variable hDset as handle no-undo.
+        buffer TempBCode:handle:BUFFER-FIELD("gds-code"):serialize-hidden = yes .
+        create dataset hDset.
+
+        hDset:set-buffers(buffer tt-goods:handle,
+                          buffer tt-barcodes:handle,
+                          buffer TempBCode:handle).
+        hDset:serialize-name = "Goods".
+        hDset:add-relation(buffer tt-goods:handle, 
+                           buffer tt-barcodes:handle,
+                           "gds-code,gds-code",
+                           false,
+                           true).
+        hDset:add-relation(buffer tt-barcodes:handle,
+                           buffer TempBCode:handle,
+                           "gds-code,gds-code",
+                           false,
+                           true).
+        for each tt-Goods no-lock:
+           create tt-barcodes.
+           tt-barcodes.gds-code = tt-Goods.gds-code.
+        end.
+        ttprint(type, hDset).
+        finally:
+           delete object hDset no-error.
+        end.   
+     end.
+     else do:
+        if type eq ""
+        then
+           return error "не поддеживается ".
+        GoodsPrint("TH_goods.txt").
+        BarcodesPrint("TH_barcodes.txt").
+     end.
+  end.
+
+  method public void getBarcodes (input iprotocol as char):
+    getGoodsAndBarcodes(no,yes,iprotocol).  
+  end.
+  
+  method public void BarcodesPrint (type as char):
+     if    type eq "xml"
+       or type eq "json"
+    then do on error undo, leave:
+        define variable hDset as handle no-undo.
+        buffer TempBCode:handle:BUFFER-FIELD("gds-code"):serialize-hidden = no .
+        
+        create dataset hDset.
+
+        hDset:set-buffers(buffer TempBCode:handle).
+        hDset:serialize-name = "Barcodes".
+    
+    
+       ttprint(type,hDset).
+       finally:
+           delete object hDset no-error.
+        end.   
+    end.
+    else do:
+       if type eq ""
+       then
+          type = "temp_tsd.txt".
+    
+    
+       tsdstreamopen(type).
     
     for each TempBCode:
         
         put stream tsdstream unformatted
           string (TempBCode.gds-code) + {&delimiteFld} +
           TempBCode.b-str + {&delimiteFld} +
-          TempBCode.priceSale + {&delimiteFld} +
+             decToString( TempBCode.priceSale) + {&delimiteFld} +
           TempBCode.unit-cli + {&delimiteFld} +
-          TempBCode.cliBaseRate + {&delimiterLine}.
+             decToString(TempBCode.cliBaseRate) + {&delimiterLine}.
           
     end.
     
     tsdstreamclose().
-    empty temp-table TempBCode.
+       if type = "temp_tsd.txt"
+       then
+          setResult(type).
+     end.
+    
+    BarcodesClear().
   end.
 
   
@@ -956,7 +1154,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     
   end.
   
-  
   method public logical ImpInventory (table TempTrnDoc, table TempDocLine, userId_ as char):
 
     define buffer buf_trn-doc       for ub.trn-doc.
@@ -974,7 +1171,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define buffer bar-code for ub.bar-code.
     define buffer marking for ub.marking.
             
-        
     define variable adapterOra-i506 as class   AdapterOra-i506.
     define variable varzero-string  as logical no-undo.
     define variable myflagsDoc     as class flagsdoc     no-undo.
@@ -986,7 +1182,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     define variable v-type          as character no-undo .
     define variable isManual        as logical   no-undo .
     def    var      Marking         as class     mark            no-undo .
-    
+
     find first TempTrnDoc.
     myflagsDoc = new flagsdoc ().
     myflagsDocLine = new flagsdocline ().
@@ -1915,10 +2111,7 @@ end.
     define buffer utd for ub.utd.
     
     define variable dFactSum   as decimal   no-undo.
-    define variable factQnty   as character no-undo.
-    define variable docQnty    as character no-undo.
     define variable priceSale  as character no-undo.
-    define variable FactSum    as character no-undo.
     define variable docType    as character no-undo.
     define variable dPriceSale as decimal   no-undo.
     define variable decDocQnty as decimal no-undo.
@@ -1930,15 +2123,10 @@ end.
     define variable pos as integer no-undo.
     def    var      internal-b-code like ub.bar-code.b-code no-undo .
     def    var      full-b-code     as character init "" no-undo .
-    def    var      bc-frmt         as character no-undo .
-    def    var      bc-pfx          as character no-undo .
-    def    var      v-par-type      as character no-undo .
     def    var      v-doc-num       as character no-undo .
     def var v-sts as character no-undo.
     def var vRecKey-line as character no-undo.
           
-    run gbl/conf-rd.p ("bc-pfx", "", "", 0, "", "", "", yes, output bc-pfx, output v-par-type) no-error.
-    run gbl/conf-rd.p ("bc-frmt", "", "", 0, "", "", "", yes, output bc-frmt, output v-par-type) no-error.
     myflagsDoc = new flagsdoc ().
     myflagsDocLine = new flagsdocline ().
     l_utd:
@@ -2004,12 +2192,10 @@ end.
 
         assign
           priceSale = string (dPriceSale)
-          docQnty   = string (decDocQnty)
         .
 
         assign
           priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-          docQnty  = if decDocQnty > -1 and decDocQnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
         .
         define variable vErrorLine as logical no-undo.
         ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
@@ -2056,82 +2242,64 @@ end.
           end.
 
       
-          tsdstreamopenapp("MT_MarkLines.txt").
           jj = jj + 1.
-          define variable vqnty as decimal no-undo.
+          define variable vqnty as integer no-undo.
           if vmark
              and available buf_m 
           then do:
              vqnty = buf_m.box-qnty.
-             if vqnty = ? then vqnty = decimal(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"box-qnty","0")) no-error.
+             if vqnty = ? then vqnty = integer (GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"box-qnty","0")) no-error.
           end.   
-          else vqnty = decimal(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"box-qnty","0")) no-error.
+          else vqnty = integer(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"box-qnty","0")) no-error.
           if vqnty = ? then vqnty = 0.
-          put stream tsdstream unformatted 
-          substitute ("&3&1&4&1&5&1&6&1&7&1&8&1&9&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      string (jj),
+          addDocLineMark(
+                    jj,
                       v-doc-num,
+                    buf_utd-l.linenum,
                       buf_utd-m-l.mark,
                       v-doc-num + "_" + string (buf_goods.gds-code) + "_" + string(pos),
                       v-sts,
                       (if available buf_m then  buf_m.mark-parent else ""),
-                      string(vqnty)
-                     )
-          .
-          tsdstreamclose().
+                    vqnty
+                    ).
         end.
 
-
-        factQnty  = replace (GetAttrUtdlinesEx(buf_utd-l.db-num,buf_utd-l.doc-id,buf_utd-l.linenum,"QuantityBarCode","0"), ".", "0" + CurrDecSeparatorTH).
-        tsdstreamopenapp("MT_lines.txt"). 
+        define variable decFactQnty as decimal no-undo.
+        decFactQnty  = dec (GetAttrUtdlinesEx(buf_utd-l.db-num,buf_utd-l.doc-id,buf_utd-l.linenum,"QuantityBarCode","0")).
           jjm = jjm + 1.
-          put stream tsdstream unformatted 
-          substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
-                      {&delimiteFld},
-                      string (jjm),
-                      v-doc-num ,
-                      string (pos),
-                      string (buf_goods.gds-code),
-                      buf_goods.gds-name,
+         addDocLine(jjm,
+                       v-doc-num,
+                       pos,
+                       buf_goods.gds-code,
+                       buf_goods.gds-name ,
                       buf_goods.unit-base,
                       full-b-code,
-                      priceSale
-
-                     )
-                     +
-           substitute ("&3&1&4&1&5&1&6&1&7&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      docQnty,
-                      factQnty,
+                       priceSale,
+                       decDocQnty,
+                       decFactQnty,
                       getErrForLineType(buffer buf_utd-l:handle, "*"),
                       v-doc-num + "_" + string (buf_goods.gds-code) + "_" + string(pos),
-                      string (myflagsDocLine:FlagsToInt)
-                      )
-          
-          .
-         tsdstreamclose().
-        
+                       myflagsDocLine:FlagsToInt  ).
       end.
       
-      FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
-
-      docType = "UTD".
-      def var str as character no-undo.
-      str = string (v-doc-num + {&delimiteFld} + 
-        docType + {&delimiteFld} + "false" + {&delimiteFld} + "накл" + string ("+") + {&delimiteFld} + 
-        string (buf_utd.cli-code) + {&delimiteFld} + buf_utd.cli-type + {&delimiteFld} + 
-        string (buf_utd.obj-code) + {&delimiteFld} + buf_utd.obj-type + {&delimiteFld} + 
-        {&delimiteFld} + {&delimiteFld}
-        +
-        string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate))) + {&delimiteFld} 
-        + string(myflagsDoc:FlagsToInt) + {&delimiterLine}).
       
-      tsdstreamopenapp("MT_documents.txt"). 
-        put stream tsdstream unformatted str. 
-      tsdstreamclose().
+      docType = "UTD".
+      addDoc(
+           v-doc-num,
+           docType,
+           false,
+           "накл+",
+           buf_utd.cli-code,
+           buf_utd.cli-type,
+           buf_utd.obj-code,
+           buf_utd.obj-type,
+           "",
+            "",
+           dFactSum,
+           datetime-tz (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate),
+           myflagsDoc:FlagsToInt
+      ).
+      
     end.
     l_utd_Introduce:
     for each buf_utd where buf_utd.obj-type = ObjType and buf_utd.obj-code = ObjCode and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB
@@ -2166,41 +2334,26 @@ end.
         
         assign
           priceSale   = string (dPriceSale)
-          docQnty    = string (decDocQnty)
           .
 
         assign
           priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-          docQnty  = if decDocQnty > -1 and decDocQnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
           .
         pos = pos + 1.
-        tsdstreamopenapp("MT_lines.txt"). 
-          jjm = jjm + 1.
-          put stream tsdstream unformatted 
-          substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
-                      {&delimiteFld},
-                      string (jjm),
-                      v-doc-num ,
-                      string (pos),
-                      string (buf_goods.gds-code),
-                      buf_goods.gds-name,
+        addDocLine(jjm,
+                       v-doc-num,
+                       pos,
+                       buf_goods.gds-code,
+                       buf_goods.gds-name ,
                       buf_goods.unit-base,
                       full-b-code,
-                      priceSale
-                      
-                     )
-                     +
-          substitute ("&3&1&4&1&5&1&6&1&7&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      docQnty,
-                      docQnty,
-                      "", /* string (buf_goods.gds-code) */
+                       priceSale,
+                       decDocQnty,
+                       decDocQnty,
+                       "",
                       v-doc-num + "_" + string (buf_goods.gds-code),
-                      string (myflagsDocLine:FlagsToInt)
-                      )
-                     .
-        tsdstreamclose().
+                       myflagsDocLine:FlagsToInt  ).
+        
         for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id and buf_utd-m-l.LineNum = buf_utd-l.LineNum no-lock
           :
           vmark =isMark(buf_utd-m-l.mark).
@@ -2232,7 +2385,6 @@ end.
             then v-mark = utd-marking-lines-attr.attr-value.
             else v-mark = buf_utd-m-l.mark. 
 
-          tsdstreamopenapp("MT_MarkLines.txt").
           jj = jj + 1.
           if vmark and 
              available buf_m 
@@ -2242,60 +2394,50 @@ end.
           end.   
           else vqnty = decimal(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"box-qnty","0")) no-error.
           if vqnty = ? then vqnty = 0.
-          put stream tsdstream unformatted 
-          substitute ("&3&1&4&1&5&1&6&1&7&1&8&1&9&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      string (jj),
+          addDocLineMark(
+                    jj,
                       v-doc-num,
+                    buf_utd-l.linenum,
                       v-mark,
                       v-doc-num + "_" + string (buf_goods.gds-code),
                       "CrTSD",
                       (if available buf_m then  buf_m.mark-parent else ""),
-                      string(vqnty)
-                     )             
-          .
-          tsdstreamclose().
+                    vqnty
+                    ).
+          
         end.
       end.      
       
-      FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
-
       if buf_utd.cli-code = ? or buf_utd.obj-code = ? or buf_utd.cli-type = ? or buf_utd.obj-type = ?
       then do:
         LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Не указан контрагент/объект TH в документе УТД &1.", v-doc-num).
         next l_utd_Introduce.
       end.
-      FactSum = "0".
-/*      tsdstreamopenapp("MT_lines.txt").                                                                                                                           */
-/*        jjm = jjm + 1.                                                                                                                                            */
-/*        put stream tsdstream unformatted string (jjm) + {&delimiteFld} + v-doc-num + {&delimiteFld} + string (1) + {&delimiteFld} + string (9999) + {&delimiteFld}*/
-/*        + string (9999) + {&delimiteFld} + "марка" + {&delimiteFld} + "9999" + {&delimiteFld} +                                                                   */
-/*        "0" + {&delimiteFld} + "0" + {&delimiteFld} +                                                                                                             */
-/*        "0" + {&delimiteFld} + string (9999) + {&delimiteFld} +                                                                                                   */
-/*        v-doc-num + "_9999" + {&delimiteFld} + string(myflagsDocLine:FlagsToInt) + {&delimiterLine}.                                                              */
-/*      tsdstreamclose().                                                                                                                                           */
       
+
       docType = "Introduce".
-      str = string (v-doc-num + {&delimiteFld} + 
-        docType + {&delimiteFld} + "false" + {&delimiteFld} + "накл" + string ("+") + {&delimiteFld} + 
-        string (buf_utd.obj-code) + {&delimiteFld} + buf_utd.obj-type + {&delimiteFld} + 
-        string (buf_utd.obj-code) + {&delimiteFld} + buf_utd.obj-type + {&delimiteFld} + 
-        {&delimiteFld} + {&delimiteFld}
-        +
-        string (FactSum) + {&delimiteFld} + string (iso-date (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate)) + {&delimiteFld} 
-        + string(myflagsDoc:FlagsToInt) + {&delimiterLine}).
-      
-      tsdstreamopenapp("MT_documents.txt"). 
-        put stream tsdstream unformatted str. 
-      tsdstreamclose().
+      addDoc(
+           v-doc-num,
+           docType,
+           false,
+           "накл+",
+           buf_utd.cli-code,
+           buf_utd.cli-type,
+           buf_utd.obj-code,
+           buf_utd.obj-type,
+           "",
+            "",
+           0,
+           datetime-tz (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate),
+           myflagsDoc:FlagsToInt
+      ).
               
     end.
 
     def var v-attr-value   as character no-undo.
     def var v-attr-type    as character no-undo. 
     def var v-is-introduce as logical   no-undo.
-    define variable decFactQnty as decimal no-undo.
+
     invd_:
     for each buf_trn-doc where buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and buf_trn-doc.status_ = {&wayb} and not buf_trn-doc.flag:
       v-is-introduce = false.
@@ -2371,43 +2513,25 @@ end.
         
         assign
           priceSale   = if buf_doc-line.price-rubl <> 0 and buf_doc-line.price-rubl <> ? then string (buf_doc-line.price-rubl) else "0"
-          factQnty    = string (decFactQnty)
-          docQnty    = string (decDocQnty)
           .
         assign
           priceSale = if buf_doc-line.price-rubl > -1 and buf_doc-line.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-          factQnty  = if buf_doc-line.fact-qnty > -1 and buf_doc-line.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")
-          docQnty  = if buf_doc-line.doc-qnty > -1 and buf_doc-line.doc-qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
           .
-/*          cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).*/
-      tsdstreamopenapp("MT_lines.txt"). 
         jjm = jjm + 1.
-        put stream tsdstream unformatted
-          substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
-                      {&delimiteFld},
-                      string (jjm),
-                      v-doc-num ,
-                      string (pos),
-                      string (buf_goods.gds-code),
-                      buf_goods.gds-name,
+        addDocLine(jjm,
+                       v-doc-num,
+                       pos,
+                       buf_goods.gds-code,
+                       buf_goods.gds-name ,
                       buf_goods.unit-base,
                       full-b-code,
-                      priceSale
-                      
-                     )
-                    +
-         substitute ("&3&1&4&1&5&1&6&1&7&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      docQnty,
-                      factQnty,
-                      "", /* string (buf_goods.gds-code) */
+                       priceSale,
+                       decDocQnty,
+                       decFactQnty,
+                       "",
                       v-doc-num + "_" + string (buf_goods.gds-code),
-                      string (myflagsDocLine:FlagsToInt)
-                      )
-                     .
+                       myflagsDocLine:FlagsToInt  ).
         
-      tsdstreamclose().
         if not v-is-introduce
         then do:
           for each buf_m-l no-lock where buf_m-l.obj-type = buf_doc-line.obj-type
@@ -2445,28 +2569,23 @@ end.
                else next.
             end.
             else v-sts = "Check".
-            tsdstreamopenapp("MT_MarkLines.txt").
             jj = jj + 1.
             if vmark 
               and available buf_m
             then vqnty = buf_m.box-qnty.
 /*            else vqnty = decimal(GetAttrUtdlinesEx (buf_m-l.db-num,buf_m-l.doc-id,buf_m-l.lineNum,"box-qnty","0")).*/
-            if vqnty = ? then run vqnty = 0.
-            put stream tsdstream unformatted 
-            substitute ("&3&1&4&1&5&1&6&1&7&1&8&1&9&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      string (jj),
+            if vqnty = ? then vqnty = 0.
+            addDocLineMark(
+                    jj,
                       v-doc-num,
+                    pos,
                       buf_m-l.mark,
                       v-doc-num + "_" + string (buf_goods.gds-code),
                       "Check",
                       (if available buf_m then buf_m.mark-parent else ""),
-                      string(vqnty)
-                     )
+                    vqnty
+                    ).
           
-            .
-            tsdstreamclose().
           end.
         end.
         else do:
@@ -2492,12 +2611,10 @@ end.
             
             assign
               priceSale   = string (dPriceSale)
-              docQnty    = string (decDocQnty)
               .
     
             assign
               priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-              docQnty  = if decDocQnty > -1 and decDocQnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")
               .
             for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id and buf_utd-m-l.LineNum = buf_utd-l.LineNum 
               no-lock
@@ -2519,7 +2636,6 @@ end.
 /*                if not available (buf_m-chi)                                         */
 /*                  then next.                                                         */
 /*              end.                                                                   */
-              tsdstreamopenapp("MT_MarkLines.txt").
               jj = jj + 1.
               if vmark
                  and available buf_m 
@@ -2529,46 +2645,341 @@ end.
               end.   
               else vqnty = decimal(GetAttrUtdlinesEx (buf_utd-m-l.db-num,buf_utd-m-l.doc-id,buf_utd-m-l.lineNum,"box-qnty","0")) no-error.
               if vqnty = ? then vqnty = 0.
-              put stream tsdstream unformatted 
-              substitute ("&3&1&4&1&5&1&6&1&7&1&8&1&9&2",
-                      {&delimiteFld},
-                      {&delimiterLine},
-                      string (jj),
+              addDocLineMark(
+                    jj,
                       v-doc-num,
-                      buf_utd-m-l.mark,
+                    buf_utd-l.linenum,
+                    buf_m-l.mark,
                       v-doc-num + "_" + string (buf_goods.gds-code),
                       "CrTSD",
                       (if available buf_m then buf_m.mark-parent else ""),
-                      string(vqnty)
-                     )
-          
-            
-              .
-              tsdstreamclose().
+                    vqnty
+                    ).
             end.
           end.
         end.
       end.
-      FactSum = if dFactSum > -1 and dFactSum < 1 then replace (string (dFactSum), ".", "0,") else replace (string (dFactSum), ".", ",").
       if v-is-introduce
         then doctype = "InvIntroduce". 
         else docType = "InvMarks".
-      str = string (v-doc-num + {&delimiteFld} + 
-        docType + {&delimiteFld} + "false" + {&delimiteFld} + buf_trn-doc.status_ + string (buf_trn-doc.flag, "+/-") + {&delimiteFld} + 
-        string (buf_trn-doc.cli-code) + {&delimiteFld} + buf_trn-doc.cli-type + {&delimiteFld} + 
-        string (buf_trn-doc.obj-code) + {&delimiteFld} + buf_trn-doc.obj-type + {&delimiteFld} + 
-        {&delimiteFld} + {&delimiteFld}
-        +
-        string (FactSum) + {&delimiteFld} + string (iso-date (datetime-tz (now))) + {&delimiteFld} 
-        + string(myflagsDoc:FlagsToInt) + {&delimiterLine}).
+      addDoc(
+           v-doc-num,
+           docType,
+           false,
+           buf_trn-doc.status_ + string (buf_trn-doc.flag, "+/-"),
+           buf_trn-doc.cli-code,
+           buf_trn-doc.cli-type,
+           buf_trn-doc.obj-code,
+           buf_trn-doc.obj-type,
+           "",
+            "",
+           0,
+           now,
+           myflagsDoc:FlagsToInt
+      ).
       
-      tsdstreamopenapp("MT_documents.txt"). 
-        put stream tsdstream unformatted str. 
-      tsdstreamclose().
-
     end.
   end.
-
+  method private character decToString (iValue as decimal ):
+     return replace(trim(string(iValue, "->>>>>>>>>>>>9.9<<<<<")),".",",").
+  end.
+  
+  define temp-table tt-doc no-undo serialize-name "document"
+    field doc-num as char
+    field docType as char
+    field complite as logical
+    field status_ as char
+    field cli-code as int
+    field cli-type as char
+    field obj-code as int
+    field obj-type as char
+    field user-id as character
+    field user-login as char
+    field FactSum as dec
+    field doc-date as datetime-tz
+    field flags as integer
+    index doc-num doc-num.
+  define temp-table tt-doc-lines no-undo serialize-name "lines"
+    field doc-num as character serialize-hidden 
+    index doc-num doc-num.  
+  method private void addDoc(
+     idoc-num as char,
+     idocType as char,
+     icomplite as logical,
+     istatus as char,
+     icli-code as int,
+     icli-type as char,
+     iobj-code as int,
+     iobj-type as char,
+     iuser-id as character,
+     iuser-login as char,
+     iFactSum as dec,
+     idoc-date as datetime-tz,
+     iflags as int
+  ):
+     find first tt-doc where tt-doc.doc-num eq idoc-num no-lock no-error.
+     if not available tt-doc
+     then do:
+        create tt-doc.
+        tt-doc.doc-num = idoc-num.
+     end.
+     assign
+        tt-doc.docType    = idocType
+        tt-doc.complite   = icomplite
+        tt-doc.status_    = istatus
+        tt-doc.cli-code   = icli-code
+        tt-doc.cli-type   = icli-type
+        tt-doc.obj-code   = iobj-code
+        tt-doc.obj-type   = iobj-type
+        tt-doc.user-id    = iuser-id
+        tt-doc.user-login = iuser-login
+        tt-doc.FactSum    = iFactSum
+        tt-doc.doc-date   = idoc-date
+        tt-doc.flags      = iflags
+      .
+  end.
+  
+  method public void docPrint():
+     tsdstreamopenapp("MT_documents.txt").
+     for each tt-doc no-lock:  
+        put stream tsdstream unformatted 
+        tt-doc.doc-num + {&delimiteFld} + 
+        tt-doc.docType + {&delimiteFld} + 
+        string(tt-doc.complite) + {&delimiteFld} + 
+        tt-doc.status_ + {&delimiteFld} + 
+        string (tt-doc.cli-code) + {&delimiteFld} + 
+        tt-doc.cli-type + {&delimiteFld} + 
+        string (tt-doc.obj-code) + {&delimiteFld} + 
+        tt-doc.obj-type + {&delimiteFld} + 
+        tt-doc.user-id + {&delimiteFld} + 
+        tt-doc.user-login + {&delimiteFld} +
+        decToString(tt-doc.FactSum) + {&delimiteFld} + 
+        string (iso-date (tt-doc.doc-date)) + {&delimiteFld} 
+        + string(tt-doc.flags) + {&delimiterLine}.
+     end. 
+     tsdstreamclose().
+     
+  end.
+  define temp-table tt-doc-line no-undo serialize-name "line"
+     field doc-num as character serialize-hidden
+     field line-num as int
+     field gds-code as int
+     field gds-name as character 
+     field unit-base as character 
+     field full-b-code as char
+     field priceSale as char
+     field docQnty as dec
+     field factQnty as  dec
+     field Error as char
+     field RecKey as char
+     field flags as int
+     field jjm as integer 
+  index num doc-num line-num.
+  define temp-table tt-doc-line-marks no-undo serialize-name "marks"
+     field doc-num as character serialize-hidden
+     field line-num as integer serialize-hidden
+     index num doc-num line-num.
+  method private void addDocLine(jjm as integer,
+                       idoc-num as char,
+                       iline-num as int,
+                       igds-code as int,
+                       igds-name as character ,
+                       iunit-base as character ,
+                       ifull-b-code as char,
+                       ipriceSale as char,
+                       idocQnty as dec,
+                       ifactQnty as  dec,
+                       iError as char,
+                       iRecKey as char,
+                       iflags as int 
+  ):
+     find first tt-doc-line where tt-doc-line.doc-num eq idoc-num
+                              and tt-doc-line.line-num eq iline-num
+     no-lock no-error. 
+     if not available tt-doc-line
+     then do:
+        create tt-doc-line.
+        assign 
+           tt-doc-line.doc-num = idoc-num
+           tt-doc-line.line-num = iline-num
+        .
+     end.
+     assign
+        tt-doc-line.gds-code    = igds-code
+        tt-doc-line.gds-name    = igds-name
+        tt-doc-line.unit-base   = iunit-base
+        tt-doc-line.full-b-code = ifull-b-code
+        tt-doc-line.priceSale   = ipriceSale
+        tt-doc-line.docQnty     = idocQnty
+        tt-doc-line.factQnty    = ifactQnty
+        tt-doc-line.Error       = iError
+        tt-doc-line.RecKey      = iRecKey
+        tt-doc-line.flags       = iflags
+        tt-doc-line.jjm         = jjm
+     . 
+  end.
+  method public void docLinePrint():
+  
+      tsdstreamopenapp("MT_lines.txt").
+      for each tt-doc-line no-lock:  
+        put stream tsdstream unformatted
+          substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
+                      {&delimiteFld},
+                      tt-doc-line.jjm,
+                      tt-doc-line.doc-num ,
+                      tt-doc-line.line-num,
+                      tt-doc-line.gds-code,
+                      tt-doc-line.gds-name,
+                      tt-doc-line.unit-base,
+                      tt-doc-line.full-b-code,
+                      tt-doc-line.priceSale
+                      
+                     )
+        +
+         substitute ("&3&1&4&1&5&1&6&1&7&2",
+                      {&delimiteFld},
+                      {&delimiterLine},
+                      decToString(tt-doc-line.docQnty),
+                      decToString(tt-doc-line.factQnty),
+                      tt-doc-line.Error, /* string (buf_goods.gds-code) */
+                      tt-doc-line.RecKey,
+                      tt-doc-line.flags
+                      )
+                     .
+      end.
+      tsdstreamclose().
+  end.
+  define temp-table tt-doc-line-mark no-undo serialize-name "mark"
+     field jj as int
+     field doc-num as character serialize-hidden
+     field line-num as integer serialize-hidden
+     field mark as char
+     field RecKey as char
+     field Status_ as char
+     field MarkParent as char
+     field MarkQnty as int
+  index mark doc-num line-num mark.
+  
+  method private void addDocLineMark(
+     jj as int,
+     idoc-num as char,
+     iline-num as integer,
+     imark as char,
+     iRecKey as char,
+     iStatus as char,
+     iMarkParent as char,
+     iMarkQnty as int
+      
+  ):
+     find first tt-doc-line-mark where tt-doc-line-mark.doc-num  eq idoc-num
+                                   and tt-doc-line-mark.line-num eq iline-num
+                                   and tt-doc-line-mark.mark     eq imark
+     no-error.
+     if not available tt-doc-line-mark
+     then do:
+        create tt-doc-line-mark.
+        assign
+           tt-doc-line-mark.doc-num = idoc-num
+           tt-doc-line-mark.line-num = iline-num
+           tt-doc-line-mark.mark     = imark
+        .
+     end.
+     assign
+        tt-doc-line-mark.jj         = jj
+        tt-doc-line-mark.RecKey     = iRecKey
+        tt-doc-line-mark.Status_    = iStatus
+        tt-doc-line-mark.MarkParent = iMarkParent
+        tt-doc-line-mark.MarkQnty   = iMarkQnty
+     .
+  end.
+  method public void docLineMarkPrint():
+     tsdstreamopenapp("MT_MarkLines.txt").
+     for each tt-doc-line-mark no-lock:
+     put stream tsdstream unformatted 
+         substitute ("&3&1&4&1&5&1&6&1&7&8&2",
+                {&delimiteFld},
+                {&delimiterLine},
+                tt-doc-line-mark.jj,
+                tt-doc-line-mark.doc-num,
+                tt-doc-line-mark.mark,
+                tt-doc-line-mark.RecKey,
+                tt-doc-line-mark.Status_,
+                if     tt-doc-line-mark.MarkParent ne ? 
+                   and tt-doc-line-mark.MarkQnty   ne ?
+                then
+                   substitute ("&1&2&1&3",{&delimiteFld},
+                                        tt-doc-line-mark.MarkParent,
+                                        tt-doc-line-mark.MarkQnty)
+                else ""
+               )
+    
+      .
+      end.
+      tsdstreamclose().
+    end.
+  define dataset ds-doc serialize-name "documents"
+  for tt-doc
+  , tt-doc-lines
+  , tt-doc-line
+  , tt-doc-line-marks
+  , tt-doc-line-mark
+  data-relation docLines     for tt-doc, tt-doc-lines    relation-fields (doc-num, doc-num) nested
+  data-relation docLine      for tt-doc-lines, tt-doc-line     relation-fields (doc-num, doc-num) nested 
+  data-relation docLineMarks for tt-doc-line, tt-doc-line-marks    relation-fields (doc-num, doc-num,line-num,line-num) nested
+  data-relation docLineMark  for tt-doc-line-marks, tt-doc-line-mark    relation-fields (doc-num, doc-num,line-num,line-num) nested
+  .
+  method public void docWrite():
+     docPrint(resType,"UTF-8").
+     
+  end.
+  method public void docPrint(type as char,encoding as char):
+     for each tt-doc no-lock:
+        create tt-doc-lines.
+        tt-doc-lines.doc-num = tt-doc.doc-num.
+     end.
+     for each tt-doc-line no-lock:
+        create tt-doc-line-marks.
+        assign
+           tt-doc-line-marks.doc-num  = tt-doc-line.doc-num
+           tt-doc-line-marks.line-num = tt-doc-line.line-num
+           .
+     end. 
+     ttPrint(type,
+        DATASET  ds-doc:handle,encoding).
+     empty temp-table tt-doc-lines .
+     empty temp-table tt-doc-line-marks.
+        /*
+        WRITE-XML("longchar",SomeStr, true, encoding, ?, false, true ,false,true).
+     else if type eq "json"
+     then
+        DATASET ds-doc:WRITE-json("longchar",SomeStr,TRUE,?,true,true,false).
+     else
+        SomeStr = getStatusXml(false,"Тип ответа не подерживается responseType должно быть xml или json") .
+        */
+  end.
+   
+  method public void ttPrint(type as char,htable as handle):
+     ttPrint(type, htable, "utf-8").
+  end.
+  
+  method public void ttPrint(type as char, htable as handle, encoding as char):
+     if type eq "xml"
+     then
+        htable:WRITE-XML("longchar",SomeStr, true, encoding, ?, false, true ,false,true).
+     else if type eq "json"
+     then do:
+        htable:WRITE-json("longchar",SomeStr,TRUE,?,true,true,false).
+     end.
+     else
+        SomeStr = getStatusXml(false,"Тип ответа не подерживается responseType должно быть xml или json") .
+  end.
+  method public void docClear():
+     empty temp-table tt-doc.
+     empty temp-table tt-doc-lines.
+     empty temp-table tt-doc-line.
+     empty temp-table tt-doc-line-marks.
+     empty temp-table tt-doc-line-mark.
+  end.
   { utl/gtin.i class }
 
 end class.
