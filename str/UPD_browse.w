@@ -4969,6 +4969,8 @@ PROCEDURE mark-temp :
    define variable v-db-num       as integer   no-undo .
    define variable v-doc-id       as integer   no-undo .
    define variable vType          as character no-undo .
+   define variable vIsErrMark     as logical   no-undo .
+   define variable vQntyScan      as decimal   no-undo .
   
    empty temp-table  tt-utd-lines-filtr.
    run add-filter(?  ,
@@ -5141,56 +5143,59 @@ PROCEDURE mark-temp :
                   buf_utd-marking-lines.db-num  = buf_utd-lines.db-num 
               and buf_utd-marking-lines.doc-id  = buf_utd-lines.doc-id 
               and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+              and buf_utd-marking-lines.doc-level = 1
          :  
-            find first buf_marking no-lock where 
-                       buf_marking.mark begins buf_utd-marking-lines.mark no-error.
-/*            if buf_utd-marking-lines.doc-level = 1 then*/
-            if not avail buf_marking or buf_marking.unit-ext = "UNIT" then
-            do:
-               X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-               if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) and
-                  (X_utd-lines.qnty-scan < X_utd-lines.Quantity or
-                   (X_utd-lines.markType <> "tabak" and X_utd-lines.markType <> "stiki")) then
-               do: /* для табака и стиков факт. кол-во считаем пока не достигли кол-ва по док-ту */
-                 if X_utd-lines.isWeight
-                 and available buf_marking
-                 then do:                    
-                    X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + MarkWeight(buf_marking.mark).
-                 end.     
-                 else X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1.
-                 find first buf_utd-lines-attr where 
-                            buf_utd-lines-attr.db-num = X_utd-lines.db-num and
-                            buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
-                            buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
-                            buf_utd-lines-attr.attr-code = "QuantityBarCode"
-                      exclusive-lock no-error.
-                 if avail buf_utd-lines-attr then
-                 do:
-                    if X_utd-lines.qnty-scan <> 0 then
-                      buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan).
-                    else 
-                      delete buf_utd-lines-attr.
-                 end.
-                 else do:
-                    if X_utd-lines.qnty-scan <> 0 then
-                    do:  
-                       create buf_utd-lines-attr.
-                       assign
-                          buf_utd-lines-attr.db-num     = X_utd-lines.db-num
-                          buf_utd-lines-attr.doc-id     = X_utd-lines.doc-id
-                          buf_utd-lines-attr.LineNum    = X_utd-lines.LineNum
-                          buf_utd-lines-attr.attr-code  = "QuantityBarCode"
-                          buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .
-                       .
-                    end.
-                 end. 
-               end.
-            end .
-            if  avail buf_marking and (
-               buf_marking.sts = Marking:GrayZone:KeyIntDB or 
-               buf_marking.sts = Marking:UnknowSts:KeyIntDB or 
-               buf_marking.sts = Marking:MarkError:KeyIntDB ) then X_utd-lines.stts = "Ошибка статус марки" .        
-         end.   
+           X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1.
+
+           if buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB then
+           do: /* если лок.статус 1-го уровня Проверен, то кол-во берем из qnty-box */
+               /* марка при этом может быть Разгруппирована при загрузке УПД*/
+             find first buf_marking no-lock where 
+                        buf_marking.mark begins buf_utd-marking-lines.mark 
+             no-error.
+             X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + buf_marking.box-qnty.
+           end.  
+           else
+           do:  /* иначе считаем кол-во принятых марок по UNIT */
+              run calcQntyMarkByUnit in this-procedure(
+                buf_utd-lines.db-num,
+                buf_utd-lines.doc-id,
+                buf_utd-lines.LineNum,
+                buf_utd-marking-lines.mark, 
+                X_utd-lines.isWeight, 
+                output vQntyScan,
+                output vIsErrMark). 
+              X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + vQntyScan. 
+              if vIsErrMark then X_utd-lines.stts = "Ошибка статус марки" .        
+           end.
+         end.
+         
+         find first buf_utd-lines-attr where 
+                    buf_utd-lines-attr.db-num = X_utd-lines.db-num and
+                    buf_utd-lines-attr.doc-id = X_utd-lines.doc-id and
+                    buf_utd-lines-attr.LineNum = X_utd-lines.LineNum and
+                    buf_utd-lines-attr.attr-code = "QuantityBarCode"
+              exclusive-lock no-error.
+         if avail buf_utd-lines-attr then
+         do:
+            if X_utd-lines.qnty-scan <> 0 then
+              buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan).
+            else 
+              delete buf_utd-lines-attr.
+         end.
+         else do:
+            if X_utd-lines.qnty-scan <> 0 then
+            do:  
+               create buf_utd-lines-attr.
+               assign
+                  buf_utd-lines-attr.db-num     = X_utd-lines.db-num
+                  buf_utd-lines-attr.doc-id     = X_utd-lines.doc-id
+                  buf_utd-lines-attr.LineNum    = X_utd-lines.LineNum
+                  buf_utd-lines-attr.attr-code  = "QuantityBarCode"
+                  buf_utd-lines-attr.attr-value = string(X_utd-lines.qnty-scan) .
+               .
+            end.
+         end. 
       end.    
       else 
       do:
@@ -5216,6 +5221,62 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE temp-mark d-utd 
+PROCEDURE calcQntyMarkByUnit :
+   define input  parameter iDbNum     as integer no-undo.
+   define input  parameter iDocId     as integer no-undo.
+   define input  parameter iLineNum   as integer no-undo.
+   define input  parameter iMark      as character no-undo.
+   define input  parameter iIsWeight  as logical no-undo.
+   define output parameter oQntyScan  as decimal no-undo.
+   define output parameter oIsErrMark as logical no-undo init false.
+   
+   define variable vIsErrMark     as logical   no-undo .
+   define variable vQntyScan      as decimal   no-undo .
+   define buffer buf_marking           for ub.marking.
+   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+    
+   for each buf_marking no-lock where
+            buf_marking.mark-parent begins iMark,
+       first buf_utd-marking-lines no-lock where 
+             buf_utd-marking-lines.db-num  = iDbNum and
+             buf_utd-marking-lines.doc-id  = iDocId and 
+             buf_utd-marking-lines.LineNum = iLineNum and
+             buf_utd-marking-lines.mark    = buf_marking.mark
+   :
+     if buf_marking.unit-ext = "UNIT" then
+     do:
+       if     can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) 
+/*          /* для табака и стиков факт. кол-во считаем пока не достигли кол-ва по док-ту */*/
+/*          /* непонятно откуда проверка. Катя сказала для всех одинаково считаем         */*/
+/*          and X_utd-lines.qnty-scan < X_utd-lines.Quantity or                             */
+/*             (X_utd-lines.markType <> "tabak" and X_utd-lines.markType <> "stiki"))       */
+       then do:
+         if iIsWeight
+         then do:
+            oQntyScan = oQntyScan + MarkWeight(buf_marking.mark).
+         end.
+         else oQntyScan = oQntyScan + buf_marking.box-qnty.
+       end.
+     end .
+     
+     run calcQntyMarkByUnit in this-procedure(
+         iDbNum,
+         iDocId,
+         iLineNum,
+         buf_marking.mark, 
+         iIsWeight, 
+         output vQntyScan,
+         output vIsErrMark). 
+     oQntyScan = oQntyScan + vQntyScan. 
+     if vIsErrMark then oIsErrMark = vIsErrMark.        
+   end.
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE temp-mark d-utd 
 PROCEDURE temp-mark :
    /* --------------------------------------------------------------------
