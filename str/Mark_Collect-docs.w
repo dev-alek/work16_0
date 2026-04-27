@@ -568,11 +568,11 @@ if num-entries (v-rid-list) > 1 then do:
     do kk = 1 to num-entries (v-rid-list):
         find first bf_utd no-lock where string(recid(bf_utd)) = entry(kk,v-rid-list) no-error .
         if available (bf_utd) then do:
-/*            if bf_utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then do:                                                */
-/*                message "Объединению подлежат только документы в статусе «Новый», исключите документы в статусе «Подтвержден»"*/
-/*                view-as alert-box.                                                                                            */
-/*                return no-apply .                                                                                             */
-/*            end.                                                                                                              */
+            if bf_utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then do:
+                message "Объединению подлежат только документы в статусе «Новый», исключите документы в статусе «Подтвержден»"
+                view-as alert-box.
+                return no-apply .
+            end.
             if kk = 1 then type-doc = bf_utd.is-initial .
             else do:
                 if type-doc <> bf_utd.is-initial then do:
