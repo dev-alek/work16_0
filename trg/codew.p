@@ -1,11 +1,11 @@
 block-level on error undo, throw.
 /*
 
-$Revision: f3ea8f4d0bae, 3346, rls $
-$Author: EShklyar $
-$Date: 2023/05/19 13:37:10 $
-$Workfile: codew.p $
-$Archive: trg/codew.p $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 */
 
@@ -15,11 +15,11 @@ trigger procedure for write of ub.{&main-tbl}
    old buffer old-{&main-tbl}
    .
 
-define variable vss-revision    as character no-undo initial "$Revision: f3ea8f4d0bae, 3346, rls $":U .
-define variable vss-author      as character no-undo initial "$Author: EShklyar $":U .
-define variable vss-date        as character no-undo initial "$Date: 2023/05/19 13:37:10 $":U .
-define variable vss-workfile    as character no-undo initial "$Workfile: codew.p $":U .
-define variable vss-archive     as character no-undo initial "$Archive: trg/codew.p $":U .
+define variable vss-revision    as character no-undo initial "$Revision$":U .
+define variable vss-author      as character no-undo initial "$Author$":U .
+define variable vss-date        as character no-undo initial "$Date$":U .
+define variable vss-workfile    as character no-undo initial "$Workfile$":U .
+define variable vss-archive     as character no-undo initial "$Archive$":U .
 define variable vss-description as character no-undo init "Тригер изменение {&main-tbl}". 
 { trg/trghistnws.i 
   &hist = yes 
@@ -146,11 +146,27 @@ if g#db-num <> 0 and
    new-{&main-tbl}.parent <> "" and
    not new-{&main-tbl}.parent begins "Versions" then
 do:  /* создадим запись версии справочника  */
+   def var vi    as int no-undo.
    mParent = substitute("Versions&1&2",{&delim-par},0).
+   mcode = new-{&main-tbl}.parent.
    find first buf_code where
               buf_code.parent = mParent
           and buf_code.code = new-{&main-tbl}.parent
         no-lock no-error.
+   if not avail buf_code then
+   do:
+     vi = num-entries(new-{&main-tbl}.parent,{&delim-par}).
+     do while vi > 1 and not avail buf_code :
+        vi = vi - 1.
+        if r-index(mcode,{&delim-par}) > 0
+        then   
+           mcode = substring(mcode,1,r-index(mcode,{&delim-par}) - 1).
+        find first buf_code where
+              buf_code.parent = mParent
+          and buf_code.code = mcode
+        no-lock no-error.
+      end.
+   end.
    if avail buf_code then
    do:
       mCodeValue = buf_code.codevalue.
@@ -184,18 +200,18 @@ do:  /* создадим запись версии справочника  */
       mParent = substitute("Versions&1&2",{&delim-par},g#db-num).
       find first buf_code where
                  buf_code.parent = mParent
-             and buf_code.code = new-{&main-tbl}.parent
+             and buf_code.code   = mcode
            no-error.
       if not avail buf_code then
       do:
          find first buf_code_parent where
                     buf_code_parent.parent = ""
-                and buf_code_parent.code = new-{&main-tbl}.parent
+                and buf_code_parent.code = mcode
               no-error.
          create buf_code.
          assign
             buf_code.parent    = mParent
-            buf_code.code      = new-{&main-tbl}.parent
+            buf_code.code      = mcode
             buf_code.CodeName  = buf_code_parent.codename
             buf_code.export_   = yes
             buf_code.status_   = 0
