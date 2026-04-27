@@ -5707,7 +5707,7 @@ PROCEDURE save_mark :
                                        if avail buf_marking-attr
                                        then 
                                        MESSAGE "Масса товара равна "
-                                          (if decimal(buf_marking-attr.attr-value) < 1 
+                                          (if decimal(buf_marking-attr.attr-value) < 1  and decimal(buf_marking-attr.attr-value) >= 0
                                               then string(decimal(buf_marking-attr.attr-value),"9.999")
                                               else buf_marking-attr.attr-value)
                                           X_utd-lines.UnitCode "?"
@@ -7299,7 +7299,9 @@ PROCEDURE add-mark-weight :
             end.
              
             if available buf_marking-attr 
-            then buf_marking-attr.attr-value = string(vWeight).                                         
+            then buf_marking-attr.attr-value = if vWeight < 1  
+                                                  then string(vWeight,"9.999") 
+                                                  else string(vWeight).                                         
             
             assign                                                                                                                                                                                                           
                 bX_utd-lines.qnty-scan = bX_utd-lines.qnty-scan + vWeight                                                                                                                                                        

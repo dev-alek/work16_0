@@ -475,13 +475,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
           buf_marking-attr.attr-code = "weight"
         no-error.
       end.
-      buf_marking-attr.attr-value = string(tt-marking.weight).
+      buf_marking-attr.attr-value = if tt-marking.weight < 1 and tt-marking.weight > 0 
+                                      then string(tt-marking.weight,"9.999") 
+                                      else string(tt-marking.weight). 
       release buf_marking-attr no-error.
       if error-status:error then
       do:
         undo, throw new Progress.Lang.AppError(substitute("Ошибка создания марки &1 товар &2",buf_tt-marking.mark,buf_tt-marking.gds-code)) .
       end.
     end.
+        
   end method.    
 
   method private void out2log (iMark as character, iLevel as int):
