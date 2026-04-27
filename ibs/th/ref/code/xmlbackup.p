@@ -20,13 +20,10 @@ define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 
 define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
-
 mCodeTrg = new ibs.th.ref.code.code_trg(if    g#db-num eq 0 
                                            or imode    ne {&update} 
                                         then imode 
                                         else {&lookup}).
-
-mCodeTrg:formLable(1, 1, "Код").
 mCodeTrg:formLable(1, 3, "Файл").
 mCodeTrg:formLable(1, 6, "XML").
 mCodeTrg:parparentproc = Parparentproc.
@@ -35,8 +32,10 @@ mCodeTrg:addMenu(1, "Восстановление файла", ",Экспорт в XML,").
 /*mCodeTrg:parent = "XML_backup".*/
 mCodeTrg:parent = iparent.
 mCodeTrg:startlevel = num-entries(mCodeTrg:parent, {&delim-par}).
-mCodeTrg:title = "Файлы для восстановления".
+mCodeTrg:MaxLevel = mCodeTrg:startlevel.
+mCodeTrg:title = "Файл для восстановления".
 mCodeTrg:filter = " and code.code = " + quoter(icode).
+mCodeTrg:Mode = {&lookup}.  
 
 mCodeTrg:brwcode().
 
@@ -46,10 +45,10 @@ end finally.
 
 procedure menuitem_1_2: 
    define input  parameter iBuff as handle no-undo.
-   message icode view-as alert-box.
    define variable cSaveFile as character no-undo.
    define variable lCommit   as logical   no-undo.
 
+   cSaveFile = substring(icode, r-index(icode, " ") + 1).
    SYSTEM-DIALOG GET-FILE cSaveFile
        TITLE "Сохранить XML-файл"
        FILTERS 
