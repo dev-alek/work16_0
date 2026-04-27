@@ -393,8 +393,11 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        
    end.
    
-   define variable mType as character no-undo.
-   define variable mVersion as character no-undo.
+    define variable mType    as character no-undo.
+    define variable mVersion as character no-undo.
+    define variable mObjType as character no-undo .
+    define variable mObjCode as character no-undo .
+    define variable mSN      as character no-undo .
   method public override void Execute_( input req as IRequest, resp as class IResponse ):
   ErrStatus = false.
   do transaction:
@@ -439,6 +442,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       tsd:ResType = hRoot:get-attribute("responseType")
       tsd:CurrDecSeparator = hRoot:get-attribute("currDecSeparator")
       tsd:IsMarkOn = if hRoot:get-attribute("MarksReg") = "true" then true else false
+      mSn = hRoot:get-attribute("from")
+      mVersion = hRoot:get-attribute("version")
       .
       if tsd:ResType eq "xml"
       then do:
@@ -467,7 +472,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
              return.
           end.
           else do:
-             tsd:SomeStr = tsd:getStatusXml(false, substitute ("Нет файля для учтройства '&1' и версии '&2'", mType, mVersion)).
+             tsd:SomeStr = tsd:getStatusXml(false, substitute ("Нет файла для устройства '&1' и версии '&2'", mType, mVersion)).
           end.
         end.
       when "TH_ALL" then 
@@ -636,6 +641,20 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
         
     end case.
+    if mSN <> "" then do:
+    find first ub.Code exclusive-lock where ub.Code.code = mSN and ub.Code.parent = "TSDversion" no-error .
+    if not available (ub.Code) then do:
+        create ub.Code .
+        assign
+        ub.Code.code = mSN
+        ub.Code.parent = "TSDversion"
+        .
+    end.
+    if mVersion <> "" then ub.Code.misc1 = mVersion .
+    if mObjCode <> "" then ub.Code.misc2 = mObjCode .
+    if mObjType <> "" then ub.Code.misc3 = mObjType .
+    ub.Code.misc4 = string(now,"99/99/9999 HH:MM:SS") .
+    end.
 
     if ErrStatus then 
     do:
@@ -1092,6 +1111,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
             if hRow:get-attribute("type") = "HARDWARE" 
             then do:
               tsd:SN = hRow:get-attribute("value").
+              mSN = hRow:get-attribute("value").
             end.
           end.
         when "device" then
@@ -1099,7 +1119,19 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
             mType    = hRow:get-attribute("type"). 
             mVersion = hRow:get-attribute("version").
           end.
+        when "TSD" then
+          do:
+            mSN    = hRow:get-attribute("from"). 
+            mVersion = hRow:get-attribute("version").
+          end.
+        when "OBJ" then
+          do:
+            mObjType = hRow:get-attribute("obj_type"). 
+            mObjCode = hRow:get-attribute("obj_code").
+          end.
+          
       end case.
+      
     end.
     
     

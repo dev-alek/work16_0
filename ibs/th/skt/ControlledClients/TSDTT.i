@@ -131,3 +131,13 @@ define temp-table TempMarkLineMT no-undo
   DocName
   MarkCode
   .
+  
+  define temp-table TempTSDSetting no-undo
+  field sn   as character
+  field obj-code  as integer
+  field obj-type as character
+  field version_ as character
+  field lastDate as datetime
+  index pi
+  sn
+  .
