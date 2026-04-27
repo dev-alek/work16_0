@@ -71,7 +71,9 @@ define temp-table tt-utd-lines like ub.utd-lines
   field UnitCliQnty as decimal
   field isMarking   as logical
   field isArtic     as logical
-  field isWeight    as logical
+  field isWeight    as logical /* весовой товар */
+  field isVarWeight as logical /* товар с переменным весом */
+  field isSelect    as logical
   field PieceTTH    as character
   field PieceFact   as character  
   index pi  db-num doc-id LineNum
@@ -93,7 +95,8 @@ define temp-table tt-marking-lines no-undo like ub.marking-lines
   field doc-id      as integer
   field LineNum     as integer
   field GrayZone    as logical
-  field isMark      as logical 
+  field isMark      as logical
+  field isWeight    as logical
   field marking-string as character
   field old-sts     as integer
   field weight      as character

@@ -34,11 +34,30 @@ function formatLogicalValue returns character (iValue as character ):
   return if iValue = "" then ? else string(logical(iValue),"Да/Нет").
 end.
 
+function formatValue returns character (iValue as character ):
+  define variable vLog as logical no-undo. 
+  define variable vDec as decimal no-undo.
+  define variable vChr as character no-undo.
+  
+  vChr = iValue.
+  
+  if iValue <> "" then do:
+      vLog = logical(iValue) no-error.
+      if vLog <> ? then vChr = string(vLog,"Да/Нет").
+      else do:
+         vDec = decimal(iValue) no-error.
+         if vDec <> ? then vChr = string(vDec).          
+      end.   
+  end.    
+  return vChr.
+end.
+
 function getAttributeName returns character (iCode as character ):
   return 
     if iCode = "notOnlineCheck" 
       then "Игнорировать результат online-проверки"
-      else "Значение атрибута".
+      else if iCode = "weight" then "Вес"
+      else "Значение атрибута " + iCode. 
 end.
 
 &glob tt_name temp-changes
@@ -123,7 +142,8 @@ procedure getMarkingAttr:
     &scop fields-name-list "attr-value"
     define variable v-label-param as character no-undo .
     v-label-param =
-          "attr-value"   + {&delim-par} + getAttributeName(current_c-marking.attr-code) + {&delim-par} + "formatLogicalValue".
+          "attr-value"   + {&delim-par} + getAttributeName(current_c-marking.attr-code) + {&delim-par} 
+          + (if current_c-marking.attr-code = "notOnlineCheck" then "formatLogicalValue" else "formatValue").
     run proc-full-temp-changes in this-procedure (
                                                  input current_c-marking.action = integer({&hn-create})
                                                 ,input current_c-marking.action = integer({&hn-delete})

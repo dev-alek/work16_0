@@ -37,7 +37,8 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
 on stop   undo main-block, return error substitute( "&1. stop", vss-workfile )
 on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
 : 
-  if new-{&main-tbl}.attr-code = "notOnlineCheck" then
+  if new-{&main-tbl}.attr-code = "notOnlineCheck" or 
+     new-{&main-tbl}.attr-code = "weight" then
   do:
     { trg/trghistnws.i 
       &hist = yes 

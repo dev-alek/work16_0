@@ -79,6 +79,7 @@ do:
   def buffer buf_utd-attr for ub.utd-attr.
   def buffer buf_utd-lines for ub.utd-lines.
   def buffer buf_utd-marking-lines for ub.utd-marking-lines.
+  def buffer buf_utd-marking-lines-attr for ub.utd-marking-lines-attr.
   def buffer buf_mark-lines for ub.marking-lines.
   def buffer buf_marking for ub.marking.
   def buffer buf_bar-code for ub.bar-code.
@@ -102,7 +103,6 @@ do:
   define variable vCount     as int no-undo.
    
   { gbl/objsrv.i  }
-  
 /*  logWrite = new LogWrite().*/
   
   find first buf_utd where buf_utd.db-num = p-db-num and buf_utd.doc-id = p-doc-id no-error.
@@ -299,13 +299,24 @@ do:
     and abs(buf_utd-lines.TaxRate - temp_doc-line.vat-pc) < 1
     then do :
       temp_doc-line.vat-pc = buf_utd-lines.TaxRate .
-    end .
-    
-    if (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
-    or logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "ArticUtdLine", "no")))
-    and not vIsWeight
+    end .          
+                                     
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
+    or logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "ArticUtdLine", "no"))    
     then do:
-      
+      if vIsWeight then do:
+         uml_: 
+         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                                  and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                                  and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum,
+             first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark                                                 
+         :
+             vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
+             temp_doc-line.gtinline = vGtin. 
+             leave uml_.
+         end.               
+      end.
+      else do:    
       assign
         vGtinList = ""
         vGtinDocQntyList = ""
@@ -343,6 +354,7 @@ do:
         end.
         
         vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
+        
         if vGtin > ""
         then do :
           vGtinQnty = 0 .
@@ -388,8 +400,8 @@ do:
       
       vGtinList = trim(vGtinList, ",") .
       vGtinDocQntyList = trim(vGtinDocQntyList, ",") .
-      vGtinFactQntyList = trim(vGtinFactQntyList, ",") .
-                                    
+      vGtinFactQntyList = trim(vGtinFactQntyList, ",") .      
+                                                                   
       if temp_doc-line.fact-qnty <> temp_doc-line.doc-qnty
       and temp_doc-line.fact-qnty > 0
       then do : /* Частичная приёмка */
@@ -497,8 +509,8 @@ do:
         temp_doc-line.gtinDocQntyList = vGtinDocQntyList
         temp_doc-line.gtinFactQntyList = vGtinFactQntyList
       .
-    end .
-    
+      end .
+    end.
   end.
   
   if not can-find (first temp_doc-line no-lock where temp_doc-line.fact-qnty > 0)

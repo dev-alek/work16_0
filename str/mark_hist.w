@@ -160,9 +160,9 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
 f-last-change f-status emission_Date Btn_dateOther expire_Date online-check ~
 f-online-result Btn_rn br-mark Btn_pn 
 &Scoped-Define DISPLAYED-OBJECTS v-mark f-GTIN v-mark-2 f-last-change ~
-f-status f-gds-name f-gds-code mrc f-obj-code f-obj-type produced_Date ~
-emission_Date expire_Date online-check f-online-result f-rn f-unit f-unit-2 ~
-f-loc-key f-pn 
+f-status f-gds-name f-gds-code mrc f-obj-code f-obj-type f-weight ~
+produced_Date emission_Date expire_Date online-check f-online-result f-rn ~
+f-unit f-unit-2 f-loc-key f-pn 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -315,6 +315,11 @@ DEFINE VARIABLE f-unit-2 AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 7.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-weight AS CHARACTER FORMAT "X(40)":U 
+     LABEL "Вес" 
+     VIEW-AS FILL-IN 
+     SIZE 14 BY 1 NO-UNDO.
+
 DEFINE VARIABLE mrc AS CHARACTER FORMAT "X(256)":U 
      LABEL "МРЦ" 
      VIEW-AS FILL-IN 
@@ -392,6 +397,7 @@ DEFINE FRAME d-mark
      mrc AT ROW 5.67 COL 82 RIGHT-ALIGNED WIDGET-ID 266
      f-obj-code AT ROW 5.75 COL 10.63 COLON-ALIGNED WIDGET-ID 256
      f-obj-type AT ROW 5.75 COL 18.75 COLON-ALIGNED NO-LABEL WIDGET-ID 258
+     f-weight AT ROW 5.75 COL 107 RIGHT-ALIGNED WIDGET-ID 294
      produced_Date AT ROW 6.75 COL 82 RIGHT-ALIGNED WIDGET-ID 262
      emission_Date AT ROW 7.83 COL 82 RIGHT-ALIGNED WIDGET-ID 264
      Btn_dateOther AT ROW 8.92 COL 89 WIDGET-ID 292
@@ -469,6 +475,8 @@ ASSIGN
 /* SETTINGS FOR FILL-IN f-unit IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-unit-2 IN FRAME d-mark
+   NO-ENABLE ALIGN-R                                                    */
+/* SETTINGS FOR FILL-IN f-weight IN FRAME d-mark
    NO-ENABLE ALIGN-R                                                    */
 /* SETTINGS FOR FILL-IN mrc IN FRAME d-mark
    NO-ENABLE ALIGN-R                                                    */
@@ -900,6 +908,7 @@ PROCEDURE enable_mark :
     v-mark-2
     f-loc-key
     mrc
+    f-weight
     produced_Date
     emission_Date
     online-check
@@ -1058,6 +1067,28 @@ PROCEDURE init-temp :
   empty temp-table X_marking-line.
 
   /*  f-GTIN:screen-value =*/
+  assign
+      f-GTIN = "" 
+      f-gds-code = "" 
+      f-gds-name = "" 
+      f-status = 0 
+      f-last-change = ? 
+      /*соответствие товаров*/
+      f-unit     = ""      
+      f-unit-2   = ""  
+      f-obj-code = ? 
+      f-obj-type = ""    
+      v-mark-2 = "" 
+      f-loc-key = "" 
+      f-pn = "" 
+      f-rn = "" 
+      mrc  = "" 
+      f-weight = "" 
+      emission_Date = "" 
+      produced_Date = ""       
+      f-online-result = -1
+      online-check  = no 
+      .
 
   if v-mark <> "" then 
   do:
@@ -1071,132 +1102,90 @@ PROCEDURE init-temp :
     no-error .
     if available (buf_marking) then 
     do:
-        f-status = buf_marking.sts .
-        f-online-result = if buf_marking.online-result = ? then -1 else buf_marking.online-result.
-        f-last-change = buf_marking.last-change .
-        /*соответствие товаров*/
-        f-gds-code = string(buf_marking.gds-code) .
-        f-gds-name = GdsName(buf_marking.gds-code) .
-        f-unit     = buf_marking.unit-ext .     
-        f-GTIN     = buf_marking.gds-ext-id .
-        f-unit-2   = buf_marking.unit . 
-        f-obj-code = buf_marking.obj-code .
-        f-obj-type = buf_marking.obj-type .
-        f-loc-key = buf_marking.loc-key .
-        expire_Date = entry(1,buf_marking.expDate,"."). 
-        expire_Date = replace(expire_Date,"/",".") .   
-        expire_DateOther = buf_marking.expDateOther.   
+         assign
+           f-status = buf_marking.sts 
+           f-online-result = if buf_marking.online-result = ? then -1 else buf_marking.online-result
+           f-last-change = buf_marking.last-change 
+           /*соответствие товаров*/
+           f-gds-code = string(buf_marking.gds-code) 
+           f-gds-name = GdsName(buf_marking.gds-code) 
+           f-unit     = buf_marking.unit-ext      
+           f-GTIN     = buf_marking.gds-ext-id 
+           f-unit-2   = buf_marking.unit  
+           f-obj-code = buf_marking.obj-code 
+           f-obj-type = buf_marking.obj-type 
+           f-loc-key = buf_marking.loc-key 
+           expire_Date = entry(1,buf_marking.expDate,".") 
+           expire_Date = replace(expire_Date,"/",".")    
+           expire_DateOther = buf_marking.expDateOther                   
+           .
         
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "MRC"
-                                          and buf_marking-attr.mark begins v-marking:
-        mrc = buf_marking-attr.attr-value .                                              
-     end.                                                
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "emissionDate"
-                                          and buf_marking-attr.mark begins v-marking:
-        emission_Date = buf_marking-attr.attr-value .                                              
-     end.                                  
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "producedDate"
-                                          and buf_marking-attr.mark begins v-marking:
-        produced_Date = buf_marking-attr.attr-value .                                              
-     end.                                       
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"
-                                          and buf_marking-attr.mark begins v-marking:
-        online-check = logical(buf_marking-attr.attr-value).                                              
-     end.   
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "MRC"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            mrc = buf_marking-attr.attr-value .                                              
+         end.                                                
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "emissionDate"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            emission_Date = buf_marking-attr.attr-value .                                              
+         end.                                  
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "producedDate"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            produced_Date = buf_marking-attr.attr-value .                                              
+         end.                                       
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            online-check = logical(buf_marking-attr.attr-value).                                              
+         end.   
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "weight"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            f-weight = buf_marking-attr.attr-value .                                              
+         end.   
                                           
-      for each buf_marking-lines no-lock where buf_marking-lines.mark begins v-marking:
-        /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
-        create X_marking-line .
-        buffer-copy buf_marking-lines to X_marking-line .
-        X_marking-line.gds-code = buf_marking.gds-code .
-    
-        find first buf_trn-doc no-lock where buf_trn-doc.doc-code = if buf_marking-lines.out-code <> {&output-code} and buf_marking-lines.out-code <> {&free-code} then buf_marking-lines.out-code else buf_marking-lines.in-code no-error .
-        if available (buf_trn-doc) then do:
-        X_marking-line.date_ = buf_trn-doc.doc-date .
-        X_marking-line.doc-type = func-get-name-from-ext-type(buf_trn-doc.ext-doc-type,no) .
-        if X_marking-line.fact-order = 0 then X_marking-line.fact-order = 1 .
-        end.
+         for each buf_marking-lines no-lock where buf_marking-lines.mark begins v-marking:
+            /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
+            create X_marking-line .
+            buffer-copy buf_marking-lines to X_marking-line .
+            X_marking-line.gds-code = buf_marking.gds-code .
         
-      end.  
-      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark begins v-marking:
-        for first buf_utd no-lock where buf_utd.doc-id = buf_utd-marking-lines.doc-id and buf_utd.db-num = buf_utd-marking-lines.db-num:  
-        create X_marking-line .
-        assign
-          X_marking-line.doc-type    = EdoTypeName(buf_utd.EDocType)
-          X_marking-line.mark        = buf_marking.mark
-          X_marking-line.out-code    = buf_utd.DocumentNumber
-          X_marking-line.date_       = buf_utd.DocumentDate
-          X_marking-line.sts         = buf_utd-marking-lines.sts
-          X_marking-line.type        = 1
-          X_marking-line.obj-code    = buf_utd.obj-code
-          X_marking-line.obj-type    = buf_utd.obj-type
-          X_marking-line.doc-id      = buf_utd.doc-id
-          X_marking-line.db-num      = buf_utd.db-num
-          X_marking-line.EdocType    = buf_utd.EdocType
-        .
-        end.
-      end.  
-    end.
+            find first buf_trn-doc no-lock where buf_trn-doc.doc-code = if buf_marking-lines.out-code <> {&output-code} 
+                                             and buf_marking-lines.out-code <> {&free-code} then buf_marking-lines.out-code else buf_marking-lines.in-code 
+               no-error .
+            if available (buf_trn-doc) then do:
+                X_marking-line.date_ = buf_trn-doc.doc-date .
+                X_marking-line.doc-type = func-get-name-from-ext-type(buf_trn-doc.ext-doc-type,no) .
+                if X_marking-line.fact-order = 0 then X_marking-line.fact-order = 1 .
+            end.            
+         end.  
+         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark begins v-marking:
+            for first buf_utd no-lock where buf_utd.doc-id = buf_utd-marking-lines.doc-id 
+                                        and buf_utd.db-num = buf_utd-marking-lines.db-num:  
+                create X_marking-line .
+                assign
+                  X_marking-line.doc-type    = EdoTypeName(buf_utd.EDocType)
+                  X_marking-line.mark        = buf_marking.mark
+                  X_marking-line.out-code    = buf_utd.DocumentNumber
+                  X_marking-line.date_       = buf_utd.DocumentDate
+                  X_marking-line.sts         = buf_utd-marking-lines.sts
+                  X_marking-line.type        = 1
+                  X_marking-line.obj-code    = buf_utd.obj-code
+                  X_marking-line.obj-type    = buf_utd.obj-type
+                  X_marking-line.doc-id      = buf_utd.doc-id
+                  X_marking-line.db-num      = buf_utd.db-num
+                  X_marking-line.EdocType    = buf_utd.EdocType
+                .
+            end.
+         end.  
+    end. /* available (buf_marking) */
     else do:
-      f-GTIN = getGtinByDM(v-mark) .
-      f-gds-code = string(getGdsCodeByGtin(f-GTIN)) .
-      f-gds-name = GdsName(integer(f-gds-code)) .
-      f-status = 0 .
-      f-last-change = ? .
-      /*соответствие товаров*/
-      f-unit     = "" .     
-      f-unit-2   = "" . 
-      f-obj-code = ? .
-      f-obj-type = "" .     
-      f-loc-key = "" .   
-      f-pn = "" .
-      f-rn = "" .
-      mrc  = "" .
-      emission_Date = "" .
-      produced_Date = "" .
-      f-online-result = -1.
+      assign  
+         f-GTIN = getGtinByDM(v-mark) 
+         f-gds-code = string(getGdsCodeByGtin(f-GTIN)) 
+         f-gds-name = GdsName(integer(f-gds-code)) 
+         .      
     end.  
-  end.   
-  else do:
-      f-GTIN = "" .
-      f-gds-code = "" .
-      f-gds-name = "" .
-      f-status = 0 .
-      f-last-change = ? .
-      /*соответствие товаров*/
-      f-unit     = "" .     
-      f-unit-2   = "" . 
-      f-obj-code = ? .
-      f-obj-type = "" .   
-      f-loc-key = "".
-      f-pn = "" .
-      f-rn = "" .
-      mrc  = "" .
-      emission_Date = "" .
-      produced_Date = "" .      
-      f-online-result = -1.
-  end. 
-  end.  
-  else do:
-      f-GTIN = "" .
-      f-gds-code = "" .
-      f-gds-name = "" .
-      f-status = 0 .
-      f-last-change = ? .
-      /*соответствие товаров*/
-      f-unit     = "" .     
-      f-unit-2   = "" . 
-      f-obj-code = ? .
-      f-obj-type = "" .   
-      v-mark-2 = "" .
-      f-loc-key = "" .
-      f-pn = "" .
-      f-rn = "" .
-      mrc  = "" .
-      emission_Date = "" .
-      produced_Date = "" .      
-      f-online-result = -1.
-  end.      
+  end.   /* v-marking <> "" and v-marking <> ? */  
+  end.  /* v-mark <> "" */
+        
   {&OPEN-QUERY-br-mark}
 END PROCEDURE.
 

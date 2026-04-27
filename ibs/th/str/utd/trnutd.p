@@ -1162,7 +1162,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-parts.fact-date      = new_trn-doc.fact-date
             tt-parts.fact-num       = new_trn-doc.fact-num
             tt-parts.VAT-pc         = temp_doc-line.vat-pc
-            tt-parts.part-code      = string(temp_doc-line.line-num)
+            tt-parts.part-code      = if temp_doc-line.gtinline <> "" 
+                                         then (temp_doc-line.gtinline + "_" + string(temp_doc-line.line-num))
+                                         else string(temp_doc-line.line-num)
             tt-parts.PS             = ""
             tt-parts.pay-code       = new_trn-doc.pay-code
             tt-parts.status_        = no

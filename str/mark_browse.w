@@ -54,6 +54,8 @@ define variable vss-description as character no-undo init "Проверка кодов маркир
 { gbl/key-rec.i  }
 { utl/gtin.i }
 { gbl/objsrv.i }
+{ str/utd-typemark.i }
+
 define input parameter parparentproc as widget-handle no-undo .
 define input-output  PARAMETER TABLE FOR tt-marking-lines.
 define input parameter p-mode as character no-undo .
@@ -421,7 +423,7 @@ DEFINE BROWSE br-mark
   X_marking.mark COLUMN-LABEL "Марка/Штрих-код" FORMAT "x(56)":U width 33
   
   X_marking.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  X_marking.weight COLUMN-LABEL "Вес" FORMAT "x(10)":U width 10
+  if ismark(X_marking.mark) and WeighedProd(X_marking.gds-code) then string(MarkWeight(X_marking.mark),">>>>>9.999") else "" @ X_marking.weight COLUMN-LABEL "Вес" FORMAT "x(10)":U width 10
   if not ismark(X_marking.mark) then "" else getStatusName(X_marking.mark,X_marking.sts,X_marking.sts-utd) @ X_marking.stts COLUMN-LABEL "Текущий статус" FORMAT "X(50)":U width 20 
 /*  X_marking.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */
@@ -447,7 +449,7 @@ DEFINE BROWSE br-mark-item
   else "АОД" @ typem COLUMN-LABEL "Тип!кода" FORMAT "x(3)":U
   X_marking-line.mark COLUMN-LABEL "Марка" FORMAT "x(56)":U width 33
   X_marking-line.box-qnty column-label "Кол-во" format "->>>>>>9.99":U
-  X_marking-line.weight COLUMN-LABEL "Вес" FORMAT "x(10)":U width 10
+  if ismark(X_marking-line.mark) and WeighedProd(X_marking-line.gds-code) then string(MarkWeight(X_marking-line.mark),">>>>>9.999") else "" @ X_marking-line.weight COLUMN-LABEL "Вес" FORMAT "x(10)":U width 10
   getStatusName(X_marking.mark,X_marking-line.sts,X_marking-line.sts-utd) @ X_marking-line.stts COLUMN-LABEL "Текущий статус" FORMAT "X(50)":U width 20
 /*  X_marking-line.stts-utd COLUMN-LABEL "Статус" FORMAT "X(30)":U width 20*/
 /*  X_marking-line.in-code COLUMN-LABEL "ПН" FORMAT "X(15)":U */

@@ -288,7 +288,7 @@ function WeighedProd return logical
    ( input p-gds-code as integer) :
    /*------------------------------------------------------------------------------
      Purpose:  
-       Notes:  
+       Notes:  Весовой товар
    ------------------------------------------------------------------------------*/
    define variable v-par-val  as character no-undo.
    define variable v-par-type as character no-undo.
@@ -302,6 +302,53 @@ function WeighedProd return logical
   
    return logical(v-par-val).   /* Function return value. */
 
+end.
+
+&if "{1}" = "class"
+&then
+method public logical WghProdVariable
+&else
+function WghProdVariable return logical 
+&endif
+    (input p-obj-type as char,
+     input p-obj-code as integer,
+     input p-gds-code as integer) :
+   /*------------------------------------------------------------------------------
+     Purpose:  
+       Notes:  Товар с переменным весом
+   ------------------------------------------------------------------------------*/
+   define variable v-wgh-val  as character no-undo.
+   define variable v-par-val  as character no-undo.
+   define variable v-par-type as character no-undo.
+   define variable vMarking        as logical no-undo.
+   define variable vArtic          as logical no-undo.
+   define variable vTransitional   as logical no-undo.
+   define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+   &scop proc-name gds-attr-value
+   {&run_proc_attr-lib}
+        ( p-gds-code,
+          {&attr-weighed-gds},
+           output v-wgh-val,
+           output v-par-type
+        ).
+    if logical(v-wgh-val) = yes then do:                
+        {&run_proc_attr-lib}
+            ( p-gds-code,
+              {&attr-mark-type},
+               output v-par-val,
+               output v-par-type
+            ).
+        if v-par-val <> "" then do:
+            EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(p-obj-type, p-obj-code). 
+            assign
+               vMarking = EDOParSec:GetIsEDOForType(v-par-val)  
+               vArtic = not vMarking and EDOParSec:GetIsArticForType(v-par-val)
+               .
+        end.   
+   end.
+   if v-wgh-val > "" and (vMarking or vArtic)
+   then return yes.
+   else return no.
 end.
 
 &if "{1}" = "class"

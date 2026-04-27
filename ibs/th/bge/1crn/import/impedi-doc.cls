@@ -307,11 +307,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                setattrutdlines(utd-lines.db-num, utd-lines.doc-id, utd-lines.lineNum,"QuantityBarCode",string(v-gds-gd:Qnty-accepted)).
                
             /* разрешение ручного выбора */            
-            if v-gds-gd:manual-selection eq 1 or
-               v-gds-gd:manual-selection eq 0
-            then
-               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"manual-selection",string(v-gds-gd:manual-selection)).            
-            
+            if v-gds-gd:manual-selection eq 1 
+            then 
+               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"manual-selection","yes").                              
+            else
+               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"manual-selection",""). 
                 
             define variable vqnty as integer no-undo.
             vqnty = 0.
@@ -790,6 +790,41 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
            end.
         end.
      end.
+     else if available marking 
+     then do:
+        if marking.gds-code > 0
+        then do :
+           cisGdsCode = marking.gds-code . 
+        end .
+        else do :
+           cisGdsCode = getGdsCodeByGtin(marking.gds-ext-id) .
+        end .
+        /* если товар с переменным весом, то у марки должен быть вес */
+        if cisGdsCode > 0 and 
+           WeighedProd(cisGdsCode) and 
+           MarkWeight(marking.mark) = 0 then do:
+            find first bf_utd-marking-lines where bf_utd-marking-lines.db-num eq idb-num
+                                              and bf_utd-marking-lines.doc-id eq idoc-id
+                                              and bf_utd-marking-lines.mark   eq marking.mark
+            no-lock no-error.
+            errMSG = "Марка не содержит информации о весе товара." .
+            MarkChangeSts(marking.mark, 
+                           objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB, 
+                           errMSG, 
+                           yes).                
+            if marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+               and available bf_utd-marking-lines
+            then             
+                AddUtdErr(idb-num,
+                          idoc-id,
+                          if available bf_utd-marking-lines 
+                          then buffer bf_utd-marking-lines:handle
+                          else buffer marking:handle,
+                          "LoadUtd",
+                          "NoWeightMark",
+                          (marking.mark + {&delim-par} + errMSG)).                                      
+        end.    
+     end.    
   end.
   
   method public void MarkChangeSts(imark as char, ists as int, ierrMSG as char, ichld as log):     
