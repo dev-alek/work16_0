@@ -318,7 +318,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             .
           
 /*          cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).*/
-        addDocLine(jjm,
+         jjm = jjm + 1. 
+         addDocLine(jjm,
                       buf_trn-doc.doc-code,
                        if docType = 'inv' then pos else buf_doc-line.line-num,
                       buf_goods.gds-code,
