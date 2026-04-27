@@ -511,6 +511,16 @@ class ibs.th.ref.code.code_trg final:
              chek-erpRN = yes.
              isVisibleStatus = false.
           end.
+          else if icode eq "XML_UPD"
+          then do:
+             MaxLevel = MaxLevel + 1.
+             formLable(1, 1, "Код").
+             formLable(1, 3, "Файл").
+             formLable(1, 4, "Хеш").
+             formLable(1, 5, "Версия метаданных").
+             formLable(1, 6, "БД").
+          end.
+
        end.
     end.
     
