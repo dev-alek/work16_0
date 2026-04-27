@@ -1662,7 +1662,7 @@ class ibs.th.str.InfoSectionsTotal:
           do on error undo, return no-apply :
     
   
-            /*данные по средству измерения резервуара для ПО МИ*/
+            /*данные по средству измерения резервуара для ПОкМИ*/
           find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSi no-error.
           if not available buf_sr-izmerenia then do :
             message
@@ -1712,7 +1712,7 @@ class ibs.th.str.InfoSectionsTotal:
           if InfoSectionCurr:Pour = "" then do :
             message 
               "Заполнены не все поля, необходимые " skip
-              "для работы библиотеки ПО МИ"         skip
+              "для работы библиотеки ПОкМИ"         skip
               "Введите тип налива"  skip
             view-as alert-box error.
             undo _trpomi, return no-apply .
@@ -1721,14 +1721,14 @@ class ibs.th.str.InfoSectionsTotal:
           if InfoSectionCurr:Shape = "" then do :
             message
               "Заполнены не все поля, необходимые " skip
-              "для работы библиотеки ПО МИ"         skip
+              "для работы библиотеки ПОкМИ"         skip
               "Укажите форму горловины"  skip
             view-as alert-box error.
           end.
           if InfoSectionCurr:CarVol = ? or InfoSectionCurr:CarVol = 0 then do :
             message
               "Заполнены не все поля, необходимые " skip
-              "для работы библиотеки ПО МИ"         skip
+              "для работы библиотеки ПОкМИ"         skip
               "Введите Объем по свидетельству о поверке в литрах"  skip
             view-as alert-box error.
             undo _trpomi, return no-apply  .
@@ -1737,7 +1737,7 @@ class ibs.th.str.InfoSectionsTotal:
           if InfoSectionCurr:ABTarir = ? then do :
             message
               "Заполнены не все поля, необходимые " skip
-              "для работы библиотеки ПО МИ"         skip
+              "для работы библиотеки ПОкМИ"         skip
               "Введите Уровень цистерны относительно тарировочной планки"  skip
             view-as alert-box error.
             undo _trpomi, return no-apply  .
@@ -1764,7 +1764,7 @@ class ibs.th.str.InfoSectionsTotal:
 /*            if InfoSectionCurr:Diameter = ? or InfoSectionCurr:Diameter = "0" then do :*/
 /*              message                                                                  */
 /*                "Заполнены не все поля, необходимые " skip                             */
-/*                "для работы библиотеки ПО МИ"         skip                             */
+/*                "для работы библиотеки ПОкМИ"         skip                             */
 /*                "Введите Внутренний диаметр горловины"  skip                           */
 /*              view-as alert-box error.                                                 */
 /*              undo _trpomi, return no-apply  .                                         */
@@ -1772,7 +1772,7 @@ class ibs.th.str.InfoSectionsTotal:
           if InfoSectionCurr:TankTemp = ? then do :
             message
               "Заполнены не все поля, необходимые " skip
-              "для работы библиотеки ПО МИ"         skip
+              "для работы библиотеки ПОкМИ"         skip
               "Введите Температуру"  skip
             view-as alert-box error.
             undo _trpomi, return no-apply  .
@@ -1788,8 +1788,8 @@ class ibs.th.str.InfoSectionsTotal:
           if InfoSectionCurr:TankDensity = ? or InfoSectionCurr:TankDensity = 0 then do :
             message
               "Заполнены не все поля, необходимые " skip
-              "для работы библиотеки ПО МИ"         skip
-              "Введите Плотность топлива для ПО МИ"  skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Введите Плотность топлива для ПОкМИ"  skip
             view-as alert-box error.
             undo _trpomi, return no-apply .
           end.
@@ -1797,7 +1797,7 @@ class ibs.th.str.InfoSectionsTotal:
           if  InfoSectionCurr:ListTank = "" then do :
             message
               "Заполнены не все поля, необходимые " skip
-              "для работы библиотеки ПО МИ"         skip
+              "для работы библиотеки ПОкМИ"         skip
               "Выберите резервуар"  skip
             view-as alert-box error.
             undo _trpomi, return no-apply .
@@ -1966,7 +1966,7 @@ class ibs.th.str.InfoSectionsTotal:
 
             output stream outstream close.
             message
-              substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
+              substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) skip
             view-as alert-box error.
             undo _trpomi, return no-apply  .
           end.
@@ -2296,7 +2296,7 @@ class ibs.th.str.InfoSectionsTotal:
         put stream outstream error-string format "x(1024)" skip.
       output stream outstream close.
       message
-        substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
+        substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) skip
       view-as alert-box error.
       undo, return no-apply  .
     end.
@@ -3357,7 +3357,7 @@ class ibs.th.str.InfoSectionsTotal:
             output stream outstream to value ("pomi.log")  append.
             put stream outstream vErr format "X(1024)" skip.
             output stream outstream close.
-            message substitute('Ошибка работы библиотеки ПО МИ &1', vErr) view-as alert-box .
+            message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
             undo _trpomi, return error .
           end.
           else do :
@@ -3397,7 +3397,7 @@ class ibs.th.str.InfoSectionsTotal:
             output stream outstream to value ("pomi.log")  append.
             put stream outstream vErr format "X(1024)" skip.
             output stream outstream close.
-            message substitute('Ошибка работы библиотеки ПО МИ &1', vErr) view-as alert-box .
+            message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
             undo _trpomi, return error .
           end.
           else do :

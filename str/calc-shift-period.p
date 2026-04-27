@@ -1542,7 +1542,7 @@ procedure pomi-calc :
   
   _trpomi :
   do on error undo, return :
-    /*данные по резервуару для ПО МИ*/
+    /*данные по резервуару для ПОкМИ*/
     find first bf_place no-lock where bf_place.pl-code = cur_rvs-line.pl-code no-error .
     
     do ii = 1 to num-entries({&list-place-attr},','):
@@ -1566,9 +1566,9 @@ procedure pomi-calc :
         when {&place-dens-prov} then do :
           if v-ok then dens-prov = decimal(v-value) .
         end.
-        when {&place-temp-coef} then do :
-          if v-ok then A_Reservoir = decimal(v-value) .
-        end.
+/*        when {&place-temp-coef} then do :              */
+/*          if v-ok then A_Reservoir = decimal(v-value) .*/
+/*        end.                                           */
         when {&place-dead-high} then do :
           if v-ok then DeadZone_Reservoir = decimal(v-value) .
         end.
@@ -1594,7 +1594,7 @@ procedure pomi-calc :
     end.
     /*..........................................*/
   
-    /*градуировочная таблица резервуара для ПО МИ*/
+    /*градуировочная таблица резервуара для ПОкМИ*/
     if cur_rvs-line.state-level-water > 0
     then do :
       find last water1_pl-level no-lock where water1_pl-level.pl-code  = cur_rvs-line.pl-code
@@ -1674,7 +1674,7 @@ procedure pomi-calc :
     ).
     /*..........................................*/
     
-    /*данные по средству измерения резервуара для ПО МИ*/
+    /*данные по средству измерения резервуара для ПОкМИ*/
     
     find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
     if error-status :error or not available buf_sr-izmerenia then do :
@@ -1931,7 +1931,7 @@ procedure pomi-calc :
         output stream s-pomi to value ("pomi.log")  append.
         put stream s-pomi vErr format "X(1024)" skip.
         output stream s-pomi close.
-        message substitute('Ошибка работы библиотеки ПО МИ &1', vErr) view-as alert-box .
+        message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
         undo _trpomi, return "pomi-error" .
       end.
       else do :
@@ -2147,7 +2147,7 @@ procedure pomi-calc :
       output stream s-pomi to value ("pomi.log")  append.
       put stream s-pomi error-string format "X(1024)" skip.
       message
-      substitute('Ошибка работы библиотеки ПО МИ. &1',error-string)
+      substitute('Ошибка работы библиотеки ПОкМИ. &1',error-string)
       view-as alert-box error.
       output stream s-pomi close.
       undo _trpomi, return "pomi-error" .

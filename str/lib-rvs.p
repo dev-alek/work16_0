@@ -3793,7 +3793,7 @@ then do:
 
 FIND FIRST tt-meas-file WHERE tt-meas-file.pl-code =  tt-meas.pl-code NO-LOCK NO-ERROR.
   
-    /*для работы с ПО МИ (библиотека ММ.dll com-сервер)*/
+    /*для работы с ПОкМИ (библиотека ММ.dll com-сервер)*/
     /* Включили работу с ПО к МИ в связи с тем, что изменилась постановка задачи. Сейчас приведение плотности используется только при приемке топлива  */
     /*  { gbl/conf-rd.i  */
     /*      "'rdc-dnst'" */
@@ -3825,7 +3825,7 @@ THEN DO:
   then do :
     _trpomi :
     do on error undo, return error :
-    /*данные по резервуару для ПО МИ*/
+    /*данные по резервуару для ПОкМИ*/
       
 /*      if is-sug(bf_rvs-line.gds-code)  */
 /*      and tt-meas-file.log-brutto = yes*/
@@ -3856,9 +3856,9 @@ THEN DO:
           when {&place-dens-prov} then do :
             if v-ok then dens-prov = decimal(v-value) .
           end.
-          when {&place-temp-coef} then do :
-            if v-ok then A_Reservoir = decimal(v-value) .
-          end.
+/*          when {&place-temp-coef} then do :              */
+/*            if v-ok then A_Reservoir = decimal(v-value) .*/
+/*          end.                                           */
           when {&place-dead-high} then do :
             if v-ok then DeadZone_Reservoir = decimal(v-value) .
           end.
@@ -3893,7 +3893,7 @@ THEN DO:
       end.
         /*..........................................*/
 
-        /*градуировочная таблица резервуара для ПО МИ*/
+        /*градуировочная таблица резервуара для ПОкМИ*/
 /*        for last pl-level no-lock                                                                                              */
 /*            where pl-level.pl-code  = bf_rvs-line.pl-code                                                                      */
 /*            and pl-level.obj-code =  bf_rvs-line.obj-code                                                                      */
@@ -4074,7 +4074,7 @@ THEN DO:
       end .                                                                                      
       /*..........................................*/
 
-      /*данные по средству измерения резервуара для ПО МИ*/
+      /*данные по средству измерения резервуара для ПОкМИ*/
       define buffer dens_sr-izmerenia for sr-izmerenia .
       define buffer temp_sr-izmerenia for sr-izmerenia .
       define buffer level_sr-izmerenia for sr-izmerenia .
@@ -4375,8 +4375,8 @@ THEN DO:
           output stream outstream to value ("pomi.log")  append.
           put stream outstream vErr format "X(1024)" skip.
           output stream outstream close.
-          message substitute('Ошибка работы библиотеки ПО МИ &1', vErr) view-as alert-box .
-          undo _trpomi, return error substitute('Ошибка работы библиотеки ПО МИ &1', vErr) .
+          message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
+          undo _trpomi, return error substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) .
         end.
         else do :
           OUTPUT stream outstream to value ("pomi.log")  append.
@@ -4664,7 +4664,7 @@ THEN DO:
           output stream outstream to value ("pomi.log")  append.
           put stream outstream error-string format "X(1024)" skip.
           output stream outstream close.
-          undo _trpomi, return error substitute('Ошибка работы библиотеки ПО МИ &1',error-string) .
+          undo _trpomi, return error substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) .
         end.    
 
         if tt-meas-file.log-brutto = no
@@ -4869,7 +4869,7 @@ THEN DO:
           output stream outstream to value ("pomi.log")  append.
           put stream outstream error-string format "X(1024)" skip.
           output stream outstream close.
-          undo _trpomi, return error substitute('Ошибка работы библиотеки ПО МИ &1',error-string) .
+          undo _trpomi, return error substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) .
         end.
         else do :
           v-mm-density = Rcy / 1000 .

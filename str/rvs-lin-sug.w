@@ -1562,7 +1562,7 @@ define buffer bf_place for ub.place .
     if tt-rvs-line.state-density = ? or tt-rvs-line.state-density = 0 then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите плотность ЖФ "
       view-as alert-box error.
       undo _trpomi, return .
@@ -1570,7 +1570,7 @@ define buffer bf_place for ub.place .
     if tt-rvs-line.state-dens-pf-sug = ? or tt-rvs-line.state-dens-pf-sug = 0 then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите плотность ПФ "
       view-as alert-box error.
       undo _trpomi, return .
@@ -1578,7 +1578,7 @@ define buffer bf_place for ub.place .
     if tt-rvs-line.state-level-total = ? or tt-rvs-line.state-level-total = 0 then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите факт. общий уровень"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.state-level-total in frame {&frame-name}.
@@ -1587,7 +1587,7 @@ define buffer bf_place for ub.place .
     if tt-rvs-line.state-level-water = ? then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите факт. уровень воды"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.state-level-water in frame {&frame-name}.
@@ -1596,7 +1596,7 @@ define buffer bf_place for ub.place .
     if tt-rvs-line.state-temperature = ? then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите температуру"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.state-temperature in frame {&frame-name}.
@@ -1605,14 +1605,14 @@ define buffer bf_place for ub.place .
     if tt-rvs-line.state-pressure-sug = ? then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите давление"
       view-as alert-box error.
       apply "entry" to tt-rvs-line.state-pressure-sug in frame {&frame-name}.
       undo _trpomi, return .
     end.
     
-    /*данные по резервуару для ПО МИ*/
+    /*данные по резервуару для ПОкМИ*/
     do ii = 1 to num-entries({&list-place-attr},','):
       v-code = entry(ii,{&list-place-attr}) .
       run placelib_get-attr  ( input v-code
@@ -1637,14 +1637,14 @@ define buffer bf_place for ub.place .
         when {&place-dens-prov} then do :
           if v-ok then dens-prov = decimal(v-value) .
         end.
-        when {&place-temp-coef} then do :
-          if v-ok then A_Reservoir = decimal(v-value) .
-        end.
+/*        when {&place-temp-coef} then do :              */
+/*          if v-ok then A_Reservoir = decimal(v-value) .*/
+/*        end.                                           */
       end case.
     end.
     /*..........................................*/
 
-    /*градуировочная таблица резервуара для ПО МИ*/
+    /*градуировочная таблица резервуара для ПОкМИ*/
 /*    for last pl-level no-lock                                                                                                */
 /*        where pl-level.pl-code  = tt-rvs-line.pl-code                                                                        */
 /*          and pl-level.obj-code = tt-rvs-line.obj-code                                                                       */
@@ -1745,7 +1745,7 @@ define buffer bf_place for ub.place .
     
     /*..........................................*/
 
-    /*данные по средству измерения резервуара для ПО МИ*/
+    /*данные по средству измерения резервуара для ПОкМИ*/
     if (pl-rvd-lvl
     and pl-rvd-dens
     and pl-rvd-temp)
@@ -1764,7 +1764,7 @@ define buffer bf_place for ub.place .
         find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
         if not available buf_sr-izmerenia then do :
           message
-          "Ошибка работы с библиотекой ПО МИ"
+          "Ошибка работы с библиотекой ПОкМИ"
           substitute( 'Не найдено средство измерения с кодом &1', place-si ) skip
           view-as alert-box error.
           undo _trpomi, return no-apply.
@@ -1806,7 +1806,7 @@ define buffer bf_place for ub.place .
         find first level_sr-izmerenia no-lock where level_sr-izmerenia.node-code = v-mi-lvl no-error.
         if not available level_sr-izmerenia then do :
           message
-          "Ошибка работы с библиотекой ПО МИ"
+          "Ошибка работы с библиотекой ПОкМИ"
           substitute( 'Не найдено средство измерения с кодом &1', v-mi-lvl ) skip
           view-as alert-box error.
           undo _trpomi, return no-apply.
@@ -1884,7 +1884,7 @@ define buffer bf_place for ub.place .
 /*        find first temp_sr-izmerenia no-lock where temp_sr-izmerenia.node-code = pl-temp-sr-izm no-error.                    */
 /*        if not available temp_sr-izmerenia then do :                                                                         */
 /*          message                                                                                                            */
-/*          "Ошибка работы с библиотекой ПО МИ"                                                                                */
+/*          "Ошибка работы с библиотекой ПОкМИ"                                                                                */
 /*          substitute( 'Не найдено средство измерения с кодом &1', pl-temp-sr-izm ) skip                                      */
 /*          view-as alert-box error.                                                                                           */
 /*          undo _trpomi, return no-apply.                                                                                     */
@@ -2008,7 +2008,7 @@ define buffer bf_place for ub.place .
       output stream outstream to value ("pomi.log")  append.
       put stream outstream error-string format "X(1024)" skip.
       message
-      substitute('Ошибка работы библиотеки ПО МИ. &1',error-string)
+      substitute('Ошибка работы библиотеки ПОкМИ. &1',error-string)
       view-as alert-box error.
       output stream outstream close.
       undo _trpomi, return no-apply .
@@ -3635,7 +3635,7 @@ END.
 /*          and input frame {&frame-name} tt-rvs-line.izmer-density <> 1                         */
 /*        )                                                                                      */
 /*    then do:                                                                                   */
-/*      message "Неверно определена плотность топлива измер. для ПО МИ." view-as alert-box error.*/
+/*      message "Неверно определена плотность топлива измер. для ПОкМИ." view-as alert-box error.*/
 /*      apply "entry" to tt-rvs-line.izmer-density .                                             */
 /*      return no-apply.                                                                         */
 /*    end.                                                                                       */

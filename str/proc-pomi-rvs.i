@@ -1050,7 +1050,7 @@ procedure calc-pomi-rvs :
           output stream outstream to value ("pomi.log")  append.
           put stream outstream vErr format "X(1024)" skip.
           output stream outstream close.
-          message substitute('Ошибка работы библиотеки ПО МИ &1', vErr) view-as alert-box .
+          message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
           undo _trpomi, return error .
         end.
         else do :
@@ -1090,7 +1090,7 @@ procedure calc-pomi-rvs :
           output stream outstream to value ("pomi.log")  append.
           put stream outstream vErr format "X(1024)" skip.
           output stream outstream close.
-          message substitute('Ошибка работы библиотеки ПО МИ &1', vErr) view-as alert-box .
+          message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
           undo _trpomi, return error .
         end.
         else do :

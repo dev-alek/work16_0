@@ -1668,15 +1668,15 @@ define variable VolumetricExpansion as decimal no-undo .
     if calc_r-line.density = ? or calc_r-line.density = 0 then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
-        "Введите плотность измер.для ПО МИ"
+        "для работы библиотеки ПОкМИ"        skip
+        "Введите плотность измер.для ПОкМИ"
       view-as alert-box error.
       undo _trpomi, return "need-data" .
     end.
     if calc_r-line.level-total = ? or calc_r-line.level-total = 0 then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите факт. общий уровень"
       view-as alert-box error.
       undo _trpomi, return "need-data" .
@@ -1684,7 +1684,7 @@ define variable VolumetricExpansion as decimal no-undo .
     if calc_r-line.level-water = ? then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите факт. уровень воды"
       view-as alert-box error.
       undo _trpomi, return "need-data" .
@@ -1693,13 +1693,13 @@ define variable VolumetricExpansion as decimal no-undo .
     then do :
       message
         "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПО МИ"        skip
+        "для работы библиотеки ПОкМИ"        skip
         "Введите температуру"
       view-as alert-box error.
       undo _trpomi, return "need-data" .
     end.
     
-    /*данные по резервуару для ПО МИ*/
+    /*данные по резервуару для ПОкМИ*/
     do ii = 1 to num-entries({&list-place-attr},','):
       v-code = entry(ii,{&list-place-attr}) .
       run placelib_get-attr  ( input v-code
@@ -1724,9 +1724,9 @@ define variable VolumetricExpansion as decimal no-undo .
         when {&place-dens-prov} then do :
           if v-ok then dens-prov = decimal(v-value) .
         end.
-        when {&place-temp-coef} then do :
-          if v-ok then A_Reservoir = decimal(v-value) .
-        end.
+/*        when {&place-temp-coef} then do :              */
+/*          if v-ok then A_Reservoir = decimal(v-value) .*/
+/*        end.                                           */
         when {&place-dead-high} then do :
           if v-ok then DeadZone_Reservoir = decimal(v-value) .
         end.
@@ -1743,7 +1743,7 @@ define variable VolumetricExpansion as decimal no-undo .
     end.
     /*..........................................*/
 
-    /*градуировочная таблица резервуара для ПО МИ*/
+    /*градуировочная таблица резервуара для ПОкМИ*/
 /*    for last pl-level no-lock                                                                                                */
 /*        where pl-level.pl-code  = calc_r-line.pl-code                                                                        */
 /*          and pl-level.obj-code = calc_r-line.obj-code                                                                       */
@@ -1844,7 +1844,7 @@ define variable VolumetricExpansion as decimal no-undo .
     
     /*..........................................*/
 
-    /*данные по средству измерения резервуара для ПО МИ*/
+    /*данные по средству измерения резервуара для ПОкМИ*/
 
     if place-si = 0
     or place-si = ?
@@ -1858,7 +1858,7 @@ define variable VolumetricExpansion as decimal no-undo .
       find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
       if not available buf_sr-izmerenia then do :
         message
-        "Ошибка работы с библиотекой ПО МИ"
+        "Ошибка работы с библиотекой ПОкМИ"
         substitute( 'Не найдено средство измерения с кодом &1', place-si ) skip
         view-as alert-box error.
         undo _trpomi, return "need-data" .
@@ -1956,7 +1956,7 @@ define variable VolumetricExpansion as decimal no-undo .
         output stream outstream to value ("pomi.log")  append.
         put stream outstream vErr format "X(1024)" skip.
         output stream outstream close.
-        message substitute('Ошибка работы библиотеки ПО МИ &1', vErr) view-as alert-box .
+        message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
         undo _trpomi, return "pomi-error" .
       end.
       else do :
@@ -2177,7 +2177,7 @@ define variable VolumetricExpansion as decimal no-undo .
       put stream outstream error-string format "X(1024)" skip.
       output stream outstream close.
       message
-      substitute('Ошибка работы библиотеки ПО МИ. &1',error-string)
+      substitute('Ошибка работы библиотеки ПОкМИ. &1',error-string)
       view-as alert-box error.
       undo _trpomi, return "pomi-error" .
     end.

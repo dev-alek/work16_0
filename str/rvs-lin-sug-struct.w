@@ -459,7 +459,7 @@ do :
     output stream outstream to value ("pomi.log")  append.
     put stream outstream error-string format "X(1024)" skip.
     output stream outstream close.
-    message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
+    message substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) view-as alert-box .
     return .
   end.
   else do :
@@ -534,7 +534,7 @@ do :
     output stream outstream to value ("pomi.log")  append.
     put stream outstream error-string format "X(1024)" skip.
     output stream outstream close.
-    message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
+    message substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) view-as alert-box .
     return .
   end.
   else do :

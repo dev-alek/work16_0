@@ -899,17 +899,23 @@ class ibs.th.str.InfoSection:
       then v-mouth = 0.
     else do:
       FillTTSection(Diameter) .
+      find first tt-section where decimal (tt-section.dif) = decimal (inABTarir) / 10 no-error.
+      if available tt-section
+      then do :
+        v-mouth = tt-section.volume1 .
+        return v-mouth.
+      end .
       find first tt-section where decimal (tt-section.dif) > decimal (inABTarir) / 10 no-error.
       if error-status:error
       then do:
-        message "Не найдено соответствие уровня относительно тарировочной планки и объема." view-as alert-box.
+/*        message "Не найдено соответствие уровня относительно тарировочной планки и объема." view-as alert-box.*/
         return 0.
       end. 
       v-vol2 = tt-section.volume1.
       find last tt-section where decimal (tt-section.dif) <= decimal (inABTarir) / 10 no-error.
       if error-status:error
       then do:
-        message "Не найдено соответствие уровня относительно тарировочной планки и объема." view-as alert-box.
+/*        message "Не найдено соответствие уровня относительно тарировочной планки и объема." view-as alert-box.*/
         return 0.
       end.
       v-diff = decimal (inABTarir) - decimal (tt-section.dif) * 10. 
