@@ -308,8 +308,8 @@ DEFINE BROWSE br-utd-lines
       X_utd-lines.LineNum FORMAT "99999":U label "Номер"
       X_utd-lines.gds-code FORMAT "999999999":U label "Код товара"
       X_utd-lines.GdsName FORMAT "x(128)":U label "Наименование товара" width 40
-      X_utd-lines.Quantity FORMAT "->>,>>9":U label "Просканировано"
-      X_utd-lines.free-qnty FORMAT "->>,>>9":U label "Общий остаток"
+      X_utd-lines.Quantity FORMAT "->>,>>9.<<<":U label "Просканировано"
+      X_utd-lines.free-qnty FORMAT "->>,>>9.<<<":U label "Общий остаток"
       X_utd-lines.UnitCode FORMAT "x(8)":U label "Единица измерения"
 /*      X_utd-lines.qnty-mark FORMAT "->>,>>9":U label "Кол-во марок"*/
 /* _UIB-CODE-BLOCK-END */

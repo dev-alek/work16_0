@@ -12,6 +12,7 @@
        
   define buffer buf_marking-child for ub.marking .
   define buffer buf_marking for ub.marking.
+  define buffer buf_marking-attr for  ub.marking-attr.
   define buffer buf_marking-parent for ub.marking .
   define buffer buf_utd-marking-lines for ub.utd-marking-lines.
   define buffer buf_utd-marking-lines-child for ub.utd-marking-lines .
@@ -32,6 +33,8 @@
   define variable v-mark-short as character no-undo.
   define variable v-GisMTcheckStatus as integer no-undo .
   define variable v-is-off-line as logical no-undo .
+  define variable v-mark-weight as decimal no-undo .
+  define variable v-isweighed as logical no-undo .
   
   define variable v-ok        as logical no-undo .
 
@@ -70,6 +73,15 @@
     return substitute ( "Не найден товар по коду &1.",v-gds-code ).
   end .
   
+  &scop proc-name gds-attr-value
+  {&run_proc_attr-lib}
+  ( buf_goods.gds-code,
+   {&attr-weighed-gds},
+   output v-par-val,
+   output v-par-type
+  ).
+  v-isweighed = logical(v-par-val) .
+  
   if v-GTIN-qnty = ?
   or v-GTIN-qnty <= 0.0
   then do :
@@ -92,6 +104,15 @@
   then do :
     return substitute ("Сверка марок товара &1 '&2' не требуется", buf_goods.gds-code,buf_goods.gds-name).
   end .
+  
+  if v-isweighed
+  and v-par-val > ""
+  and ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val)
+  and not available buf_marking
+  then do :
+    return "Марка не найдена в БД" .
+  end .
+  
   define variable v-attr-value as character no-undo.
   define variable v-attr-type as character no-undo.
   {&CommentStartNoClass}
@@ -213,10 +234,25 @@ v-attr-value = gdsoattr-value (input   {&attr-mark-collect-type},
     .
     &endif
   end .
-  assign
-    buf_utd-lines.Quantity = buf_utd-lines.Quantity + v-GTIN-qnty
-/*    buf_utd-lines.qnty-mark = buf_utd-lines.qnty-mark + 1*/
-  .
+  if v-isweighed
+  then do :
+    find first buf_marking-attr where buf_marking-attr.mark      eq buf_marking.mark
+                                  and buf_marking-attr.attr-code eq "weight"
+    no-lock no-error.
+    if avail buf_marking-attr
+    then
+      v-mark-weight = dec(buf_marking-attr.attr-value) .
+    .
+    assign
+      buf_utd-lines.Quantity = buf_utd-lines.Quantity + v-mark-weight
+    .
+  end .
+  else do :
+    assign
+      buf_utd-lines.Quantity = buf_utd-lines.Quantity + v-GTIN-qnty
+  /*    buf_utd-lines.qnty-mark = buf_utd-lines.qnty-mark + 1*/
+    .
+  end .
   for each buf_marking-child no-lock where buf_marking-child.mark-parent begins v-mark-short,
   first buf_utd-marking-lines-child no-lock where buf_utd-marking-lines-child.mark = buf_marking-child.mark
                                               and buf_utd-marking-lines-child.db-num  = buf_utd-lines.db-num
@@ -279,5 +315,5 @@ v-attr-value = gdsoattr-value (input   {&attr-mark-collect-type},
     .
   end .
   validate buf_utd-marking-lines .
-  
+  return "" .
 end.

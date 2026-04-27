@@ -288,8 +288,8 @@ DEFINE BROWSE br-utd
       X_utd.DocumentDate COLUMN-LABEL "Дата документа" FORMAT "99/99/9999":U
       X_utd.stts COLUMN-LABEL "Статус" FORMAT "X(40)":U width 14
       X_utd.is-initial COLUMN-LABEL "Первоначальный" FORMAT "X(40)":U width 15
-      X_utd.scan-qnty COLUMN-LABEL "Итого просканировано" FORMAT "->>>>>>9"
-      X_utd.free-qnty COLUMN-LABEL "Итого остаток" FORMAT "->>>>>>9"
+      X_utd.scan-qnty COLUMN-LABEL "Итого просканировано" FORMAT "->>>>>>9.<<<"
+      X_utd.free-qnty COLUMN-LABEL "Итого остаток" FORMAT "->>>>>>9.<<<"
       X_utd.comment COLUMN-LABEL "Комментарий" FORMAT "X(256)":U width 40
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -550,6 +550,7 @@ define variable v-mark-short     as character no-undo.
 define variable v-GTIN-child as character no-undo .
 define variable v-GTIN-qnty-child as decimal no-undo .
 define variable v-auto as logical no-undo .
+define variable v-isweighed as logical no-undo .
   
 define buffer buf_utd for ub.utd .
 define buffer bf_utd for X_utd .
@@ -646,8 +647,18 @@ if num-entries (v-rid-list) > 1 then do:
                             buf_utd-marking-lines.doc-level = bf_utd-marking-lines.doc-level
                             .
                             for first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark:
-                            assign
-                                buf_utd-lines.Quantity = buf_utd-lines.Quantity + buf_marking.box-qnty .
+                              v-isweighed = WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, buf_utd-lines.gds-code) .
+                              if v-isweighed
+                              then do :
+                                assign
+                                  buf_utd-lines.Quantity = buf_utd-lines.Quantity + MarkWeight(buf_marking.mark)
+                                .
+                              end .
+                              else do :
+                                assign
+                                  buf_utd-lines.Quantity = buf_utd-lines.Quantity + buf_marking.box-qnty
+                                .
+                              end .
                             end.
                               v-mark-short = GetCodeIdent(buf_marking.mark).
                         for each buf_marking-child no-lock where buf_marking-child.mark-parent begins v-mark-short,
@@ -1382,6 +1393,8 @@ PROCEDURE init-sort :
     define variable vInt      as logical   no-undo.
     define variable vi        as integer   no-undo.
     
+    define variable v-isweighed as logical no-undo .
+    
     define buffer buf_utd-attr          for ub.utd-attr .
     define buffer buf_utd-lines         for ub.utd-lines .
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
@@ -1421,15 +1434,22 @@ PROCEDURE init-sort :
         for each buf_utd-lines no-lock where buf_utd-lines.db-num = buf_utd.db-num 
                                          and buf_utd-lines.doc-id = buf_utd.doc-id
         :
+          v-isweighed = WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, buf_utd-lines.gds-code) .
           for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num 
                                                    and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
                                                    and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
                                                    and buf_utd-marking-lines.doc-level = 1
                                                    and buf_utd-marking-lines.site <> "only-send"
           :
-            vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
-            vGtinQnty = getQntyCodeByGtin(vGtin) .
-            X_utd.scan-qnty = X_utd.scan-qnty + vGtinQnty .
+            if v-isweighed
+            then do :
+              X_utd.scan-qnty = X_utd.scan-qnty + MarkWeight(buf_utd-marking-lines.mark) .
+            end .
+            else do :
+              vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
+              vGtinQnty = getQntyCodeByGtin(vGtin) .
+              X_utd.scan-qnty = X_utd.scan-qnty + vGtinQnty .
+            end .
           end .
           if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
           then do :
