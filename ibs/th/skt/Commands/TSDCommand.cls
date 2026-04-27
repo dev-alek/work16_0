@@ -719,10 +719,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        end. 
        input close.
     end.
-    for each TempTrnDocMT 
-/*    where TempTrnDocMT.Complete_ = true*/
-        :
-    
+    for each TempTrnDocMT where TempTrnDocMT.Complete_ = true:
+      LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + "Загружаем документ " + TempTrnDocMT.DocName.
       empty temp-table TempTrnDoc.
       empty temp-table TempDocLine.
       empty temp-table TempMarkLine.
@@ -922,7 +920,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               
               if not available buf_bar-code then 
               do:
-                logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
+                LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
                 logWrite:WriteFileToLog( "Не известный штрих-код:" + TempDocLine.b-code).
                 writeSockError(HndlSocket, "Не известный штрих-код:" + TempDocLine.b-code).
