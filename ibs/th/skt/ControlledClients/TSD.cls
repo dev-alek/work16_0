@@ -247,6 +247,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
               and buf_trn-doc.status_ = {&wayb})
             ) 
       no-lock:
+      
     for each inv-doc-attr no-lock where (inv-doc-attr.doc-code = buf_trn-doc.doc-code 
                                 and inv-doc-attr.attr-code = "ItogInv") or ( inv-doc-attr.doc-code = buf_trn-doc.doc-code 
                                   and inv-doc-attr.attr-code = "ItogInvManual" ):
@@ -254,7 +255,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     find first inv-doc-attr no-lock where inv-doc-attr.doc-code = buf_trn-doc.doc-code and inv-doc-attr.attr-code = "invMultDevice" and inv-doc-attr.attr-value = string(true) no-error .
     if not available (inv-doc-attr) and buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then next .  
-
+    LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ " + buf_trn-doc.doc-code.
+    
       myflagsDoc:unSetAllFlags().
       case buf_trn-doc.ext-doc-type:
         when {&TDEDT_Ras_Vnesh} then do:
@@ -2301,6 +2303,7 @@ end.
     for each buf_utd where buf_utd.obj-type = ObjType and buf_utd.obj-code = ObjCode and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB
       and buf_utd.EDocType = ObjSrv:Env:Utd:EDocType:UTD:KeyIntDB:
       v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
+      LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ УПД " + v-doc-num.    
       myflagsDoc:unSetAllFlags().
       myflagsDoc:isDocMarkOn = false.
       block-u-l:
@@ -2474,8 +2477,8 @@ end.
       and buf_utd.EDocType = ObjSrv:Env:Utd:EDocType:Introduce:KeyIntDB
         and buf_utd.doc-code = "" 
         and not can-find (first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_utd.doc-code):
-      
       v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
+      LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ Первоначальный ввод КМ " + v-doc-num.
       pos = 0.
       l_utd1:
       for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
@@ -2608,6 +2611,8 @@ end.
 
     invd_:
     for each buf_trn-doc where buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and buf_trn-doc.status_ = {&wayb} and not buf_trn-doc.flag:
+      LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ " + buf_trn-doc.doc-code.
+      
       v-is-introduce = false.
       { str/tdat-val.i
         buf_trn-doc.doc-code
