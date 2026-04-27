@@ -252,7 +252,7 @@ for each tt-goods:
             if buf_marking.expDateOther <> ? and buf_marking.expDateOther <> "" then 
             do:
 /*                empty temp-table tt-date .*/
-                vExpireDateOther = "-" .
+                vExpireDateOther = "" .
                 do ii = 1 to num-entries (buf_marking.expDateOther):
                     if vExpireDateOther = "" then vExpireDateOther = string(date(entry(ii,buf_marking.expDateOther)),"99.99.9999") .
                     else vExpireDateOther = vExpireDateOther + ", " + string(date(entry(ii,buf_marking.expDateOther)),"99.99.9999") .
