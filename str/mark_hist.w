@@ -180,6 +180,13 @@ FUNCTION GdsName RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD GdsUnit d-mark 
+FUNCTION GdsUnit RETURNS CHARACTER
+  ( input p-gds-code as integer )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusName d-mark 
 FUNCTION StatusName RETURNS CHARACTER
   ( input p-sts as integer )  FORWARD.
@@ -317,7 +324,7 @@ DEFINE VARIABLE f-unit-2 AS CHARACTER FORMAT "X(256)":U
 
 DEFINE VARIABLE f-weight AS CHARACTER FORMAT "X(40)":U 
      LABEL "Вес" 
-     VIEW-AS FILL-IN 
+     VIEW-AS FILL-IN      
      SIZE 14 BY 1 NO-UNDO.
 
 DEFINE VARIABLE mrc AS CHARACTER FORMAT "X(256)":U 
@@ -1138,7 +1145,10 @@ PROCEDURE init-temp :
          end.   
          for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "weight"
                                               and buf_marking-attr.mark = buf_marking.mark:
-            f-weight = buf_marking-attr.attr-value .                                              
+            f-weight = if decimal(buf_marking-attr.attr-value) < 1 and  decimal(buf_marking-attr.attr-value) >= 0 
+                          then string(decimal(buf_marking-attr.attr-value),"9.999") 
+                          else buf_marking-attr.attr-value.
+            f-weight = substitute("&1 &2",f-weight, GdsUnit(buf_marking.gds-code)).                                              
          end.   
                                           
          for each buf_marking-lines no-lock where buf_marking-lines.mark begins v-marking:
@@ -1261,6 +1271,24 @@ FUNCTION GdsName RETURNS CHARACTER
   find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
   if available (buf_goods) then v-gds-name = buf_goods.gds-name .
   RETURN v-gds-name.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION GdsName d-mark 
+FUNCTION GdsUnit RETURNS CHARACTER
+  ( input p-gds-code as integer ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+  define buffer buf_goods for ub.goods .
+  define variable v-gds-unit as character no-undo . 
+  find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+  if available (buf_goods) then v-gds-unit = buf_goods.unit-base .
+  RETURN v-gds-unit.   /* Function return value. */
 
 END FUNCTION.
 

@@ -2728,13 +2728,12 @@ ON CHOOSE OF MENU-ITEM m_reset_row_data /* Сбросить данные по строке */
          /* для товара с переменным весом удаляем строки с марками */
          if x_utd-lines.isArtic and x_utd-lines.isWeight 
          then do:
-             for each cancel_utd-marking-lines exclusive-lock where cancel_utd-marking-lines.doc-id  = x_utd-lines.doc-id
-                and cancel_utd-marking-lines.db-num  = x_utd-lines.db-num
-                and cancel_utd-marking-lines.lineNum = x_utd-lines.lineNum,                   
-             first cancel_marking exclusive-lock where 
-                   cancel_marking.mark = cancel_utd-marking-lines.mark:                                              
-                /* изменяем статус марки */                                                                                                           
-                cancel_marking.sts = Marking:PendingVerification:KeyIntDB .
+             for each cancel_utd-marking-lines exclusive-lock where 
+                      cancel_utd-marking-lines.doc-id  = x_utd-lines.doc-id
+                  and cancel_utd-marking-lines.db-num  = x_utd-lines.db-num
+                  and cancel_utd-marking-lines.lineNum = x_utd-lines.lineNum,                   
+             first cancel_marking no-lock where 
+                   cancel_marking.mark = cancel_utd-marking-lines.mark:                                                              
                 /* убираем вес марки */   
                 find first cancel_marking-attr exclusive-lock where                                 
                            cancel_marking-attr.mark = cancel_utd-marking-lines.mark
@@ -5153,7 +5152,17 @@ PROCEDURE mark-temp :
              find first buf_marking no-lock where 
                         buf_marking.mark begins buf_utd-marking-lines.mark 
              no-error.
-             X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + buf_marking.box-qnty.
+             if available buf_marking then do:   
+                 /* для весового товара берем не из box-qnty, а из веса марки */
+                 if X_utd-lines.isWeight                          
+                 then do:                            
+                    X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + MarkWeight(buf_marking.mark).
+                 end.
+                 else
+                    X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + buf_marking.box-qnty.
+             end.
+             /* такого теоретически не должно быть, что бы статус строки был в статусе "проверен", а марки нет */
+             else X_utd-lines.stts = "Ошибка статус марки" .
            end.  
            else
            do:  /* иначе считаем кол-во принятых марок по UNIT */
@@ -5504,10 +5513,7 @@ PROCEDURE save_mark :
       /*      f-text = check_:CheckMarkUTD(v-mark, buf_utd.doc-id, buf_utd.db-num) .*/
       /*      if F-text = "" then do:                                               */
       
-      
-      
-      /* код по созданию марки для весового товара */
-      
+                  
       find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
          and buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
       if available (buf_utd-marking-lines) then
@@ -5700,7 +5706,11 @@ PROCEDURE save_mark :
                                        no-lock no-error.
                                        if avail buf_marking-attr
                                        then 
-                                       MESSAGE "Масса товара равна " buf_marking-attr.attr-value "?"
+                                       MESSAGE "Масса товара равна "
+                                          (if decimal(buf_marking-attr.attr-value) < 1 
+                                              then string(decimal(buf_marking-attr.attr-value),"9.999")
+                                              else buf_marking-attr.attr-value)
+                                          X_utd-lines.UnitCode "?"
                                           VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO
                                           TITLE "" UPDATE lChoice AS LOGICAL.
                                        if lChoice then do:
@@ -5904,6 +5914,7 @@ PROCEDURE save_mark :
 /*            end.                                                                           */
             if available tt-utd-lines-filtr
             then do:
+               /* если товар с переменным весом */ 
                if WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, getGdsCodeByGtin(m-gds-code)) 
                then do:
                   run add-mark-weight (v-mark, m-gds-code, output recid_utd, output F-text) .
@@ -7180,6 +7191,7 @@ end.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+/* Процедура создания марки для товара с переменным весом */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-mark-weight Dialog-Frame 
 PROCEDURE add-mark-weight :
     define input  parameter iMark   as character no-undo.
@@ -7254,7 +7266,7 @@ PROCEDURE add-mark-weight :
                  assign                                                                           
                     buf_marking.gds-code   = buf_utd-marking-lines.gds-code                       
                     buf_marking.mark       = iMark                                          
-                    buf_marking.sts        = Marking:Checked_:KeyIntDB                     
+                    buf_marking.sts        = Marking:DeliveryControl:KeyIntDB                     
                     buf_marking.gds-ext-id = iGTIN                                               
                     buf_marking.obj-code   = buf_utd.obj-code                                     
                     buf_marking.obj-type   = buf_utd.obj-type                                                                                                                                  
