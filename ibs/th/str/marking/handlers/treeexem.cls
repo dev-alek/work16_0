@@ -179,17 +179,17 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
     
     for first marking where marking.mark = mark no-lock:
       for first buf_marking exclusive-lock where buf_marking.mark = marking.mark-parent:
-        for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:
+/*        for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:
           for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
             and buf_utd-marking-lines.mark = bf_marking.mark:
             buf_utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level - 1 .          
           end.
-        end.
+        end.   */
         buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB. .
         for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
             and buf_utd-marking-lines.mark = buf_marking.mark:
               buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB. .
-              buf_utd-marking-lines.doc-level = 0 .
+/*              buf_utd-marking-lines.doc-level = 0 . */
         end.       
         v-is = yes .
       end.
