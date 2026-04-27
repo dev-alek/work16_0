@@ -63,8 +63,8 @@ define buffer buf_clob-bind for ub.clob-bind.
 define variable cb-sr-type-id as integer column-label "Тип"
   format ">9" label "Тип"
   view-as combo-box list-item-pairs
-    "Ареометр калиброванный при 15°С",1,
-    "Ареометр калиброванный при 20°С",2,
+    "Ареометр, отградуирован при 15°С",1,
+    "Ареометр, отградуирован при 20°С",2,
     "Поточный плотномер",3,
     "Погружной плотномер",4,
     "Канал измерения плотности (с поточным плотномером)",5,

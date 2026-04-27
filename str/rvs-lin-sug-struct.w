@@ -44,6 +44,7 @@ define output parameter p-dens-pf as decimal no-undo .
 define output parameter p-ok      as logical no-undo .
 /* Local Variable Definitions ---                                       */
 { gbl/cur-time.i }
+{ str/pokmi-dyn.i }
 
 define stream outstream.
 
@@ -206,6 +207,16 @@ do :
   define variable mmM    as character no-undo .
   define variable v-sug-struct-val as character no-undo .
   define variable v-proc as character no-undo .
+  
+  define variable M as decimal extent 16 .
+  
+  define variable R as decimal no-undo .
+  define variable CTL as decimal no-undo .
+  define variable P_vapor as decimal no-undo .
+  
+  define variable vErr as character no-undo .
+  define variable vWrn as character no-undo .
+  define variable vDllVersion as character no-undo .
   
   assign
     r-struct-type
@@ -412,61 +423,54 @@ do :
   
   release rvs-line-attr no-error .
   
-  RELEASE OBJECT v-mm55 NO-ERROR.
-  v-mm55 = ?.
+  v-proc = "CMethodOfMetering55" .
   
-  v-proc = "ADMM.CMethodOfMetering55" .
-
-  CREATE value(v-proc) v-mm55 no-error.
-  IF ERROR-STATUS:ERROR
-  OR NOT VALID-HANDLE(v-mm55)
-  THEN DO:
-    RELEASE OBJECT v-mm55 NO-ERROR.
-    v-mm55 = ?.
-    message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) view-as alert-box .
-    return .
-  END.
-  ELSE DO :
-    assign
-      v-mm55:R15      = f-dens15 * 1000
-      v-mm55:T        = p-temp
-    .
-    OUTPUT stream outstream to value ("pomi.log") append.
-    PUT STREAM outstream unformatted
-        "    " SKIP
-        "    " SKIP
-        cur-time-string()           FORMAT "x(16)"    SKIP
-        'Процедура             '    v-proc   SKIP
-        'CODE_PL                = ' p-pl-code                           SKIP
-        'R15                    = ' v-mm55:R15                  SKIP
-        'T                      = ' v-mm55:T                                      SKIP
-            SKIP SKIP 
-    .
-    output stream outstream close.
+  MM55
+    (
+    input f-dens15 * 1000,
+    input p-temp,
+    input 2, /* Round_R */
+    input 2, /* Round_T */
     
-    v-mm55:Exec() no-error.
-    if v-mm55:Result <> 0 then do :
-      error-string = v-mm55:ResultDetail .
-      output stream outstream to value ("pomi.log")  append.
-      put stream outstream error-string format "X(1024)" skip.
-      RELEASE OBJECT v-mm55 NO-ERROR.
-      v-mm55 = ?.
-      output stream outstream close.
-      message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
-      return .
-    end.
-    else do :
-      p-dens = round(v-mm55:R / 1000,4) .
-      OUTPUT stream outstream to value ("pomi.log")  append.
-      PUT STREAM outstream unformatted
-          "MM:R   = " v-mm55:R  SKIP
-          "MM:CTL = " v-mm55:CTL  SKIP
-          'Версия dll: '              v-mm55:DllVersion  SKIP
-      .
-      OUTPUT stream outstream close.
-      RELEASE OBJECT v-mm55 NO-ERROR.
-      v-mm55 = ?.
-    end .
+    output R,
+    output CTL,
+    
+    output vErr,
+    output vWrn,
+    output vDllVersion
+    )
+  .
+
+  OUTPUT stream outstream to value ("pomi.log") append.
+  PUT STREAM outstream unformatted
+      "    " SKIP
+      "    " SKIP
+      cur-time-string()           FORMAT "x(16)"    SKIP
+      'Процедура             '    v-proc   SKIP
+      'CODE_PL                = ' p-pl-code                           SKIP
+      'R15                    = ' f-dens15 * 1000                 SKIP
+      'T                      = ' p-temp                                  SKIP
+          SKIP SKIP 
+  .
+  output stream outstream close.
+  
+  if trim(vErr) > "" then do :
+    error-string = vErr .
+    output stream outstream to value ("pomi.log")  append.
+    put stream outstream error-string format "X(1024)" skip.
+    output stream outstream close.
+    message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
+    return .
+  end.
+  else do :
+    p-dens = round(R / 1000, 4) .
+    OUTPUT stream outstream to value ("pomi.log")  append.
+    PUT STREAM outstream unformatted
+        "R   = " R  SKIP
+        "CTL = " CTL  SKIP
+        'Версия dll: '   vDllVersion  SKIP
+    .
+    OUTPUT stream outstream close.
   end .
   
   if p-dens = ?
@@ -476,96 +480,93 @@ do :
     return .
   end .
   
-  RELEASE OBJECT v-mm56 NO-ERROR.
-  v-mm56 = ?.
   
-  v-proc = "ADMM.CMethodOfMetering56" .
-
-  CREATE value(v-proc) v-mm56 no-error.
-  IF ERROR-STATUS:ERROR
-  OR NOT VALID-HANDLE(v-mm56)
-  THEN DO:
-    RELEASE OBJECT v-mm56 NO-ERROR.
-    v-mm56 = ?.
-    message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) view-as alert-box .
-    return .
-  END.
-  ELSE DO :
-    assign
-      v-mm56:M_type   = if r-struct-type = 1 then 0 else 1
-      v-mm56:T        = p-temp
-      v-mm56:P_extra  = p-press
-      v-mm56:P_atmosphere = f-atm-pressure
-      v-mm56:M_pseudo = f-mmass-pseudo
-      v-mm56:R_pseudo = f-dens-pseudo
-    .
-    for each buf_sug-struct no-lock by buf_sug-struct.ii :
-      v-mm56:setArrayElementM(input buf_sug-struct.ii, input buf_sug-struct.val_).
-      mmM = mmM + ";" + string(buf_sug-struct.val_, ">>>>9.99<<") .
-    end . 
-    mmM = trim(mmM, ";") .
-    OUTPUT stream outstream to value ("pomi.log") append.
-    PUT STREAM outstream unformatted
-                "    " SKIP
-                "    " SKIP
-                cur-time-string()           FORMAT "x(16)"    SKIP
-                'Процедура             '    v-proc   SKIP
-                'CODE_PL                = ' p-pl-code                           SKIP
-                'M_type                 = ' v-mm56:M_type                  SKIP
-                'M                      = ' mmM                  SKIP
-                'T                      = ' v-mm56:T                       SKIP
-                'P_extra                = ' v-mm56:P_extra                       SKIP
-                'P_atmosphere           = ' v-mm56:P_atmosphere                       SKIP
-                'M_pseudo               = ' v-mm56:M_pseudo                      SKIP
-                'R_pseudo               = ' v-mm56:R_pseudo                       SKIP
-                    SKIP SKIP 
-    .
-    output stream outstream close.
+  v-proc = "CMethodOfMetering56" .
+  
+  for each buf_sug-struct no-lock by buf_sug-struct.ii :
+    M[buf_sug-struct.ii + 1] = buf_sug-struct.val_ .
+    mmM = mmM + ";" + string(buf_sug-struct.val_, ">>>>9.99<<") .
+  end . 
+  mmM = trim(mmM, ";") .
+  
+  MM56
+    (
+    input if r-struct-type = 1 then 0 else 1,
+    input M,
+    input p-temp, /* T */
+    input 0, /* P_type 0 - избыточное, 1 - абсолютное */
+    input p-press, /* P_extra */
+    input f-atm-pressure, /* P_atmosphere */
+    input f-mmass-pseudo, /* M_pseudo */
+    input f-dens-pseudo, /* R_pseudo */
+    input 2, /* Round_T */
+    input 2, /* Round_R */
     
-    v-mm56:Exec() no-error.
-    if v-mm56:Result <> 0 then do :
-      error-string = v-mm56:ResultDetail .
-      output stream outstream to value ("pomi.log")  append.
-      put stream outstream error-string format "X(1024)" skip.
-      RELEASE OBJECT v-mm56 NO-ERROR.
-      v-mm56 = ?.
-      output stream outstream close.
-      message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
-      return .
-    end.
-    else do :
-      p-dens-pf = round(v-mm56:R / 1000,4) .
-      OUTPUT stream outstream to value ("pomi.log")  append.
-      PUT STREAM outstream unformatted
-          "MM:R   = " v-mm56:R  SKIP
-          "MM:P_Vapor = " v-mm56:P_Vapor  SKIP
-          'Версия dll: '              v-mm56:DllVersion  SKIP
-      .
-      OUTPUT stream outstream close.
-      RELEASE OBJECT v-mm56 NO-ERROR.
-      v-mm56 = ?.
-      if p-dens-pf < 0
+    output R,
+    output P_vapor,
+    
+    output vErr,
+    output vWrn,
+    output vDllVersion
+    )
+  .
+  
+  OUTPUT stream outstream to value ("pomi.log") append.
+  PUT STREAM outstream unformatted
+              "    " SKIP
+              "    " SKIP
+              cur-time-string()           FORMAT "x(16)"    SKIP
+              'Процедура             '    v-proc   SKIP
+              'CODE_PL                = ' p-pl-code                           SKIP
+              'M_type                 = ' if r-struct-type = 1 then 0 else 1                  SKIP
+              'M                      = ' mmM                  SKIP
+              'T                      = ' p-temp                       SKIP
+              'P_extra                = ' p-press                       SKIP
+              'P_atmosphere           = ' f-atm-pressure                       SKIP
+              'M_pseudo               = ' f-mmass-pseudo                      SKIP
+              'R_pseudo               = ' f-dens-pseudo                      SKIP
+                  SKIP SKIP 
+  .
+  output stream outstream close.
+  
+  if trim(vErr) > "" then do :
+    error-string = vErr .
+    output stream outstream to value ("pomi.log")  append.
+    put stream outstream error-string format "X(1024)" skip.
+    output stream outstream close.
+    message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
+    return .
+  end.
+  else do :
+    p-dens-pf = round(R / 1000, 4) .
+    OUTPUT stream outstream to value ("pomi.log")  append.
+    PUT STREAM outstream unformatted
+        "R   = " R  SKIP
+        "P_Vapor = " P_Vapor  SKIP
+        'Версия dll: '              vDllVersion  SKIP
+    .
+    OUTPUT stream outstream close.
+    if p-dens-pf < 0
+    then do :
+      find first buf_place no-lock where buf_place.obj-type = p-obj-type
+                                     and buf_place.obj-code = p-obj-code
+                                     and buf_place.pl-code = p-pl-code
+                                     no-error .
+      find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+      if available buf_place
+      and available buf_goods
       then do :
-        find first buf_place no-lock where buf_place.obj-type = p-obj-type
-                                       and buf_place.obj-code = p-obj-code
-                                       and buf_place.pl-code = p-pl-code
-                                       no-error .
-        find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
-        if available buf_place
-        and available buf_goods
-        then do :
-          message
-            "Ошибка при заполнении данных!" skip
-            "Для резервуара " string(buf_place.pl-code) " (" buf_place.loc1 "  " buf_goods.gds-name ") не определено значение плотности ПГФ. Сохранение результатов расчёта невозможно." skip
-            "Проверьте внесённый компонентный состав СУГ."
-          view-as alert-box .
-          return .
-        end .
-        else do :
-          message "Ошибка при заполнении данных! Проверьте внесённый компонентный состав СУГ." view-as alert-box .
-          return .
-        end .                               
+        message
+          "Ошибка при заполнении данных!" skip
+          "Для резервуара " string(buf_place.pl-code) " (" buf_place.loc1 "  " buf_goods.gds-name ") не определено значение плотности ПГФ. Сохранение результатов расчёта невозможно." skip
+          "Проверьте внесённый компонентный состав СУГ."
+        view-as alert-box .
+        return .
       end .
+      else do :
+        message "Ошибка при заполнении данных! Проверьте внесённый компонентный состав СУГ." view-as alert-box .
+        return .
+      end .                               
     end .
   end .
   

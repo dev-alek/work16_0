@@ -159,7 +159,7 @@ define stream outstream.
 { gbl/key-rec.i                }
 { cmp/ini-lib.i                }
 { str/trdcalib.i               }
-{ str/get-pokmi-dll-version.i  }
+{ str/pokmi-dyn.i              }
 { str/proc-pomi-rvs.i          }
 
 define buffer type-inp-vat-attr for ub.doc-line-attr.
@@ -3285,11 +3285,9 @@ do:
     define variable infoSectionObj as class InfoSection no-undo.
     
     run gbl/conf-rd.p ("rdc-dnst", "", "", 0, "", "", "", no, output rdc-dnstvalue, output rdc-dnsttype) no-error.
-    v-pokmi-dll-version = get-pokmi-dll-version() .
     
     if infoSectionsTotal:FlagTrn
     and rdc-dnstvalue = "pomi-rn"
-    and v-pokmi-dll-version <> "1.0.2.7"
     and not v-lgas-gds
     then do :
       v-need-save = no . 
@@ -3316,7 +3314,7 @@ do:
             or v-calc-density <= 0
             or v-calc-density >= 1
             then do :
-              message substitute("По результатам рассчёта модуля ПОкМИ плотность выходит за допустимые значения!&1Масса, кг: &2&1Объём, л: &3", {&new-line}, v-tank-weight-rvs, v-tank-vol-pomi-rvs)
+              message substitute("По результатам расчёта модуля ПОкМИ плотность выходит за допустимые значения!&1Масса, кг: &2&1Объём, л: &3", {&new-line}, v-tank-weight-rvs, v-tank-vol-pomi-rvs)
               view-as alert-box error .
               return no-apply .
             end .

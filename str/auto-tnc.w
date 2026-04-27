@@ -172,10 +172,10 @@ DEFINE VARIABLE C-neck       AS INTEGER   FORMAT "->,>>>,>>9":U INITIAL 0
    LIST-ITEM-PAIRS "",4,
    "Эллиптическая",2,
    "Прямоугольная или квадратная",1,
-   "Круглая",3,
-   "Без горловины",0
+   "Цилиндрическая",3,
+   "Без горловины/нарушена геометрия",0
    DROP-DOWN-LIST
-   SIZE 31.5 BY 1 NO-UNDO.
+   SIZE 36.5 BY 1 NO-UNDO.
 
 DEFINE VARIABLE varPS        AS CHARACTER 
    VIEW-AS EDITOR NO-WORD-WRAP SCROLLBAR-HORIZONTAL SCROLLBAR-VERTICAL LARGE
@@ -239,9 +239,9 @@ DEFINE QUERY brw-auto-num-sec FOR
 DEFINE BROWSE brw-auto-num-sec
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS brw-auto-num-sec Dialog-Frame _FREEFORM
    QUERY brw-auto-num-sec DISPLAY
-   tt_auto-tank-sec.sec-num FORMAT ">>>>9":U LABEL "№ секции"
-   tt_auto-tank-sec.brutto-qnty FORMAT "->>,>>>,>>9.<<<":U LABEL "Вместимость(л)"
-   tt_auto-tank-sec.add-volume  FORMAT "->>,>>>,>>9.<<<":U LABEL "Дополнит. объем трубопровода нижнего налива(л)"
+   tt_auto-tank-sec.sec-num FORMAT ">>>>9":U COLUMN-LABEL "№ секции"
+   tt_auto-tank-sec.brutto-qnty FORMAT "->>,>>>,>>9.<<<":U COLUMN-LABEL "Вместимость!секции (л)"
+   tt_auto-tank-sec.add-volume  FORMAT "->>,>>>,>>9.<<<":U COLUMN-LABEL "Дополнительный объем трубопровода нижнего!налива(л)"
   /*ENABLE
       tt_auto-tank-sec.diametr
       tt_auto-tank-sec.brutto-qnty*/

@@ -142,6 +142,10 @@ class ibs.th.str.InfoSection:
   define property Diameter as character no-undo
     get.
     set.
+    
+  define property CalibTable as character no-undo init ""
+    get.
+    set.
 
   define property PlSiName as character no-undo
     get.
@@ -371,6 +375,13 @@ class ibs.th.str.InfoSection:
     get.
     set.
   
+  define property PokmiWarnings as character no-undo
+    get.
+    set.
+    
+  define property PokmiWarningsRVS as character no-undo
+    get.
+    set.
   /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -462,6 +473,32 @@ class ibs.th.str.InfoSection:
       end.
     end.
   end.
+  
+  method public void GetCalibTable (input DeltaH as decimal) :
+    FillTTSection(Diameter) .
+    find first tt-section where decimal(tt-section.dif) = (DeltaH / 10) no-error .
+    if available tt-section
+    then do :
+      CalibTable = Substitute("&1=&2", tt-section.dif, tt-section.volume1) .
+      return .
+    end .
+    find last tt-section where decimal(tt-section.dif) <= (DeltaH / 10) no-error .
+    if available tt-section
+    then do :
+      CalibTable = Substitute("&1=&2", tt-section.dif, tt-section.volume1) .
+    end .
+    find first tt-section where decimal(tt-section.dif) > (DeltaH / 10) no-error .
+    if available tt-section
+    then do :
+      if DeltaH < 0
+      then do :
+        CalibTable = Substitute("&1=&2", tt-section.dif, tt-section.volume1) + {&new-line} + CalibTable .
+      end .
+      else do :
+        CalibTable = CalibTable + {&new-line} + Substitute("&1=&2", tt-section.dif, tt-section.volume1) .
+      end .
+    end .
+  end .
 	
   /*------------------------------------------------------------------------------
    Purpose:
@@ -833,6 +870,16 @@ class ibs.th.str.InfoSection:
             KPnoMeas = logical (inAttrValue) no-error.
           if error-status:error or inAttrValue = "" or KPnoMeas = ?
             then KPnoMeas = no.
+        end.
+      when 'pokmi-warnings' then 
+        do:
+          assign
+            PokmiWarnings = inAttrValue no-error.
+        end.
+      when 'pokmi-warnings-rvs' then 
+        do:
+          assign
+            PokmiWarningsRVS = inAttrValue no-error.
         end.
         
     end case.

@@ -342,7 +342,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     or v-calc-density <= 0
     or v-calc-density >= 1
     then do :
-      message substitute("По результатам рассчёта модуля ПОкМИ плотность выходит за допустимые значения!&1Масса, кг: &2&1Объём, л: &3", {&new-line}, v-tank-weight-rvs, v-tank-vol-pomi-rvs)
+      message substitute("По результатам расчёта модуля ПОкМИ плотность выходит за допустимые значения!&1Масса, кг: &2&1Объём, л: &3", {&new-line}, v-tank-weight-rvs, v-tank-vol-pomi-rvs)
       view-as alert-box error .
       return .
     end .
@@ -403,6 +403,46 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
 		return.
 
 	end method.
+
+	@VisualDesigner.
+  method private void maskedTextBoxDensTemp_Leave( input sender as System.Object, input e as System.EventArgs ):
+    
+    define variable v-dec as decimal no-undo init ? .
+    
+    v-dec = decimal(maskedTextBoxDensTemp:Text) no-error .
+    if v-dec <> ?
+    then do :
+      if v-dec < -40.0
+      or v-dec > 90.0
+      then do :
+        message "Температура должна находиться в диапазоне от -40°С до 90°С" view-as alert-box .
+        maskedTextBoxDensTemp:Text = "0.0" .
+      end .
+    end .
+    
+    return.
+
+  end method.
+  
+  @VisualDesigner.
+  method private void maskedTextBoxTankTemp_Leave( input sender as System.Object, input e as System.EventArgs ):
+    
+    define variable v-dec as decimal no-undo init ? .
+    
+    v-dec = decimal(maskedTextBoxTankTemp:Text) no-error .
+    if v-dec <> ?
+    then do :
+      if v-dec < -40.0
+      or v-dec > 90.0
+      then do :
+        message "Температура должна находиться в диапазоне от -40°С до 90°С" view-as alert-box .
+        maskedTextBoxTankTemp:Text = "0.0" .
+      end .
+    end .
+    
+    return.
+
+  end method.
 
   @VisualDesigner.
   method private void onClickRvsBef1 ( input sender as System.Object, input e as System.EventArgs ) :
@@ -1261,7 +1301,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     or v-calc-density <= 0
     or v-calc-density >= 1
     then do :
-      message "По результатам рассчёта модуля ПОкМИ плотность выходит за допустимые значения!"
+      message "По результатам расчёта модуля ПОкМИ плотность выходит за допустимые значения!"
       view-as alert-box error .
       return .
     end .
@@ -2549,6 +2589,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxDensTemp:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxDensTemp:TabIndex = 21.
     this-object:maskedTextBoxDensTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimalNegNum_2_1).
+    this-object:maskedTextBoxDensTemp:Leave:Subscribe(this-object:maskedTextBoxDensTemp_Leave).
     /*  */
     /* maskedTextBoxTankTemp */
     /*  */
@@ -2558,6 +2599,7 @@ class ibs.th.str.ptrl.forms.tanksection inherits UserControl:
     this-object:maskedTextBoxTankTemp:Size = new System.Drawing.Size(100, 20).
     this-object:maskedTextBoxTankTemp:TabIndex = 19.
     this-object:maskedTextBoxTankTemp:KeyPress:Subscribe(this-object:KeyPressMaskTBDecimalNegNum_2_1).
+    this-object:maskedTextBoxTankTemp:Leave:Subscribe(this-object:maskedTextBoxTankTemp_Leave).
     /*  */
     /* maskedTextBoxTankWater */
     /*  */

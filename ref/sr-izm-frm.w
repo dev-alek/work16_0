@@ -248,11 +248,11 @@ DEFINE FRAME Dialog-Frame
           SIZE 13.4 BY .81
      sr-izmerenia.sr-type-level-measuring AT ROW 7.91 COL 39.6 COLON-ALIGNED WIDGET-ID 112
           VIEW-AS COMBO-BOX INNER-LINES 5
-          LIST-ITEM-PAIRS "Рулетка 2-го класса точности (Расчет по ГОСТ 7502)",1,
-                     "Плотномер-уровнемер ПЛОТ-3Б-1РУ (Расчет по формуле)",2,
-                     "Статичная величина",0
+          LIST-ITEM-PAIRS "Расчет по ГОСТ 7502 (рулетка 2 класса точности)",1,
+                     "Расчет по формуле (плотномер-уровнемер ПЛОТ-3Б-1РУ)",2,
+                     "Ввод погрешности вручную",0
           DROP-DOWN-LIST
-          SIZE 48 BY 1
+          SIZE 56 BY 1
      sr-izmerenia.sr-temp-line AT ROW 9.14 COL 61.6 COLON-ALIGNED WIDGET-ID 104
           VIEW-AS FILL-IN 
           SIZE 26 BY 1
@@ -282,8 +282,8 @@ DEFINE FRAME Dialog-Frame
           SIZE 17 BY .81
      sr-izmerenia.sr-type-id AT ROW 21.95 COL 40.6 COLON-ALIGNED WIDGET-ID 108
           VIEW-AS COMBO-BOX INNER-LINES 5
-          LIST-ITEM-PAIRS "Ареометр откалиброванный при 15°С",1,
-                     "Ареометр откалиброванный при 20°С",2,
+          LIST-ITEM-PAIRS "Ареометр, отградуирован при 15°С",1,
+                     "Ареометр, отградуирован при 20°С",2,
                      "Поточный плотномер",3,
                      "Погружной плотномер",4,
                      "Канал измерения плотности (с поточным плотномером)",5,

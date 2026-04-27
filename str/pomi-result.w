@@ -46,7 +46,7 @@ define input-output parameter p-InfoSec as class ibs.th.str.InfoSection .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS Btn_OK 
-&Scoped-Define DISPLAYED-OBJECTS v-legend f-fact-kg-qnty f-pokmi-kg-qnty ~
+&Scoped-Define DISPLAYED-OBJECTS e-pokmi-warnings v-legend f-fact-kg-qnty f-pokmi-kg-qnty ~
 f-limit f-excess f-deficit f-norm-loss f-fact-qnty f-pokmi-qnty f-density ~
 f-temperature 
 
@@ -68,6 +68,10 @@ DEFINE BUTTON Btn_OK AUTO-GO
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
+DEFINE VARIABLE e-pokmi-warnings AS CHARACTER 
+     VIEW-AS EDITOR SCROLLBAR-VERTICAL
+     SIZE 73 BY 2.62 NO-UNDO.
+     
 DEFINE VARIABLE v-legend AS CHARACTER 
      VIEW-AS EDITOR
      SIZE 69 BY 3.6 NO-UNDO.
@@ -126,8 +130,9 @@ DEFINE VARIABLE f-temperature AS CHARACTER format "X(20)":U INITIAL 0
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME Dialog-Frame
-     v-legend AT ROW 11.24 COL 2 NO-LABEL WIDGET-ID 2
-     Btn_OK AT ROW 13.14 COL 72
+     e-pokmi-warnings AT ROW 12.02 COL 2 NO-LABEL WIDGET-ID 40
+     v-legend AT ROW 14.84 COL 2 NO-LABEL WIDGET-ID 2
+     Btn_OK AT ROW 16.74 COL 72
      f-fact-kg-qnty AT ROW 1.48 COL 2 WIDGET-ID 4
      f-pokmi-kg-qnty AT ROW 2.52 COL 2 WIDGET-ID 6
      f-limit AT ROW 3.52 COL 2 WIDGET-ID 8
@@ -138,7 +143,9 @@ DEFINE FRAME Dialog-Frame
      f-pokmi-qnty AT ROW 8.38 COL 2 WIDGET-ID 18
      f-density AT ROW 9.33 COL 2 WIDGET-ID 20
      f-temperature AT ROW 10.24 COL 2 WIDGET-ID 22
-     SPACE(54.39) SKIP(3.84)
+     "Предупреждения:" VIEW-AS TEXT
+          SIZE 22 BY .62 AT ROW 11.25 COL 3 WIDGET-ID 38
+     SPACE(2.00) SKIP(1.5)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Результат расчета"
@@ -165,6 +172,11 @@ DEFINE FRAME Dialog-Frame
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
+
+/* SETTINGS FOR EDITOR e-pokmi-warnings IN FRAME Dialog-Frame
+   NO-ENABLE                                                            */
+ASSIGN 
+       e-pokmi-warnings:READ-ONLY IN FRAME Dialog-Frame        = TRUE.
 
 /* SETTINGS FOR FILL-IN f-deficit IN FRAME Dialog-Frame
    NO-ENABLE ALIGN-L                                                    */
@@ -277,6 +289,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-pokmi-qnty      = trim(string(p-InfoSec:TankVolPomiRvs, "->>,>>>,>>9":U))
       f-density         = trim(string((p-InfoSec:FactKgQnty / p-InfoSec:FactQnty), "9.9999"))
       f-temperature     = trim(string(p-InfoSec:AvgTempRvs, "->>9.9"))
+      e-pokmi-warnings  = p-InfoSec:PokmiWarningsRVS
     .
   end .
   else do :
@@ -292,6 +305,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
       f-pokmi-qnty      = trim(string(p-InfoSec:TankVolPomiRvs, "->>,>>>,>>9":U))
       f-density         = trim(string((p-InfoSec:TankWeightRvs / p-InfoSec:TankVolPomiRvs), "9.9999"))
       f-temperature     = trim(string(p-InfoSec:AvgTempRvs, "->>9.9"))
+      e-pokmi-warnings  = p-InfoSec:PokmiWarningsRVS
     .
   end .
   RUN enable_UI.
@@ -336,7 +350,7 @@ PROCEDURE enable_UI :
   DISPLAY v-legend f-fact-kg-qnty f-pokmi-kg-qnty f-limit f-excess f-deficit 
           f-norm-loss f-fact-qnty f-pokmi-qnty f-density f-temperature 
       WITH FRAME Dialog-Frame.
-  ENABLE Btn_OK 
+  ENABLE e-pokmi-warnings Btn_OK 
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}

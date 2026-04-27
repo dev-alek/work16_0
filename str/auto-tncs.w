@@ -179,7 +179,7 @@ DEFINE VARIABLE varsec-num         AS INTEGER   FORMAT "->,>>>,>>9" INITIAL 0
    SIZE 15 BY 1 NO-UNDO.
 
 DEFINE VARIABLE varsec-qnty        AS DECIMAL   FORMAT "->>>,>>>,>>9.999" INITIAL 0 
-   LABEL "Вместимость, л" 
+   LABEL "Вместимость секции, л" 
    VIEW-AS FILL-IN 
    SIZE 15 BY 1 NO-UNDO.
 
@@ -193,8 +193,8 @@ DEFINE QUERY BROWSE-2 FOR
 DEFINE BROWSE BROWSE-2
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 Dialog-Frame _STRUCTURED
    QUERY BROWSE-2 DISPLAY
-   tt-section.dif COLUMN-LABEL "Отклонение" FORMAT "->9.9":U WIDTH 15
-   tt-section.volume1 COLUMN-LABEL "Объем!для указанного!отклонения от планки" FORMAT "->>,>>9.99":U
+   tt-section.dif COLUMN-LABEL "Отклонение от!тарировочной!планки, см" FORMAT "->9.9":U WIDTH 15
+   tt-section.volume1 COLUMN-LABEL "Объем!для указанного!отклонения от планки, л" FORMAT "->>,>>9.99":U
   ENABLE
       tt-section.volume1
 /* _UIB-CODE-BLOCK-END */
