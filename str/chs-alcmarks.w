@@ -102,7 +102,7 @@ define variable v-is-return as logical no-undo init no .
 define variable v-gds-code as integer no-undo .
 define variable v-free-qnty as decimal no-undo .
 define variable v-free-part-qnty as decimal no-undo .
-define variable v-scan-qnty as integer no-undo .
+define variable v-scan-qnty as decimal no-undo .
 
 define variable varvalue as character no-undo.
 define variable vartype  as character no-undo.
@@ -533,8 +533,8 @@ PROCEDURE calcMarks :
   define input  parameter p-obj-type as  character no-undo. 
   define input  parameter p-obj-code as  integer   no-undo. 
   define parameter buffer b_goods    for ub.goods. 
-  define output parameter o-free-qnty as  integer   no-undo. 
-  define output parameter o-scan-qnty as  integer   no-undo. 
+  define output parameter o-free-qnty as  decimal   no-undo. 
+  define output parameter o-scan-qnty as  decimal   no-undo. 
   
   define buffer bf_gds-obj  for ub.gds-obj .
   define buffer buf_parts         for ub.parts .

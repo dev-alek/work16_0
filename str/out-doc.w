@@ -101,6 +101,7 @@ def    var      Marking     as class     mark no-undo .
 
 { str/temp_upd.i }
 { utl/gtin.i }
+{ str/utd-typemark.i }
 
 &global-define is-fuel 1
 &global-define is-lgas 2
@@ -1289,9 +1290,14 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     define variable ungroup    as logical   no-undo .
     define variable v-message  as character no-undo .
     define variable vIsExemplarGoods as logical no-undo .
+    define variable varvalue        as character no-undo .
+    define variable vartype         as character no-undo .
+    define variable v-mark-weight as decimal no-undo .
+    define variable v-isweighed as logical no-undo .
     
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
     and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
+    and not v-is-return
     then do :
       if t-doc.out-code = ?
       or t-doc.out-code = ""
@@ -1308,12 +1314,25 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
       message "Сначала добавьте товар в документ" view-as alert-box .
       return no-apply.
     end.
+    
+    RUN gds-attr-value (
+            INPUT ub.goods.gds-code,
+            INPUT {&attr-mark-type},
+            OUTPUT varvalue,
+            OUTPUT vartype
+            ).      
+    v-isweighed = WeighedProd(ub.goods.gds-code)
+              and varvalue > ""
+              and (EDOParSec:GetIsEDOForType(varvalue)
+                or EDOParSec:GetIsArticForType(varvalue))
+    .
         
     run isExemplarGoods in this-procedure 
        (t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code, output vIsExemplarGoods).
        
-    if not vIsExemplarGoods /* not isExemplarType(ub.goods.gds-code) */ then
-    do:
+    if not vIsExemplarGoods /* not isExemplarType(ub.goods.gds-code) */
+    and not v-isweighed
+    then do:
       message "Для выбранного товара в документе не требуется ввод марок." skip
               "Выполняется ручное добавление товара и ввод количества." view-as alert-box .
       return no-apply.
@@ -2819,41 +2838,81 @@ DO:
   define variable vIsExemplarGoods as logical no-undo .
   define variable vGtin     as character no-undo.
   define variable vGtinQnty as integer no-undo.
+  define variable varvalue        as character no-undo .
+  define variable vartype         as character no-undo .
+  define variable v-mark-weight as decimal no-undo .
+  define variable v-isweighed as logical no-undo .
   define buffer buf_marking-lines for ub.marking-lines.
   define buffer buf_marking       for ub.marking.
   define buffer buf_goods         for ub.goods.
+  
+  if available ub.gds-dtl
+  then do :
     
-  find first buf_goods where 
-        buf_goods.artic     = ub.gds-dtl.artic
-    and buf_goods.prod-type = ub.gds-dtl.prod-type
-    and buf_goods.prod-code = ub.gds-dtl.prod-code.
-        
+    find first buf_goods where 
+          buf_goods.artic     = ub.gds-dtl.artic
+      and buf_goods.prod-type = ub.gds-dtl.prod-type
+      and buf_goods.prod-code = ub.gds-dtl.prod-code.
+    
+    RUN gds-attr-value (
+            INPUT buf_goods.gds-code,
+            INPUT {&attr-mark-type},
+            OUTPUT varvalue,
+            OUTPUT vartype
+            ).      
+    v-isweighed = WeighedProd(buf_goods.gds-code)
+              and varvalue > ""
+              and (EDOParSec:GetIsEDOForType(varvalue)
+                or EDOParSec:GetIsArticForType(varvalue))
+    .
     run isExemplarGoods in this-procedure 
-       (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+         (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
     
-  if vIsExemplarGoods then
-  do:  /* для поэкземплярного учета проверим: введенное кол-во не должно быть < просканированных марок */
-    for each buf_marking-lines no-lock where
-             buf_marking-lines.out-code = t-doc.doc-code
-         and buf_marking-lines.obj-type = t-doc.obj-type
-         and buf_marking-lines.obj-code = t-doc.obj-code
-         and buf_marking-lines.gds-code = buf_goods.gds-code
-         and buf_marking-lines.doc-level = 1,
-        first buf_marking no-lock where
-              buf_marking.mark = buf_marking-lines.mark
-    :
-      assign
-        vGtin     = getGtinByDM(buf_marking.mark)
-        vGtinQnty = vGtinQnty  + getQntyCodeByGtin(vGtin)
-      .
+    if v-isweighed
+    then do :
+      for each buf_marking-lines no-lock where
+               buf_marking-lines.out-code = t-doc.doc-code
+           and buf_marking-lines.obj-type = t-doc.obj-type
+           and buf_marking-lines.obj-code = t-doc.obj-code
+           and buf_marking-lines.gds-code = buf_goods.gds-code
+           and buf_marking-lines.doc-level = 1,
+          first buf_marking no-lock where
+                buf_marking.mark = buf_marking-lines.mark
+      :
+        v-mark-weight = v-mark-weight + MarkWeight(buf_marking.mark) .
+      end.
+      if v-mark-weight > decimal({&self-name}:screen-value IN BROWSE {&browse-name}) then 
+      do:
+        message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
+        {&self-name}:screen-value IN BROWSE {&browse-name} = string(v-mark-weight).
+        return no-apply.  
+      end. 
+    end .
+    else  
+    if vIsExemplarGoods
+    then do:  /* для поэкземплярного учета проверим: введенное кол-во не должно быть < просканированных марок */
+      for each buf_marking-lines no-lock where
+               buf_marking-lines.out-code = t-doc.doc-code
+           and buf_marking-lines.obj-type = t-doc.obj-type
+           and buf_marking-lines.obj-code = t-doc.obj-code
+           and buf_marking-lines.gds-code = buf_goods.gds-code
+           and buf_marking-lines.doc-level = 1,
+          first buf_marking no-lock where
+                buf_marking.mark = buf_marking-lines.mark
+      :
+        assign
+          vGtin     = getGtinByDM(buf_marking.mark)
+          vGtinQnty = vGtinQnty  + getQntyCodeByGtin(vGtin)
+        .
+      end.
+      if vGtinQnty > int({&self-name}:screen-value IN BROWSE {&browse-name}) then 
+      do:
+        message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
+        {&self-name}:screen-value IN BROWSE {&browse-name} = string(vGtinQnty).
+        return no-apply.  
+      end.  
     end.
-    if vGtinQnty > int({&self-name}:screen-value IN BROWSE {&browse-name}) then 
-    do:
-      message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
-      {&self-name}:screen-value IN BROWSE {&browse-name} = string(vGtinQnty).
-      return no-apply.  
-    end.  
-  end.
+  end . /* if available gds-dtl */
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -6328,6 +6387,9 @@ define variable v-rid       as   integer                    no-undo.
 define variable v-rid-list  as   char                       no-undo.
 define variable i           as   integer                    no-undo.
 
+define variable v-mark-weight as decimal no-undo .
+define variable v-isweighed as logical no-undo .
+
 do on error undo, return error return-value :
 run check-rate no-error.
 if error-status :error then do:
@@ -6806,8 +6868,14 @@ do while varlns-cnt <= num-entries (varnotes):
   else do : 
     run isExemplarGoods in this-procedure 
        (t-doc.obj-type, t-doc.obj-code, bf_goods.gds-code, output vIsExemplarGoods).
-    if vIsExemplarGoods then
-    do: 
+    v-isweighed = WeighedProd(bf_goods.gds-code)
+              and varvalue > ""
+              and (EDOParSec:GetIsEDOForType(varvalue)
+                or EDOParSec:GetIsArticForType(varvalue))
+    .
+    if vIsExemplarGoods
+    or v-isweighed
+    then do: 
       /* для списания требуется сканирование марок */
       message "Товар подлежит обязательной маркировке и прослеживаемости, для списания необходимо просканировать КМ" view-as alert-box .
 

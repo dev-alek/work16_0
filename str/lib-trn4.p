@@ -50,6 +50,7 @@ field coef as decimal
 { rep/spr-sug.i }
 
 { utl/gtin.i    }
+{ str/utd-typemark.i }
 
 if valid-handle( g#lib-trn4 ) = yes and
    g#lib-trn4 <> this-procedure :handle and
@@ -562,12 +563,15 @@ define buffer buf_doc-line for ub.doc-line .
 define buffer buf_gds-dtl   for ub.gds-dtl .
 define buffer buf_goods for ub.goods .
 define buffer buf_marking-lines for ub.marking-lines .
+define buffer buf_marking for ub.marking .
 
 define variable var-ok-assort-pol   as logical   no-undo .
 define variable var-mess-assort-pol as character no-undo .
 define variable v-file-n as character no-undo .
 define variable v-ischg-ext-type as logical no-undo .
 define variable v-is-exemplar-goods as logical   no-undo .
+define variable v-mark-weight as decimal   no-undo .
+define variable v-isweighed as logical   no-undo .
 define variable v-message           as character no-undo .
 define variable v-scan-qnty as  integer   no-undo. 
 define variable v-GTIN     as character no-undo .
@@ -2287,6 +2291,38 @@ define variable v-codident as character no-undo.
            and buf_goods.prod-type = buf_gds-dtl.prod-type no-lock:
         run isExemplarGoods in g#attr-lib 
           (buf_trn-doc.obj-type, buf_trn-doc.obj-code, buf_goods.gds-code, output v-is-exemplar-goods).
+        run gds-attr-value in g#attr-lib
+          (input buf_goods.gds-code,
+           input {&attr-mark-type},
+           output varvalue,
+           output vartype
+          ).
+        v-isweighed = WeighedProd(buf_goods.gds-code)
+                  and varvalue > ""
+                  and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsEDOForType(varvalue)
+                    or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsArticForType(varvalue))
+        .  
+        if v-isweighed
+        then do :
+          v-mark-weight = 0 .
+          for each buf_marking-lines no-lock where buf_marking-lines.obj-type = buf_trn-doc.obj-type
+                                               and buf_marking-lines.obj-code = buf_trn-doc.obj-code
+                                               and buf_marking-lines.gds-code = buf_goods.gds-code
+                                               and buf_marking-lines.out-code = buf_trn-doc.doc-code
+                                               and buf_marking-lines.doc-level = 1,
+            first buf_marking no-lock where
+                  buf_marking.mark = buf_marking-lines.mark
+          :
+            v-mark-weight = v-mark-weight + MarkWeight(buf_marking.mark).
+          end .
+          if buf_gds-dtl.doc-qnty <> v-mark-weight then
+          do:
+            v-message = substitute(
+                "&1~nПо товару &2 &3 списывается &4 просканировано &5", 
+                v-message, buf_goods.artic, buf_goods.gds-name, buf_gds-dtl.doc-qnty, v-mark-weight).
+          end.
+        end .
+        else
         if v-is-exemplar-goods then do:
           v-scan-qnty = 0.
           for each buf_marking-lines no-lock where buf_marking-lines.obj-type = buf_trn-doc.obj-type
