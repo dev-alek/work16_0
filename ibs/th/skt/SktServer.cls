@@ -150,14 +150,15 @@ class ibs.th.skt.SktServer:
    Purpose: Публичный метод, который все что нужно дальше делает с контентом. Его и вызываем для обработки контента.
    Notes:
   ------------------------------------------------------------------------------*/
-   method public void RequestProcessing (HeadHttp as HeadHttp, content as longchar, hndlSocket as handle):
+   method public void RequestProcessing (HeadHttp as HeadHttp, content as memptr, hndlSocket as handle):
       define variable req           as class     IRequest      no-undo.
       define variable resp          as class     IResponse     no-undo.
       define variable client_       as character no-undo.
       define variable vDelete as logical no-undo.
       req = new SimpleRequest(HeadHttp).
       resp = new SimpleResponse().
-      req:Content = content.
+      req:ContentBuff = content.
+      logWrite:WriteFileToLog('REQUEST-CONTENT:' + req:Content).
       req:HndlSocket = hndlSocket.
       client_ = identifyClients(req).
       if client_ <> ? then 
@@ -345,18 +346,16 @@ class ibs.th.skt.SktServer:
       define variable v-str         as char     no-undo init "".
       define variable resp-head     as longchar no-undo. /*ответ сокет-сервера*/
       define variable v-read        as logical  no-undo.
-      define variable v-content     as longchar no-undo.
       define variable v-pos-buf     as integer  no-undo.
       define variable HeadHttp as HeadHttp no-undo.
   
-      fix-codepage(v-content) = "1251" .
+/*      fix-codepage(v-content) = "1251" .*/
       fix-codepage(resp-head) = "1251" .
       hSocket:set-socket-option('TCP-NODELAY', 'true').
       hSocket:set-socket-option('SO-KEEPALIVE', 'true').
       hSocket:set-socket-option('SO-REUSEADDR', 'true').
   
       assign 
-         v-content = '':U
          v-header  = '':U
          v-bytes   = 0
          n         = 0
@@ -444,17 +443,18 @@ class ibs.th.skt.SktServer:
                   v-pos-buf = v-pos-buf + v-bytes
                .
          end.
-         if not (              mbuffer-in = ? 
-                  or get-size (mbuffer-in) = ? 
-                  or get-size (mbuffer-in) = 0) 
-            and not HeadHttp:contentType = 'raw'
-         then 
-            copy-lob from mbuffer-in to v-content no-error.
+/*         if not (              mbuffer-in = ?              */
+/*                  or get-size (mbuffer-in) = ?             */
+/*                  or get-size (mbuffer-in) = 0)            */
+/*            and not HeadHttp:contentType = 'raw'           */
+/*         then                                              */
+/*            copy-lob from mbuffer-in to v-content no-error.*/
  
 /*         logWrite:WriteFileToLog('SOCKET-READ:' + v-content ).*/
 /*    RUN write-to-log('SOCKET-READ:' + v-str ).*/
-         if       (   v-content = '' 
-                   or v-content = ?) 
+         if       ( mbuffer-in = ?              
+                  or get-size (mbuffer-in) = ?
+                  or get-size (mbuffer-in) = 0)  
             and (    HeadHttp:contentType <> "raw" 
             and HeadHttp:queryReq = "")
          then do:
@@ -492,7 +492,7 @@ class ibs.th.skt.SktServer:
 /*          END.                                                                  */
 /*      END.                                                                      */
       
-         logWrite:WriteFileToLog('REQUEST-CONTENT:' + v-content).
+         
       /* тело запроса передано не полностью */
          if (    
 /*          HeadHttp:contentLength > 0 and*/
@@ -531,7 +531,7 @@ class ibs.th.skt.SktServer:
             or
             when HeadHttp:contentType = 'text/xml' 
             then do:
-               RequestProcessing(HeadHttp, v-content, hsocket) no-error.
+               RequestProcessing(HeadHttp,mbuffer-in, hsocket) no-error.
                resp-head = if logWrite:LogStr <> "" then logWrite:LogStr else "OK".
             end.
             when HeadHttp:contentType = 'raw' 

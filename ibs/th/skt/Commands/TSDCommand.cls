@@ -46,9 +46,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   
   define private variable tsd         as class     TSD no-undo.
   define private variable fileSend         as class     FileSend no-undo.
-  define private variable hRoot       as handle    no-undo.
-  define private variable hDoc        as handle    no-undo.
-  define private variable hRow        as handle    no-undo.
   define private variable i           as integer   no-undo.
   define private variable userId_     as character no-undo.
   define private variable sn          as character no-undo.
@@ -306,7 +303,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
     else if vStatus eq "step1"
     then do transaction:
-       run gbl\inidebug.p.
        logWrite:WriteFileToLog("DBInitExpDoc.txt","IBM866").
        run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
@@ -436,25 +432,22 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        Execute_ (req,resp,req:HeadHTTP:userAgent).
        return.
     end.
-    
+    define variable hRoot       as handle    no-undo.
+    define variable hDoc        as handle    no-undo.
+  
     create x-document hDoc.
-    create x-noderef  hRoot.
-    create x-noderef  hRow.
-    
+    hDoc:encoding = "utf-8".
     hDoc:load("longchar",req:Content,no).
     tsd:CP = hDoc:encoding.
     if hDoc:encoding <> "windows-" + session:charset then
     do:
-      str = req:Content.
-      str = codepage-convert (str, session:charset, hDoc:encoding) no-error.
-      if error-status:error
-        then return error "Ошибка при преобразовании кодировки".
-      req:Content = str.
+      req:convertContentInCharset(hDoc:encoding).
       delete object hDoc.
       create x-document hDoc.
       hDoc:load("longchar",req:Content,no).
     end.
     hDoc:encoding = if session:charset begins "12" then "windows-" + session:charset else session:charset.
+    create x-noderef  hRoot.
     hDoc:get-document-element(hRoot) .
     assign
       tsd:ObjCode = integer (substring (hRoot:get-attribute("to"), 4))
@@ -479,14 +472,14 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     case tsd:ReqType :
       when "SETTINGS" then 
         do:
-          parseXML().
+          parseXML(hRoot).
           tsd:Check_().
           tsd:ResType = "xml".
           resp:Content-Type = "text/xml; charset=" + tsd:CP.
         end.
       when "getVersion" then 
         do:
-          parseXML().
+          parseXML(hRoot).
           define variable vfile as character no-undo.
           vfile = tsd:getFileVersion(mType, mVersion).
           if vfile ne ?
@@ -572,7 +565,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
       when "WAYBILL" then 
         do:
-          parseXML().
+          parseXML(hRoot).
 
           for each TempDocLine no-lock where not TempDocLine.b-code matches ("*" + string (TempDocLine.gds-code) + "*"):
                       
@@ -630,7 +623,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       when "INVENTORY" then 
         do:
 
-          parseXML().
+          parseXML(hRoot).
 
           if tsd:ImpInventory (table TempTrnDoc, table TempDocLine, userId_)
             then ErrStatus = false.
@@ -705,8 +698,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
     finally:
         delete object hDoc no-error.
-        delete object  hRoot no-error.
-        delete object  hRow no-error.
+        delete object hRoot no-error.
     end.
   end /*trans*/.
     
@@ -1023,7 +1015,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method private logical parseXML(  ):
+  method private logical parseXML(hRoot as handle  ):
     
     define variable lResult    as logical   no-undo.
     define variable cFactQnty  as character no-undo.
@@ -1032,7 +1024,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define variable cRowSum    as character no-undo.
     define variable iDbNum     as integer   no-undo.
     define variable docType    as character no-undo.
-
+    define variable hRow        as handle    no-undo.
+    create x-noderef  hRow.
+    
     do i = 1 to hRoot:num-children:
       hRoot:get-child(hRow,i).
       case hRow:name:
@@ -1161,7 +1155,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     
     
     return true.
-
+    finally:
+           delete object  hRow no-error.
+    end.
   end method.  
   
   
@@ -1201,18 +1197,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     set-size(VrespOK) = 0.
     logWrite:WriteDebugLog("Ответ отправлен.").
        
-/*    if not hndlSocket:connected()                                                                    */
-/*    then do:                                                                                         */
-/*       LogWrite:WriteFileToLog("Клиент отключился.").                                                */
-/*       return false.                                                                                 */
-/*    end.                                                                                             */
-/*    glog = hndlsocket:write(resp:Content,1,get-size(resp:Content)).                                  */
-/*    if    not glog                                                                                   */
-/*       or hndlsocket:bytes-written ne get-size(resp:Content)                                         */
-/*    then do:                                                                                         */
-/*       LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".*/
-/*       return false.                                                                                 */
-/*    end.                                                                                             */
     return true.
       
   end method.

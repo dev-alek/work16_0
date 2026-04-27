@@ -2151,22 +2151,6 @@ end.
     return true.
   end.
 
-  method public void CodePageConvert ():
-    
-    define variable str as char no-undo.
-    
-    
-    if session:charset <> replace (CP, "windows-", "") 
-      then do:
-        str = codepage-convert (SomeStr, replace (CP, "windows-", ""), session:charset) no-error.
-        if str = ? 
-          then.
-          else SomeStr = str. 
-      end.
-        
-  end.  
-  
-
   method public void WriteUnknown ():
     
     SomeStr = getStatusXml(false, "Неизвестный запрос.").
