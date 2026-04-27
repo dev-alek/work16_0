@@ -1241,8 +1241,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
                 end.
                 find first ub.gds-obj-attr where ub.gds-obj-attr.gds-code = ub.goods.gds-code and
                     ub.gds-obj-attr.obj-code = ub.clients.obj-code and ub.gds-obj-attr.obj-type = ub.clients.obj-type
-                    and ub.gds-obj-attr.attr-code = {&attr-mark-collect-type} and ub.gds-obj-attr.attr-value = "yes" no-lock no-error.
-                
+                    and ub.gds-obj-attr.attr-code = {&attr-mark-collect-type} no-lock no-error.
+                                          
                         tml_:
                         for each TempMarkLine where TempMarkLine.PartIDTH = TempDocLine.PartIDTH and TempMarkLine.MarkCode <> "" :
                                define variable vmes as character no-undo.
@@ -1256,7 +1256,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
                               vmes = CrCheckMarkDoc(bf_utd.obj-type, bf_utd.obj-code,
                                           bf_utd.db-num, bf_utd.doc-id,
                                           TempMarkLine.MarkCode,
-                                       no).
+                                       false).
                                if vmes ne ? and vmes ne ""
                                then
                                   LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + vmes.
