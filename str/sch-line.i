@@ -97,25 +97,25 @@ on backspace of {2} in frame {&frame-name} do:
   return no-apply.
 end.
 
-ON MOUSE-SELECT-DBLCLICK, return OF loc-code IN FRAME {&frame-name} do:
+ON return OF loc-code IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-loc-code in this-procedure   no-error.
   return no-apply.
 end.
 
 &if "{1}" = "bb-list" or "{1}" = "scnblist" &then
-ON MOUSE-SELECT-DBLCLICK, return, Ctrl-J OF loc-b-str IN FRAME {&frame-name} do:
+ON return, Ctrl-J OF loc-b-str IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-loc-b-str in this-procedure   no-error.
   return no-apply.
 end.
 &endif
 
-ON MOUSE-SELECT-DBLCLICK, return, Ctrl-J OF loc-name IN FRAME {&frame-name} do:
+ON return, Ctrl-J OF loc-name IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-loc-name in this-procedure   no-error.
   return no-apply.
 end.
 
 &if "{1}" = "goo-doc" or "{1}" = "gob-doc" &then
-ON MOUSE-SELECT-DBLCLICK, return OF NameContext IN FRAME {&frame-name} do:
+ON return OF NameContext IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-namec in this-procedure   no-error.
   return no-apply.
 end.
