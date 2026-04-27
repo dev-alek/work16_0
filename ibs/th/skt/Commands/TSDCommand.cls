@@ -262,6 +262,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define variable mbuffer       as memptr   no-undo.
     define variable mbuffer1      as memptr   no-undo.
     define variable glog          as logical  no-undo.
+    define variable vsize as int64 no-undo.
+    define variable vi as integer no-undo.
+      
     hndlsocket = req:HndlSocket.
     
     define variable vPos as integer no-undo.
@@ -276,17 +279,25 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     vStatus = entry(vpos + 1,resp:ParamWait).
     if vStatus eq "dictionaries"
     then do:
-       
-       run gbl/pause.p( 1000).
        logWrite:WriteFileToLog("DBInitDict.txt","IBM866").
-       if search ("dictionaries.s3db") = ? 
+       block-size:
+       do vi = 1 to 50:
+         file-info:file-name = "dictionaries_new.s3db".
+         vsize = file-info:file-size. 
+         run gbl/pause.p( 1000). /* Пауза для того чтобы файл успел дозаписаться иначе размер определяется не правильно*/
+         if     vsize ne ?
+            and vsize eq file-info:file-size
+         then
+            leave block-size.
+      end.
+       if vsize eq ? or vsize eq 0 
        then do:
           logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
           ErrStatus = true.
           return.
        end.
        assign
-         file-info:file-name = "dictionaries.s3db"
+         file-info:file-name = "dictionaries_new.s3db"
        .
         
        filesend:sendfile(resp, file-info:file-name).
@@ -295,6 +306,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
     else if vStatus eq "step1"
     then do transaction:
+       run gbl\inidebug.p.
        logWrite:WriteFileToLog("DBInitExpDoc.txt","IBM866").
        run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
@@ -335,8 +347,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       logWrite:WriteFileToLog("DBInitDoc.txt").
       endStep('Завершена загрузка документов в ТСД.').
       resp:condition = resp:STSlist:ReciveCommand:NameProp.
-      define variable vsize as int64 no-undo.
-      define variable vi as integer no-undo.
       block-size:
       do vi = 1 to 50:
          file-info:file-name = "documents_new.s3db".
@@ -366,6 +376,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   
   method private int64 dumpDistric(iprotocol as char):
      define variable tempStr       as char     no-undo.
+      os-delete "dictionaries.s3db".
+      os-delete "dictionaries_new.s3db".
       startStep("Начало конвертации справочника.").
       if iprotocol > ""
       then do:
@@ -398,7 +410,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          os-copy value(search("exe/x86/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
       end.    
     
-      return runProc( 'DBInit.exe Dict 30 31 >DBInitDict.txt') .
+      return runProc( 'DBInit.exe Dict 30 31 >DBInitDict.txt' + {&new-line} + 'rename dictionaries.s3db dictionaries_new.s3db') .
        
        
    end.
