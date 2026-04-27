@@ -118,7 +118,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   define variable dbNum as integer no-undo.
     
   constructor public TSD (  ):
-    dbNum = GetDbNum().
+    dbNum = GetDbNumLocal().
     
     define variable v-par-type as character no-undo.
     keyrec = new keyrec ().
@@ -184,11 +184,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-  method public longchar getStatusXml (statusOk as logical, statusMsg as char):
+  method public longchar getStatusXml (statusOk as logical, statusMsg as longchar):
      return getStatusXml(statusOk,statusMsg,"").
   end.
   
-  method public longchar getStatusXml (statusOk as logical, statusMsg as char, iDopTag as longchar):
+  method public longchar getStatusXml (statusOk as logical, statusMsg as longchar, iDopTag as longchar):
     
     define variable statusOkTag as character no-undo.
     define variable statusMsgTag as character no-undo. 
@@ -2215,6 +2215,9 @@ end.
   end.
 
   method public integer GetDbNum ():
+    return dbNum.
+  end method.
+  method private integer GetDbNumLocal ():
     define buffer buf_sys-ctrl for ub.sys-ctrl .
   
     do
@@ -2226,7 +2229,6 @@ end.
   
     end.
   end method.
-
   method public character gds-attr-mark-type (
 
   p-gds-code as integer
@@ -3263,6 +3265,31 @@ end.
       return if available tt-version then tt-version.FullPath else ?.
    end.
    
+   method public character addPrintBc(igds-code as integer):
+      
+      define buffer code for code.
+      define buffer goods for goods.
+      define buffer bar-code for bar-code.
+      find first goods where goods.gds-code =  igds-code no-lock no-error.
+      if not available goods
+      then
+         return substitute ("Не известный код товара &1", igds-code).
+      find first code  where code.parent eq "TiketPrint" 
+                         and code.code   eq string(igds-code)  
+      exclusive-lock no-error.
+      if not available code
+      then do:
+         create code.
+         assign
+            code.parent = "TiketPrint" 
+            code.code = string(igds-code)
+         .
+      end.
+      assign
+         Code.CodeName = goods.gds-name
+         code.status_ = {&bef-current-status-int}
+      .
+  end.
    
   { utl/gtin.i class }
 

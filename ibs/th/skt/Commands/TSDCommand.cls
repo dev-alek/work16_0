@@ -54,6 +54,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   define public property ErrStatus as logical no-undo 
     get.
     private set.
+  define public property TsdMes as longchar no-undo 
+    get.
+    private set.
   
   define private variable tsd         as class     TSD no-undo.
   define private variable fileSend         as class     FileSend no-undo.
@@ -519,6 +522,21 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
              resp:Content-Type = "text/xml" + (if tsd:cp ne "windows-1251" then "; charset=" + tsd:CP else "").
       
           end.
+        end.
+        when "PrintTiket" then 
+        do:
+          tsdmes = "".
+          if parseXML(hRoot)
+          then do:
+            tsd:SomeStr = tsd:getStatusXml(true,"" ).
+        end.
+        else do:
+             tsdmes = substring (tsdmes, 2 ).
+             tsd:SomeStr = tsd:getStatusXml (false, tsdmes).
+          end.
+          tsd:ResType = "xml".
+          resp:Content-Type = "text/xml; charset=" + tsd:CP.
+        
         end.
       when "TH_ALL" then 
         do:
@@ -1060,7 +1078,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
 
   method private logical parseXML(hRoot as handle  ):
     
-    define variable lResult    as logical   no-undo.
+    define variable lResult    as logical   no-undo init yes.
     define variable cFactQnty  as character no-undo.
     define variable cDocQnty   as character no-undo.
     define variable cPriceRubl as character no-undo.
@@ -1163,6 +1181,25 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
                 .
             end.
           end.
+        when "tiketGood" then
+          do:
+             integer (hRow:get-attribute("GoodsID")) no-error.
+             if error-status:error
+             then do:
+                TsdMes = tsdMes + "," + substitute ("Код товара '&1' Должен быть числом",hRow:get-attribute("GoodsID")) no-error.  
+                lResult = false.
+             end.
+             else do:
+                define variable vmes as character no-undo.
+                vmes = tsd:addPrintBc(integer (hRow:get-attribute("GoodsID"))).
+                if vmes ne ? and vmes ne ""
+                then do:
+                   TsdMes = tsdMes + "," + vmes no-error.  
+                   lResult = false.
+                end.
+             end.
+        end.
+
         when "MarkLines" then
           do:
             create TempMarkLine.
@@ -1189,7 +1226,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
     
     
-    return true.
+    return lResult.
     finally:
            delete object  hRow no-error.
     end.

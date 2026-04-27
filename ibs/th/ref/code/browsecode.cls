@@ -36,6 +36,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
    define private variable ElemMenu as System.Windows.Forms.MenuStrip no-undo.
    define private variable fchange as System.Windows.Forms.DataGridViewCheckBoxColumn no-undo.
    define private variable Hist as System.Windows.Forms.ToolStripMenuItem no-undo.
+   define private variable imageList1 as System.Windows.Forms.ImageList no-undo.
    define private variable oneHist as System.Windows.Forms.ToolStripMenuItem no-undo.
    define private variable openFileDialog1 as System.Windows.Forms.OpenFileDialog no-undo.
    define private variable saveFileDialog1 as System.Windows.Forms.SaveFileDialog no-undo.
@@ -104,7 +105,19 @@ class ibs.th.ref.code.browsecode inherits Form final:
 
    method private void BrwMode( input imode as character  ):
       
-      if iMode eq {&lookup}
+      if iMode eq {&add-def}
+      then do:
+         assign 
+/*         bAdd   :visible = false*/
+/*         bdel   :visible = false*/
+         bedit  :visible = false
+/*         bexport:visible = false                              */
+/*         bimport:visible = false                              */
+/*         bselect:visible = false                              */
+         this-object:dataGridView1:Columns[0]:Visible = false.
+      .
+      end.
+      else if iMode eq {&lookup}
       then do:
          assign 
          bAdd   :visible = false
@@ -343,8 +356,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
       Modifying the contents of this method using a code editor will invalidate any support for this file. */
       this-object:components = new System.ComponentModel.Container().
       @VisualDesigner.FormMember (NeedsInitialize="true").
-      define variable tableDesc3 as Progress.Data.TableDesc no-undo.
-      tableDesc3 = new Progress.Data.TableDesc("Code").
+      define variable tableDesc2 as Progress.Data.TableDesc no-undo.
+      tableDesc2 = new Progress.Data.TableDesc("Code").
       @VisualDesigner.FormMember (NeedsInitialize="true").
       define variable resources as Progress.Util.ResourceManager no-undo.
       resources = new Progress.Util.ResourceManager("ibs.th.ref.code.browsecode").
@@ -385,6 +398,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:Hist = new System.Windows.Forms.ToolStripMenuItem().
       this-object:oneHist = new System.Windows.Forms.ToolStripMenuItem().
       this-object:childHist = new System.Windows.Forms.ToolStripMenuItem().
+      this-object:imageList1 = new System.Windows.Forms.ImageList(this-object:components).
       cast(this-object:dataGridView1, System.ComponentModel.ISupportInitialize):BeginInit().
       cast(this-object:bindCode, System.ComponentModel.ISupportInitialize):BeginInit().
       this-object:toolStrip1:SuspendLayout().
@@ -600,7 +614,7 @@ class ibs.th.ref.code.browsecode inherits Form final:
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar1 as "Progress.Data.TableDesc[]" no-undo.
       arrayvar1 = new "Progress.Data.TableDesc[]"(0).
-      tableDesc3:ChildTables = arrayvar1.
+      tableDesc2:ChildTables = arrayvar1.
       @VisualDesigner.FormMember (NeedsInitialize="false", InitializeArray="true").
       define variable arrayvar2 as Progress.Data.ColumnPropDesc extent 19 no-undo.
       arrayvar2[1] = new Progress.Data.ColumnPropDesc("fchange", "", Progress.Data.DataType:LOGICAL).
@@ -622,8 +636,8 @@ class ibs.th.ref.code.browsecode inherits Form final:
       arrayvar2[17] = new Progress.Data.ColumnPropDesc("procdel", "Процедура удаления", Progress.Data.DataType:CHARACTER).
       arrayvar2[18] = new Progress.Data.ColumnPropDesc("procedit", "процедура редактирования", Progress.Data.DataType:CHARACTER).
       arrayvar2[19] = new Progress.Data.ColumnPropDesc("fstatus", "Статус", Progress.Data.DataType:CHARACTER).
-      tableDesc3:Columns = arrayvar2.
-      this-object:bindCode:TableSchema = tableDesc3.
+      tableDesc2:Columns = arrayvar2.
+      this-object:bindCode:TableSchema = tableDesc2.
       /*  */
       /* toolStrip1 */
       /*  */
@@ -757,9 +771,9 @@ class ibs.th.ref.code.browsecode inherits Form final:
       define variable arrayvar4 as System.Windows.Forms.ToolStripItem extent 1 no-undo.
       arrayvar4[1] = this-object:Hist.
       this-object:ElemMenu:Items:AddRange(arrayvar4).
-      this-object:ElemMenu:Location = new System.Drawing.Point(796, 0).
+      this-object:ElemMenu:Location = new System.Drawing.Point(888, 0).
       this-object:ElemMenu:Name = "ElemMenu".
-      this-object:ElemMenu:Size = new System.Drawing.Size(194, 36).
+      this-object:ElemMenu:Size = new System.Drawing.Size(102, 36).
       this-object:ElemMenu:TabIndex = 3.
       this-object:ElemMenu:Text = "Меню".
       /*  */
@@ -778,16 +792,23 @@ class ibs.th.ref.code.browsecode inherits Form final:
       /* oneHist */
       /*  */
       this-object:oneHist:Name = "oneHist".
-      this-object:oneHist:Size = new System.Drawing.Size(152, 22).
+      this-object:oneHist:Size = new System.Drawing.Size(130, 22).
       this-object:oneHist:Text = "Записи".
       this-object:oneHist:Click:Subscribe(this-object:bHistOne).
       /*  */
       /* childHist */
       /*  */
       this-object:childHist:Name = "childHist".
-      this-object:childHist:Size = new System.Drawing.Size(152, 22).
+      this-object:childHist:Size = new System.Drawing.Size(130, 22).
       this-object:childHist:Text = "Потомков".
       this-object:childHist:Click:Subscribe(this-object:bchildHist).
+      /*  */
+      /* imageList1 */
+      /*  */
+      this-object:imageList1:ImageStream = cast(resources:GetObject("imageList1.ImageStream"), System.Windows.Forms.ImageListStreamer).
+      this-object:imageList1:TransparentColor = System.Drawing.Color:Transparent.
+      this-object:imageList1:Images:SetKeyName(0, "print_32x32.png").
+      this-object:imageList1:Images:SetKeyName(1, "toolbox_32x32.png").
       /*  */
       /* browsecode */
       /*  */
@@ -867,7 +888,13 @@ class ibs.th.ref.code.browsecode inherits Form final:
       this-object:ElemMenu:Items:Add(menuNew).
       menuNew:Name = substitute ("MenuItem_&1",inum).
       menuNew:Size = new System.Drawing.Size(59, 20).
+      
       menuNew:Text = Ilable.
+      if Ilable begins "Печать"
+      then
+         menuNew:image = imageList1:Images[0].
+      else
+         menuNew:image = imageList1:Images[1].
       define variable vi as integer no-undo.
       do vi = 1 to num-entries (ilistMenu):
          define variable vNameItem as character no-undo.
