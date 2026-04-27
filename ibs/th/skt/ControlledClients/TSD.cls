@@ -3149,7 +3149,10 @@ end.
                     ttfile.fnAME         = vPureName
                     ttfile.FullPath      = vFullPath
                  no-error.
-                 vPureName = entry(1,vPureName,".").
+                 mpos = r-index (vPureName,".").
+                 if mpos > 0
+                 then
+                    vPureName = substring (vPureName,1,mpos - 1).
                  mpos = index (vPureName,"_").
                  if mpos = 0
                  then
