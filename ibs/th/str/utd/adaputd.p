@@ -207,7 +207,8 @@ do:
       
     end.
     
-    vIsWeight = WeighedProd(buf_utd-lines.gds-code).
+    vIsWeight = WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, buf_utd-lines.gds-code).
+    
     if logical (getAttrUtdLinesEx(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"MarkUtdLine","no"))
     then do :
       vIsMarkLine = yes .      
@@ -217,9 +218,10 @@ do:
            for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
                 and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
                 and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
-                and buf_utd-marking-lines.doc-level = 1
-              no-lock:
-              v-q = v-q + MarkWeight(buf_utd-marking-lines.mark).
+                and buf_utd-marking-lines.doc-level = 1                
+              no-lock:              
+              if buf_utd-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then     
+              v-q = v-q + MarkWeight(buf_utd-marking-lines.mark).              
            end.
         end.   
         else 
@@ -232,7 +234,10 @@ do:
           and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
           and buf_utd-marking-lines.doc-level = 1
           no-lock:
-            if vIsWeight then v-q = v-q + MarkWeight(buf_utd-marking-lines.mark).
+            if vIsWeight then do:               
+               if buf_utd-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then 
+               v-q = v-q + MarkWeight(buf_utd-marking-lines.mark).               
+            end.   
             else do: 
              find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark no-lock no-error.
              if buf_utd-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and
@@ -268,13 +273,14 @@ do:
         v-q-doc = v-q-doc-base / (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1) .
       end .
     end .
-    else do :
+    else do :         
       vIsMarkLine = no .              
       find first buf_bar-code where 
                  buf_bar-code.gds-code = buf_utd-lines.gds-code
              and buf_bar-code.unit-cli = vUnitCode
       no-lock no-error.
-      v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")).
+      v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")).      
+                                   
       if v-q = ? then v-q = 0.
       v-q-doc = decimal(GetAttrUtdlinesex(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity",string(buf_utd-lines.Quantity))) .
       v-q-doc-base = v-q-doc * (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1).
@@ -520,6 +526,7 @@ do:
         temp_doc-line.gtinDocQntyList = vGtinDocQntyList
         temp_doc-line.gtinFactQntyList = vGtinFactQntyList
       .
+      
       end .
     end.
   end.

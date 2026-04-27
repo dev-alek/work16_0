@@ -7222,6 +7222,7 @@ PROCEDURE add-mark-weight :
     define variable vFnd    as logical no-undo.
     define variable vChkWeight as logical no-undo.
     define variable vUnitCode  as character no-undo.
+    define variable vMarkShort as character no-undo.
     /*define variable vRecKey as character no-undo.*/
         
     define buffer bX_utd-lines for X_utd-lines.
@@ -7233,9 +7234,10 @@ PROCEDURE add-mark-weight :
     define buffer buf_utd-lines-attr for ub.utd-lines-attr.
     
     vChkWeight = no.
+    vMarkShort = GetCodeIdent(iMark).
     
     /* проверяем если марка есть ее статус */
-    find first buf_marking no-lock where buf_marking.mark begins iMark no-error .
+    find first buf_marking no-lock where buf_marking.mark begins vMarkShort no-error .
     if not avail buf_marking then .
     else if 
        (buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
@@ -7254,9 +7256,9 @@ PROCEDURE add-mark-weight :
     end.            
     
     /* проверяем, есть ли привязка к другому УПД */
-    if ChkAnotherUtd(iDocId, iDbNum, iMark) 
+    if ChkAnotherUtd(iDocId, iDbNum, vMarkShort) 
     then do:
-       find first buf_marking-attr where buf_marking-attr.mark eq iMark
+       find first buf_marking-attr where buf_marking-attr.mark begins vMarkShort
                                      and buf_marking-attr.attr-code eq "weight"
           no-lock no-error.
        if avail buf_marking-attr
@@ -7326,7 +7328,7 @@ PROCEDURE add-mark-weight :
                buf_utd-marking-lines.doc-id    = bX_utd-lines.doc-id
                buf_utd-marking-lines.gds-code  = bX_utd-lines.gds-code
                buf_utd-marking-lines.LineNum   = bX_utd-lines.LineNum
-               buf_utd-marking-lines.mark      = iMark
+               buf_utd-marking-lines.mark      = vMarkShort
                buf_utd-marking-lines.sts       = Marking:Checked_:KeyIntDB .
                buf_utd-marking-lines.doc-level = 1
                .
@@ -7337,14 +7339,14 @@ PROCEDURE add-mark-weight :
                                    buf_utd-marking-lines.mark, 
                                    "AddMarkWeight", 
                                    "yes") .   
-            find first buf_marking exclusive-lock where buf_marking.mark = iMark no-error .
+            find first buf_marking exclusive-lock where buf_marking.mark begins vMarkShort no-error .
             if not available (buf_marking) 
             and not locked buf_marking then                                                 
             do:                                                                                                  
                  create buf_marking .                                                             
                  assign                                                                           
                     buf_marking.gds-code   = buf_utd-marking-lines.gds-code                       
-                    buf_marking.mark       = iMark                                          
+                    buf_marking.mark       = vMarkShort                                          
                     buf_marking.sts        = Marking:DeliveryControl:KeyIntDB                     
                     buf_marking.gds-ext-id = iGTIN                                               
                     buf_marking.obj-code   = buf_utd.obj-code                                     
@@ -7360,7 +7362,7 @@ PROCEDURE add-mark-weight :
                 /* атрибут вес */
                 find first buf_marking-attr where 
                            buf_marking-attr.attr-code eq "weight"
-                       and buf_marking-attr.mark begins buf_marking.mark
+                       and buf_marking-attr.mark eq buf_marking.mark
                      exclusive-lock no-error.            
                 if not available buf_marking-attr
                    and not locked buf_marking-attr 
