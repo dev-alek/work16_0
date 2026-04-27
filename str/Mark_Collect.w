@@ -368,7 +368,7 @@ DEFINE FRAME Dialog-Frame
  */
 &ANALYZE-RESUME _END-PROCEDURE-SETTINGS
 
-
+{str/mark_collect.i no}
 
 /* ***********  Runtime Attributes and AppBuilder Settings  *********** */
 
@@ -613,37 +613,6 @@ DO:
 
   run ActivateKeyboardLayout (input iLang, input 0).
 END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME b-cancel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-cancel Dialog-Frame
-ON CHOOSE OF b-cancel IN FRAME Dialog-Frame /* Отмена */
-do:
-  define buffer bf_utd-marking-lines for ub.utd-marking-lines .
-  define buffer bf_marking           for ub.marking .
-  define variable v-auto as logical no-undo .
-    
-  if p-mode = {&add-def}
-  and available (buf_utd) 
-  then do:
-    for each bf_utd-marking-lines where bf_utd-marking-lines.db-num = buf_utd.db-num
-                                    and bf_utd-marking-lines.doc-id = buf_utd.doc-id
-                                    and bf_utd-marking-lines.sts = 0
-    :
-      v-auto = g#auto .
-      g#auto = true .
-      for each bf_marking exclusive-lock where bf_marking.mark = bf_utd-marking-lines.mark
-                                           and bf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
-      :
-        delete bf_marking .
-      end.
-      g#auto = v-auto .
-    end.
-    delete buf_utd .
-  end.
-end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1392,7 +1361,7 @@ IF VALID-HANDLE(ACTIVE-WINDOW) AND FRAME {&FRAME-NAME}:PARENT eq ?
 /* (NOTE: handle ERROR and END-KEY so cleanup code will always fire.    */
 /*{ gbl/app_help.i }*/
 MAIN-BLOCK:
-DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
+do trans ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   :
   { gbl/getcntxt.i get }
   assign v-num-str = 0 .
@@ -1603,240 +1572,15 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE CrCheckMark Dialog-Frame 
 PROCEDURE CrCheckMark :
-
-  define buffer buf_marking-child for ub.marking .
-  define buffer buf_marking-parent for ub.marking .
-  define buffer buf_utd-marking-lines-child for ub.utd-marking-lines .
-  
-  define variable v-par-type as character no-undo.
-  define variable v-par-val  as character no-undo.
-  define variable v-gds-code as integer no-undo .
-  define variable v-num-recipes as integer no-undo .
-  define variable v-GTIN as character no-undo .
-  define variable v-GTIN-qnty as decimal no-undo .
-  define variable v-GTIN-child as character no-undo .
-  define variable v-GTIN-qnty-child as decimal no-undo .
-  define variable v-free-qnty as decimal no-undo .
-  define variable v-old-sts as integer no-undo .
-  
-  define variable v-GisMTcheckStatus as integer no-undo .
-  define variable v-is-off-line as logical no-undo .
-  
-  define variable v-ok        as logical no-undo .
-
-  assign 
-    v-mark = v-mark:screen-value in frame {&frame-name}.
-  if v-mark = ""
-    then return.
-
-  v-mark-short = GetCodeIdent(v-mark).
-  
-  if v-mark-short = "" or v-mark-short = ?
-  then do:
-    run dispmessage ("Неизвестный формат марки.").
-    return.
+  define variable vmes as character no-undo.
+  vmes = CrCheckMarkDoc(v-cntxt-obj-type, v-cntxt-obj-code,
+                 buf_utd.db-num, buf_utd.doc-id,
+                 v-mark:screen-value in frame {&frame-name},
+                 is-initial-set).
+   if vmes ne ""
+   then
+      run dispmessage (vmes).              
   end.
-  
-  find first buf_marking where (buf_marking.mark begins v-mark-short) no-error.
-  
-  if available buf_marking
-  then do :
-    v-GTIN = getGtinByDM(buf_marking.mark) .
-  end .
-  else do :
-    v-GTIN = getGtinByDM(v-mark) .
-  end .
-  v-gds-code = getGdsCodeByGtin(v-GTIN) .
-  v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
-  
-  if v-gds-code = ?
-  then do :
-    run dispmessage ("Товар не найден.").
-    return.
-  end .
-  
-  find first buf_goods no-lock where buf_goods.gds-code = v-gds-code no-error .
-  if not available buf_goods
-  then do :
-    run dispmessage ("Товар не найден.").
-    return.
-  end .
-  
-  if v-GTIN-qnty = ?
-  or v-GTIN-qnty <= 0.0
-  then do :
-    run dispmessage ("Не установлен коэффициент для упаковки.").
-    return.
-  end .
-  
-  &scop proc-name gds-attr-value
-  {&run_proc_attr-lib}
-  ( buf_goods.gds-code,
-   {&attr-mark-type},
-   output v-par-val,
-   output v-par-type
-  ).
-  
-  if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
-  or (not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
-    and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val)
-    and not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsMarkingForType(v-par-val)
-      )
-  then do :
-    run dispmessage ("Сверка марок данного товара не требуется").
-    return.
-  end .
-  
-  run gdsoattr-value in this-procedure (input   {&attr-mark-collect-type},
-                                        input   buf_goods.gds-code,
-                                        input   buf_utd.obj-type,
-                                        input   buf_utd.obj-code,
-                                        output  v-attr-value,
-                                        output  v-attr-type
-                                        ) no-error.
-  
-  find first buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd.db-num
-                                             and buf_utd-marking-lines.doc-id = buf_utd.doc-id
-                                             and buf_utd-marking-lines.mark begins v-mark-short
-                                             no-error.
-  if available buf_utd-marking-lines
-  then do :
-    run dispmessage ("Марка добавлена в документ ранее.").
-    return.
-  end .
-  
-  find first buf_utd-lines exclusive-lock where buf_utd-lines.db-num    = buf_utd.db-num
-                                            and buf_utd-lines.doc-id    = buf_utd.doc-id
-                                            and buf_utd-lines.gds-code  = buf_goods.gds-code
-                                            no-error .
-  if not available buf_utd-lines
-  then do :
-    if is-initial-set
-    then do :
-      if v-attr-value = "1"
-      or v-attr-value = "2"
-      then do :
-        message substitute("Для товара &1 ранее был выполнен первоначальный сбор марок, хотите произвести его повторно?", buf_goods.gds-name)
-        view-as alert-box question buttons yes-no update v-ok .
-        if not v-ok
-        then do :
-          return .
-        end .
-      end .
-      else do :
-        disable is-initial-set with frame {&frame-name} .
-      end .
-    end .
-    else do :
-      if v-attr-value = ""
-      or v-attr-value = "0"
-      then do :
-        if vLineNum = 0
-        then do :
-          assign is-initial-set = yes .
-          display is-initial-set with frame {&frame-name} .
-          disable is-initial-set with frame {&frame-name} .
-        end .
-        else do :
-          message substitute("Для товара &1 не выполнен первоначальный сбор марок, товар не может быть добавлен в документ без признака «Первоначальный сбор марок». Создайте для товара отдельный документ", buf_goods.gds-name)
-          view-as alert-box .
-          return .
-        end .
-      end .
-    end .
-    assign vLineNum = vLineNum + 1 .
-    create buf_utd-lines .
-    assign
-      buf_utd-lines.db-num    = buf_utd.db-num
-      buf_utd-lines.doc-id    = buf_utd.doc-id
-      buf_utd-lines.gds-code  = buf_goods.gds-code
-      buf_utd-lines.UnitCode  = buf_goods.unit-base
-      buf_utd-lines.LineNum   = vLineNum
-    .  
-    assign v-free-qnty = 0 .
-    find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
-                                     and buf_gds-obj.obj-code  = v-cntxt-obj-code
-                                     and buf_gds-obj.artic     = buf_goods.artic
-                                     and buf_gds-obj.prod-type = buf_goods.prod-type
-                                     and buf_gds-obj.prod-code = buf_goods.prod-code
-                                     no-error .
-    if available buf_gds-obj
-    then do :
-      assign v-free-qnty = buf_gds-obj.free-qnty .
-    end .
-    create tt-utd-lines .
-    buffer-copy buf_utd-lines to tt-utd-lines
-    assign
-      tt-utd-lines.free-qnty = v-free-qnty
-      tt-utd-lines.GdsName = buf_goods.gds-name
-    .
-  end .
-  assign
-    buf_utd-lines.Quantity = buf_utd-lines.Quantity + v-GTIN-qnty
-/*    buf_utd-lines.qnty-mark = buf_utd-lines.qnty-mark + 1*/
-  .
-  for each buf_marking-child no-lock where buf_marking-child.mark-parent begins v-mark-short,
-  first buf_utd-marking-lines-child no-lock where buf_utd-marking-lines-child.mark = buf_marking-child.mark
-                                              and buf_utd-marking-lines-child.db-num  = buf_utd-lines.db-num
-                                              and buf_utd-marking-lines-child.doc-id  = buf_utd-lines.doc-id
-                                              and buf_utd-marking-lines-child.LineNum = buf_utd-lines.LineNum
-  :
-    assign
-      v-GTIN-child = getGtinByDM(buf_marking-child.mark)
-      v-GTIN-qnty-child = getQntyCodeByGtin(v-GTIN-child)
-      buf_utd-lines.Quantity = buf_utd-lines.Quantity - v-GTIN-qnty-child
-    .
-  end .
-  
-  find first tt-utd-lines exclusive-lock where tt-utd-lines.db-num    = buf_utd.db-num
-                                           and tt-utd-lines.doc-id    = buf_utd.doc-id
-                                           and tt-utd-lines.gds-code  = buf_goods.gds-code
-                                           no-error .
-  assign
-    tt-utd-lines.Quantity  = buf_utd-lines.Quantity
-    tt-utd-lines.qnty-mark = tt-utd-lines.qnty-mark + 1
-  .
-  
-  if available buf_marking
-  then do :
-    create buf_utd-marking-lines .
-    assign
-      buf_utd-marking-lines.mark      = buf_marking.mark
-      buf_utd-marking-lines.gds-code  = buf_goods.gds-code
-      buf_utd-marking-lines.sts       = buf_marking.sts
-      buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
-      buf_utd-marking-lines.doc-id    = buf_utd.doc-id
-      buf_utd-marking-lines.db-num    = buf_utd.db-num
-      buf_utd-marking-lines.doc-level = 1
-    .
-  end .
-  else do :
-    create buf_marking .
-    assign
-      buf_marking.mark = v-mark-short
-      buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
-      buf_marking.box-qnty = v-GTIN-qnty
-      buf_marking.obj-type = v-cntxt-obj-type
-      buf_marking.obj-code = v-cntxt-obj-code
-      buf_marking.gds-code = buf_goods.gds-code
-/*      buf_marking.unit     = buf_goods.unit-base*/
-      buf_marking.gds-ext-id = v-GTIN
-      buf_marking.unit-ext = (if v-GTIN-qnty = 1 then "UNIT" else if v-GTIN-qnty > 1 then "LEVEL1" else "")
-    .
-    create buf_utd-marking-lines .
-    assign
-      buf_utd-marking-lines.mark      = buf_marking.mark
-      buf_utd-marking-lines.gds-code  = buf_goods.gds-code
-      buf_utd-marking-lines.sts       = 0
-      buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
-      buf_utd-marking-lines.doc-id    = buf_utd.doc-id
-      buf_utd-marking-lines.db-num    = buf_utd.db-num
-      buf_utd-marking-lines.doc-level = 1
-    .
-  end .
-  validate buf_utd-marking-lines .
-  
-end.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
