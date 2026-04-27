@@ -100,7 +100,7 @@ class ibs.th.bge.1crn.subjects.mark inherits ibs.th.bge.1crn.subjects.asubject:
                 GTIN             = {&attr-str} .
             when "expirationDate" then 
                 expDate        = ENTRY(1,STRING(formatDateTime(inValue)),"+") .
-            when "expirationDateOther" then 
+            when "expirationsDates" then 
                 do:
                     do ii = 1 to num-entries(inValue):
                         if ii = 12 then leave .
