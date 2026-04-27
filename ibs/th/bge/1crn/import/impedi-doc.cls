@@ -197,8 +197,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                ,input-output TABLE thbjattr_thbj-attr
                ) no-error .
            if v-value-integer <> ?
-           then
-              GrayZoneQnty = v-value-integer
+           then 
+              /* ЗАПЛАТКА: по ЗИ по коробам не должно быть проверки на "серую зону" */
+              /* на случай, если надо вернуть, просто всегда берем 100              */
+/*              GrayZoneQnty = v-value-integer*/
+              GrayZoneQnty = 100
            . 
 
          find first shop where shop.obj-code eq buf_clients.obj-code

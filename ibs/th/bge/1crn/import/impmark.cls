@@ -94,6 +94,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    if vKM = ""
    then
       undo, throw new Progress.Lang.AppError(substitute("Не удалось получить код маркировки по марке &1.", vmark)) .
+   if objImp:gds-code = ? and objImp:unit-ext = "LEVEL2" then
+   do:
+      undo, throw new Progress.Lang.AppError("Код товара gds-code обязательный для unit-ext = LEVEL2") .
+   end.
    if objImp:gds-code ne ?
    then do:
       find first buf_goods  where buf_goods.gds-code eq objImp:gds-code
