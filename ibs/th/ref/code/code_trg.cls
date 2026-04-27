@@ -65,6 +65,7 @@ class ibs.th.ref.code.code_trg final:
   define public variable filter   as character no-undo.
   define public variable nwsGbd   as logical no-undo.
   define public variable nwsUbd   as logical no-undo.
+  define public variable extProcView as logical no-undo .
   
   define property curLevel as integer no-undo
   get:
@@ -212,6 +213,7 @@ class ibs.th.ref.code.code_trg final:
             if mode eq {&select}
             then
                rid-keep ().
+            extProcView = yes .
             run value( code.procview) (parparentproc, Mode, code.parent , code.code,Code.CodeName) no-error.
             if error-status:error
             then
@@ -223,7 +225,7 @@ class ibs.th.ref.code.code_trg final:
                rid-rest ().
          end.
          else do:
-            
+            extProcView = no .
             if not endLevel
             then do:
                codeProcViewSet(code.parent,code.code).
@@ -344,6 +346,7 @@ class ibs.th.ref.code.code_trg final:
         define variable vTblName as character no-undo .
         define variable vOpenStr as character no-undo .
         define variable vSchedId as integer no-undo .
+        define variable sortFrase as character no-undo .
         
         define buffer code    for ub.code.
         
@@ -391,8 +394,25 @@ class ibs.th.ref.code.code_trg final:
                  vCodeQry:query-close().
                  delete object vCodeQry.
                  
-                  hQuery:set-buffers(buffer tt-code-brw:HANDLE). 
-                  hQuery:query-prepare("FOR EACH tt-code-brw ").
+                 case entry(1, Parent, {&delim-par}) :
+                   when "CashParamHash"
+                   then do :
+                     if num-entries(Parent, {&delim-par}) = 1
+                     then do :
+                       sortFrase = "by datetime(tt-code-brw.codeName) desc".
+                     end .
+                   end .
+                   when "XML_UPD"
+                   then do :
+                     if num-entries(Parent, {&delim-par}) = 2
+                     then do :
+                       sortFrase = "by datetime(tt-code-brw.code) desc".
+                     end .
+                   end .
+                 end case .
+                 
+                 hQuery:set-buffers(buffer tt-code-brw:HANDLE). 
+                 hQuery:query-prepare("FOR EACH tt-code-brw " + sortFrase).
               end.
               when "currentcode" 
               then do:
@@ -521,7 +541,7 @@ class ibs.th.ref.code.code_trg final:
              formLable(2, 4, "Хеш").
              formLable(2, 5, "Версия метаданных").
              formLable(2, 6, "БД").
-
+             
           end.
 
        end.

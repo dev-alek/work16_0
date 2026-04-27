@@ -60,6 +60,9 @@ class ibs.th.ref.code.browsecode inherits Form final:
    define variable mcretrg  as logical no-undo.
    
    { cmp/str-glbl.i class }
+   
+   define private variable vCurRow as integer no-undo extent 6 .
+   
    define property chek-erpRN as logical no-undo
     
    set(input ichek-erpRN as logical):
@@ -204,10 +207,11 @@ class ibs.th.ref.code.browsecode inherits Form final:
 		if mCodeTrg:PrevLevel()
 		then do:
 		   bnext:visible = not mCodeTrg:endLevel.
-         bindCode:RefreshAll().
-      end.
-      else
-         Close().
+       bindCode:RefreshAll().
+       dataGridView1:CurrentCell = dataGridView1:Rows[vCurRow[mCodeTrg:curLevel + 1]]:Cells[1] .
+    end.
+    else
+       Close().
 		return.
 
 	end method.
@@ -265,10 +269,15 @@ class ibs.th.ref.code.browsecode inherits Form final:
 	@VisualDesigner.
 	method private void bnext_Click( input sender as System.Object, input e as System.EventArgs ):
 	
+	   vCurRow[mCodeTrg:curLevel + 1] = dataGridView1:CurrentRow:Index no-error .
 	   mCodeTrg:NextLevel().
 	   bnext:visible = not mCodeTrg:endLevel.
-      bindCode:RefreshAll().
-		return.
+     bindCode:RefreshAll().
+     if mCodeTrg:extProcView
+     then do :
+       dataGridView1:CurrentCell = dataGridView1:Rows[vCurRow[mCodeTrg:curLevel + 1]]:Cells[1] .
+     end .
+		 return.
 
 	end method.
 
@@ -308,9 +317,14 @@ class ibs.th.ref.code.browsecode inherits Form final:
 	@VisualDesigner.
 	method private void dataGridView1_CellContentDoubleClick( input sender as System.Object, input e as System.Windows.Forms.DataGridViewCellEventArgs ):
 	   
+      vCurRow[mCodeTrg:curLevel + 1] = dataGridView1:CurrentRow:Index no-error .
       mCodeTrg:NextLevel().
       bnext:visible = not mCodeTrg:endLevel.
       bindCode:RefreshAll().
+      if mCodeTrg:extProcView
+      then do :
+        dataGridView1:CurrentCell = dataGridView1:Rows[vCurRow[mCodeTrg:curLevel + 1]]:Cells[1] .
+      end .
       return.
 
 	end method.
