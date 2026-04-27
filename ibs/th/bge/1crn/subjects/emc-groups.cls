@@ -38,9 +38,9 @@ class ibs.th.bge.1crn.subjects.emc-groups inherits ibs.th.bge.1crn.subjects.code
       when "emctype-code" then do:
         assign emctype-code = {&attr-integer}
                code_   = string(emctype-code,"999")
-               old_code_ = code_
+               old_code_ = code_  
                parent_ = "EMC"
-               old_parent_  = parent_
+               old_parent_  = parent_  
                CodeValue = string(emctype-code,"999")
                .
       end.
@@ -71,30 +71,17 @@ class ibs.th.bge.1crn.subjects.emc-groups inherits ibs.th.bge.1crn.subjects.code
       v-str = v-str + ", emctype-name" when emctype-name = ""
     . 
     v-str = trim (v-str, ",").
-    if v-str > ''
+    if v-str > '' 
     then 
       undo, throw new Progress.Lang.AppError( substitute ("Теги &1 не могут иметь неопределное значение", v-str)).
 
-    block-code:      
-    for each code where Code.parent    eq "emc" 
-                    and Code.CodeName  eq CodeName
-    no-lock:
-       assign
-          old_parent_ = Code.parent
-          old_code_   = Code.code
-       .
-       leave block-code.
-    end.
-    if    code_   ne old_code_
-       or parent_ ne old_parent_
-    then do:
-       find first code where Code.parent eq parent_
-                         and Code.code   eq code_
-       no-lock no-error.
-       if available code
-       then
-          undo, throw new Progress.Lang.AppError( substitute("Уже есть запись emctype-code = &1 &2",emctype-code, codeName)).
-    end.
+/*    find first code where Code.parent       eq "emc" 
+                          and Code.code     eq code_
+                          and Code.CodeName eq CodeName 
+                          no-lock no-error.
+    if available code
+    then undo, throw new Progress.Lang.AppError( substitute("Уже есть запись emctype-code = &1 &2",emctype-code, codeName)). */
+
   end method.
   
 end class.
