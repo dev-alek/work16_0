@@ -44,6 +44,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   {str/lib-trn.i class}
   { str/utd-attr.i class }
   { str/utd-err.i class }
+  { str\utd-typemark.i class }
   {ibs/th/skt/ControlledClients/TSDTT.i}
   { str/utd-err.i class }
   {ibs/th/gbl/doc-codeClass.i}
@@ -2309,8 +2310,18 @@ end.
       logWrite:WriteDebugLog( "Выгружаем документ УПД " + v-doc-num).    
       myflagsDoc:unSetAllFlags().
       myflagsDoc:isDocMarkOn = false.
+      
+      for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
+         if WeighedProd(buf_utd-l.gds-code)
+         then do:
+            logWrite:WriteDebugLog( substitute ("Документ &1 содержит весовой товар &2. Документ пропущен.", v-doc-num, buf_utd-l.gds-code)).    
+      
+            next l_utd.
+         end.
+      end.
       block-u-l:
       for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
+      
          block-mark:
          for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd-l.db-num 
                              and buf_utd-m-l.doc-id    = buf_utd-l.doc-id
