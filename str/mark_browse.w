@@ -563,6 +563,29 @@ assign
 
 
 /* ************************  Control Triggers  ************************ */
+&Scoped-define SELF-NAME Dialog-Frame
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Dialog-Frame Dialog-Frame
+ON CTRL-S OF FRAME d-mark
+anywhere DO:
+  /* показывает глобальный и локольный статусы марок */
+  define buffer b_utd-marking-lines for ub.utd-marking-lines.
+  define buffer b_marking for ub.marking.
+  
+  if focus:parent:type = "browse" and
+     focus:name = "mark" and
+     focus:screen-value <> "" then
+  do:
+    message 
+      "Марка     :" focus:screen-value skip
+      "Глобальный:" if focus:parent:name = "br-mark" then X_marking.stts else X_marking-line.stts skip
+      "Локальный :" if focus:parent:name = "br-mark" then X_marking.stts-utd else X_marking-line.stts-utd
+    view-as alert-box title "Статус марки".
+  end.    
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define SELF-NAME b-change
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-change d-mark
@@ -2732,13 +2755,17 @@ PROCEDURE scan-mark :
                                                         tt-marking-lines.sts-utd = Marking:PendingVerification:KeyIntDB no-error .
                                                     if not available (tt-marking-lines) then 
                                                     do:
-                                                        un_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .
-                                                        find first X_marking where X_marking.mark = un_utd-marking-lines.mark no-error .
-                                                        if available (X_marking) then 
-                                                        do:
+                                                        /* Проверим, если все марки упаковки проверены, то надо сменить локальный статус упаковки на "Проверен" */
+                                                        if tree:checkedAllMarksOfUpakUTD(un_utd-marking-lines.mark, buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id)
+                                                        then do:
+                                                          un_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .
+                                                          find first X_marking where X_marking.mark = un_utd-marking-lines.mark no-error .
+                                                          if available (X_marking) then 
+                                                          do:
                                                             X_marking.sts-utd = Marking:Checked_:KeyIntDB .
                                                             X_marking.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
-                                                        end.    
+                                                          end.    
+                                                        end.
                                                     end. 
                                                     else 
                                                     do:
@@ -2781,8 +2808,8 @@ PROCEDURE scan-mark :
                                 end.
                                 assign
                                     X_marking.sts-utd = Marking:Checked_:KeyIntDB .
-                                X_marking.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB)
-                                    .
+                                    X_marking.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB)
+                                .
                             end.
 
                             for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and 

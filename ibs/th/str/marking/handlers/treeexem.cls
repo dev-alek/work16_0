@@ -390,6 +390,23 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
      end.
      return v-q.
   end method. 
+
+  /* Метод проверяет все ли дочерние марки проверены в УПД */
+  method public logical checkedAllMarksOfUpakUTD(iMarkUpak as character, iDbNum as integer, iDocId as integer):
+
+     define buffer upak_marking                for ub.marking .
+     define buffer upak_utd-marking-lines      for ub.utd-marking-lines .
+     define variable Marking as class mark no-undo .
+     Marking = ObjSrv:Env:Marking:Sts:Mark.
+
+     return not can-find(first upak_marking where
+              upak_marking.mark-parent = iMarkUpak
+           and can-find(first upak_utd-marking-lines where 
+               upak_utd-marking-lines.mark   = upak_marking.mark 
+           and upak_utd-marking-lines.db-num = iDbNum 
+           and upak_utd-marking-lines.doc-id = iDocId
+           and upak_utd-marking-lines.sts   <> Marking:Checked_:KeyIntDB)).
+  end method.
  
   {utl/gtin.i class }
 end class.

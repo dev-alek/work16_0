@@ -169,4 +169,14 @@ class ibs.th.str.marking.handlers.tree inherits objth:
      delete object mExem no-error.
      return vqnty-check.   
   end method.
+  
+   method public logical checkedAllMarksOfUpakUTD(iMarkUpak as character, iDbNum as integer, iDocId as integer):
+     define variable vIsChecked as logical no-undo.
+     define variable mExem as class ibs.th.str.marking.handlers.treeexem no-undo.
+     {utl\objreg.i mExem ibs.th.str.marking.handlers.treeexem }
+     vIsChecked = mExem:checkedAllMarksOfUpakUTD( iMarkUpak, iDbNum ,iDocId ).
+     delete object mExem no-error.
+     return vIsChecked.   
+  end method.
+  
 end class.

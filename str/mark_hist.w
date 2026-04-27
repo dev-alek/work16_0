@@ -156,7 +156,7 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
     ~{&OPEN-QUERY-br-mark}
     
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark RECT-1 b-hist v-mark-2 ~
+&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark RECT-1 b-hist b-sostav v-mark-2 ~
 f-last-change f-status emission_Date Btn_dateOther expire_Date online-check ~
 f-online-result Btn_rn br-mark Btn_pn 
 &Scoped-Define DISPLAYED-OBJECTS v-mark f-GTIN v-mark-2 f-last-change ~
@@ -207,6 +207,13 @@ DEFINE BUTTON b-hist
      IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
      LABEL "Ис&тория" 
      SIZE 3 BY 1.
+
+DEFINE BUTTON b-sostav 
+     IMAGE-UP FILE "cmp/b-file.bmp":U
+     IMAGE-DOWN FILE "cmp/b-filed.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/b-file.bmp":U
+     LABEL "" 
+     SIZE 5 BY 1.14 TOOLTIP "Посмотреть состав марки".
 
 DEFINE BUTTON Btn_dateOther 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
@@ -375,6 +382,7 @@ DEFINE FRAME d-mark
      B-1 AT ROW 1 COL 11.63 WIDGET-ID 248
      v-mark AT ROW 1.08 COL 27.63 COLON-ALIGNED WIDGET-ID 34
      b-hist AT ROW 1.08 COL 106
+     b-sostav AT ROW 2.19 COL 57 WIDGET-ID 294
      f-GTIN AT ROW 2.21 COL 67 COLON-ALIGNED WIDGET-ID 220
      v-mark-2 AT ROW 2.25 COL 10.63 COLON-ALIGNED WIDGET-ID 252
      f-last-change AT ROW 3.38 COL 67 COLON-ALIGNED WIDGET-ID 268
@@ -696,6 +704,70 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-sostav
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sostav d-mark
+ON CHOOSE OF b-sostav IN FRAME d-mark /* Состав марки */
+DO:
+  define buffer bf_marking for ub.marking.  
+    
+  if v-mark-2 = "" then return no-apply.
+  
+  if can-find(first bf_marking where bf_marking.mark-parent begins v-mark-2)
+  then do:
+      empty temp-table tt-marking-lines.
+      for first bf_marking no-lock where 
+                bf_marking.mark begins v-mark-2:
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = GdsName(bf_marking.gds-code)
+          tt-marking-lines.mark        = bf_marking.mark
+          tt-marking-lines.gds-code    = bf_marking.gds-code
+          tt-marking-lines.isMark      = IsMark(tt-marking-lines.mark)    
+          tt-marking-lines.sts         = bf_marking.sts
+          tt-marking-lines.unit        = bf_marking.unit
+          tt-marking-lines.unit-ext    = bf_marking.unit-ext
+          tt-marking-lines.box-qnty    = bf_marking.box-qnty  when tt-marking-lines.box-qnty eq 0 or tt-marking-lines.box-qnty eq ?
+          tt-marking-lines.mark-parent = bf_marking.mark-parent
+          tt-marking-lines.stts        = Marking:GetLabel(bf_marking.sts)
+          tt-marking-lines.doc-level   = 1
+        .
+                    
+      end.
+      for each bf_marking no-lock where 
+                bf_marking.mark-parent begins v-mark-2:
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = GdsName(bf_marking.gds-code)
+          tt-marking-lines.mark        = bf_marking.mark
+          tt-marking-lines.gds-code    = bf_marking.gds-code
+          tt-marking-lines.isMark      = IsMark(tt-marking-lines.mark)    
+          tt-marking-lines.sts         = bf_marking.sts
+          tt-marking-lines.unit        = bf_marking.unit
+          tt-marking-lines.unit-ext    = bf_marking.unit-ext
+          tt-marking-lines.box-qnty    = bf_marking.box-qnty  when tt-marking-lines.box-qnty eq 0 or tt-marking-lines.box-qnty eq ?
+          tt-marking-lines.mark-parent = bf_marking.mark-parent
+          tt-marking-lines.stts        = Marking:GetLabel(bf_marking.sts)
+          tt-marking-lines.doc-level   = 2
+        .
+                    
+      end.
+      if available (tt-marking-lines) then 
+      do:
+        run str/mark_browse.w (input parparentproc,
+           input-output table tt-marking-lines by-reference,
+           input {&lookup},
+           input "Состав марки " + v-mark-2,
+           input 0,
+           input ""
+           ) no-error .
+      end.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-mark 
@@ -899,6 +971,7 @@ PROCEDURE enable_UI :
     br-mark
     b-exit
     b-hist
+    b-sostav
     WITH FRAME {&frame-name}.
   hide B-1 in frame {&frame-name} .
   if p-mark <> "" then 

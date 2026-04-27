@@ -2008,6 +2008,7 @@ ON CHOOSE OF menu-item m_marks-lines  /* Марки */
             }
             empty temp-table tt-marking-lines .
             run mark-temp .
+            {&OPEN-QUERY-br-utd}
             run enable_BUTTON .
             if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
             do:
@@ -2210,7 +2211,8 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
                      when Marking:SaleLock:KeyIntDB or 
                      when Marking:SaleWaitLock:KeyIntDB or 
                      when Marking:ReturnLock:KeyIntDB or 
-                     when Marking:ReturnWaitLock:KeyIntDB then 
+                     when Marking:ReturnWaitLock:KeyIntDB or
+                     when Marking:Ungrouped:KeyIntDB then 
                         do:
                         end.    
                      otherwise 
@@ -5030,10 +5032,15 @@ PROCEDURE mark-temp :
            X_utd-lines.qnty-mark = 0
            X_utd-lines.qnty-scan = 0 
          .
-         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num and
-            buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum:
-            find first buf_marking no-lock where buf_marking.mark begins buf_utd-marking-lines.mark no-error .
-            if buf_utd-marking-lines.doc-level = 1 then 
+         for each buf_utd-marking-lines no-lock where 
+                  buf_utd-marking-lines.db-num  = buf_utd-lines.db-num 
+              and buf_utd-marking-lines.doc-id  = buf_utd-lines.doc-id 
+              and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+         :  
+            find first buf_marking no-lock where 
+                       buf_marking.mark begins buf_utd-marking-lines.mark no-error.
+/*            if buf_utd-marking-lines.doc-level = 1 then*/
+            if not avail buf_marking or buf_marking.unit-ext = "UNIT" then
             do:
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
                if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then
@@ -5260,6 +5267,8 @@ PROCEDURE save_mark :
    define buffer gray_unit_utd-marking-lines for ub.utd-marking-lines .
    define buffer buf_utd-lines-attr          for ub.utd-lines-attr .
    define buffer un_utd-marking-lines        for ub.utd-marking-lines .
+   define buffer parent_marking              for ub.marking .
+   define buffer parent_utd-marking-lines    for ub.utd-marking-lines .
    define VARIABLE v-qnty       as decimal   no-undo .
    define VARIABLE v-rowid      as rowid     no-undo .
    define VARIABLE v-tbl-name   as character no-undo .
@@ -5334,6 +5343,18 @@ PROCEDURE save_mark :
                v-mark:screen-value = "" .
                v-mark = "" .
                return no-apply.
+         end.
+         for first buf_marking no-lock where 
+                   buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:Ungrouped:KeyIntDB
+         :
+            F-text = substitute(
+              "&1 упаковка разгруппирована, просканируйте марку &2 упаковки.",
+              if buf_marking.unit-ext = "LEVEL1" then "Групповая" else "Транспортная",
+              if buf_marking.unit-ext = "LEVEL1" then "потребительской" else "групповой").
+            display F-text with frame {&frame-name}.
+            v-mark:screen-value = "" .
+            v-mark = "" .
+            return no-apply.
          end.
          find first X_utd-lines exclusive-lock where X_utd-lines.LineNum = buf_utd-marking-lines.LineNum no-error .
          if available (X_utd-lines) then
@@ -5428,38 +5449,46 @@ PROCEDURE save_mark :
                      input "" /*тип продукции*/
                      ) no-error .
                   { gbl/brwrepos.i
-              &line-num= 5
-            }
+                    &line-num= 5
+                  }
                end.
                else 
                do:
                   if buf_utd-marking-lines.doc-level > 1 then 
                   do:
-                     if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then 
-                     do:
-                        /*            if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/
-                        message "Разгруппировать упаковки?"
-                           view-as alert-box question buttons yes-no update ungroup.
-                        if ungroup then 
-                        do:
-                           if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
-                           do:
-                              message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
-                                 view-as alert-box.
-                           end.
+/*                     if can-find (ub.marking where ub.marking.mark = buf_utd-marking-lines.mark and ub.marking.unit-ext <> "UNIT") then                    */
+/*                     do:                                                                                                                                   */
+/*/*                                    if tree:LevelUpUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:*/*/
+/*                        message "Разгруппировать упаковки?"                                                                                                */
+/*                           view-as alert-box question buttons yes-no update ungroup.                                                                       */
+/*                        if ungroup then                                                                                                                    */
+/*                        do:                                                                                                                                */
+/*                           if tree:UnGroupUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then                 */
+/*                           do:                                                                                                                             */
+/*                              message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."                                              */
+/*                                 view-as alert-box.                                                                                                        */
+/*                           end.                                                                                                                            */
+/*                        end.                                                                                                                               */
+/*                     end.                                                                                                                                  */
+/*                     else                                                                                                                                  */
+/*                     do:                                                                                                                                   */
+                        /* проверим что упаковка уже не разгруппирована */
+                        find first ub.marking where ub.marking.mark = buf_utd-marking-lines.mark no-lock no-error.
+                        if avail ub.marking and ub.marking.mark-parent <> "" then
+                          find first parent_marking no-lock where 
+                                     parent_marking.mark = ub.marking.mark-parent no-error.
+                        if not avail parent_marking or parent_marking.sts <> Marking:Ungrouped:KeyIntDB
+                        then do:
+                          F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .
+                          display F-text with frame {&frame-name}.
+                          v-mark:screen-value = "" .
+                          v-mark = "" .
+                          return no-apply.
                         end.
-                     end.  
-                     else 
-                     do:    
-                        F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .
-                        display F-text with frame {&frame-name}.
-                        v-mark:screen-value = "" .
-                        v-mark = "" .
-                        return no-apply.
-                     end. 
+/*                     end.*/
                   end.
-                  else 
-                  do:
+/*                  else*/
+/*                  do: */
                      if X_utd-lines.isMarking
                      then do:
                         define variable vCheck as logical no-undo init yes.
@@ -5467,7 +5496,7 @@ PROCEDURE save_mark :
                            for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num and
                               bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id:
                                  find first buf_marking where buf_marking.mark eq bf_utd-marking-lines.mark no-lock no-error.
-                           
+
                               if     available buf_marking
 /*                                 and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB*/
                                  and buf_marking.sts ne ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
@@ -5480,6 +5509,17 @@ PROCEDURE save_mark :
                                  if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
                                  do:
                                     vCheck = tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
+                                 end.
+                                 /* Проверим, если все марки упаковки проверены, то надо сменить статус упаковки на "Проверен" */
+                                 if tree:checkedAllMarksOfUpakUTD(buf_marking.mark-parent, buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id)
+                                 then do:
+                                    for first parent_utd-marking-lines exclusive-lock where 
+                                              parent_utd-marking-lines.mark = buf_marking.mark-parent 
+                                          and parent_utd-marking-lines.db-num = buf_utd-marking-lines.db-num 
+                                          and parent_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id
+                                    :
+                                      parent_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB.  
+                                    end.  
                                  end.
                               end.
                               else do:
@@ -5579,7 +5619,7 @@ PROCEDURE save_mark :
                         v-mark:screen-value = "" .
                         v-mark = "" .
                      end.
-                  end.
+/*                  end.*/
                end.  
             /*            if available (gray_marking) then do:                                               */
             /*              gray_marking.box-qnty = gray_marking.box-qnty - 1 .                              */
