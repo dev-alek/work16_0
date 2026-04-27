@@ -53,7 +53,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   define private variable userId_     as character no-undo.
   define private variable sn          as character no-undo.
   define private variable hndlSocket  as handle    no-undo.
-  define private variable duration    as integer   no-undo.
   define private variable millisec    as integer   no-undo.
   
 /*  define private variable isDocMarkOn as logical   no-undo.*/
@@ -97,20 +96,23 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   end.
   
   method private void startStep(msg as char):
-    output to logduraton.txt append.
-    duration = etime.
-    put unformatted string (string (now) + "   " + msg + {&new-line}).
-    output close.
+    logWrite:WriteDebugLog(msg).
   end.
   
   method private void endStep(msg as char):
-    output to logduraton.txt append.
-    duration = etime - duration.
-    put unformatted string ('Время выполнения шага - ' + string (int64 (duration / 1000), "HH:MM:SS") + "." + string ((duration / 1000 - int64 (duration / 1000)) * 1000) + {&new-line}).
-    put unformatted string (string (now) + "   " + msg  + {&new-line}).
-    output close.    
+     logWrite:WriteDebugLog(msg).
   end.
-  define variable mServiceBusy as logical no-undo.
+  define private property mServiceBusy as logical no-undo
+  get.
+  set (arg as logical):
+      mServiceBusy = arg.
+      if arg
+      then
+         logWrite:WriteDebugLog("Загрузка с другого устройтва заблокирована").
+      else
+         logWrite:WriteDebugLog("Загрузка с другого устройтва разблокирована").
+       
+  end.
   method public void Execute_( input req as IRequest, resp as class IResponse, list-par as char ):
     ErrStatus = false.
     define variable mbuffer       as memptr   no-undo.
@@ -218,10 +220,13 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           end. 
           else
              os-copy value(search(vfileDbInit)) value ("DBInit.exe").
+          logWrite:WriteDebugLog("Используем " + vfileDbInit).
+       
        end.
-       else
+       else do:
           os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
-            
+          logWrite:WriteDebugLog("Используем exe/DBInit_0.exe" ).
+       end.  
        
        if is-ProcArch64 
        then do:
@@ -239,6 +244,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        finally:
          if (vOk ne true)
          then do:
+            
             if (vMesForTsd > "")
             then do:
                writeSockError (req:HndlSocket, vMesForTsd).
@@ -375,11 +381,15 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
              return error . 
              
           end. 
-          else
-             os-copy value(search(vfileDbInit)) value ("DBInit.exe").
+          os-copy value(search(vfileDbInit)) value ("DBInit.exe").
+          logWrite:WriteDebugLog("Используем " + vfileDbInit).
+  
       end.
-      else
+      else do:
          os-copy value(search("exe/DBInit_0.exe"))   value ("DBInit.exe").       
+         logWrite:WriteDebugLog("Используем exe/DBInit_0.exe").
+  
+      end.
       if is-ProcArch64 
       then do:
          os-copy value(search("exe/x64/System.Data.SQLite.dll")) value ("System.Data.SQLite.dll").
@@ -401,7 +411,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   method public override void Execute_( input req as IRequest, resp as class IResponse ):
   ErrStatus = false.
   do transaction:
-
     define variable contLength as integer   no-undo.
     define variable strLog     as character no-undo.
     define variable str        as character no-undo.
@@ -447,12 +456,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       .
       if tsd:ResType eq "xml"
       then do:
-         resp:Content-Type = "text/xml; charset=UTF-8".
+         resp:Content-Type = "text/xml; charset=" + tsd:CP.
          
       end.
       else if tsd:ResType eq "json"
       then
-       resp:Content-Type = "application/json; charset=UTF-8".  
+       resp:Content-Type = "application/json; charset=" + tsd:CP.  
        
     hndlsocket = req:HndlSocket.
     case tsd:ReqType :
@@ -461,6 +470,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           parseXML().
           tsd:Check_().
           tsd:ResType = "xml".
+          resp:Content-Type = "text/xml; charset=" + tsd:CP.
         end.
       when "getVersion" then 
         do:
@@ -474,6 +484,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           end.
           else do:
              tsd:SomeStr = tsd:getStatusXml(false, substitute ("Нет файла для устройства '&1' и версии '&2'", mType, mVersion)).
+             tsd:ResType = "xml".
+             resp:Content-Type = "text/xml; charset=" + tsd:CP.
+      
           end.
         end.
       when "TH_ALL" then 
@@ -566,8 +579,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               
               if not available buf_bar-code then do:
                 logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
-                tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
-                writeSock(resp,"").
+                logWrite:WriteFileToLog( "Не известный штрих-код:" + TempDocLine.b-code).
+                writeSockError(HndlSocket, "Не известный штрих-код:" + TempDocLine.b-code).
               end.
               
             end.
@@ -669,11 +682,11 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       if tsd:ResType eq "xml" or tsd:ResType eq "json" 
       then do:
          resp:condition = resp:STSlist:WriteResponse:NameProp.
-         resp:ConvertPage = "UTF-8".
+         resp:ConvertPage = tsd:CP.
          resp:setContent(tsd:SomeStr). 
       end.
       else do:
-         writeSock(resp,str).
+         writeSock(resp,tsd:SomeStr).
          if ErrStatus = true then undo.
       end.
       end.
@@ -687,7 +700,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     
   end method.
 
-
+  
   method private logical parseCSV(  ):
     
     define variable lResult    as logical   no-undo.
@@ -745,7 +758,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        input close.
     end.
     for each TempTrnDocMT where TempTrnDocMT.Complete_ = true:
-      LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + "Загружаем документ " + TempTrnDocMT.DocName.
+      logWrite:WriteDebugLog("Загружаем документ " + TempTrnDocMT.DocName).
       empty temp-table TempTrnDoc.
       empty temp-table TempDocLine.
       empty temp-table TempMarkLine.
@@ -944,7 +957,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               if not available buf_bar-code then 
               do:
                 LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
-                tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
                 logWrite:WriteFileToLog( "Не известный штрих-код:" + TempDocLine.b-code).
                 writeSockError(HndlSocket, "Не известный штрих-код:" + TempDocLine.b-code).
                 ErrStatus = true.
@@ -986,7 +998,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
 
       end.
-
+      logWrite:WriteDebugLog("Загружен документ " + TempTrnDocMT.DocName).
     end.
 
     
@@ -1163,16 +1175,20 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        LogWrite:WriteFileToLog("Клиент отключился.").
        return false.
     end.
+    logWrite:WriteDebugLog("Отправляем ответ:").
+    logWrite:WriteDebugLog(VOK).
     glog = hndlsocket:write(VrespOK,1,get-size(VrespOK)).
     if    not glog
        or hndlsocket:bytes-written ne get-size(VrespOK)
     then do:
        set-size(VrespOK) = 0.
+       logWrite:WriteDebugLog("Произошла ошибка при отправке.").
        LogWrite:LogStr = LogWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
        return false.
     end.
     set-size(VrespOK) = 0.
-    
+    logWrite:WriteDebugLog("Ответ отправлен.").
+       
 /*    if not hndlSocket:connected()                                                                    */
 /*    then do:                                                                                         */
 /*       LogWrite:WriteFileToLog("Клиент отключился.").                                                */
@@ -1190,7 +1206,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   end method.
 
   
-  method private logical writeSock (resp as class IResponse, arg as character):
+  method private logical writeSock (resp as class IResponse, arg as longchar):
     resp:setContent(arg).
     resp:Content-Type= "text/csv".   
     resp:condition = resp:STSlist:WriteResponse:NameProp.  

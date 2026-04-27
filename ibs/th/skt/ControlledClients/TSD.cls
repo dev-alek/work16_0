@@ -97,7 +97,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       get.
       set.
       
-  define public property CP as character no-undo
+  define public property CP as character no-undo init "UTF-8"
     get.
     set.
 
@@ -260,7 +260,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     find first inv-doc-attr no-lock where inv-doc-attr.doc-code = buf_trn-doc.doc-code and inv-doc-attr.attr-code = "invMultDevice" and inv-doc-attr.attr-value = string(true) no-error .
     if not available (inv-doc-attr) and buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then next .  
-    LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ " + buf_trn-doc.doc-code.
+    logWrite:WriteDebugLog( "Выгружаем документ " + buf_trn-doc.doc-code).
     
       myflagsDoc:unSetAllFlags().
       case buf_trn-doc.ext-doc-type:
@@ -358,7 +358,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 /*)                                                        */
 /*          .                                              */
           
-        tsdstreamclose().
+/*        tsdstreamclose().*/
           
 /*          dFactSum = buf_doc-line.fact-qnty + dFactSum.*/
         end.
@@ -463,7 +463,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       
       
 /*      SomeStr = SomeStr + cHeader + cLine + cMarkLine.*/
-
+        logWrite:WriteDebugLog( "Выгружен документ " + buf_trn-doc.doc-code).
+    
     end.
 /*    SomeStr = substitute ('<?xml version="1.0" encoding="&1"?><TSD>', CP) + SomeStr + ('</TSD>').*/
 /*    output stream logTSD to value ("logSKTTSD.txt").*/
@@ -833,7 +834,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           if error-status:error
           then do:
             delete TempBCode.
-            LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибка передачи бар-кода &1 в ТСД.", buf_prod-bc.b-str).
+            logWrite:WriteFileToLog(substitute ( "Ошибка передачи бар-кода &1 в ТСД.", buf_prod-bc.b-str)).
           end.
           if iprotocol > "" then
                      TempBCode.priceSale = (if vMarkingType or (available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value)) then (-1 * priceSale ) else priceSale)   .
@@ -1041,15 +1042,15 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     if available buf_trn-doc then 
     do:   
       
-      output to "marks.txt".
-      for each gen-attr where num-entries (gen-attr.p-key, {&delim-key}) > 6 and entry (8, gen-attr.p-key, {&delim-key}) = buf_trn-doc.doc-code:
-        export gen-attr.
-      end.
-      put skip "полученные с TSD" skip.
-      for each TempMarkLine:
-        export TempMarkLine.
-      end.
-      output close.
+/*      output to "marks.txt".                                                                                                                    */
+/*      for each gen-attr where num-entries (gen-attr.p-key, {&delim-key}) > 6 and entry (8, gen-attr.p-key, {&delim-key}) = buf_trn-doc.doc-code:*/
+/*        export gen-attr.                                                                                                                        */
+/*      end.                                                                                                                                      */
+/*      put skip "полученные с TSD" skip.                                                                                                         */
+/*      for each TempMarkLine:                                                                                                                    */
+/*        export TempMarkLine.                                                                                                                    */
+/*      end.                                                                                                                                      */
+/*      output close.                                                                                                                             */
       
       if myflagsDoc:isDocMarkOn
       then do:
@@ -1081,7 +1082,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           
         end.
         else do:
-          LogWrite:LogStr = substitute ( "В накладной &1 отсутсвует товар с кодом &2.", TempTrnDoc.ext-doc-code, TempDocLine.gds-code ).
+          logWrite:WriteFileToLog( substitute ( "В накладной &1 отсутсвует товар с кодом &2.", TempTrnDoc.ext-doc-code, TempDocLine.gds-code )).
           buf_trn-doc.ps = if buf_trn-doc.ps begins "@" then substitute ( "пропущен товар с кодом (штрих-код &3) &1&2.", TempDocLine.gds-code, {&new-line}, TempDocLine.b-code ) else substitute ( "&1&3 пропущен товар с кодом &2.",buf_trn-doc.ps, TempDocLine.gds-code, {&new-line} ).
           delete TempDocLine.
           next.
@@ -1107,6 +1108,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input "doctsd.txt", if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
           if error-status:error then do:
             LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
+            logWrite:WriteFileToLog(LogWrite:LogStr).
             SomeStr = getStatusXml(false, LogWrite:LogStr).
             os-delete value (search ("doctsd.txt")) no-error.
             os-delete value (search ("newdoctsd.txt")) no-error.
@@ -1121,6 +1123,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input "newdoctsd.txt", if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
           if error-status:error then do:
             LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
+            logWrite:WriteFileToLog(LogWrite:LogStr).
             SomeStr = getStatusXml(false, LogWrite:LogStr).
             os-delete value (search ("doctsd.txt")) no-error.
             os-delete value (search ("newdoctsd.txt")) no-error.
@@ -1148,7 +1151,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       
       adapterOra-i516:WriteDB(output glog).
   
-      LogWrite:LogStr = LogWrite:LogStr + {&new-line} + adapterOra-i516:StrLog.
+      logWrite:WriteFileToLog(adapterOra-i516:StrLog).
       delete object AdapterOra-i516.
   
       if glog
@@ -1242,7 +1245,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
                 if error-status:error
                     then  
                 do:
-                    LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Товар не найден &1", TempDocLine.gds-code).
+                    logWrite:WriteFileToLog(substitute ("Товар не найден &1", TempDocLine.gds-code)).
                     vError = true .
                     next .
                 end.
@@ -1266,7 +1269,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
                                        false).
                                if vmes ne ? and vmes ne ""
                                then
-                                  LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + vmes.
+                                  logWrite:WriteFileToLog(vmes).
                         end. /* tml_: */
 
             end. /* for each TempDocLine: */
@@ -1403,7 +1406,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             release doc-line .
         end.
         else do:
-          LogWrite:LogStr = substitute ( "В инвентаризации &1 отсутсвует товар с кодом &2.", TempTrnDoc.ext-doc-code, TempDocLine.gds-code ).
+          logWrite:WriteFileToLog(substitute ( "В инвентаризации &1 отсутсвует товар с кодом &2.", TempTrnDoc.ext-doc-code, TempDocLine.gds-code )).
           buf_trn-doc.ps = if buf_trn-doc.ps begins "@" then substitute ( "пропущен товар с кодом (штрих-код &3) &1&2.", TempDocLine.gds-code, {&new-line}, TempDocLine.b-code ) else substitute ( "&1&3 пропущен товар с кодом &2.",buf_trn-doc.ps, TempDocLine.gds-code, {&new-line} ).
           delete TempDocLine.
           next.
@@ -1502,7 +1505,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         vardoc-code = docCode("main", clients.obj-type, clients.obj-code, ?) no-error .
         if error-status:error then 
         do:
-          LogWrite:LogStr = "Ошибка при генерации номера документа." .
+          logWrite:WriteFileToLog("Ошибка при генерации номера документа.") .
           SomeStr = getStatusXml(false, "Ошибка при генерации номера документа.").
           return false.
         end.
@@ -1546,14 +1549,14 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         create TempDocLineIsTSD.
         buffer-copy TempDocLine to TempDocLineIsTSD no-error.
         if error-status:error then do:
-          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + error-status:get-message(1).
+          logWrite:WriteFileToLog(error-status:get-message(1)).
           SomeStr = getStatusXml(false, LogWrite:LogStr).
           return false.
     end.
     end.
       run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input table TempDocLineIsTSD, if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
         if error-status:error then do:
-        LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value.
+        logWrite:WriteFileToLog(return-value).
           SomeStr = getStatusXml(false, LogWrite:LogStr).
           return false.
         end.
@@ -1569,14 +1572,14 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         create TempDocLineIsTSD.
         buffer-copy TempDocLine to TempDocLineIsTSD no-error.
         if error-status:error then do:
-          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + error-status:get-message(1).
+           logWrite:WriteFileToLog(error-status:get-message(1)).
           SomeStr = getStatusXml(false, LogWrite:LogStr).
           return false.
         end.
         end.
       run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input table TempDocLineIsTSD, if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
       if error-status:error then do:
-        LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
+        logWrite:WriteFileToLog(return-value). 
         SomeStr = getStatusXml(false, LogWrite:LogStr).
         return false.
       end.
@@ -1933,7 +1936,7 @@ end.
               and buf_utd-marking-lines.mark begins TempMarkLine.MarkParent exclusive-lock no-error.
             if not available (buf_utd-marking-lines)
             then do:
-              LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + substitute ("Нарушена целостности либо изменен документ &1 на стороне TH", v-utd-doc-id).
+              logWrite:WriteFileToLog(substitute ("Нарушена целостности либо изменен документ &1 на стороне TH", v-utd-doc-id)).
               undo, return false.
             end.
             buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
@@ -2263,7 +2266,7 @@ end.
     for each buf_utd where buf_utd.obj-type = ObjType and buf_utd.obj-code = ObjCode and buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB
       and buf_utd.EDocType = ObjSrv:Env:Utd:EDocType:UTD:KeyIntDB:
       v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
-      LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ УПД " + v-doc-num.    
+      logWrite:WriteDebugLog( "Выгружаем документ УПД " + v-doc-num).    
       myflagsDoc:unSetAllFlags().
       myflagsDoc:isDocMarkOn = false.
       block-u-l:
@@ -2292,7 +2295,7 @@ end.
       end.         
       if buf_utd.cli-code = ? or buf_utd.obj-code = ? or buf_utd.cli-type = ? or buf_utd.obj-type = ?
       then do:
-        LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Не указан контрагент/объект TH в документе УТД &1.", v-doc-num).
+        logWrite:WriteFileToLog( substitute ( "Не указан контрагент/объект TH в документе УТД &1.", v-doc-num)).
         next l_utd.
       end.
       
@@ -2307,7 +2310,7 @@ end.
         find first buf_goods no-lock where buf_goods.gds-code = buf_utd-l.gds-code no-error.
         if not available (buf_goods)
         then do: 
-          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Не указан товар TH в документе УТД &1.", v-doc-num).
+          logWrite:WriteFileToLog( substitute ( "Не указан товар TH в документе УТД &1.", v-doc-num)).
           next l_utd.
         end.
 
@@ -2430,6 +2433,7 @@ end.
            datetime-tz (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate),
            myflagsDoc:FlagsToInt
       ).
+      logWrite:WriteDebugLog( "Выгружен документ УПД " + v-doc-num).    
       
     end.
     l_utd_Introduce:
@@ -2438,7 +2442,7 @@ end.
         and buf_utd.doc-code = "" 
         and not can-find (first buf_trn-doc no-lock where buf_trn-doc.doc-code = buf_utd.doc-code):
       v-doc-num = buf_utd.DocumentNumber + "(" + string(buf_utd.db-num) + "_" + string(buf_utd.doc-id) + ")".
-      LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ Первоначальный ввод КМ " + v-doc-num.
+      logWrite:WriteDebugLog( "Выгружаем документ Первоначальный ввод КМ " + v-doc-num).
       pos = 0.
       l_utd1:
       for each buf_utd-l where buf_utd-l.db-num = buf_utd.db-num and buf_utd-l.doc-id = buf_utd.doc-id no-lock:
@@ -2493,7 +2497,7 @@ end.
           find first buf_m no-lock where buf_m.mark = buf_utd-m-l.mark no-error.
              if not available (buf_m)
              then do:
-               LogWrite:LogStr = LogWrite:LogStr + {&new-line} + (substitute ("Некорректная марка &1.", buf_utd-m-l.mark)).
+               logWrite:WriteFileToLog(substitute ("Некорректная марка &1.", buf_utd-m-l.mark)).
                next.
              end.
           end.
@@ -2541,7 +2545,7 @@ end.
       
       if buf_utd.cli-code = ? or buf_utd.obj-code = ? or buf_utd.cli-type = ? or buf_utd.obj-type = ?
       then do:
-        LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Не указан контрагент/объект TH в документе УТД &1.", v-doc-num).
+        logWrite:WriteFileToLog(substitute ( "Не указан контрагент/объект TH в документе УТД &1.", v-doc-num)).
         next l_utd_Introduce.
       end.
       
@@ -2562,6 +2566,7 @@ end.
            datetime-tz (if buf_utd.DocumentDate = ? then now else buf_utd.DocumentDate),
            myflagsDoc:FlagsToInt
       ).
+      logWrite:WriteDebugLog( "Выгружен документ Первоначальный ввод КМ " + v-doc-num).
               
     end.
 
@@ -2571,7 +2576,6 @@ end.
 
     invd_:
     for each buf_trn-doc where buf_trn-doc.ext-doc-type = {&TDEDT_Inv} and buf_trn-doc.status_ = {&wayb} and not buf_trn-doc.flag:
-      LogWrite:LogStr = LogWrite:LogStr + {&new-line} + "Выгружаем документ " + buf_trn-doc.doc-code.
       
       v-is-introduce = false.
       { str/tdat-val.i
@@ -2586,10 +2590,11 @@ end.
         find first buf_utd no-lock where buf_utd.doc-code = buf_trn-doc.doc-code no-error.
         if not available (buf_utd)
         then do:
-          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Ошибочный документ &1 TH первоначального ввода, нет привязанного документа УТД.", v-doc-num).
+          logWrite:WriteFileToLog(substitute ( "Ошибочный документ &1 TH первоначального ввода, нет привязанного документа УТД.", v-doc-num)).
           next invd_.
         end.
       end.
+      logWrite:WriteDebugLog( "Выгружаем документ " + buf_trn-doc.doc-code).
       
       v-doc-num = buf_trn-doc.doc-code.
       pos = 0.
@@ -2598,7 +2603,11 @@ end.
         find first buf_bar-code no-lock where buf_bar-code.gds-code = buf_goods.gds-code.
         
         if not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsMarkingForType(gds-attr-mark-type(buf_goods.gds-code))
-          then next invd_.
+        then do: 
+        logWrite:WriteDebugLog( "Не выгружаем документ " + buf_trn-doc.doc-code + ". В нем содержится не маркированный товар.").
+      
+        next invd_.
+        end.
 /*        if not gds-attr-mark-type(buf_goods.gds-code) = "tabak"*/
 /*        then next invd_.                                       */
         internal-b-code = buf_bar-code.b-code.
@@ -2730,7 +2739,7 @@ end.
             find first buf_goods no-lock where buf_goods.gds-code = buf_utd-l.gds-code no-error.
             if not available (buf_goods)
             then do: 
-              LogWrite:LogStr = LogWrite:LogStr + {&new-line} + substitute ( "Не указан товар TH в документе УТД &1.", v-doc-num).
+              logWrite:WriteFileToLog( substitute ( "Не указан товар TH в документе УТД &1.", v-doc-num)).
               next l_utdf.
             end.
            
@@ -2758,7 +2767,7 @@ end.
                  find first buf_m no-lock where buf_m.mark = buf_utd-m-l.mark no-error.
                  if not available (buf_m)
                  then do:
-                   LogWrite:LogStr = LogWrite:LogStr + {&new-line} + (substitute ("Некорректная марка &1.", buf_utd-m-l.mark)).
+                   logWrite:WriteFileToLog(substitute ("Некорректная марка &1.", buf_utd-m-l.mark)).
                    next.
                  end.
               end.
@@ -2810,6 +2819,7 @@ end.
            now,
            myflagsDoc:FlagsToInt
       ).
+      logWrite:WriteDebugLog( "Выгружен документ " + buf_trn-doc.doc-code).
       
     end.
   end.
@@ -3062,7 +3072,7 @@ end.
   data-relation docLineMark  for tt-doc-line-marks, tt-doc-line-mark    relation-fields (doc-num, doc-num,line-num,line-num) nested
   .
   method public void docWrite():
-     docPrint(resType,"UTF-8").
+     docPrint(resType,cp).
      
   end.
   method public void docPrint(type as char,encoding as char):
@@ -3092,7 +3102,7 @@ end.
   end.
    
   method public void ttPrint(type as char,htable as handle):
-     ttPrint(type, htable, "utf-8").
+     ttPrint(type, htable, cp).
   end.
   
   method public void ttPrint(type as char, htable as handle, encoding as char):
