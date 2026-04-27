@@ -140,7 +140,7 @@ do
       put stream OutStr-html unformatted
         '<TR>' skip
         '<TD text_wrap="true" style="text-align: center;">' + cli-name(integer(ub.Code.misc2), ub.Code.misc3) + '</TD>' skip
-        '<TD text_wrap="true" style="text-align: center;">' + ub.Code.misc1 + '</TD>' skip
+        '<TD text_wrap="true" style="text-align: center;">' + if ub.Code.misc1 = ? then "" else ub.Code.misc1 + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + ub.Code.code + '</TD>' skip
         '<TD text_wrap="true" style="text-align: center;">' + ub.Code.misc4 + '</TD>' skip
         '</TR>'skip     

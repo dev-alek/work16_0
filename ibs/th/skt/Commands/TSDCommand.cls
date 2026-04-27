@@ -456,8 +456,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       tsd:ResType = hRoot:get-attribute("responseType")
       tsd:CurrDecSeparator = hRoot:get-attribute("currDecSeparator")
       tsd:IsMarkOn = if hRoot:get-attribute("MarksReg") = "true" then true else false
-      mSn = hRoot:get-attribute("from")
-      mVersion = hRoot:get-attribute("version")
       .
       if tsd:ResType eq "xml"
       then do:
@@ -661,6 +659,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
         
     end case.
+    mSN = req:HeadHTTP:getValue("TSD-serial").
+    mVersion = req:HeadHTTP:getValue("TSD-version").
     if mSN <> "" then do:
     find first ub.Code exclusive-lock where ub.Code.code = mSN and ub.Code.parent = "TSDversion" no-error .
     if not available (ub.Code) then do:
@@ -1126,22 +1126,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               TempMarkLine.Sts         = hRow:get-attribute("Sts")
               .
           end.
-        when "SN" then
-          do:
-            if hRow:get-attribute("type") = "HARDWARE" 
-            then do:
-              tsd:SN = hRow:get-attribute("value").
-              mSN = hRow:get-attribute("value").
-            end.
-          end.
-        when "device" then
+         when "device" then
           do:
             mType    = hRow:get-attribute("type"). 
-            mVersion = hRow:get-attribute("version").
-          end.
-        when "TSD" then
-          do:
-            mSN    = hRow:get-attribute("from"). 
             mVersion = hRow:get-attribute("version").
           end.
         when "OBJ" then
