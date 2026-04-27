@@ -52,6 +52,9 @@ class ibs.th.skt.Commands.IResponse abstract:
    define public property content-disposition as character  no-undo 
    get.
    set.
+  define public property content-Md5 as character  no-undo 
+  get.
+  set.
   
    define public property saveFile as character  no-undo 
    set (arg as char):
@@ -146,6 +149,10 @@ class ibs.th.skt.Commands.IResponse abstract:
          otherwise vConType = "raw".
       end.
       set-size(Content) = 0.
+      run gbl/md5.p (
+          input  file-information:full-pathname
+         ,output content-Md5 /* p-md5-signature */
+         ) .
       set-size(Content) = file-information:file-size + 1.    
       copy-lob from file file-information:full-pathname to Content.
       Content-Type = vConType.

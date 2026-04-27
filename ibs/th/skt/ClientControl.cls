@@ -43,9 +43,9 @@ class ibs.th.skt.ClientControl:
       super ().
       hLog = iLog.
       logWrite = new LogWrite().
-      HTTPOK = substitute("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: &3&1Content-Length: &4&2",
+      HTTPOK = substitute("HTTP/1.1 200 OK&1Server: 4GL&1Content-Type: &3&5&6&1Content-Length: &4&2",
                          chr(13) + chr(10),
-                         chr(13) + chr(10) + chr(13) + chr(10) , "&1","&2&3").
+                         chr(13) + chr(10) + chr(13) + chr(10) , "&1","&2","&3","&4").
    end constructor.
 
 
@@ -230,7 +230,11 @@ class ibs.th.skt.ClientControl:
     define variable v-cont-length as integer no-undo.
     define variable VOK as longchar no-undo.
     define variable VrespOK as memptr no-undo.
-    VOK = substitute (HTTPOK,resp:Content-Type,string(resp:ContentLength),if resp:content-disposition ne "" then chr(10) + chr(13) + "content-disposition:" + resp:content-disposition else "").
+    VOK = substitute (HTTPOK,resp:Content-Type,
+                     string(resp:ContentLength),
+                     if resp:content-disposition ne "" then chr(13) + chr(10) + "content-disposition:" + resp:content-disposition else "",
+                     if resp:Content-MD5 ne "" then chr(13) + chr(10) + "Content-MD5: " + resp:Content-MD5 else ""
+).
     copy-lob
       from object VOK
       to object VrespOK
