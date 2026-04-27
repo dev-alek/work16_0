@@ -107,6 +107,7 @@ define variable v-scan-str  as character no-undo.
 define variable v-manual    as logical   no-undo .
 DEFINE VARIABLE v-timedelay as integer   no-undo .
 define variable vMarkBrow2 as character no-undo.
+define variable vLevel     as integer   no-undo init 1.
 
 define variable varvalue as character no-undo.
 define variable vartype  as character no-undo.
@@ -1319,7 +1320,7 @@ ON CHOOSE OF bt-not-sel-all IN FRAME d-mark /* + */
         then 
         do:
             v-rid-list = "" .
-            for each X_marking where X_marking.doc-level = 1:
+            for each X_marking where X_marking.doc-level = vLevel:
                 X_marking.marking-string = "*" .
                 /*        { gbl/markstrn.i X_marking v-rid-list }*/
 /*                if not upd_mark then loc#log = br-bar-code:refresh() no-error.*/
@@ -2115,6 +2116,14 @@ PROCEDURE init-temp :
         c-status:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_1 .
     ASSIGN
         c-status-2:LIST-ITEM-PAIRS  in frame {&frame-name} = Status_1 .
+
+    /* вычислим уровень */
+    if p-parent_mark <> "" then
+    do:
+      for first tt-marking-lines no-lock where tt-marking-lines.mark-parent = p-parent_mark:
+        vLevel = tt-marking-lines.doc-level.
+      end.        
+    end.
 /*    if not upd_mark then do:           */
 /*    for each tt-marking-lines no-lock: */
 /*        v-qnty-mark = v-qnty-mark + 1 .*/
