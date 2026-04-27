@@ -460,6 +460,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         do:
           parseXML().
           tsd:Check_().
+          tsd:ResType = "xml".
         end.
       when "getVersion" then 
         do:
