@@ -907,13 +907,13 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
      BarcodesClear().
      empty temp-table tt-barcodes. 
   end.
-  method public void getGoodsAndBarcodes (input iprotocol as char):
+  method public void getGoodsAndBarcodes (input iprotocol as char, idir as char):
      GoodsAndBarcodesClear().
      getGoodsAndBarcodes (yes, yes, iprotocol).
-     GoodsAndBarcodesPrint("all").
+     GoodsAndBarcodesPrint("",idir).
   end.
   
-  method public void GoodsAndBarcodesPrint (input type as char):
+  method public void GoodsAndBarcodesPrint (input type as char, idir as character):
      if    type eq "xml"
         or type eq "json"
      then do on error undo, leave:
@@ -945,11 +945,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         end.   
      end.
      else do:
-        if type eq ""
-        then
-           return error "не поддеживается ".
-        GoodsPrint("TH_goods.txt").
-        BarcodesPrint("TH_barcodes.txt").
+        GoodsPrint(idir + "\TH_goods.txt").
+        BarcodesPrint(idir + "\TH_barcodes.txt").
      end.
   end.
 

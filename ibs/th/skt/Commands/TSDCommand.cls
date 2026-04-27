@@ -73,7 +73,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     os-command silent value( 'set processor_Architecture >procarch') .
     if search ("procarch") = ? 
     then do:
-      logWrite:LogStr = "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории".
+      logWrite:WriteFileToLog ( "Не найден файл с данными PROCESSOR_ARCHITECTURE, проверьте настройки propath - должен быть указан путь рабочий директории").
       ErrStatus = true.
       return.
     end.    
@@ -176,7 +176,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        if vobjtype eq "" or vobjtype eq ?
        then do:
          vMesForTsd = "Не задан тип объекта".
-         logWrite:LogStr = "Не задан тип объекта".
+         logWrite:WriteFileToLog ( vMesForTsd).
          return.
        end.
        else if vobjtype eq "shop"
@@ -192,7 +192,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        if error-status:error
        then do:
          vMesForTsd  = "Не задан код объекта".
-         logWrite:LogStr = "Не задан код объекта".
+         logWrite:WriteFileToLog ( vMesForTsd).
          return.
        end.
        assign    
@@ -289,7 +289,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       end.
        if vsize eq ? or vsize eq 0 
        then do:
-          logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
+          logWrite:WriteFileToLog ( substitute ("Не найден файл &1 базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории",ifileName)).
           ErrStatus = true.
           return.
        end.
@@ -484,6 +484,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           vfile = tsd:getFileVersion(mType, mVersion).
           if vfile ne ?
           then do:
+             logWrite:WriteFileToLog (substitute ("Подготавливаем файл &1 к отправке ",vfile)).
              filesend:sendfile(resp, vfile).
              return.
           end.
@@ -508,7 +509,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           tsd:WriteClients().
           endStep('Завершено кеширование справочника контрагентов.').
           startStep('Начало кеширования справочника товаров и штрих-кодов.').
-          tsd:getGoodsAndBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
+          tsd:getGoodsAndBarcodes(req:HeadHTTP:getValue("TSD-protocol"),vdir).
           endStep('Завершено кеширование справочника товаров и штрих-кодов.').
           str = 'dictionaries'.
           define variable vpid as integer no-undo.
@@ -560,7 +561,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         do:
           tsd:GoodsAndBarcodesClear().
           tsd:getGoodsAndBarcodes(yes, yes, req:HeadHTTP:getValue("TSD-protocol")).
-          tsd:GoodsAndBarcodesPrint(tsd:ResType).
+          tsd:GoodsAndBarcodesPrint(tsd:ResType,?).
           
         end.
       when "WAYBILL" then 
@@ -640,7 +641,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     case tsd:ReqType :
       when "SETTINGS" then 
         do:
-          logWrite:LogStr = 'Отправлен ответ на запрос типа "SETTINGS".' + {&new-line} + logWrite:LogStr.
+          logWrite:WriteFileToLog ( 'Отправлен ответ на запрос типа "SETTINGS".' + {&new-line} + logWrite:LogStr).
         end.
       when "TH_ALL" then 
         do:
@@ -648,15 +649,15 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
       when "TH_WB" then 
         do:
-          logWrite:LogStr = 'Отправлен ответ на запрос типа "TH_WB".' + {&new-line} + logWrite:LogStr.
+          logWrite:WriteFileToLog ('Отправлен ответ на запрос типа "TH_WB".' + {&new-line} + logWrite:LogStr).
         end.
       when "WAYBILL" then 
         do:
-          logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + logWrite:LogStr.
+          logWrite:WriteFileToLog ( 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + logWrite:LogStr).
         end.
       when "INVENTORY" then 
         do:
-          logWrite:LogStr = 'Отправлен ответ на запрос типа "INVENTORY".' + {&new-line} + logWrite:LogStr.
+          logWrite:WriteFileToLog ( 'Отправлен ответ на запрос типа "INVENTORY".' + {&new-line} + logWrite:LogStr).
         end.
         
     end case.
