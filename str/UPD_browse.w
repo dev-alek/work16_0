@@ -2747,7 +2747,8 @@ ON CHOOSE OF MENU-ITEM m_reset_row_data /* —бросить данные по строке */
              end.                                           
          end.               
          X_utd-lines.qnty-scan = 0 .
-         X_utd-lines.stts = "ќжидает проверку" .         
+         X_utd-lines.sts_err = CheckErrForLine(buffer X_utd-lines:handle).
+         X_utd-lines.stts = if X_utd-lines.sts_err then "ќшибка по строке"  else "ќжидает проверку" .         
          if x_utd-lines.isMarking then 
          do:
             setattrUtdlines(X_utd-lines.db-num, X_utd-lines.doc-id, X_utd-lines.LineNum, "QuantityBarCode", string(X_utd-lines.qnty-scan)).
