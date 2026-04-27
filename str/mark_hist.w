@@ -486,6 +486,26 @@ DO:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Btn_dateOther
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_dateOther d-mark
+ON CHOOSE OF Btn_dateOther IN FRAME d-mark
+DO:
+   define variable kk as integer no-undo .
+   define variable dateOther as character no-undo .
+   define variable dateOtherMes as character no-undo .
+   do kk = 1 to num-entries(expire_DateOther):
+       dateOtherMes = entry(1,entry(kk,expire_DateOther),".") .
+       dateOtherMes = replace(dateOtherMes,"/",".") .
+       if kk = 1 then dateOther = " " + dateOtherMes .
+       else dateOther = dateOther + {&new-line} + dateOtherMes .
+   end.
+
+message dateOther 
+view-as alert-box title "Иные условия хранения".
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME f-status
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-status d-mark
@@ -588,79 +608,6 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME b-hist
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-hist d-mark
-ON CHOOSE OF b-hist IN FRAME d-mark /* История */
-DO:
-  DEFINE VARIABLE v-rid-list AS CHARACTER NO-undo.
-  IF available buf_marking THEN DO:
-    run ref/cmarking.w (
-              buf_marking.mark, 
-              parparentproc,
-              0,
-              "",
-              0,
-              "",
-              "one",
-              ?,
-              "",
-              "" ,
-              v-cntxt-db-num,
-              ?,
-              input-output v-rid-list ) .
-  END.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define BROWSE-NAME br-mark
-&Scoped-define SELF-NAME br-mark
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-mark d-mark
-ON value-changed OF br-mark IN FRAME d-mark
-DO:
-    run enable_mark .
-  END .
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME Btn_dateOther
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_dateOther d-mark
-ON CHOOSE OF Btn_dateOther IN FRAME d-mark
-DO:
-   define variable kk as integer no-undo .
-   define variable dateOther as character no-undo .
-   define variable dateOtherMes as character no-undo .
-   do kk = 1 to num-entries(expire_DateOther):
-       dateOtherMes = entry(1,entry(kk,expire_DateOther),".") .
-       dateOtherMes = replace(dateOtherMes,"/",".") .
-       if kk = 1 then dateOther = " " + dateOtherMes .
-       else dateOther = dateOther + {&new-line} + dateOtherMes .
-   end.
-
-message dateOther 
-view-as alert-box title "Иные условия хранения".
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME Btn_pn
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_pn d-mark
-ON CHOOSE OF Btn_pn IN FRAME d-mark
-DO:
-    { gbl/stdbtn.i }
-run show-in-code in this-procedure .
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME Btn_rn
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_rn d-mark
 ON CHOOSE OF Btn_rn IN FRAME d-mark
@@ -685,47 +632,7 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME f-status
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-status d-mark
-ON value-changed OF f-status IN FRAME d-mark
-DO:
-   assign 
-     f-status
-   .
-END .
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME v-mark
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-mark
-ON ENTRY OF v-mark IN FRAME d-mark /* Марка */
-DO:
-            run LoadKeyboardLayoutA (input v-mark, input 0, output iLang).
-            run adm/shattri.p (
-               input "get":U
-               ,input  v-cntxt-obj-type /*p-obj-type*/
-               ,input  v-cntxt-obj-code /*p-obj-code*/
-               ,input  {&attr-marking}
-               ,input  {&attr-marking_rus-key} /*p-param-code*/
-               ,output p-value-character
-               ,output p-value-date
-               ,output p-value-decimal
-               ,output p-value-integer
-               ,output p-value-logical
-               ,output p-param-type
-               ,input-output table-handle v-tth
-               ) no-error . 
-            IF p-value-logical = yes THEN  iLang = 68748313.
-
-            run ActivateKeyboardLayout (input iLang, input 0).
-        END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL v-mark d-mark
 ON return OF v-mark IN FRAME d-mark /* Марка */
 DO:
@@ -757,6 +664,33 @@ DO:
     display 
       with frame {&frame-name} .
   END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME B-hist
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL B-hist d-mark
+ON CHOOSE OF B-hist IN FRAME d-mark /* История */
+DO:
+  DEFINE VARIABLE v-rid-list AS CHARACTER NO-undo.
+  IF available buf_marking THEN DO:
+    run ref/cmarking.w (
+              buf_marking.mark, 
+              parparentproc,
+              0,
+              "",
+              0,
+              "",
+              "one",
+              ?,
+              "",
+              "" ,
+              v-cntxt-db-num,
+              ?,
+              input-output v-rid-list ) .
+  END.
+END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1018,7 +952,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-status d-mark 
 PROCEDURE init-status :
-define variable vi as integer no-undo.
+  define variable vi as integer no-undo.
   define variable MarkType as ibs.th.gbl.map.mapstring no-undo.
   define variable objMark  as ibs.th.gbl.propmap no-undo.
   do with frame {&frame-name}:
@@ -1054,7 +988,7 @@ PROCEDURE init-temp :
 
   if v-mark <> "" then 
   do:
-/*       mMRCCode = yes .*/
+/*	 mMRCCode = yes .*/
   v-marking = GetCodeIdent(v-mark) .
 
   v-mark-2   = v-marking .
