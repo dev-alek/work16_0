@@ -829,6 +829,7 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
         define buffer bf_marking           for ub.marking .
         define variable Log-Res as logical no-undo.
         define variable undelete as logical no-undo .
+        define variable vCount   as integer no-undo .
         if AVAILABLE (X_utd) then 
         do:
             /*Проверка прав */
@@ -849,16 +850,26 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
 }
             if log-res then 
             do: 
+              if v-rid-list <> "" then
+              do:
+                message "Удалить"  num-entries(v-rid-list) "документа?"
+                        view-as alert-box question buttons yes-no update undelete.
+                if not undelete then return no-apply.
+              end.
+              else v-rid-list = string(recid(X_utd)).
+              do vCount = 1 to num-entries(v-rid-list):  
+                find first X_utd no-lock where recid(X_utd) = int(entry(vCount, v-rid-list)) no-error .
                 if X_utd.EDocType = objSrv:Env:Utd:EDocType:AKT:KeyIntDB or X_utd.EDocType = objSrv:Env:Utd:EDocType:Introduce:KeyIntDB  
                     then 
                 do:
                     if X_utd.sts = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then 
                     do:
+                        if not undelete then
                         message "Удалить документ " + X_utd.DocumentNumber + "?"
                             view-as alert-box question buttons yes-no update undelete.
                         if undelete then 
                         do:
-                            find first bf_utd exclusive-lock where bf_utd.db-num = X_utd.db-num and bf_utd.doc-id = X_utd.doc-id no-error .
+                            find first bf_utd exclusive-lock where bf_utd.db-num = X_utd.db-num and bf_utd.doc-id = int(entry(vCount, v-rid-list)) no-error .
                             /*        for each bf_utd-marking-lines where bf_utd-marking-lines.db-num = X_utd.db-num and bf_utd-marking-lines.doc-id = X_utd.doc-id:*/
                             /*          for each bf_marking where bf_marking.mark = bf_utd-marking-lines.mark:                                                      */
                             /*            delete bf_marking .                                                                                                       */
@@ -879,6 +890,7 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
                         X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB and 
                         X_utd.sts <> ObjSrv:Env:Utd:Sts:TH:Rejection:KeyIntDB then 
                     do:
+                        if not undelete then
                         message "Удалить документ " + X_utd.DocumentNumber + "?"
                             view-as alert-box question buttons yes-no update undelete.
                         if undelete then 
@@ -897,9 +909,11 @@ ON choose OF b-del IN FRAME d-utd /* Удалить */
                         message "Документ " + string (X_utd.DocumentNumber) + " не может быть удален"
                             view-as alert-box.
                     end.                     
-                end.         
-                run init-sort .
-                {&OPEN-QUERY-br-utd}
+                end.
+              end.
+              v-rid-list = "".         
+              run init-sort .
+              {&OPEN-QUERY-br-utd}
             end.   /*if log-res then*/
         end.
 
@@ -996,7 +1010,6 @@ ON choose OF b-hist IN FRAME d-utd /* История */
 ON CHOOSE OF b-mark IN FRAME d-utd /* * */
     DO:
         define variable loc#log as logical no-undo .
-      
         if available X_utd then 
         do:
             { gbl/markstrn.i X_utd v-rid-list }
