@@ -79,6 +79,8 @@ define variable vss-description as character no-undo init "Редактирование партий
 { gbl/lineattr.i }
 { ref/gds-attr.i }
 { str/temp_upd.i }
+{ str/utd-typemark.i }
+
 define variable v-parts-recid as recid no-undo .
 define buffer parts for ub.parts  .
 /* поле, разрешенное для изменения */
@@ -2938,6 +2940,10 @@ PROCEDURE determine-enable-qnty :
 
   define buffer buf_trn-doc for ub.trn-doc.
   define variable vIsExemplarGoods as logical no-undo.
+  define variable v-isweighed as logical   no-undo .
+  define variable varvalue as character no-undo .
+  define variable vartype  as character no-undo .
+  define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
   if p-ext-doc-type = {&TDEDT_Pri_Perem} then
   do:
@@ -2945,7 +2951,21 @@ PROCEDURE determine-enable-qnty :
                buf_trn-doc.doc-code = p-doc-code.
     run isExemplarGoods in this-procedure 
       (buf_trn-doc.obj-type, buf_trn-doc.obj-code, p-gds-code, output vIsExemplarGoods).
-    if vIsExemplarGoods then do: 
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code).
+    RUN gds-attr-value (
+                        INPUT p-gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT varvalue,
+                        OUTPUT vartype
+                        ).
+    v-isweighed = WeighedProd(p-gds-code)
+              and varvalue > ""
+              and (EDOParSec:GetIsEDOForType(varvalue)
+                or EDOParSec:GetIsArticForType(varvalue))
+    .
+    if vIsExemplarGoods
+    or v-isweighed
+    then do: 
       p-enable-qnty = "".
       return.
     end. 

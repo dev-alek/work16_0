@@ -1321,11 +1321,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
             OUTPUT varvalue,
             OUTPUT vartype
             ).      
-    v-isweighed = WeighedProd(ub.goods.gds-code)
-              and varvalue > ""
-              and (EDOParSec:GetIsEDOForType(varvalue)
-                or EDOParSec:GetIsArticForType(varvalue))
-    .
+    v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code) .
         
     run isExemplarGoods in this-procedure 
        (t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code, output vIsExemplarGoods).
@@ -1746,10 +1742,12 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
     define variable par-type    as character no-undo .
     define variable p-alcohol   as logical   no-undo .
     define variable v-type      as integer   no-undo .
-    define variable v-fact-qnty as integer   no-undo .
-    define variable v-fact-part as integer   no-undo .
-    define variable vGtin       as character no-undo.
-    define variable vGtinQnty   as integer   no-undo.
+    define variable v-fact-qnty as decimal   no-undo .
+    define variable v-fact-part as decimal   no-undo .
+    define variable vGtin       as character no-undo .
+    define variable vGtinQnty   as integer   no-undo .
+    define variable v-mark-weight as decimal no-undo .
+    define variable v-isweighed as logical   no-undo .
     
     define buffer buf_doc-line for ub.doc-line.
     define buffer buf_gds-dtl  for ub.gds-dtl.
@@ -1840,6 +1838,7 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
           if pardoc-mode <> {&lookup} and t-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
           do:    /* для приход перемещение вычислим отсканированные марки */
              /* идем по партиям и учтем принятые марки в факт */
+             v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code) .
              for each buf_parts exclusive-lock where
                       buf_parts.artic = ub.goods.artic
                   and buf_parts.prod-type = ub.goods.prod-type
@@ -1857,8 +1856,16 @@ ON CHOOSE OF MENU-ITEM m_lookup-marks /* Просмотр */
                     and tt-marking-lines.prt-code = buf_parts.prt-code
                :
                    if tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB and
-                      tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB then
-                      v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
+                      tt-marking-lines.sts-utd <> objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+                   then do :
+                     if v-isweighed
+                     then do :
+                       v-fact-part = v-fact-part + MarkWeight(tt-marking-lines.mark) .
+                     end .
+                     else do :
+                       v-fact-part = v-fact-part + tt-marking-lines.box-qnty.
+                     end .
+                   end .
                end.
                if buf_parts.fact-qnty <> v-fact-part then
                  buf_parts.fact-qnty = v-fact-part.
@@ -2860,11 +2867,8 @@ DO:
             OUTPUT varvalue,
             OUTPUT vartype
             ).      
-    v-isweighed = WeighedProd(buf_goods.gds-code)
-              and varvalue > ""
-              and (EDOParSec:GetIsEDOForType(varvalue)
-                or EDOParSec:GetIsArticForType(varvalue))
-    .
+    v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code) .
+    
     run isExemplarGoods in this-procedure 
          (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
     

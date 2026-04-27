@@ -72,6 +72,7 @@ define variable vss-description as character no-undo initial "Создание документо
 { ref/gds-attr.i }
 { gbl/getsect.i def }
 { gbl/attr-lib.i }
+{ str/utd-typemark.i }
 
 define variable v-today as date      no-undo.
 define variable v-host-code like ub.trn-doc.host no-undo .
@@ -101,6 +102,12 @@ define variable v-out-pay like ub.sysconf.out-pay .
 define variable vGtin as character no-undo .
 
 define variable v-country-code as integer   no-undo .
+
+define variable v-isweighed as logical   no-undo .
+define variable v-mark-weight              as decimal   no-undo .
+define variable varvalue as character no-undo .
+define variable vartype  as character no-undo .
+define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
 
 define buffer buf_trn-doc       for ub.trn-doc .
 define buffer buf_doc-line      for ub.doc-line .
@@ -413,6 +420,19 @@ on error undo, return error return-value
     assign
       v-total-parts-cli-qnty = 0
     .
+    
+    EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code).
+    RUN gds-attr-value (
+                        INPUT ub.goods.gds-code,
+                        INPUT {&attr-mark-type},
+                        OUTPUT varvalue,
+                        OUTPUT vartype
+                        ).
+    v-isweighed = WeighedProd(ub.goods.gds-code)
+              and varvalue > ""
+              and (EDOParSec:GetIsEDOForType(varvalue)
+                or EDOParSec:GetIsArticForType(varvalue))
+    .
 
     /* создаем партии */
     for each TempDocPart where TempDocPart.gds-code = TempDocLine.gds-code
@@ -661,9 +681,19 @@ on error undo, return error return-value
                  can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
                  can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) then
               do: /* если марка добавлена в чек или расходый док-т, то увеличиваем кол-во принятых марок */
-                buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty.
-                   /* и увеличим кол-во факт по партии с этой маркой*/
-                buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.
+                if v-isweighed
+                then do :
+                  v-mark-weight = MarkWeight(ub.marking.mark).
+                  
+                  buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + v-mark-weight .
+                     /* и увеличим кол-во факт по партии с этой маркой*/
+                  buf_parts.fact-qnty = buf_parts.fact-qnty + v-mark-weight .
+                end .
+                else do :
+                  buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty.
+                     /* и увеличим кол-во факт по партии с этой маркой*/
+                  buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.
+                end .
               end.
 
 /*              if not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) then                                            */

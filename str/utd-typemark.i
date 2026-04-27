@@ -1,7 +1,7 @@
 { str/utd-attr.i {1} }
-{ gbl/attr-lib.i }
-{ utl/gtin.i }
-{ str/utd-err.i }
+{ gbl/attr-lib.i {1} }
+{ utl/gtin.i {1} }
+{ str/utd-err.i {1} }
 &if "{1}" = "class"
 &then
 
@@ -321,6 +321,12 @@ function MarkWeight return decimal
        find first buf_marking-attr where buf_marking-attr.mark      eq p-mark 
                                      and buf_marking-attr.attr-code eq "weight"
           no-lock no-error.
+       if not available buf_marking-attr
+       then do :
+         find first buf_marking-attr where buf_marking-attr.mark  begins p-mark 
+                                       and buf_marking-attr.attr-code eq "weight"
+            no-lock no-error.
+       end .
        if avail buf_marking-attr
        then vMarkWeight = dec(buf_marking-attr.attr-value).    
    end.

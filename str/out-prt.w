@@ -869,6 +869,7 @@ DO:
     if t-doc.doc-type = {&expense}
     and buf_goods.qnty-cart <> 0
     and not v-is-return
+    and not v-isweighed
     then do:
       if (input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty / buf_goods.qnty-cart) - round (input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty / buf_goods.qnty-cart, 0) <> 0 then do:
         if available ub.prt-obj then do:
@@ -3105,6 +3106,7 @@ end.
                 1 @ ub.gds-dtl.doc-qnty
               with frame {&FRAME-NAME}.
               if v-is-return
+              or v-isweighed
               then do :
                 display
                   0 @ ub.gds-dtl.doc-qnty

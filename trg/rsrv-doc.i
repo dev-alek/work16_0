@@ -25,6 +25,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 { gbl/std-func.i {&f-l} }
 { str/marks.i }
 { utl/gtin.i }
+{ str/utd-typemark.i }
 
   define temp-table tt-alc-codes
     field alc-code      as character
@@ -45,6 +46,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
     field unit as character
     field qnty as integer
     field to-ungroup as logical
+    field is-weight as logical
+    field weight as decimal
     index pi as primary unique
       mark
     index un
@@ -139,6 +142,8 @@ procedure rsrv-doc :
   define buffer buf_utd-lines       for ub.utd-lines .
   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
   
+  define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+  
   define variable varb-code like ub.bar-code.b-code .
   define variable vardoc-num     like ub.price-list.doc-num    no-undo .
   define variable varprice-sale  like ub.price-list.price-sale no-undo .
@@ -149,6 +154,10 @@ procedure rsrv-doc :
   define variable varprice-rubl  as decimal no-undo .
   define variable varprice-base  as decimal no-undo .
   define variable vIsExemplarGoods as logical no-undo init false.
+  define variable v-isweighed as logical no-undo init false.
+  define variable varvalue as character no-undo .
+  define variable vartype  as character no-undo .
+  define variable v-mark-weight as decimal   no-undo .
     
   define variable v-exch-rate  like ub.curr-accnt.exch-rate no-undo .
   define variable v-exch-scale like ub.curr-accnt.exch-scale no-undo .
@@ -193,6 +202,18 @@ procedure rsrv-doc :
     do:  /* определим, что товар с поэкземплярным учетом  */
       run isExemplarGoods in this-procedure 
           (buf_trn-doc.obj-type, buf_trn-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+      EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code).
+      RUN gds-attr-value (
+                          INPUT buf_goods.gds-code,
+                          INPUT {&attr-mark-type},
+                          OUTPUT varvalue,
+                          OUTPUT vartype
+                          ).
+      v-isweighed = WeighedProd(buf_goods.gds-code)
+                and varvalue > ""
+                and (EDOParSec:GetIsEDOForType(varvalue)
+                  or EDOParSec:GetIsArticForType(varvalue))
+      .
     end.
 
 /*    run gbl/inidebug.p .*/
@@ -584,6 +605,14 @@ procedure rsrv-doc :
           p-mark = ""
           v-mark-tobacco = true
         .
+        if v-isweighed
+        then do :
+          v-mark-weight = MarkWeight(buf_marking.mark).
+          assign
+            tt-tobacco-marks.is-weight = yes
+            tt-tobacco-marks.weight = v-mark-weight
+          .
+        end .
       end .
     end .
     
@@ -1375,6 +1404,12 @@ procedure rsrv-doc :
                   v-iteration-chg-qnty = v-chg-qnty-sign * v-GTIN-qnty
                 .
               end .
+              if tt-tobacco-marks.is-weight
+              then do :
+                assign
+                  v-iteration-chg-qnty = v-chg-qnty-sign * tt-tobacco-marks.weight
+                .
+              end .
               find first buf_marking no-lock where buf_marking.mark begins tt-tobacco-marks.mark no-error .
               if not available buf_marking
               then do :
@@ -1453,7 +1488,7 @@ procedure rsrv-doc :
             if v-fifo = true
             then do:
               release buf_parts.
-              if vIsExemplarGoods then
+              if vIsExemplarGoods or v-isweighed then
                 { trg/fndpartfifo.i
                   "first"
                   "and not can-find(first buf_marking-lines where
@@ -1471,7 +1506,7 @@ procedure rsrv-doc :
               if p-mark = "" and not (v-izlcstpr and buf_trn-doc.ext-doc-type = {&TDEDT_Inv}) or (v-izlcstpr and p-action = {&rsrv-dtl_action_reserv-sozdanie}) then
               do:
                 release buf_parts.
-                if vIsExemplarGoods then
+                if vIsExemplarGoods or v-isweighed then
                   { trg/fndpartfifo.i
                     "last"
                     "and not can-find(first buf_marking-lines where
@@ -1731,7 +1766,7 @@ procedure rsrv-doc :
               then
               do:  
                 release buf_parts.
-                if vIsExemplarGoods then
+                if vIsExemplarGoods or v-isweighed then
                   { trg/fndpartfifo.i
                     "first"
                     "and not can-find(first buf_marking-lines where
@@ -1746,7 +1781,7 @@ procedure rsrv-doc :
               end.
               else
               do:  
-                if vIsExemplarGoods then
+                if vIsExemplarGoods or v-isweighed then
                 do:
                   release buf_parts.
                   { trg/fndpartfifo.i
@@ -1769,7 +1804,7 @@ procedure rsrv-doc :
             end.
             else if not v-alc-rsrv and not v-mark-tobacco
             then do:
-              if vIsExemplarGoods then
+              if vIsExemplarGoods or v-isweighed then
               do:
                 release buf_parts.
                 { trg/fndpartfifo.i
@@ -1793,7 +1828,7 @@ procedure rsrv-doc :
 
           if not available buf_parts
           then do:
-            if vIsExemplarGoods and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}) then
+            if (vIsExemplarGoods or v-isweighed) and (buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or buf_trn-doc.ext-doc-type = {&TDEDT_Spi_Vnesh}) then
             do:  /* если помарочный учет и партия не найдена */
               message "Просканирована групповая упаковка, не найдено партий для списания.~nНеобходимо сканировать потребительские упаковки"
                 view-as alert-box. 
