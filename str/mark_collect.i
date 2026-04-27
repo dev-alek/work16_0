@@ -178,7 +178,7 @@ v-attr-value = gdsoattr-value (input   {&attr-mark-collect-type},
                                      and bf_utd-lines.doc-id    = idoc-id
     no-error .
     define variable vLineNum as integer no-undo.
-    vLineNum = if available bf_utd-lines then bf_utd-lines.linenum else 1.
+    vLineNum = if available bf_utd-lines then (bf_utd-lines.linenum + 1) else 1.
     &else
     vLineNum = vLineNum + 1.
     &endif

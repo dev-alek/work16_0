@@ -136,6 +136,8 @@ class ibs.th.skt.ClientControl:
   end method.
   
   method public logical checkEnd ():
+     SESSION:ERROR-STACK-TRACE=YES.
+     
      define variable req  as ibs.th.skt.Commands.IRequest  no-undo.
      define variable resp as ibs.th.skt.Commands.IResponse no-undo.
      define variable vAvailProc as logical no-undo.
@@ -187,7 +189,7 @@ class ibs.th.skt.ClientControl:
                then . 
                else v-err-msg = "AppError в модуле {&FILE-NAME}" .
             end .
-            logWrite:LogStr = v-err-msg.
+            logWrite:LogStr = v-err-msg + exAppErrors:CallStack.
             vDelete = yes.
          end catch .
          catch exProErrors as class Progress.Lang.ProError :
