@@ -246,7 +246,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
           or tt-marking.box-qnty = 1
         : /* сначала копируем в БД потребительские упаковки */
       copyMark2DB(buffer tt-marking, ?).
-      
+
       /* Если КМ ранее была реализована или добавлена в документ,     */
       /* то разгруппируем упаковки с этой КМ на всех уровнях до верху */
         if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(tt-marking.sts)) or
@@ -264,37 +264,39 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
 
       vGtin     = getGtinByDM(tt-marking.mark) .
       vGtinQnty = getQntyCodeByGtin(vGtin).
-      for each buf_marking no-lock where
-               buf_marking.mark-parent = tt-marking.mark
-          break by buf_marking.mark
-          :
-        if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
-        do: 
-          /* если в упаковке есть КМ в "Ошибке"            */
-          /* и есть агрегат того же уровня с проданной КМ, */
-          /* то разгруппируем упаковку */
-          /*  */
-          for first buf_tt-marking no-lock where
-                     buf_tt-marking.mark-parent =  tt-marking.mark-parent
-                 and buf_tt-marking.mark        <> tt-marking.mark
-                 and buf_tt-marking.existKM
-          :
-            tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
-          end.  
-        end.
-      end.
-      if tt-marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
-      do:
-        /* если  упаковка в "Ошибке"            */
-        /* но на ее агрегате стоит признак проданной КМ, */
-        /* то разгруппируем эту упаковку, чтобы не продали упаковкой, */
-        /* т.к. на ней была Ошибка */
-        for first buf_tt-marking no-lock where
-                  buf_tt-marking.mark =  tt-marking.mark-parent
-              and buf_tt-marking.existKM
-        :
-          tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
-        end.  
+      if tt-marking.mark-parent <> "" then
+      do: 
+          for each buf_marking no-lock where
+                   buf_marking.mark-parent = tt-marking.mark
+              break by buf_marking.mark
+              :
+            if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
+            do: 
+              /* если в упаковке есть КМ в "Ошибке"            */
+              /* и есть агрегат того же уровня с проданной КМ, */
+              /* то разгруппируем упаковку */
+              for first buf_tt-marking no-lock where
+                         buf_tt-marking.mark-parent =  tt-marking.mark-parent
+                     and buf_tt-marking.mark        <> tt-marking.mark
+                     and buf_tt-marking.existKM
+              :
+                tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+              end.  
+            end.
+          end.
+          if tt-marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
+          do:
+            /* если  упаковка в "Ошибке"            */
+            /* но на ее агрегате стоит признак проданной КМ, */
+            /* то разгруппируем эту упаковку, чтобы не продали упаковкой, */
+            /* т.к. на ней была Ошибка */
+            for first buf_tt-marking no-lock where
+                      buf_tt-marking.mark =  tt-marking.mark-parent
+                  and buf_tt-marking.existKM
+            :
+              tt-marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+            end.  
+          end.
       end.
 
       /* перенесено из trndocmv-1c.p (ТЗ 7700183344 помарочное движение п.3.1.5.) */
