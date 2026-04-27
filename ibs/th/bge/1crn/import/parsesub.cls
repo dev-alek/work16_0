@@ -563,18 +563,6 @@ class ibs.th.bge.1crn.import.parsesub:
            ReceivedSubjectPublish(v-iSubject, v-iImpSub).
            publish "startStopGroupRec" from p-parent-handle.
         end.
-        when "marks":U 
-        then do:
-          if level < 2 // если загрузка не из в составе edoc
-          then do:          
-            GetChildren(hNoderef, (level + 1)).
-            if valid-object(impmarkEventHndlrObj) then
-            do:
-              impmarkEventHndlrObj:WriteDB().
-              delete object impmarkEventHndlrObj.
-            end.
-          end.
-        end.
         when "mark":U
         then do:
            if level < 3 // если загрузка не из в составе edoc
@@ -761,14 +749,6 @@ class ibs.th.bge.1crn.import.parsesub:
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).
         end.
-        when "ordansws" then do:
-          GetChildren(hNoderef, (level + 1)).
-          if valid-object(impordanswEventHndlrObj) then
-          do:
-            impordanswEventHndlrObj:sendNotification().
-            delete object impordanswEventHndlrObj.
-          end.
-        end.
         when "ordansw" then do:
           if not valid-object(ordanswSubjectObj) then ordanswSubjectObj = new ordansw ().
           if not valid-object(impordanswEventHndlrObj) then do :
@@ -866,6 +846,29 @@ class ibs.th.bge.1crn.import.parsesub:
       
       // после отработки GetChildrenSub() вызывает GetChildren() и ещё раз просматривает все дочерние элементы сущности верхнего уровня 
       GetChildren(hNoderef, (level + 1)).
+
+      /* Обработка охватывающих тегов одинаковых сообщений */
+      /* для выполнения действии после обработки одинаковых сообщений */
+      case hNoderef:name:
+        when "marks":U 
+        then do:
+          if level < 2 // если загрузка не из в составе edoc
+          then do:          
+            if valid-object(impmarkEventHndlrObj) then
+            do:
+              impmarkEventHndlrObj:WriteDB().
+              delete object impmarkEventHndlrObj.
+            end.
+          end.
+        end.
+        when "ordansws" then do:
+          if valid-object(impordanswEventHndlrObj) then
+          do:
+            impordanswEventHndlrObj:sendNotification().
+            delete object impordanswEventHndlrObj.
+          end.
+        end.
+      end case.
     end.
     
     catch exAppErrors as class Progress.Lang.AppError :
@@ -896,6 +899,7 @@ class ibs.th.bge.1crn.import.parsesub:
       input Subject as class ibs.th.bge.1crn.subjects.isubject, input EventHndlrImpSub as class ibs.th.bge.1crn.import.iimpsubject):
         
     ReceivedSubject:Publish(Subject, EventHndlrImpSub).
+    ibs.th.bge.1crn.import.impmsgs:writeSec(substitute ("Секция &1 элемент № &2", nameChildrenCurr, string (iNum))).
     
     catch exAppErrors as class Progress.Lang.AppError :
       MsgPrivate = EventHndlrImpSub:Msg .

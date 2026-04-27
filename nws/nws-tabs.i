@@ -466,6 +466,7 @@ abc-analysis~
 ,esys-datatype-imp~
 ,c-esys-datatype-imp~
 ,esys-pck-rcvd~
+,esys-pck-rcvd-err~
 ,esys-pck-sent~
 ,esys-route~
 ,ex-mark~
