@@ -3017,11 +3017,8 @@ end.
         ub.gds-dtl.doc-qnty
       with frame {&FRAME-NAME} . 
     end .
-    v-isweighed = WeighedProd(buf_goods.gds-code)
-              and varvalue > ""
-              and (EDOParSec:GetIsEDOForType(varvalue)
-                or EDOParSec:GetIsArticForType(varvalue))
-    .
+    
+    v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code) .
     
     if v-is-return
     and (EDOParSec:GetIsArticForType(varvalue)
@@ -3281,6 +3278,48 @@ end.
                       and buf_marking-lines.gds-code = buf_goods.gds-code) then 
           disable ub.gds-dtl.fact-qnty with frame {&frame-name}. 
       end. 
+      
+      if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or 
+         t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
+      do:
+          run isExemplarGoods in this-procedure 
+            (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+          if vIsExemplarGoods
+          or v-isweighed 
+          then do:
+            if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} and 
+               can-find(first buf_marking-lines no-lock where 
+                                buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                            and buf_marking-lines.gds-code = buf_goods.gds-code) then
+            do:  /* дл€ ѕ≈–≈ћ≈ў≈Ќ»я –ј—’ќƒ проверим есть ли марки по товару, и если есть, то кол-во редактировать нельз€ */
+              vRightChngQnty = false.  
+            end.
+            else
+            do:
+                vRightChngQntyCode = if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} 
+                    then 'actn_write-off_add-no-mark':U
+                    else 'actn_tdedt-ras-perem_add-no-mark':U.
+                { gbl/chk-actg.i
+                  v-cntxt-db-num
+                  v-cntxt-userid
+                  {&action-head-code-main}
+                  vRightChngQntyCode
+                  {&cntxt-object}
+                  t-doc.host-code
+                  t-doc.obj-type
+                  t-doc.obj-code
+                  0
+                  0
+                  0
+                  false
+                  vRightChngQnty
+                }
+            end.
+            if not vRightChngQnty then
+              disable ub.gds-dtl.fact-qnty with frame {&frame-name}.
+          end.
+      end.
+      
       if ptrlprop-expptrl = {&calc-petrol-weight}
         and v-fact-qnty-kg :sensitive in frame {&FRAME-NAME}
       then do:

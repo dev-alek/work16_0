@@ -1315,12 +1315,6 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
       return no-apply.
     end.
     
-    RUN gds-attr-value (
-            INPUT ub.goods.gds-code,
-            INPUT {&attr-mark-type},
-            OUTPUT varvalue,
-            OUTPUT vartype
-            ).      
     v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code) .
         
     run isExemplarGoods in this-procedure 
@@ -2817,27 +2811,6 @@ END.
 
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-dtl d-out-doc
-ON VALUE-CHANGED OF br-dtl IN FRAME d-out-doc
-DO:
-  define variable  p-type     as character no-undo .
- if available ub.goods then
-    run lineattr-value (
-      input   t-doc.doc-code ,
-      input   ub.goods.gds-code ,
-      input   {&lineattr-flora_ps},
-      output  flora-ps ,
-      output  p-type      )
-    .
-    
-  display flora-ps with frame {&frame-name} .
-
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 &Scoped-define SELF-NAME {&sort-clmn_6-br-dtl}
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL {&sort-clmn_6-br-dtl} d-out-doc
 ON LEAVE OF {&sort-clmn_6-br-dtl} IN BROWSE {&browse-name}
@@ -2861,12 +2834,6 @@ DO:
       and buf_goods.prod-type = ub.gds-dtl.prod-type
       and buf_goods.prod-code = ub.gds-dtl.prod-code.
     
-    RUN gds-attr-value (
-            INPUT buf_goods.gds-code,
-            INPUT {&attr-mark-type},
-            OUTPUT varvalue,
-            OUTPUT vartype
-            ).      
     v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code) .
     
     run isExemplarGoods in this-procedure 
@@ -3295,7 +3262,7 @@ define menu m-ptrl
     menu-item m-ptrl-2   label "Удалить документы сверки и расфиксировать книжное кол-во"  accelerator "alt-2".
 { gbl/f2.i br-dtl " " " " parparentproc }
 { gbl/hot-key.i b-mark }
-{ str/sch-line.i doc-line br-dtl }
+{ str/sch-line.i doc-line br-dtl " " " " out-doc }
 
 IF mImagePh THEN
 DO:
@@ -6872,11 +6839,7 @@ do while varlns-cnt <= num-entries (varnotes):
   else do : 
     run isExemplarGoods in this-procedure 
        (t-doc.obj-type, t-doc.obj-code, bf_goods.gds-code, output vIsExemplarGoods).
-    v-isweighed = WeighedProd(bf_goods.gds-code)
-              and varvalue > ""
-              and (EDOParSec:GetIsEDOForType(varvalue)
-                or EDOParSec:GetIsArticForType(varvalue))
-    .
+    v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, bf_goods.gds-code) .
     if vIsExemplarGoods
     or v-isweighed
     then do: 
@@ -8612,11 +8575,11 @@ display varcontract-prn-code with frame {&frame-name}.
 enable b-contr-lkp with frame {&frame-name} .
 b-contr-lkp:column =  varcontract-prn-code:column + length(trim(varcontract-prn-code)) + 1 .
 
-if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
-   t-doc.internal = true
-   then do:
-     hide varcontract-prn-code b-contr-lkp in frame {&frame-name} .
-   end.
+  if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} or
+    t-doc.internal = true
+  then do:
+    hide varcontract-prn-code b-contr-lkp in frame {&frame-name} .
+  end.
    
   if v-is-return
   then do :

@@ -32,8 +32,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
 
   { cmp/str-glbl.i class }
   { cmp/library.i  class }
-  { gbl/attr-lib.i class}
-  { utl/gtin.i class }
+  { str/utd-typemark.i class }
   
   define temp-table buf_fbr-doc like ub.fbr-doc.
   
@@ -201,6 +200,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
     
     define variable v-value as character no-undo .
     define variable v-type as character no-undo .
+    define variable isVarWeight as logical no-undo init no .
 
     sw:start-element ("dishs").    
     for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code
@@ -212,6 +212,8 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
         and buf_gds.prod-type = buf_fbr-line.prod-type.
       
       ii = ii + 1.
+      
+      isVarWeight = WghProdVariable(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code, buf_gds.gds-code).
       
       &scop proc-name gds-attr-value
       {&run_proc_attr-lib}
@@ -238,7 +240,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
         write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
         write-data-element ("rcp-code", buf_fbr-line.recipe-code).
         
-        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value) and
+        if (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value) or isVarWeight) and
            can-find(first buf_marking-lines where 
                           buf_marking-lines.gds-code = buf_gds.gds-code
                       and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
@@ -279,6 +281,8 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
             buf_gds.artic = buf_fbr-line.artic 
         and buf_gds.prod-code = buf_fbr-line.prod-code
         and buf_gds.prod-type = buf_fbr-line.prod-type.
+      
+      isVarWeight = WghProdVariable(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code, buf_gds.gds-code).
 
       find first buf_recipe no-lock where
             buf_recipe.recipe-code = buf_fbr-line.recipe-code no-error.
@@ -334,6 +338,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
         write-data-element ("u-price-s", string-mth (round (buf_fbr-line.price-sum-rubl , 2))).
         if available buf_doc-line-attr
         and buf_doc-line-attr.attr-value > ""
+        and not isVarWeight
         then do :
           sw:start-element ("marks").
           GT_ :
@@ -353,7 +358,7 @@ class ibs.th.bge.1crn.subjects.fbr-gd-doc inherits ibs.th.gbl.sys.objth implemen
           end .
           sw:end-element ("marks").
         end .
-        if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value) and
+        if (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code):GetIsEDOForType(v-value) or isVarWeight) and
            can-find(first buf_marking-lines where 
                           buf_marking-lines.gds-code = buf_gds.gds-code
                       and buf_marking-lines.obj-type = buf_fbr-doc.obj-type

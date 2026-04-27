@@ -1089,12 +1089,15 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       buf_goods.prod-code = buf_doc-line.prod-code and
       buf_goods.prod-type = buf_doc-line.prod-type  :
     
+      isVarWeight = WghProdVariable(buf_doc-line.obj-type, buf_doc-line.obj-code, buf_goods.gds-code).
+      
       find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
                                              and buf_doc-line-attr.gds-code = buf_goods.gds-code
                                              and buf_doc-line-attr.attr-code = "GTIN-qnty"
                                              no-error .
       if available buf_doc-line-attr
       and buf_doc-line-attr.attr-value > ""
+      and not isVarWeight
       then do :
         sw:start-element ("marks").
         GT_ :
@@ -1128,8 +1131,6 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
         end.
         define variable vAvailMarks as logical no-undo.
         
-        isVarWeight = WghProdVariable(buf_doc-line.obj-type, buf_doc-line.obj-code, buf_goods.gds-code).
-  
         for each buf_parts no-lock where buf_parts.out-code  = buf_doc-line.doc-code
                                      and buf_parts.artic     = buf_doc-line.artic
                                      and buf_parts.prod-type = buf_doc-line.prod-type

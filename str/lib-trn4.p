@@ -2291,17 +2291,7 @@ define variable v-codident as character no-undo.
            and buf_goods.prod-type = buf_gds-dtl.prod-type no-lock:
         run isExemplarGoods in g#attr-lib 
           (buf_trn-doc.obj-type, buf_trn-doc.obj-code, buf_goods.gds-code, output v-is-exemplar-goods).
-        run gds-attr-value in g#attr-lib
-          (input buf_goods.gds-code,
-           input {&attr-mark-type},
-           output varvalue,
-           output vartype
-          ).
-        v-isweighed = WeighedProd(buf_goods.gds-code)
-                  and varvalue > ""
-                  and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsEDOForType(varvalue)
-                    or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_trn-doc.obj-type, buf_trn-doc.obj-code):GetIsArticForType(varvalue))
-        .  
+        v-isweighed = WghProdVariable(buf_trn-doc.obj-type, buf_trn-doc.obj-code, buf_goods.gds-code) .
         if v-isweighed
         then do :
           v-mark-weight = 0 .
@@ -2317,6 +2307,26 @@ define variable v-codident as character no-undo.
           end .
           if buf_gds-dtl.doc-qnty <> v-mark-weight then
           do:
+            { gbl/chk-actg.i
+              v-cntxt-db-num
+              v-cntxt-userid
+              {&action-head-code-main}
+              'actn_write-off_add-no-mark':U
+              {&cntxt-object}
+              buf_trn-doc.host-code
+              buf_trn-doc.obj-type
+              buf_trn-doc.obj-code
+              0
+              0
+              0
+              false
+              varlog
+            }
+            if not varlog then do :
+              message "В документе присутствуют товары с помарочной прослеживаемостью в Честном Знаке. Для закрытия списания добавьте марки" view-as alert-box .
+              return error.
+            end .
+            
             v-message = substitute(
                 "&1~nПо товару &2 &3 списывается &4 просканировано &5", 
                 v-message, buf_goods.artic, buf_goods.gds-name, buf_gds-dtl.doc-qnty, v-mark-weight).
@@ -2338,6 +2348,26 @@ define variable v-codident as character no-undo.
           end .
           if buf_gds-dtl.doc-qnty <> v-scan-qnty then
           do:
+            { gbl/chk-actg.i
+              v-cntxt-db-num
+              v-cntxt-userid
+              {&action-head-code-main}
+              'actn_write-off_add-no-mark':U
+              {&cntxt-object}
+              buf_trn-doc.host-code
+              buf_trn-doc.obj-type
+              buf_trn-doc.obj-code
+              0
+              0
+              0
+              false
+              varlog
+            }
+            if not varlog then do :
+              message "В документе присутствуют товары с помарочной прослеживаемостью в Честном Знаке. Для закрытия списания добавьте марки" view-as alert-box .
+              return error.
+            end .
+            
             v-message = substitute(
                 "&1~nПо товару &2 &3 списывается &4 просканировано &5", 
                 v-message, buf_goods.artic, buf_goods.gds-name, buf_gds-dtl.doc-qnty, v-scan-qnty).
