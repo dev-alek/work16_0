@@ -513,12 +513,15 @@ class ibs.th.ref.code.code_trg final:
           end.
           else if icode eq "XML_UPD"
           then do:
-             MaxLevel = MaxLevel + 1.
-             formLable(1, 1, "Код").
-             formLable(1, 3, "Файл").
-             formLable(1, 4, "Хеш").
-             formLable(1, 5, "Версия метаданных").
-             formLable(1, 6, "БД").
+             MaxLevel = MaxLevel + 2.
+             formLable(1, 1,"БД ").
+
+             formLable(2, 1, "Код").
+             formLable(2, 3, "Файл").
+             formLable(2, 4, "Хеш").
+             formLable(2, 5, "Версия метаданных").
+             formLable(2, 6, "БД").
+
           end.
 
        end.

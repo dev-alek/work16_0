@@ -102,17 +102,22 @@ do mdbver = mdbver_old + 1 to 999999999:
             
 /*      end.*/
 
-       create code no-error.
+       CODE_UPD:
+       do transaction on error undo CODE_UPD, leave CODE_UPD:
+
+       create code  no-error.
          assign 
-         code.parent    = "XML_UPD"
-         code.code      = substitute("XML&1", string(now))
+         code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+         code.code      = string(now)
          code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
          code.misc1     = v-md5-signature
          code.misc2     = string(mdbver)
          code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
          code.nwsgbd    = yes.
+         code.nwsubd    = yes.
          .
        f_load = yes.
+       end.      
       return-value = "".
       vimport:xmldom-clear().
    end.
@@ -163,36 +168,43 @@ then do:
 
    end.
 
+   CODE_UPD2:
+   do transaction on error undo CODE_UPD2, leave CODE_UPD2:
+
    find last code no-lock where code.CodeValue = "code.xml" no-error.
    if available code and code.misc1 <> v-md5-signature
          then do:
-         create code.
+         create code no-error.
             assign 
-            code.parent    = "XML_UPD"
-            code.code      = substitute("XML&1", string(now))
+            code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+            code.code      = string(now)
             code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
             code.misc1     = v-md5-signature
             code.misc2     = string(mdbver)
             code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
             code.nwsgbd    = yes.
+            code.nwsubd    = yes.
             .
    f_load = yes.
    end.
 
    if not available code 
          then do:
-         create code.
+         create code  no-error.
             assign 
-            code.parent    = "XML_UPD"
-            code.code      = substitute("XML&1", string(now))
+            code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+            code.code      = string(now)
             code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
             code.misc1     = v-md5-signature
             code.misc2     = string(mdbver)
             code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
             code.nwsgbd    = yes.
+            code.nwsubd    = yes.
             .
    f_load = yes.
    end.
+
+   end.      
 
    return-value = "".
    vimport:xmldom-clear().
@@ -200,7 +212,12 @@ end.
 
 if f_load = no
         then do:
-	find last code no-lock where code.parent = "XML_UPD" no-error.
+
+   CODE_UPD3:
+   do transaction on error undo CODE_UPD3, leave CODE_UPD3:
+
+/*	find last code no-lock where code.parent = "XML_UPD" no-error. */
+        find last code no-lock where code.parent BEGINS "XML_UPD" no-error.
         mfile    = search(substitute("upd/&1.xml", string(mdbver_old, "999999999"))).
         mfilemd5 = search(substitute("upd/&1.md5", string(mdbver_old, "999999999"))).
         if mfile ne ? and mfilemd5 ne ? then do:
@@ -209,21 +226,21 @@ if f_load = no
 	        input stream md5in close.
 	        run gbl/md5.p (input  mfile, output v-md5-signature) no-error.
 	        if available code and code.misc1 ne v-md5-signature then do:
-		        create code.
+		        create code no-error.
 		        assign
-		        code.parent    = "XML_UPD"
-		        code.code      = substitute("XML&1", string(now))
+                        code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+		        code.code      = string(now)
 		        code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
 		        code.misc1     = v-md5-signature
 		        code.misc2     = string(mdbver)
 		        code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
-                        code.nwsgbd    = yes.
+                        code.nwsgbd    = yes.                              
+                        code.nwsubd    = yes.
 		        .
 	        end.
-/*        message f_load  mfile  view-as alert-box.*/
 	end.
+   end.
 end.
-
 
 
 define variable v-err-msg as character no-undo .  
