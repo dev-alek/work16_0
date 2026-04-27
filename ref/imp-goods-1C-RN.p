@@ -1107,6 +1107,7 @@ end.
     RUN gds-attr-write (v-nbc, {&attr-weighed-gds}, "yes").  
   end.
   else if p-GdsObj:weighed-product = 0
+       or p-GdsObj:weighed-product = ?
   then do :
     RUN gds-attr-delete (v-nbc, {&attr-weighed-gds}, output v-attr-del).     
   end.
