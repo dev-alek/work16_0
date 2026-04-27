@@ -42,7 +42,7 @@ define variable vss-description as character no-undo init "Сканирование акцизных
 { utl/gtin.i     }
 { gbl/waitfram.i noprocess }
 { gbl/getcntxt.i def }
-
+{ str/utd-typemark.i }
 
 /* Parameters Definitions ---                                           */
 
@@ -83,8 +83,11 @@ define variable marking    as class ibs.th.skt.ControlledClients.marking.
 
 define variable v-free-qnty as decimal no-undo .
 define variable v-doc-qnty as decimal no-undo .
-define variable v-scan-qnty as integer no-undo .
+define variable v-scan-qnty as decimal no-undo .
 define variable v-status-message as character no-undo .
+
+define variable v-mark-weight as decimal no-undo .
+define variable v-isweighed as logical no-undo .
 
 define stream str-err .
 define stream in-stream.
@@ -458,6 +461,30 @@ PROCEDURE CrCheckMark :
     return.
   end .
   
+  &scop proc-name gds-attr-value
+  {&run_proc_attr-lib}
+  ( buf_goods.gds-code,
+   {&attr-mark-type},
+   output v-par-val,
+   output v-par-type
+  ).
+  v-isweighed = WeighedProd(buf_goods.gds-code)
+            and v-par-val > ""
+            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
+              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
+  .
+  if v-isweighed
+  then do :
+    v-mark-weight = MarkWeight(buf_marking.mark) .
+    if v-mark-weight = 0
+    or v-mark-weight = ?
+    then do :
+      message ("Марка не может быть добавлена, т.к. в БД отсутствует ее вес.")
+      view-as alert-box .
+      return.
+    end .
+  end .
+  
   find first tt-marking-lines where buf_marking.mark begins tt-marking-lines.mark no-error.
   if available tt-marking-lines
   then do :
@@ -492,7 +519,8 @@ PROCEDURE CrCheckMark :
     tt-marking-lines.gds-name = buf_goods.gds-name
     tt-marking-lines.obj-type = v-cntxt-obj-type
     tt-marking-lines.obj-code = v-cntxt-obj-code
-    tt-marking-lines.box-qnty = v-GTIN-qnty
+    tt-marking-lines.box-qnty = v-GTIN-qnty when not v-isweighed
+    tt-marking-lines.box-qnty = v-mark-weight when v-isweighed
     tt-marking-lines.doc-level = 1
   .
   
@@ -502,8 +530,13 @@ PROCEDURE CrCheckMark :
     assign buf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .
   end .
   
-  assign v-scan-qnty = v-scan-qnty + integer(v-GTIN-qnty) .
-  
+  if v-isweighed
+  then do :
+    assign v-scan-qnty = v-scan-qnty + v-mark-weight .
+  end .
+  else do :
+    assign v-scan-qnty = v-scan-qnty + integer(v-GTIN-qnty) .
+  end .
   
 end.
 

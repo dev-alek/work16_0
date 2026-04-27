@@ -472,12 +472,6 @@ PROCEDURE CrCheckMark :
   end .
   v-gds-code = getGdsCodeByGtin(v-GTIN) .
   v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
-  v-isweighed = WeighedProd(v-gds-code) .
-  if v-isweighed and 
-     available buf_marking
-  then do :
-      v-mark-weight = MarkWeight(buf_marking.mark).
-  end.    
   
   if v-gds-code = ?
   then do :
@@ -506,8 +500,30 @@ PROCEDURE CrCheckMark :
    output v-par-val,
    output v-par-type
   ).
-  
+  v-isweighed = WeighedProd(buf_goods.gds-code)
+            and v-par-val > ""
+            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
+              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
+  .
+  if v-isweighed
+  then do : 
+    if available buf_marking
+    then do :
+      v-mark-weight = MarkWeight(buf_marking.mark).
+      if v-mark-weight = 0
+      or v-mark-weight = ?
+      then do :
+        run dispmessage ("Марка не может быть добавлена, т.к. в БД отсутствует ее вес.").
+        return.
+      end .
+    end .
+    else do :
+      run dispmessage ("Марка не найдена в БД.").
+      return.
+    end .
+  end.  
   if not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val)
+  and not v-isweighed
   then do :
     run dispmessage ("Сканирование марок данного товара для производства не требуется").
     return.
@@ -713,7 +729,13 @@ PROCEDURE CrCheckMark :
   find current buf_marking exclusive-lock no-error .
   if locked buf_marking
   then do :
-    assign tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty - v-GTIN-qnty .
+    if tt-fbr-line.weighed
+    then do :
+      assign tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty - v-mark-weight .
+    end .
+    else do :
+      assign tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty - v-GTIN-qnty .
+    end .
     if tt-fbr-line.ingr-qnty = 0
     then do :
       assign v-num-str = v-num-str - 1 .
