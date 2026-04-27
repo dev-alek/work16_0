@@ -337,7 +337,8 @@ DO:
         define variable rs-list-method as character no-undo init "goods".
         define variable tot-lns        as integer   init ? no-undo.
         define variable v-no-hist      as integer   no-undo init -1.
-
+        define variable v-first        as logical   no-undo .
+        
             run ref/gds-ref.p (
                 input parParentProc
                 ,input "b-mark,b-sel"
@@ -359,10 +360,18 @@ DO:
                     view-as alert-box QUESTION buttons YES-NO update vAnswer.
                 if not vAnswer then return.
             end.
-
+            find first gds-list no-error .
+            if available (gds-list) then v-first = true .
             if ref-list <> "" then
             do:
+                empty temp-table gds-list .
+                empty temp-table gds-list-hist .
+/*                s-notes = "" .     */
+/*                t-str = "" .       */
+/*                Goods-Editor = "" .*/
+                
                 v-recs = num-entries (ref-list).
+                _next:
                 do num-rec = 0 to v-recs:
 
                     if v-recs = 1 then
@@ -373,41 +382,51 @@ DO:
                     do:
                         v-ref-rec = integer (entry (num-rec, ref-list)).
                         find goods where recid (goods) = v-ref-rec no-lock.
+                        find first gds-list where gds-list.gds-code = goods.gds-code no-error .
+                        if not available (gds-list) then do:
                         create gds-list .
                         buffer-copy goods to gds-list .
+                        end.
+                        else next _next .
                     end.
+
                     if v-recs = 1 then
                     do:
                         assign
                             v-temp-seq = v-seq
                             v-line     = 0
-                            dsp-rs     = substitute("Товар :&1 &2", goods.gds-name, stat-line(rs-status))
                             v-item     = '':U
                             v-tbl-name = {&table_goods}
                             v-bh       = buffer goods:handle
                             v-tot-lns  = tot-lns
                             .
+                            if not v-first then dsp-rs     = substitute("Товар :&1 &2", goods.gds-name, stat-line(rs-status)) .
+                            else dsp-rs     = substitute("Товар :&1 ", goods.gds-name) .
                     end.
                     else
                     do:
+                        
                         if num-rec = 0 then
                         do:
+                            if not v-first then do:
                             assign
                                 v-temp-seq = v-seq
                                 v-line     = 0
-                                dsp-rs     = substitute("Товары : &1", stat-line(rs-status))
                                 v-item     = '':U
                                 v-tbl-name = '':U
                                 v-bh       = ?
                                 v-tot-lns  = tot-lns
                                 .
+                                dsp-rs     = substitute("Товары : &1", stat-line(rs-status)) .
+                            end.
                         end.
                         else
                         do:
                             assign
                                 v-temp-seq = v-seq - 1
                                 v-line     = num-rec
-                                dsp-rs     = substitute("код &1 &2 &3&4 &5", goods.gds-code, goods.artic, goods.prod-type, goods.prod-code, goods.gds-name)
+                                dsp-rs     = substitute("&1 ", goods.gds-name) 
+/*                                dsp-rs     = substitute("код &1 &2 &3&4 &5", goods.gds-code, goods.artic, goods.prod-type, goods.prod-code, goods.gds-name)*/
                                 v-item     = '':U
                                 v-tbl-name = {&table_goods}
                                 v-bh       = buffer goods:handle
@@ -416,6 +435,7 @@ DO:
                         end.
                     end.
                     v-no-hist = (if num-rec = 1 then 0 else num-rec).
+                    if dsp-rs <> "" then do:
                     run create-gds-list-hist in this-procedure(input {&add-def}
                         , input-output v-temp-seq
                         , input v-line
@@ -429,6 +449,7 @@ DO:
                         , input v-bh
                         ).
                     if num-rec = 0 or v-recs = 1 then v-seq  = v-temp-seq.
+                    end.
                 end.
             end.
         lns-cnt = 0 .
