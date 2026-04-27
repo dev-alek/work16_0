@@ -799,40 +799,54 @@ PROCEDURE save_update :
     then do :
       p-mark = v-mark .
     end .
-    
-    v-GTIN = getGtinByDM(p-mark) .
-    if v-GTIN = "" then
+
+    find first marking where marking.mark begins vcodident
+      and vcodident > ""
+      no-lock no-error  .
+
+    if not avail marking or marking.unit-ext <> "LEVEL2" then
     do:
-      run dispmessage ("Марка не распознана.").
-      return error.
+      v-GTIN = getGtinByDM(p-mark) .
+      if v-GTIN = "" then
+      do:
+        run dispmessage ("Марка не распознана.").
+        return error.
+      end.
+      v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
+      if v-cis-gds-code = 0 or v-cis-gds-code = ? then
+      do:
+        run dispmessage ("Не определен товар.").
+        return error.
+      end.
+      if avail buf_goods and buf_goods.gds-code <> v-cis-gds-code then
+      do:
+        find first buf_mark_goods where
+                   buf_mark_goods.gds-code = v-cis-gds-code no-lock no-error.
+        run dispmessage (substitute("Просканированная марка принадлежит другому товару, необходимо сканировать товар &1 &2.", buf_goods.gds-code, buf_goods.gds-name)).
+        return error.
+      end.
+      find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
+                                      and bf_prod-bc.bc-on
+                                      no-error.
+      if not available bf_prod-bc
+      then do :
+        run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
+        return .
+      end .
+      find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
+      if not available bf_bar-code
+      then do :
+        run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
+        return .
+      end .
+
+      if bf_bar-code.cli-base-rate <> 1 and can-do({&expense_write-off}, t_doc.doc-type) and
+         v-free-qnty < bf_bar-code.cli-base-rate then
+      do: /* отсканирована упаковка и док-т расхода или списания и кол-во в упаковке < книжного остатка*/
+        run dispmessage ("Марка групповой упаковки не может быть добавлена в документ, т.к. будет превышено количество товара по документу.~nСканируйте потребительские упаковки").
+        return.
+      end.
     end.
-    v-cis-gds-code = getGdsCodeByGtin(v-GTIN) .
-    if v-cis-gds-code = 0 or v-cis-gds-code = ? then
-    do:
-      run dispmessage ("Не определен товар.").
-      return error.
-    end.
-    if avail buf_goods and buf_goods.gds-code <> v-cis-gds-code then
-    do:
-      find first buf_mark_goods where
-                 buf_mark_goods.gds-code = v-cis-gds-code no-lock no-error.
-      run dispmessage (substitute("Просканированная марка принадлежит другому товару, необходимо сканировать товар &1 &2.", buf_goods.gds-code, buf_goods.gds-name)).
-      return error.
-    end.
-    find first bf_prod-bc no-lock where bf_prod-bc.b-str = v-GTIN
-                                    and bf_prod-bc.bc-on
-                                    no-error.
-    if not available bf_prod-bc
-    then do :
-      run dispmessage ("В системе не найден доп. код " + v-GTIN + " (GTIN)").
-      return .
-    end .
-    find first bf_bar-code no-lock where bf_bar-code.b-code = bf_prod-bc.b-code no-error .
-    if not available bf_bar-code
-    then do :
-      run dispmessage ("В системе не найден бар-код " + string(bf_prod-bc.b-code) + "!!!").
-      return .
-    end .
 
     if can-find(bf_marking-lines no-lock where bf_marking-lines.mark = p-mark
                                            and bf_marking-lines.out-code = t_doc.doc-code)
@@ -841,17 +855,6 @@ PROCEDURE save_update :
       run dispmessage ("КМ добавлен в документ ранее").
       return .
     end . 
-
-    if bf_bar-code.cli-base-rate <> 1 and can-do({&expense_write-off}, t_doc.doc-type) and
-       v-free-qnty < bf_bar-code.cli-base-rate then
-    do: /* отсканирована упаковка и док-т расхода или списания и кол-во в упаковке < книжного остатка*/
-        run dispmessage ("Марка групповой упаковки не может быть добавлена в документ, т.к. будет превышено количество товара по документу.~nСканируйте потребительские упаковки").
-        return.
-    end.
-
-    find first marking where marking.mark begins vcodident
-      and vcodident > ""
-      no-lock no-error  .
 
     if v-is-return then 
     do:
@@ -1002,6 +1005,13 @@ PROCEDURE save_update :
         run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",thMarkSts:GetLabel(marking.sts))).
         return.
       end.
+      
+      if marking.unit-ext = "LEVEL2" and
+        t_doc.ext-doc-type = {&TDEDT_Spi_Vnesh}
+      then do:
+        run dispmessage ("Некорректный тип упаковки. Сканируйте КМ групповой или потребительской упаковки.").
+        return.
+      end.
 
       case t_doc.ext-doc-type:
       when {&TDEDT_Ras_Vnesh} then
@@ -1111,7 +1121,7 @@ PROCEDURE save_update :
       end.
       end case.
       
-      if bf_bar-code.cli-base-rate <> 1 then
+      if avail bf_bar-code and bf_bar-code.cli-base-rate <> 1 then
       do:     /* отсканирована упаковка */
         for each buf_marking where
                  buf_marking.mark-parent begins p-mark

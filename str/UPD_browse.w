@@ -2170,7 +2170,7 @@ ON CHOOSE OF b_prov-finish IN FRAME d-utd /* Проверка завершена */
          if      vFlagErrorMarkCheck
             and  vFlagErrorBarCheck
          then do:
-            message "Ни одна марка не просканирована и ни один штрих-код не просканирован, просканируйте штрих-коды/марки или откажите в поставке"
+            message "Ни одна марка не просканирована и ни один штрих-код не просканирован. Просканируйте штрих-коды/марки или откажите в поставке."
                   view-as alert-box.
                return no-apply .
          end.
@@ -4946,6 +4946,7 @@ PROCEDURE mark-temp :
    define buffer buf_marking-attr for ub.marking-attr.
    define variable v-db-num       as integer   no-undo .
    define variable v-doc-id       as integer   no-undo .
+   define variable vType          as character no-undo .
   
    empty temp-table  tt-utd-lines-filtr.
    run add-filter(?  ,
@@ -4965,6 +4966,16 @@ PROCEDURE mark-temp :
                                                         buf_utd-lines.LineNum,
                                                         "manual-selection",
                                                         "no")).            
+      if x_utd-lines.isMarking then
+      do:
+         &scop proc-name gds-attr-value
+                {&run_proc_attr-lib}
+                    ( buf_utd-lines.gds-code,
+                      {&attr-mark-type},
+                       output x_utd-lines.markType,
+                       output vtype
+                    ).
+      end.
                                      
       if not x_utd-lines.isArtic and not x_utd-lines.isMarking
       then do:
@@ -5115,13 +5126,14 @@ PROCEDURE mark-temp :
             if not avail buf_marking or buf_marking.unit-ext = "UNIT" then
             do:
                X_utd-lines.qnty-mark = X_utd-lines.qnty-mark + 1 .
-               if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then
-               do: 
+               if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) and
+                  (X_utd-lines.qnty-scan < X_utd-lines.Quantity or
+                   (X_utd-lines.markType <> "tabak" and X_utd-lines.markType <> "stiki")) then
+               do: /* для табака и стиков факт. кол-во считаем пока не достигли кол-ва по док-ту */
                  if X_utd-lines.isWeight
                  and available buf_marking
                  then do:                    
                     X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + MarkWeight(buf_marking.mark).
-                    /*else X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1.*/
                  end.     
                  else X_utd-lines.qnty-scan = X_utd-lines.qnty-scan + if available buf_marking then buf_marking.box-qnty else 1.
                  find first buf_utd-lines-attr where 
@@ -5624,17 +5636,14 @@ PROCEDURE save_mark :
                                         vCheck = tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
                                      end.
                                  end.
-                                 /* Проверим, если все марки упаковки проверены, то надо сменить статус упаковки на "Проверен" */
-                                 if tree:checkedAllMarksOfUpakUTD(buf_marking.mark-parent, buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id)
-                                 then do:
-                                    for first parent_utd-marking-lines exclusive-lock where 
-                                              parent_utd-marking-lines.mark = buf_marking.mark-parent 
-                                          and parent_utd-marking-lines.db-num = buf_utd-marking-lines.db-num 
-                                          and parent_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id
-                                    :
-                                      parent_utd-marking-lines.sts   = Marking:Checked_:KeyIntDB.  
-                                    end.  
-                                 end.
+                                 /* Проверим, если все марки упаковки проверены,                   */
+                                 /* то надо сменить статус упаковки и ее "родителей" на "Проверен" */
+                                 tree:StatusUpUTD(
+                                    buf_marking.mark-parent, 
+                                    buf_utd-marking-lines.db-num, 
+                                    buf_utd-marking-lines.doc-id,
+                                    Marking:Checked_:KeyIntDB
+                                 ).
                               end.
                               else do:
                                  empty temp-table tt-marking-lines .

@@ -74,6 +74,7 @@ define temp-table tt-utd-lines like ub.utd-lines
   field isWeight    as logical /* весовой товар */
   field isVarWeight as logical /* товар с переменным весом */
   field isSelect    as logical
+  field markType    as character /* тип маркировки */
   field PieceTTH    as character
   field PieceFact   as character  
   index pi  db-num doc-id LineNum

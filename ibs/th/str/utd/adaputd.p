@@ -234,13 +234,24 @@ do:
           no-lock:
             if vIsWeight then v-q = v-q + MarkWeight(buf_utd-marking-lines.mark).
             else do: 
-             /* в fact считаем марки из упаковки проверенные, проданные и добавленные в док-т */
-             v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
-             do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait):
-               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait))).  
+             find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark no-lock no-error.
+             if buf_utd-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and
+                buf_marking.box-qnty <> ? then
+             do:   
+               /* Попробум в fact брать из кол-ва по марке, если марка в статусе "Проверен", */
+               /* т.к. когда лок. статус марки "Ошибка", а глоб. статус - "Проверен",        */
+               /* то она не попадает в fact, хотя считается принятой                         */
+               v-q = v-q + buf_marking.box-qnty.
              end.
-             do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Doc_Status):
-               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Doc_Status))).  
+             else do:
+               /* в fact считаем марки из упаковки проверенные, проданные и добавленные в док-т */
+               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
+               do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait):
+                 v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait))).  
+               end.
+               do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Doc_Status):
+                 v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Doc_Status))).  
+               end.
              end.
             end.
         end.      

@@ -49,6 +49,8 @@
   
   if available buf_marking
   then do :
+    if buf_marking.unit-ext = "LEVEL2" then
+      return "Неизвестный формат марки.".
     v-GTIN = getGtinByDM(buf_marking.mark) .
   end .
   else do :

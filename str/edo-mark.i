@@ -137,7 +137,7 @@ function addMarkforUtd returns recid
                                    getLevelMotpByCodId(marking.mark)
                                 else marking.unit-ext
            marking.box-qnty   = vQnty
-           marking.unit       = getLevelUTDByCodId(marking.mark)
+           marking.unit       = if marking.unit-ext = "LEVEL2" then "КИТУ" else getLevelUTDByCodId(marking.mark)
          .
 /*         marking.unit-ext = utd-lines.UnitCode .*/
          /* BTS-1134: не понятно, зачем статус марки с "Ошибка" меняется на ? */

@@ -331,7 +331,7 @@ DEFINE VARIABLE f-qnty-unit AS INTEGER FORMAT "->>>,>>>,>>9":U INITIAL 0
 
 DEFINE VARIABLE F-text AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
-     SIZE 80.5 BY 1.25
+     SIZE 100 BY 1.25
      FGCOLOR 12  NO-UNDO.
 
 /*DEFINE VARIABLE qnty-bar-code AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 0*/
@@ -2200,7 +2200,11 @@ FUNCTION getStatusName RETURNS CHARACTER
         return substitute("&1_&2",StatusTHName(p-sts-loc),StatusTHName(c-marking.sts)).
     end.
     else 
-      return if p-sts-loc = marking:Checked_:KeyIntDB then StatusTHName(p-sts-loc) else StatusTHName(p-sts-glob). 
+      return if p-sts-loc = marking:Checked_:KeyIntDB    and 
+                p-sts-glob <> marking:Ungrouped:KeyIntDB and 
+                p-sts-glob <> marking:MarkError:KeyIntDB
+             then StatusTHName(p-sts-loc) 
+             else StatusTHName(p-sts-glob). 
 
 END FUNCTION.
 
@@ -2556,9 +2560,29 @@ PROCEDURE scan-mark :
         
                 end. /*for first buf_utd-marking-lines no-lock where buf_utd-marking-lines.doc-id = X_marking.doc-id*/
                 recid_mark = recid (X_marking) .
-                if X_marking.sts-utd = Marking:Checked_:KeyIntDB then
+                if X_marking.isWeight then
+                do:
+                    f-text = "Просканированная марка по товару с переменным весом. Просканируйте марку в основном окне УПД." .
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" . 
+                    return no-apply.
+                end.               
+                else if X_marking.sts-utd = Marking:Checked_:KeyIntDB then
                 do:
                     f-text = "          Марка уже проверена, просканируйте следующую" .
+                    display F-text with frame {&frame-name}.
+                    v-mark:screen-value = "" .
+                    v-mark = "" . 
+                    return no-apply.
+                end. /*if X_marking.sts-utd = Marking:Checked_:KeyIntDB then*/
+                else if X_marking.sts-utd = Marking:Ungrouped:KeyIntDB then
+                do:
+                    f-text = substitute(
+                      "&1 упаковка разгруппирована, просканируйте марку &2 упаковки.",
+                      if X_marking.unit-ext = "LEVEL1" then "Групповая" else "Транспортная",
+                      if X_marking.unit-ext = "LEVEL1" then "потребительской" else "групповой"
+                    ).
                     display F-text with frame {&frame-name}.
                     v-mark:screen-value = "" .
                     v-mark = "" . 
@@ -2689,25 +2713,17 @@ PROCEDURE scan-mark :
                                                 message "Упаковка с маркой " + buf_utd-marking-lines.mark + " разгруппирована."
                                                     view-as alert-box.
                                             end.
-                                            /*Проставили статус у блока*/
-                                            find first X_marking exclusive-lock where X_marking.mark = ub.marking.mark no-error .
-                                            if available (X_marking) then 
-                                            do:
-                                                recid_mark = recid (X_marking) .
-                                                X_marking.stts = StatusTHName(Marking:Ungrouped:KeyIntDB) . 
-                                                X_marking.stts-utd = StatusTHName(Marking:UnknowSts:KeyIntDB) .
-                                                X_marking.sts = Marking:Ungrouped:KeyIntDB . 
-                                                X_marking.sts-utd = Marking:UnknowSts:KeyIntDB .
-                                            end.    
+                                            /* Разгруппируем упаковки в tt-таблице */
+                                            run ungroupTT in this-procedure (ub.marking.mark).
+                                            /* Проставим статус "Проверен" у просканированной марки */
                                             find first X_marking-line where X_marking-line.mark = buf_marking.mark no-error .
                                             if available (X_marking-line) then 
                                             do:
                                                 X_marking-line.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
                                                 X_marking-line.sts-utd = Marking:Checked_:KeyIntDB .
                                                 buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .
-                                            end.                                              
+                                            end.
                                             br-mark :refresh().
-                                            reposition br-mark to recid recid_mark no-error .
                                             {&OPEN-QUERY-br-mark-item}
                                             br-mark-item:refresh () no-error .
                                         /*              end.*/
@@ -2738,12 +2754,6 @@ PROCEDURE scan-mark :
                                                 end.
   
                                             end.
-                                            /*                                F-text = "            Марка входит в состав упаковки, просканируйте марку упаковки" .*/
-                                            /*                                display F-text with frame {&frame-name}.                                             */
-                                            /*                                v-mark:screen-value = "" .                                                           */
-                                            /*                                v-mark = "" .                                                                        */
-                                            /*                                return no-apply.                                                                     */
-
                                             else 
                                             do:
                                                 F-text = "                            Просканируйте марку" .
@@ -2765,70 +2775,53 @@ PROCEDURE scan-mark :
                                             if available (bf_utd-marking-lines) then 
                                             do:
                                                 bf_utd-marking-lines.sts   = X_marking-line.sts-utd .
-                                                find first un_utd-marking-lines exclusive-lock where un_utd-marking-lines.mark = X_marking-line.mark-parent no-error .
-                                                if available (un_utd-marking-lines) then 
-                                                do:
-                           
-                                                    find first tt-marking-lines where un_utd-marking-lines.mark begins tt-marking-lines.mark-parent and 
-                                                        tt-marking-lines.mark-parent <> "" and 
-                                                        tt-marking-lines.sts-utd = Marking:PendingVerification:KeyIntDB no-error .
-                                                    if not available (tt-marking-lines) then 
-                                                    do:
-                                                        /* Проверим, если все марки упаковки проверены, то надо сменить локальный статус упаковки на "Проверен" */
-                                                        if tree:checkedAllMarksOfUpakUTD(un_utd-marking-lines.mark, buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id)
-                                                        then do:
-                                                          un_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .
-                                                          find first X_marking where X_marking.mark = un_utd-marking-lines.mark no-error .
-                                                          if available (X_marking) then 
-                                                          do:
-                                                            X_marking.sts-utd = Marking:Checked_:KeyIntDB .
-                                                            X_marking.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
-                                                          end.    
-                                                        end.
-                                                    end. 
-                                                    else 
-                                                    do:
-                                                        find first X_marking where X_marking.mark = un_utd-marking-lines.mark no-error .
-                                                        if available (X_marking) then recid_mark = recid(X_marking) .
-                                                    end.       
-                                                end.      
+                                                run setCheckedStatusForParentMarks(X_marking-line.mark-parent, buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id).
                                             end.  
-                                            br-mark :refresh().
-                                            reposition br-mark to recid recid_mark no-error .
                                             {&OPEN-QUERY-br-mark-item}
-                                            br-mark-item:refresh () no-error .
                                             F-text = "                            Просканируйте марку" .
                                             display F-text with frame {&frame-name} .
-                                            v-mark:screen-value = "" .
-                                            v-mark = "" .
-                                            return no-apply.
-                                  
                                         end.
                                     end.
                                 end.
-
-
-                            /*                end.                                                                       */
-                            /*                else                                                                       */
-                            /*                do:                                                                        */
-                            /*                  f-text = "Марка входит в состав упаковки, просканируйте марку упаковки" .*/
-                            /*                  display F-text with frame {&frame-name}.                                 */
-                            /*                  v-mark:screen-value = "" .                                               */
-                            /*                  v-mark = "" .                                                            */
-                            /*                  return no-apply.                                                         */
-                            /*                end.                                                                       */
                             end.        
                             if tree:LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then 
                             do:
                                 tree:StatusDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num, Marking:Checked_:KeyIntDB) .
-                                for each X_marking-line exclusive-lock where X_marking-line.mark-parent begins v-marking:
-                                    X_marking-line.sts-utd = Marking:Checked_:KeyIntDB .
-                                    X_marking-line.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
+                                for each X_marking-line exclusive-lock,
+                                    first bf_utd-marking-lines no-lock where 
+                                          bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num 
+                                      and bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id
+                                      and bf_utd-marking-lines.mark   = X_marking-line.mark
+                                :  /* обновим статусы во временной таблице */
+                                    
+                                    X_marking-line.sts-utd = bf_utd-marking-lines.sts .
+                                    X_marking-line.stts-utd = StatusTHName(X_marking-line.sts-utd) .
                                 end.
-                                assign
-                                    X_marking.sts-utd = Marking:Checked_:KeyIntDB .
-                                    X_marking.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB)
-                                .
+                            end.
+                            else do:
+                              assign
+                                buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB
+                              .                                
+                            end.
+                            
+                            for each X_marking-line exclusive-lock,
+                                first bf_utd-marking-lines no-lock where 
+                                      bf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num 
+                                  and bf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id
+                                  and bf_utd-marking-lines.mark   = X_marking-line.mark
+                            :  /* обновим статусы во временной таблице */
+                              X_marking-line.sts-utd = bf_utd-marking-lines.sts .
+                              X_marking-line.stts-utd = StatusTHName(X_marking-line.sts-utd) .
+                            end.
+ 
+                            if tree:checkedAllMarksOfUpakUTD(X_marking.mark, buf_utd-marking-lines.db-num, buf_utd-marking-lines.doc-id)
+                            then do:
+                              /* Проверим, если все марки упаковки, отсканированной марки, проверены, */
+                              /* то надо сменить локальный статус упаковки на "Проверен"              */
+                              assign
+                                X_marking.sts-utd = Marking:Checked_:KeyIntDB .
+                                X_marking.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB)
+                              .
                             end.
 
                             for first bf_utd-marking-lines exclusive-lock where bf_utd-marking-lines.mark = buf_utd-marking-lines.mark and 
@@ -3211,3 +3204,74 @@ PROCEDURE checkPriPerem :
 END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ungroupTT Dialog-Frame 
+PROCEDURE ungroupTT:
+    define input parameter iMark as character no-undo.
+    
+    define buffer buf_tt-marking-lines for tt-marking-lines. 
+
+    for first buf_tt-marking-lines exclusive-lock where 
+              buf_tt-marking-lines.mark = iMark
+    :
+      buf_tt-marking-lines.stts = StatusTHName(Marking:Ungrouped:KeyIntDB) .
+      buf_tt-marking-lines.stts-utd = StatusTHName(Marking:Ungrouped:KeyIntDB) .
+      buf_tt-marking-lines.sts = Marking:Ungrouped:KeyIntDB .
+      buf_tt-marking-lines.sts-utd = Marking:Ungrouped:KeyIntDB .
+      run ungroupTT in this-procedure (buf_tt-marking-lines.mark-parent).
+    end.
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE setCheckedStatusForParentMarks Dialog-Frame 
+PROCEDURE setCheckedStatusForParentMarks:
+  /* Смена статуса родительских маркок по иерархии на проверен, если все ее "дети" проверены */
+  /* вынесено из кода для иерархичности */
+  define input parameter iMark  as character no-undo.
+  define input parameter iDbNum as integer no-undo.
+  define input parameter iDocId as integer no-undo.
+  
+  define buffer parent_utd-marking-lines for ub.utd-marking-lines.
+
+  if iMark = "" then return.
+    
+  find first parent_utd-marking-lines exclusive-lock where
+             parent_utd-marking-lines.db-num = iDbNum
+         and parent_utd-marking-lines.doc-id = iDocId 
+         and parent_utd-marking-lines.mark = iMark no-error .
+  if available (parent_utd-marking-lines) then 
+  do:
+    find first tt-marking-lines where 
+               parent_utd-marking-lines.mark begins tt-marking-lines.mark-parent 
+           and tt-marking-lines.mark-parent <> "" 
+           and tt-marking-lines.sts-utd = Marking:PendingVerification:KeyIntDB no-error .
+    if not available (tt-marking-lines) then 
+    do:
+        /* Проверим, если все марки упаковки проверены, то надо сменить локальный статус упаковки на "Проверен" */
+        if tree:checkedAllMarksOfUpakUTD(parent_utd-marking-lines.mark, iDbNum, iDocId)
+        then do:
+          parent_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .
+          find first X_marking where X_marking.mark = parent_utd-marking-lines.mark no-error .
+          if available (X_marking) then 
+          do:
+            X_marking.sts-utd = Marking:Checked_:KeyIntDB .
+            X_marking.stts-utd = StatusTHName(Marking:Checked_:KeyIntDB) .
+          end.    
+          run setCheckedStatusForParentMarks(X_marking.mark-parent, iDbNum, iDocId).
+        end.
+    end. 
+    else 
+    do:
+        find first X_marking where X_marking.mark = parent_utd-marking-lines.mark no-error .
+        if available (X_marking) then recid_mark = recid(X_marking) .
+    end.       
+  end.      
+
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+

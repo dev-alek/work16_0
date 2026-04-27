@@ -67,6 +67,15 @@ class ibs.th.str.marking.handlers.tree inherits objth:
      return vOk.   
   end method. 
 
+  method public logical StatusUpUTD(mark as char, doc-id as integer, db-num as integer, sts as integer):
+     define variable vOk         as logical no-undo.
+     define variable mExem as class ibs.th.str.marking.handlers.treeexem no-undo.
+     {utl\objreg.i mExem ibs.th.str.marking.handlers.treeexem }
+     vOk = mExem:StatusUpUTD(mark , doc-id , db-num , sts ).
+     delete object mExem no-error.
+     return vOk.   
+  end method. 
+
   method public integer StatusDownDoc(mark as char, obj-code as integer, obj-type as character, in-code as character, out-code as character, sts as integer):
      define variable vqnty-check as integer  no-undo.
      

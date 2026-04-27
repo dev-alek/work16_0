@@ -423,7 +423,6 @@ procedure rsrv-doc :
         end.
     end.  
     
-    
     for each tt-marks exclusive-lock :
       if tt-marks.qnty = 0 then delete tt-marks .
       else
@@ -602,6 +601,7 @@ procedure rsrv-doc :
           tt-tobacco-marks.mark = buf_marking.mark
           tt-tobacco-marks.qnty = 1
           tt-tobacco-marks.unit = buf_marking.unit-ext
+          tt-tobacco-marks.qnty = buf_marking.box-qnty
           p-mark = ""
           v-mark-tobacco = true
         .
@@ -617,33 +617,34 @@ procedure rsrv-doc :
     end .
     
     
-    
-    for each buf_tt-tobacco-marks exclusive-lock where buf_tt-tobacco-marks.unit = "LEVEL2" :
-/*    first buf_marking no-lock where buf_marking.mark = tt-tobacco-marks.mark*/
-/*                                and buf_marking.unit-ext = "LEVEL1" :       */
-      assign v-box-qnty = 0 .
-      for each buf_marking-childs no-lock where buf_marking-childs.mark-parent = buf_tt-tobacco-marks.mark :
-        find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = buf_marking-childs.mark no-error .
-        if not available tt-tobacco-marks
-        then do :
-          create tt-tobacco-marks .
-          assign
-            tt-tobacco-marks.mark = buf_marking-childs.mark
-            tt-tobacco-marks.unit = "LEVEL1"
-            tt-tobacco-marks.qnty = 0
-          .
-        end. 
-        assign
-          tt-tobacco-marks.qnty = tt-tobacco-marks.qnty + 1
-          v-box-qnty = v-box-qnty + 1
-        .
-      end . 
-      if  v-box-qnty <> 50
-      then do :
-        /* error */
-      end.    
-      delete buf_tt-tobacco-marks .
-    end . 
+/*    ZI-701 Кол-во по коробу берем из марки, то что пришло из 1С     */
+/*    for each buf_tt-tobacco-marks exclusive-lock where buf_tt-tobacco-marks.unit = "LEVEL2" :                      */
+/*/*    first buf_marking no-lock where buf_marking.mark = tt-tobacco-marks.mark*/                                   */
+/*/*                                and buf_marking.unit-ext = "LEVEL1" :       */                                   */
+/*      assign v-box-qnty = 0 .                                                                                      */
+/*      for each buf_marking-childs no-lock where buf_marking-childs.mark-parent = buf_tt-tobacco-marks.mark :       */
+/*        find first tt-tobacco-marks exclusive-lock where tt-tobacco-marks.mark = buf_marking-childs.mark no-error .*/
+/*        if not available tt-tobacco-marks                                                                          */
+/*        then do :                                                                                                  */
+/*          create tt-tobacco-marks .                                                                                */
+/*          assign                                                                                                   */
+/*            tt-tobacco-marks.mark = buf_marking-childs.mark                                                        */
+/*            tt-tobacco-marks.unit = "LEVEL1"                                                                       */
+/*            tt-tobacco-marks.qnty = 0                                                                              */
+/*          .                                                                                                        */
+/*        end.                                                                                                       */
+/*        assign                                                                                                     */
+/*          tt-tobacco-marks.qnty = tt-tobacco-marks.qnty + buf_marking-childs.box-qnty                              */
+/*          v-box-qnty = v-box-qnty + buf_marking-childs.box-qnty                                                    */
+/*        .                                                                                                          */
+/*      end .                                                                                                        */
+/*      if  v-box-qnty <> 50                                                                                         */
+/*      then do :                                                                                                    */
+/*        /* error */                                                                                                */
+/*      end.                                                                                                         */
+/*      buf_tt-tobacco-marks.qnty = v-box-qnty.                                                                      */
+/*/*      delete buf_tt-tobacco-marks .*/                                                                            */
+/*    end .                                                                                                          */
     
     /*p-mark = v-mark.*/ /* ?????? S.Slivenko: Я вообще не знаю и не понимаю, зачем сюда добавили p-mark (то есть одиночную марку). Логики не вижу. Вопросы к Шкляр/Морозову*/            
                                    

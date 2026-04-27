@@ -124,7 +124,7 @@ define buffer doc-obj           for ub.clients .
 define buffer buf_cliobj        for ub.clients .
 define buffer buf_sysconf       for ub.sysconf  .
 define buffer chi_marking       for ub.marking  .
-/*define stream myProt.*/
+define stream myProt.
 
 { gbl/objsrv.i }
 
@@ -626,42 +626,12 @@ on error undo, return error return-value
         end .
       end .
 
-/*output stream myProt to c:\wrk\16_0\oxml_imp\oxml\heap\ES00002-038\myprot2.txt.*/
       for each TempDocMark where TempDocMark.gds-code = TempDocLine.gds-code
                              and (TempDocMark.prt-id = ? or TempDocMark.prt-id = buf_parts.part-code)
                              and (TempDocMark.in-doc-id = ? or TempDocMark.in-doc-id = buf_parts.in-code)
       :
         if TempDocMark.gtin > "" and TempDocMark.gtin_qnt > 0 then next .
         
-        if can-find(first ub.marking-lines where
-                          ub.marking-lines.mark = TempDocMark.mark
-                      and ub.marking-lines.obj-type = buf_parts.obj-type
-                      and ub.marking-lines.obj-code = buf_parts.obj-code
-                      and ub.marking-lines.gds-code = TempDocLine.gds-code
-                      and ub.marking-lines.in-code = buf_parts.in-code
-                      and ub.marking-lines.out-code = buf_parts.out-code
-                      and ub.marking-lines.part-code = buf_parts.part-code) then
-        do:
-          v-end-message = substitute(
-            {&error_marking-line},
-            TempDocMark.mark, 
-            buf_parts.in-code,
-            buf_parts.part-code).
-          run pcall-log-file in parparentproc (input v-end-message) .
-          undo, return error v-end-message .
-        end.
-        create ub.marking-lines.
-        assign
-          ub.marking-lines.obj-type = buf_parts.obj-type
-          ub.marking-lines.obj-code = buf_parts.obj-code
-          ub.marking-lines.in-code = buf_parts.in-code
-          ub.marking-lines.out-code = buf_parts.out-code
-          ub.marking-lines.part-code = buf_parts.part-code
-          ub.marking-lines.prt-code  = buf_parts.prt-code
-          ub.marking-lines.gds-code = TempDocLine.gds-code
-          ub.marking-lines.mark = TempDocMark.mark
-          ub.marking-lines.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
-        .
         assign
           buf_parts.PS =  TempDocMark.upd_id when TempDocMark.upd_id <> ""
         .
@@ -669,156 +639,19 @@ on error undo, return error return-value
         if TempDocMark.prt-id = ? then TempDocMark.prt-id = buf_parts.part-code .
         if TempDocMark.in-doc-id = ? then TempDocMark.in-doc-id = buf_parts.in-code .
 
-        find first ub.marking where ub.marking.mark begins ub.marking-lines.mark no-error.
-        if available (ub.marking)
-        then do:
-          ub.marking.obj-type = ub.marking-lines.obj-type.
-          ub.marking.obj-code = ub.marking-lines.obj-code.
-          ub.marking-lines.doc-level = 1.
-          if buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
-          do:
-              if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or
-                 can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
-                 can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) then
-              do: /* если марка добавлена в чек или расходый док-т, то увеличиваем кол-во принятых марок */
-                if v-isweighed
-                then do :
-                  v-mark-weight = MarkWeight(ub.marking.mark).
-                  
-                  buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + v-mark-weight .
-                     /* и увеличим кол-во факт по партии с этой маркой*/
-                  buf_parts.fact-qnty = buf_parts.fact-qnty + v-mark-weight .
-                end .
-                else do :
-                  buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty.
-                     /* и увеличим кол-во факт по партии с этой маркой*/
-                  buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.
-                end .
-              end.
-
-/*              if not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) then                                            */
-/*              do:                                                                                                                                */
-/*                if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or                                                            */
-/*                   ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB then                                                           */
-/*                do:  /* если это упаковка и разгруппирована или Серая зона, то анализируем статус марок внутри упаковки */                       */
-/*                  for each chi_marking no-lock where                                                                                             */
-/*                           chi_marking.mark-parent = ub.marking.mark                                                                             */
-/*                       and chi_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB                                                */
-/*                  :  /* считаем марки в Ожидает приемку */                                                                                       */
-/*                      accum chi_marking.mark (count).                                                                                            */
-/*                  end.                                                                                                                           */
-/*                  if (accum count chi_marking.mark) >= ub.marking.box-qnty then                                                                  */
-/*                  do:  /* если все марки внутри упаковки Ожидает приемку, значит пришел полный состав и меняем статус упаковки */                */
-/*                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.                                                       */
-/*                  end.                                                                                                                           */
-/*                  else                                                                                                                           */
-/*                  do: /* иначе идем по маркам упаковки, если проданные и возвращенные марки оставляем, а остальные меняем на Проверен*/          */
-/*                    for each chi_marking exclusive-lock where                                                                                    */
-/*                             chi_marking.mark-parent = ub.marking.mark                                                                           */
-/*                    :                                                                                                                            */
-/*                      if not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(chi_marking.sts)) then                                   */
-/*                      do:                                                                                                                        */
-/*                        chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.                                                         */
-/*                      end.                                                                                                                       */
-/*                    end.                                                                                                                         */
-/*                    if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB then                                                       */
-/*                    do:  /* меняем статус с Серая зона на Раз группирован */                                                                     */
-/*                      ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.                                                           */
-/*                    end.                                                                                                                         */
-/*                    buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty.                                                       */
-/*                    buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.                                                             */
-/*                  end.                                                                                                                           */
-/*                end.                                                                                                                             */
-/*                else                                                                         */
-/*                do:                                                                          */
-/*                  for each chi_marking exclusive-lock where                                  */
-/*                           chi_marking.mark-parent = ub.marking.mark                         */
-/*                  :                                                                          */
-/*                      chi_marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.*/
-/*                  end.                                                                       */
-/*                  ub.marking.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB.     */
-/*                end.                                                                         */
-/*              end.                                                                                                                               */
-/*              else                                                                                                                               */
-/*              do:  /* если марка уже продана или возвращена или в процессе продажи или возврата на кассу, то увеличиваем кол-во принятых марок */*/
-/*                buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty.                                                           */
-/*                   /* и увеличим кол-во факт по партии с этой маркой*/                                                                           */
-/*                buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.                                                                 */
-/*              end.                                                                                                                               */
-          end.
-/*          if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then            */
-/*          do:                                                                  */
-/*            ub.marking.sts = objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB.*/
-/*          end.                                                                 */
-          ub.marking-lines.sts = if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
-                                    can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) or
-                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
-                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
-                                 then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
-                                 else ub.marking.sts.
-/*put stream myProt unformatted                               */
-/*  TempDocLine.gds-code " "                                  */
-/*  ub.marking-lines.doc-level " "                            */
-/*  ub.marking.mark " "                                       */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts) " "  */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking-lines.sts)*/
-/*  skip                                                      */
-/*.                                                           */
-          for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
-            if can-find(first ub.marking-lines where
-                              ub.marking-lines.mark = chi_marking.mark
-                          and ub.marking-lines.obj-type = buf_parts.obj-type
-                          and ub.marking-lines.obj-code = buf_parts.obj-code
-                          and ub.marking-lines.gds-code = TempDocLine.gds-code
-                          and ub.marking-lines.in-code = buf_parts.in-code
-                          and ub.marking-lines.out-code = buf_parts.out-code
-                          and ub.marking-lines.part-code = buf_parts.part-code) then
-            do:
-              v-end-message = substitute(
-                {&error_marking-line},
-                chi_marking.mark, 
-                buf_parts.in-code,
-                buf_parts.part-code).
-              run pcall-log-file in parparentproc (input v-end-message) .
-              undo, return error v-end-message .
-            end.
-            create ub.marking-lines.
-            assign
-              ub.marking-lines.obj-type = buf_parts.obj-type
-              ub.marking-lines.obj-code = buf_parts.obj-code
-              ub.marking-lines.in-code = buf_parts.in-code
-              ub.marking-lines.out-code = buf_parts.out-code
-              ub.marking-lines.part-code = buf_parts.part-code
-              ub.marking-lines.prt-code  = buf_parts.prt-code
-              ub.marking-lines.gds-code = TempDocLine.gds-code
-              ub.marking-lines.mark = chi_marking.mark
-              ub.marking-lines.doc-level = 2
-            .
-/*            if buf_trn-doc.ext-doc-type <> {&TDEDT_Pri_Perem} then              */
-/*            do:  /* на всякий случай, чтобы не сломать док-ты не приход внутр */*/
-/*              chi_marking.sts = ub.marking.sts.                                 */
-/*            end.                                                                */
-            chi_marking.obj-type = ub.marking-lines.obj-type.
-            chi_marking.obj-code = ub.marking-lines.obj-code.
-            ub.marking-lines.sts = if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(chi_marking.sts)) or
-                                      can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(chi_marking.sts)) or
-                                      chi_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
-                                      chi_marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
-                                   then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
-                                   else chi_marking.sts.
-/*put stream myProt unformatted                               */
-/*  "  " TempDocLine.gds-code " "                             */
-/*  ub.marking-lines.doc-level " "                            */
-/*  chi_marking.mark " "                                      */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(chi_marking.sts) " " */
-/*  objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking-lines.sts)*/
-/*  skip                                                      */
-/*.                                                           */
-          end.
+        run addChildMarkingLines in this-procedure (TempDocMark.mark, 1) no-error.
+        if error-status:error then
+        do:
+          v-end-message = substitute(
+            {&error_marking-line} + " &4",
+            TempDocMark.mark, 
+            buf_parts.in-code,
+            buf_parts.part-code,
+            return-value).
+          run pcall-log-file in parparentproc (input v-end-message) .
+          undo, return error v-end-message .
         end.
       end.
-/*output stream myProt close.*/
-/*run gbl/inidebug.p.        */
       if buf_trn-doc.ext-doc-type = {&TDEDT_Vozvrat_Perem} then
       do:
         /* для док-та ВОЗВРАТ ВНУТР увеличим факт. кол-во по строке товара*/
@@ -1150,3 +983,93 @@ procedure get-country-code :
 
 end procedure. /* get-country-code */
 
+procedure addChildMarkingLines:
+  define input parameter iMark  as character no-undo.
+  define input parameter iLevel as integer   no-undo.
+
+  define buffer chi_marking       for ub.marking  .
+  define buffer buf_marking-lines for ub.marking-lines  .
+
+  if can-find(first buf_marking-lines where
+                    buf_marking-lines.mark      = iMark
+                and buf_marking-lines.obj-type  = buf_parts.obj-type
+                and buf_marking-lines.obj-code  = buf_parts.obj-code
+                and buf_marking-lines.gds-code  = TempDocLine.gds-code
+                and buf_marking-lines.in-code   = buf_parts.in-code
+                and buf_marking-lines.out-code  = buf_parts.out-code
+                and buf_marking-lines.part-code = buf_parts.part-code) then
+  do:
+    return error.
+  end.
+  create buf_marking-lines.
+  assign
+    buf_marking-lines.obj-type = buf_parts.obj-type
+    buf_marking-lines.obj-code = buf_parts.obj-code
+    buf_marking-lines.in-code = buf_parts.in-code
+    buf_marking-lines.out-code = buf_parts.out-code
+    buf_marking-lines.part-code = buf_parts.part-code
+    buf_marking-lines.prt-code  = buf_parts.prt-code
+    buf_marking-lines.gds-code = TempDocLine.gds-code
+    buf_marking-lines.mark = iMark
+    buf_marking-lines.sts = objSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+    buf_marking-lines.doc-level = iLevel
+  no-error.
+  if error-status:error then
+    return error error-status:get-message(1).
+
+  for first ub.marking exclusive-lock where 
+            ub.marking.mark begins buf_marking-lines.mark 
+  :
+    ub.marking.obj-type = buf_marking-lines.obj-type.
+    ub.marking.obj-code = buf_marking-lines.obj-code.
+
+    if iLevel = 1 and buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then
+    do:
+      if ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or
+         can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
+         can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) then
+      do: /* если марка добавлена в чек или расходый док-т, то увеличиваем кол-во принятых марок */
+        if v-isweighed
+        then do :
+          v-mark-weight = MarkWeight(ub.marking.mark).
+          
+          buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + v-mark-weight .
+          /* и увеличим кол-во факт по партии с этой маркой*/
+          buf_parts.fact-qnty = buf_parts.fact-qnty + v-mark-weight .
+        end .
+        else do :
+          buf_doc-line.fact-qnty = buf_doc-line.fact-qnty + ub.marking.box-qnty.
+          /* и увеличим кол-во факт по партии с этой маркой*/
+          buf_parts.fact-qnty = buf_parts.fact-qnty + ub.marking.box-qnty.
+        end .
+      end.
+    end.
+    buf_marking-lines.sts = if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
+                              can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) or
+                              ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                              ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                           then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+                            else ub.marking.sts.
+    validate buf_marking-lines no-error.
+    if error-status:error then
+      return error error-status:get-message(1).
+    
+/*    if iLevel = 1 then                                           */
+/*      output stream myProt to c:\wrk\imptrn-gd-doc.log.          */
+/*    else                                                         */
+/*      output stream myProt to c:\wrk\imptrn-gd-doc.log append.   */
+/*    put stream myProt unformatted                                */
+/*      fill(" ", (iLevel - 1) * 2)                                */
+/*      TempDocLine.gds-code " "                                   */
+/*      buf_marking-lines.doc-level " "                            */
+/*      ub.marking.mark " "                                        */
+/*      objSrv:Env:Marking:Sts:Mark:GetLabel(ub.marking.sts) " "   */
+/*      objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking-lines.sts)*/
+/*      skip                                                       */
+/*    .                                                            */
+/*    output stream myProt close.                                  */
+    for each chi_marking where chi_marking.mark-parent = ub.marking.mark:
+        run addChildMarkingLines in this-procedure (chi_marking.mark, iLevel + 1) no-error.
+    end.
+  end.  
+end procedure.

@@ -603,6 +603,12 @@ define variable v-error      as logical   no-undo init no.
     return.    
   end.
   
+  if buf_marking.unit-ext = "LEVEL2"
+  then do:
+    run dispmessage ("Внимание!~nДобавление марки короба в данный вид документа невозможно!").
+    return.
+  end.
+  
   find first buf_marking-lines where (buf_marking-lines.mark begins v-mark-short)
     and buf_marking-lines.out-code = {&free-code} no-error.
   

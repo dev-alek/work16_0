@@ -1075,7 +1075,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               if getGtinByDM(ub.utd-marking-lines.mark) <> vGtin
               then next fe1_ .
               
-              if logical (getAttrUtdLinesEx(ub.utd-marking-lines.db-num,ub.utd-marking-lines.doc-id,ub.utd-marking-lines.LineNum,"MarkUtdLine","no"))
+              if logical (getAttrUtdLinesEx(ub.utd-marking-lines.db-num,ub.utd-marking-lines.doc-id,ub.utd-marking-lines.LineNum,"MarkUtdLine","no")) and
+                 ub.utd-marking-lines.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
+              /* если лок. статус марки "Проверен", то считаем ее принятой и добавляем в партию */
               then do :
                 find first ub.marking no-lock where 
                            ub.marking.mark = ub.utd-marking-lines.mark 
@@ -1084,6 +1086,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 if not available (ub.marking)
                 then next fe1_.
               end .
+              else
+                find first ub.marking no-lock where 
+                           ub.marking.mark = ub.utd-marking-lines.mark no-error.
               
               create ub.marking-lines.
               assign
@@ -1227,12 +1232,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             and ub.utd-marking-lines.LineNum = temp_doc-line.line-num
             :
 
-              find first ub.marking no-lock where 
-                         ub.marking.mark = ub.utd-marking-lines.mark 
-                     and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
-                     and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
-              if not available (ub.marking)
-                then next fe1_.
+              if ub.utd-marking-lines.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then
+              /* если лок. статус марки "Проверен", то считаем ее принятой и добавляем в партию */
+              do:
+                find first ub.marking no-lock where 
+                           ub.marking.mark = ub.utd-marking-lines.mark 
+                       and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
+                       and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
+                if not available (ub.marking)
+                  then next fe1_.
+              end.
               
               create ub.marking-lines.
               assign
