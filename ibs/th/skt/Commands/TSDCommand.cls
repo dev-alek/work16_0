@@ -490,7 +490,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           else do:
              tsd:SomeStr = tsd:getStatusXml(false, substitute ("Нет файла для устройства '&1' и версии '&2'", mType, mVersion)).
              tsd:ResType = "xml".
-             resp:Content-Type = "text/xml; charset=" + tsd:CP.
+             resp:Content-Type = "text/xml" + (if tsd:cp ne "windows-1251" then "; charset=" + tsd:CP else "").
       
           end.
         end.

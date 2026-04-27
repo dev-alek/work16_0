@@ -51,23 +51,27 @@ class ibs.th.skt.Commands.IResponse abstract:
       content-disposition = substitute ('attachment; filename="&1"',arg).
    end.
    
-/*   define variable mAddctrf as logical no-undo.*/
    
-   define public property ConvertPage as character  no-undo 
-   get.
-   set.
    define public property ContentLongChar as longchar no-undo 
    get.
    private set .
+   
+   define public property ConvertPage as character  no-undo 
+   get.
+   set(arg as char):
+      ConvertPage = arg.
+      if arg begins "windows-"
+      then
+         arg = substring (arg,9).
+      FIX-CODEPAGE(ContentLongChar) = arg. 
+   end.
    define public property Content as memptr no-undo 
    get.
    set(arg as memptr):
       Content = arg.
-/*      mAddctrf = no.*/
    end.
    define public property ContentLength as int64 no-undo 
    get : return get-size(Content) 
-/*   - if mAddctrf then 2 else 0*/
    . 
    end.
    
@@ -79,11 +83,8 @@ class ibs.th.skt.Commands.IResponse abstract:
    end.
    method public void setContent(arg as longchar, saveOrigin as logical ):
       set-size(Content) = 0.
-      /*      if not saveOrigin                */
-/*      then                             */
-/*         arg = arg + chr(13) + chr(10).*/
       ContentLongChar = arg.
-      set-size(Content) = length(arg,"raw").
+      set-size(Content) = 1.
       if ConvertPage eq ""
       then
          copy-lob
@@ -97,10 +98,10 @@ class ibs.th.skt.Commands.IResponse abstract:
          else
             pagecode = ConvertPage.
          copy-lob
-         from object arg
-         to object Content overlay at 1 convert target codepage pagecode.
+         from object ContentLongChar
+         to object Content 
+         convert target codepage pagecode.
       end.
-/*      mAddctrf = not saveOrigin.*/
    end.
    
    method public void setContent(arg as char ):
