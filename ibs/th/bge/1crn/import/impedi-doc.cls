@@ -211,7 +211,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       no-lock no-error.
       if  not available contract
       then
-         undo, throw new Progress.Lang.AppError(substitute("В &1, указанный в УПД, не нфйден в системе.",utd.contract-code)) .
+         undo, throw new Progress.Lang.AppError(substitute("В &1, указанный в УПД, не найден в системе.",utd.contract-code)) .
       
       if     contract.cli-type  ne utd.cli-type
          or  contract.cli-code  ne utd.cli-code

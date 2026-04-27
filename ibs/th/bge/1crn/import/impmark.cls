@@ -118,16 +118,19 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    if not available tt-marking then
      create tt-marking.
 
-   assign
-      tt-marking.mark         = vmark
-      tt-marking.gds-code     = objImp:gds-code
-      tt-marking.gds-ext-id   = objImp:GTIN
-      tt-marking.mark-parent  = repTegforDm(objImp:mark-parent) when objImp:mark-parent ne ? 
-      tt-marking.box-qnty     = objImp:qnty-box
-      tt-marking.unit-ext     = objImp:unit-ext
-      tt-marking.sts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
-      tt-marking.mrc = objImp:mrc
-   .
+      assign
+          tt-marking.mark         = vmark
+          tt-marking.gds-code     = objImp:gds-code
+          tt-marking.gds-ext-id   = objImp:GTIN
+          tt-marking.mark-parent  = repTegforDm(objImp:mark-parent) 
+          when objImp:mark-parent ne ? 
+          tt-marking.box-qnty     = objImp:qnty-box
+          tt-marking.unit-ext     = objImp:unit-ext
+          tt-marking.sts          = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(objImp:stts)
+          tt-marking.mrc          = objImp:mrc
+          tt-marking.expDate      = objImp:expDate
+          tt-marking.expDateOther = objImp:expDateOther
+          .
    if tt-marking.gds-code eq 0
    then 
       tt-marking.gds-code = ?.
