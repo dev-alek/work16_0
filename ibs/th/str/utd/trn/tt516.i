@@ -81,6 +81,7 @@ define temp-table temp_doc-line no-undo
   field gtinList           as character
   field gtinDocQntyList    as character
   field gtinFactQntyList   as character
+  field isWeight           as logical
   index pi
   doc-code
   line-num

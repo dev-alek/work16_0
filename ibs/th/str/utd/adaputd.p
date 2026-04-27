@@ -206,6 +206,7 @@ do:
         vunitCode = units.unit-name.
       
     end.
+    
     vIsWeight = WeighedProd(buf_utd-lines.gds-code).
     if logical (getAttrUtdLinesEx(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"MarkUtdLine","no"))
     then do :
@@ -290,6 +291,7 @@ do:
       temp_doc-line.price-rubl = buf_utd-lines.Total / (if vMarkUtd then buf_utd-lines.Quantity else temp_doc-line.cli-qnty)
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
       temp_doc-line.vat-pc     = 100 * sum-vat / (buf_utd-lines.TotalWithVatExcluded / temp_doc-line.cli-qnty)
+      temp_doc-line.isWeight   = vIsWeight
     .
     
     if buf_utd-lines.TaxRate <> round ( temp_doc-line.vat-pc, 1 )
@@ -301,6 +303,7 @@ do:
     
     if (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
     or logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "ArticUtdLine", "no")))
+    and not vIsWeight
     then do:
       
       assign
