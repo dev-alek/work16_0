@@ -1,10 +1,10 @@
 /*
 
-$Revision: b1f216c91d59, 3334, rls $
-$Author: SSlivenko $
-$Date: 2023/05/19 13:37:09 $
-$Workfile: gds-ref.i $
-$Archive: ref/gds-ref.i $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Справочник товаров
 
@@ -648,7 +648,7 @@ DEFINE FRAME {&FRAME-NAME}
   NameContext AT ROW 4 COL 56 COLON-ALIGNED label "Контекст" format "x(40)":U
   loc-art AT ROW 4 COL 56 COLON-ALIGNED no-label /* "Начало артикула" */
   loc-name AT ROW 4 COL 56 COLON-ALIGNED label "Нач. назв." format "x(40)":U
-  loc-code AT ROW 4 COL 59 COLON-ALIGNED label "Код(весь)":U format "x(30)":U
+  loc-code AT ROW 4 COL 59 COLON-ALIGNED label "Код(весь)":U format "x(300)":U
   goo-doc.gds-code at row 4 col 82  colon-aligned label "Код" fgcolor 4 format "9999999999":U
   {&BROWSE-NAME} AT ROW 5 COL 1
   rect-gds-ref-fi at row 16.1 COL 1
@@ -4484,4 +4484,4 @@ define buffer buf_assortment-matrix-goods for ub.assortment-matrix-goods  .
   end.
 end procedure. /* recalc-assgds */
 
-/* $Workfile: gds-ref.i $   E n d */
+/* $Workfile$   E n d */
