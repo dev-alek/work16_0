@@ -1222,6 +1222,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE proc-load Dialog-Frame 
 PROCEDURE proc-load :
 /*------------------------------------------------------------------------------
@@ -1234,150 +1235,167 @@ define input  parameter iFile as character no-undo.
 define variable vtxt as character no-undo.
 define variable vip as character no-undo.
 define variable vport as character no-undo.
+define variable currentSection as character no-undo.
+
 for each tt-asi_exp:
    delete tt-asi_exp.
 end.
 for each tt-tank_exp:
    delete tt-tank_exp.
 end.
-   if iFile eq ?
-   then do:
-      iFile = "measurer_par_exp.reg".
-      output to "measurer_par_exp.reg".
-      output close.
-      /*output to "measurer_par_exp.bat".
-      put unformatted "reg export HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR " + search("measurer_par_exp.reg")  + " /y >> measurer_par_exp.rez "  skip .
-      output close.
-      os-command value (search("measurer_par_exp.bat")).*/
-      os-command silent value ("reg export HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR " + search("measurer_par_exp.reg") + " /y /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_exp.rez 2>&1").
-   end.
-   input STREAM sReadfile FROM  VALUE(iFile). 
-   repeat:
-      import stream sReadfile unformatted vtxt.
-      vtxt = trim(vtxt).
-      vtxt = replace (vtxt,'"','').
+   
+if iFile eq ? then do:
+   iFile = "measurer_par_exp.reg".
+   output to "measurer_par_exp.reg".
+   output close.
+   os-command silent value ("reg export HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR " + search("measurer_par_exp.reg") + " /y /reg:" + (if is-ProcArch64 then "64" else "32") + " >> measurer_par_exp.rez 2>&1").
+end.
+
+input STREAM sReadfile FROM VALUE(iFile). 
+
+repeat:
+   import stream sReadfile unformatted vtxt.
+   vtxt = trim(vtxt).
+   vtxt = replace (vtxt,'"','').
+   
+   /* Определяем текущий раздел */
+   if vtxt begins "[" then do:
+      currentSection = vtxt.
       
-      if vtxt eq "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR]"
-      then
+      /* основной раздел */
+      if vtxt eq "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR]" then do:
          mObj = "head".
-      else if vtxt begins "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\" 
-      then do:
-          if index (vtxt,"TankTop") ne 0
-          then
-          assign
-             mObj  = "tank".
-             
-          else
-          assign
-             mObj = "asi"
-             vip   = ""
-             vport = "".
-          vtxt = entry(4,vtxt,"\"). 
-          
-          mtypeasi = entry(1,vtxt," ") .
-          assign  
-          MCom     = entry(2,vtxt," ")
-          MCom     = trim(MCom,"]")
-          no-error. 
-          if error-status:error
-          then 
-             message "Ошибка загрузки данных из реестра"
-              view-as alert-box.
-          if MCom begins "Ethernet"
-          then
-             MCom = "Ethernet".
-          if mObj = "asi" 
-          then do:
-             create tt-asi_exp.
-             assign
-                tt-asi_exp.parent = mtypeasi
-                tt-asi_exp.code   = mcom
+         next.
+      end.
+      /* Modbus */
+      else if vtxt eq "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\Modbus]" or
+              vtxt eq "[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\MEASURER_PAR\Modbus]" then do:
+         mObj = "modbus".
+         next.
+      end.
+      /* ASI/TANK */
+      else if vtxt begins "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\" then do:
+         if index (vtxt,"TankTop") ne 0 then
+            assign mObj = "tank".
+         else
+            assign
+               mObj = "asi"
+               vip = ""
+               vport = "".
+         
+         /* Извлекаем информацию о разделе */
+         vtxt = entry(4,vtxt,"\"). 
+         mtypeasi = entry(1,vtxt," ") .
+         assign  
+            MCom = entry(2,vtxt," ")
+            MCom = trim(MCom,"]")
+            no-error. 
+         
+         if error-status:error then 
+            message "Ошибка загрузки данных из реестра" view-as alert-box.
+         
+         if MCom begins "Ethernet" then
+            MCom = "Ethernet".
+         
+         if mObj = "asi" then do:
+            create tt-asi_exp.
+            assign
+               tt-asi_exp.parent = mtypeasi
+               tt-asi_exp.code = mcom
             .
             validate tt-asi_exp.
-          end.      
+         end.
+         next.
       end.
       else do:
-         assign
-            mteg   = entry(1,vtxt,"=") 
-            mvalue = entry(2,vtxt,"=") 
-         no-error.
-         if not error-status:error
-         then do:
-            if mObj = "head"
-            then do:
-
-               if mteg = "IP"
-               then
-                  Fip:screen-value in frame frame-a = mvalue.
-               else if mteg = "PORT" 
-               then
-                  FPort:screen-value = mvalue.
-               else if mteg = "PORT" 
-               then
-                  FPort:screen-value = mvalue.
-               if mteg = "RefreshTime"  then  rfrtime:screen-value = mvalue.
-               if mteg = "TimeLive"     then  tlive:screen-value = mvalue.
-               else if mteg = "TYPE" 
-               then
-                  ftype:screen-value = if  mvalue eq  ? or mvalue eq  "?" then "1" else mvalue.
-               else if mteg = "Spec" then fSpec:screen-value = if mvalue eq ? or mvalue eq "?" then "Авто" else mvalue.
-
-            end.
-            else if mObj = "asi"
-            then do:
-               if mteg = "TimeOut"      then tt-asi_exp.misc9 = mvalue.  
-               if mteg = "PORT_NUM"
-               then
-                 tt-asi_exp.code = "COM" + mvalue.
-               else if mteg = "Baud" 
-               then
-                  tt-asi_exp.misc1 = mvalue.
-               else if mteg = "Parity"
-               then
-                  tt-asi_exp.misc2 = mvalue. 
-                  /*-------------------------------------------------------------конверт */
-               else if mteg = "Databits" 
-               then
-                  tt-asi_exp.misc3  = mvalue.
-               else if mteg = "License"
-               then
-                  tt-asi_exp.misc4 = mvalue.
-               else if mteg = "ip" 
-               then do:
-                  vip               = mvalue.
-                  tt-asi_exp.misc5  = mvalue.
-               end.
-               else if mteg = "Port"
-               then assign
-                  vport            = mvalue
-                  tt-asi_exp.misc6 = mvalue. 
-               else if mteg = "SlaveId"
-               then
-                  tt-asi_exp.misc7 = mvalue.
-              
-                
-            end.
-            else if mObj = "tank"
-            then do:
-               if mteg begins "ID_"
-               then do:
-                  create tt-tank_exp.
-                  assign 
-                     tt-tank_exp.parent = mtypeasi + {&delim-par} + mcom + {&delim-par} + Vip + {&delim-par} + vport
-                     tt-tank_exp.code   = substring(mteg,4)
-                     tt-tank_exp.CodeValue = entry(1,mvalue,":")
-                     tt-tank_exp.misc1     = entry(2,mvalue,":")
-                  no-error.
-               end. 
-            end.
-         end.    
-      end.           
+         mObj = "".
+         next.
+      end.
    end.
-   input close.
-   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
-  apply  "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
-  {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
-  apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C. 
+   /* Обработка параметров текущего раздела */
+   else if mObj ne "" then do:
+      assign
+         mteg = entry(1,vtxt,"=") 
+         mvalue = entry(2,vtxt,"=") 
+         no-error.
+      
+      if not error-status:error then do:
+         /* основной раздел */
+         if mObj = "head" then do:
+            if mteg = "IP" then
+               Fip:screen-value in frame frame-a = mvalue.
+            else if mteg = "PORT" then
+               FPort:screen-value = mvalue.
+            else if mteg = "RefreshTime" then
+               rfrtime:screen-value = mvalue.
+            else if mteg = "TimeLive" then
+               tlive:screen-value = mvalue.
+            else if mteg = "TYPE" then
+               ftype:screen-value = if mvalue eq ? or mvalue eq "?" then "1" else mvalue.
+         end.
+
+         /* Modbus */
+         else if mObj = "modbus" then do:
+            if mteg = "Spec" then do:
+               if mvalue = "0" then
+                  fSpec:screen-value = "1.0".
+               else if mvalue = "1" then
+                  fSpec:screen-value = "1.1".
+               else if mvalue = "99" then
+                  fSpec:screen-value = "Авто".
+               else
+                  fSpec:screen-value = "Авто".
+            end.
+         end.
+         /*  ASI */
+         else if mObj = "asi" then do:
+            if mteg = "TimeOut" then
+               tt-asi_exp.misc9 = mvalue.  
+            else if mteg = "PORT_NUM" then
+               tt-asi_exp.code = "COM" + mvalue.
+            else if mteg = "Baud" then
+               tt-asi_exp.misc1 = mvalue.
+            else if mteg = "Parity" then
+               tt-asi_exp.misc2 = mvalue. 
+            else if mteg = "Databits" then
+               tt-asi_exp.misc3 = mvalue.
+            else if mteg = "License" then
+               tt-asi_exp.misc4 = mvalue.
+            else if mteg = "ip" then do:
+               vip = mvalue.
+               tt-asi_exp.misc5 = mvalue.
+            end.
+            else if mteg = "Port" then assign
+               vport = mvalue
+               tt-asi_exp.misc6 = mvalue. 
+            else if mteg = "SlaveId" then
+               tt-asi_exp.misc7 = mvalue.
+         end.
+         /*  TANK */
+         else if mObj = "tank" then do:
+            if mteg begins "ID_" then do:
+               create tt-tank_exp.
+               assign 
+                  tt-tank_exp.parent = mtypeasi + {&delim-par} + mcom + {&delim-par} + Vip + {&delim-par} + vport
+                  tt-tank_exp.code = substring(mteg,4)
+                  tt-tank_exp.CodeValue = entry(1,mvalue,":")
+                  tt-tank_exp.misc1 = entry(2,mvalue,":")
+                  no-error.
+            end. 
+         end.
+      end.
+   end.
+end.
+
+input stream sReadfile close.
+
+display fSpec with frame frame-a.
+
+{&OPEN-BROWSERS-IN-QUERY-FRAME-B}
+apply "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
+{&OPEN-BROWSERS-IN-QUERY-FRAME-C}
+apply "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C. 
+
 end procedure.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1400,13 +1418,33 @@ do with frame FRAME-A:
    put unformatted  "Windows Registry Editor Version 5.00" skip.
    put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR]" skip
    substitute('"IP"="&1"',       Fip:screen-value   ) skip
-   substitute('"PORT"="&1"',     Fport:screen-value ) skip
-   substitute('"Spec"="&1"',     fSpec:screen-value ) skip
+   substitute('"PORT"="&1"',     Fport:screen-value ) skip.
+   put unformatted 
    substitute('"TYPE"="&1"',     ftype:screen-value ) skip
    substitute('"CodePage"="&1"', "1251"             ) skip(1).
    if tlive:screen-value  ne "" and tlive:screen-value  ne ?    then  put unformatted  substitute('"TimeLive"="&1"', tlive:screen-value) skip .
    if rfrtime:screen-value  ne "" and rfrtime:screen-value  ne ?    then  put unformatted  substitute('"RefreshTime"="&1"', rfrtime:screen-value) skip .
+
+   if fSpec:screen-value = "1.0" then do:
+   put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\Modbus]" skip
+   substitute('"Spec"="0"') skip.
+   end.
+
+   if fSpec:screen-value = "1.1" then do:
+   put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\Modbus]" skip
+   substitute('"Spec"="1"') skip.
+   end.
+
+   if fSpec:screen-value = "Авто" then do:
+   put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\Modbus]" skip
+   substitute('"Spec"="99"') skip.
+   end. 
+
 end.
+
+
+
+
 for each tt-asi:
    if tt-asi.code begins "Ethernet"
    then
@@ -1428,10 +1466,23 @@ for each tt-asi:
                       substitute('"Databits"="&1"', tt-asi.misc3                                        ) skip.
    if tt-asi.code begins "Ethernet"
    then
-       put unformatted substitute('"ip"="&1"', tt-asi.misc5                         ) skip
-                      substitute('"Port"="&1"'    , tt-asi.misc6                                        ) skip  .
-   if tt-asi.parent = "Modbus" 
-   then put unformatted substitute('"SlaveId"="&1"', tt-asi.misc7                         ) skip.
+       put unformatted substitute('"ip"="&1"', tt-asi.misc5       ) skip
+                      substitute('"Port"="&1"'    , tt-asi.misc6  ) skip  .
+
+   if tt-asi.parent = "Modbus" then do:
+
+
+/*      case fSpec:screen-value in frame FRAME-A:
+          when "Авто" then mvalue = "99".
+          when "1.0"  then mvalue = "0".
+          when "1.1"  then mvalue = "1".
+          otherwise        mvalue = "99".
+      end case.  */
+
+      put unformatted substitute('"Spec"="&1"', mvalue) skip.
+      put unformatted substitute('"SlaveId"="&1"', tt-asi.misc7  ) skip.
+   end.
+
    if tt-asi.misc4 ne "" and tt-asi.misc4 ne ?
    then
       put unformatted substitute('"License"="&1"', tt-asi.misc4 ) skip(1).
