@@ -249,6 +249,7 @@ for each tt-goods:
         buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB)
             :
         if buf_marking.expDate <> ? and buf_marking.expDate <> "" then do:
+            vExpireDateOther = "-" .
             if buf_marking.expDateOther <> ? and buf_marking.expDateOther <> "" then 
             do:
 /*                empty temp-table tt-date .*/
