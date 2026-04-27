@@ -45,6 +45,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     private set.
   
   define private variable tsd         as class     TSD no-undo.
+  define private variable fileSend         as class     FileSend no-undo.
   define private variable hRoot       as handle    no-undo.
   define private variable hDoc        as handle    no-undo.
   define private variable hRow        as handle    no-undo.
@@ -61,11 +62,13 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-  define variable HTTPError as longchar no-undo.  
-  constructor public TSDCommand (  ):
-    define variable tempStr       as char     no-undo.
+  define variable HTTPError as longchar no-undo.
+    
+  constructor public TSDCommand (iFileSend as class fileSend):
     
     super ().
+    fileSend = iFileSend. 
+    define variable tempStr       as char     no-undo.
     HTTPError = substitute("HTTP/1.1 500 Internal Server Error&1Server: 4GL&1Content-Type: text/html&1ETag: &3&4&2",
                          chr(13) + chr(10),
                          chr(13) + chr(10) + chr(13) + chr(10) , 
@@ -87,7 +90,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     tsd = new tsd().
     
   end constructor.
-
+  define variable mEmptyConstr as logical no-undo.
+  constructor public TSDCommand ():
+      this-object(new fileSend()).
+      mEmptyConstr = yes.
+  end.
+  
   method private void startStep(msg as char):
     output to logduraton.txt append.
     duration = etime.
@@ -262,10 +270,22 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     vStatus = entry(vpos + 1,resp:ParamWait).
     if vStatus eq "dictionaries"
     then do:
+       
        run gbl/pause.p( 1000).
-       if writeSock(vStatus)
-       then
-          resp:condition = resp:STSlist:ReciveCommand:NameProp.
+       logWrite:WriteFileToLog("DBInitDict.txt","IBM866").
+       if search ("dictionaries.s3db") = ? 
+       then do:
+          logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
+          ErrStatus = true.
+          return.
+       end.
+       assign
+         file-info:file-name = "dictionaries.s3db"
+       .
+        
+       filesend:sendfile(resp, file-info:file-name).
+       
+       
     end.
     else if vStatus eq "step1"
     then do transaction:
@@ -328,42 +348,10 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          logWrite:LogStr = "Не удалость произвести выгрузку".
       end.
       else do:
-         set-size (mbuffer1) = 0.
-         set-size (mbuffer1) = vsize.
-         input from value (file-info:file-name) binary no-convert.
-         import mbuffer1 no-error .
-         input close.
+         filesend:sendfile(resp, file-info:file-name).
+         return.
       end.
-      
-      if logWrite:LogStr = ""
-      then tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1)).
-      else tempLongCh = substitute("HTTP/1.0 500 Internal Server Error&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&5&2&2",{&CRLF},{&HdEnd},0, "При обмене возникли ошибки.",logWrite:LogStr). 
-      block-write:
-      do trans:
-      set-size(mbuffer) = 0.
-      set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
-      put-string(mbuffer,1) = tempLongCh.
-      
-      assign
-         glog = req:HndlSocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
-      if not glog 
-      then do:
-        logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
-        ErrStatus = true.
-        leave block-write.
-      end.
-      if logWrite:LogStr = ""
-      then do:
-         assign
-            glog = req:HndlSocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
-         if not glog
-         then do:
-           logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
-           ErrStatus = true.
-           leave block-write.
-         end.
-      end.
-      end.
+      writeSockError (req:HndlSocket, substitute("&1 &2", "При обмене возникли ошибки.",logWrite:LogStr)).
       finally:
          mServiceBusy = no.
       end.
@@ -381,7 +369,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          then do:
             define variable vMesForTsd as character no-undo.
              vMesForTsd = "Не найден файл " + vfileDbInit + " для версии протокола " + iprotocol.
-             writeSockError (hndlsocket, vMesForTsd,  iprotocol).
+             writeSockError (hndlsocket, vMesForTsd).
              logWrite:LogStr = vMesForTsd.
              ErrStatus = true.
              return error . 
@@ -404,6 +392,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        
        
    end.
+   
+   define variable mType as character no-undo.
+   define variable mVersion as character no-undo.
   method public override void Execute_( input req as IRequest, resp as class IResponse ):
   ErrStatus = false.
   do transaction:
@@ -464,6 +455,20 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         do:
           parseXML().
           tsd:Check_().
+        end.
+      when "getVersion" then 
+        do:
+          parseXML().
+          define variable vfile as character no-undo.
+          vfile = tsd:getFileVersion(mType, mVersion).
+          if vfile ne ?
+          then do:
+             filesend:sendfile(resp, vfile).
+             return.
+          end.
+          else do:
+             tsd:SomeStr = tsd:getStatusXml(false, substitute ("Нет файля для учтройства '&1' и версии '&2'", mType, mVersion)).
+          end.
         end.
       when "TH_ALL" then 
         do:
@@ -556,7 +561,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               if not available buf_bar-code then do:
                 logWrite:LogStr = 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
                 tsd:SomeStr = tsd:getStatusXml(false, "Не известный штрих-код:" + TempDocLine.b-code).
-                writeSock("").
+                writeSock(resp,"").
               end.
               
             end.
@@ -634,7 +639,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
 
     if ErrStatus then 
     do:
-      writeSock("").
+      writeSock(resp,"").
       if ErrStatus = true then undo.
     end.
     else do:
@@ -648,7 +653,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          resp:setContent(tsd:SomeStr). 
       end.
       else do:
-         writeSock(str).
+         writeSock(resp,str).
          if ErrStatus = true then undo.
       end.
       end.
@@ -785,16 +790,14 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           cDocQnty   = replace (TempTrnLineMT.DocQnty, ",", ".") .
           cFactQnty  = replace (TempTrnLineMT.FactQnty, ",", ".") .
           cPriceRubl = replace (TempTrnLineMT.Price_, ",", ".") .
-          cFactQntyDec = DECIMAL(cFactQnty) no-error.
-          if ERROR-STATUS:ERROR then
+          cFactQntyDec = decimal(cFactQnty) no-error.
+          if error-status:error then
           assign
           cFactQnty = "0" .
-          cPriceRublDec = DECIMAL (cPriceRubl)no-error.
-          if ERROR-STATUS:error then 
-          ASSIGN 
-          cPriceRubl = "0"
-          .
-          RowSum    =  DECIMAL (cFactQnty) * DECIMAL (cPriceRubl) .
+          cPriceRublDec = decimal (cPriceRubl)no-error.
+          if error-status:error then 
+          cPriceRubl = "0" .
+          RowSum    =  decimal (cFactQnty) * decimal (cPriceRubl) .
 
         /* для помарочного учета объеденим все линии по товару и будем резервировать количество по маркам в rsrv-dtl.p*/
         if myflagsDoc:isDocMarkOn and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
@@ -1091,6 +1094,11 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               tsd:SN = hRow:get-attribute("value").
             end.
           end.
+        when "device" then
+          do:
+            mType    = hRow:get-attribute("type"). 
+            mVersion = hRow:get-attribute("version").
+          end.
       end case.
     end.
     
@@ -1149,62 +1157,10 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   end method.
 
   
-  method private logical writeSock ( arg as character):
-    
-    define variable mbuffer       as memptr   no-undo.
-    define variable mbuffer1      as memptr   no-undo.
-    define variable tempLongCh    as longchar no-undo.
-    define variable glog          as logical  no-undo.
-    
-    define variable mTypeResp as character no-undo init "text/csv".
-    
-    if arg = "dictionaries" then 
-    do:
-      logWrite:WriteFileToLog("DBInitDict.txt","IBM866").
-      if search ("dictionaries.s3db") = ? 
-      then do:
-        logWrite:LogStr = "Не найден файл базы данных, для отсылки на TSD, проверьте настройки propath - должен быть указан путь рабочий директории".
-         return false.
-      end.
-      assign
-         file-info:file-name = "dictionaries.s3db"
-      .
-      set-size (mbuffer1) = file-info:file-size.
-      input from value (file-info:file-name) binary no-convert.
-      import mbuffer1.
-      input close.
-      endStep("Завершена конвертация справочника.").
-      mTypeResp = "raw".
-    end.
-    else 
-    do:
-      set-size(mbuffer1) = length (tsd:SomeStr, "RAW":U) + 1.
-      put-string(mbuffer1,1) = tsd:SomeStr.        
-    end.
-      
-    tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: &4&1Content-Length: &3&2",{&CRLF},{&HdEnd},get-size(mbuffer1),mTypeResp).
-    set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.
-    put-string(mbuffer,1) = tempLongCh.
-    startStep("Начало отправки справочника на ТСД.").
-    assign
-      glog = hndlsocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.
-    set-size(mbuffer) = 0.
-    if not glog 
-      then do:
-        logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.". 
-        ErrStatus = true.
-      end.
-    assign
-      glog = hndlsocket:write(mbuffer1,1,get-size(mbuffer1)) no-error.
-    set-size(mbuffer1) = 0.
-    if not glog
-      then do:
-        logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".
-        ErrStatus = true.
-      end.
-    endStep("Завершена отправка справочника на ТСД.").
-    return true.
-      
+  method private logical writeSock (resp as class IResponse, arg as character):
+    resp:setContent(arg).
+    resp:Content-Type= "text/csv".   
+    resp:condition = resp:STSlist:WriteResponse:NameProp.  
   end method.
 
 	/*------------------------------------------------------------------------------
@@ -1213,6 +1169,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
 	------------------------------------------------------------------------------*/
 	destructor public TSDCommand ( ):
       delete object tsd no-error.
+      if mEmptyConstr
+      then
+         delete object filesend no-error.
    end destructor.
   
    

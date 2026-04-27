@@ -48,6 +48,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   { str/utd-err.i class }
   {ibs/th/gbl/doc-codeClass.i}
   {ibs/th/gbl/basecodeClass.i}
+  {utl/search.i}  
   { ref/gdsoattr.i '' class}
   {str/mark_collect.i}
   define stream str1 .
@@ -179,8 +180,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-
-  method public character getStatusXml (statusOk as logical, statusMsg as char):
+  method public longchar getStatusXml (statusOk as logical, statusMsg as char):
+     return getStatusXml(statusOk,statusMsg,"").
+  end.
+  
+  method public longchar getStatusXml (statusOk as logical, statusMsg as char, iDopTag as longchar):
     
     define variable statusOkTag as character no-undo.
     define variable statusMsgTag as character no-undo. 
@@ -189,7 +193,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       statusOkTag = substitute ('<STATUS>&1</STATUS>', if statusOk then "OK" else "ERROR")
       statusMsgTag = if statusOk then '' else substitute ('<STATUS_MESSAGE>&1</STATUS_MESSAGE>', statusMsg)
     .
-    return substitute ('<?xml version="1.0" encoding="&1"?><TSD>&2&3</TSD>', CP, statusOkTag, statusMsgTag).
+    return substitute ('<?xml version="1.0" encoding="&1"?><TSD>&2&3&4</TSD>', CP, statusOkTag, statusMsgTag,iDopTag).
 
   end method.
 
@@ -438,7 +442,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         end.      
       end.
       
-      if buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then myflagsDoc:setFlagsToInt(1). /* Было решено сделать флаг 1 всегда для инвентаризаций на АКС от 22.04.2025 */
+      if buf_trn-doc.ext-doc-type = {&TDEDT_Inv} then myflagsDoc:isDocMarkOn = yes. /* Было решено сделать флаг 1 всегда для инвентаризаций на АКС от 22.04.2025 */
       
       find first buf_user-login where buf_user-login.user-id = buf_trn-doc.user-name  no-lock no-error.
       addDoc(
@@ -482,10 +486,13 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     if available (buf_clients) 
       then statusOK = true. 
 	  else statusOK = false. 
-    SomeStr = 
-      if true // Зачем неписать сообщение об ошибке если в ответ всеравно отправляется ошибка 
-        then getStatusXml(statusOK, "") 
-        else if lookup (SN, confPar) = 0 then getStatusXml(statusOK, "LIC") else getStatusXml(statusOK, "OBJ").
+     
+    if true // Зачем неписать сообщение об ошибке если в ответ всеравно отправляется ошибка 
+    then do:
+       importVersion(). 
+       SomeStr = getStatusXml(statusOK, "",getVersion()).
+    end. 
+    else SomeStr = if lookup (SN, confPar) = 0 then getStatusXml(statusOK, "LIC") else getStatusXml(statusOK, "OBJ").
     
   end method.
   
@@ -3106,6 +3113,89 @@ end.
      empty temp-table tt-doc-line-marks.
      empty temp-table tt-doc-line-mark.
   end.
+  define STREAM sReadDir.
+  
+  define temp-table tt-version no-undo
+     field fnAME    as character 
+     field FullPath as character 
+     field device   as character 
+     field version  as character 
+  index version device version
+  index fnAME FullPath fnAME. 
+  method private void importVersion():
+     define variable vPureName as character no-undo.
+     define variable vFullPath as character no-undo.
+     define variable vFileType as character no-undo.
+     define variable mpos as integer no-undo.
+     define buffer ttfile for tt-version.
+     empty temp-table tt-version.
+     define variable vDir as character no-undo.
+     vdir = replace(search("exe/7z.exe"),"7z.exe","tsd").
+     if objExists(vdir,"d") ne ?
+     then do:
+        input STREAM sReadDir FROM os-dir(vdir).
+        repeat:
+           import stream sReadDir vPureName vFullPath vFileType.
+           if vPureName begins "." then next.
+           if vFileType =  "f" then 
+           do:
+              find first ttfile where ttfile.FullPath = vFullPath 
+                                  and ttfile.fnAME     = vPureName
+              no-error.
+              if not available ttfile
+              then do:
+                 create ttfile.
+                 assign
+                    ttfile.fnAME         = vPureName
+                    ttfile.FullPath      = vFullPath
+                 no-error.
+                 vPureName = entry(1,vPureName,".").
+                 mpos = index (vPureName,"_").
+                 if mpos = 0
+                 then
+                    ttfile.device = vPureName.
+                 else assign 
+                    ttfile.device  = CAPS(substring (vPureName,1,mpos - 1))
+                    ttfile.version = substring (vPureName,  mpos + 1)
+                 .
+              end.
+           end.
+         end.
+      end.
+   end.
+   
+   method private longchar getVersion():
+      define variable vVertion as longchar no-undo.
+      for each tt-version break by tt-version.device:
+         if first-of (tt-version.device)
+         then do:
+             vVertion = vVertion + substitute ("<&1><VERSIONS>",tt-version.device).
+             
+         end.
+         vVertion = vVertion + substitute ("<VERSION>&1</VERSION>",tt-version.version).
+         
+         if last-of (tt-version.device)
+         then do:
+            vVertion = vVertion + substitute ("</VERSIONS><LASTVERSION>&2</LASTVERSION></&1>",tt-version.device,tt-version.version).
+         end.
+         
+      end.
+      return vVertion.
+   end.
+   
+   method public char getFileVersion(iDevice as char,iversion as char):
+      importVersion().
+      if iversion = "" or iversion = ?
+      then
+         find last tt-version where tt-version.device = iDevice no-lock no-error.
+      else
+         find first tt-version where tt-version.device = iDevice
+                                 and tt-version.version = iversion 
+         no-lock no-error.
+      return if available tt-version then tt-version.FullPath else ?.
+   end.
+   
+   
   { utl/gtin.i class }
 
 end class.

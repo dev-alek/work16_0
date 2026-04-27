@@ -127,13 +127,20 @@ class ibs.th.skt.Commands.IResponse abstract:
       define variable vtype    as character no-undo.
       define variable vConType as character no-undo.
       define variable vRas     as character no-undo.
-      file-information:file-name = "cmp/" + arg.
+      file-information:file-name =  arg.
       vtype = file-information:file-type.
       if    file-information:file-name eq "" 
          or vtype eq ?
          or index( vtype, "F") = 0
-      then
-         file-information:file-name = "cmp/dontknow.jpg".
+      then do:
+         file-information:file-name = "cmp/" + arg.
+         vtype = file-information:file-type.
+         if    file-information:file-name eq "" 
+            or vtype eq ?
+            or index( vtype, "F") = 0
+         then
+            file-information:file-name = "cmp/dontknow.jpg".
+      end.
       vRas = entry(2,file-information:file-name,".").
       case vRas:
          when "icon" then vConType = "image/vnd.microsoft.icon". 
@@ -144,6 +151,7 @@ class ibs.th.skt.Commands.IResponse abstract:
       or when "xml"  then vConType = "text/xml".
          when "json" then vConType = "application/json".
          when "html" then vConType = "text/html".
+         otherwise vConType = "raw".
       end.
       set-size(Content) = 0.
       set-size(Content) = file-information:file-size + 1.    
