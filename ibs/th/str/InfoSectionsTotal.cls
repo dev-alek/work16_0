@@ -1924,11 +1924,14 @@ class ibs.th.str.InfoSectionsTotal:
             'NeckArea               = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea) skip
             'Tv                     = ' InfoSectionCurr:TankTemp skip
             'Tr                     = ' InfoSectionCurr:DensTemp skip
-            'R                      = ' ( InfoSectionCurr:TankDensity * 1000 ) skip
+            'R                      = ' trim(string(( InfoSectionCurr:TankDensity * 1000 ), ">>>9.9<")) skip
             'Tcy                    = ' TempForPomi skip
             'ToolType               = ' ToolType                skip
             'A_Reservoir            = ' string (A_Reservoir)    skip
             'DeltaOtn_V             = ' string (v-auto-error)   skip
+            'ToolAutomationLevel_R  = ' ToolAutomationLevel_R skip
+            'ToolAutomationLevel_Tv = ' ToolAutomationLevel_Tv skip
+            'ToolAutomationLevel_Tr = ' ToolAutomationLevel_Tr skip
             'DeltaAbs_R             = ' DeltaAbs_R              skip
             'DeltaOtn_R             = ' DeltaOtn_R              skip
             'DeltaAbs_Tv            = ' DeltaAbs_Tv             skip
@@ -1941,6 +1944,7 @@ class ibs.th.str.InfoSectionsTotal:
             'DeltaV                 = ' DeltaV            skip  
             'Vcy                    = ' Vcy               skip 
             'Rcy                    = ' Rcy               skip
+            'Rcy20                  = ' Rcy20             skip
             'V                      = ' V                 skip
             'CTL_base_alt           = ' CTL_base_alt      skip 
             'CPL_base_alt           = ' CPL_base_alt      skip 
@@ -1955,11 +1959,7 @@ class ibs.th.str.InfoSectionsTotal:
             'DeltaOtn_Vcy           = ' DeltaOtn_Vcy      skip 
             'M                      = ' M                 skip
             'DeltaOtn_M             = ' DeltaOtn_M        skip
-            'ToolAutomationLevel_R  = ' ToolAutomationLevel_R skip
-            'ToolAutomationLevel_Tv = ' ToolAutomationLevel_Tv skip
-            'ToolAutomationLevel_Tr = ' ToolAutomationLevel_Tr skip
-            'Rcy20                  = ' Rcy20 skip
-            'Warnings               = ' vWrn skip
+            'Warnings               = ' vWrn              skip
           .    
 
           output stream outstream close.
@@ -3627,8 +3627,8 @@ class ibs.th.str.InfoSectionsTotal:
           'Tv2                          = ' Tv2                                 SKIP
           'Tr1                          = ' Tr1                                 SKIP
           'Tr2                          = ' Tr2                                 skip
-          'R1                           = ' R1                                  SKIP
-          'R2                           = ' R2                                  SKIP
+          'R1                           = ' trim(string(R1, ">>>9.9<"))         SKIP
+          'R2                           = ' trim(string(R2, ">>>9.9<"))         SKIP
           'ToolType1                    = ' ToolType1                           SKIP
           'ToolType2                    = ' ToolType2                           SKIP
           'DeltaOtn_K                   = ' DeltaOtn_K                          SKIP

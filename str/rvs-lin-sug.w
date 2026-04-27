@@ -1986,8 +1986,8 @@ define buffer bf_place for ub.place .
             'H                      = ' tt-rvs-line.state-level-total * 10                    SKIP
             'CalibrationTable       = ' CalibTable                    SKIP
             'T                      = ' tt-rvs-line.state-temperature               SKIP
-            'R_liquid               = ' tt-rvs-line.state-density * 1000                         SKIP
-            'R_gas                  = ' tt-rvs-line.state-dens-pf-sug * 1000       SKIP
+            'R_liquid               = ' trim(string(tt-rvs-line.state-density * 1000, ">>>9.9<"))                         SKIP
+            'R_gas                  = ' trim(string(tt-rvs-line.state-dens-pf-sug * 1000, ">>>9.9<"))        SKIP
             'A_Reservoir            = ' A_Reservoir                                   SKIP
             'DeltaOtn_K             = ' DeltaOtn_K                                    SKIP
             'DeltaOtn_K_Full        = ' DeltaOtn_K_Full                               SKIP

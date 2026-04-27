@@ -2111,7 +2111,7 @@ procedure pomi-calc :
       'DeltaAbs_H_Water_CalcType   = ' DeltaAbs_H_Water_CalcType SKIP
       'Tr                          = ' (if temp-izm-vol <> ? then temp-izm-vol else new_shift-period.sales-temperature) SKIP
       'Tv                          = ' new_shift-period.sales-temperature  SKIP
-      'R                           = ' new_shift-period.sales-density * 1000  SKIP
+      'R                           = ' trim(string(new_shift-period.sales-density * 1000, ">>>9.9<"))  SKIP
       'Tcy                         = ' temp-for-pomi                       SKIP
       'ToolType                    = ' ToolType                            SKIP
       'DeadZone_Reservoir          = ' DeadZone_Reservoir                  SKIP

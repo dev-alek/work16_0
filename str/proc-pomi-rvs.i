@@ -1316,8 +1316,8 @@ procedure calc-pomi-rvs :
         'Tv2                          = ' Tv2                                 SKIP
         'Tr1                          = ' Tr1                                 SKIP
         'Tr2                          = ' Tr2                                 skip
-        'R1                           = ' R1                                  SKIP
-        'R2                           = ' R2                                  SKIP
+        'R1                           = ' trim(string(R1, ">>>9.9<"))         SKIP
+        'R2                           = ' trim(string(R2, ">>>9.9<"))         SKIP
         'ToolType1                    = ' ToolType1                           SKIP
         'ToolType2                    = ' ToolType2                           SKIP
         'DeltaOtn_K                   = ' DeltaOtn_K                          SKIP

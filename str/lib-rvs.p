@@ -4661,8 +4661,8 @@ THEN DO:
           'H                      = ' bf_rvs-line.level-total * 10            SKIP
           'CalibrationTable       = ' CalibTable                              SKIP
           'T                      = ' bf_rvs-line.state-temperature           SKIP
-          'R_liquid               = ' bf_rvs-line.state-density * 1000  SKIP
-          'R_gas                  = ' (if state-vapor-density <> ? then (state-vapor-density * 1000) else (vapor-density * 1000))  SKIP
+          'R_liquid               = ' trim(string(bf_rvs-line.state-density * 1000, ">>>9.9<"))  SKIP
+          'R_gas                  = ' trim(string((if state-vapor-density <> ? then (state-vapor-density * 1000) else (vapor-density * 1000)), ">>>9.9<"))  SKIP
           'A_Reservoir            = ' A_Reservoir                                   SKIP
           'DeltaOtn_K             = ' DeltaOtn_K                                    SKIP
           'DeltaOtn_K_Full        = ' DeltaOtn_K_Full                               SKIP
@@ -4860,7 +4860,7 @@ THEN DO:
           'DeltaAbs_H_Water_CalcType   = ' DeltaAbs_H_Water_CalcType SKIP
           'Tv                          = ' if temp-izm-vol <> ? then temp-izm-vol else bf_rvs-line.state-temperature  SKIP
           'Tr                          = ' bf_rvs-line.state-temperature SKIP
-          'R                           = ' if izmer-density <> ? then ( izmer-density * 1000 ) else ( bf_rvs-line.state-density * 1000 )  SKIP
+          'R                           = ' trim(string(if izmer-density <> ? then ( izmer-density * 1000 ) else ( bf_rvs-line.state-density * 1000 ), ">>>9.9<"))  SKIP
           'Tcy                         = ' temp-for-pomi                       SKIP
           'ToolType                    = ' ToolType                            SKIP
           'DeadZone_Reservoir          = ' DeadZone_Reservoir                  SKIP
