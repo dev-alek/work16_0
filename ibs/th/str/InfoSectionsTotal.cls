@@ -1612,6 +1612,7 @@ class ibs.th.str.InfoSectionsTotal:
   method public void CalcWeight ():  
     define variable ToolType                as integer no-undo.
     define variable DeltaAbs_R              as decimal no-undo.
+    define variable DeltaOtn_R              as decimal no-undo.
     define variable DeltaAbs_Tv             as decimal no-undo.
     define variable DeltaAbs_Tr             as decimal no-undo.
     define variable NeckType                as integer no-undo.
@@ -1683,10 +1684,12 @@ class ibs.th.str.InfoSectionsTotal:
             assign
               ToolType               = buf_sr-izmerenia.sr-type-id
               DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+              DeltaOtn_R             = buf_sr-izmerenia.sr-relative-err-dens
               ToolAutomationLevel_R  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
               ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
               ToolAutomationLevel_Tr = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             .
+            if DeltaOtn_R = ? then DeltaOtn_R = 0 .
           end.
           
           find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSiTemp no-error.
@@ -1874,7 +1877,7 @@ class ibs.th.str.InfoSectionsTotal:
             input ToolAutomationLevel_Tv,
             input ToolAutomationLevel_Tr,
             input DeltaAbs_R,
-            input 0.0, /* DeltaOtn_R */
+            input DeltaOtn_R,
             input DeltaAbs_Tv,
             input DeltaAbs_Tr,
             input DeltaOtn_N,
@@ -1927,6 +1930,7 @@ class ibs.th.str.InfoSectionsTotal:
             'A_Reservoir            = ' string (A_Reservoir)    skip
             'DeltaOtn_V             = ' string (v-auto-error)   skip
             'DeltaAbs_R             = ' DeltaAbs_R              skip
+            'DeltaOtn_R             = ' DeltaOtn_R              skip
             'DeltaAbs_Tv            = ' DeltaAbs_Tv             skip
             'DeltaAbs_Tr            = ' DeltaAbs_Tr             skip
             'DeltaOtn_N             = ' DeltaOtn_N              skip

@@ -2306,6 +2306,7 @@ define variable VolumetricExpansion as decimal no-undo .
       put stream outstream unformatted
         "Rprov                  = " 0.0 skip
         "Mpokr                  = " 0.0 skip
+        "Vdisp                  = " 0.0 skip
         "CoverFloatingHeight    = " 0.0 skip
       .
     end.
