@@ -22,13 +22,12 @@ create: Суслов Алексей Юрьевич
 
 */
 
-
-
+{ibs/th/skt/ControlledClients/TSDTT.i}
 /*define input  parameter parParentProc  as widget-handle no-undo.*/
 define input  parameter v-num          as integer   no-undo.
 define input  parameter add-sens  as logical no-undo.  /* активна ли кнопка добавить в документе : yes / no - вызов из документа,? - вызов из гл. меню - привязка партий к складским местам */
 define input  parameter p-doc-rec as recid no-undo .
-define input  parameter p-name-file as character no-undo .
+define input  parameter table for TempDocLineIsTSD .
 define input  parameter p-action    as character no-undo .
 
 define variable vss-revision    as character no-undo initial "$Revision: e5fbdeab5909, 1547, rls $":U .
@@ -101,21 +100,6 @@ define variable v-cntxt-load-time  as integer   no-undo .
 define variable v-cntxt-holidays  as character no-undo .
 
 
-if num-entries(p-name-file, {&delim-par}) >= 2 then do:
-  assign
-    v1 = entry(1,p-name-file, {&delim-par})
-    v2 = entry(2,p-name-file, {&delim-par})
-    no-error
-    .
-   if error-status :error then
-   assign
-     v1 = p-name-file
-     v2 = ?
-   .
-   v-upperhandl = widget-handle(v2) .
-   p-name-file  = v1.
-end.
-
 find first t-doc no-lock where recid(t-doc) = p-doc-rec no-error .
 assign
   vt-host-code          = t-doc.host-code
@@ -159,60 +143,6 @@ define frame a
     with view-as dialog-box side-labels three-d title "".
 { str/bc-res.i "all" "log" }
 { str/libbcrcn.i }
-/* -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   чтение файла сканера
-   -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-if p-name-file = ? then do:
-system-dialog get-file scan-txt
-  title "Выберите файл со сканера"
-       filters "WorkAbout MS15"         "*.dbs",
-               "WorkAbout"              "*.imp",
-               "Инвентаризация с кассы" "*.inv",
-               "Все файлы"               "*.*"
-       update varlog.
-if not varlog then return error.
-end.
-else do:
-  scan-txt = p-name-file.
-end.
-if entry (2, scan-txt, ".") = "log" then do:
-  message "Файл с расширением '.log' не может быть обработан. Переименуйте его.".
-  return error.
-end.
-if entry (2, scan-txt, ".") = "err" then do:
-  message "Файл с расширением '.err' не может быть обработан. Переименуйте его.".
-  return error.
-end.
-if entry (2, scan-txt, ".") = "ler" then do:
-  message "Файл с расширением '.ler' не может быть обработан. Переименуйте его.".
-  return error.
-end.
-
-/*{ str/tdat-val.i
-    t-doc.doc-code
-    {&trdcattr-scanfile}
-    varvalue
-    vartype
-    no-error
-}
-if lookup (scan-txt, varvalue) <> 0 then do:
-  message "Файл с названием " scan-txt " уже загружался в документ " t-doc.doc-code " ." skip
-          "Продолжить?" view-as alert-box question buttons yes-no update varlog.
-  if varlog <> yes then do:
-    return error.
-  end.
-end.
-else do:
-  assign
-    varline-file = varvalue + min (",", varvalue) + scan-txt no-error.
-  { str/tdat-wrt.i
-      t-doc.doc-code
-      {&trdcattr-scanfile}
-      varline-file
-      no-error
-  }
-end.*/
-
 
   assign
     v-pri-nakl- = false
@@ -246,9 +176,9 @@ end.*/
     end.
   end case.
 
-scan-name = entry (1, scan-txt, ".").
+scan-name = "scantsd".
 
-frame a :title = "Разбор файла : " + scan-txt.
+frame a :title = "Разбор таблицы бар-кодов".
 { gbl/conf-rd.i  "'noapndsc'"  0  "''"  0 "''" "''" "''"  no varnoapnd vartype no-error }
 if varnoapnd = "yes":u then do:
   output stream log to value (scan-name + ".log").
@@ -282,7 +212,6 @@ else do:
   end.
 end.
 view frame a.
-input stream cur from value (scan-txt).
 if t-doc.doc-type = {&inventory} and
    t-doc.status_  = {&permitted} and
    add-sens       = ?            then do:
@@ -301,7 +230,7 @@ end.
 for each un-bc on error undo, return error return-value :
     delete un-bc.
 end.
-run str/bc-anlz.p (parParentProc , "file", scan-txt, yes, output varerr, output table in-bc) no-error.
+run str/bc-anlz.p (parParentProc , "table", string(temp-table TempDocLineIsTSD:handle), yes, output varerr, output table in-bc) no-error.
 if error-status:error then do:
    message "Ошибка при обработке файла." skip
            error-status:get-message(1)

@@ -71,6 +71,8 @@ define temp-table TempDocLine no-undo
   line-num
   gds-code
   .
+
+define temp-table TempDocLineIsTSD like TempDocLine.
   
 define temp-table TempDocLineTSD no-undo
   field gds-code     as integer

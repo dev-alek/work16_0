@@ -102,6 +102,15 @@ end.
 else do:
   run waitfram-show in this-procedure ("Разбор сканерного файла.").
 end.
+if parworkmode = "table" then do:
+   run loadTempTable in this-procedure no-error.
+   if error-status:error then
+   do:
+      message return-value view-as alert-box error buttons ok.
+        run waitfram-hide in this-procedure.
+      return error.
+   end.
+end.
 if parworkmode = "file" then do:
    if search(parinformation) = ? then do:
       message "Не найден файл: " parinformation " с бар-кодами для анализа."
@@ -218,6 +227,47 @@ else run undo-qnty.
 run waitfram-hide in this-procedure.
 
 { str/read-str.i }
+procedure loadTempTable:
+  define variable vTime   as integer   no-undo.
+  define variable vWhere  as character no-undo.
+  define variable hTable  as handle  no-undo.
+  define variable hBuffer as handle  no-undo.
+  define variable hQuery  as handle  no-undo.
+
+  assign
+    vTime = TIME
+    hTable = handle(parinformation)
+    vWhere = substitute("FOR EACH &1", hTable:name)
+  no-error.
+  if error-status:error or not valid-handle(hTable) then
+    return error "Ошибка при чтении таблицы строк документа".
+
+  create buffer hBuffer for table hTable.
+  create query  hQuery.
+  hQuery:set-buffers(hBuffer).
+  hQuery:query-prepare(vWhere).
+  hQuery:query-open().
+  hQuery:get-first().
+  repeat while not hQuery:query-off-end:
+    assign
+      bar-str = ""
+      i-num = i-num + 1
+    .
+    run waitfram-show in this-procedure (substitute("Разбор записей с бар-кодами. Всего считано &1. Время &2.", i-num, string (time - vTime, "hh:mm:ss"))).
+    create in-bc.
+    assign 
+      in-bc.nm       = i-num
+      in-bc.bar-str  = substitute(
+                         "&1,&2", 
+                         hBuffer:buffer-field("b-code"):buffer-value,
+                         hBuffer:buffer-field("fact-qnty"):buffer-value)
+    .
+    hQuery:GET-NEXT().
+  end.
+  hQuery:query-close().
+  delete object hQuery.
+end procedure.
+
 procedure loadnewfile:
 define variable vartime as integer no-undo.
 input stream scan-file from value (parinformation).

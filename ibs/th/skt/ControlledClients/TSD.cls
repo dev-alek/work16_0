@@ -1087,10 +1087,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     else 
     do:
       if not (TempTrnDoc.ext-doc-code begins "TSD-") then do:
-      LogWrite:LogStr = "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code.
-      SomeStr = getStatusXml(false, "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code).
+/*          run gbl/inidebug.p.                                                                    */
+/*      LogWrite:LogStr = "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code.*/
+/*      SomeStr = getStatusXml(true, "Нет инвентаризации в статусе разр+ с кодом: " + TempTrnDoc.ext-doc-code).*/
   
-      return false.
+      return true.
       end.
         /* Проверка на создание итогового документа */
     find first bf_inv-doc-attr no-lock where bf_inv-doc-attr.attr-code = "ItogInv" and bf_inv-doc-attr.attr-value = TempTrnDoc.ext-doc-code no-error .
@@ -1210,55 +1211,51 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
       end.
     end.      
     end.
-    os-delete value (search ("doctsd.txt")) no-error.
-    os-delete value (search ("newdoctsd.txt")) no-error.
-    output stream str1 to value ("doctsd.txt").
-    output stream str2 to value ("newdoctsd.txt").
+    
+    if can-find (first TempDocLine where TempDocLine.is-tsd-qnty = true) and
+       not invMulti then
+    do:
+      empty temp-table TempDocLineIsTSD.
     for each TempDocLine where TempDocLine.is-tsd-qnty = true:
-      put stream str1 unformatted TempDocLine.b-code "," TempDocLine.fact-qnty skip.
-    end.
-    for each TempDocLine where TempDocLine.is-tsd-qnty = false:
-      put stream str2 unformatted TempDocLine.b-code "," TempDocLine.fact-qnty skip.
-    end.
-    output stream str1 close.
-    output stream str2 close.
-    if can-find (first TempDocLine)
-    then do: 
-      run gbl/filnline.p (input ("doctsd.txt"), output varzero-string).
-      if varzero-string and not invMulti
-      then do:
-        run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input "doctsd.txt", if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
+        create TempDocLineIsTSD.
+        buffer-copy TempDocLine to TempDocLineIsTSD no-error.
         if error-status:error then do:
-          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
+          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + error-status:get-message(1).
           SomeStr = getStatusXml(false, LogWrite:LogStr).
-          os-delete value (search ("doctsd.txt")) no-error.
-          os-delete value (search ("newdoctsd.txt")) no-error.
+          return false.
+    end.
+    end.
+      run str/scantsd.p ( 2, input no , input recid(buf_trn-doc) ,input table TempDocLineIsTSD, if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
+        if error-status:error then do:
+        LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value.
+          SomeStr = getStatusXml(false, LogWrite:LogStr).
           return false.
         end.
 /*        else LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value.*/
       end.
 
-      run gbl/filnline.p (input ("newdoctsd.txt"), output varzero-string).
-      if varzero-string 
-      then do:
-      if not isManual then 
-      do: 
-        if not invMulti then do:
-        run str/scantsd.p ( 1, input no , input if invMulti then recid(trn-doc) else recid(buf_trn-doc) ,input "newdoctsd.txt", if myflagsDoc:isDocMarkOn then "rsvmarks" else ""  ) no-error.
+    if can-find (first TempDocLine where TempDocLine.is-tsd-qnty = false) and 
+       not isManual and 
+       not invMulti then 
+    do:
+      empty temp-table TempDocLineIsTSD.
+      for each TempDocLine where TempDocLine.is-tsd-qnty = false:
+        create TempDocLineIsTSD.
+        buffer-copy TempDocLine to TempDocLineIsTSD no-error.
         if error-status:error then do:
-          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
+          LogWrite:LogStr = LogWrite:LogStr + {&new-line} + error-status:get-message(1).
           SomeStr = getStatusXml(false, LogWrite:LogStr).
-          os-delete value (search ("doctsd.txt")) no-error.
-          os-delete value (search ("newdoctsd.txt")) no-error.
           return false.
         end.
         end.
+      run str/scantsd.p ( 1, input no , input recid(buf_trn-doc) ,input table TempDocLineIsTSD, if myflagsDoc:isDocMarkOn then "rsvmarks" else "" ) no-error.
+      if error-status:error then do:
+        LogWrite:LogStr = LogWrite:LogStr + {&new-line} + return-value. 
+        SomeStr = getStatusXml(false, LogWrite:LogStr).
+        return false.
       end.
       end.
 
-    end.
-    os-delete value (search ("doctsd.txt")) no-error.
-    os-delete value (search ("newdoctsd.txt")) no-error.
     SomeStr = getStatusXml(true, "").
 
     return true.
