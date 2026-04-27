@@ -19,35 +19,40 @@ define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 
+define new global Shared variable opn_win as logical no-undo init NO. 
 define variable mCodeTrg as class ibs.th.ref.code.code_trg no-undo.
-mCodeTrg = new ibs.th.ref.code.code_trg(if    g#db-num eq 0 
-                                           or imode    ne {&update} 
-                                        then imode 
-                                        else {&lookup}).
-mCodeTrg:formLable(1, 3, "Файл").
+mCodeTrg = new ibs.th.ref.code.code_trg({&lookup}).
+mCodeTrg:formLable(1, 1, "Код").              
+mCodeTrg:formLable(1, 3, "Файл").              
 mCodeTrg:formLable(1, 6, "XML").
 mCodeTrg:parparentproc = Parparentproc.
 mCodeTrg:menuHandle = this-procedure.  
 mCodeTrg:addMenu(1, "Восстановление файла", ",Экспорт в XML,").
-/*mCodeTrg:parent = "XML_backup".*/
-mCodeTrg:parent = iparent.
+mCodeTrg:parent = "XML_backup".
 mCodeTrg:startlevel = num-entries(mCodeTrg:parent, {&delim-par}).
 mCodeTrg:MaxLevel = mCodeTrg:startlevel.
 mCodeTrg:title = "Файл для восстановления".
 mCodeTrg:filter = " and code.code = " + quoter(icode).
-mCodeTrg:Mode = {&lookup}.  
+mCodeTrg:Mode = {&lookup}. 
 
-mCodeTrg:brwcode().
+if opn_win = YES then do:
+    run menuitem_1_2  ( input this-procedure ).
+end.
+
+if opn_win = NO then do:
+   opn_win = YES.
+   mCodeTrg:brwcode().
+end.
 
 finally:
-   delete object mCodeTrg.
+    opn_win = NO.
 end finally.
 
 procedure menuitem_1_2: 
    define input  parameter iBuff as handle no-undo.
    define variable cSaveFile as character no-undo.
    define variable lCommit   as logical   no-undo.
-
+   opn_win = YES.
    cSaveFile = substring(icode, r-index(icode, " ") + 1).
    SYSTEM-DIALOG GET-FILE cSaveFile
        TITLE "Сохранить XML-файл"
@@ -77,6 +82,5 @@ procedure menuitem_1_2:
          message "Ошибка сохранения файла:" view-as alert-box.
      else  message  "Файл сохранён:" cSaveFile view-as alert-box .
    end.
-
 end.
 
