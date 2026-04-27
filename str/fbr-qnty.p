@@ -704,9 +704,7 @@ on error undo calc-ingr, return error
                            and buf_old_fbr-line.is-comp      = buf_ingr_fbr-line.is-comp
                            and recid( buf_old_fbr-line )    <> recid( buf_ingr_fbr-line )
                     no-error.
-                    if ( not v-value-qntc
-                         and available buf_old_fbr-line )
-/*                    and p-autofbr = no      */
+                    if available buf_old_fbr-line
                     then do:
                         run str/fbr-mrcp.p (
                               input buf_ingr_goods.gds-code
@@ -715,11 +713,15 @@ on error undo calc-ingr, return error
                             , output v-produced-qnty
                         ).
                     end.
-                    else do:
-                        assign
-                            v-required-qnty = buf_ingr_fbr-line.fact-qnty
-                            v-produced-qnty = 0
-                        .
+                    else do :
+                      assign
+                        v-required-qnty = buf_ingr_fbr-line.fact-qnty
+                        v-produced-qnty = 0
+                      .
+                    end .
+                    if v-value-qntc
+                    then do:
+                      assign v-produced-qnty = 0 .
                     end.
                     assign
                         v-need-qnty = v-required-qnty - ( v-produced-qnty + v-free-qnty )
