@@ -650,6 +650,7 @@ do
     end case .   
   end.    
   if sgdkk then v-car-type = "СЭП" .   
+  if v-car-type = "" then v-car-type = "Бензовоз" .
                                            
   next_:
   for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code :  

@@ -808,7 +808,7 @@ procedure save_update :
       { str/tdat-wrt.i
           t_doc.doc-code
           {&trdcattr-car-num}
-          v-tmp-char
+          ub.auto-tank.auto-num
           no-error
       }
       v-tmp-char2 = ub.auto-tank.firm-type + ";" + string(ub.auto-tank.firm-code) .
