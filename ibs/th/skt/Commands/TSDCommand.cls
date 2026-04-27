@@ -972,7 +972,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       end.
       
       for each TempMarkLineMT 
-/*      where TempMarkLineMT.DocName = TempTrnDoc.ext-doc-code*/
+      where TempMarkLineMT.DocName = TempTrnDoc.ext-doc-code
           :
       
         create TempMarkLine.
