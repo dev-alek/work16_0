@@ -785,11 +785,11 @@ PROCEDURE save_update :
 
   if v-mark <> "" then 
   do:
-     if length(v-mark) < 29
-     then do:
-        run dispmessage ("Данная последовательность не является маркой. Введите марку.").
-        return error .
-     end.
+/*     if length(v-mark) < 29                                                              */
+/*     then do:                                                                            */
+/*        run dispmessage ("Данная последовательность не является маркой. Введите марку.").*/
+/*        return error .                                                                   */
+/*     end.                                                                                */
 
     vcodident = GetCodeIdent(v-mark).
     p-mark = vcodident .
