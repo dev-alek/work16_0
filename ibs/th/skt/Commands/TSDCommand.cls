@@ -546,7 +546,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       
           end.
         end.
-        when "PrintTiket" then 
+        when "PrintTicket" then 
         do:
           for each ub.Code exclusive-lock where ub.Code.parent = "TiketPrint":
               delete ub.Code .
