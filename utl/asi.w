@@ -9,11 +9,9 @@
 
 /* Temp-Table and Buffer definitions                                    */
 DEFINE TEMP-TABLE tt-asi NO-UNDO LIKE Code
-       index parent parent code.
+      index parent parent code.
 DEFINE TEMP-TABLE tt-tank NO-UNDO LIKE Code
        index parent parent code.
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Dialog-Frame 
 /*------------------------------------------------------------------------
@@ -182,7 +180,9 @@ DEFINE VARIABLE FPort AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE fSpec AS CHARACTER FORMAT "X(10)":U 
      LABEL "Спецификация" 
      VIEW-AS COMBO-BOX INNER-LINES 3
-     LIST-ITEMS "Авто","1.0","1.1" 
+     LIST-ITEM-PAIRS "Авто","99",
+                     "1.0","0",
+                     "1.1","1"
      DROP-DOWN-LIST
      SIZE 7 BY 1 NO-UNDO.
 
@@ -251,7 +251,7 @@ DEFINE VARIABLE ftypeasi AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE fipasi AS CHARACTER FORMAT "X(256)":U 
      LABEL "IP-адрес" 
      VIEW-AS FILL-IN 
-     SIZE 14 BY 1 NO-UNDO.
+     SIZE 16 BY 1 NO-UNDO.
 
 DEFINE VARIABLE fportasi AS CHARACTER FORMAT "X(256)":U 
      LABEL "Порт" 
@@ -266,7 +266,7 @@ DEFINE VARIABLE fSlaveId AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE TOut AS CHARACTER FORMAT "X(256)":U 
      LABEL "Таймаут опроса TimeOut (миллисекунды)" 
      VIEW-AS FILL-IN 
-     SIZE 16 BY 1 NO-UNDO.
+     SIZE 14 BY 1 NO-UNDO.
 
 DEFINE BUTTON bt-add-2 
      LABEL "Добавить" 
@@ -359,7 +359,7 @@ DEFINE FRAME FRAME-C
      fnompres AT ROW 9 COL 36.5 COLON-ALIGNED WIDGET-ID 28
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1.5 ROW 22.5
+         AT COL 1.5 ROW 23.5
          SIZE 66.5 BY 10.75
          TITLE "Параметры резервуарного парка" WIDGET-ID 600.
 
@@ -368,26 +368,26 @@ DEFINE FRAME FRAME-B
      bt-add AT ROW 5.5 COL 2 WIDGET-ID 10
      bt-del AT ROW 5.5 COL 13.5 WIDGET-ID 12
      bt-edit AT ROW 5.5 COL 25 WIDGET-ID 14
-     ftypeasi AT ROW 6.75 COL 21 COLON-ALIGNED WIDGET-ID 20
-     fSlaveId AT ROW 6.75 COL 48 COLON-ALIGNED WIDGET-ID 24
+     ftypeasi AT ROW 6.75 COL 19 COLON-ALIGNED WIDGET-ID 20
+     fSlaveId AT ROW 6.75 COL 47 COLON-ALIGNED WIDGET-ID 24
      fCom AT ROW 8 COL 11 COLON-ALIGNED WIDGET-ID 16
      fchet AT ROW 8 COL 40 COLON-ALIGNED WIDGET-ID 8
      fbit AT ROW 9.25 COL 40 COLON-ALIGNED WIDGET-ID 10
-     fportasi AT ROW 9.25 COL 40 COLON-ALIGNED WIDGET-ID 10
-     fspeed AT ROW 9.5 COL 11 COLON-ALIGNED WIDGET-ID 18
-     fipasi AT ROW 9.5 COL 11 COLON-ALIGNED WIDGET-ID 8
-     TOut AT ROW 10.75 COL 40 COLON-ALIGNED WIDGET-ID 6
+     fportasi AT ROW 9.26 COL 40 COLON-ALIGNED WIDGET-ID 10
+     fspeed AT ROW 9.25 COL 11 COLON-ALIGNED WIDGET-ID 18
+     fipasi AT ROW 9.3 COL 11 COLON-ALIGNED WIDGET-ID 8
+     TOut AT ROW 10.5 COL 40 COLON-ALIGNED WIDGET-ID 6
+     fSpec AT ROW 11.6 COL 15 COLON-ALIGNED WIDGET-ID 10
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1.5 ROW 10.5
-         SIZE 66.5 BY 11.75
+         SIZE 66.5 BY 12.75
          TITLE "Параметры подключения" WIDGET-ID 400.
 
 DEFINE FRAME FRAME-A
      fip AT ROW 1.25 COL 10 COLON-ALIGNED WIDGET-ID 4
      ftype AT ROW 1.25 COL 44.5 COLON-ALIGNED WIDGET-ID 8
      FPort AT ROW 2.75 COL 10 COLON-ALIGNED WIDGET-ID 6
-     fSpec AT ROW 2.75 COL 54 COLON-ALIGNED WIDGET-ID 10
      tlive AT ROW 4 COL 50.5 COLON-ALIGNED WIDGET-ID 6
      rfrtime AT ROW 5.25 COL 50.5 COLON-ALIGNED WIDGET-ID 6
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
@@ -550,9 +550,9 @@ do:
          fportasi:screen-value in frame FRAME-B = tt-asi.misc6
          fSlaveId:screen-value in frame FRAME-B = tt-asi.misc7
          TOut:screen-value in frame FRAME-B = tt-asi.misc9
-
-         
-        .  
+/*         fSpec:screen-value in frame FRAME-B = (if tt-asi.parent = "Modbus" then tt-asi.misc10 else "")*/
+         fSpec:screen-value in frame FRAME-B = tt-asi.misc10 
+         .  
 
         {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
        apply  "VALUE-CHANGED" to BROWSE-5 in frame FRAME-C. 
@@ -608,6 +608,18 @@ END.
 &ANALYZE-RESUME
 
 
+
+&Scoped-define FRAME-NAME FRAME-B
+&Scoped-define SELF-NAME fSpec
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fSpec Dialog-Frame
+ON value-changed OF fSpec IN FRAME FRAME-B /* Спецификация */
+do:
+  if available tt-asi and tt-asi.parent = "Modbus" then tt-asi.misc10 = fSpec:screen-value in frame FRAME-B.
+end.
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define FRAME-NAME FRAME-B
 &Scoped-define SELF-NAME bt-add
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-add Dialog-Frame
@@ -659,11 +671,8 @@ do:
      tt-asi.misc6  = fportasi:screen-value in frame FRAME-B
      tt-asi.misc7  = fSlaveId:screen-value in frame FRAME-B
      tt-asi.misc9  = TOut:screen-value in frame FRAME-B
-
-  .
-
-
-
+     tt-asi.misc10   = (if ftypeasi:screen-value in frame FRAME-B = "Modbus"  then fSpec:screen-value in frame FRAME-B else "")
+     .
 
 
   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
@@ -850,7 +859,9 @@ do:
      tt-asi.misc6  = fportasi:screen-value in frame FRAME-B
      tt-asi.misc7  = fSlaveId:screen-value in frame FRAME-B
      tt-asi.misc9  = TOut:screen-value in frame FRAME-B
-  .
+     tt-asi.misc10   = (if ftypeasi:screen-value in frame FRAME-B = "Modbus"  then fSpec:screen-value in frame FRAME-B else "")
+     .
+
      {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
      apply  "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
      {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
@@ -1107,10 +1118,15 @@ DOMS POS,4,
      .
    apply  "VALUE-CHANGED" to fCom in frame FRAME-B.   
 
-   if ftypeasi:screen-value = "Modbus" then
-       fSpec:visible in frame FRAME-A = yes.
-    else
-      fSpec:visible in frame FRAME-A = no.
+   if ftypeasi:screen-value = "Modbus" then do:
+      fSpec:visible in frame FRAME-B = yes.
+ /*     if available tt-asi and tt-asi.parent = "Modbus" then fSpec:screen-value in frame FRAME-B = tt-asi.misc10. */
+        if available tt-asi then fSpec:screen-value in frame FRAME-B = tt-asi.misc10.
+  end.
+  else do:
+      fSpec:visible in frame FRAME-B = no.
+      fSpec:screen-value in frame FRAME-B = "".
+  end.
 
 end.
 
@@ -1146,7 +1162,7 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   fip:screen-value in frame frame-a = mvalue-attr.
   run db-attr-value(sys-ctrl.db,"AsiPort",output mvalue-attr,output mtype-attr).
   FPort:screen-value in frame frame-a = mvalue-attr.
-  fSpec:screen-value in frame frame-a = "Авто" .
+  fSpec:screen-value in frame frame-b = "99" .
   run db-attr-value(sys-ctrl.db,"AsiType",output mvalue-attr,output mtype-attr).
   ftype:screen-value in frame frame-a = mvalue-attr.
  
@@ -1201,15 +1217,16 @@ PROCEDURE enable_UI :
       WITH FRAME FRAME-A.
   ENABLE fip ftype FPort tlive rfrtime 
       WITH FRAME FRAME-A.
-  DISPLAY fip ftype FPort fSpec tlive rfrtime 
+  DISPLAY fip ftype FPort tlive rfrtime 
       WITH FRAME FRAME-A.
-  ENABLE fip ftype FPort fSpec tlive rfrtime 
+  fSpec:visible in frame FRAME-B = no. 
+  ENABLE fip ftype FPort tlive rfrtime 
       WITH FRAME FRAME-A.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-A}
-  DISPLAY ftypeasi fipasi TOut 
+  DISPLAY ftypeasi fipasi TOut fSpec
       WITH FRAME FRAME-B.
   ENABLE BROWSE-3 bt-add bt-del bt-edit ftypeasi fSlaveId fCom fchet fbit 
-         fportasi fspeed fipasi TOut 
+         fportasi fspeed fipasi TOut fSpec
       WITH FRAME FRAME-B.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
   DISPLAY Faddr Fcoor fnompres 
@@ -1217,6 +1234,7 @@ PROCEDURE enable_UI :
   ENABLE BROWSE-5 bt-add-2 bt-del-2 bt-edit-2 Faddr Fcoor BUTTON-2 fnompres 
       WITH FRAME FRAME-C.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-C}
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1312,6 +1330,7 @@ repeat:
          next.
       end.
    end.
+
    /* Обработка параметров текущего раздела */
    else if mObj ne "" then do:
       assign
@@ -1334,19 +1353,6 @@ repeat:
                ftype:screen-value = if mvalue eq ? or mvalue eq "?" then "1" else mvalue.
          end.
 
-         /* Modbus */
-         else if mObj = "modbus" then do:
-            if mteg = "Spec" then do:
-               if mvalue = "0" then
-                  fSpec:screen-value = "1.0".
-               else if mvalue = "1" then
-                  fSpec:screen-value = "1.1".
-               else if mvalue = "99" then
-                  fSpec:screen-value = "Авто".
-               else
-                  fSpec:screen-value = "Авто".
-            end.
-         end.
          /*  ASI */
          else if mObj = "asi" then do:
             if mteg = "TimeOut" then
@@ -1370,6 +1376,10 @@ repeat:
                tt-asi_exp.misc6 = mvalue. 
             else if mteg = "SlaveId" then
                tt-asi_exp.misc7 = mvalue.
+            else  if mteg = "Spec" then do:
+               tt-asi_exp.misc10 = mvalue.
+            end.
+
          end.
          /*  TANK */
          else if mObj = "tank" then do:
@@ -1389,7 +1399,6 @@ end.
 
 input stream sReadfile close.
 
-display fSpec with frame frame-a.
 
 {&OPEN-BROWSERS-IN-QUERY-FRAME-B}
 apply "VALUE-CHANGED" to BROWSE-3 in frame FRAME-B. 
@@ -1424,26 +1433,7 @@ do with frame FRAME-A:
    substitute('"CodePage"="&1"', "1251"             ) skip(1).
    if tlive:screen-value  ne "" and tlive:screen-value  ne ?    then  put unformatted  substitute('"TimeLive"="&1"', tlive:screen-value) skip .
    if rfrtime:screen-value  ne "" and rfrtime:screen-value  ne ?    then  put unformatted  substitute('"RefreshTime"="&1"', rfrtime:screen-value) skip .
-
-   if fSpec:screen-value = "1.0" then do:
-   put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\Modbus]" skip
-   substitute('"Spec"="0"') skip.
-   end.
-
-   if fSpec:screen-value = "1.1" then do:
-   put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\Modbus]" skip
-   substitute('"Spec"="1"') skip.
-   end.
-
-   if fSpec:screen-value = "Авто" then do:
-   put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR\Modbus]" skip
-   substitute('"Spec"="99"') skip.
-   end. 
-
 end.
-
-
-
 
 for each tt-asi:
    if tt-asi.code begins "Ethernet"
@@ -1460,29 +1450,18 @@ for each tt-asi:
       put unformatted substitute('"TimeOut"="&1"', tt-asi.misc9 ) skip(1).
    if tt-asi.code begins "com"
    then
-      put unformatted substitute('"PORT_NUM"="&1"', substring(tt-asi.code,4)                          ) skip
-                      substitute('"Baud"="&1"'    , tt-asi.misc1                                        ) skip
+      put unformatted substitute('"PORT_NUM"="&1"', substring(tt-asi.code,4)              ) skip
+                      substitute('"Baud"="&1"'    , tt-asi.misc1                          ) skip
                       substitute('"Parity"="&1"'  , (if tt-asi.misc2 eq "3" then "NONE" else tt-asi.misc2)) skip
-                      substitute('"Databits"="&1"', tt-asi.misc3                                        ) skip.
+                      substitute('"Databits"="&1"', tt-asi.misc3                          ) skip.
    if tt-asi.code begins "Ethernet"
    then
        put unformatted substitute('"ip"="&1"', tt-asi.misc5       ) skip
                       substitute('"Port"="&1"'    , tt-asi.misc6  ) skip  .
 
-   if tt-asi.parent = "Modbus" then do:
+   if tt-asi.misc10 ne "" then put unformatted substitute('"Spec"="&1"', tt-asi.misc10) skip. 
 
-
-/*      case fSpec:screen-value in frame FRAME-A:
-          when "Авто" then mvalue = "99".
-          when "1.0"  then mvalue = "0".
-          when "1.1"  then mvalue = "1".
-          otherwise        mvalue = "99".
-      end case.  */
-
-      put unformatted substitute('"Spec"="&1"', mvalue) skip.
-      put unformatted substitute('"SlaveId"="&1"', tt-asi.misc7  ) skip.
-   end.
-
+   put unformatted substitute('"SlaveId"="&1"', tt-asi.misc7  ) skip.
    if tt-asi.misc4 ne "" and tt-asi.misc4 ne ?
    then
       put unformatted substitute('"License"="&1"', tt-asi.misc4 ) skip(1).
