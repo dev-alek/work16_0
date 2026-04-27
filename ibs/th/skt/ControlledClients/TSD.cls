@@ -409,8 +409,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
                       v-keyrec,
                     "TH",
                     ?,
-                    ?
-                    ).
+                    ?,
+                    "").
             end.
             
               jjm = jjm + 1.
@@ -2084,7 +2084,7 @@ end.
       if error-status:error
         then next.
       tml_:
-      for each TempMarkLine where TempMarkLine.Sts = "Check" or TempMarkLine.Sts = "CheckScan" or TempMarkLine.Sts = "CrTsd" :
+      for each TempMarkLine where TempMarkLine.Sts = "Check" or TempMarkLine.Sts = "CheckScan" or TempMarkLine.Sts = "CrTsd" or TempMarkLine.Sts = "Ungrouped" :
         find first utd-marking-lines where utd-marking-lines.db-num = v-utd-db-num and utd-marking-lines.doc-id = v-utd-doc-id 
           and utd-marking-lines.mark = TempMarkLine.MarkCode 
           exclusive-lock no-error.
@@ -2156,15 +2156,15 @@ end.
             SetAttrUtdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.linenum,"QuantityBarCode",string(TempDocLine.fact-qnty)).
         
       end.
-/*      for each TempMarkLine where TempMarkLine.Sts = "Ungrouped" :                                       */
-/*        find first utd-marking-lines where utd-marking-lines.mark = TempMarkLine.MarkCode no-error.*/
-/*        if available (utd-marking-lines)                                                              */
-/*        then do:                                                                                         */
-/*          utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.                     */
-/*          find first marking where marking.mark = TempMarkLine.MarkCode no-error.                  */
-/*          marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.                               */
-/*        end.                                                                                             */
-/*      end.                                                                                               */
+      for each TempMarkLine where TempMarkLine.Sts = "Ungrouped" :
+        find first utd-marking-lines where utd-marking-lines.mark = TempMarkLine.MarkCode no-error.
+        if available (utd-marking-lines)
+        then do:
+/*          utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.*/
+          find first marking where marking.mark = TempMarkLine.MarkCode no-error.
+          marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB.
+        end.
+      end.
     end.
     
   end.
@@ -2521,6 +2521,9 @@ end.
                   then v-sts = "Check".
                   else v-sts = "NotCorrect".
               end.
+              else if available buf_m and buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB
+              then
+                 v-sts = "Ungrouped".
               else if available buf_m and buf_m.sts = ObjSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
               then
                  v-sts = "NotCorrect".
@@ -2554,8 +2557,8 @@ end.
                       v-doc-num + "_" + string (buf_goods.gds-code) + "_" + string(pos),
                       v-sts,
                       (if available buf_m then  buf_m.mark-parent else ""),
-                    vqnty
-                    ).
+                    vqnty,
+                    if available buf_m then  buf_m.unit-ext else "").
         end.
 
         define variable decFactQnty as decimal no-undo.
@@ -2691,7 +2694,8 @@ end.
                       v-doc-num + "_" + string (buf_goods.gds-code),
                       "CrTSD",
                       (if available buf_m then  buf_m.mark-parent else ""),
-                    vqnty
+                    vqnty,
+                    if available buf_m then  buf_m.unit-ext else ""
                     ).
           
         end.
@@ -2876,7 +2880,8 @@ end.
                       v-doc-num + "_" + string (buf_goods.gds-code),
                       "Check",
                       (if available buf_m then buf_m.mark-parent else ""),
-                    vqnty
+                    vqnty,
+                    if available buf_m then  buf_m.unit-ext else ""
                     ).
           
           end.
@@ -2940,7 +2945,8 @@ end.
                       v-doc-num + "_" + string (buf_goods.gds-code),
                       "CrTSD",
                       (if available buf_m then buf_m.mark-parent else ""),
-                    vqnty
+                    vqnty,
+                    if available buf_m then  buf_m.unit-ext else ""
                     ).
             end.
           end.
@@ -3071,7 +3077,6 @@ end.
      . 
   end.
   method public void docLinePrint(idir as char):
-  
       tsdstreamopenapp(idir + "\MT_lines.txt").
       for each TempTrnLineMT no-lock:  
         put stream tsdstream unformatted
@@ -3110,7 +3115,8 @@ end.
      iRecKey as char,
      iStatus as char,
      iMarkParent as char,
-     iMarkQnty as int
+     iMarkQnty as int,
+     iUnitBox as char
       
   ):
      find first TempMarkLineMT where TempMarkLineMT.DocName  eq idoc-num
@@ -3132,6 +3138,7 @@ end.
         TempMarkLineMT.Status_     = iStatus
         TempMarkLineMT.MarkParent  = iMarkParent
         TempMarkLineMT.BoxQnty    = iMarkQnty
+        TempMarkLineMT.UnitBox    = iUnitBox
      .
   end.
   method public void docLineMarkPrint(idir as char):
@@ -3168,15 +3175,18 @@ end.
      for each TempTrnDocMT no-lock:
         create TempTrnLineMTs.
         TempTrnLineMTs.DocName = TempTrnDocMT.DocName.
-        create TempTrnLineMTs.
-        TempMarkLineMT.DocName  = TempTrnLineMT.DocName.
-           
+/*        for each TempTrnLineMT where                         */
+/*                 TempTrnLineMT.DocName = TempTrnDocMT.DocName*/
+/*        :                                                    */
+/*          create TempMarkLineMTs.                            */
+/*          TempMarkLineMTs.PartIDTH  = TempTrnLineMT.PartIDTH.*/
+/*        end.                                                 */
      end.
       
      ttPrint(type,
         DATASET  ds-doc:handle,encoding).
      empty temp-table TempTrnLineMTs .
-     empty temp-table TempMarkLineMTs.
+/*     empty temp-table TempMarkLineMTs.*/
         /*
         WRITE-XML("longchar",SomeStr, true, encoding, ?, false, true ,false,true).
      else if type eq "json"

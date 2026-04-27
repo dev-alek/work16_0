@@ -35,11 +35,12 @@
      field Flags_ as integer serialize-name "Flags"
   index num docname pos.
   
-  define temp-table TempMarkLineMTs no-undo serialize-name "MT_MarkLines"
-     field docname as character serialize-hidden
-  index num docname .
+/*  define temp-table TempMarkLineMTs no-undo serialize-name "MT_MarkLines"*/
+/*     field PartIDTH as character serialize-hidden                        */
+/*  index num PartIDTH .                                                   */
      
-  define temp-table TempMarkLineMT no-undo serialize-name "MT_MarkLine"
+/*  define temp-table TempMarkLineMT no-undo serialize-name "MT_MarkLine"*/
+  define temp-table TempMarkLineMT no-undo serialize-name "MT_MarkLines"
      field LineId as integer serialize-name "LineId"
      field DocName as character serialize-hidden
      field MarkCode as character  serialize-name "MarkCode"
@@ -48,6 +49,7 @@
      field MarkParent as character  serialize-name "MarkParent"
      field BoxQnty as integer  serialize-name "BoxQnty"
      field Pos as integer  serialize-name "Pos"
+     field UnitBox as character  serialize-name "UnitBox"
   index mark DocName MarkCode.
   
      
@@ -55,12 +57,13 @@
       for TempTrnDocMT
     , TempTrnLineMTs
     , TempTrnLineMT
-    , TempMarkLineMTs
+/*    , TempMarkLineMTs*/
     , TempMarkLineMT
     data-relation docLines     for TempTrnDocMT, TempTrnLineMTs    relation-fields (DocName, DocName) nested
     data-relation docLine      for TempTrnLineMTs, TempTrnLineMT     relation-fields (DocName, docname) nested 
-    data-relation docLineMarks for TempTrnDocMT, TempMarkLineMTs    relation-fields (docname, docname) nested
-    data-relation docLineMark  for TempMarkLineMTs, TempMarkLineMT    relation-fields (docname, docname) nested
+/*    data-relation docLineMarks for TempTrnLineMT, TempMarkLineMTs    relation-fields (PartIDTH, PartIDTH) nested */
+/*    data-relation docLineMark  for TempMarkLineMTs, TempMarkLineMT    relation-fields (PartIDTH, PartIDTH) nested*/
+    data-relation docLineMark  for TempTrnLineMT, TempMarkLineMT    relation-fields (PartIDTH, PartIDTH) nested
   .
   
   define temp-table tt-user no-undo serialize-name "TH_users"
