@@ -1077,6 +1077,16 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME fi-bar-code
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL fi-bar-code C-Win
+ON ANY-KEY OF fi-bar-code IN FRAME DEFAULT-FRAME
+DO:
+  if lastkey = 308 then
+    return no-apply.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &UNDEFINE SELF-NAME
 

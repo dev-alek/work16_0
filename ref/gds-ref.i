@@ -1274,6 +1274,13 @@ on choose of b-extart in frame {&FRAME-NAME} do:
   end.
 end.
 
+ON ANY-KEY OF loc-code IN FRAME {&FRAME-NAME}
+DO:
+  if a-n-c = "DataMatrix" then
+    if lastkey = 308 then
+      return no-apply.
+END.
+
 ON MOUSE-SELECT-DBLCLICK OF g-image IN FRAME {&FRAME-NAME}
 DO:
     DEFINE VARIABLE v-main-code LIKE ub.bar-code.b-code NO-UNDO.
