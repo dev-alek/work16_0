@@ -179,6 +179,13 @@ DEFINE VARIABLE FPort AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 26 BY 1 NO-UNDO.
 
+DEFINE VARIABLE fSpec AS CHARACTER FORMAT "X(10)":U 
+     LABEL "Спецификация" 
+     VIEW-AS COMBO-BOX INNER-LINES 3
+     LIST-ITEMS "Авто","1.0","1.1" 
+     DROP-DOWN-LIST
+     SIZE 7 BY 1 NO-UNDO.
+
 DEFINE VARIABLE rfrtime AS CHARACTER FORMAT "X(100)":U 
      LABEL "Частота опроса уровнемеров RefreshTime (Секунды)" 
      VIEW-AS FILL-IN 
@@ -380,6 +387,7 @@ DEFINE FRAME FRAME-A
      fip AT ROW 1.25 COL 10 COLON-ALIGNED WIDGET-ID 4
      ftype AT ROW 1.25 COL 44.5 COLON-ALIGNED WIDGET-ID 8
      FPort AT ROW 2.75 COL 10 COLON-ALIGNED WIDGET-ID 6
+     fSpec AT ROW 2.75 COL 54 COLON-ALIGNED WIDGET-ID 10
      tlive AT ROW 4 COL 50.5 COLON-ALIGNED WIDGET-ID 6
      rfrtime AT ROW 5.25 COL 50.5 COLON-ALIGNED WIDGET-ID 6
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
@@ -1098,6 +1106,12 @@ DOMS POS,4,
          
      .
    apply  "VALUE-CHANGED" to fCom in frame FRAME-B.   
+
+   if ftypeasi:screen-value = "Modbus" then
+       fSpec:visible in frame FRAME-A = yes.
+    else
+      fSpec:visible in frame FRAME-A = no.
+
 end.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1132,9 +1146,10 @@ do on error   undo MAIN-BLOCK, leave MAIN-BLOCK
   fip:screen-value in frame frame-a = mvalue-attr.
   run db-attr-value(sys-ctrl.db,"AsiPort",output mvalue-attr,output mtype-attr).
   FPort:screen-value in frame frame-a = mvalue-attr.
+  fSpec:screen-value in frame frame-a = "Авто" .
   run db-attr-value(sys-ctrl.db,"AsiType",output mvalue-attr,output mtype-attr).
   ftype:screen-value in frame frame-a = mvalue-attr.
-  
+ 
   apply  "value-changed" to ftypeasi IN FRAME FRAME-B.
   apply  "VALUE-CHANGED" to fCom in frame FRAME-B.  
   wait-for go of frame {&FRAME-NAME}.
@@ -1185,6 +1200,10 @@ PROCEDURE enable_UI :
   DISPLAY fip ftype FPort tlive rfrtime 
       WITH FRAME FRAME-A.
   ENABLE fip ftype FPort tlive rfrtime 
+      WITH FRAME FRAME-A.
+  DISPLAY fip ftype FPort fSpec tlive rfrtime 
+      WITH FRAME FRAME-A.
+  ENABLE fip ftype FPort fSpec tlive rfrtime 
       WITH FRAME FRAME-A.
   {&OPEN-BROWSERS-IN-QUERY-FRAME-A}
   DISPLAY ftypeasi fipasi TOut 
@@ -1286,6 +1305,7 @@ end.
          then do:
             if mObj = "head"
             then do:
+
                if mteg = "IP"
                then
                   Fip:screen-value in frame frame-a = mvalue.
@@ -1300,6 +1320,8 @@ end.
                else if mteg = "TYPE" 
                then
                   ftype:screen-value = if  mvalue eq  ? or mvalue eq  "?" then "1" else mvalue.
+               else if mteg = "Spec" then fSpec:screen-value = if mvalue eq ? or mvalue eq "?" then "Авто" else mvalue.
+
             end.
             else if mObj = "asi"
             then do:
@@ -1379,6 +1401,7 @@ do with frame FRAME-A:
    put unformatted  "[HKEY_LOCAL_MACHINE\SOFTWARE\MEASURER_PAR]" skip
    substitute('"IP"="&1"',       Fip:screen-value   ) skip
    substitute('"PORT"="&1"',     Fport:screen-value ) skip
+   substitute('"Spec"="&1"',     fSpec:screen-value ) skip
    substitute('"TYPE"="&1"',     ftype:screen-value ) skip
    substitute('"CodePage"="&1"', "1251"             ) skip(1).
    if tlive:screen-value  ne "" and tlive:screen-value  ne ?    then  put unformatted  substitute('"TimeLive"="&1"', tlive:screen-value) skip .
