@@ -46,26 +46,26 @@ do
     define variable vss-archive     as character no-undo initial "$Archive$":U .
     define variable vss-description as character no-undo initial "Печать счета-фактуры.":U .
 
-{ cmp/vssrevis.i     }
-   { cmp/str-glbl.i     }
+    { cmp/vssrevis.i     }
+    { cmp/str-glbl.i     }
     { cmp/library.i      }
     { cmp/r-pril.i       }
     { cmp/breakstr.i     }
-   { str/trdcalib.i     }
+    { str/trdcalib.i     }
     { str/in-vatp.i def  }
     { str/out-vatp.i def }
-{ cmp/croslist.i     }
-{ str/hvrdtax.i      }
+    { cmp/croslist.i     }
+    { str/hvrdtax.i      }
     { gbl/tax-name.i     }
-   { rep/r-factur21.i def }
+    { rep/r-factur21.i def }
     { rep/fmtcli.i       }
     { rep/torgconf.i     }
     { rep/p-fmt.i        }
-   { gbl/clntattr.i     }
+    { gbl/clntattr.i     }
     { gbl/thbjattr.i     }
-   { ref/extclass.i     }
+    { ref/extclass.i     }
     { gbl/prn-lib.i }
-{ rep/html-conv.i }
+    { rep/html-conv.i }
     define variable g#report-num as integer no-undo.
    
     define variable g#log        as logical no-undo.
@@ -741,7 +741,7 @@ do
         '<TD text_wrap="true" rowspan="2" colspan="15" style="text-align: center;">Регистрационный номер декларации на товары или регистрационный номер партии товара, подлежащего прослеживаемости</TD>' skip
         '<TD text_wrap="true" colspan="16" style="text-align: center;">Количественная единица измерения товара, используемая в целях осуществления прослеживаемости</TD>' skip
         '<TD text_wrap="true" rowspan="2" colspan="15" style="text-align: center;">Количество товара, подлежащего прослеживаемости, в количественной единице измерения товара, используемой в целях осуществления прослеживаемости</TD>' skip
-        '<TD text_wrap="true" rowspan="2" colspan="15" style="text-align: center;">Стоимость товара, подлежащего прослеживаемости, без налога на добавленную стоимость, в рублях и копейках</TD>' skip
+        '<TD text_wrap="true" rowspan="2" colspan="14" style="text-align: center;">Стоимость товара, подлежащего прослеживаемости, без налога на добавленную стоимость, в рублях и копейках</TD>' skip
         '</TR>'skip   
         '<TR style="height: 60px;">' skip
         '<TD text_wrap="true" colspan="5" style="text-align: center;">код</TD>' skip
@@ -770,7 +770,7 @@ do
         '<TD colspan="7" style="text-align: center;">12</TD>' skip
         '<TD colspan="9" style="text-align: center;">12а</TD>' skip
         '<TD colspan="15" style="text-align: center;">13</TD>' skip
-        '<TD colspan="15" style="text-align: center;">14</TD>' skip
+        '<TD colspan="14" style="text-align: center;">14</TD>' skip
         '</TR>'skip     
         .
     define variable jj as integer no-undo .
@@ -815,10 +815,10 @@ do
     if Log-Res
         then 
     do:
-    run prn-lib-reportviewer-report-name in this-procedure (
-        input THIS-PROCEDURE
-        ,input v-file-name-rep-html
-        ).
+        run prn-lib-reportviewer-report-name in this-procedure (
+            input THIS-PROCEDURE
+            ,input v-file-name-rep-html
+            ).
         if error-status:error then
         do:
             message return-value view-as alert-box.
@@ -827,10 +827,10 @@ do
     end.
     else 
     do:
-    run prn-lib-reportviewer-report-name in this-procedure (
-        input THIS-PROCEDURE
-        ,input v-file-name-rep-html
-        ).
+        run prn-lib-reportviewer-report-name in this-procedure (
+            input THIS-PROCEDURE
+            ,input v-file-name-rep-html
+            ).
         if error-status:error then
         do:
             message return-value view-as alert-box.
@@ -861,176 +861,194 @@ end procedure.
 
 /*==========================================================================*/
 procedure print-line :
-do
-on error undo, return error
-:
-define variable v-print-parts     as logical    init no       no-undo.
+    do
+        on error undo, return error
+        :
+        define variable v-print-parts as logical init no no-undo.
 
-assign v-add-str = ""
-       v-start-str = ""
-.
-    find first ub.goods no-lock
-         where ub.goods.prod-type = ub.doc-line.prod-type
-           and ub.goods.prod-code = ub.doc-line.prod-code
-           and ub.goods.artic = ub.doc-line.artic
-    .
-    find first ub.country no-lock
-         where ub.country.alpha1 = ub.goods.alpha1
-    no-error.
-    if lookup( "zum", p-mode ) <> 0
-    then do:
-        assign
-            v-country = ub.goods.engl-name
-        .
-    end.
-    else do:
-        if available ub.country and ub.country.num-code <> 643 /*Россия*/
-        then do:
-            assign
-                v-country-code = " " + string(ub.country.num-code)
-                v-country = ub.country.short-name
+        assign 
+            v-add-str   = ""
+            v-start-str = ""
             .
-        end.
-        else do:
-            assign
-                v-country-code = ""
-                v-country = ""
+        find first ub.goods no-lock
+            where ub.goods.prod-type = ub.doc-line.prod-type
+            and ub.goods.prod-code = ub.doc-line.prod-code
+            and ub.goods.artic = ub.doc-line.artic
             .
-        end.
-    end.
-    assign
-        gds-str  = ''
-        gds-str1 = ''
-        gds-str2 = ''
-    .
-    find first ub.Units no-lock
-         where ub.units.unit-name = ub.goods.unit-base
-    .
-    if v-uaes-code = "" then v-uaes-code = "-" . 
-    v-unit-code = (if ub.units.OKEI = 0 then "-" else string(ub.units.OKEI)) .
-    if (units.type = "{&bef-divisional},{&bef-twounit}"  or  ub.units.type = "{&bef-divisional},{&bef-altunit}" )
-    then do:
-        assign
-            str =  (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "")  + string(ub.goods.Sort,"x(5)") + " " + trim(ub.goods.gds-name)
-                                                                                 + " " + trim(ub.goods.PS)
-        .
-    end.
-    else do:
-        assign
-            str = (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "")  + trim(ub.goods.gds-name)
-        .
-    end.
-    assign
-        Gds-str1 = breakstr(str, {&gds-len}, input-output gds-str1, input-output gds-str2)
-    .
-    do while trim(gds-str2) <> "" :
-        assign
-            gds-str = gds-str2
-            gds-str1 = breakstr(gds-str, {&gds-len}, input-output gds-str1, input-output gds-str2)
-        .
-    end.
-    assign
-        gds-str1 = breakstr(str, {&gds-len}, input-output gds-str1, input-output gds-str2).
-    .
-
-    find first ub.gds-prt no-lock
-         where ub.gds-prt.upper-code = ub.doc-line.prt-root
-    .
-    assign
-        rootnode_code = ub.gds-prt.node-code
-    .
-    assign
-            v-tot-prt-qnty          = 0
-            v-tot-prt-doc-qnty      = 0
-            v-tot-prt-VAT           = 0
-            v-tot-prt-doc-VAT       = 0
-            v-tot-prt-SLT           = 0
-            v-tot-prt-sum-no-VAT    = 0
-            v-tot-prt-doc-sum-no-VAT    = 0
-            v-tot-prt-sum           = 0
-            v-tot-prt-doc-sum           = 0
-                v-VAT           = 0
-                v-doc-VAT       = 0
-                v-SLT           = 0
-                v-sum-no-VAT    = 0
-                v-doc-sum-no-VAT = 0
-                v-tax           = 0
-    .
-    if ( ub.gds-prt.node-name <> {&empty-scale} )
-/*    and ( not invers )*/
-    then do:
-        /*---S------------- Не пустая шкала и не от поставщика ---------------------*/
-        assign
-            v-tot-prt-qnty          = 0
-            v-tot-prt-doc-qnty      = 0
-            v-tot-prt-VAT           = 0
-            v-tot-prt-doc-VAT       = 0
-            v-tot-prt-SLT           = 0
-            v-tot-prt-sum-no-VAT    = 0
-            v-tot-prt-doc-sum-no-VAT    = 0
-            v-tot-prt-sum           = 0
-            v-tot-prt-doc-sum           = 0
-            v-must-print-scale      = PrintScale
-        .
-        if v-must-print-scale = yes
-        then do:
-          define variable is-printed as logical initial no no-undo .
-          for each ub.parts no-lock
-             where ub.parts.out-code  = ub.doc-line.doc-code
-               and ub.parts.obj-type  = ub.doc-line.obj-type
-               and ub.parts.obj-code  = ub.doc-line.obj-code
-               and ub.parts.artic     = ub.doc-line.artic
-               and ub.parts.prod-type = ub.doc-line.prod-type
-               and ub.parts.prod-code = ub.doc-line.prod-code
-          :
-            /*---S------------- По партиям - для печати ГТД ---------------------*/
-            jj = jj + 1 . 
-            assign v-GTD = (if trim(ub.parts.cst-code) <> "" then ub.parts.cst-code else "             -             ").
-            if available ub.country
-            and ub.country.alpha1 = "RU":U
-            then do:
-                assign
-                    v-GTD       = "             -             ":U
-                    v-country   = "":U
-                    v-country-code = "":U
+        find first ub.country no-lock
+            where ub.country.alpha1 = ub.goods.alpha1
+            no-error.
+        if lookup( "zum", p-mode ) <> 0
+            then 
+        do:
+            assign
+                v-country = ub.goods.engl-name
                 .
+        end.
+        else 
+        do:
+            if available ub.country and ub.country.num-code <> 643 /*Россия*/
+                then 
+            do:
+                assign
+                    v-country-code = " " + string(ub.country.num-code)
+                    v-country      = ub.country.short-name
+                    .
             end.
+            else 
+            do:
+                assign
+                    v-country-code = ""
+                    v-country      = ""
+                    .
+            end.
+        end.
+        assign
+            gds-str  = ''
+            gds-str1 = ''
+            gds-str2 = ''
+            .
+        find first ub.Units no-lock
+            where ub.units.unit-name = ub.goods.unit-base
+            .
+        if v-uaes-code = "" then v-uaes-code = "-" . 
+        v-unit-code = (if ub.units.OKEI = 0 then "-" else string(ub.units.OKEI)) .
+        if (units.type = "{&bef-divisional},{&bef-twounit}"  or  ub.units.type = "{&bef-divisional},{&bef-altunit}" )
+            then 
+        do:
+            assign
+                str = (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "")  + string(ub.goods.Sort,"x(5)") + " " + trim(ub.goods.gds-name)
+                                                                                 + " " + trim(ub.goods.PS)
+                .
+        end.
+        else 
+        do:
+            assign
+                str = (if rep-artic then (string(ub.goods.artic,"x(16)") +  " ") else "")  + trim(ub.goods.gds-name)
+                .
+        end.
+        assign
+            Gds-str1 = breakstr(str, {&gds-len}, input-output gds-str1, input-output gds-str2)
+            .
+        do while trim(gds-str2) <> "" :
+            assign
+                gds-str  = gds-str2
+                gds-str1 = breakstr(gds-str, {&gds-len}, input-output gds-str1, input-output gds-str2)
+                .
+        end.
+        assign
+            gds-str1 = breakstr(str, {&gds-len}, input-output gds-str1, input-output gds-str2).
+        .
 
-            find first buf_parts-attr no-lock
-              where buf_parts-attr.in-code   = ub.parts.in-code
-                and buf_parts-attr.gds-code  = ub.goods.gds-code
-                and buf_parts-attr.part-code = ub.parts.part-code
-            no-error .
-            if available buf_parts-attr
-              and buf_parts-attr.country-code <> 0
-              then do:
-                  find first buf_country
-                  where buf_country.num-code = buf_parts-attr.country-code
-                  no-error.
-                  if available buf_country
-                  and buf_country.num-code <> ub.country.num-code
-                  and buf_country.short-name <> "" and ub.country.num-code <> 643
-                  then do :
-                       assign
-                          v-country-code = " " + string(buf_country.num-code)
-                          v-country = buf_country.short-name
-                        .
-                       if buf_country.alpha1 = "RU":U
-                       then do :
-                          assign
+        find first ub.gds-prt no-lock
+            where ub.gds-prt.upper-code = ub.doc-line.prt-root
+            .
+        assign
+            rootnode_code = ub.gds-prt.node-code
+            .
+        assign
+            v-tot-prt-qnty           = 0
+            v-tot-prt-doc-qnty       = 0
+            v-tot-prt-VAT            = 0
+            v-tot-prt-doc-VAT        = 0
+            v-tot-prt-SLT            = 0
+            v-tot-prt-sum-no-VAT     = 0
+            v-tot-prt-doc-sum-no-VAT = 0
+            v-tot-prt-sum            = 0
+            v-tot-prt-doc-sum        = 0
+            v-VAT                    = 0
+            v-doc-VAT                = 0
+            v-SLT                    = 0
+            v-sum-no-VAT             = 0
+            v-doc-sum-no-VAT         = 0
+            v-tax                    = 0
+            .
+        if ( ub.gds-prt.node-name <> {&empty-scale} )
+            /*    and ( not invers )*/
+            then 
+        do:
+            /*---S------------- Не пустая шкала и не от поставщика ---------------------*/
+            assign
+                v-tot-prt-qnty           = 0
+                v-tot-prt-doc-qnty       = 0
+                v-tot-prt-VAT            = 0
+                v-tot-prt-doc-VAT        = 0
+                v-tot-prt-SLT            = 0
+                v-tot-prt-sum-no-VAT     = 0
+                v-tot-prt-doc-sum-no-VAT = 0
+                v-tot-prt-sum            = 0
+                v-tot-prt-doc-sum        = 0
+                v-must-print-scale       = PrintScale
+                .
+            if v-must-print-scale = yes
+                then 
+            do:
+                define variable is-printed as logical initial no no-undo .
+                for each ub.parts no-lock
+                    where ub.parts.out-code  = ub.doc-line.doc-code
+                    and ub.parts.obj-type  = ub.doc-line.obj-type
+                    and ub.parts.obj-code  = ub.doc-line.obj-code
+                    and ub.parts.artic     = ub.doc-line.artic
+                    and ub.parts.prod-type = ub.doc-line.prod-type
+                    and ub.parts.prod-code = ub.doc-line.prod-code
+                    :
+                    /*---S------------- По партиям - для печати ГТД ---------------------*/
+                    jj = jj + 1 . 
+                    assign 
+                        v-GTD = (if trim(ub.parts.cst-code) <> "" then ub.parts.cst-code else "-").
+                    if available ub.country
+                        and ub.country.alpha1 = "RU":U
+                        then 
+                    do:
+                        assign
+                            v-GTD          = "-":U
+                            v-country      = "":U
                             v-country-code = "":U
-                            v-country = "":U
-                            v-GTD     = "             -             ":U
-                          .
-                       end .
-                  end.
-            end.
-           /*---S------------- Печатать по шкале ---------------------*/
-            if is-printed = no then do:
-              assign is-printed = yes .
-              if lookup ( "corr", p-mode ) <> 0 then do :
-              end.
-              else do :
+                            .
+                    end.
+
+                    find first buf_parts-attr no-lock
+                        where buf_parts-attr.in-code   = ub.parts.in-code
+                        and buf_parts-attr.gds-code  = ub.goods.gds-code
+                        and buf_parts-attr.part-code = ub.parts.part-code
+                        no-error .
+                    if available buf_parts-attr
+                        and buf_parts-attr.country-code <> 0
+                        then 
+                    do:
+                        find first buf_country
+                            where buf_country.num-code = buf_parts-attr.country-code
+                            no-error.
+                        if available buf_country
+                            and buf_country.num-code <> ub.country.num-code
+                            and buf_country.short-name <> "" and ub.country.num-code <> 643
+                            then 
+                        do :
+                            assign
+                                v-country-code = " " + string(buf_country.num-code)
+                                v-country      = buf_country.short-name
+                                .
+                            if buf_country.alpha1 = "RU":U
+                                then 
+                            do :
+                                assign
+                                    v-country-code = "":U
+                                    v-country      = "":U
+                                    v-GTD          = "-":U
+                                    .
+                            end .
+                        end.
+                    end.
+                    /*---S------------- Печатать по шкале ---------------------*/
+                    if is-printed = no then 
+                    do:
+                        assign 
+                            is-printed = yes .
+                        if lookup ( "corr", p-mode ) <> 0 then 
+                        do :
+                        end.
+                        else 
+                        do :
                             put stream OutStr-html unformatted
                                 '<TR>' skip
                                 '<TD colspan="4" text_wrap="true" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1051,13 +1069,15 @@ assign v-add-str = ""
                                 '<TD colspan="7" style="text-align: center;"></TD>' skip
                                 '<TD colspan="9" style="text-align: center;"></TD>' skip
                                 '<TD colspan="15" style="text-align: center;"></TD>' skip
-                                '<TD colspan="15" style="text-align: center;"></TD>' skip
+                                '<TD colspan="14" style="text-align: center;"></TD>' skip
                                 '</TR>'skip     
                                 .   
-            end.
-            end.
-            else do:
-              if v-GTD <> "" and v-GTD <> "             -             " then do:
+                        end.
+                    end.
+                    else 
+                    do:
+                        if v-GTD <> "" and v-GTD <> "-" then 
+                        do:
                             put stream OutStr-html unformatted
                                 '<TR>' skip
                                 '<TD colspan="4" text_wrap="true" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1078,13 +1098,14 @@ assign v-add-str = ""
                                 '<TD colspan="7" style="text-align: center;"></TD>' skip
                                 '<TD colspan="9" style="text-align: center;"></TD>' skip
                                 '<TD colspan="15" style="text-align: center;"></TD>' skip
-                                '<TD colspan="15" style="text-align: center;"></TD>' skip
+                                '<TD colspan="14" style="text-align: center;"></TD>' skip
                                 '</TR>'skip     
                                 .    
-              end.
-            end.
-          end.
-          if is-printed = no then do:
+                        end.
+                    end.
+                end.
+                if is-printed = no then 
+                do:
                     put stream OutStr-html unformatted
                         '<TR>' skip
                         '<TD colspan="4" text_wrap="true" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1105,201 +1126,195 @@ assign v-add-str = ""
                         '<TD colspan="7" style="text-align: center;"></TD>' skip
                         '<TD colspan="9" style="text-align: center;"></TD>' skip
                         '<TD colspan="15" style="text-align: center;"></TD>' skip
-                        '<TD colspan="15" style="text-align: center;"></TD>' skip
+                        '<TD colspan="14" style="text-align: center;"></TD>' skip
                         '</TR>'skip     
                         .
-            if FullGdsName
-            and gds-str1 <> "":U then do :
-               run print-more in this-procedure.
-            end.
-          end.
-          /*  run print-more in this-procedure. */
-          /*---E------------- Печатать по шкале ---------------------*/
-        end.        /* if v-must-print-scale = yes */
-        for each ub.gds-dtl no-lock
-           where ub.gds-dtl.prod-type  = ub.doc-line.prod-type
-             and ub.gds-dtl.prod-code  = ub.doc-line.prod-code
-             and ub.gds-dtl.artic      = ub.doc-line.artic
-             and ub.gds-dtl.doc-code   = ub.doc-line.doc-code
-        :
-            /*---S------------- for each ub.gds-dtl ---------------------*/
-            find first ub.gds-prt no-lock
-                 where ub.gds-prt.node-code = ub.gds-dtl.prt-code
-            .
-            if CostPrice = yes
-            then do:
-                { str/in-vatp.i calc ub.doc-line. buf_trn-doc. g }
-                assign
-                    v-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
-                    v-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
-                .
-                if v-VAT = ?        then assign v-VAT       = 0.
-                if v-SLT = ?        then assign v-SLT       = 0.
-                assign
-/*                        v-price-no-VAT = ( if PrintRubl*/
-/*                                        then price-rubl-with-tax-loc - vat-rubl-loc - slt-rubl-loc - road-tax-rubl-loc*/
-/*                                        else price-base-with-tax-loc - vat-base-loc - slt-base-loc - road-tax-base-loc)*/
-                    v-price-no-VAT   = ( if PrintRubl then price-rubl-with-tax-loc else price-base-with-tax-loc ) - v-VAT - v-SLT
-                    v-prt-qnty       = ub.gds-dtl.fact-qnty
-                    v-prt-doc-qnty   = ub.gds-dtl.doc-qnty
-                .
-                if v-r-factur-is-vozvrat-vnesh = yes
-                then do:
+                    if FullGdsName
+                        and gds-str1 <> "":U then 
+                    do :
+                        run print-more in this-procedure.
+                    end.
+                end.
+            /*  run print-more in this-procedure. */
+            /*---E------------- Печатать по шкале ---------------------*/
+            end.        /* if v-must-print-scale = yes */
+            for each ub.gds-dtl no-lock
+                where ub.gds-dtl.prod-type  = ub.doc-line.prod-type
+                and ub.gds-dtl.prod-code  = ub.doc-line.prod-code
+                and ub.gds-dtl.artic      = ub.doc-line.artic
+                and ub.gds-dtl.doc-code   = ub.doc-line.doc-code
+                :
+                /*---S------------- for each ub.gds-dtl ---------------------*/
+                find first ub.gds-prt no-lock
+                    where ub.gds-prt.node-code = ub.gds-dtl.prt-code
+                    .
+                if CostPrice = yes
+                    then 
+                do:
+                    { str/in-vatp.i calc ub.doc-line. buf_trn-doc. g }
                     assign
-                        v-price-no-VAT = v-price-no-VAT -
+                        v-VAT = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
+                        v-SLT = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
+                        .
+                    if v-VAT = ?        then assign v-VAT = 0.
+                    if v-SLT = ?        then assign v-SLT = 0.
+                    assign
+                        /*                        v-price-no-VAT = ( if PrintRubl*/
+                        /*                                        then price-rubl-with-tax-loc - vat-rubl-loc - slt-rubl-loc - road-tax-rubl-loc*/
+                        /*                                        else price-base-with-tax-loc - vat-base-loc - slt-base-loc - road-tax-base-loc)*/
+                        v-price-no-VAT = ( if PrintRubl then price-rubl-with-tax-loc else price-base-with-tax-loc ) - v-VAT - v-SLT
+                        v-prt-qnty     = ub.gds-dtl.fact-qnty
+                        v-prt-doc-qnty = ub.gds-dtl.doc-qnty
+                        .
+                    if v-r-factur-is-vozvrat-vnesh = yes
+                        then 
+                    do:
+                        assign
+                            v-price-no-VAT = v-price-no-VAT -
                                         ( if PrintRubl
                                             then ( transport-rubl-loc + other-rubl-loc )
                                             else ( transport-base-loc + other-base-loc ) )
-                    .
-                end.
-                if p-round = 'round':U
-                then do:
-                    run p-fmt-round in this-procedure (
-                          input v-prt-qnty
-                        , input v-price-no-VAT
-                        , input v-VAT
-                        , input v-SLT
-                        , input 0
-                        , output v-price-no-VAT
-                        , output v-VAT
-                        , output v-SLT
-                        , output v-prt-VAT
-                        , output v-prt-SLT
-                        , output v-void-decimal
-                        , output v-prt-sum-no-VAT
-                        , output v-void-decimal
-                    ).
-/*                    assign*/
-/*                        v-vat-pc            = v-VAT / v-price-no-VAT*/
-/*                        v-slt-pc            = v-SLT / ( v-price-no-VAT + v-VAT )*/
-/*                        v-price-no-VAT      = round( v-price-no-VAT, 2 )*/
-/*                        v-VAT               = round( v-price-no-VAT * v-vat-pc, 2 )*/
-/*                        v-prt-SLT           = round( ( v-price-no-VAT + v-VAT ) * v-prt-qnty * v-slt-pc, 2 )*/
-/*                        v-prt-VAT           = round( v-VAT          * v-prt-qnty, 2 )*/
-/*                        v-prt-sum-no-VAT    = round( v-price-no-VAT * v-prt-qnty, 2 )*/
-/*                    .*/
-                end.        /* if p-round = 'round':U */
-                else do:
-                    assign
-                        v-prt-VAT       =  v-VAT            * v-prt-qnty
-                        v-prt-doc-VAT   =  v-VAT            * v-prt-doc-qnty
-                        v-prt-SLT        = v-SLT            * v-prt-qnty
-                        v-prt-sum-no-VAT = v-price-no-VAT   * v-prt-qnty
-                        v-prt-doc-sum-no-VAT = v-price-no-VAT   * v-prt-doc-qnty
-                    .
-                end.        /* if NOT( p-round = 'round':U ) */
-                assign
-                    v-price          = v-price-no-VAT + v-VAT
-                    v-prt-sum        = v-prt-sum-no-VAT + v-prt-VAT
-                    v-prt-doc-sum    = v-prt-doc-sum-no-VAT + v-prt-doc-VAT
-                .
-                assign
-                    v-tot-prt-qnty          = v-tot-prt-qnty        + v-prt-qnty
-                    v-tot-prt-doc-qnty      = v-tot-prt-doc-qnty    + v-prt-doc-qnty
-                    v-tot-prt-VAT           = v-tot-prt-VAT         + v-prt-VAT
-                    v-tot-prt-doc-VAT       = v-tot-prt-doc-VAT     + v-prt-doc-VAT
-                    v-tot-prt-SLT           = v-tot-prt-SLT         + v-prt-SLT
-                    v-tot-prt-sum-no-VAT    = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
-                    v-tot-prt-doc-sum-no-VAT = v-tot-prt-doc-sum-no-VAT  + v-prt-doc-sum-no-VAT
-                    v-tot-prt-sum           = v-tot-prt-sum         + v-prt-sum
-                    v-tot-prt-doc-sum       = v-tot-prt-doc-sum     + v-prt-doc-sum
-                .
-            end.        /* CostPrice = yes  */
-            else do:
-                { str/out-vatp.i calc-gds-dtl ub.doc-line. buf_trn-doc. ub.gds-dtl. }
-                assign
-                    v-VAT = ( if PrintRubl then vat-rubl-buyer else vat-base-buyer )
-                    v-SLT = ( if PrintRubl then slt-rubl-sale else slt-base-sale )
-                .
-                if v-VAT = ? then assign v-VAT = 0.
-                if v-SLT = ? then assign v-SLT = 0.
-                assign
-                    v-price-no-VAT   = ( if PrintRubl then price-rubl-with-tax-sale else price-base-with-tax-sale ) - v-VAT - v-SLT
-                    v-prt-qnty       = ub.gds-dtl.fact-qnty
-                    v-prt-doc-qnty   = ub.gds-dtl.doc-qnty
-                .
-                if p-round = 'round':U
-                then do:
-                    run p-fmt-round in this-procedure (
-                          input v-prt-qnty
-                        , input v-price-no-VAT
-                        , input v-VAT
-                        , input v-SLT
-                        , input 0
-                        , output v-price-no-VAT
-                        , output v-VAT
-                        , output v-SLT
-                        , output v-prt-VAT
-                        , output v-prt-SLT
-                        , output v-void-decimal
-                        , output v-prt-sum-no-VAT
-                        , output v-void-decimal
-                    ).
-/*                    assign*/
-/*                        v-vat-pc            = v-VAT / v-price-no-VAT*/
-/*                        v-slt-pc            = v-SLT / ( v-price-no-VAT + v-VAT )*/
-/*                        v-price-no-VAT      = round( v-price-no-VAT, 2 )*/
-/*                        v-VAT               = round( v-price-no-VAT * v-vat-pc, 2 )*/
-/*                        v-prt-SLT           = round( ( v-price-no-VAT + v-VAT ) * v-prt-qnty * v-slt-pc, 2 )*/
-/*                        v-prt-VAT           = round( v-VAT          * v-prt-qnty, 2 )*/
-/*                        v-prt-sum-no-VAT    = round( v-price-no-VAT * v-prt-qnty, 2 )*/
-/*                    .*/
-                end.        /* p-round = 'round':U */
-                else do:
-                    assign
-                        v-prt-VAT        = v-VAT          * v-prt-qnty
-                        v-prt-doc-VAT    = v-VAT          * v-prt-doc-qnty
-                        v-prt-SLT        = v-SLT          * v-prt-qnty
-                        v-prt-sum-no-VAT = v-price-no-VAT * v-prt-qnty
-                        v-prt-doc-sum-no-VAT = v-price-no-VAT * v-prt-doc-qnty
-                    .
-                end.        /* NOT ( p-round = 'round':U ) */
-                assign
-                    v-price          = v-price-no-VAT + v-VAT
-                    v-prt-sum        = v-prt-sum-no-VAT + v-prt-VAT
-                    v-prt-doc-sum        = v-prt-doc-sum-no-VAT + v-prt-doc-VAT
-                .
-                assign
-                    v-tot-prt-qnty          = v-tot-prt-qnty        + v-prt-qnty
-                    v-tot-prt-doc-qnty      = v-tot-prt-doc-qnty    + v-prt-doc-qnty
-                    v-tot-prt-VAT           = v-tot-prt-VAT         + v-prt-VAT
-                    v-tot-prt-doc-VAT       = v-tot-prt-doc-VAT     + v-prt-doc-VAT
-                    v-tot-prt-SLT           = v-tot-prt-SLT         + v-prt-SLT
-                    v-tot-prt-sum-no-VAT    = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
-                    v-tot-prt-doc-sum-no-VAT = v-tot-prt-doc-sum-no-VAT  + v-prt-doc-sum-no-VAT
-                    v-tot-prt-sum           = v-tot-prt-sum         + v-prt-sum
-                    v-tot-prt-doc-sum       = v-tot-prt-doc-sum     + v-prt-doc-sum
-                .
-            end.        /* NOT ( CostPrice = yes  ) */
-            if v-must-print-scale
-            then do:
-                /*---S------------- Печатать шкалу ---------------------*/
-                find first ub.bar-code no-lock
-                     where ub.bar-code.gds-code    = ub.goods.gds-code
-                       and ub.bar-code.unit-cli    = ub.goods.unit-base
-                       and ub.bar-code.node-code   = ub.gds-dtl.prt-code
-                       and ub.bar-code.part-code   = ""
-                       and ub.bar-code.in-code     = ""
-                .
-                assign
-                    v-prt-name = ""
-                .
-                do while available ub.gds-prt:
-                    if available ub.gds-prt
-                    then do:
-                        assign
-                            v-prt-name     = "\" + string( ub.gds-prt.node-name, "X(10)" ) + v-prt-name
-                            v-node-code   = ub.gds-prt.upper-code
-                        .
+                            .
                     end.
-                    find first ub.gds-prt no-lock
-                         where ub.gds-prt.node-code = v-node-code
-                           and ub.gds-prt.root <> yes
-                    no-error.
-                end.
-                if lookup ( "corr" , p-mode ) <> 0 then do :
-                end.
-                else do :
+                    if p-round = 'round':U
+                        then 
+                    do:
+                        run p-fmt-round in this-procedure (
+                            input v-prt-qnty
+                            , input v-price-no-VAT
+                            , input v-VAT
+                            , input v-SLT
+                            , input 0
+                            , output v-price-no-VAT
+                            , output v-VAT
+                            , output v-SLT
+                            , output v-prt-VAT
+                            , output v-prt-SLT
+                            , output v-void-decimal
+                            , output v-prt-sum-no-VAT
+                            , output v-void-decimal
+                            ).
+                    end.        /* if p-round = 'round':U */
+                    else 
+                    do:
+                        assign
+                            v-prt-VAT            = v-VAT            * v-prt-qnty
+                            v-prt-doc-VAT        = v-VAT            * v-prt-doc-qnty
+                            v-prt-SLT            = v-SLT            * v-prt-qnty
+                            v-prt-sum-no-VAT     = v-price-no-VAT   * v-prt-qnty
+                            v-prt-doc-sum-no-VAT = v-price-no-VAT   * v-prt-doc-qnty
+                            .
+                    end.        /* if NOT( p-round = 'round':U ) */
+                    assign
+                        v-price       = v-price-no-VAT + v-VAT
+                        v-prt-sum     = v-prt-sum-no-VAT + v-prt-VAT
+                        v-prt-doc-sum = v-prt-doc-sum-no-VAT + v-prt-doc-VAT
+                        .
+                    assign
+                        v-tot-prt-qnty           = v-tot-prt-qnty        + v-prt-qnty
+                        v-tot-prt-doc-qnty       = v-tot-prt-doc-qnty    + v-prt-doc-qnty
+                        v-tot-prt-VAT            = v-tot-prt-VAT         + v-prt-VAT
+                        v-tot-prt-doc-VAT        = v-tot-prt-doc-VAT     + v-prt-doc-VAT
+                        v-tot-prt-SLT            = v-tot-prt-SLT         + v-prt-SLT
+                        v-tot-prt-sum-no-VAT     = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
+                        v-tot-prt-doc-sum-no-VAT = v-tot-prt-doc-sum-no-VAT  + v-prt-doc-sum-no-VAT
+                        v-tot-prt-sum            = v-tot-prt-sum         + v-prt-sum
+                        v-tot-prt-doc-sum        = v-tot-prt-doc-sum     + v-prt-doc-sum
+                        .
+                end.        /* CostPrice = yes  */
+                else 
+                do:
+                    { str/out-vatp.i calc-gds-dtl ub.doc-line. buf_trn-doc. ub.gds-dtl. }
+                    assign
+                        v-VAT = ( if PrintRubl then vat-rubl-buyer else vat-base-buyer )
+                        v-SLT = ( if PrintRubl then slt-rubl-sale else slt-base-sale )
+                        .
+                    if v-VAT = ? then assign v-VAT = 0.
+                    if v-SLT = ? then assign v-SLT = 0.
+                    assign
+                        v-price-no-VAT = ( if PrintRubl then price-rubl-with-tax-sale else price-base-with-tax-sale ) - v-VAT - v-SLT
+                        v-prt-qnty     = ub.gds-dtl.fact-qnty
+                        v-prt-doc-qnty = ub.gds-dtl.doc-qnty
+                        .
+                    if p-round = 'round':U
+                        then 
+                    do:
+                        run p-fmt-round in this-procedure (
+                            input v-prt-qnty
+                            , input v-price-no-VAT
+                            , input v-VAT
+                            , input v-SLT
+                            , input 0
+                            , output v-price-no-VAT
+                            , output v-VAT
+                            , output v-SLT
+                            , output v-prt-VAT
+                            , output v-prt-SLT
+                            , output v-void-decimal
+                            , output v-prt-sum-no-VAT
+                            , output v-void-decimal
+                            ).
+                     end.        /* p-round = 'round':U */
+                    else 
+                    do:
+                        assign
+                            v-prt-VAT            = v-VAT          * v-prt-qnty
+                            v-prt-doc-VAT        = v-VAT          * v-prt-doc-qnty
+                            v-prt-SLT            = v-SLT          * v-prt-qnty
+                            v-prt-sum-no-VAT     = v-price-no-VAT * v-prt-qnty
+                            v-prt-doc-sum-no-VAT = v-price-no-VAT * v-prt-doc-qnty
+                            .
+                    end.        /* NOT ( p-round = 'round':U ) */
+                    assign
+                        v-price       = v-price-no-VAT + v-VAT
+                        v-prt-sum     = v-prt-sum-no-VAT + v-prt-VAT
+                        v-prt-doc-sum = v-prt-doc-sum-no-VAT + v-prt-doc-VAT
+                        .
+                    assign
+                        v-tot-prt-qnty           = v-tot-prt-qnty        + v-prt-qnty
+                        v-tot-prt-doc-qnty       = v-tot-prt-doc-qnty    + v-prt-doc-qnty
+                        v-tot-prt-VAT            = v-tot-prt-VAT         + v-prt-VAT
+                        v-tot-prt-doc-VAT        = v-tot-prt-doc-VAT     + v-prt-doc-VAT
+                        v-tot-prt-SLT            = v-tot-prt-SLT         + v-prt-SLT
+                        v-tot-prt-sum-no-VAT     = v-tot-prt-sum-no-VAT  + v-prt-sum-no-VAT
+                        v-tot-prt-doc-sum-no-VAT = v-tot-prt-doc-sum-no-VAT  + v-prt-doc-sum-no-VAT
+                        v-tot-prt-sum            = v-tot-prt-sum         + v-prt-sum
+                        v-tot-prt-doc-sum        = v-tot-prt-doc-sum     + v-prt-doc-sum
+                        .
+                end.        /* NOT ( CostPrice = yes  ) */
+                if v-must-print-scale
+                    then 
+                do:
+                    /*---S------------- Печатать шкалу ---------------------*/
+                    find first ub.bar-code no-lock
+                        where ub.bar-code.gds-code    = ub.goods.gds-code
+                        and ub.bar-code.unit-cli    = ub.goods.unit-base
+                        and ub.bar-code.node-code   = ub.gds-dtl.prt-code
+                        and ub.bar-code.part-code   = ""
+                        and ub.bar-code.in-code     = ""
+                        .
+                    assign
+                        v-prt-name = ""
+                        .
+                    do while available ub.gds-prt:
+                        if available ub.gds-prt
+                            then 
+                        do:
+                            assign
+                                v-prt-name  = "\" + string( ub.gds-prt.node-name, "X(10)" ) + v-prt-name
+                                v-node-code = ub.gds-prt.upper-code
+                                .
+                        end.
+                        find first ub.gds-prt no-lock
+                            where ub.gds-prt.node-code = v-node-code
+                            and ub.gds-prt.root <> yes
+                            no-error.
+                    end.
+                    if lookup ( "corr" , p-mode ) <> 0 then 
+                    do :
+                    end.
+                    else 
+                    do :
                         put stream OutStr-html unformatted
                             '<TR>' skip
                             '<TD text_wrap="true" colspan="4" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1320,90 +1335,99 @@ assign v-add-str = ""
                             '<TD colspan="7" style="text-align: center;"></TD>' skip
                             '<TD colspan="9" style="text-align: center;"></TD>' skip
                             '<TD colspan="15" style="text-align: center;"></TD>' skip
-                            '<TD colspan="15" style="text-align: center;"></TD>' skip
+                            '<TD colspan="14" style="text-align: center;"></TD>' skip
                             '</TR>'skip
                             .
-                end.
+                    end.
                 /*---E------------- Печатать шкалу ---------------------*/
-            end.
+                end.
             /*---E------------- for each ub.gds-dtl ---------------------*/
-        end.
+            end.
 
-        assign
-            v-qnty          = v-tot-prt-qnty
-            v-doc-qnty      = v-tot-prt-doc-qnty
-            v-VAT           = v-tot-prt-VAT
-            v-doc-VAT       = v-tot-prt-doc-VAT
-            v-SLT           = v-tot-prt-SLT
-            v-sum-no-VAT    = v-tot-prt-sum-no-VAT
-            v-doc-sum-no-VAT = v-tot-prt-doc-sum-no-VAT
-            v-sum           = v-tot-prt-sum
-            v-doc-sum       = v-tot-prt-doc-sum
-        .
+            assign
+                v-qnty           = v-tot-prt-qnty
+                v-doc-qnty       = v-tot-prt-doc-qnty
+                v-VAT            = v-tot-prt-VAT
+                v-doc-VAT        = v-tot-prt-doc-VAT
+                v-SLT            = v-tot-prt-SLT
+                v-sum-no-VAT     = v-tot-prt-sum-no-VAT
+                v-doc-sum-no-VAT = v-tot-prt-doc-sum-no-VAT
+                v-sum            = v-tot-prt-sum
+                v-doc-sum        = v-tot-prt-doc-sum
+                .
 
-        if not v-must-print-scale
-        then do:
-            /*---S------------- Не печатать признаки ---------------------*/
-            assign v-price-no-VAT = v-sum-no-VAT / v-qnty.
-            find first ub.bar-code no-lock
+            if not v-must-print-scale
+                then 
+            do:
+                /*---S------------- Не печатать признаки ---------------------*/
+                assign 
+                    v-price-no-VAT = v-sum-no-VAT / v-qnty.
+                find first ub.bar-code no-lock
                     where ub.bar-code.gds-code = ub.goods.gds-code
                     and ub.bar-code.unit-cli = ub.goods.unit-base
                     and ub.bar-code.node-code = rootnode_code
                     and ub.bar-code.part-code = ""
                     and ub.bar-code.in-code = ""
-            .
-            for each ub.parts no-lock
-                where ub.parts.out-code = ub.doc-line.doc-code
+                    .
+                for each ub.parts no-lock
+                    where ub.parts.out-code = ub.doc-line.doc-code
                     and ub.parts.obj-type = ub.doc-line.obj-type
                     and ub.parts.obj-code = ub.doc-line.obj-code
                     and ub.parts.artic = ub.doc-line.artic
                     and ub.parts.prod-type = ub.doc-line.prod-type
                     and ub.parts.prod-code = ub.doc-line.prod-code
-            :
+                    :
                     /*---S------------- По партиям ---------------------*/
                     jj = jj + 1 .
-                    assign v-GTD = (if trim(ub.parts.cst-code) <> "" then ub.parts.cst-code else "             -             ").
+                    assign 
+                        v-GTD = (if trim(ub.parts.cst-code) <> "" then ub.parts.cst-code else "-").
                     if available ub.country
-                    and ub.country.alpha1 = "RU":U
-                    then do:
+                        and ub.country.alpha1 = "RU":U
+                        then 
+                    do:
                         assign
-                            v-GTD       = "             -             ":U
-                            v-country   = "":U
+                            v-GTD          = "-":U
+                            v-country      = "":U
                             v-country-code = "":U
-                        .
+                            .
                     end.
                     find first buf_parts-attr no-lock
-                      where buf_parts-attr.in-code   = ub.parts.in-code
+                        where buf_parts-attr.in-code   = ub.parts.in-code
                         and buf_parts-attr.gds-code  = ub.goods.gds-code
                         and buf_parts-attr.part-code = ub.parts.part-code
-                    no-error .
+                        no-error .
                     if available buf_parts-attr
-                      and buf_parts-attr.country-code <> 0
-                      then do:
-                          find first buf_country
-                          where buf_country.num-code = buf_parts-attr.country-code
-                          no-error.
-                          if available buf_country
-                          and buf_country.num-code <> ub.country.num-code
-                          and buf_country.short-name <> "" and ub.country.num-code <> 643
-                          then do :
-                              assign
-                                  v-country-code = " " + string(buf_country.num-code)
-                                  v-country = buf_country.short-name
+                        and buf_parts-attr.country-code <> 0
+                        then 
+                    do:
+                        find first buf_country
+                            where buf_country.num-code = buf_parts-attr.country-code
+                            no-error.
+                        if available buf_country
+                            and buf_country.num-code <> ub.country.num-code
+                            and buf_country.short-name <> "" and ub.country.num-code <> 643
+                            then 
+                        do :
+                            assign
+                                v-country-code = " " + string(buf_country.num-code)
+                                v-country      = buf_country.short-name
                                 .
-                              if buf_country.alpha1 = "RU":U
-                              then do :
-                                  assign
+                            if buf_country.alpha1 = "RU":U
+                                then 
+                            do :
+                                assign
                                     v-country-code = "":U
-                                    v-country = "":U
-                                    v-GTD     = "             -             ":U
-                                  .
-                              end .
-                          end.
+                                    v-country      = "":U
+                                    v-GTD          = "-":U
+                                    .
+                            end .
+                        end.
                     end.
-                    if lookup ( "corr" , p-mode) <> 0 then do :
+                    if lookup ( "corr" , p-mode) <> 0 then 
+                    do :
                     end.
-                    else do :
+                    else 
+                    do :
                         put stream OutStr-html unformatted
                             '<TR>' skip
                             '<TD text_wrap="true" colspan="4" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1424,95 +1448,102 @@ assign v-add-str = ""
                             '<TD colspan="7" style="text-align: center;"></TD>' skip
                             '<TD colspan="9" style="text-align: center;"></TD>' skip
                             '<TD colspan="15" style="text-align: center;"></TD>' skip
-                            '<TD colspan="15" style="text-align: center;"></TD>' skip
+                            '<TD colspan="14" style="text-align: center;"></TD>' skip
                             '</TR>'skip
                             .    
-                    if FullGdsName
-                    and goods.gds-name <> "":U then do :
-                      run print-more in this-procedure.
-                    end.
+                        if FullGdsName
+                            and goods.gds-name <> "":U then 
+                        do :
+                            run print-more in this-procedure.
+                        end.
                     end.
                     v-lines-counter = v-lines-counter + 1 .
-                    /*---E------------- По партиям ---------------------*/
-            end.
+                /*---E------------- По партиям ---------------------*/
+                end.
             /*---E------------- Не печатать признаки ---------------------*/
-        end.
+            end.
         /*---E------------- Не пустая шкала и не от поставщика ---------------------*/
-    end.
-    else do:
-        /*---S------------- Пустая шкала или от поставщика ---------------------*/
-        find first ub.bar-code no-lock
+        end.
+        else 
+        do:
+            /*---S------------- Пустая шкала или от поставщика ---------------------*/
+            find first ub.bar-code no-lock
                 where ub.bar-code.gds-code = ub.goods.gds-code
                 and ub.bar-code.unit-cli = ub.goods.unit-base
                 and ub.bar-code.node-code = rootnode_code
                 and ub.bar-code.part-code = ""
                 and ub.bar-code.in-code = ""
-        .
-        if CostPrice = yes
-        then do:
-            /*---S------------------- Счет-фактура от поставщика -----------------*/
-            assign v-qnty = ub.doc-line.doc-qnty.
+                .
+            if CostPrice = yes
+                then 
+            do:
+                /*---S------------------- Счет-фактура от поставщика -----------------*/
+                assign 
+                    v-qnty = ub.doc-line.doc-qnty.
 
             { str/in-vatp.i calc ub.doc-line. buf_trn-doc. g }
-            assign
-                v-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
-                v-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
-                v-tax-price = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
-            .
-            if v-VAT = ?        then assign v-VAT       = 0.
-            if v-SLT = ?        then assign v-SLT       = 0.
-            if v-tax-price = ?  then assign v-tax-price = 0.
-            assign
+                assign
+                    v-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
+                    v-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
+                    v-tax-price = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
+                    .
+                if v-VAT = ?        then assign v-VAT = 0.
+                if v-SLT = ?        then assign v-SLT = 0.
+                if v-tax-price = ?  then assign v-tax-price = 0.
+                assign
                     v-price-no-VAT = ( if PrintRubl
                                         then price-rubl-with-tax-loc - vat-rubl-loc - slt-rubl-loc - road-tax-rubl-loc
                                         else price-base-with-tax-loc - vat-base-loc - slt-base-loc - road-tax-base-loc)
-            .
-            if v-r-factur-is-vozvrat-vnesh = yes
-            then do:
-                assign
-                    v-price-no-VAT = v-price-no-VAT
+                    .
+                if v-r-factur-is-vozvrat-vnesh = yes
+                    then 
+                do:
+                    assign
+                        v-price-no-VAT = v-price-no-VAT
                                     - ( if PrintRubl
                                         then ( transport-rubl-loc + other-rubl-loc )
                                         else ( transport-base-loc + other-base-loc ) )
-                .
-            end.
+                        .
+                end.
             /*---E------------------- Счет-фактура от поставщика -----------------*/
-        end.
-        else do:
-            /*---S---------------------- Обычный счет-фактура --------------------*/
-            find first ub.gds-dtl no-lock
-                 where ub.gds-dtl.doc-code = ub.doc-line.doc-code
-                   and ub.gds-dtl.prod-type = ub.doc-line.prod-type
-                   and ub.gds-dtl.prod-code = ub.doc-line.prod-code
-                   and ub.gds-dtl.artic = ub.doc-line.artic
-                   and ub.gds-dtl.prt-code = rootnode_code
-            .
-            assign
-                v-qnty = ub.gds-dtl.fact-qnty
-                v-doc-qnty = ub.gds-dtl.doc-qnty
-            .
+            end.
+            else 
+            do:
+                /*---S---------------------- Обычный счет-фактура --------------------*/
+                find first ub.gds-dtl no-lock
+                    where ub.gds-dtl.doc-code = ub.doc-line.doc-code
+                    and ub.gds-dtl.prod-type = ub.doc-line.prod-type
+                    and ub.gds-dtl.prod-code = ub.doc-line.prod-code
+                    and ub.gds-dtl.artic = ub.doc-line.artic
+                    and ub.gds-dtl.prt-code = rootnode_code
+                    .
+                assign
+                    v-qnty     = ub.gds-dtl.fact-qnty
+                    v-doc-qnty = ub.gds-dtl.doc-qnty
+                    .
             { str/out-vatp.i calc-gds-dtl ub.doc-line. buf_trn-doc. ub.gds-dtl. }
-            assign
-                v-VAT       = ( if PrintRubl then vat-rubl-buyer        else vat-base-buyer )
-                v-SLT       = ( if PrintRubl then slt-rubl-sale         else slt-base-sale )
-                v-tax-price = ( if PrintRubl then road-tax-rubl-sale    else road-tax-base-sale )
-                v-doc-VAT   = v-VAT
-            .
-            if v-VAT = ?        then assign v-VAT       = 0.
-            if v-SLT = ?        then assign v-SLT       = 0.
-            if v-tax-price = ?  then assign v-tax-price = 0.
+                assign
+                    v-VAT       = ( if PrintRubl then vat-rubl-buyer        else vat-base-buyer )
+                    v-SLT       = ( if PrintRubl then slt-rubl-sale         else slt-base-sale )
+                    v-tax-price = ( if PrintRubl then road-tax-rubl-sale    else road-tax-base-sale )
+                    v-doc-VAT   = v-VAT
+                    .
+                if v-VAT = ?        then assign v-VAT = 0.
+                if v-SLT = ?        then assign v-SLT = 0.
+                if v-tax-price = ?  then assign v-tax-price = 0.
 
-            assign
-                v-price-no-VAT = ( if PrintRubl
+                assign
+                    v-price-no-VAT = ( if PrintRubl
                                    then price-rubl-with-tax-sale
                                    else price-base-with-tax-sale ) - v-VAT - v-SLT - v-tax-price
-            .
+                    .
             /*---E---------------------- Обычный счет-фактура --------------------*/
-        end.
-        if p-round = 'round':U
-        then do:
+            end.
+            if p-round = 'round':U
+                then 
+            do:
                 run p-fmt-round in this-procedure (
-                      input v-qnty
+                    input v-qnty
                     , input v-price-no-VAT
                     , input v-VAT
                     , input v-SLT
@@ -1525,38 +1556,33 @@ assign v-add-str = ""
                     , output v-tax
                     , output v-sum-no-VAT
                     , output v-void-decimal
-                ).
-/*            assign*/
-/*                        v-vat-pc            = v-VAT / v-price-no-VAT*/
-/*                        v-slt-pc            = v-SLT / ( v-price-no-VAT + v-VAT )*/
-/*                        v-price-no-VAT      = round( v-price-no-VAT, 2 )*/
-/*                        v-VAT               = round( round( v-price-no-VAT * v-vat-pc, 2 ) * v-qnty, 2 )*/
-/*                        v-SLT               = round( ( v-price-no-VAT * v-qnty + v-VAT ) * v-slt-pc, 2 )*/
-/*                        v-sum-no-VAT        = round( v-price-no-VAT * v-qnty, 2 )*/
-/*                        v-tax               = round( v-tax-price * v-qnty, 2 )*/
-/*            .*/
-        end.        /* p-round = 'round':U */
-        else do:
+                    ).
+            end.        /* p-round = 'round':U */
+            else 
+            do:
+                assign
+                    v-VAT            = v-VAT * v-qnty
+                    v-doc-VAT        = v-doc-VAT * v-doc-qnty
+                    v-SLT            = v-SLT * v-qnty
+                    v-sum-no-VAT     = v-price-no-VAT * v-qnty
+                    v-doc-sum-no-VAT = v-price-no-VAT * v-doc-qnty
+                    v-tax            = v-tax-price * v-qnty
+                    .
+            end.        /* NOT ( p-round = 'round':U ) */
             assign
-                v-VAT           = v-VAT * v-qnty
-                v-doc-VAT       = v-doc-VAT * v-doc-qnty
-                v-SLT           = v-SLT * v-qnty
-                v-sum-no-VAT    = v-price-no-VAT * v-qnty
-                v-doc-sum-no-VAT = v-price-no-VAT * v-doc-qnty
-                v-tax           = v-tax-price * v-qnty
-            .
-        end.        /* NOT ( p-round = 'round':U ) */
-        assign
-            v-sum           = v-sum-no-VAT + v-VAT
-            v-doc-sum       = v-doc-sum-no-VAT + v-doc-VAT
-        .
-        if ub.goods.gds-type = {&gds-office}
-        or PrintScale
-        then do:
-            /*---S------------- Услуга ---------------------*/
-          if lookup ( "corr" , p-mode ) <> 0 then do :
-          end.
-          else do :
+                v-sum     = v-sum-no-VAT + v-VAT
+                v-doc-sum = v-doc-sum-no-VAT + v-doc-VAT
+                .
+            if ub.goods.gds-type = {&gds-office}
+                or PrintScale
+                then 
+            do:
+                /*---S------------- Услуга ---------------------*/
+                if lookup ( "corr" , p-mode ) <> 0 then 
+                do :
+                end.
+                else 
+                do :
                     put stream OutStr-html unformatted
                         '<TR>' skip
                         '<TD text_wrap="true" colspan="4" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1576,164 +1602,163 @@ assign v-add-str = ""
                         '<TD colspan="7" style="text-align: center;"></TD>' skip
                         '<TD colspan="9" style="text-align: center;"></TD>' skip
                         '<TD colspan="15" style="text-align: center;"></TD>' skip
-                        '<TD colspan="15" style="text-align: center;"></TD>' skip
+                        '<TD colspan="14" style="text-align: center;"></TD>' skip
                         '</TR>'skip
                         .
-            if FullGdsName
-            and gds-str1 <> "":U then do :
-               run print-more in this-procedure.
-            end.
-          end.
+                    if FullGdsName
+                        and gds-str1 <> "":U then 
+                    do :
+                        run print-more in this-procedure.
+                    end.
+                end.
 
-            assign v-lines-counter = v-lines-counter + 1.
+                assign 
+                    v-lines-counter = v-lines-counter + 1.
             /*---E------------- Услуга ---------------------*/
-        end.
-        else do:
-            /*---S------------- Не услуга ---------------------*/
-            define variable v-first-parts   as logical     no-undo.
-            assign
-                v-first-parts = yes
-            .
-            for each ub.parts no-lock
-               where ub.parts.out-code  = ub.doc-line.doc-code
-                 and ub.parts.obj-type  = ub.doc-line.obj-type
-                 and ub.parts.obj-code  = ub.doc-line.obj-code
-                 and ub.parts.artic     = ub.doc-line.artic
-                 and ub.parts.prod-type = ub.doc-line.prod-type
-                 and ub.parts.prod-code = ub.doc-line.prod-code
-            :
-                /*---S------------- Для каждой партии ---------------------*/
-                jj = jj + 1 .
+            end.
+            else 
+            do:
+                /*---S------------- Не услуга ---------------------*/
+                define variable v-first-parts as logical no-undo.
                 assign
-                    v-GTD       = (if trim(ub.parts.cst-code) <> "" then ub.parts.cst-code else "             -             ")
-                    v-prt-qnty  = ub.parts.fact-qnty
-                    v-prt-doc-qnty = ub.parts.qnty
-                .
-                if available ub.country
-                and ub.country.alpha1 = "RU":U
-                then do:
-                    assign
-                        v-GTD       = "             -             ":U
-                        v-country-code   = "":U
-                        v-country   = "":U
+                    v-first-parts = yes
                     .
-                end.
-                find first buf_parts-attr no-lock
-                  where buf_parts-attr.in-code   = ub.parts.in-code
-                    and buf_parts-attr.gds-code  = ub.goods.gds-code
-                    and buf_parts-attr.part-code = ub.parts.part-code
-                no-error .
-                if available buf_parts-attr
-                  and buf_parts-attr.country-code <> 0
-                  then do:
-                      find first buf_country
-                      where buf_country.num-code = buf_parts-attr.country-code
-                      no-error.
-                      if available buf_country
-                      and buf_country.num-code <> ub.country.num-code
-                      and buf_country.short-name <> "" and ub.country.num-code <> 643
-                      then do :
-                          assign
-                              v-country-code = " " + string(buf_country.num-code)
-                              v-country = buf_country.short-name
+                for each ub.parts no-lock
+                    where ub.parts.out-code  = ub.doc-line.doc-code
+                    and ub.parts.obj-type  = ub.doc-line.obj-type
+                    and ub.parts.obj-code  = ub.doc-line.obj-code
+                    and ub.parts.artic     = ub.doc-line.artic
+                    and ub.parts.prod-type = ub.doc-line.prod-type
+                    and ub.parts.prod-code = ub.doc-line.prod-code
+                    :
+                    /*---S------------- Для каждой партии ---------------------*/
+                    jj = jj + 1 .
+                    assign
+                        v-GTD          = (if trim(ub.parts.cst-code) <> "" then ub.parts.cst-code else "-")
+                        v-prt-qnty     = ub.parts.fact-qnty
+                        v-prt-doc-qnty = ub.parts.qnty
+                        .
+                    if available ub.country
+                        and ub.country.alpha1 = "RU":U
+                        then 
+                    do:
+                        assign
+                            v-GTD          = "-":U
+                            v-country-code = "":U
+                            v-country      = "":U
                             .
-                          if buf_country.alpha1 = "RU":U
-                          then do :
-                              assign
-                                v-country-code   = "":U
-                                v-country = "":U
-                                v-GTD     = "             -             ":U
-                              .
-                          end .
-                      end.
-                end.
+                    end.
+                    find first buf_parts-attr no-lock
+                        where buf_parts-attr.in-code   = ub.parts.in-code
+                        and buf_parts-attr.gds-code  = ub.goods.gds-code
+                        and buf_parts-attr.part-code = ub.parts.part-code
+                        no-error .
+                    if available buf_parts-attr
+                        and buf_parts-attr.country-code <> 0
+                        then 
+                    do:
+                        find first buf_country
+                            where buf_country.num-code = buf_parts-attr.country-code
+                            no-error.
+                        if available buf_country
+                            and buf_country.num-code <> ub.country.num-code
+                            and buf_country.short-name <> "" and ub.country.num-code <> 643
+                            then 
+                        do :
+                            assign
+                                v-country-code = " " + string(buf_country.num-code)
+                                v-country      = buf_country.short-name
+                                .
+                            if buf_country.alpha1 = "RU":U
+                                then 
+                            do :
+                                assign
+                                    v-country-code = "":U
+                                    v-country      = "":U
+                                    v-GTD          = "-":U
+                                    .
+                            end .
+                        end.
+                    end.
                 
-                if CostPrice = yes
-                then do:
+                    if CostPrice = yes
+                        then 
+                    do:
 /* Если приход, то цену по партиям не осреднять, печатать как есть */
-                    { str/in-vatp.i calc-parts ub.parts. buf_trn-doc. g }
-                    assign
-                        v-parts-VAT       = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
-                        v-parts-SLT       = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
-                        v-tax-price       = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
-                    .
-                    if v-parts-VAT = ?  then assign v-parts-VAT = 0.
-                    if v-parts-SLT = ?  then assign v-parts-SLT = 0.
-                    if v-tax-price = ?  then assign v-tax-price = 0.
-                    assign
-                        v-parts-price-no-VAT    =
-                                          ( if PrintRubl
+                        { str/in-vatp.i calc-parts ub.parts. buf_trn-doc. g }
+                        assign
+                            v-parts-VAT = ( if PrintRubl then vat-rubl-loc      else vat-base-loc )
+                            v-parts-SLT = ( if PrintRubl then slt-rubl-loc      else slt-base-loc )
+                            v-tax-price = ( if PrintRubl then road-tax-rubl-loc else road-tax-base-loc )
+                            .
+                        if v-parts-VAT = ?  then assign v-parts-VAT = 0.
+                        if v-parts-SLT = ?  then assign v-parts-SLT = 0.
+                        if v-tax-price = ?  then assign v-tax-price = 0.
+                        assign
+                            v-parts-price-no-VAT = ( if PrintRubl
                                           then price-rubl-with-tax-loc - vat-rubl-loc - slt-rubl-loc - road-tax-rubl-loc
                                           else price-base-with-tax-loc - vat-base-loc - slt-base-loc - road-tax-base-loc )
-                        v-parts-sum             =
-                                          ( if PrintRubl
+                            v-parts-sum          = ( if PrintRubl
                                           then price-rubl-with-tax-loc
                                           else price-base-with-tax-loc ) * v-prt-qnty
-                    .
-                    if v-r-factur-is-vozvrat-vnesh = yes
-                    then do:
-                        assign
-                            v-parts-price-no-VAT = v-parts-price-no-VAT
+                            .
+                        if v-r-factur-is-vozvrat-vnesh = yes
+                            then 
+                        do:
+                            assign
+                                v-parts-price-no-VAT = v-parts-price-no-VAT
                                             - ( if PrintRubl
                                                 then ( transport-rubl-loc + other-rubl-loc )
                                                 else ( transport-base-loc + other-base-loc ) )
-                            v-parts-sum          = v-parts-sum
+                                v-parts-sum          = v-parts-sum
                                             - ( ( if PrintRubl
                                                   then ( transport-rubl-loc + other-rubl-loc )
                                                   else ( transport-base-loc + other-base-loc ) ) * v-prt-qnty )
-                        .
-                    end.
-                    if p-round = 'round':U
-                    then do:
-                        if v-first-parts = yes
-                        then do:
-                            assign
-                                v-first-parts   = no
-                                v-sum-no-VAT    = 0
-                                v-VAT           = 0
-                                v-SLT           = 0
-                                v-tax           = 0
-                                v-sum           = 0
-                            .
+                                .
                         end.
-                        run p-fmt-round in this-procedure (
-                              input v-prt-qnty
-                            , input v-parts-price-no-VAT
-                            , input v-parts-VAT
-                            , input v-parts-SLT
-                            , input v-tax-price
-                            , output v-parts-price-no-VAT
-                            , output v-parts-VAT
-                            , output v-parts-SLT
-                            , output v-sum-VAT
-                            , output v-sum-SLT
-                            , output v-sum-tax
-                            , output v-parts-sum-no-VAT
-                            , output v-parts-sum
-                        ).
-/*                        assign*/
-/*                            v-vat-pc                = v-parts-VAT / v-parts-price-no-VAT*/
-/*                            v-slt-pc                = v-parts-SLT / ( v-parts-price-no-VAT + v-parts-VAT )*/
-/*                            v-parts-price-no-VAT    = round( v-parts-price-no-VAT, 2 )*/
-/*                            v-parts-VAT             = round( v-parts-price-no-VAT * v-vat-pc, 2 )*/
-/*                            v-parts-SLT             = round( ( v-parts-price-no-VAT * v-prt-qnty + v-parts-VAT ) * v-slt-pc, 2 )*/
-/*                            v-parts-sum             = round( ( v-parts-price-no-VAT + v-parts-VAT + v-parts-SLT*/
-/*                                                                + ( if PrintRubl*/
-/*                                                                    then road-tax-rubl-loc*/
-/*                                                                    else road-tax-base-loc )*/
-/*                                                             ) * v-prt-qnty, 2 )*/
-/*                        .*/
-                        assign
-                            v-sum-no-VAT    = v-sum-no-VAT  + v-parts-sum-no-VAT
-                            v-VAT           = v-VAT         + v-sum-VAT
-                            v-SLT           = v-SLT         + v-sum-SLT
-                            v-tax           = v-tax         + v-sum-tax
-                            v-sum           = v-sum         + v-parts-sum
-                        .
-                    end.        /* p-round = 'round':U */
-                    if lookup ( "corr" , p-mode ) <> 0 then do :
-                    end.
-                    else do :
+                        if p-round = 'round':U
+                            then 
+                        do:
+                            if v-first-parts = yes
+                                then 
+                            do:
+                                assign
+                                    v-first-parts = no
+                                    v-sum-no-VAT  = 0
+                                    v-VAT         = 0
+                                    v-SLT         = 0
+                                    v-tax         = 0
+                                    v-sum         = 0
+                                    .
+                            end.
+                            run p-fmt-round in this-procedure (
+                                input v-prt-qnty
+                                , input v-parts-price-no-VAT
+                                , input v-parts-VAT
+                                , input v-parts-SLT
+                                , input v-tax-price
+                                , output v-parts-price-no-VAT
+                                , output v-parts-VAT
+                                , output v-parts-SLT
+                                , output v-sum-VAT
+                                , output v-sum-SLT
+                                , output v-sum-tax
+                                , output v-parts-sum-no-VAT
+                                , output v-parts-sum
+                                ).
+                             assign
+                                v-sum-no-VAT = v-sum-no-VAT  + v-parts-sum-no-VAT
+                                v-VAT        = v-VAT         + v-sum-VAT
+                                v-SLT        = v-SLT         + v-sum-SLT
+                                v-tax        = v-tax         + v-sum-tax
+                                v-sum        = v-sum         + v-parts-sum
+                                .
+                        end.        /* p-round = 'round':U */
+                        if lookup ( "corr" , p-mode ) <> 0 then 
+                        do :
+                        end.
+                        else 
+                        do :
                             put stream OutStr-html unformatted
                                 '<TR>' skip
                                 '<TD text_wrap="true" colspan="4" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1754,14 +1779,17 @@ assign v-add-str = ""
                                 '<TD colspan="7" style="text-align: center;"></TD>' skip
                                 '<TD colspan="9" style="text-align: center;"></TD>' skip
                                 '<TD colspan="15" style="text-align: center;"></TD>' skip
-                                '<TD colspan="15" style="text-align: center;"></TD>' skip
+                                '<TD colspan="14" style="text-align: center;"></TD>' skip
                                 '</TR>'skip.
-                end.
-                end.
-                else do:
-                  if lookup ( "corr" , p-mode ) <> 0 then do:
-                  end.
-                  else do :
+                        end.
+                    end.
+                    else 
+                    do:
+                        if lookup ( "corr" , p-mode ) <> 0 then 
+                        do:
+                        end.
+                        else 
+                        do :
                             put stream OutStr-html unformatted
                                 '<TR>' skip
                                 '<TD text_wrap="true" colspan="4" style="text-align: center;">' + string(jj) + '</TD>' skip
@@ -1782,44 +1810,47 @@ assign v-add-str = ""
                                 '<TD colspan="7" style="text-align: center;"></TD>' skip
                                 '<TD colspan="9" style="text-align: center;"></TD>' skip
                                 '<TD colspan="15" style="text-align: center;"></TD>' skip
-                                '<TD colspan="15" style="text-align: center;"></TD>' skip
+                                '<TD colspan="14" style="text-align: center;"></TD>' skip
                                 '</TR>'skip.
-                end.
-                end.
-                if FullGdsName and lookup ( "corr" , p-mode ) = 0
-                and gds-str1 <> "":U then do :
-                   run print-more in this-procedure.
-                end.
+                        end.
+                    end.
+                    if FullGdsName and lookup ( "corr" , p-mode ) = 0
+                        and gds-str1 <> "":U then 
+                    do :
+                        run print-more in this-procedure.
+                    end.
 
-                { rep/r-factur21.i tax prt-}
+                    { rep/r-factur21.i tax prt-}
 
-                assign v-lines-counter = v-lines-counter + 1.
+                    assign 
+                        v-lines-counter = v-lines-counter + 1.
                 /*---E------------- Для каждой партии ---------------------*/
-            end.
+                end.
             /*---E------------- Не услуга ---------------------*/
-        end.
+            end.
         /*---E------------- Пустая шкала или от поставщика ---------------------*/
-    end.
-    assign
-        v-tot-sum-no-VAT    = v-tot-sum-no-VAT  + v-sum-no-VAT  + v-tax
-        v-tot-VAT           = v-tot-VAT         + v-VAT
-        v-tot-SLT           = v-tot-SLT         + v-SLT
-        v-tot-tax           = v-tot-tax         + v-tax
-        v-tot-sum           = v-tot-sum         + v-sum         + v-tax
-    .
-    if lookup ("corr" , p-mode) <> 0 then do :
-      if v-diff-sum-no-VAT > 0 then v-tot-sum-no-VAT1   = v-tot-sum-no-VAT1 + v-diff-sum-no-VAT.
-      if v-diff-sum-no-VAT < 0 then v-tot-sum-no-VAT2   = v-tot-sum-no-VAT2 + abs(v-diff-sum-no-VAT).
-      if v-diff-VAT        > 0 then v-tot-VAT1          = v-tot-VAT1        + v-diff-VAT.
-      if v-diff-VAT        < 0 then v-tot-VAT2          = v-tot-VAT2        + abs(v-diff-VAT).
-      if v-diff-sum        > 0 then v-tot-sum1          = v-tot-sum1        + v-diff-sum.
-      if v-diff-sum        < 0 then v-tot-sum2          = v-tot-sum2        + abs(v-diff-sum).
+        end.
+        assign
+            v-tot-sum-no-VAT = v-tot-sum-no-VAT  + v-sum-no-VAT  + v-tax
+            v-tot-VAT        = v-tot-VAT         + v-VAT
+            v-tot-SLT        = v-tot-SLT         + v-SLT
+            v-tot-tax        = v-tot-tax         + v-tax
+            v-tot-sum        = v-tot-sum         + v-sum         + v-tax
+            .
+        if lookup ("corr" , p-mode) <> 0 then 
+        do :
+            if v-diff-sum-no-VAT > 0 then v-tot-sum-no-VAT1   = v-tot-sum-no-VAT1 + v-diff-sum-no-VAT.
+            if v-diff-sum-no-VAT < 0 then v-tot-sum-no-VAT2   = v-tot-sum-no-VAT2 + abs(v-diff-sum-no-VAT).
+            if v-diff-VAT        > 0 then v-tot-VAT1          = v-tot-VAT1        + v-diff-VAT.
+            if v-diff-VAT        < 0 then v-tot-VAT2          = v-tot-VAT2        + abs(v-diff-VAT).
+            if v-diff-sum        > 0 then v-tot-sum1          = v-tot-sum1        + v-diff-sum.
+            if v-diff-sum        < 0 then v-tot-sum2          = v-tot-sum2        + abs(v-diff-sum).
 
-      put stream Out-stream
-          v-single-line format "X(199)"
-      .
+            put stream Out-stream
+                v-single-line format "X(199)"
+                .
+        end.
     end.
-end.
 end procedure. /* print-line */
 
 
@@ -1860,10 +1891,10 @@ procedure print-header :
         find first buf_trn-doc no-lock
             where buf_trn-doc.doc-code = p-doc-code
             .
-    { gbl/getsect.i run {&cmp} buf_trn-doc.host-code {&attr-prt-firm} }
-    for each thbjattr_thbj-attr :
-        if thbjattr_thbj-attr.prop-code = 'factur01' then v-print-doc =  string(thbjattr_thbj-attr.property-value-logical) .
-    end.
+        { gbl/getsect.i run {&cmp} buf_trn-doc.host-code {&attr-prt-firm} }
+        for each thbjattr_thbj-attr :
+            if thbjattr_thbj-attr.prop-code = 'factur01' then v-print-doc =  string(thbjattr_thbj-attr.property-value-logical) .
+        end.
         assign
             p-sf-par = no
             .
@@ -1906,12 +1937,12 @@ procedure print-header :
     }
         for each buf_doc-line no-lock where buf_doc-line.doc-code = buf_trn-doc.doc-code,
             each ub.parts no-lock
-             where ub.parts.out-code  = buf_doc-line.doc-code
-               and ub.parts.obj-type  = buf_doc-line.obj-type
-               and ub.parts.obj-code  = buf_doc-line.obj-code
-               and ub.parts.artic     = buf_doc-line.artic
-               and ub.parts.prod-type = buf_doc-line.prod-type
-               and ub.parts.prod-code = buf_doc-line.prod-code:
+            where ub.parts.out-code  = buf_doc-line.doc-code
+            and ub.parts.obj-type  = buf_doc-line.obj-type
+            and ub.parts.obj-code  = buf_doc-line.obj-code
+            and ub.parts.artic     = buf_doc-line.artic
+            and ub.parts.prod-type = buf_doc-line.prod-type
+            and ub.parts.prod-code = buf_doc-line.prod-code:
             ii = ii + 1 .
         end.  
         v-ship-doc = "1 - " + string (ii) .
@@ -1952,46 +1983,6 @@ procedure print-header :
         if v-torgconf-outappr = yes
             then 
         do:
-        /*         put stream OutStr-html unformatted                                                                                                              */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;">Приложение №1</td>' skip                                                                        */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;">к постановлению Правительства</td>' skip                                                        */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;">Российской Федерации</td>' skip                                                                 */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;">от 26 декабря 2011 г. № 1137</td>' skip                                                         */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;"></td>' skip                                                                                     */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;">(в ред. Постановления Правительства РФ от 02.04.2021 № 534)</td>' skip                          */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;"></td>' skip                                                                                     */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="117" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '<td colspan="50" style="text-align: right;"></td>' skip                                                                                     */
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="167" style="text-align: center;">I. Форма счета-фактуры, применяемого прирасчетах по налогу на добавленную стоимость</td>' skip*/
-        /*            '</tr>'                                                                                                                                      */
-        /*            '<tr>' skip                                                                                                                                  */
-        /*            '<td colspan="167" style="text-align: center;"></td>' skip                                                                                   */
-        /*            '</tr>'                                                                                                                                      */
-        /*            .                                                                                                                                            */
         END.
         v-status = if buf_trn-doc.status_ <> {&fact}
             then string( "(" + caps( buf_trn-doc.status_ ) + ")" )
@@ -2020,18 +2011,6 @@ procedure print-header :
             '<td></td>' skip
             '<td colspan="60">(1а)</td>' skip
             '</tr>'
-            /*            '<tr height="1">' skip                                            */
-            /*            '<td colspan="35"></td>' skip                                     */
-            /*            '<td colspan="5"></td>' skip                                      */
-            /*            '<td colspan="11" style="border-top: 1px solid black;"></td>' skip*/
-            /*            '<td colspan="4"></td>' skip                                      */
-            /*            '<td colspan="5" style="border-top: 1px solid black;"></td>' skip */
-            /*            '<td colspan="3"></td>' skip                                      */
-            /*            '<td colspan="27" style="border-top: 1px solid black;"></td>' skip*/
-            /*            '<td></td>' skip                                                  */
-            /*            '<td colspan="30">(1а)</td>' skip                                 */
-            /*            '<td colspan="46"></td>' skip                                     */
-            /*            '</tr>'                                                           */
             '<tr>' skip
             '<td colspan="9" style="text-align: left;">Продавец</td>' skip
             '<td></td>' skip
@@ -2079,7 +2058,7 @@ procedure print-header :
             '<td colspan="60">(3)</td>' skip
             '</tr>'
             .
-                { str/tdat-val.i p-doc-code {&trdcattr-idCountryContr} v-idContr v-attr-type no-error }
+        { str/tdat-val.i p-doc-code {&trdcattr-idCountryContr} v-idContr v-attr-type no-error }
     
         assign
             t-inn = substitute( "&1&2&3",
@@ -2185,13 +2164,6 @@ procedure print-header :
             '<td colspan="60">(8)</td>' skip
             '</tr>'
             '<tr>' skip
-            '<td colspan="74" style="text-align: left;"></td>' skip
-            '<td></td>' skip
-            '<td colspan="45"></td>' skip
-            '<td></td>' skip
-            '<td colspan="60"></td>' skip
-            '</tr>'            
-            '<tr>' skip
             '<td colspan="117" style="text-align: center;"></td>' skip
             '<td colspan="64" style="text-align: right;"></td>' skip
             '</tr>'  
@@ -2220,7 +2192,7 @@ procedure print-footer :
             '<td colspan="14" style="text-align:center; border: 1px solid black;">Х</td>' skip
             '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(v-tot-VAT,"->>>>>>>>>>>9.99",2) + '" colspan="9" style="text-align: right; border: 1px solid black;">' + fnc-convert-dot-to-colon(v-tot-VAT,"->>>>>>>>>>>9.99",2) + '</TD>' skip
             '<TD text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(v-tot-sum,"->>>>>>>>>>>9.99",2) + '" colspan="13" style="text-align: right; border: 1px solid black;">' + fnc-convert-dot-to-colon(v-tot-sum,"->>>>>>>>>>>9.99",2) + '</TD>' skip
-            '<td colspan="78"></td>' skip
+            '<td colspan="77"></td>' skip
             '</tr>'
             .
         put stream OutStr-html unformatted
