@@ -760,8 +760,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
      define buffer buf_prod-bc   for ub.prod-bc.
      define buffer utd-lines for ub.utd-lines.
      define buffer country for ub.country . 
-    
-     define variable vMarkingType   as logical no-undo.
+
+     define variable vMarkingType   as integer no-undo init 0.
     
      define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
      if ibarcode
@@ -816,7 +816,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
        end.
        if ibarcode
        then do:
-         
           if iprotocol > "" 
           then do:
              define variable v-value as character no-undo.
@@ -832,13 +831,17 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
              then do:
                 undo, return error return-value .
              end.
-             vMarkingType = (EDOParSec:GetIsEDOForType(v-value) or EDOParSec:GetIsArticForType(v-value)) and not EDOParSec:GetIsTransitionalForType(v-value).
+             myflagsbarcode:unSetAllFlags().
+             myflagsbarcode:isEDO = EDOParSec:GetIsEDOForType(v-value) . /* поэкземплярный учет */
+             myflagsbarcode:isArtic = EDOParSec:GetIsArticForType(v-value) . /* объемно-артикульный учет */
+             myflagsBarcode:IsTransitional = EDOParSec:GetIsTransitionalForType(v-value) . /* переходный период */
+
           end.
           for each buf_bar-code where buf_bar-code.in-code = "" 
                                   and buf_bar-code.gds-code = buf_goods.gds-code 
                                   and buf_bar-code.stts_ = 0 
           no-lock use-index prt-parts:
-             myflagsbarcode:unSetAllFlags().
+             
              find last buf_price-all where
                 buf_price-all.b-code          = buf_bar-code.b-code and
                 buf_price-all.gds-code        = buf_goods.gds-code  and
@@ -878,6 +881,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         
                 if iprotocol > "" 
                 then do:
+                   myflagsbarcode:isMark = false .
                    define buffer buf_prod-bc-attr for ub.prod-bc-attr.
                    find first buf_prod-bc-attr where buf_prod-bc-attr.b-code eq buf_prod-bc.b-code
                                                  and buf_prod-bc-attr.b-str eq buf_prod-bc.b-str 
@@ -899,13 +903,14 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
                    delete TempBCode.
                    logWrite:WriteFileToLog(substitute ( "Ошибка передачи бар-кода &1 в ТСД.", buf_prod-bc.b-str)).
                 end.
-                myflagsbarcode:isMark = vMarkingType or (available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value)).
+                if available buf_prod-bc-attr and logical(buf_prod-bc-attr.attr-value) then myflagsbarcode:isMark = true . /* баркод требует маркировку */
+
                 if iprotocol eq "1.0" 
                 then
                    TempBCode.priceSale = if (myflagsbarcode:isMark) then (-1 * priceSale ) else priceSale .
                 else 
                    TempBCode.priceSale = priceSale .
-                TempBCode.flags = myflagsbarcode:FlagsToInt.
+                   TempBCode.flags = myflagsbarcode:FlagsToInt .
              end.
              
           end.
@@ -967,10 +972,10 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   method public void getGoodsAndBarcodes (input iprotocol as char, idir as char):
      GoodsAndBarcodesClear().
      getGoodsAndBarcodes (yes, yes, iprotocol).
-     GoodsAndBarcodesPrint(resType,idir).
+     GoodsAndBarcodesPrint(resType,idir,iprotocol).
   end.
   
-  method public void GoodsAndBarcodesPrint (input type as char, idir as character):
+  method public void GoodsAndBarcodesPrint (input type as char, idir as character, iprotocol as character):
      if    type eq "xml"
         or type eq "json"
      then do on error undo, leave:
@@ -990,7 +995,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
      end.
      else do:
         GoodsPrint(idir + "\TH_goods.txt").
-        BarcodesPrint(idir + "\TH_barcodes.txt").
+        BarcodesPrint(idir + "\TH_barcodes.txt", iprotocol).
      end.
   end.
 
@@ -998,7 +1003,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     getGoodsAndBarcodes(no,yes,iprotocol).  
   end.
   
-  method public void BarcodesPrint (type as char):
+  method public void BarcodesPrint (type as char, iprotocol as character):
      if    type eq "xml"
        or type eq "json"
     then do on error undo, leave:
@@ -1017,16 +1022,27 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     
     
        tsdstreamopen(type).
-    
-    for each TempBCode:
-        
-        put stream tsdstream unformatted
-          string (TempBCode.gds-code) + {&delimiteFld} +
-          TempBCode.b-str + {&delimiteFld} +
-             decToString( TempBCode.priceSale) + {&delimiteFld} +
-          TempBCode.unit-cli + {&delimiteFld} +
-             decToString(TempBCode.cliBaseRate) + {&delimiterLine}.
-          
+
+    if iprotocol = "1.0" or iprotocol = ""  then do:
+        for each TempBCode:
+            put stream tsdstream unformatted
+            string (TempBCode.gds-code) + {&delimiteFld} +
+            TempBCode.b-str + {&delimiteFld} +
+            decToString( TempBCode.priceSale) + {&delimiteFld} +
+            TempBCode.unit-cli + {&delimiteFld} +
+            decToString(TempBCode.cliBaseRate) + {&delimiterLine} .
+        end .
+        end.
+     else do:
+        for each TempBCode:
+            put stream tsdstream unformatted
+            string (TempBCode.gds-code) + {&delimiteFld} +
+            TempBCode.b-str + {&delimiteFld} +
+            decToString( TempBCode.priceSale) + {&delimiteFld} +
+            TempBCode.unit-cli + {&delimiteFld} +
+            decToString(TempBCode.cliBaseRate) + {&delimiteFld} +
+            string(TempBCode.flags) + {&delimiterLine} .
+        end.         
     end.
     
     tsdstreamclose().

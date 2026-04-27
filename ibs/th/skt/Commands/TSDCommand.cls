@@ -330,7 +330,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
        startStep('Начало загрузки документов.').
-       if (vProt = "1.0" or vProt eq "")
+       if (vProt = "1.0" or vProt = "2.0" or vProt eq "")
        then do:
           if not parseCSV(vdir)
           then do:
@@ -354,7 +354,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        tsd:getUTDDoc(req:HeadHTTP:getValue("TSD-protocol")).
        endStep('Завершена выгрузка ЭДО').
        
-       if (vProt = "1.0" or vProt eq "")
+       if (vProt = "1.0" or vProt = "2.0" or vProt eq "")
        then do:
           tsd:docPrint(vdir).
           tsd:docLinePrint(vdir).
@@ -565,7 +565,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         do:
           define variable vProtocol as character no-undo.
           vProtocol = req:HeadHTTP:getValue("TSD-protocol").
-          if (vProtocol ne "1.0" and vProtocol ne "")
+          if (vProtocol ne "1.0" and vProtocol ne "2.0" and vProtocol ne "")
           then do:
              tsd:ResType = "json".
           end.
@@ -631,14 +631,14 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         do:
           tsd:BarcodesClear().
           tsd:getBarcodes(req:HeadHTTP:getValue("TSD-protocol")).
-          tsd:BarcodesPrint(tsd:ResType).
+          tsd:BarcodesPrint(tsd:ResType, req:HeadHTTP:getValue("TSD-protocol")).
           
         end.
      when "TH_goodsAndBarcodes" then 
         do:
           tsd:GoodsAndBarcodesClear().
           tsd:getGoodsAndBarcodes(yes, yes, req:HeadHTTP:getValue("TSD-protocol")).
-          tsd:GoodsAndBarcodesPrint(tsd:ResType,?).
+          tsd:GoodsAndBarcodesPrint(tsd:ResType,?, req:HeadHTTP:getValue("TSD-protocol")).
           
         end.
       when "WAYBILL" then 
