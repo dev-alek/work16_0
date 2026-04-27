@@ -242,6 +242,14 @@ FUNCTION StatusName RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ChkAnotherUtd d-utd 
+FUNCTION ChkAnotherUtd RETURNS LOGICAL
+   ( input p-doc-id as integer,
+     input p-db-num as integer,
+     input p-mark as character)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 /* ********************  Preprocessor Definitions  ******************** */
 
@@ -2733,14 +2741,17 @@ ON CHOOSE OF MENU-ITEM m_reset_row_data /* Сбросить данные по строке */
                   and cancel_utd-marking-lines.db-num  = x_utd-lines.db-num
                   and cancel_utd-marking-lines.lineNum = x_utd-lines.lineNum,                   
              first cancel_marking no-lock where 
-                   cancel_marking.mark = cancel_utd-marking-lines.mark:                                                              
-                /* убираем вес марки */   
-                find first cancel_marking-attr exclusive-lock where                                 
-                           cancel_marking-attr.mark = cancel_utd-marking-lines.mark
-                       and cancel_marking-attr.attr-code = "weight"
-                       no-wait no-error.
-                if avail cancel_marking-attr then                                   
-                   delete cancel_marking-attr.                                    
+                   cancel_marking.mark = cancel_utd-marking-lines.mark:
+                 /* проверяем, что нет привязки к друмого документу */
+                if not ChkAnotherUtd(x_utd-lines.doc-id, x_utd-lines.db-num, cancel_marking.mark) then do:                                                                    
+                    /* убираем вес марки */   
+                    find first cancel_marking-attr exclusive-lock where                                 
+                               cancel_marking-attr.mark = cancel_utd-marking-lines.mark
+                           and cancel_marking-attr.attr-code = "weight"
+                           no-wait no-error.
+                    if avail cancel_marking-attr then                                   
+                       delete cancel_marking-attr.
+                end.                                       
                 /*if available buf_utd then UnLockUTDMarkbuf(buffer buf_utd,yes).*/    
                 delete cancel_utd-marking-lines.
              end.                                           
@@ -5917,7 +5928,12 @@ PROCEDURE save_mark :
                /* если товар с переменным весом */ 
                if WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, getGdsCodeByGtin(m-gds-code)) 
                then do:
-                  run add-mark-weight (v-mark, m-gds-code, output recid_utd, output F-text) .
+                  run add-mark-weight (v-mark, 
+                                       m-gds-code, 
+                                       buf_utd.doc-id, 
+                                       buf_utd.db-num,                                         
+                                       output recid_utd, 
+                                       output F-text) .
                   v-gds-code = ?.
                   m-gds-code = ?.   
                   if recid_utd = ? then do:                                        
@@ -7194,13 +7210,18 @@ end.
 /* Процедура создания марки для товара с переменным весом */
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE add-mark-weight Dialog-Frame 
 PROCEDURE add-mark-weight :
-    define input  parameter iMark   as character no-undo.
-    define input  parameter iGTIN   as character no-undo.
+    define input  parameter iMark     as character no-undo.
+    define input  parameter iGTIN     as character no-undo.
+    define input  parameter iDocId    as integer   no-undo.
+    define input  parameter iDbNum    as integer   no-undo.          
+    
     define output parameter oRecUtd as recid     no-undo.  
     define output parameter oTxt    as character no-undo.
     
     define variable vWeight as decimal no-undo.
     define variable vFnd    as logical no-undo.
+    define variable vChkWeight as logical no-undo.
+    define variable vUnitCode  as character no-undo.
     /*define variable vRecKey as character no-undo.*/
         
     define buffer bX_utd-lines for X_utd-lines.
@@ -7210,8 +7231,66 @@ PROCEDURE add-mark-weight :
     define buffer buf_marking  for ub.marking .
     define buffer buf_marking-attr for ub.marking-attr.
     define buffer buf_utd-lines-attr for ub.utd-lines-attr.
-            
-    run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).
+    
+    vChkWeight = no.
+    
+    /* проверяем если марка есть ее статус */
+    find first buf_marking no-lock where buf_marking.mark begins iMark no-error .
+    if not avail buf_marking then .
+    else if 
+       (buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:DeliveryControl:KeyIntDB
+         or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
+         or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB
+         or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:Freezone:KeyIntDB 
+         or buf_marking.sts eq ObjSrv:Env:Marking:Sts:Mark:UnknowSts:KeyIntDB)
+    then .
+    /* марка есть и она в некорректном статусе - не добавляем */
+    else do:
+       assign
+          oRecUtd = ?    
+          oTxt = "Товар не подлежит приемке, т. к. не прошел проверку на корректность"
+          .
+          return "".
+    end.            
+    
+    /* проверяем, есть ли привязка к другому УПД */
+    if ChkAnotherUtd(iDocId, iDbNum, iMark) 
+    then do:
+       find first buf_marking-attr where buf_marking-attr.mark eq iMark
+                                     and buf_marking-attr.attr-code eq "weight"
+          no-lock no-error.
+       if avail buf_marking-attr
+       then do:
+          vWeight = decimal(buf_marking-attr.attr-value) no-error.
+          if vWeight <> 0 and vWeight <> ? then do:
+              vUnitCode = gdsunit (getGdsCodeByGtin(iGTIN)).
+              MESSAGE "Масса товара равна "
+                  (if vWeight < 1  and vWeight >= 0
+                      then string(vWeight,"9.999")
+                      else string(vWeight))
+                  vUnitCode "?"
+                  VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO
+                  TITLE "" UPDATE lChoice AS LOGICAL.
+              /* марку привязываем и запоминаем, что вес на ней не меняем */
+              if lChoice then do:
+                  vChkWeight = yes.
+              end.
+              /* не подтвердили вес - не привязываем эту марку */
+              else do:
+                  assign
+                     oRecUtd = ?    
+                     oTxt = "Масса товара не совпадает с данными в системе. Товар не подлежит приемке." 
+                     .
+                  return .   
+              end.    
+          end.
+          /* к другому УПД привязан, но вес нулевой или ошибочный на марке */
+          else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).    
+       end.
+       /* к другому УПД привязан, но вес не задан на марке */
+       else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).
+    end.            
+    else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).
     if vWeight = 0 then do:
         MESSAGE "Вес товара обязательный"        
         VIEW-AS ALERT-BOX.
@@ -7276,32 +7355,29 @@ PROCEDURE add-mark-weight :
                     /*buf_marking.loc-key    = vRecKey.*/
                     .                              
             end.         
-            /*else if available buf_marking and 
-                    (buf_marking.loc-key = "" or buf_marking.loc-key = ?)
-                 then assign
-                         buf_marking.loc-key    = vRecKey
-                         buf_marking.sts        = Marking:Checked_:KeyIntDB
-                         .*/
-            /* атрибут вес */
-            find first buf_marking-attr where 
-                       buf_marking-attr.attr-code eq "weight"
-                   and buf_marking-attr.mark begins buf_marking.mark
-                 exclusive-lock no-error.            
-            if not available buf_marking-attr
-               and not locked buf_marking-attr 
-            then
-            do:
-              create buf_marking-attr.
-              assign
-                buf_marking-attr.mark = buf_marking.mark
-                buf_marking-attr.attr-code = "weight"
-              .
-            end.
-             
-            if available buf_marking-attr 
-            then buf_marking-attr.attr-value = if vWeight < 1  
-                                                  then string(vWeight,"9.999") 
-                                                  else string(vWeight).                                         
+            
+            if not vChkWeight then do:             
+                /* атрибут вес */
+                find first buf_marking-attr where 
+                           buf_marking-attr.attr-code eq "weight"
+                       and buf_marking-attr.mark begins buf_marking.mark
+                     exclusive-lock no-error.            
+                if not available buf_marking-attr
+                   and not locked buf_marking-attr 
+                then
+                do:
+                  create buf_marking-attr.
+                  assign
+                    buf_marking-attr.mark = buf_marking.mark
+                    buf_marking-attr.attr-code = "weight"
+                  .
+                end.
+                 
+                if available buf_marking-attr 
+                then buf_marking-attr.attr-value = if vWeight < 1  
+                                                      then string(vWeight,"9.999") 
+                                                      else string(vWeight).
+            end.                                                                                   
             
             assign                                                                                                                                                                                                           
                 bX_utd-lines.qnty-scan = bX_utd-lines.qnty-scan + vWeight                                                                                                                                                        
@@ -7445,6 +7521,38 @@ FUNCTION StatusName RETURNS CHARACTER
    end.           
    else v-status-name = "" .                                
    RETURN v-status-name.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ChkAnotherUtd d-utd 
+FUNCTION ChkAnotherUtd RETURNS LOGICAL
+   ( input p-doc-id as integer,
+     input p-db-num as integer,
+     input p-mark as character
+     ) :
+   /*------------------------------------------------------------------------------
+     Purpose:  
+       Notes:  
+   ------------------------------------------------------------------------------*/   
+   define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+   define variable vAvail as logical no-undo.
+   vAvail = no.
+   uml:
+   for each buf_utd-marking-lines no-lock where
+            buf_utd-marking-lines.mark begins p-mark
+        :
+        if buf_utd-marking-lines.doc-id <> p-doc-id
+           or buf_utd-marking-lines.db-num  <> p-db-num
+        then do:
+            vAvail = yes.
+            leave uml.
+        end.       
+   end.          
+                                                       
+   RETURN vAvail.   /* Function return value. */
 
 END FUNCTION.
 
