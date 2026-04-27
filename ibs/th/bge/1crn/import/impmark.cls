@@ -89,11 +89,16 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
    then
       undo, throw new Progress.Lang.AppError(substitute("Загрузка &1 не предусмотрена",objImp:obj-load)) .
    vmark = repTegforDm(objImp:mark-code).
-   vKM = GetCodeIdent(vmark).
+   if objImp:unit-ext <> "LEVEL2" then
+   do:
+     vKM = GetCodeIdent(vmark).
+     if vKM = ""
+     then
+        undo, throw new Progress.Lang.AppError(substitute("Не удалось получить код маркировки по марке &1.", vmark)) .
+   end.
+   else 
+     vKM = vmark.
 
-   if vKM = ""
-   then
-      undo, throw new Progress.Lang.AppError(substitute("Не удалось получить код маркировки по марке &1.", vmark)) .
    if objImp:gds-code = ? and objImp:unit-ext = "LEVEL2" then
    do:
       undo, throw new Progress.Lang.AppError("Код товара gds-code обязательный для unit-ext = LEVEL2") .
@@ -293,7 +298,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       end.
 
       /* перенесено из trndocmv-1c.p (ТЗ 7700183344 помарочное движение п.3.1.5.) */
-      vKM = GetCodeIdent(tt-marking.mark).
+      vKM = if tt-marking.unit-ext <> "LEVEL2" then GetCodeIdent(tt-marking.mark) else tt-marking.mark.
       find first buf_marking exclusive-lock where
                buf_marking.mark begins vKM no-error.
       if tt-marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB and 
@@ -405,7 +410,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define buffer buf_marking      for ub.marking.
     define buffer buf_marking-attr for ub.marking-attr.
     
-    vKM = GetCodeIdent(buf_tt-marking.mark).
+    vKM = if buf_tt-marking.unit-ext <> "LEVEL2" 
+          then GetCodeIdent(buf_tt-marking.mark) else buf_tt-marking.mark.
     find first buf_marking exclusive-lock where
                buf_marking.mark begins vKM no-error.
     if not avail buf_marking then 
@@ -489,7 +495,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     for each tt-marking no-lock where
         tt-marking.mark-parent = iMark
     :
-        vKM = GetCodeIdent(tt-marking.mark).
+        vKM = if tt-marking.unit-ext <> "LEVEL2" then GetCodeIdent(tt-marking.mark) else tt-marking.mark. 
         find first buf_marking no-lock where
                    buf_marking.mark begins vKM no-error.
         output stream myProt to c:\wrk\impmark.log append.
