@@ -3112,7 +3112,6 @@ PROCEDURE checkPriPerem :
     define buffer buf_trn-doc          for ub.trn-doc. 
     define buffer buf_marking          for ub.marking. 
     define buffer parent_marking       for ub.marking. 
-    define buffer buf_marking-child    for ub.marking. 
     define buffer buf_marking-lines    for ub.marking-lines. 
     define buffer buf_tt-marking       for tt-marking-lines.
     
@@ -3190,25 +3189,7 @@ PROCEDURE checkPriPerem :
           X_marking.stts-utd    = marking:GetLabel(buf_marking.sts)
           X_marking.stts        = marking:GetLabel(buf_marking.sts)
         .
-        for each buf_marking-child where
-                 buf_marking-child.mark-parent = buf_marking.mark
-            exclusive-lock:
-            find first buf_marking-lines exclusive-lock where 
-                       buf_marking-lines.mark      = buf_marking-child.mark 
-                   and buf_marking-lines.obj-type  = X_marking.obj-type 
-                   and buf_marking-lines.obj-code  = X_marking.obj-code 
-                   and buf_marking-lines.gds-code  = X_marking.gds-code 
-                   and buf_marking-lines.out-code  = X_marking.out-code no-error .
-            find first X_marking-line exclusive-lock where X_marking-line.mark begins buf_marking-child.mark no-error .
-            assign
-              X_marking-line.sts      = buf_marking.sts
-              X_marking-line.sts-utd  = buf_marking.sts
-              X_marking-line.stts-utd = marking:GetLabel(buf_marking.sts)
-              X_marking-line.stts     = marking:GetLabel(buf_marking.sts)
-              buf_marking-lines.sts   = buf_marking.sts
-              buf_marking-child.sts   = buf_marking.sts
-            .
-        end.
+        run setStatusForChildMarks in this-procedure (buf_marking.mark, buf_marking.sts).
     end.
 END.
 /* _UIB-CODE-BLOCK-END */
@@ -3279,6 +3260,41 @@ PROCEDURE setCheckedStatusForParentMarks:
     end.       
   end.      
 
+end.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE setStatusForChildMarks Dialog-Frame 
+PROCEDURE setStatusForChildMarks:
+  /* Смена статуса дочерних марок на родительский статус */
+  /* вынесено из кода для иерархичности */
+  define input parameter iMark  like ub.marking.mark no-undo.
+  define input parameter iSts   like ub.marking.sts  no-undo.
+  
+  define buffer buf_marking-child    for ub.marking. 
+  define buffer buf_marking-lines    for ub.marking-lines. 
+
+  for each buf_marking-child where
+           buf_marking-child.mark-parent = iMark
+    exclusive-lock:
+    find first buf_marking-lines exclusive-lock where 
+               buf_marking-lines.mark      = buf_marking-child.mark 
+           and buf_marking-lines.obj-type  = X_marking.obj-type 
+           and buf_marking-lines.obj-code  = X_marking.obj-code 
+           and buf_marking-lines.gds-code  = X_marking.gds-code 
+           and buf_marking-lines.out-code  = X_marking.out-code no-error .
+    find first X_marking-line exclusive-lock where X_marking-line.mark begins buf_marking-child.mark no-error .
+    assign
+      X_marking-line.sts      = iSts
+      X_marking-line.sts-utd  = iSts
+      X_marking-line.stts-utd = marking:GetLabel(iSts)
+      X_marking-line.stts     = marking:GetLabel(iSts)
+      buf_marking-lines.sts   = iSts
+      buf_marking-child.sts   = iSts
+    .
+    run setStatusForChildMarks in this-procedure (buf_marking-child.mark, iSts).
+  end.
 end.
 
 /* _UIB-CODE-BLOCK-END */
