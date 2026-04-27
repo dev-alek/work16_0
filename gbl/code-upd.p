@@ -51,6 +51,7 @@ define variable m-type as character no-undo.
 define variable mdbver as integer no-undo.
 define variable mdbver_old as integer no-undo.
 define variable f_load as logical no-undo init no.
+define variable mRunTransaction as logical no-undo.
 define stream md5in.
 
 run db-attr-value in this-procedure 
@@ -87,20 +88,33 @@ do mdbver = mdbver_old + 1 to 999999999:
    if mtxt eq {utl/chekmd5.i v-md5-signature } 
    then do:
       vimport:xmldom-load-ver  ( mfile,? ) no-error.
+      mRunTransaction = vimport:mTransaction.
 
       if error-status:error
       then
          return error return-value.
 
-
-/*      UPD_TBL:                                            */
-/*      do transaction on error undo UPD_TBL, leave UPD_TBL:*/
-/*      убрана транзакция временно по BTS-1809   */
+      /* BTS-1871 03.02.2026 Чтобы не открывать транзакцию при изменения/удаления больших данных    */
+      /* нужно задать тег NoTransaction внутри File-info с любым значением                          */
+      /* <File-info>                                                                                */       
+      /*    <NoTransaction>Yes</NoTransaction>                                                      */
+      /* </File-info>                                                                               */
+      /* В этом случае при возникновении ошибки загрузки восстановление данных необходимо выполнять */
+      /* программным путем или делать копию БД перед накатом обновлений                             */
+      if mRunTransaction then
+      do:
+        UPD_TBL:
+        do transaction on error undo UPD_TBL, leave UPD_TBL:
           vimport:updatetablefordb(this-procedure) no-error.
           if error-status:error
-          then return error return-value.
-            
-/*      end.*/
+            then return error return-value.
+        end.
+      end.
+      else do:
+         vimport:updatetablefordb(this-procedure) no-error.
+         if error-status:error
+           then return error return-value.
+      end.
 
        CODE_UPD:
        do transaction on error undo CODE_UPD, leave CODE_UPD:

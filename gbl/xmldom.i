@@ -110,6 +110,15 @@ define variable mverfile_text as character   no-undo.
 define variable mverfile      as integer  no-undo.
 define variable v-xmldom-key       as integer      no-undo.
 
+&if "{1}" eq "class"
+&then
+define public property mTransaction  as logical init yes no-undo
+   get.
+   private set.
+&else
+  define variable mTransaction  as logical no-undo init yes.
+&endif
+
 /*==========================================================================*/
 &if "{1}" eq "class"
 &then
@@ -131,6 +140,7 @@ on error undo, return error
     empty temp-table buf_temp_testXML-atribut.
     assign
         v-xmldom-key = 0
+        mTransaction = yes
     .
 end.
 end . /* xmldom-clear */
@@ -438,6 +448,11 @@ function  xmldom-load-next-level returns logical
             end.
          end.
       end.
+      else if     IParent:name         eq "file-info"
+              and v-field-handle :name eq "NoTransaction"
+      then do:
+        mTransaction = no.
+      end.
       assign
          buf_temp_testXML-entity.xmeEntName   = v-field-handle :name
          buf_temp_testXML-entity.xmeEntValue  = v-text-handle :node-value
@@ -525,18 +540,28 @@ function  xmldom-load-ver returns character
          end.
       end.
    
-/*    output to D:/test.txt.*/
-/*    for each buf_temp_testXML-node*/
-/*    :*/
-/*        export buf_temp_testXML-node.*/
-/*        for each buf_temp_testXML-entity*/
-/*           where buf_temp_testXML-entity.xmh-key = buf_temp_testXML-node.xmh-key*/
-/*        on error undo, return error*/
-/*        :*/
-/*            export buf_temp_testXML-entity.*/
-/*        end.*/
-/*    end.*/
-/*    output close.*/
+/*    define buffer buf_temp_testXML-entity         for temp_testXML-entity.       */
+/*    define buffer buf_temp_testXML-atribut         for temp_testXML-atribut.     */
+/*    output to c:/wrk/16_0/node.txt.                                              */
+/*    for each buf_temp_testXML-node                                               */
+/*    :                                                                            */
+/*        export buf_temp_testXML-node.                                            */
+/*        put unformatted "attributes" skip.                                       */
+/*        for each buf_temp_testXML-atribut                                        */
+/*           where buf_temp_testXML-atribut.xme-key = buf_temp_testXML-node.xmh-key*/
+/*        on error undo, return error                                              */
+/*        :                                                                        */
+/*            export buf_temp_testXML-atribut.                                     */
+/*        end.                                                                     */
+/*        put unformatted "chldren" skip.                                          */
+/*        for each buf_temp_testXML-entity                                         */
+/*           where buf_temp_testXML-entity.xmh-key = buf_temp_testXML-node.xmh-key */
+/*        on error undo, return error                                              */
+/*        :                                                                        */
+/*            export buf_temp_testXML-entity.                                      */
+/*        end.                                                                     */
+/*    end.                                                                         */
+/*    output close.                                                                */
     
       delete object v-root-handle.
       delete object v-doc-handle.
