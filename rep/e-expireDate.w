@@ -359,6 +359,14 @@ DO:
                     "Ќе было выбрано ни одного товара. ќчистить список ранее выбранных товаров?"
                     view-as alert-box QUESTION buttons YES-NO update vAnswer.
                 if not vAnswer then return.
+                else do:
+                    empty temp-table gds-list .
+                    empty temp-table gds-list-hist .
+/*                    dsp-rs = "" .      */
+/*                    s-notes = "" .     */
+/*                    t-str = "" .       */
+/*                    Goods-Editor = "" .*/
+                end.
             end.
             find first gds-list no-error .
             if available (gds-list) then v-first = true .
