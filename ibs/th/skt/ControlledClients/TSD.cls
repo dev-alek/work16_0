@@ -2888,7 +2888,7 @@ end.
         put stream tsdstream unformatted 
         tt-doc.doc-num + {&delimiteFld} + 
         tt-doc.docType + {&delimiteFld} + 
-        string(tt-doc.complite) + {&delimiteFld} + 
+        string(tt-doc.complite,"true/false") + {&delimiteFld} + 
         tt-doc.status_ + {&delimiteFld} + 
         string (tt-doc.cli-code) + {&delimiteFld} + 
         tt-doc.cli-type + {&delimiteFld} + 
