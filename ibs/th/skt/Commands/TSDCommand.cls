@@ -254,7 +254,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define variable vPid as integer no-undo.
     vpos = lookup("pid",resp:ParamWait).
     vpid = int64(entry(vpos + 1,resp:ParamWait)).
-    if IsProcessRunning(vpid) > 0
+    if vpid ne 0 and IsProcessRunning(vpid) > 0
     then
        return. /* ждем завершения процеса */
     define variable vStatus as character no-undo.
@@ -290,12 +290,13 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
     else if vStatus eq "step1"
     then do transaction:
+       vpid = 0.
        if not hndlSocket:connected()
        then do:
           resp:condition = resp:STSlist:WriteResponse:NameProp.
-          mServiceBusy = no.
           return.
        end.
+    
        logWrite:WriteFileToLog("DBInitExpDoc.txt","IBM866").
        run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
@@ -303,7 +304,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        if not parseCSV()
        then do:
           resp:condition = resp:STSlist:ReciveCommand:NameProp.
-          mServiceBusy = no.
           return.
        end.
        endStep('Завершена загрузки документов.').
@@ -322,28 +322,34 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        if not hndlSocket:connected()
        then do:
           resp:condition = resp:STSlist:WriteResponse:NameProp.
-          mServiceBusy = no.
           return.
        end.
     
        vpid = runProc('DBInit.exe Doc 30 31 >DBInitDoc.txt'  + {&new-line} + 'rename documents.s3db documents_new.s3db').
-       resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
-       resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
+       
        catch exAppErrors as class Progress.Lang.AppError :
-            mServiceBusy = no.
             undo ,throw exAppErrors.
          end catch .
          catch exProErrors as class Progress.Lang.ProError :
-            mServiceBusy = no.
             undo ,throw exProErrors.
          end catch .
          catch exAnyErrors as class Progress.Lang.Error:
-            mServiceBusy = no.
             undo ,throw exAnyErrors.
          end catch .
+       finally:
+          resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
+          resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
+       end.
+       
     end.
     else if vStatus eq "step2"
     then do on error undo, leave:
+      
+      if (vpid =0)
+      then do:
+         resp:condition = resp:STSlist:WriteResponse:NameProp.
+         return.
+      end.
       logWrite:WriteFileToLog("DBInitDoc.txt").
       endStep('Завершена загрузка документов в ТСД.').
       if not hndlSocket:connected()
@@ -469,6 +475,13 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     hDoc:get-document-element(hRoot) .
     assign
       tsd:ObjCode = integer (substring (hRoot:get-attribute("to"), 4))
+    no-error.
+    if error-status:error
+    then do:
+       writeSockError(req:HndlSocket,substitute ("Код магазина '&1' должен быть числом ",substring (hRoot:get-attribute("to"), 4))).
+       return.   
+    end.
+    assign
       tsd:ObjType = substring (hRoot:get-attribute("to"), 1, 3)
       tsd:ReqType = hRoot:get-attribute("item")
       tsd:ResType = hRoot:get-attribute("responseType")
@@ -1233,7 +1246,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   method private logical writeSock (resp as class IResponse, arg as longchar):
     resp:setContent(arg).
     resp:Content-Type= "text/csv".   
-    resp:condition = resp:STSlist:WriteResponse:NameProp.  
+    resp:condition = resp:STSlist:WriteResponse:NameProp.
+      
   end method.
 
 	/*------------------------------------------------------------------------------
