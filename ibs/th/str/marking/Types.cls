@@ -46,7 +46,25 @@ class ibs.th.str.marking.Types inherits TypeMap:
     define buffer code for ub.code.
     define variable vCode as integer no-undo.
     super().
-
+    assign
+       tabak = Unknow
+       shoes = Unknow
+       perfume = Unknow
+       industry = Unknow
+       tires = Unknow
+       apteka = Unknow
+       photo = Unknow
+       milk = Unknow
+       water = Unknow
+       stiki = Unknow
+       milk-40 = Unknow
+       NSJ = Unknow
+       Bad = Unknow
+       antiseptic = Unknow
+       Badd2L7 = Unknow
+       
+    .
+    
     for each code no-lock where code.parent = "MarkType":
         vCode = int(code.code) no-error.
         if vCode <> ? then
@@ -84,7 +102,8 @@ class ibs.th.str.marking.Types inherits TypeMap:
             else
               crProp(vCode,code.codevalue,code.codename).
         end.    
-    end.    
+    end. 
+    
     Unknow:Label_  = "Неизвестный тип маркировки.".
   end.
   

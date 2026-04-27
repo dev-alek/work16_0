@@ -37,6 +37,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
    
   { cmp/str-glbl.i class}  
   { ibs/th/skt/ControlledClients/TSDTT.i}
+  { ibs/th/skt/ControlledClients/TSDMT.i}
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10) + chr(13) + chr(10)
   define variable mdelFile as character no-undo init "DBInit.exe System.Data.SQLite.dll".
@@ -75,9 +76,11 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   define variable HTTPError as longchar no-undo.
   define variable myPID as int64 no-undo.  
   define variable myCompUser as character no-undo.
+  define variable myflagsDoc     as class flagsdoc     no-undo.
   constructor public TSDCommand (iFileSend as class fileSend):
     
     super ().
+    myflagsDoc = new flagsdoc ().
     DelDontWorkProc().
     define variable myCompName as character no-undo.
     run utl/getpid.p (output myPID,
@@ -163,7 +166,8 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           
        os-delete value (search (vdir + "\MT_documentsSend.txt")) no-error.
        os-delete value (search (vdir + "\MT_lineSend.txt")) no-error.
-       os-delete value (search (vdir + "\MT_MarkLinesSend.txt")) no-error.  
+       os-delete value (search (vdir + "\MT_MarkLinesSend.txt")) no-error.
+       os-delete value (search (vdir + "\MT_documentsSend.json")) no-error.  
        
        startStep('Начало выгрузка из базы ТСД').
              
@@ -320,15 +324,26 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           resp:condition = resp:STSlist:WriteResponse:NameProp.
           return.
        end.
-    
+       define variable vProt as character no-undo.
+       vProt = req:HeadHTTP:getValue("TSD-protocol").
        logWrite:WriteFileToLog(vdir + "\DBInitExpDoc.txt","IBM866").
        run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
        startStep('Начало загрузки документов.').
-       if not parseCSV(vdir)
+       if (vProt = "1.0" or vProt eq "")
        then do:
-          resp:condition = resp:STSlist:ReciveCommand:NameProp.
-          return.
+          if not parseCSV(vdir)
+          then do:
+             resp:condition = resp:STSlist:ReciveCommand:NameProp.
+             return.
+          end.
+       end.
+       else do:
+          if not tsd:parseCSV(vdir)
+          then do:
+             resp:condition = resp:STSlist:ReciveCommand:NameProp.
+             return.
+          end.
        end.
        endStep('Завершена загрузки документов.').
        startStep('Начало выгрузки накладных.').
@@ -338,9 +353,17 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        startStep('Начало выгрузки ЭДО.').
        tsd:getUTDDoc(req:HeadHTTP:getValue("TSD-protocol")).
        endStep('Завершена выгрузка ЭДО').
-       tsd:docPrint(vdir).
-       tsd:docLinePrint(vdir).
-       tsd:docLineMarkPrint(vdir).
+       
+       if (vProt = "1.0" or vProt eq "")
+       then do:
+          tsd:docPrint(vdir).
+          tsd:docLinePrint(vdir).
+          tsd:docLineMarkPrint(vdir).
+       end.
+       else do:
+          tsd:docPrint("json","utf-8").
+          tsd:writeResult(vdir + "\MT_documents.json","utf-8").
+       end.
        startStep('Начало загрузки документов в ТСД.').
        os-delete value(vdir + "\documents_new.s3db").
        if not hndlSocket:connected()
@@ -480,7 +503,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       else if tsd:ResType eq "json"
       then
        resp:Content-Type = "application/json; charset=" + tsd:CP.  
-       
+        
     hndlsocket = req:HndlSocket.
     case tsd:ReqType :
         when "SETTINGS" then 
@@ -540,6 +563,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         end.
       when "TH_ALL" then 
         do:
+          define variable vProtocol as character no-undo.
+          vProtocol = req:HeadHTTP:getValue("TSD-protocol").
+          if (vProtocol ne "1.0" and vProtocol ne "")
+          then do:
+             tsd:ResType = "json".
+          end.
           define variable vdir as character no-undo.
           vdir = crDir().
           resp:ParamWait:setParam("WorkDir",vdir).
@@ -776,13 +805,10 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define variable iDbNum     as integer   no-undo.
     define variable docType    as character no-undo.
     define variable vFilename  as character no-undo.
-    define buffer buf_bar-code  for ub.bar-code.
-    define buffer buf_prod-bc   for ub.prod-bc.
-    define buffer buf_place     for ub.place.
-    define buffer bfTempDocLine for TempDocLine.
-    define variable myflagsDoc     as class flagsdoc     no-undo.
     
-    myflagsDoc = new flagsdoc ().
+    
+    
+    myflagsDoc:unSetAllFlags().
 
     iDbNum = tsd:GetDbNum().
     empty temp-table TempTrnDocMT.
@@ -915,7 +941,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
               TempDocLine.price-rubl   = ?
               TempDocLine.RowSum       = ?
               TempDocLine.PartIDTH     = TempTrnLineMT.PartIDTH
-              TempDocLine.NotDict      = TempTrnLineMT.NotDict
+              TempDocLine.NotDict      = TempTrnLineMT.goodsid eq 0
               .
           end.
           else do:
@@ -937,7 +963,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
             TempDocLine.price-rubl   = decimal(cPriceRubl)
             TempDocLine.RowSum       = RowSum
             TempDocLine.PartIDTH = string (TempTrnLineMT.PartIDTH)
-            TempDocLine.NotDict      = TempTrnLineMT.NotDict
+            TempDocLine.NotDict      = TempTrnLineMT.goodsid eq 0
             .
         end.
       end.
@@ -956,113 +982,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           .
       end.
 
-      case docType:
-
-        when {&TDEDT_Inv} then 
-          do:
-            if tsd:ImpInventory (table TempTrnDoc, table TempDocLine, userId_)
-            then ErrStatus = false.
-            else ErrStatus = true.
-
-          end.
-        when "UTD_DOC" then 
-          do:
-            if tsd:ImpUTDDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
-            then ErrStatus = false.
-            else ErrStatus = true.
-
-          end.
-        when "InvIntroduce" then 
-          do:
-            if tsd:ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
-            then ErrStatus = false.
-            else ErrStatus = true.
-
-          end.
-        when "invmark" then 
-          do:
-            if tsd:ImpInvMarksDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
-            then ErrStatus = false.
-            else ErrStatus = true.
-
-          end.
-        when "UTD_Introduce" then 
-          do:
-            if tsd:ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
-            then ErrStatus = false.
-            else ErrStatus = true.
-
-          end.
-         when "MarksInv" then 
-          do:
-            if tsd:ImpMarksInv (table TempTrnDoc, table TempDocLine, table TempMarkLine)
-            then ErrStatus = false.
-            else ErrStatus = true.
-
-          end.
-        otherwise  
-        do:
-          for each TempDocLine no-lock where not TempDocLine.b-code matches ("*" + string (TempDocLine.gds-code) + "*"):
-                      
-            find first bfTempDocLine where bfTempDocLine.gds-code = TempDocLine.gds-code and bfTempDocLine.b-code matches ( "*" + string (bfTempDocLine.gds-code) + "*")  no-error.
-            find buf_bar-code no-lock where 
-              buf_bar-code.gds-code = TempDocLine.gds-code and TempDocLine.b-code matches ("*" + string(buf_bar-code.b-code)+ "*") no-error.
-            
-            
-            if not available buf_bar-code then 
-            do:
-              
-              find first buf_prod-bc no-lock where buf_prod-bc.b-str = TempDocLine.b-code no-error.
-              if available buf_prod-bc 
-                then 
-              do:
-                find first buf_bar-code no-lock where buf_bar-code.b-code = buf_prod-bc.b-code and buf_bar-code.gds-code = TempDocLine.gds-code no-error.
-              end.
-              
-              if not available buf_bar-code then 
-              do:
-                LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
-                logWrite:WriteFileToLog( "Не известный штрих-код:" + TempDocLine.b-code).
-                writeSockError(HndlSocket, "Не известный штрих-код:" + TempDocLine.b-code).
-                ErrStatus = true.
-                return false.
-              end.
-              
-            end.
-
-            if not available bfTempDocLine
-              then 
-            do:
-              create bfTempDocLine.
-              assign
-                bfTempDocLine.gds-code = TempDocLine.gds-code
-                bfTempDocLine.b-code   = string (TempDocLine.gds-code)
-                .
-            end.
-            
-            assign
-              bfTempDocLine.doc-qnty  = bfTempDocLine.doc-qnty + TempDocLine.doc-qnty * buf_bar-code.cli-base-rate
-              bfTempDocLine.fact-qnty = bfTempDocLine.fact-qnty + TempDocLine.fact-qnty * buf_bar-code.cli-base-rate
-              bfTempDocLine.RowSum    = bfTempDocLine.RowSum + TempDocLine.RowSum
-              .
-            delete TempDocLine.
-          
-          end.
-          
-          for each TempDocLine no-lock:
-            assign
-              TempDocLine.price-rubl = TempDocLine.RowSum / TempDocLine.fact-qnty.
-            .
-            
-          end.
-          
-          if tsd:ImpWB(table TempTrnDoc, table TempDocLine, table TempMarkLine, userId_)
-          then ErrStatus = false.
-          else ErrStatus = true.
-          
-        end.
-
-      end.
+      tsd:updatedocument(doctype, table TempTrnDoc, table TempDocLine, table TempMarkLine, userId_).
       logWrite:WriteDebugLog("Загружен документ " + TempTrnDocMT.DocName).
     end.
 

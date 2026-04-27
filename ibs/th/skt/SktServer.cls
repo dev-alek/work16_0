@@ -177,7 +177,7 @@ class ibs.th.skt.SktServer:
             then . 
             else v-err-msg = "AppError в модуле {&FILE-NAME}" .
          end .
-         logWrite:LogStr = v-err-msg.
+         logWrite:LogStr = v-err-msg + exAppErrors:CallStack.
          vDelete = yes.
       end catch .
       catch exProErrors as class Progress.Lang.ProError :

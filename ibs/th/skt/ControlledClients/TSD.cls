@@ -46,6 +46,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   { str/utd-err.i class }
   { str\utd-typemark.i class }
   {ibs/th/skt/ControlledClients/TSDTT.i}
+  {ibs/th/skt/ControlledClients/TSDds.i}
   { str/utd-err.i class }
   {ibs/th/gbl/doc-codeClass.i}
   {ibs/th/gbl/basecodeClass.i}
@@ -102,7 +103,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     get.
     set.
 
-  define private variable tthDocument as handle no-undo.
   define private stream tsdstream.
   define private variable logWrite     as class     LogWrite     no-undo.
   define private variable keyrec       as class     keyrec       no-undo.
@@ -116,10 +116,15 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   define variable bc-frmt         as character no-undo .
   define variable bc-pfx          as character no-undo .
   define variable dbNum as integer no-undo.
-    
+  
+  define variable myflagsDoc         as class flagsdoc         no-undo.
+  define variable myflagsBarcode     as class flagsbarcode     no-undo.  
+  
   constructor public TSD (  ):
+    super().
     dbNum = GetDbNumLocal().
-    
+    myflagsDoc     = new flagsdoc ().
+    myflagsbarcode = new flagsbarcode ().
     define variable v-par-type as character no-undo.
     keyrec = new keyrec ().
     logWrite = new LogWrite().
@@ -144,13 +149,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     docClear().
   end.
 
-  define temp-table TempBCode no-undo serialize-name "Barcode"
-    field gds-code as integer
-    field b-str as character
-    field priceSale as decimal 
-    field unit-cli  as character
-    field cliBaseRate as decimal 
-    index pi is unique primary b-str.
+  
   
   /*------------------------------------------------------------------------------
    Purpose:
@@ -208,9 +207,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 /*    define variable cLine      as longchar no-undo. */
 /*    define variable cMarkLine  as longchar no-undo. */
     define variable dFactSum   as decimal   no-undo.
-    define variable priceSale  as character no-undo.
+    define variable priceSale  as dec no-undo.
     define variable docType    as character no-undo.
-    define variable dPriceSale as decimal   no-undo.
+
     define variable hour     as integer no-undo.
     define variable minute   as integer no-undo.
     define variable sec      as integer no-undo.
@@ -315,11 +314,9 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           decFactQnty = if docType = 'inv' then buf_doc-line.doc-qnty else buf_doc-line.fact-qnty.
           
           assign
-            priceSale   = if buf_doc-line.price-rubl <> 0 and buf_doc-line.price-rubl <> ? then string (buf_doc-line.price-rubl) else "0"
+            priceSale   = if buf_doc-line.price-rubl <> ? then buf_doc-line.price-rubl else 0
             .
-          assign
-            priceSale = if buf_doc-line.price-rubl > -1 and buf_doc-line.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-            .
+          
 /*          cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />', buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty).*/
         addDocLine(jjm,
                       buf_trn-doc.doc-code,
@@ -390,19 +387,12 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
             decDocQnty = buf_parts.qnty.
             decFactQnty = buf_parts.fact-qnty.
             assign
-              priceSale   = if buf_parts.price-rubl <> 0 and buf_parts.price-rubl <> ? then string (buf_parts.price-rubl) else "0"
-/*              factQnty    = string (decFactQnty)*/
-/*              docQnty    = string (decDocQnty)  */
+              priceSale   = if buf_parts.price-rubl <> ? then buf_parts.price-rubl else 0
               .
             assign
-              priceSale = if buf_parts.price-rubl > -1 and buf_parts.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-/*              factQnty  = if buf_parts.fact-qnty > -1 and buf_parts.fact-qnty < 1 then replace (factQnty, ".", "0,") else replace (factQnty, ".", ",")*/
-/*              docQnty  = if buf_parts.qnty > -1 and buf_parts.qnty < 1 then replace (docQnty, ".", "0,") else replace (docQnty, ".", ",")             */
               .
             keyrec:GenKeyRec({&table_parts}, buffer buf_parts:handle, output v-keyrec).
             v-alc-code = if num-entries  (buf_parts.alc-ref-ab-path, ",") < 3 then "" else entry (3, buf_parts.alc-ref-ab-path, ",").
-/*            cLine = cLine + substitute ('<line DocName="&1" GoodsID="&2" UnitBC="&3" BC="&4" Price="&5" DocQnty="&6" FactQnty="&7" AlcCode="&8" PartIDTH ="&9" />',*/
-/*            buf_doc-line.doc-code, buf_goods.gds-code, buf_goods.unit-base, full-b-code, priceSale, docQnty, factQnty, v-alc-code, v-keyrec).*/
             
 
             pos = pos + 1.
@@ -551,17 +541,36 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
           no-convert
        no-error .
   end.
-  method public void WriteUsers (idir as char):
-     GetUsers ().
-     UsersPrint(idir + "\TH_users.txt").
+  
+  method public void writeResult (iFile as char):
+      writeResult(iFile,?).
   end.
   
-  define temp-table tt-user no-undo serialize-name "User"
-     field user-id    as char
-     field user-login as char
-  index user-id as unique user-id.
-  define dataset ds-user serialize-name "Users"
-  for tt-user.
+  method public void writeResult (iFile as char, iencode as char):
+      if(iencode eq ?)
+      then do:
+         copy-lob
+            from object SomeStr 
+            to file iFile
+            no-convert
+         .
+       end.
+       else do:
+          copy-lob
+            from object SomeStr 
+            to  file iFile
+            convert  TARGET CODEPAGE iencode
+          .
+       end.
+  end.
+  
+  
+  method public void WriteUsers (idir as char):
+     GetUsers ().
+     UsersPrint(ResType, idir + "\TH_users." + if ResType eq ? or ResType eq "" then "txt" else "json" ).
+  end.
+  
+  
   
   method public void usersClear ():
      empty temp-table tt-user.
@@ -569,7 +578,6 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   
   method public void GetUsers ():
     define buffer buf_user-login for ub.user-login.
-    
     for each buf_user-login where buf_user-login.status_ = 0 and buf_user-login.db-num = dbNum no-lock:
       create tt-user.
       assign 
@@ -577,40 +585,40 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
          tt-user.user-login = buf_user-login.user-login
          .
     end.
-  end.   
-  method public void UsersPrint (type as char):
+  end. 
+  method public void UsersPrint (type as character):
+     UsersPrint(type,?).
+  end.
+  method public void UsersPrint (type as char, file as char):
     if    type eq "xml"
        or type eq "json"
-    then
+    then do:
        ttprint(type, dataset ds-user :handle).
-    else do:
-       if type eq ""
+       if (file ne "" and file ne ?)
        then
-          type = "temp_tsd.txt".
-       tsdstreamopen(type).
+          writeResult(file,"utf-8").
+    end.
+    else do:
+       if file eq ?
+       then
+          file = "temp_tsd.txt".
+       tsdstreamopen(file).
        for each tt-user no-lock:
          put stream tsdstream unformatted tt-user.user-id + {&delimiteFld} + tt-user.user-login + {&delimiterLine}.
     end.
     tsdstreamclose().
-       if type = "temp_tsd.txt"
+       if file = "temp_tsd.txt"
        then
-          setResult(type).
+          setResult(file).
   end.
   end.
   
   method public void WriteObjects (idir as char):
      getObjects().
-     ObjectsPrint(idir + "\TH_objects.txt").
+     ObjectsPrint(ResType, idir + "\TH_objects." + if ResType eq ? or ResType eq "" then "txt" else "json" ).
   end.
   
-  define temp-table  tt-Objects no-undo namespace-prefix "Object" serialize-name "Object"
-     field obj-type as char
-     field obj-code as int
-     field obj-name as char
-  index pi as unique obj-type obj-code.
   
-  define dataset ds-Objects serialize-name "Objects"
-  for tt-Objects.
   
   method public void ObjectsClear ():
      empty temp-table tt-Objects.
@@ -643,18 +651,24 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     
   end.
-  
   method public void ObjectsPrint (type as char):
+     ObjectsPrint(type, ?).
+  end.
+  method public void ObjectsPrint (type as char,file as char):
     define buffer buf_clients   for ub.clients.
     if    type eq "xml"
        or type eq "json"
-    then
+    then do:
        ttprint(type, dataset ds-Objects :handle).
-    else do:
-       if type eq ""
+       if (file ne "" and file ne ?)
        then
-          type = "temp_tsd.txt".
-       tsdstreamopen(type).
+          writeResult(file,"utf-8").
+    end.
+    else do:
+       if file eq ""
+       then
+          file = "temp_tsd.txt".
+       tsdstreamopen(file).
        for each tt-Objects no-lock:
      put stream tsdstream unformatted 
          string (tt-Objects.obj-code) + {&delimiteFld} + 
@@ -664,26 +678,17 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     end.
     tsdstreamclose().
-       if type = "temp_tsd.txt"
+       if file = "temp_tsd.txt"
        then
-          setResult(type).
+          setResult(file).
   end.
   
   method public void WriteClients (idir as character):
      ClientsClear().
      getClients().
-     ClientsPrint(idir + "\TH_clients.txt").
+     ClientsPrint(resType, idir + "\TH_clients."  + if ResType eq ? or ResType eq "" then "txt" else "json" ).
   end.
   
-  
-  define temp-table  tt-Clients no-undo serialize-name "Client"
-     field obj-type as char
-     field obj-code as int
-     field obj-name as char
-  index pi as unique obj-type obj-code.
-  
-  define dataset ds-Clients serialize-name "Clients"
-  for tt-Clients.
   
   method public void ClientsClear ():
      empty temp-table tt-Clients.
@@ -702,41 +707,35 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
        .
     end.
   end.
-  
   method public void ClientsPrint (type as char):
+     ClientsPrint(type,?).
+  end.
+  method public void ClientsPrint (type as char,file as char):
     if    type eq "xml"
        or type eq "json"
-    then
+    then do:
        ttprint(type, dataset ds-Clients :handle).
-    else do:
-       if type eq ""
+       if (file ne "" and file ne ?)
        then
-          type = "temp_tsd.txt".
+          writeResult(file,"utf-8").
+    end.
+    else do:
+       if file eq ""
+       then
+          file = "temp_tsd.txt".
     
     
-       tsdstreamopen(type). 
+       tsdstreamopen(file). 
        for each tt-Clients no-lock: 
          put stream tsdstream unformatted string (tt-Clients.obj-code) + {&delimiteFld} + tt-Clients.obj-type + {&delimiteFld} + tt-Clients.obj-name + {&delimiterLine}.
     end.
     tsdstreamclose().
-       if type = "temp_tsd.txt"
+       if file = "temp_tsd.txt"
        then
-          setResult(type).
+          setResult(file).
      end.
   end.
   
-  define temp-table  tt-Goods no-undo serialize-name "Good"
-      field gds-code as int
-      field gds-name as char 
-      field unit-base as char
-/*      field priceSale as dec*/
-/*      field vatPc as dec    */
-      field countryName  as char
-/*      field struct  as char*/
-      field factQnty as dec 
-      field freeQnty as dec
-  index pi as unique gds-code.
-    
   method public void GoodsClear ():
      empty temp-table tt-Goods.
   end.
@@ -745,182 +744,182 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
      getGoodsAndBarcodes(yes,no,?).
   end.   
   method public void getGoodsAndBarcodes (iGoods as logical ,ibarcode as logical, input iprotocol as char):
-    define variable factQnty    as dec no-undo.
-    define variable freeQnty    as dec no-undo.
-    define variable countryName as character no-undo.
-    define variable dPriceSale  as decimal   no-undo.
-    define variable dVatPc      as decimal   no-undo.
-    define variable is-petrol   as logical no-undo.
-    define variable is-pieces   as logical no-undo.
-    define variable priceSale   as decimal no-undo.
-    define variable cliBaseRate as decimal no-undo.  
-    define buffer buf_goods     for ub.goods.
-    define buffer buf_gds-obj   for ub.gds-obj.
-    define buffer buf_bar-code  for ub.bar-code.
-    define buffer buf_price-all for ub.price-all.
-    define buffer buf_prod-bc   for ub.prod-bc.
-    define buffer utd-lines for ub.utd-lines.
-    define buffer country for ub.country . 
+     define variable factQnty    as dec no-undo.
+     define variable freeQnty    as dec no-undo.
+     define variable countryName as character no-undo.
+     define variable dPriceSale  as decimal   no-undo.
+     define variable dVatPc      as decimal   no-undo.
+     define variable is-petrol   as logical no-undo.
+     define variable is-pieces   as logical no-undo.
+     define variable priceSale   as decimal no-undo.
+     define variable cliBaseRate as decimal no-undo.  
+     define buffer buf_goods     for ub.goods.
+     define buffer buf_gds-obj   for ub.gds-obj.
+     define buffer buf_bar-code  for ub.bar-code.
+     define buffer buf_price-all for ub.price-all.
+     define buffer buf_prod-bc   for ub.prod-bc.
+     define buffer utd-lines for ub.utd-lines.
+     define buffer country for ub.country . 
     
-    define variable vMarkingType   as logical no-undo.
+     define variable vMarkingType   as logical no-undo.
     
-    define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
-    if ibarcode
-    then
-       EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ObjType, ObjCode).
+     define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+     if ibarcode
+     then
+        EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(ObjType, ObjCode).
     
-    cicle:
-    for each buf_goods where buf_goods.stts = 0 
-    and buf_goods.gds-type = 'т' no-lock :
-      
-      { str/is-petrl.i
+     cicle:
+     for each buf_goods where buf_goods.stts = 0 
+                          and buf_goods.gds-type = 'т' 
+     no-lock :
+       { str/is-petrl.i
           buf_goods.artic
           buf_goods.prod-type
           buf_goods.prod-code
           is-petrol
           is-pieces
           no-error
-      }
-      if is-petrol = yes and is-pieces = no then do:
-        next cicle.
-      end.
+       }
+       if is-petrol = yes and is-pieces = no then do:
+          next cicle.
+       end.
       
-      find first buf_gds-obj where buf_gds-obj.gds-code = buf_goods.gds-code no-lock no-error.
-      if not available (buf_gds-obj)
-      then do:
-        find first utd-lines where utd-lines.gds-code = buf_goods.gds-code no-lock no-error.
-        if not available (utd-lines)
+       find first buf_gds-obj where buf_gds-obj.gds-code = buf_goods.gds-code no-lock no-error.
+       if not available (buf_gds-obj)
+       then do:
+          find first utd-lines where utd-lines.gds-code = buf_goods.gds-code no-lock no-error.
+          if not available (utd-lines)
           then next cicle.
-      end.
+       end.
       
-      if(igoods)
-      then do:
-      find first country where country.alpha1 = buf_goods.alpha1 no-lock no-error. 
+       if(igoods)
+       then do:
+          find first country where country.alpha1 = buf_goods.alpha1 no-lock no-error. 
    
-      assign
-           factQnty    = if available buf_gds-obj then buf_gds-obj.fact-qnty else 0
-           freeQnty    = if available buf_gds-obj then buf_gds-obj.free-qnty else 0
-           countryName = if available ub.country then ub.country.long-name else ""
-        .
-         create tt-goods.  
-      assign
-           tt-goods.gds-code  = buf_goods.gds-code
-           tt-goods.gds-name  = buf_goods.gds-name
-           tt-goods.unit-base = buf_goods.unit-base
+          assign
+             factQnty    = if available buf_gds-obj then buf_gds-obj.fact-qnty else 0
+             freeQnty    = if available buf_gds-obj then buf_gds-obj.free-qnty else 0
+             countryName = if available ub.country then ub.country.long-name else ""
+          .
+          create tt-goods.  
+          assign
+             tt-goods.gds-code  = buf_goods.gds-code
+             tt-goods.gds-name  = buf_goods.gds-name
+             tt-goods.unit-base = buf_goods.unit-base
    /*        tt-goods.priceSale = priceSale*/
    /*        tt-goods.vatPc     = vatPc    */
-           tt-goods.countryName = countryName
+             tt-goods.countryName = countryName
    /*        tt-goods.struct    = "Состав"*/
-           tt-goods.factQnty  = factQnty 
-           tt-goods.freeQnty  = freeQnty 
-        .
-      end.
-      if ibarcode
-      then do:
-      if iprotocol > "" then do:
-      define variable v-value as character no-undo.
-      define variable v-type  as character no-undo.
-      &scop proc-name gds-attr-value
-       {&run_proc_attr-lib}
-         (input  buf_goods.gds-code
-         ,input  {&attr-mark-type}
-         ,output v-value
-         ,output v-type
-         ) no-error .
-       if error-status :error
-       then do:
-         undo, return error return-value .
+             tt-goods.factQnty  = factQnty 
+             tt-goods.freeQnty  = freeQnty 
+          .
        end.
-       vMarkingType = (EDOParSec:GetIsEDOForType(v-value) or EDOParSec:GetIsArticForType(v-value)) and not EDOParSec:GetIsTransitionalForType(v-value).
-      end.
-         for each buf_bar-code where buf_bar-code.in-code = "" 
-                                 and buf_bar-code.gds-code = buf_goods.gds-code 
-                                 and buf_bar-code.stts_ = 0 
-         no-lock use-index prt-parts:
-
-        find last buf_price-all where
-          buf_price-all.b-code          = buf_bar-code.b-code and
-          buf_price-all.gds-code        = buf_goods.gds-code  and
-          buf_price-all.obj-code        = ObjCode and
-          buf_price-all.obj-type        = ObjType and
-          buf_price-all.plt-priority    = 0                   and
-          buf_price-all.last-pr         = true
-          no-lock no-error.
+       if ibarcode
+       then do:
+         
+          if iprotocol > "" 
+          then do:
+             define variable v-value as character no-undo.
+             define variable v-type  as character no-undo.
+             &scop proc-name gds-attr-value
+             {&run_proc_attr-lib}
+               (input  buf_goods.gds-code
+               ,input  {&attr-mark-type}
+               ,output v-value
+               ,output v-type
+               ) no-error .
+             if error-status :error
+             then do:
+                undo, return error return-value .
+             end.
+             vMarkingType = (EDOParSec:GetIsEDOForType(v-value) or EDOParSec:GetIsArticForType(v-value)) and not EDOParSec:GetIsTransitionalForType(v-value).
+          end.
+          for each buf_bar-code where buf_bar-code.in-code = "" 
+                                  and buf_bar-code.gds-code = buf_goods.gds-code 
+                                  and buf_bar-code.stts_ = 0 
+          no-lock use-index prt-parts:
+             myflagsbarcode:unSetAllFlags().
+             find last buf_price-all where
+                buf_price-all.b-code          = buf_bar-code.b-code and
+                buf_price-all.gds-code        = buf_goods.gds-code  and
+                buf_price-all.obj-code        = ObjCode and
+                buf_price-all.obj-type        = ObjType and
+                buf_price-all.plt-priority    = 0                   and
+                buf_price-all.last-pr         = true
+             no-lock no-error.
 
 /*        internal-b-code = buf_bar-code.b-code.                */
 /*                                                              */
 /*                                                              */
 /*        { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}*/
 
-            find first ub.gds-obj no-lock where 
-                         ub.gds-obj.artic = buf_goods.artic
-                     and ub.gds-obj.prod-type = buf_goods.prod-type
-                     and ub.gds-obj.prod-code = buf_goods.prod-code no-error.
+             find first ub.gds-obj no-lock where 
+                        ub.gds-obj.artic = buf_goods.artic
+                    and ub.gds-obj.prod-type = buf_goods.prod-type
+                    and ub.gds-obj.prod-code = buf_goods.prod-code no-error.
         
-        if available buf_price-all and not buf_price-all.price-sale = ?
-            then priceSale = buf_price-all.price-sale.
-            else if available (ub.gds-obj) and not ub.gds-obj.price-sale = ?
-            then priceSale = ub.gds-obj.price-sale.
-            else priceSale = 0.
-        if iprotocol > "" then do:
-               if priceSale = 0
-        then
-                  priceSale =  1 / 100000.  
-        end.
-        assign
-/*          priceSale   = if available buf_price-all then string (buf_price-all.price-sale) else ().*/
-                  cliBaseRate = buf_bar-code.cli-base-rate
-          .
+             if available buf_price-all and not buf_price-all.price-sale = ?
+             then priceSale = buf_price-all.price-sale.
+             else if available (ub.gds-obj) and not ub.gds-obj.price-sale = ?
+             then priceSale = ub.gds-obj.price-sale.
+             else priceSale = 0.
+             if iprotocol eq "1.0" then do:
+                if priceSale = 0
+                then
+                   priceSale =  1 / 100000.  
+             end.
+             assign
+                cliBaseRate = buf_bar-code.cli-base-rate
+             .
         
-        for each buf_prod-bc no-lock where buf_prod-bc.b-code = buf_bar-code.b-code and buf_prod-bc.bc-on = yes:
+             for each buf_prod-bc where buf_prod-bc.b-code = buf_bar-code.b-code 
+                                    and buf_prod-bc.bc-on = yes
+             no-lock:
         
-        if iprotocol > "" then do:
-                     define buffer buf_prod-bc-attr for ub.prod-bc-attr.
-        find first buf_prod-bc-attr where buf_prod-bc-attr.b-code eq buf_prod-bc.b-code
-                              and buf_prod-bc-attr.b-str eq buf_prod-bc.b-str 
-                              and buf_prod-bc-attr.attr-code eq {&mark}
-        no-lock no-error.
-        end. 
+                if iprotocol > "" 
+                then do:
+                   define buffer buf_prod-bc-attr for ub.prod-bc-attr.
+                   find first buf_prod-bc-attr where buf_prod-bc-attr.b-code eq buf_prod-bc.b-code
+                                                 and buf_prod-bc-attr.b-str eq buf_prod-bc.b-str 
+                                                 and buf_prod-bc-attr.attr-code eq {&mark}
+                   no-lock no-error.
+                end. 
           
-        create TempBCode.
+                create TempBCode.
               
-          assign
-            TempBCode.gds-code = buf_goods.gds-code
-            TempBCode.b-str = buf_prod-bc.b-str            
-            TempBCode.unit-cli = buf_bar-code.unit-cli
-            TempBCode.cliBaseRate = cliBaseRate 
-          no-error.
+                assign
+                   TempBCode.gds-code = buf_goods.gds-code
+                   TempBCode.b-str = buf_prod-bc.b-str            
+                   TempBCode.unit-cli = buf_bar-code.unit-cli
+                   TempBCode.cliBaseRate = cliBaseRate 
+                no-error.
 
-          if error-status:error
-          then do:
-            delete TempBCode.
-            logWrite:WriteFileToLog(substitute ( "Ошибка передачи бар-кода &1 в ТСД.", buf_prod-bc.b-str)).
+                if error-status:error
+                then do:
+                   delete TempBCode.
+                   logWrite:WriteFileToLog(substitute ( "Ошибка передачи бар-кода &1 в ТСД.", buf_prod-bc.b-str)).
+                end.
+                myflagsbarcode:isMark = vMarkingType or (available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value)).
+                if iprotocol eq "1.0" 
+                then
+                   TempBCode.priceSale = if (myflagsbarcode:isMark) then (-1 * priceSale ) else priceSale .
+                else 
+                   TempBCode.priceSale = priceSale .
+                TempBCode.flags = myflagsbarcode:FlagsToInt.
+             end.
+             
           end.
-          if iprotocol > "" then
-                     TempBCode.priceSale = (if vMarkingType or (available buf_prod-bc-attr and  logical(buf_prod-bc-attr.attr-value)) then (-1 * priceSale ) else priceSale)   .
-          else TempBCode.priceSale = priceSale .
-          
-        end.
-         
-            end.
        end.
-      end.
-    
-    
-        
+    end.
   end.
    
   method public void GoodsPrint (type as char):
     if    type eq "xml"
        or type eq "json"
     then do on error undo, leave:
-        define variable hDset as handle no-undo.
-        
-        create dataset hDset.
-
-        hDset:set-buffers(buffer tt-goods:handle).
-        hDset:serialize-name = "Goods".
-    
+       define variable hDset as handle no-undo.
+       hDset = CreateDsGoods().
+          
        ttprint(type, hDset).
        finally:
            delete object hDset no-error.
@@ -958,9 +957,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   method public void BarcodesClear ():
      empty temp-table TempBCode.
   end.
-  define temp-table tt-barcodes no-undo serialize-name "Barcodes"
-     field gds-code as integer  serialize-hidden
-     index gds-code gds-code.
+  
     
   method public void GoodsAndBarcodesClear ():
      GoodsClear().
@@ -970,7 +967,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   method public void getGoodsAndBarcodes (input iprotocol as char, idir as char):
      GoodsAndBarcodesClear().
      getGoodsAndBarcodes (yes, yes, iprotocol).
-     GoodsAndBarcodesPrint("",idir).
+     GoodsAndBarcodesPrint(resType,idir).
   end.
   
   method public void GoodsAndBarcodesPrint (input type as char, idir as character):
@@ -978,28 +975,15 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
         or type eq "json"
      then do on error undo, leave:
         define variable hDset as handle no-undo.
-        buffer TempBCode:handle:BUFFER-FIELD("gds-code"):serialize-hidden = yes .
-        create dataset hDset.
-
-        hDset:set-buffers(buffer tt-goods:handle,
-                          buffer tt-barcodes:handle,
-                          buffer TempBCode:handle).
-        hDset:serialize-name = "Goods".
-        hDset:add-relation(buffer tt-goods:handle, 
-                           buffer tt-barcodes:handle,
-                           "gds-code,gds-code",
-                           false,
-                           true).
-        hDset:add-relation(buffer tt-barcodes:handle,
-                           buffer TempBCode:handle,
-                           "gds-code,gds-code",
-                           false,
-                           true).
+        hDset = CreateDsGoodsAndBarcodes().
         for each tt-Goods no-lock:
            create tt-barcodes.
            tt-barcodes.gds-code = tt-Goods.gds-code.
         end.
         ttprint(type, hDset).
+        if (idir ne "" and idir ne ?)
+        then
+           writeResult(idir + "\TH_goods." + resType,"utf-8").
         finally:
            delete object hDset no-error.
         end.   
@@ -1018,14 +1002,8 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
      if    type eq "xml"
        or type eq "json"
     then do on error undo, leave:
-        define variable hDset as handle no-undo.
-        buffer TempBCode:handle:BUFFER-FIELD("gds-code"):serialize-hidden = no .
-        
-        create dataset hDset.
-
-        hDset:set-buffers(buffer TempBCode:handle).
-        hDset:serialize-name = "Barcodes".
-    
+       define variable hDset as handle no-undo.
+       hdset = CreateDsBarcodes ().
     
        ttprint(type,hDset).
        finally:
@@ -1646,7 +1624,128 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
 
     return true.
   end method.
+  method public logical updatedocument (
+      docType as char,
+      table TempTrnDoc   ,
+      table TempDocLine ,
+      table TempMarkLine ,
+      userid_ as char
+      ):
+     define variable ErrStatus as logical no-undo.
+    define buffer bfTempDocLine for TempDocLine.
+    define buffer buf_bar-code  for ub.bar-code.
+    define buffer buf_prod-bc   for ub.prod-bc.
+    define buffer buf_place     for ub.place.
+    
+     case docType:
 
+        when {&TDEDT_Inv} then 
+          do:
+            if ImpInventory (table TempTrnDoc, table TempDocLine, userId_)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "UTD_DOC" then 
+          do:
+            if ImpUTDDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "InvIntroduce" then 
+          do:
+            if ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "invmark" then 
+          do:
+            if ImpInvMarksDOC (table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        when "UTD_Introduce" then 
+          do:
+            if ImpUTDIntroduce(table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+         when "MarksInv" then 
+          do:
+            if ImpMarksInv (table TempTrnDoc, table TempDocLine, table TempMarkLine)
+            then ErrStatus = false.
+            else ErrStatus = true.
+
+          end.
+        otherwise  
+        do:
+          for each TempDocLine no-lock where not TempDocLine.b-code matches ("*" + string (TempDocLine.gds-code) + "*"):
+                      
+            find first bfTempDocLine where bfTempDocLine.gds-code = TempDocLine.gds-code and bfTempDocLine.b-code matches ( "*" + string (bfTempDocLine.gds-code) + "*")  no-error.
+            find buf_bar-code no-lock where 
+              buf_bar-code.gds-code = TempDocLine.gds-code and TempDocLine.b-code matches ("*" + string(buf_bar-code.b-code)+ "*") no-error.
+            
+            
+            if not available buf_bar-code then 
+            do:
+              
+              find first buf_prod-bc no-lock where buf_prod-bc.b-str = TempDocLine.b-code no-error.
+              if available buf_prod-bc 
+                then 
+              do:
+                find first buf_bar-code no-lock where buf_bar-code.b-code = buf_prod-bc.b-code and buf_bar-code.gds-code = TempDocLine.gds-code no-error.
+              end.
+              
+              if not available buf_bar-code then 
+              do:
+                LogWrite:LogStr =  LogWrite:LogStr + {&new-line} + 'Отправлен ответ на запрос типа "WAYBILL".' + {&new-line} + "Не известный штрих-код:" + TempDocLine.b-code.
+                logWrite:WriteFileToLog( "Не известный штрих-код:" + TempDocLine.b-code).
+                SomeStr = "Не известный штрих-код:" + TempDocLine.b-code.
+                ErrStatus = true.
+                return false.
+              end.
+              
+            end.
+
+            if not available bfTempDocLine
+              then 
+            do:
+              create bfTempDocLine.
+              assign
+                bfTempDocLine.gds-code = TempDocLine.gds-code
+                bfTempDocLine.b-code   = string (TempDocLine.gds-code)
+                .
+            end.
+            
+            assign
+              bfTempDocLine.doc-qnty  = bfTempDocLine.doc-qnty + TempDocLine.doc-qnty * buf_bar-code.cli-base-rate
+              bfTempDocLine.fact-qnty = bfTempDocLine.fact-qnty + TempDocLine.fact-qnty * buf_bar-code.cli-base-rate
+              bfTempDocLine.RowSum    = bfTempDocLine.RowSum + TempDocLine.RowSum
+              .
+            delete TempDocLine.
+          
+          end.
+          
+          for each TempDocLine no-lock:
+            assign
+              TempDocLine.price-rubl = TempDocLine.RowSum / TempDocLine.fact-qnty.
+            .
+            
+          end.
+          
+          if ImpWB(table TempTrnDoc, table TempDocLine, table TempMarkLine, userId_)
+          then ErrStatus = false.
+          else ErrStatus = true.
+          
+        end.
+
+      end.
+      return ErrStatus.
+   end.
 method public void createTempGoods(buffer goods for goods, icli-base-rate as decimal , mark_ as logical):
   define buffer del_TempDocLineTSD for TempDocLineTSD .
   define buffer marking for ub.marking.
@@ -2287,9 +2386,8 @@ end.
     define buffer utd for ub.utd.
     
     define variable dFactSum   as decimal   no-undo.
-    define variable priceSale  as character no-undo.
+    define variable priceSale  as dec no-undo.
     define variable docType    as character no-undo.
-    define variable dPriceSale as decimal   no-undo.
     define variable decDocQnty as decimal no-undo.
     define variable jj as integer no-undo.
     define variable jjm as integer no-undo.
@@ -2373,17 +2471,10 @@ end.
         { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
 
         pos = pos + 1.
-        dPriceSale = buf_utd-l.Total / buf_utd-l.Quantity. 
+        PriceSale = buf_utd-l.Total / buf_utd-l.Quantity. 
         decDocQnty = buf_utd-l.Quantity.
         
 
-        assign
-          priceSale = string (dPriceSale)
-        .
-
-        assign
-          priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-        .
         define variable vErrorLine as logical no-undo.
         ObjSrv:Lib:KeyRec:GenKeyRec ( input "utd-lines", 
             input  buffer buf_utd-l:handle, 
@@ -2517,16 +2608,10 @@ end.
         internal-b-code = buf_bar-code.b-code.
         { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
         
-        dPriceSale = buf_utd-l.Total / buf_utd-l.Quantity. 
+        PriceSale = buf_utd-l.Total / buf_utd-l.Quantity. 
         decDocQnty = buf_utd-l.Quantity.
         
-        assign
-          priceSale   = string (dPriceSale)
-          .
-
-        assign
-          priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-          .
+        
         pos = pos + 1.
         addDocLine(jjm,
                        v-doc-num,
@@ -2707,10 +2792,7 @@ end.
         end.
         
         assign
-          priceSale   = if buf_doc-line.price-rubl <> 0 and buf_doc-line.price-rubl <> ? then string (buf_doc-line.price-rubl) else "0"
-          .
-        assign
-          priceSale = if buf_doc-line.price-rubl > -1 and buf_doc-line.price-rubl < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
+          priceSale   = if buf_doc-line.price-rubl <> ? then buf_doc-line.price-rubl else 0
           .
         jjm = jjm + 1.
         addDocLine(jjm,
@@ -2801,16 +2883,10 @@ end.
             internal-b-code = buf_bar-code.b-code.
             { str/bc-gnrti.i "bc" "internal-b-code" "full-b-code"}
             
-            dPriceSale = buf_utd-l.Total / buf_utd-l.Quantity. 
+            PriceSale = buf_utd-l.Total / buf_utd-l.Quantity. 
             decDocQnty = buf_utd-l.Quantity.
             
-            assign
-              priceSale   = string (dPriceSale)
-              .
-    
-            assign
-              priceSale = if dPriceSale > -1 and dPriceSale < 1 then replace (priceSale, ".", "0,") else replace (priceSale, ".", ",")
-              .
+            
             for each buf_utd-m-l where buf_utd-m-l.db-num = buf_utd.db-num and buf_utd-m-l.doc-id = buf_utd.doc-id and buf_utd-m-l.LineNum = buf_utd-l.LineNum 
               no-lock
               :
@@ -2880,24 +2956,6 @@ end.
      return replace(trim(string(iValue, "->>>>>>>>>>>>9.9<<<<<")),".",",").
   end.
   
-  define temp-table tt-doc no-undo serialize-name "document"
-    field doc-num as char
-    field docType as char
-    field complite as logical
-    field status_ as char
-    field cli-code as int
-    field cli-type as char
-    field obj-code as int
-    field obj-type as char
-    field user-id as character
-    field user-login as char
-    field FactSum as dec
-    field doc-date as datetime-tz
-    field flags as integer
-    index doc-num doc-num.
-  define temp-table tt-doc-lines no-undo serialize-name "lines"
-    field doc-num as character serialize-hidden 
-    index doc-num doc-num.  
   method private void addDoc(
      idoc-num as char,
      idocType as char,
@@ -2913,153 +2971,125 @@ end.
      idoc-date as datetime-tz,
      iflags as int
   ):
-     find first tt-doc where tt-doc.doc-num eq idoc-num no-lock no-error.
-     if not available tt-doc
+     find first TempTrnDocMT where TempTrnDocMT.DocName eq idoc-num no-lock no-error.
+     if not available TempTrnDocMT
      then do:
-        create tt-doc.
-        tt-doc.doc-num = idoc-num.
+        create TempTrnDocMT.
+        TempTrnDocMT.DocName = idoc-num.
      end.
      assign
-        tt-doc.docType    = idocType
-        tt-doc.complite   = icomplite
-        tt-doc.status_    = istatus
-        tt-doc.cli-code   = icli-code
-        tt-doc.cli-type   = icli-type
-        tt-doc.obj-code   = iobj-code
-        tt-doc.obj-type   = iobj-type
-        tt-doc.user-id    = iuser-id
-        tt-doc.user-login = iuser-login
-        tt-doc.FactSum    = iFactSum
-        tt-doc.doc-date   = idoc-date
-        tt-doc.flags      = iflags
+        TempTrnDocMT.DocType     = idocType
+        TempTrnDocMT.Complete_   = icomplite
+        TempTrnDocMT.Status_     = istatus
+        TempTrnDocMT.ClientID    = icli-code
+        TempTrnDocMT.ClientType  = icli-type
+        TempTrnDocMT.ObjectID    = iobj-code
+        TempTrnDocMT.ObjectType  = iobj-type
+        TempTrnDocMT.UserID_     = iuser-id
+        TempTrnDocMT.UserName    = iuser-login
+        TempTrnDocMT.FactSum     = iFactSum
+        TempTrnDocMT.StartDate   = idoc-date
+        TempTrnDocMT.Flags_      = iflags
       .
   end.
   
   method public void docPrint(idir as char):
      tsdstreamopenapp(idir + "\MT_documents.txt").
-     for each tt-doc no-lock:  
+     for each TempTrnDocMT no-lock:  
         put stream tsdstream unformatted 
-        tt-doc.doc-num + {&delimiteFld} + 
-        tt-doc.docType + {&delimiteFld} + 
-        string(tt-doc.complite,"true/false") + {&delimiteFld} + 
-        tt-doc.status_ + {&delimiteFld} + 
-        string (tt-doc.cli-code) + {&delimiteFld} + 
-        tt-doc.cli-type + {&delimiteFld} + 
-        string (tt-doc.obj-code) + {&delimiteFld} + 
-        tt-doc.obj-type + {&delimiteFld} + 
-        tt-doc.user-id + {&delimiteFld} + 
-        tt-doc.user-login + {&delimiteFld} +
-        decToString(tt-doc.FactSum) + {&delimiteFld} + 
-        iso-date (tt-doc.doc-date) + {&delimiteFld} 
-        + string(tt-doc.flags) + {&delimiterLine}.
+        TempTrnDocMT.DocName + {&delimiteFld} + 
+        TempTrnDocMT.DocType + {&delimiteFld} + 
+        string(TempTrnDocMT.Complete_,"true/false") + {&delimiteFld} + 
+        TempTrnDocMT.Status_ + {&delimiteFld} + 
+        string (TempTrnDocMT.ClientID) + {&delimiteFld} + 
+        TempTrnDocMT.ObjectType + {&delimiteFld} + 
+        string (TempTrnDocMT.ObjectID) + {&delimiteFld} + 
+        TempTrnDocMT.ObjectType + {&delimiteFld} + 
+        TempTrnDocMT.UserID_ + {&delimiteFld} + 
+        TempTrnDocMT.UserName + {&delimiteFld} +
+        decToString(TempTrnDocMT.FactSum) + {&delimiteFld} + 
+        iso-date (TempTrnDocMT.StartDate) + {&delimiteFld} 
+        + string(TempTrnDocMT.Flags_) + {&delimiterLine}.
      end. 
      tsdstreamclose().
      
   end.
-  define temp-table tt-doc-line no-undo serialize-name "line"
-     field doc-num as character serialize-hidden
-     field line-num as int
-     field gds-code as int
-     field gds-name as character 
-     field unit-base as character 
-     field full-b-code as char
-     field priceSale as char
-     field docQnty as dec
-     field factQnty as  dec
-     field Error as char
-     field RecKey as char
-     field flags as int
-     field jjm as integer 
-  index num doc-num line-num.
-  define temp-table tt-doc-line-marks no-undo serialize-name "marks"
-     field doc-num as character serialize-hidden
-     field line-num as integer serialize-hidden
-     index num doc-num line-num.
-  method private void addDocLine(jjm as integer,
+  
+  method private void addDocLine(pos as integer,
                        idoc-num as char,
                        iline-num as int,
                        igds-code as int,
                        igds-name as character ,
                        iunit-base as character ,
                        ifull-b-code as char,
-                       ipriceSale as char,
+                       ipriceSale as dec,
                        idocQnty as dec,
                        ifactQnty as  dec,
                        iError as char,
                        iRecKey as char,
                        iflags as int 
   ):
-     find first tt-doc-line where tt-doc-line.doc-num eq idoc-num
-                              and tt-doc-line.line-num eq iline-num
+     find first TempTrnLineMT where TempTrnLineMT.docname eq idoc-num
+                              and TempTrnLineMT.pos eq pos
      no-lock no-error. 
-     if not available tt-doc-line
+     if not available TempTrnLineMT
      then do:
-        create tt-doc-line.
+        create TempTrnLineMT.
         assign 
-           tt-doc-line.doc-num = idoc-num
-           tt-doc-line.line-num = iline-num
+           TempTrnLineMT.docname = idoc-num
+           TempTrnLineMT.pos = pos
         .
      end.
      assign
-        tt-doc-line.gds-code    = igds-code
-        tt-doc-line.gds-name    = igds-name
-        tt-doc-line.unit-base   = iunit-base
-        tt-doc-line.full-b-code = ifull-b-code
-        tt-doc-line.priceSale   = ipriceSale
-        tt-doc-line.docQnty     = idocQnty
-        tt-doc-line.factQnty    = ifactQnty
-        tt-doc-line.Error       = iError
-        tt-doc-line.RecKey      = iRecKey
-        tt-doc-line.flags       = iflags
-        tt-doc-line.jjm         = jjm
+        TempTrnLineMT.goodsid     = igds-code
+        TempTrnLineMT.goodsname   = igds-name
+        TempTrnLineMT.UnitBC      = iunit-base
+        TempTrnLineMT.BC          = ifull-b-code
+        TempTrnLineMT.Price_      = ipriceSale
+        TempTrnLineMT.DocQnty     = idocQnty
+        TempTrnLineMT.FactQnty    = ifactQnty
+        TempTrnLineMT.Error       = iError
+        TempTrnLineMT.PartIDTH    = iRecKey
+        TempTrnLineMT.Flags_      = iflags
+        TempTrnLineMT.lineId      = iline-num
      . 
   end.
   method public void docLinePrint(idir as char):
   
       tsdstreamopenapp(idir + "\MT_lines.txt").
-      for each tt-doc-line no-lock:  
+      for each TempTrnLineMT no-lock:  
         put stream tsdstream unformatted
           substitute ("&2&1&3&1&4&1&5&1&6&1&7&1&8&1&9&1",
                       {&delimiteFld},
-                      tt-doc-line.jjm,
-                      tt-doc-line.doc-num ,
-                      tt-doc-line.line-num,
-                      tt-doc-line.gds-code,
-                      tt-doc-line.gds-name,
-                      tt-doc-line.unit-base,
-                      tt-doc-line.full-b-code,
-                      tt-doc-line.priceSale
+                      TempTrnLineMT.lineid,
+                      TempTrnLineMT.docname ,
+                      TempTrnLineMT.pos,
+                      TempTrnLineMT.goodsid,
+                      TempTrnLineMT.goodsname,
+                      TempTrnLineMT.UnitBC,
+                      TempTrnLineMT.BC,
+                      decToString(TempTrnLineMT.Price_)
                       
                      )
         +
          substitute ("&3&1&4&1&5&1&6&1&7&2",
                       {&delimiteFld},
                       {&delimiterLine},
-                      decToString(tt-doc-line.docQnty),
-                      decToString(tt-doc-line.factQnty),
-                      tt-doc-line.Error, /* string (buf_goods.gds-code) */
-                      tt-doc-line.RecKey,
-                      tt-doc-line.flags
+                      decToString(TempTrnLineMT.DocQnty),
+                      decToString(TempTrnLineMT.FactQnty),
+                      TempTrnLineMT.Error, /* string (buf_goods.gds-code) */
+                      TempTrnLineMT.PartIDTH,
+                      TempTrnLineMT.Flags_
                       )
                      .
       end.
       tsdstreamclose().
   end.
-  define temp-table tt-doc-line-mark no-undo serialize-name "mark"
-     field jj as int
-     field doc-num as character serialize-hidden
-     field line-num as integer serialize-hidden
-     field mark as char
-     field RecKey as char
-     field Status_ as char
-     field MarkParent as char
-     field MarkQnty as int
-  index mark doc-num line-num mark.
   
   method private void addDocLineMark(
-     jj as int,
-     idoc-num as char,
      iline-num as integer,
+     idoc-num as char,
+     pos as int,
      imark as char,
      iRecKey as char,
      iStatus as char,
@@ -3067,45 +3097,45 @@ end.
      iMarkQnty as int
       
   ):
-     find first tt-doc-line-mark where tt-doc-line-mark.doc-num  eq idoc-num
-                                   and tt-doc-line-mark.line-num eq iline-num
-                                   and tt-doc-line-mark.mark     eq imark
+     find first TempMarkLineMT where TempMarkLineMT.DocName  eq idoc-num
+                                  and TempMarkLineMT.MarkCode     eq imark
      no-error.
-     if not available tt-doc-line-mark
+     if not available TempMarkLineMT
      then do:
-        create tt-doc-line-mark.
+        create TempMarkLineMT.
         assign
-           tt-doc-line-mark.doc-num = idoc-num
-           tt-doc-line-mark.line-num = iline-num
-           tt-doc-line-mark.mark     = imark
+           TempMarkLineMT.DocName = idoc-num
+           
+           TempMarkLineMT.MarkCode     = imark
         .
      end.
      assign
-        tt-doc-line-mark.jj         = jj
-        tt-doc-line-mark.RecKey     = iRecKey
-        tt-doc-line-mark.Status_    = iStatus
-        tt-doc-line-mark.MarkParent = iMarkParent
-        tt-doc-line-mark.MarkQnty   = iMarkQnty
+        TempMarkLineMT.pos         = pos
+        TempMarkLineMT.lineID      = iline-num
+        TempMarkLineMT.PartIDTH      = iRecKey
+        TempMarkLineMT.Status_     = iStatus
+        TempMarkLineMT.MarkParent  = iMarkParent
+        TempMarkLineMT.BoxQnty    = iMarkQnty
      .
   end.
   method public void docLineMarkPrint(idir as char):
      tsdstreamopenapp(idir + "\MT_MarkLines.txt").
-     for each tt-doc-line-mark no-lock:
+     for each TempMarkLineMT no-lock:
      put stream tsdstream unformatted 
          substitute ("&3&1&4&1&5&1&6&1&7&8&2",
                 {&delimiteFld},
                 {&delimiterLine},
-                tt-doc-line-mark.jj,
-                tt-doc-line-mark.doc-num,
-                tt-doc-line-mark.mark,
-                tt-doc-line-mark.RecKey,
-                tt-doc-line-mark.Status_,
-                if     tt-doc-line-mark.MarkParent ne ? 
-                   and tt-doc-line-mark.MarkQnty   ne ?
+                TempMarkLineMT.lineId,
+                TempMarkLineMT.DocName,
+                TempMarkLineMT.MarkCode,
+                TempMarkLineMT.PartIDTH,
+                TempMarkLineMT.Status_,
+                if     TempMarkLineMT.MarkParent ne ? 
+                   and TempMarkLineMT.BoxQnty   ne ?
                 then
                    substitute ("&1&2&1&3",{&delimiteFld},
-                                        tt-doc-line-mark.MarkParent,
-                                        tt-doc-line-mark.MarkQnty)
+                                        TempMarkLineMT.MarkParent,
+                                        TempMarkLineMT.BoxQnty)
                 else ""
                )
     
@@ -3113,37 +3143,24 @@ end.
       end.
       tsdstreamclose().
     end.
-  define dataset ds-doc serialize-name "documents"
-  for tt-doc
-  , tt-doc-lines
-  , tt-doc-line
-  , tt-doc-line-marks
-  , tt-doc-line-mark
-  data-relation docLines     for tt-doc, tt-doc-lines    relation-fields (doc-num, doc-num) nested
-  data-relation docLine      for tt-doc-lines, tt-doc-line     relation-fields (doc-num, doc-num) nested 
-  data-relation docLineMarks for tt-doc-line, tt-doc-line-marks    relation-fields (doc-num, doc-num,line-num,line-num) nested
-  data-relation docLineMark  for tt-doc-line-marks, tt-doc-line-mark    relation-fields (doc-num, doc-num,line-num,line-num) nested
-  .
+  
   method public void docWrite():
      docPrint(resType,cp).
      
   end.
   method public void docPrint(type as char,encoding as char):
-     for each tt-doc no-lock:
-        create tt-doc-lines.
-        tt-doc-lines.doc-num = tt-doc.doc-num.
+     for each TempTrnDocMT no-lock:
+        create TempTrnLineMTs.
+        TempTrnLineMTs.DocName = TempTrnDocMT.DocName.
+        create TempTrnLineMTs.
+        TempMarkLineMT.DocName  = TempTrnLineMT.DocName.
+           
      end.
-     for each tt-doc-line no-lock:
-        create tt-doc-line-marks.
-        assign
-           tt-doc-line-marks.doc-num  = tt-doc-line.doc-num
-           tt-doc-line-marks.line-num = tt-doc-line.line-num
-           .
-     end. 
+      
      ttPrint(type,
         DATASET  ds-doc:handle,encoding).
-     empty temp-table tt-doc-lines .
-     empty temp-table tt-doc-line-marks.
+     empty temp-table TempTrnLineMTs .
+     empty temp-table TempMarkLineMTs.
         /*
         WRITE-XML("longchar",SomeStr, true, encoding, ?, false, true ,false,true).
      else if type eq "json"
@@ -3153,6 +3170,169 @@ end.
         SomeStr = getStatusXml(false,"Тип ответа не подерживается responseType должно быть xml или json") .
         */
   end.
+  method public logical parseCSV( idir as char ):
+    
+    define variable lResult    as logical   no-undo.
+    define variable cFactQnty  as decimal  no-undo.
+    define variable cDocQnty   as decimal  no-undo.
+    define variable cPriceRubl as decimal  no-undo.
+    define variable RowSum     as decimal   no-undo.
+    define variable iDbNum     as integer   no-undo.
+    define variable docType    as character no-undo.
+    define variable vFilename  as character no-undo.
+    
+    
+    
+    myflagsDoc:unSetAllFlags().
+
+    iDbNum = GetDbNum().
+    empty temp-table TempTrnDocMT.
+    empty temp-table TempTrnLineMT.
+    empty temp-table TempMarkLineMT.
+    vFilename = idir + "\MT_documentsSend.json".
+    if SearchFile(vFilename) ne ? 
+    then do:
+       dataset ds-doc:read-json ("file",SearchFile(vFilename),"EMPTY").
+    end.
+
+    
+    for each TempTrnDocMT where TempTrnDocMT.Complete_ = true:
+      logWrite:WriteDebugLog("Загружаем документ " + TempTrnDocMT.DocName).
+      empty temp-table TempTrnDoc.
+      empty temp-table TempDocLine.
+      empty temp-table TempMarkLine.
+
+      case TempTrnDocMT.DocType:
+        when "ExtSalesWB" then do:
+          docType = {&TDEDT_Ras_Vnesh}.
+        end.
+        when "IntSalesWB" then do:
+          docType = {&TDEDT_Ras_Perem}.
+        end.
+        when "ExtPurchWB" then do:
+          docType = {&TDEDT_Pri_Vnesh}.
+        end.
+        when "IntPurchWB" then do:
+          docType = {&TDEDT_Pri_Perem}.
+        end.
+        when "Inv" then do:
+          docType = {&TDEDT_Inv}.
+        end.
+        when "Introduce" then do:
+          docType = "UTD_Introduce".
+        end.
+        when "UTD" then do:
+          docType = "UTD_DOC".
+        end.
+        when "InvMarks" then do:
+          docType = "invmark".
+        end.
+        when "MarksInv" then do:
+          docType = "MarksInv".
+        end.
+        when "InvIntroduce" then do:
+          docType = "InvIntroduce".
+        end.
+      end case.
+        
+      userId_ = TempTrnDocMT.UserID_.
+
+      find first ub.user-login where ub.user-login.db-num = iDbNum and ub.user-login.user-id = userId_ no-lock no-error.  
+      create TempTrnDoc.
+      assign
+        TempTrnDoc.line-num     = 1
+        TempTrnDoc.doc-date     = today
+        TempTrnDoc.ext-doc-code = TempTrnDocMT.DocName
+        TempTrnDoc.ext-doc-type = docType 
+        TempTrnDoc.cli-type     = TempTrnDocMT.ClientType
+        TempTrnDoc.cli-code     = integer(TempTrnDocMT.ClientID)
+        TempTrnDoc.obj-type     = TempTrnDocMT.ObjectType
+        TempTrnDoc.obj-code     = TempTrnDocMT.ObjectID
+        TempTrnDoc.ps           = if available (ub.user-login) then "" else " Пользователь: " + TempTrnDocMT.UserName
+        TempTrnDoc.Status_      = TempTrnDocMT.Status_
+        TempTrnDoc.Flags_       = TempTrnDocMT.Flags_
+        .
+
+      myflagsDoc:setFlagsToInt(TempTrnDocMT.Flags_).
+       
+      define variable cFactQntyDec as decimal no-undo .
+      define variable cPriceRublDec as decimal no-undo .  
+      for each TempTrnLineMT where TempTrnLineMT.docname = TempTrnDocMT.DocName:
+
+          cDocQnty   = TempTrnLineMT.DocQnty .
+          cFactQnty  = TempTrnLineMT.FactQnty .
+          cPriceRubl = TempTrnLineMT.Price_ .
+          
+          RowSum    = cFactQnty * cPriceRubl .
+
+        /* для помарочного учета объеденим все линии по товару и будем резервировать количество по маркам в rsrv-dtl.p*/
+        if myflagsDoc:isDocMarkOn and (docType = {&TDEDT_Pri_Vnesh} or docType = {&TDEDT_Pri_Perem})
+        then do:
+          find first TempDocLine no-lock 
+            where TempDocLine.gds-code = integer (TempTrnLineMT.goodsid) 
+              and TempDocLine.b-code = (TempTrnLineMT.BC) no-error.
+          if not available (TempDocLine)
+          then do:
+            create TempDocLine.
+            assign
+              TempDocLine.line-num     = integer (TempTrnLineMT.pos)
+              TempDocLine.gds-code     = integer (TempTrnLineMT.goodsid)
+              TempDocLine.b-code       = string (TempTrnLineMT.BC)
+              TempDocLine.fact-qnty    = decimal(cFactQnty)
+              TempDocLine.doc-qnty     = decimal(cDocQnty)
+              TempDocLine.price-rubl   = ?
+              TempDocLine.RowSum       = ?
+              TempDocLine.PartIDTH     = TempTrnLineMT.PartIDTH
+              TempDocLine.NotDict      = TempTrnLineMT.goodsid eq 0
+              .
+          end.
+          else do:
+            assign
+              TempDocLine.fact-qnty    = TempDocLine.fact-qnty + cFactQnty
+              TempDocLine.PartIDTH     = TempDocLine.PartIDTH + {&delim-par} + TempTrnLineMT.PartIDTH 
+            .
+          end.
+  
+        end.
+        else do:
+          create TempDocLine.
+          assign
+            TempDocLine.line-num     = TempTrnLineMT.pos
+            TempDocLine.gds-code     = TempTrnLineMT.goodsid
+            TempDocLine.b-code       = TempTrnLineMT.BC
+            TempDocLine.fact-qnty    = cFactQnty
+            TempDocLine.doc-qnty     = cDocQnty
+            TempDocLine.price-rubl   = cPriceRubl
+            TempDocLine.RowSum       = RowSum
+            TempDocLine.PartIDTH = TempTrnLineMT.PartIDTH
+            TempDocLine.NotDict      = TempTrnLineMT.goodsid eq 0
+            .
+        end.
+      end.
+      
+      for each TempMarkLineMT 
+/*      where TempMarkLineMT.DocName = TempTrnDoc.ext-doc-code*/
+          :
+      
+        create TempMarkLine.
+        assign
+          TempMarkLine.DocName     =  TempMarkLineMT.DocName 
+          TempMarkLine.PartIDTH    =  TempMarkLineMT.PartIDTH
+          TempMarkLine.MarkCode    =  TempMarkLineMT.MarkCode
+          TempMarkLine.Sts         =  TempMarkLineMT.Status_
+          TempMarkLine.MarkParent  =  TempMarkLineMT.MarkParent     
+          .
+      end.
+
+      updatedocument(doctype, table TempTrnDoc, table TempDocLine, table TempMarkLine, userId_).
+      logWrite:WriteDebugLog("Загружен документ " + TempTrnDocMT.DocName).
+    end.
+
+    
+    return true.
+    
+  end.
+  
    
   method public void ttPrint(type as char,htable as handle):
      ttPrint(type, htable, cp).
@@ -3170,11 +3350,11 @@ end.
         SomeStr = getStatusXml(false,"Тип ответа не подерживается responseType должно быть xml или json") .
   end.
   method public void docClear():
-     empty temp-table tt-doc.
-     empty temp-table tt-doc-lines.
-     empty temp-table tt-doc-line.
-     empty temp-table tt-doc-line-marks.
-     empty temp-table tt-doc-line-mark.
+     empty temp-table TempTrnDocMT.
+     empty temp-table TempTrnLineMTs.
+     empty temp-table TempTrnLineMT.
+     empty temp-table TempTrnLineMTs.
+     empty temp-table TempTrnLineMT.
   end.
   define STREAM sReadDir.
   
