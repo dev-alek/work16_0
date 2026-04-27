@@ -114,8 +114,11 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   ------------------------------------------------------------------------------*/
   define variable bc-frmt         as character no-undo .
   define variable bc-pfx          as character no-undo .
-		
+  define variable dbNum as integer no-undo.
+    
   constructor public TSD (  ):
+    dbNum = GetDbNum().
+    
     define variable v-par-type as character no-undo.
     keyrec = new keyrec ().
     logWrite = new LogWrite().
@@ -497,6 +500,48 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     
   end method.
   
+  method public character createTegLogical (iTeg as char,
+                                     iValue as logical):
+      if ivalue eq ? then return createTeg(iteg,?).                              
+      return createTeg(iteg,trim(string(ivalue,"true/false"))).
+  end.
+  
+  method public character createTeg (iTeg as char,
+                                     iValue as char):
+      if ivalue eq "" or ivalue eq ? then return "".                              
+      return substitute ("<&1>&2</&1>",iteg,ivalue).
+  end.
+  method public void getSettings ():
+    
+    define variable confPar   as character no-undo.
+    define variable parType   as character no-undo.
+    define variable validSN   as logical   no-undo init ?.
+    define variable validObj  as logical   no-undo init ?.
+    
+    define buffer buf_clients   for ub.clients.
+    run gbl/conf-rd.p ("tsd-list", "", "", 0, "", "", "", no, output confPar, output parType) no-error.
+    if SN ne ? and SN ne ""
+    then
+       validSN = lookup (SN, confPar, ";") > 0.
+    ObjectsClear().
+    getCurrentObjects().
+    ObjectsPrint("xml").
+    SomeStr = substring (SomeStr,index(SomeStr,">") + 1).
+    if ObjType ne ? and ObjType ne "" 
+    then do:
+      find first buf_clients no-lock 
+         where buf_clients.obj-type = ObjType and buf_clients.obj-code = ObjCode no-error.
+      validObj = available (buf_clients). 
+    end.
+    importVersion(). 
+    SomeStr = getStatusXml(true, "",
+    substitute ("&1&2&3&4",
+    getVersion(),
+    SomeStr,
+    createTegLogical("validSN",validSN),
+    createTegLogical("validObj",validObj))).
+    
+  end method.
   method public void setResult (iFile as char):
   
       copy-lob
@@ -522,9 +567,7 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
   end.
   
   method public void GetUsers ():
-    define variable dbNum as integer no-undo.
     define buffer buf_user-login for ub.user-login.
-    dbNum = GetDbNum().
     
     for each buf_user-login where buf_user-login.status_ = 0 and buf_user-login.db-num = dbNum no-lock:
       create tt-user.
@@ -584,6 +627,22 @@ class ibs.th.skt.ControlledClients.TSD inherits objth:
     end.
     
   end.
+  
+  method public void getCurrentObjects ():
+  define buffer buf_clients for ub.clients .
+  for each buf_clients where buf_clients.stts = 0 
+                         and buf_clients.db-num eq dbnum no-lock:
+       create tt-Objects.
+       assign
+          tt-Objects.obj-type = buf_clients.obj-type
+          tt-Objects.obj-code = buf_clients.obj-code
+          tt-Objects.obj-name = buf_clients.obj-name
+       .
+       
+    end.
+    
+  end.
+  
   method public void ObjectsPrint (type as char):
     define buffer buf_clients   for ub.clients.
     if    type eq "xml"
@@ -3157,7 +3216,11 @@ end.
          end.
       end.
    end.
-   
+                       
+   method public void getListVersions():
+       importVersion(). 
+       SomeStr = getStatusXml(true,"",getVersion()).
+   end.
    method private longchar getVersion():
       define variable vVertion as longchar no-undo.
       for each tt-version break by tt-version.device:

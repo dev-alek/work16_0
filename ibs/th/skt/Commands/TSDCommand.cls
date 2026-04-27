@@ -122,20 +122,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        vMesForTsd = "При обмене возникли ошибки. Уже выполняется одна задание получения данных".
        logWrite:LogStr = vMesForTsd.
               
-/*       tempLongCh = substitute("HTTP/1.0 200 OK&1Server: 4GL&1Content-Type: text/csv&1Content-Length: &3&1ETag: &4&2",*/
-/*                              {&CRLF},                                                                                */
-/*                              {&HdEnd},                                                                               */
-/*                              length(logWrite:LogStr,'RAW':U),                                                        */
-/*                              logWrite:LogStr).                                                                       */
-/*                                                                                                                      */
-/*       set-size(mbuffer) = 0.                                                                                         */
-/*       set-size(mbuffer) = length (tempLongCh, "RAW":U) + 1.                                                          */
-/*       put-string(mbuffer,1) = tempLongCh.                                                                            */
-/*       glog = req:HndlSocket:write(mbuffer,1,length(tempLongCh,'RAW':U)) no-error.                                    */
-/*       if not glog                                                                                                    */
-/*       then do:                                                                                                       */
-/*          logWrite:LogStr = logWrite:LogStr + " " + "Ошибка при отправке сообщения удаленному клиенту.".              */
-/*       end.                                                                                                           */
        ErrStatus = true.
        return.
     end.
@@ -276,6 +262,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     vStatus = entry(vpos + 1,resp:ParamWait).
     if vStatus eq "dictionaries"
     then do:
+       mServiceBusy = no.
        logWrite:WriteFileToLog("DBInitDict.txt","IBM866").
        block-size:
        do vi = 1 to 50:
@@ -303,12 +290,22 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end.
     else if vStatus eq "step1"
     then do transaction:
+       if not hndlSocket:connected()
+       then do:
+          resp:condition = resp:STSlist:WriteResponse:NameProp.
+          mServiceBusy = no.
+          return.
+       end.
        logWrite:WriteFileToLog("DBInitExpDoc.txt","IBM866").
        run gbl/pause.p( 1000).
        endStep('Завершена выгрузка из базы ТСД').
        startStep('Начало загрузки документов.').
-       parseCSV().
-       
+       if not parseCSV()
+       then do:
+          resp:condition = resp:STSlist:ReciveCommand:NameProp.
+          mServiceBusy = no.
+          return.
+       end.
        endStep('Завершена загрузки документов.').
        startStep('Начало выгрузки накладных.').
        tsd:clear().
@@ -322,6 +319,13 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        tsd:docLineMarkPrint().
        startStep('Начало загрузки документов в ТСД.').
        os-delete "documents_new.s3db".
+       if not hndlSocket:connected()
+       then do:
+          resp:condition = resp:STSlist:WriteResponse:NameProp.
+          mServiceBusy = no.
+          return.
+       end.
+    
        vpid = runProc('DBInit.exe Doc 30 31 >DBInitDoc.txt'  + {&new-line} + 'rename documents.s3db documents_new.s3db').
        resp:condition = resp:STSlist:WriteStatusAndWait:NameProp.
        resp:ParamWait = substitute ("pid,&1,status,Step2", vpid).
@@ -342,6 +346,12 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     then do on error undo, leave:
       logWrite:WriteFileToLog("DBInitDoc.txt").
       endStep('Завершена загрузка документов в ТСД.').
+      if not hndlSocket:connected()
+       then do:
+          resp:condition = resp:STSlist:WriteResponse:NameProp.
+          return.
+       end.
+    
       resp:condition = resp:STSlist:ReciveCommand:NameProp.
       block-size:
       do vi = 1 to 50:
@@ -372,6 +382,15 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
   
   method private int64 dumpDistric(iprotocol as char):
      define variable tempStr       as char     no-undo.
+     define variable vMesForTsd as character no-undo.
+     if mServiceBusy
+     then do:
+       vMesForTsd = "При обмене возникли ошибки. Уже выполняется одна задание получения данных".
+       logWrite:LogStr = vMesForTsd.
+              
+       ErrStatus = true.
+       return error.
+     end.
       os-delete "dictionaries.s3db".
       os-delete "dictionaries_new.s3db".
       startStep("Начало конвертации справочника.").
@@ -381,7 +400,6 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
          vfileDbInit = "exe/DBInit_" + replace (iprotocol,".","_") +  ".exe".
          if (search(vfileDbInit)) eq ?
          then do:
-            define variable vMesForTsd as character no-undo.
              vMesForTsd = "Не найден файл " + vfileDbInit + " для версии протокола " + iprotocol.
              writeSockError (hndlsocket, vMesForTsd).
              logWrite:LogStr = vMesForTsd.
@@ -468,10 +486,24 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
        
     hndlsocket = req:HndlSocket.
     case tsd:ReqType :
-      when "SETTINGS" then 
+        when "SETTINGS" then 
         do:
           parseXML(hRoot).
           tsd:Check_().
+          tsd:ResType = "xml".
+          resp:Content-Type = "text/xml; charset=" + tsd:CP.
+        end.
+        when "getSETTINGS" then 
+        do:
+          parseXML(hRoot).
+          tsd:getSETTINGS().
+          tsd:ResType = "xml".
+          resp:Content-Type = "text/xml; charset=" + tsd:CP.
+        end.
+        when "getListVersions" then 
+        do:
+          parseXML(hRoot).
+          tsd:getListVersions().
           tsd:ResType = "xml".
           resp:Content-Type = "text/xml; charset=" + tsd:CP.
         end.
@@ -632,6 +664,9 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       otherwise 
       do:
         tsd:WriteUnknown().
+        tsd:ResType = "xml".
+        resp:Content-Type = "text/xml; charset=" + tsd:CP.
+        
       end.
     end.
 /*    tsd:CodePageConvert().*/
@@ -661,7 +696,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     end case.
     mSN = req:HeadHTTP:getValue("TSD-serial").
     mVersion = req:HeadHTTP:getValue("TSD-version").
-    if mSN <> "" then do:
+    if mSN <> "" and mSN ne ? then do:
     find first ub.Code exclusive-lock where ub.Code.code = mSN and ub.Code.parent = "TSDversion" no-error .
     if not available (ub.Code) then do:
         create ub.Code .
@@ -965,7 +1000,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
                 logWrite:WriteFileToLog( "Не известный штрих-код:" + TempDocLine.b-code).
                 writeSockError(HndlSocket, "Не известный штрих-код:" + TempDocLine.b-code).
                 ErrStatus = true.
-                return error.
+                return false.
               end.
               
             end.
@@ -1026,6 +1061,11 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
     define variable iDbNum     as integer   no-undo.
     define variable docType    as character no-undo.
     define variable hRow        as handle    no-undo.
+    mSN = ?.
+    tsd:SN = ?.
+    mVersion = ?.
+    mobjtype = ?.
+    mobjcode = ?.          
     create x-noderef  hRow.
     
     do i = 1 to hRoot:num-children:
