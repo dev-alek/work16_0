@@ -2173,6 +2173,7 @@ procedure lib-rvs_fill1plc : /* fill-one-place */
   define buffer sug1_pl-level  for ub.pl-level .
   define buffer sug2_pl-level  for ub.pl-level .
   define buffer full_pl-level  for ub.pl-level .
+  define buffer full2_pl-level  for ub.pl-level .
   
   define buffer buf_doc-pl for ub.doc-pl .
   define buffer buf_rvs-doc for ub.rvs-doc .
@@ -3990,7 +3991,33 @@ THEN DO:
                                               :      
           DeltaOtn_K_Full = decimal(buf_pl-level-attr.attr-value) . 
         end .   
-        if DeltaOtn_K_Full = ? then DeltaOtn_K_Full = 0.25 .
+        if DeltaOtn_K_Full = ?
+        or DeltaOtn_K_Full = 0
+        then do :
+          for each full2_pl-level no-lock
+             where full2_pl-level.pl-code  = bf_rvs-line.pl-code
+               and full2_pl-level.obj-code = bf_rvs-line.obj-code
+               and full2_pl-level.obj-type = bf_rvs-line.obj-type
+               by full2_pl-level.pl-level desc
+          :
+            for first buf_pl-level-attr no-lock where buf_pl-level-attr.pl-code  = full2_pl-level.pl-code
+                                                  and buf_pl-level-attr.obj-code = full2_pl-level.obj-code
+                                                  and buf_pl-level-attr.obj-type = full2_pl-level.obj-type
+                                                  and buf_pl-level-attr.pl-level = full2_pl-level.pl-level
+                                                  and buf_pl-level-attr.attr-code = "tarir-delta"
+                                                  :      
+              DeltaOtn_K_Full = decimal(buf_pl-level-attr.attr-value) . 
+            end . 
+            if DeltaOtn_K_Full > 0 then leave .
+          end .
+        end .
+        if DeltaOtn_K_Full = ?
+        or DeltaOtn_K_Full = 0
+        then do :
+          if place-type = 1
+          then DeltaOtn_K_Full = 0.2 .
+          else DeltaOtn_K_Full = 0.25 .
+        end .
               
         CalibTable = Substitute("&1=&2", sug1_pl-level.pl-level, (sug1_pl-level.pl-qnty / 1000)) + {&new-line} .
         CalibTable = CalibTable + Substitute("&1=&2", sug2_pl-level.pl-level, (sug2_pl-level.pl-qnty / 1000)) + {&new-line} .
@@ -4454,7 +4481,7 @@ THEN DO:
            input round(if state-vapor-density <> ? then (state-vapor-density * 1000) else (vapor-density * 1000),1),
            input A_Reservoir,
            input DeltaOtn_K,
-           input DeltaOtn_K, /* DeltaOtn_K_Full */
+           input DeltaOtn_K_Full, /* DeltaOtn_K_Full */
            input DeltaAbs_H,
            input DeltaAbs_R_liquid,
            input DeltaAbs_R_gas,

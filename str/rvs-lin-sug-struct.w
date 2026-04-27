@@ -70,9 +70,9 @@ define buffer buf_goods for ub.goods .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-cancel b-save f-dens15 f-atm-pressure ~
-r-struct-type f-mmass-pseudo f-dens-pseudo 
+r-struct-type f-mmass-pseudo f-dens-pseudo cb-p_type
 &Scoped-Define DISPLAYED-OBJECTS f-dens15 f-atm-pressure r-struct-type ~
-f-mmass-pseudo f-dens-pseudo 
+f-mmass-pseudo f-dens-pseudo cb-p_type
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -97,7 +97,7 @@ DEFINE BUTTON b-save AUTO-GO
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-atm-pressure AS DECIMAL FORMAT ">>>>>9.99999":U INITIAL 0 
+DEFINE VARIABLE f-atm-pressure AS DECIMAL FORMAT ">>>>>9.999999":U INITIAL 0 
      LABEL "Атмосферное давление, МПа" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -123,6 +123,14 @@ DEFINE VARIABLE r-struct-type AS INTEGER
           "Молярные доли", 1,
 "Массовые доли", 2
      SIZE 43 BY .86 NO-UNDO.
+     
+define variable cb-p_type as integer init 0
+   LABEL "Измеряемое давление" 
+   VIEW-AS COMBO-BOX INNER-LINES 2
+   LIST-ITEM-PAIRS "избыточное",0,
+   "абсолютное",1
+   DROP-DOWN-LIST
+   SIZE 14 BY 1 NO-UNDO.
 
 define query br-sug-struct for tt-sug-struct .
 define browse br-sug-struct query br-sug-struct exclusive-lock
@@ -140,14 +148,15 @@ define browse br-sug-struct query br-sug-struct exclusive-lock
 DEFINE FRAME Dialog-Frame
      b-cancel AT ROW 1.24 COL 2
      b-save AT ROW 1.24 COL 17
-     f-dens15 AT ROW 3 COL 33 COLON-ALIGNED WIDGET-ID 2
-     f-atm-pressure AT ROW 4 COL 33 COLON-ALIGNED WIDGET-ID 4
-     r-struct-type AT ROW 5 COL 2 NO-LABEL WIDGET-ID 6
-     br-sug-struct AT ROW 6 COL 2
-     f-mmass-pseudo AT ROW 23 COL 29.2 COLON-ALIGNED WIDGET-ID 12
-     f-dens-pseudo AT ROW 24 COL 29.2 COLON-ALIGNED WIDGET-ID 10
+     cb-p_type AT ROW 3 COL 33 COLON-ALIGNED WIDGET-ID 16
+     f-dens15 AT ROW 4 COL 33 COLON-ALIGNED WIDGET-ID 2
+     f-atm-pressure AT ROW 5 COL 33 COLON-ALIGNED WIDGET-ID 4
+     r-struct-type AT ROW 6 COL 2 NO-LABEL WIDGET-ID 6
+     br-sug-struct AT ROW 7 COL 2
+     f-mmass-pseudo AT ROW 24 COL 29.2 COLON-ALIGNED WIDGET-ID 12
+     f-dens-pseudo AT ROW 25 COL 29.2 COLON-ALIGNED WIDGET-ID 10
      "Псевдокомпонент:" VIEW-AS TEXT
-          SIZE 23.4 BY .75 AT ROW 22.2 COL 8 WIDGET-ID 14
+          SIZE 23.4 BY .75 AT ROW 23.2 COL 8 WIDGET-ID 14
           FONT 6
      SPACE(1) SKIP(1)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -224,6 +233,7 @@ do :
     f-atm-pressure
     f-dens-pseudo
     f-mmass-pseudo
+    cb-p_type
   .
   
   if f-dens15 = ?
@@ -393,6 +403,26 @@ do :
   end.
   rvs-line-attr.attr-value = string(r-struct-type) .
   
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = p-obj-code
+         and rvs-line-attr.obj-type  = p-obj-type
+         and rvs-line-attr.gds-code  = p-gds-code
+         and rvs-line-attr.pl-code   = p-pl-code
+         and rvs-line-attr.rvs-code  = p-rvs-code
+         and rvs-line-attr.attr-code = "p_type" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = p-obj-code
+      rvs-line-attr.obj-type  = p-obj-type
+      rvs-line-attr.gds-code  = p-gds-code
+      rvs-line-attr.pl-code   = p-pl-code
+      rvs-line-attr.rvs-code  = p-rvs-code
+      rvs-line-attr.attr-code = "p_type"
+    .
+  end.
+  rvs-line-attr.attr-value = string(cb-p_type) .
+  
   v-sug-struct-val = "" .                              
   for each tt-sug-struct no-lock by tt-sug-struct.ii :
     v-sug-struct-val = v-sug-struct-val + string(tt-sug-struct.val, ">>9.9999") + "," . 
@@ -450,6 +480,8 @@ do :
       'CODE_PL                = ' p-pl-code                           SKIP
       'R15                    = ' f-dens15 * 1000                 SKIP
       'T                      = ' p-temp                                  SKIP
+      'Round_R                = ' 2                                   SKIP
+      'Round_T                = ' 2                                   SKIP
           SKIP SKIP 
   .
   output stream outstream close.
@@ -468,6 +500,7 @@ do :
     PUT STREAM outstream unformatted
         "R   = " R  SKIP
         "CTL = " CTL  SKIP
+        "Warnings = " vWrn SKIP
         'Версия dll: '   vDllVersion  SKIP
     .
     OUTPUT stream outstream close.
@@ -494,7 +527,7 @@ do :
     input if r-struct-type = 1 then 0 else 1,
     input M,
     input p-temp, /* T */
-    input 0, /* P_type 0 - избыточное, 1 - абсолютное */
+    input cb-p_type, /* P_type 0 - избыточное, 1 - абсолютное */
     input p-press, /* P_extra */
     input f-atm-pressure, /* P_atmosphere */
     input f-mmass-pseudo, /* M_pseudo */
@@ -521,10 +554,13 @@ do :
               'M_type                 = ' if r-struct-type = 1 then 0 else 1                  SKIP
               'M                      = ' mmM                  SKIP
               'T                      = ' p-temp                       SKIP
+              'P_type                 = ' cb-p_type                       SKIP
               'P_extra                = ' p-press                       SKIP
               'P_atmosphere           = ' f-atm-pressure                       SKIP
               'M_pseudo               = ' f-mmass-pseudo                      SKIP
               'R_pseudo               = ' f-dens-pseudo                      SKIP
+              'Round_T                = ' 2                                   SKIP
+              'Round_R                = ' 2                                   SKIP
                   SKIP SKIP 
   .
   output stream outstream close.
@@ -543,6 +579,7 @@ do :
     PUT STREAM outstream unformatted
         "R   = " R  SKIP
         "P_Vapor = " P_Vapor  SKIP
+        "Warnings = " vWrn SKIP
         'Версия dll: '              vDllVersion  SKIP
     .
     OUTPUT stream outstream close.
@@ -571,6 +608,22 @@ do :
   end .
   
   p-ok = true .
+end .
+
+on value-changed of cb-p_type in frame dialog-frame 
+do:
+  assign cb-p_type .
+  if cb-p_type = 0
+  then do :
+    assign f-atm-pressure = 0.101325 .
+    display f-atm-pressure with frame dialog-frame .
+    disable f-atm-pressure with frame dialog-frame .
+  end .
+  else do :
+    assign f-atm-pressure = 0.0 .
+    display f-atm-pressure with frame dialog-frame .
+    enable f-atm-pressure with frame dialog-frame .
+  end .
 end .
 
 on value-changed of r-struct-type in frame dialog-frame 
@@ -748,9 +801,25 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          :
     r-struct-type = integer(rvs-line-attr.attr-value) .     
   end .
+  for first rvs-line-attr no-lock
+       where rvs-line-attr.obj-code  = p-obj-code
+         and rvs-line-attr.obj-type  = p-obj-type
+         and rvs-line-attr.gds-code  = p-gds-code
+         and rvs-line-attr.pl-code   = p-pl-code
+         and rvs-line-attr.rvs-code  = p-rvs-code
+         and rvs-line-attr.attr-code = "p_type"
+         :
+    cb-p_type = integer(rvs-line-attr.attr-value) .     
+  end .
   
   run fill-tt .
   RUN enable_UI.
+  if cb-p_type = 0
+  then do :
+    assign f-atm-pressure = 0.101325 .
+    display f-atm-pressure with frame dialog-frame .
+    disable f-atm-pressure with frame dialog-frame .
+  end .
   
   assign r-struct-type .
   if r-struct-type = 1
@@ -900,9 +969,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo f-dens-pseudo 
+  DISPLAY f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo f-dens-pseudo cb-p_type
       WITH FRAME Dialog-Frame.
-  ENABLE b-cancel b-save f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo 
+  ENABLE b-cancel b-save f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo cb-p_type
          f-dens-pseudo br-sug-struct
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.
