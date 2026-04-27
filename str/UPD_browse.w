@@ -2697,12 +2697,33 @@ ON CHOOSE OF MENU-ITEM m_reset_row_data /* Сбросить данные по строке */
       if available (X_utd-lines) then 
       do:
          for each cancel_utd-marking-lines exclusive-lock where cancel_utd-marking-lines.doc-id  = x_utd-lines.doc-id
-            and cancel_utd-marking-lines.db-num  = x_utd-lines.db-num
-            and cancel_utd-marking-lines.lineNum = x_utd-lines.lineNum
-            and cancel_utd-marking-lines.sts = Marking:Checked_:KeyIntDB:            
-            
-            cancel_utd-marking-lines.sts = Marking:PendingVerification:KeyIntDB    .
-                                             
+              and cancel_utd-marking-lines.db-num  = x_utd-lines.db-num
+              and cancel_utd-marking-lines.lineNum = x_utd-lines.lineNum
+              and cancel_utd-marking-lines.doc-level = 1
+              and cancel_utd-marking-lines.sts = Marking:Checked_:KeyIntDB,                   
+            first cancel_marking exclusive-lock where 
+                  cancel_marking.mark = cancel_utd-marking-lines.mark
+         :            
+            if cancel_marking.sts = Marking:ungrouped:KeyIntDB then
+            do:
+              if not isSaleMarkInUpak(cancel_utd-marking-lines.mark) then
+                setStatusUpak (
+                  cancel_utd-marking-lines.db-num,
+                  cancel_utd-marking-lines.doc-id,
+                  cancel_utd-marking-lines.lineNum,
+                  cancel_utd-marking-lines.mark,
+                  Marking:DeliveryControl:KeyIntDB
+                ).  
+            end.
+            else do:
+              setStatusUpak (
+                cancel_utd-marking-lines.db-num,
+                cancel_utd-marking-lines.doc-id,
+                cancel_utd-marking-lines.lineNum,
+                cancel_utd-marking-lines.mark,
+                Marking:DeliveryControl:KeyIntDB
+              ).  
+            end.
          end.
          /* для товара с переменным весом удаляем строки с марками */
          if x_utd-lines.isArtic and x_utd-lines.isWeight 
@@ -5449,10 +5470,13 @@ PROCEDURE save_mark :
          for first buf_marking no-lock where 
                    buf_marking.mark = buf_utd-marking-lines.mark and buf_marking.sts = Marking:Ungrouped:KeyIntDB
          :
-            F-text = substitute(
-              "&1 упаковка разгруппирована, просканируйте марку &2 упаковки.",
-              if buf_marking.unit-ext = "LEVEL1" then "Групповая" else "Транспортная",
-              if buf_marking.unit-ext = "LEVEL1" then "потребительской" else "групповой").
+            if isSaleMarkInUpak(buf_marking.mark) then
+              F-text = "Марка уже проверена, просканируйте другую.".
+            else 
+              F-text = substitute(
+                "&1 упаковка разгруппирована, просканируйте марку &2 упаковки.",
+                if buf_marking.unit-ext = "LEVEL1" then "Групповая" else "Транспортная",
+                if buf_marking.unit-ext = "LEVEL1" then "потребительской" else "групповой").
             display F-text with frame {&frame-name}.
             v-mark:screen-value = "" .
             v-mark = "" .
@@ -5473,7 +5497,7 @@ PROCEDURE save_mark :
                
             if can-do(Marking:EqualChecked,string(buf_utd-marking-lines.sts)) then
             do:
-               F-text = "            Марка уже проверена, просканируйте следующую" .
+               F-text = "Марка уже проверена, просканируйте следующую" .
                display F-text with frame {&frame-name}.
                v-mark:screen-value = "" .
                v-mark = "" .

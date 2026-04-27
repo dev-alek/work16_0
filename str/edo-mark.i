@@ -170,3 +170,67 @@ function addMarkforUtd returns recid
    return vRec.
 end.
 
+{&CommentStartNoClass}
+method public logical isSaleMarkInUpak
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function isSaleMarkInUpak returns logical  
+{utl\comment.i} */
+(iMark    as char ):
+    
+   define buffer buf_marking       for ub.marking.
+   
+   for each buf_marking no-lock where
+            buf_marking.mark-parent = iMark
+   :
+     if can-do(objSrv:Env:marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) or 
+        can-do(objSrv:Env:marking:Sts:Mark:Doc_Status,string(buf_marking.sts)) then
+       return true.
+     if isSaleMarkInUpak(buf_marking.mark) then
+       return true.  
+   end.
+   return false.
+ end.
+
+ {&CommentStartNoClass}
+method public logical setStatusUpak
+{utl\comment.i} "Изврат для eclipse" */ {&CommentStartClass}
+function setStatusUpak returns logical  
+{utl\comment.i} */
+(iDbNum   as integer ,
+ iDocId   as integer ,
+ iLineNum as integer ,
+ iMark    as char ,
+ iSts     as integer):
+    
+   define buffer buf_utd-marking-lines for ub.utd-marking-lines.
+   define buffer buf_marking           for ub.marking.
+
+   for each buf_marking exclusive-lock where
+            buf_marking.mark-parent = iMark,
+      first buf_utd-marking-lines exclusive-lock where
+            buf_utd-marking-lines.doc-id  = iDocId
+        and buf_utd-marking-lines.db-num  = iDbNum
+        and buf_utd-marking-lines.lineNum = iLineNum           
+        and buf_utd-marking-lines.mark = buf_marking.mark
+   :
+     setStatusUpak(iDbNum, iDocId, iLineNum, buf_marking.mark, iSts). 
+   end.
+   for first buf_utd-marking-lines exclusive-lock where
+             buf_utd-marking-lines.doc-id  = iDocId
+         and buf_utd-marking-lines.db-num  = iDbNum
+         and buf_utd-marking-lines.lineNum = iLineNum           
+         and buf_utd-marking-lines.mark = iMark,
+       first buf_marking exclusive-lock where
+             buf_marking.mark = buf_utd-marking-lines.mark 
+   :
+     if  buf_marking.sts <> objSrv:Env:marking:Sts:Mark:MarkError:KeyIntDB
+     then do:
+       assign
+         buf_utd-marking-lines.sts = iSts
+         buf_marking.sts           = iSts
+       .
+     end.
+   end.
+   return true.
+end.
+ 
