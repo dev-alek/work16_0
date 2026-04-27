@@ -491,7 +491,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
           parseXML(hRoot).
           tsd:Check_().
           tsd:ResType = "xml".
-          resp:Content-Type = "text/xml; charset=" + tsd:CP.
+          resp:Content-Type = "text/csv".
         end.
         when "getSETTINGS" then 
         do:
@@ -670,7 +670,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       end.
     end.
 /*    tsd:CodePageConvert().*/
-
+/*    resp:Content-Type = replace(resp:Content-Type,"; charset=windows-1251","").*/
     case tsd:ReqType :
       when "SETTINGS" then 
         do:
@@ -724,7 +724,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
       then do:
          resp:condition = resp:STSlist:WriteResponse:NameProp.
          resp:ConvertPage = tsd:CP.
-         resp:setContent(tsd:SomeStr). 
+         resp:setContent(tsd:SomeStr,true). 
       end.
       else do:
          writeSock(resp,tsd:SomeStr).
