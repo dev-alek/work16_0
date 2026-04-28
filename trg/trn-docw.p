@@ -226,6 +226,15 @@ do :
       view-as alert-box error .
     undo, return error v-message .
   end.
+  else do:
+    if old-doc.ext-doc-type <> ub.trn-doc.ext-doc-type then do:
+      for each buf_doc-line exclusive-lock where
+               buf_doc-line.doc-code = ub.trn-doc.doc-code
+      :
+        buf_doc-line.ext-doc-type = ub.trn-doc.ext-doc-type.  
+      end.  
+    end.  
+  end.
   { gbl/chkextdt.i
     ub.trn-doc
     no-error
