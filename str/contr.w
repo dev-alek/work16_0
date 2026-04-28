@@ -571,19 +571,19 @@ DEFINE FRAME Dialog-Frame
      COMBO-type-contr AT ROW 6.67 COL 12 COLON-ALIGNED
      b-bank-own AT ROW 7.58 COL 85.13
      b-bank-cli AT ROW 8.58 COL 85.13
-     cli-code AT ROW 8.71 COL 12 COLON-ALIGNED NO-LABEL
-     cli-type AT ROW 8.71 COL 22.13 COLON-ALIGNED NO-LABEL
-     BUTTON-cli AT ROW 8.71 COL 28.75
+     cli-code AT ROW 8.45 COL 12 COLON-ALIGNED NO-LABEL
+     cli-type AT ROW 8.45 COL 22.13 COLON-ALIGNED NO-LABEL
+     BUTTON-cli AT ROW 8.45 COL 28.75
      b-bank-posr AT ROW 9.58 COL 85.13
-     posr-code AT ROW 9.71 COL 12 COLON-ALIGNED NO-LABEL
-     posr-type AT ROW 9.71 COL 22.13 COLON-ALIGNED NO-LABEL
-     BUTTON-posr AT ROW 9.71 COL 28.75
+     posr-code AT ROW 9.23 COL 12 COLON-ALIGNED NO-LABEL
+     posr-type AT ROW 9.23 COL 22.13 COLON-ALIGNED NO-LABEL
+     BUTTON-posr AT ROW 9.23 COL 28.75
      b-bank-agnt AT ROW 10.58 COL 85.13
-     agnt-code AT ROW 10.71 COL 12 COLON-ALIGNED NO-LABEL
-     agnt-type AT ROW 10.71 COL 22.13 COLON-ALIGNED NO-LABEL
-     BUTTON-agnt AT ROW 10.71 COL 28.75
-     mngr-code AT ROW 11.71 COL 12 COLON-ALIGNED NO-LABEL
-     BUTTON-mngr AT ROW 11.71 COL 28.75
+     agnt-code AT ROW 10.75 COL 12 COLON-ALIGNED NO-LABEL
+     agnt-type AT ROW 10.75 COL 22.13 COLON-ALIGNED NO-LABEL
+     BUTTON-agnt AT ROW 10.75 COL 28.75
+     mngr-code AT ROW 10.03 COL 12 COLON-ALIGNED NO-LABEL
+     BUTTON-mngr AT ROW 10.03 COL 28.75
      COMBO-usl-opl AT ROW 13.46 COL 16 COLON-ALIGNED
      srok-opl AT ROW 13.46 COL 65 COLON-ALIGNED
      COMBO-auto-pay AT ROW 13.46 COL 79.5 COLON-ALIGNED
@@ -609,12 +609,12 @@ DEFINE FRAME Dialog-Frame
      curr-name AT ROW 5.58 COL 90.5 COLON-ALIGNED NO-LABEL
      own-code AT ROW 7.67 COL 12.25 COLON-ALIGNED NO-LABEL
      own-name AT ROW 7.83 COL 21.5 COLON-ALIGNED NO-LABEL
-     cli-name AT ROW 8.71 COL 31.75 NO-LABEL
-     posr-name AT ROW 9.71 COL 31.75 NO-LABEL
-     agnt-name AT ROW 10.71 COL 31.75 NO-LABEL
-     mngr-name AT ROW 11.71 COL 31.75 NO-LABEL
+     cli-name AT ROW 8.45 COL 31.75 NO-LABEL
+     posr-name AT ROW 9.23 COL 31.75 NO-LABEL
+     agnt-name AT ROW 10.75 COL 31.75 NO-LABEL
+     mngr-name AT ROW 10.03 COL 31.75 NO-LABEL
      "ГЕНЕРАЦИЯ" VIEW-AS TEXT
-          SIZE 10.5 BY .83 AT ROW 11.58 COL 1.5 WIDGET-ID 2
+          SIZE 10.5 BY .83 AT ROW 12.0 COL 1.5 WIDGET-ID 2
           FGCOLOR 4 
      "Фирма:" VIEW-AS TEXT
           SIZE 6.13 BY .92 AT ROW 7.67 COL 7
@@ -625,16 +625,16 @@ DEFINE FRAME Dialog-Frame
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
      "Контрагент:" VIEW-AS TEXT
-          SIZE 11.5 BY 1 AT ROW 8.71 COL 2
-          FGCOLOR 4 
-     "Исполнитель:" VIEW-AS TEXT
-          SIZE 12 BY 1 AT ROW 10.46 COL 1.13
+          SIZE 11.5 BY 1 AT ROW 8.45 COL 2
           FGCOLOR 4 
      "Посредник:" VIEW-AS TEXT
-          SIZE 10.13 BY 1 AT ROW 9.58 COL 2.88
+          SIZE 10.13 BY 1 AT ROW 9.23 COL 2.88
+          FGCOLOR 4 
+     "Исполнитель:" VIEW-AS TEXT
+          SIZE 12 BY 1 AT ROW 9.95 COL 1.13
           FGCOLOR 4 
      "Агент:" VIEW-AS TEXT
-          SIZE 6.13 BY 1 AT ROW 10.58 COL 6.88
+          SIZE 6.13 BY 1 AT ROW 10.75 COL 6.88
           FGCOLOR 4 
      "ОПЛАТА" VIEW-AS TEXT
           SIZE 7 BY .83 AT ROW 14.58 COL 1.5

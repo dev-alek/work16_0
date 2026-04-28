@@ -1327,6 +1327,7 @@ function addMark returns logical
 &endif
 ( buffer utd-marking-lines for utd-marking-lines ):
    define buffer buf_utd-marking-line for utd-marking-lines.
+   define buffer par_utd-marking-line for utd-marking-lines.
    define buffer buf_utd for ub.utd .
    for each marking where marking.mark-parent eq utd-marking-lines.mark no-lock:
       find first buf_utd-marking-line where buf_utd-marking-line.db-num    eq utd-marking-lines.db-num
@@ -1354,17 +1355,29 @@ function addMark returns logical
             buf_utd-marking-line.doc-level = utd-marking-lines.doc-level + 1
             buf_utd-marking-line.mark      = marking.mark
             buf_utd-marking-line.gds-code  = marking.Gds-code
-/*            buf_utd-marking-line.sts       = marking.sts*/
             buf_utd-marking-line.sts      = if (available buf_utd and buf_utd.EDocType = objSrv:Env:Utd:EDocType:Mark_Collect:KeyIntDB)
                                             then marking.sts
                                             else
                                             if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(marking.sts)) or
-                                                can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(marking.sts)) or
-                                                marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
-                                                marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
+                                               can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(marking.sts)) or
+                                               marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                                               marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
                                              then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
                                              else marking.sts
          .
+         /* Если статус марки Ошибка, а родитель в статусе Проверен, то меняем на Проверен ( 21.01.2026 обсуждали в Максе по коробам )*/
+         if  buf_utd-marking-line.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB then
+         do:
+           for first par_utd-marking-line no-lock where 
+                     par_utd-marking-line.db-num  = buf_utd-marking-line.db-num
+                 and par_utd-marking-line.doc-id  = buf_utd-marking-line.doc-id
+                 and par_utd-marking-line.LineNum = buf_utd-marking-line.LineNum
+                 and par_utd-marking-line.mark    = marking.mark-parent
+                 and par_utd-marking-line.sts     = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
+           :
+             buf_utd-marking-line.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB.
+           end. 
+         end.
          
       end.
       addMark(buffer buf_utd-marking-line).

@@ -299,6 +299,8 @@ run write-log  in p-log-handle (
            ,output v-type
            ) no-error .
   run str/imp2cdseth.p(this-procedure).  
+
+  ibs.th.bge.1crn.import.impmsgs:clearMsg().
   do transaction:
     v-err-message = "" .
     subscribe "getNextseq" anywhere run-procedure "MySeqTable".

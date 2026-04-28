@@ -6736,6 +6736,19 @@ end procedure.
 &scop manual-edit-attr-MercUnits 0
 &scop batch-edit-attr-MercUnits  0
 
+/*Признак весового товара */
+&scop type-attr-weighed-gds {&type-log}
+&glob format-attr-weighed-gds  "+/ "
+&glob label-attr-weighed-gds   "Является весовым товаром"
+&glob tooltip-attr-weighed-gds "Является весовым товаром"
+&glob user-can-edit-attr-weighed-gds  false
+&glob output-display-attr-weighed-gds true
+&glob other-attr-weighed-gds ""
+&glob news-attr-weighed-gds  true
+&glob copy-attr-weighed-gds  true
+&scop manual-edit-attr-weighed-gds 1
+&scop batch-edit-attr-weighed-gds  1
+
 
 /* сюда добавлять новые параметры атрибутов товаров */
 
@@ -6892,6 +6905,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-MercUnits
       {&attr-temp-full-code}
+      &scop attr-code attr-weighed-gds
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -7005,6 +7020,8 @@ do
       &scop attr-code attr-image-list
       {&attr-temp-code}
       &scop attr-code attr-MercUnits
+      {&attr-temp-code}
+      &scop attr-code attr-weighed-gds
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -7370,6 +7387,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-MercUnits
       {&attr-news-code}
+      &scop attr-code attr-weighed-gds
+      {&attr-news-code}
       
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -7477,6 +7496,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-image-list
       {&attr-copy-code}
       &scop attr-code attr-MercUnits
+      {&attr-copy-code}
+      &scop attr-code attr-weighed-gds
       {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -8242,6 +8263,8 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-MercUnits
       {&attr-manual-edit-code}
+      &scop attr-code attr-weighed-gds
+      {&attr-manual-edit-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара &1", p-code ).
@@ -8344,6 +8367,8 @@ do
       &scop attr-code attr-image-list
       {&attr-batch-edit-code}
       &scop attr-code attr-MercUnits
+      {&attr-batch-edit-code}
+      &scop attr-code attr-weighed-gds
       {&attr-batch-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -14946,6 +14971,7 @@ procedure gds-obj-dt-seasons :
   :
     run ref/dtseasons.p
       (input  parparentproc
+      , p-gds-code
       ,output rid
       ) no-error.
     if rid <> ? then 

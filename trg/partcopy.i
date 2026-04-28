@@ -313,7 +313,8 @@ procedure partcopy :
             if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB and
                buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB and
                not can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(buf_marking.sts)) and
-               not can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts)) 
+               not can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(buf_marking.sts)) and
+               buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
             then do:
               buf_marking.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
               validate buf_marking.
@@ -442,60 +443,19 @@ procedure partcopy :
                         validate buf_marking-chk.
                       end .                                         
                     end .
-                    if buf_marking.unit-ext = "LEVEL1" or 
+                    if buf_marking.unit-ext <> "UNIT" or 
                        (buf_marking.unit-ext = ? and buf_marking.box-qnty > 1)
                     then do :
-                      for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark :
-                        find first buf_marking-lines-childs no-lock where buf_marking-lines-childs.mark       = buf_marking-childs.mark
-                                                                      and buf_marking-lines-childs.gds-code   = buf_marking-lines.gds-code
-                                                                      and buf_marking-lines-childs.obj-type   = buf_marking-lines.obj-type
-                                                                      and buf_marking-lines-childs.obj-code   = buf_marking-lines.obj-code
-                                                                      and buf_marking-lines-childs.in-code    = buf_marking-lines.in-code
-                                                                      and buf_marking-lines-childs.out-code   = buf_marking-lines.out-code
-                                                                      and buf_marking-lines-childs.part-code  = buf_marking-lines.part-code
-                                                                      and buf_marking-lines-childs.prt-code   = buf_marking-lines.prt-code
-                                                                      no-error .
-                        if not available buf_marking-lines-childs
-                        then do :
-                          create buf_marking-lines-childs .
-                          assign
-                            buf_marking-lines-childs.mark       = buf_marking-childs.mark    
-                            buf_marking-lines-childs.gds-code   = buf_marking-lines.gds-code 
-                            buf_marking-lines-childs.obj-type   = buf_marking-lines.obj-type 
-                            buf_marking-lines-childs.obj-code   = buf_marking-lines.obj-code 
-                            buf_marking-lines-childs.in-code    = buf_marking-lines.in-code  
-                            buf_marking-lines-childs.out-code   = buf_marking-lines.out-code 
-                            buf_marking-lines-childs.part-code  = buf_marking-lines.part-code
-                            buf_marking-lines-childs.prt-code   = buf_marking-lines.prt-code
-                            buf_marking-lines-childs.fact-order = buf_marking-lines.fact-order
-                            buf_marking-lines-childs.doc-level  = buf_marking-lines.doc-level + 1
-                          .
-                          validate buf_marking-childs.
-                        end . 
-                        assign buf_marking-childs.sts = objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB .
-                        for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking-childs.mark :
-                          for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code
-                                                          and buf_chk-doc.out-code = buf_orig_parts.out-code
-                                                          :
-                            assign buf_marking-chk.sts = 0 . 
-                            validate buf_marking-chk.
-                          end .                                         
-                        end .
-                        find first orig_marking-lines-childs exclusive-lock where orig_marking-lines-childs.mark       = buf_marking-childs.mark
-                                                                              and orig_marking-lines-childs.gds-code   = buf_goods.gds-code
-                                                                              and orig_marking-lines-childs.obj-type   = buf_orig_parts.obj-type
-                                                                              and orig_marking-lines-childs.obj-code   = buf_orig_parts.obj-code
-                                                                              and orig_marking-lines-childs.in-code    = buf_orig_parts.in-code
-                                                                              and orig_marking-lines-childs.out-code   = buf_orig_parts.out-code
-                                                                              and orig_marking-lines-childs.part-code  = buf_orig_parts.part-code
-                                                                              and orig_marking-lines-childs.prt-code   = buf_orig_parts.prt-code
-                                                                              no-error . 
-                        if available orig_marking-lines-childs
-                        then do :
-                          delete orig_marking-lines-childs .
-                        end .                                                      
-                      end .
-                    end . /* if level1 */
+                      run addChildMarkingLines in this-procedure (
+                        buf_marking.mark, 
+                        objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB,
+                        buffer buf_marking-lines,
+                        buffer buf_parts,
+                        buffer orig_marking-lines,
+                        buffer buf_orig_parts,
+                        buffer buf_goods
+                      ).
+                    end . /* if <> UNIT */
 /*                    if buf_marking.mark-parent <> ""                       */
 /*                    and buf_marking.unit-ext = "UNIT"                      */
 /*                    then do :                                              */
@@ -567,62 +527,18 @@ procedure partcopy :
                     end.
                   end .                                         
                 end .
-                if buf_marking.unit-ext = "LEVEL1" or 
+                if buf_marking.unit-ext <> "UNIT" or 
                    (buf_marking.unit-ext = ? and buf_marking.box-qnty > 1)
                 then do :
-                  for each buf_marking-childs exclusive-lock where buf_marking-childs.mark-parent = buf_marking.mark :
-                    find first buf_marking-lines-childs no-lock where buf_marking-lines-childs.mark       = buf_marking-childs.mark
-                                                                  and buf_marking-lines-childs.gds-code   = buf_marking-lines.gds-code
-                                                                  and buf_marking-lines-childs.obj-type   = buf_marking-lines.obj-type
-                                                                  and buf_marking-lines-childs.obj-code   = buf_marking-lines.obj-code
-                                                                  and buf_marking-lines-childs.in-code    = buf_marking-lines.in-code
-                                                                  and buf_marking-lines-childs.out-code   = buf_marking-lines.out-code
-                                                                  and buf_marking-lines-childs.part-code  = buf_marking-lines.part-code
-                                                                  and buf_marking-lines-childs.prt-code   = buf_marking-lines.prt-code
-                                                                  no-error .
-                    if not available buf_marking-lines-childs
-                    then do :
-                      create buf_marking-lines-childs .
-                      assign
-                        buf_marking-lines-childs.mark       = buf_marking-childs.mark    
-                        buf_marking-lines-childs.gds-code   = buf_marking-lines.gds-code 
-                        buf_marking-lines-childs.obj-type   = buf_marking-lines.obj-type 
-                        buf_marking-lines-childs.obj-code   = buf_marking-lines.obj-code 
-                        buf_marking-lines-childs.in-code    = buf_marking-lines.in-code  
-                        buf_marking-lines-childs.out-code   = buf_marking-lines.out-code 
-                        buf_marking-lines-childs.part-code  = buf_marking-lines.part-code
-                        buf_marking-lines-childs.prt-code   = buf_marking-lines.prt-code
-                        buf_marking-lines-childs.fact-order = buf_marking-lines.fact-order
-                        buf_marking-lines-childs.doc-level  = buf_marking-lines.doc-level + 1
-                      .
-                      validate buf_marking-childs.
-                    end . 
-                    assign buf_marking-childs.sts = buf_marking.sts .
-                    for each buf_marking-chk exclusive-lock where buf_marking-chk.mark begins buf_marking-childs.mark :
-                      for first buf_chk-doc no-lock where buf_chk-doc.doc-code = buf_marking-chk.doc-code
-                                                      and buf_chk-doc.out-code = buf_parts.out-code
-                                                      :
-                        assign buf_marking-chk.sts = 0 . 
-                        validate buf_marking-chk.
-                      end .                                         
-                    end .
-                    if available orig_marking-lines
-                    then do :
-                    find first orig_marking-lines-childs exclusive-lock where orig_marking-lines-childs.mark       = buf_marking-childs.mark
-                                                                          and orig_marking-lines-childs.gds-code   = buf_goods.gds-code
-                                                                          and orig_marking-lines-childs.obj-type   = buf_orig_parts.obj-type
-                                                                          and orig_marking-lines-childs.obj-code   = buf_orig_parts.obj-code
-                                                                          and orig_marking-lines-childs.in-code    = buf_orig_parts.in-code
-                                                                          and orig_marking-lines-childs.out-code   = buf_orig_parts.out-code
-                                                                          and orig_marking-lines-childs.part-code  = buf_orig_parts.part-code
-                                                                          and orig_marking-lines-childs.prt-code   = buf_orig_parts.prt-code
-                                                                          no-error . 
-                    if available orig_marking-lines-childs
-                    then do :
-                      delete orig_marking-lines-childs .
-                    end .
-                    end.                                                      
-                  end .
+                  run addChildMarkingLines in this-procedure (
+                    buf_marking.mark, 
+                    buf_marking.sts,
+                    buffer buf_marking-lines,
+                    buffer buf_parts,
+                    buffer orig_marking-lines,
+                    buffer buf_orig_parts,
+                    buffer buf_goods
+                  ).
                 end . /* if level1 */
                 
 /*                if buf_marking.mark-parent <> ""                       */
@@ -2975,5 +2891,88 @@ procedure partcopy-change-purch-code :
     end.
   end.
 end procedure. /* partcopy */
+
+procedure addChildMarkingLines:
+  define input parameter iMark as character no-undo.
+  define input parameter iSts  as integer   no-undo.
+  define parameter buffer buf_marking-lines  for ub.marking-lines.
+  define parameter buffer buf_parts          for ub.parts.
+  define parameter buffer orig_marking-lines for ub.marking-lines.
+  define parameter buffer buf_orig_parts     for ub.parts.
+  define parameter buffer buf_goods          for ub.goods.
+  
+  define buffer buf_marking-childs        for ub.marking.
+  define buffer buf_marking-lines-childs  for ub.marking-lines.
+  define buffer buf_marking-chk           for ub.marking-chk.
+  define buffer buf_chk-doc               for ub.chk-doc.
+  define buffer orig_marking-lines-childs for ub.marking-lines.
+  
+  for each buf_marking-childs exclusive-lock where 
+           buf_marking-childs.mark-parent = iMark :
+      find first buf_marking-lines-childs no-lock where 
+                 buf_marking-lines-childs.mark       = buf_marking-childs.mark
+             and buf_marking-lines-childs.gds-code   = buf_marking-lines.gds-code
+             and buf_marking-lines-childs.obj-type   = buf_marking-lines.obj-type
+             and buf_marking-lines-childs.obj-code   = buf_marking-lines.obj-code
+             and buf_marking-lines-childs.in-code    = buf_marking-lines.in-code
+             and buf_marking-lines-childs.out-code   = buf_marking-lines.out-code
+             and buf_marking-lines-childs.part-code  = buf_marking-lines.part-code
+             and buf_marking-lines-childs.prt-code   = buf_marking-lines.prt-code
+      no-error .
+      if not available buf_marking-lines-childs then
+      do:
+        create buf_marking-lines-childs .
+        assign
+          buf_marking-lines-childs.mark       = buf_marking-childs.mark    
+          buf_marking-lines-childs.gds-code   = buf_marking-lines.gds-code 
+          buf_marking-lines-childs.obj-type   = buf_marking-lines.obj-type 
+          buf_marking-lines-childs.obj-code   = buf_marking-lines.obj-code 
+          buf_marking-lines-childs.in-code    = buf_marking-lines.in-code  
+          buf_marking-lines-childs.out-code   = buf_marking-lines.out-code 
+          buf_marking-lines-childs.part-code  = buf_marking-lines.part-code
+          buf_marking-lines-childs.prt-code   = buf_marking-lines.prt-code
+          buf_marking-lines-childs.fact-order = buf_marking-lines.fact-order
+          buf_marking-lines-childs.doc-level  = buf_marking-lines.doc-level + 1
+        .
+        validate buf_marking-childs.
+      end . 
+      buf_marking-childs.sts = iSts .
+      for each buf_marking-chk exclusive-lock where 
+               buf_marking-chk.mark begins buf_marking-childs.mark
+      :
+        for first buf_chk-doc no-lock where 
+                  buf_chk-doc.doc-code = buf_marking-chk.doc-code
+              and buf_chk-doc.out-code = buf_parts.out-code
+        :
+          buf_marking-chk.sts = 0 . 
+          validate buf_marking-chk.
+        end .                                         
+      end .
+      if available orig_marking-lines
+      then do :
+        find first orig_marking-lines-childs exclusive-lock where 
+                   orig_marking-lines-childs.mark       = buf_marking-childs.mark
+               and orig_marking-lines-childs.gds-code   = buf_goods.gds-code
+               and orig_marking-lines-childs.obj-type   = buf_orig_parts.obj-type
+               and orig_marking-lines-childs.obj-code   = buf_orig_parts.obj-code
+               and orig_marking-lines-childs.in-code    = buf_orig_parts.in-code
+               and orig_marking-lines-childs.out-code   = buf_orig_parts.out-code
+               and orig_marking-lines-childs.part-code  = buf_orig_parts.part-code
+               and orig_marking-lines-childs.prt-code   = buf_orig_parts.prt-code
+        no-error . 
+        if available orig_marking-lines-childs then
+          delete orig_marking-lines-childs .
+      end. 
+      run addChildMarkingLines in this-procedure (
+        buf_marking-childs.mark, 
+        iSts,
+        buffer buf_marking-lines,
+        buffer buf_parts,
+        buffer orig_marking-lines,
+        buffer buf_orig_parts,
+        buffer buf_goods
+      ).                                                     
+  end .  /* for each buf_marking-childs */
+end.
 
 /* $Workfile$ e n d */

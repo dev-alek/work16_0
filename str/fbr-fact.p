@@ -45,6 +45,7 @@ define variable vss-description as character no-undo init "Создание, заполнение 
 { gbl/getsect.i def }
 { ref/gds-attr.i }
 { utl/gtin.i }
+{ str/utd-typemark.i }
 
 define variable v-in-qnty           like ub.doc-line.doc-qnty      no-undo.    /* количество для резервирования */
 define variable v-in-doc-code       like ub.trn-doc.doc-code       no-undo.    /* номер ПН */
@@ -81,6 +82,9 @@ define variable v-reasonme as character no-undo .
 define variable v-curr-db-num like ub.db.db-num no-undo .
 define variable v-curr-userid as character no-undo .
 define variable l-ok as logical no-undo .
+
+define variable v-mark-weight as decimal no-undo .
+define variable v-isweighed as logical no-undo .
 
 define buffer buf_in_trn-doc            for ub.trn-doc.
 define buffer buf_out_trn-doc           for ub.trn-doc.
@@ -208,13 +212,20 @@ fact-close:
                         output varvalue,
                         output vartype
                         ).
-    if varvalue > "" then do:
-      if EDOParSec:GetIsArticForType(varvalue) 
-      then do :
-        /*Считаем кол-во марок*/
-        v-qnty = v-qnty + buf_fbr-line.fact-qnty .
-      end . 
-    end.   
+    v-isweighed = WeighedProd(buf_goods.gds-code)
+              and varvalue > ""
+              and (EDOParSec:GetIsArticForType(varvalue) or EDOParSec:GetIsEDOForType(varvalue))
+    .
+    if not v-isweighed
+    then do :
+      if varvalue > "" then do:
+        if EDOParSec:GetIsArticForType(varvalue) 
+        then do :
+          /*Считаем кол-во марок*/
+          v-qnty = v-qnty + buf_fbr-line.fact-qnty .
+        end . 
+      end. 
+    end .  
   end.
   if v-qnty > 0
   then do :
@@ -240,8 +251,12 @@ fact-close:
                         OUTPUT varvalue,
                         OUTPUT vartype
                         ).
-    if varvalue > ""
-    and EDOParSec:GetIsEdoForType(varvalue)
+    v-isweighed = WeighedProd(buf_goods.gds-code)
+              and varvalue > ""
+              and (EDOParSec:GetIsArticForType(varvalue) or EDOParSec:GetIsEDOForType(varvalue))
+    .
+    if (varvalue > "" and EDOParSec:GetIsEdoForType(varvalue))
+    or v-isweighed
     then do:
       for each buf_marking-lines no-lock where buf_marking-lines.gds-code = buf_goods.gds-code
                                            and buf_marking-lines.obj-type = buf_fbr-doc.obj-type
@@ -251,11 +266,20 @@ fact-close:
                                            and buf_marking-lines.part-code = buf_fbr-line.recipe-code
                                            and buf_marking-lines.prt-code = 0
       :
-        vGtin = getGtinByDM(buf_marking-lines.mark) .
-        vGtinQnty = getQntyCodeByGtin(vGtin) .
-        if vGtinQnty = 1
+        if v-isweighed
         then do :
-          v-marks-qnty = v-marks-qnty + vGtinQnty .
+          for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
+            v-mark-weight = MarkWeight(buf_marking.mark) .
+            assign v-marks-qnty = v-marks-qnty + v-mark-weight .
+          end .
+        end .
+        else do :
+          vGtin = getGtinByDM(buf_marking-lines.mark) .
+          vGtinQnty = getQntyCodeByGtin(vGtin) .
+          if vGtinQnty = 1
+          then do :
+            v-marks-qnty = v-marks-qnty + vGtinQnty .
+          end .
         end .
       end .
       if v-marks-qnty <> buf_fbr-line.fact-qnty

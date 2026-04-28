@@ -121,6 +121,7 @@ define variable vss-description as character no-undo initial "Задание док. и фак
 { gbl/key-rec.i  }
 { cmp/ini-lib.i  }
 { utl/gtin.i }
+{ str/utd-typemark.i }
 
 /* Local Variable Definition -- For  r s r v - o u t . i */
 define variable chg-qnty     like ub.gds-dtl.doc-qnty no-undo initial ?.
@@ -167,6 +168,8 @@ define variable v-free-qnty                as decimal   no-undo .
 define variable v-no-add-marks             as logical   no-undo initial no .
 
 define variable vIsExemplarGoods           as logical   no-undo .
+define variable v-mark-weight              as decimal   no-undo .
+define variable v-isweighed                as logical   no-undo .
 define variable vRightChngQntyCode         as character no-undo .
 define variable vRightChngQnty             as logical   no-undo .
 define variable vBackSale                  as logical   no-undo initial no. /* признак возврата по договору "Обратная продажа" */
@@ -866,6 +869,7 @@ DO:
     if t-doc.doc-type = {&expense}
     and buf_goods.qnty-cart <> 0
     and not v-is-return
+    and not v-isweighed
     then do:
       if (input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty / buf_goods.qnty-cart) - round (input frame {&FRAME-NAME} ub.gds-dtl.doc-qnty / buf_goods.qnty-cart, 0) <> 0 then do:
         if available ub.prt-obj then do:
@@ -3014,6 +3018,8 @@ end.
       with frame {&FRAME-NAME} . 
     end .
     
+    v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code) .
+    
     if v-is-return
     and (EDOParSec:GetIsArticForType(varvalue)
      or EDOParSec:GetIsEDOForType(varvalue)
@@ -3097,6 +3103,7 @@ end.
                 1 @ ub.gds-dtl.doc-qnty
               with frame {&FRAME-NAME}.
               if v-is-return
+              or v-isweighed
               then do :
                 display
                   0 @ ub.gds-dtl.doc-qnty
@@ -3110,8 +3117,9 @@ end.
         do:
             run isExemplarGoods in this-procedure 
               (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
-            if vIsExemplarGoods then 
-            do:
+            if vIsExemplarGoods
+            or v-isweighed 
+            then do:
               if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} and 
                  can-find(first buf_marking-lines no-lock where 
                                   buf_marking-lines.out-code = ub.gds-dtl.doc-code
@@ -3158,10 +3166,30 @@ end.
                 message "Марка " buf_marking.mark " не в свободной зоне!" view-as alert-box .
                 undo, return error .
               end .
-              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+              if v-isweighed
+              then do :
+                v-mark-weight = MarkWeight(buf_marking.mark).
+                if v-mark-weight = 0
+                or v-mark-weight = ?
+                then do :
+                  message "Марка не может быть добавлена, т.к. в БД отсутствует ее вес." view-as alert-box .
+                  undo, return error .
+                end .
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + v-mark-weight) .
+              end .
+              else do :
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+              end .
             end .
             else do :
-              ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+              if v-isweighed
+              then do :
+                message "Марка не найдена в БД." view-as alert-box .
+                undo, return error .
+              end .
+              else do :
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + 1).
+              end .
             end .
           end .
           else do :
@@ -3187,32 +3215,51 @@ end.
               vGtin     = getGtinByDM(buf_marking.mark) .
               vGtinQnty = getQntyCodeByGtin(vGtin).
             end.
-
-            case buf_marking.unit-ext : 
-              when "LEVEL2"
-              then do : 
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + if buf_marking.box-qnty <> 0 then buf_marking.box-qnty else vGtinQnty).
-              end .
-              when "LEVEL1"
+            
+            if v-isweighed
+            then do :
+              v-mark-weight = MarkWeight(buf_marking.mark).
+              if v-mark-weight = 0
+              or v-mark-weight = ?
               then do :
-                assign v-pack-qnty = 0 .
-                for each buf_marking-child no-lock where buf_marking-child.mark-parent = buf_marking.mark,
-                first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking-child.mark-parent
-                                                  and buf_marking-lines.out-code = ub.gds-dtl.doc-code :
-                  assign v-pack-qnty = v-pack-qnty + 1 .                                  
-                end .
-                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty - v-pack-qnty).
+                message "Марка не может быть добавлена, т.к. в БД отсутствует ее вес." view-as alert-box .
+                undo, return error .
               end .
-              otherwise do :
-                find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
-                                                       and buf_marking-lines.out-code = ub.gds-dtl.doc-code
-                                                       no-error .
-                if not available buf_marking-lines
-                then do :
+              find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
+                                                     and buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                                                     no-error .
+              if not available buf_marking-lines
+              then do :
+                ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + v-mark-weight).
+              end .
+            end .
+            else do :
+              case buf_marking.unit-ext : 
+                when "LEVEL2"
+                then do : 
                   ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + if buf_marking.box-qnty <> 0 then buf_marking.box-qnty else vGtinQnty).
                 end .
-              end .
-            end case .
+                when "LEVEL1"
+                then do :
+                  assign v-pack-qnty = 0 .
+                  for each buf_marking-child no-lock where buf_marking-child.mark-parent = buf_marking.mark,
+                  first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking-child.mark-parent
+                                                    and buf_marking-lines.out-code = ub.gds-dtl.doc-code :
+                    assign v-pack-qnty = v-pack-qnty + 1 .                                  
+                  end .
+                  ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + buf_marking.box-qnty - v-pack-qnty).
+                end .
+                otherwise do :
+                  find first buf_marking-lines no-lock where buf_marking-lines.mark = buf_marking.mark-parent
+                                                         and buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                                                         no-error .
+                  if not available buf_marking-lines
+                  then do :
+                    ub.gds-dtl.doc-qnty:screen-value  = string(ub.gds-dtl.doc-qnty + if buf_marking.box-qnty <> 0 then buf_marking.box-qnty else vGtinQnty).
+                  end .
+                end .
+              end case .
+            end .
           end .
           
           apply "LEAVE":U to ub.gds-dtl.doc-qnty in frame {&FRAME-NAME}.
@@ -3231,6 +3278,48 @@ end.
                       and buf_marking-lines.gds-code = buf_goods.gds-code) then 
           disable ub.gds-dtl.fact-qnty with frame {&frame-name}. 
       end. 
+      
+      if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or 
+         t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
+      do:
+          run isExemplarGoods in this-procedure 
+            (t-doc.obj-type, t-doc.obj-code, buf_goods.gds-code, output vIsExemplarGoods).
+          if vIsExemplarGoods
+          or v-isweighed 
+          then do:
+            if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} and 
+               can-find(first buf_marking-lines no-lock where 
+                                buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                            and buf_marking-lines.gds-code = buf_goods.gds-code) then
+            do:  /* для ПЕРЕМЕЩЕНИЯ РАСХОД проверим есть ли марки по товару, и если есть, то кол-во редактировать нельзя */
+              vRightChngQnty = false.  
+            end.
+            else
+            do:
+                vRightChngQntyCode = if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} 
+                    then 'actn_write-off_add-no-mark':U
+                    else 'actn_tdedt-ras-perem_add-no-mark':U.
+                { gbl/chk-actg.i
+                  v-cntxt-db-num
+                  v-cntxt-userid
+                  {&action-head-code-main}
+                  vRightChngQntyCode
+                  {&cntxt-object}
+                  t-doc.host-code
+                  t-doc.obj-type
+                  t-doc.obj-code
+                  0
+                  0
+                  0
+                  false
+                  vRightChngQnty
+                }
+            end.
+            if not vRightChngQnty then
+              disable ub.gds-dtl.fact-qnty with frame {&frame-name}.
+          end.
+      end.
+      
       if ptrlprop-expptrl = {&calc-petrol-weight}
         and v-fact-qnty-kg :sensitive in frame {&FRAME-NAME}
       then do:
@@ -3815,7 +3904,30 @@ PROCEDURE l-doc-qnty :
 -------------------------------------------------------------*/
   define variable vGtin     as character no-undo.
   define variable vGtinQnty as integer no-undo.
-    
+  define variable v-mark-weight as decimal no-undo .
+  
+  if v-isweighed
+  then do :
+    for each buf_marking-lines no-lock where
+             buf_marking-lines.out-code = t-doc.doc-code
+         and buf_marking-lines.obj-type = t-doc.obj-type
+         and buf_marking-lines.obj-code = t-doc.obj-code
+         and buf_marking-lines.gds-code = buf_goods.gds-code
+         and buf_marking-lines.doc-level = 1,
+        first buf_marking no-lock where
+              buf_marking.mark = buf_marking-lines.mark
+    :
+      v-mark-weight = v-mark-weight + MarkWeight(buf_marking.mark).
+    end.
+    if v-mark-weight > input frame {&frame-name} ub.gds-dtl.doc-qnty then 
+    do:
+      message "Нельзя ввести количество меньше, чем просканировано марок по товару" view-as alert-box. 
+      ub.gds-dtl.doc-qnty:screen-value = string(v-mark-weight).
+      apply "enrty" to ub.gds-dtl.doc-qnty in frame {&frame-name}.
+      return error.  
+    end.
+  end .
+  else  
   if vIsExemplarGoods then
   do:  /* для поэкземплярного учета проверим: введенное кол-во не должно быть < просканированных марок */
     for each buf_marking-lines no-lock where

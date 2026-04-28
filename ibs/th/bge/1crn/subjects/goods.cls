@@ -67,6 +67,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property production-use as integer      no-undo get. private set.
   define property barcode        as subjects     no-undo get. private set.
   define property unit-add-codes as subjects     no-undo get. private set.
+  define property weighed-product as integer     no-undo get. private set.
   
   
   define override property InitTag as character no-undo init "good"
@@ -126,6 +127,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "pay-flag"      then pay-flag      = {&attr-integer} .
       when "method-flag"   then method-flag   = {&attr-str} .
       when "production-use" then production-use = {&attr-integer} .
+      when "weighed-product" then weighed-product = {&attr-integer} .
     end case.
     catch exProErrors as class Progress.Lang.ProError :
       case exProErrors:GetMessageNum(1):
@@ -227,6 +229,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         method-flag   = ?
         code-AIS      = ?
         production-use = ?
+        weighed-product = ?
     .   
     if valid-object(barcode) then delete object barcode .
     if valid-object(unit-add-codes) then delete object unit-add-codes . 

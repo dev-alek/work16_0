@@ -77,6 +77,7 @@ define variable v-tth as handle no-undo .
 define variable v-marking   as character no-undo .
 define variable canEditStatus      as logical no-undo.
 define variable canEditOnlineCheck as logical no-undo.
+define variable expire_DateOther   as character no-undo .
 
 define buffer buf_marking       for ub.marking .
 define buffer buf_marking-attr  for ub.marking-attr .
@@ -155,10 +156,12 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
     ~{&OPEN-QUERY-br-mark}
     
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit b-hist B-1 v-mark v-mark-2  f-last-change emission_Date ~
-Btn_rn br-mark Btn_pn 
-&Scoped-Define DISPLAYED-OBJECTS v-mark v-mark-2 f-status f-GTIN  f-last-change f-gds-code ~
-f-gds-name f-obj-code f-obj-type mrc produced_Date emission_Date online-check f-online-result f-rn ~
+&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark RECT-1 b-hist b-sostav v-mark-2 ~
+f-last-change f-status emission_Date Btn_dateOther expire_Date online-check ~
+f-online-result Btn_rn br-mark Btn_pn 
+&Scoped-Define DISPLAYED-OBJECTS v-mark f-GTIN v-mark-2 f-last-change ~
+f-status f-gds-name f-gds-code mrc f-obj-code f-obj-type f-weight ~
+produced_Date emission_Date expire_Date online-check f-online-result f-rn ~
 f-unit f-unit-2 f-loc-key f-pn 
 
 /* Custom List Definitions                                              */
@@ -172,6 +175,13 @@ f-unit f-unit-2 f-loc-key f-pn
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD GdsName d-mark 
 FUNCTION GdsName RETURNS CHARACTER
+  ( input p-gds-code as integer )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD GdsUnit d-mark 
+FUNCTION GdsUnit RETURNS CHARACTER
   ( input p-gds-code as integer )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
@@ -199,11 +209,25 @@ DEFINE BUTTON b-exit AUTO-GO
      SIZE 10 BY 1.
 
 DEFINE BUTTON b-hist 
-    IMAGE-UP FILE "cmp/b-hist.bmp":U
-    IMAGE-DOWN FILE "cmp/b-hist.bmp":U
-    IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
-    LABEL "Ис&тория" 
-    SIZE 3 BY 1.
+     IMAGE-UP FILE "cmp/b-hist.bmp":U
+     IMAGE-DOWN FILE "cmp/b-hist.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/b-hist.bmp":U NO-CONVERT-3D-COLORS
+     LABEL "Ис&тория" 
+     SIZE 3 BY 1.
+
+DEFINE BUTTON b-sostav 
+     IMAGE-UP FILE "cmp/b-file.bmp":U
+     IMAGE-DOWN FILE "cmp/b-filed.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/b-file.bmp":U
+     LABEL "" 
+     SIZE 5 BY 1.14 TOOLTIP "Посмотреть состав марки".
+
+DEFINE BUTTON Btn_dateOther 
+     IMAGE-UP FILE "cmp/btn-fnd.bmp":U
+     IMAGE-DOWN FILE "cmp/btn-fnd.bmp":U
+     IMAGE-INSENSITIVE FILE "cmp/btn-fnd.bmp":U NO-CONVERT-3D-COLORS
+     LABEL "" 
+     SIZE 3 BY 1 TOOLTIP "Годен до (иные условия хранения)".
 
 DEFINE BUTTON Btn_pn 
      IMAGE-UP FILE "cmp/btn-fnd.bmp":U
@@ -219,16 +243,30 @@ DEFINE BUTTON Btn_rn
      LABEL "" 
      SIZE 3 BY 1.
 
+DEFINE VARIABLE f-online-result AS INTEGER FORMAT "-9":U INITIAL ? 
+     VIEW-AS COMBO-BOX INNER-LINES 4
+     LIST-ITEM-PAIRS "",-1,
+                     "Запрет продажи",0,
+                     "Продажа разрешена",1,
+                     "Необходимо проверить сроки годности",2
+     DROP-DOWN-LIST
+     SIZE 39.25 BY 1 NO-UNDO.
+
 DEFINE VARIABLE f-status AS INTEGER FORMAT "->>9":U INITIAL -1 
      VIEW-AS COMBO-BOX INNER-LINES 7
      LIST-ITEM-PAIRS "",-1
      DROP-DOWN-LIST
-     SIZE 39.2 BY 1 NO-UNDO.
+     SIZE 39.25 BY 1 NO-UNDO.
 
 DEFINE VARIABLE emission_Date AS CHARACTER FORMAT "X(256)":U 
      LABEL "Дата эмиссии кода маркировки" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
+
+DEFINE VARIABLE expire_Date AS character FORMAT "X(20)":U 
+     LABEL "Срок годности" 
+     VIEW-AS FILL-IN 
+     SIZE 20 BY 1 NO-UNDO.
 
 DEFINE VARIABLE f-gds-code AS CHARACTER FORMAT "X(256)":U 
      LABEL "Код" 
@@ -284,6 +322,11 @@ DEFINE VARIABLE f-unit-2 AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 7.5 BY 1 NO-UNDO.
 
+DEFINE VARIABLE f-weight AS CHARACTER FORMAT "X(40)":U 
+     LABEL "Вес" 
+     VIEW-AS FILL-IN      
+     SIZE 14 BY 1 NO-UNDO.
+
 DEFINE VARIABLE mrc AS CHARACTER FORMAT "X(256)":U 
      LABEL "МРЦ" 
      VIEW-AS FILL-IN 
@@ -297,21 +340,12 @@ DEFINE VARIABLE produced_Date AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE v-mark AS CHARACTER FORMAT "X(255)" 
      LABEL "Марка" 
      VIEW-AS FILL-IN 
-     SIZE 75.6 BY 1.
+     SIZE 75.63 BY 1.
 
 DEFINE VARIABLE v-mark-2 AS CHARACTER FORMAT "X(255)" 
      LABEL "Марка" 
      VIEW-AS FILL-IN 
      SIZE 44 BY 1.
-
-DEFINE VARIABLE f-online-result AS INTEGER FORMAT "-9":U INITIAL ? 
-     VIEW-AS COMBO-BOX INNER-LINES 4
-     LIST-ITEM-PAIRS "",-1,
-                     "Запрет продажи",0,
-                     "Продажа разрешена",1,
-                     "Необходимо проверить сроки годности",2
-     DROP-DOWN-LIST
-     SIZE 39.2 BY 1 NO-UNDO.
 
 DEFINE VARIABLE online-check AS LOGICAL INITIAL no 
      LABEL "" 
@@ -356,41 +390,45 @@ DEFINE BROWSE br-mark
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME d-mark
-     b-exit AT ROW 1 COL 1.4
-     B-1 AT ROW 1 COL 11.6 WIDGET-ID 248
-     v-mark AT ROW 1.1 COL 27.6 COLON-ALIGNED WIDGET-ID 34
-     b-hist AT ROW 1.1 COL 106
-     f-GTIN AT ROW 2.19 COL 67 COLON-ALIGNED WIDGET-ID 220
-     v-mark-2 AT ROW 2.24 COL 10.6 COLON-ALIGNED WIDGET-ID 252
+     b-exit AT ROW 1 COL 1.38
+     B-1 AT ROW 1 COL 11.63 WIDGET-ID 248
+     v-mark AT ROW 1.08 COL 27.63 COLON-ALIGNED WIDGET-ID 34
+     b-hist AT ROW 1.08 COL 106
+     b-sostav AT ROW 2.19 COL 57 WIDGET-ID 294
+     f-GTIN AT ROW 2.21 COL 67 COLON-ALIGNED WIDGET-ID 220
+     v-mark-2 AT ROW 2.25 COL 10.63 COLON-ALIGNED WIDGET-ID 252
      f-last-change AT ROW 3.38 COL 67 COLON-ALIGNED WIDGET-ID 268
-     f-status AT ROW 3.43 COL 10.6 COLON-ALIGNED NO-LABEL WIDGET-ID 218
-     f-gds-name AT ROW 4.57 COL 67 COLON-ALIGNED WIDGET-ID 222
-     f-gds-code AT ROW 4.62 COL 10.6 COLON-ALIGNED WIDGET-ID 224
+     f-status AT ROW 3.42 COL 10.63 COLON-ALIGNED NO-LABEL WIDGET-ID 218
+     f-gds-name AT ROW 4.54 COL 67 COLON-ALIGNED WIDGET-ID 222
+     f-gds-code AT ROW 4.63 COL 10.63 COLON-ALIGNED WIDGET-ID 224
      mrc AT ROW 5.67 COL 82 RIGHT-ALIGNED WIDGET-ID 266
-     f-obj-code AT ROW 5.76 COL 10.6 COLON-ALIGNED WIDGET-ID 256
-     f-obj-type AT ROW 5.76 COL 18.8 COLON-ALIGNED NO-LABEL WIDGET-ID 258
-     produced_Date AT ROW 6.76 COL 82 RIGHT-ALIGNED WIDGET-ID 262
-     emission_Date AT ROW 7.91 COL 82 RIGHT-ALIGNED WIDGET-ID 264
-     online-check AT ROW 8.95 COL 22.4 WIDGET-ID 274
-     f-online-result AT ROW 9.05 COL 67 COLON-ALIGNED NO-LABEL WIDGET-ID 278
-     f-rn AT ROW 10.24 COL 10.6 COLON-ALIGNED WIDGET-ID 246
-     Btn_rn AT ROW 10.24 COL 34.2 WIDGET-ID 250
-     f-unit AT ROW 10.24 COL 81.2 COLON-ALIGNED WIDGET-ID 226
-     f-unit-2 AT ROW 10.24 COL 107.2 RIGHT-ALIGNED WIDGET-ID 254
-     br-mark AT ROW 11.24 COL 3.4 WIDGET-ID 200
-     f-loc-key AT ROW 24.19 COL 21 COLON-ALIGNED WIDGET-ID 260
-     f-pn AT ROW 24.19 COL 81 COLON-ALIGNED WIDGET-ID 244
-     Btn_pn AT ROW 24.52 COL 104.8 WIDGET-ID 68
+     f-obj-code AT ROW 5.75 COL 10.63 COLON-ALIGNED WIDGET-ID 256
+     f-obj-type AT ROW 5.75 COL 18.75 COLON-ALIGNED NO-LABEL WIDGET-ID 258
+     f-weight AT ROW 5.75 COL 107 RIGHT-ALIGNED WIDGET-ID 294
+     produced_Date AT ROW 6.75 COL 82 RIGHT-ALIGNED WIDGET-ID 262
+     emission_Date AT ROW 7.83 COL 82 RIGHT-ALIGNED WIDGET-ID 264
+     Btn_dateOther AT ROW 8.92 COL 89 WIDGET-ID 292
+     expire_Date AT ROW 8.96 COL 88 RIGHT-ALIGNED WIDGET-ID 290
+     online-check AT ROW 9.96 COL 22.38 WIDGET-ID 274
+     f-online-result AT ROW 10.04 COL 67 COLON-ALIGNED NO-LABEL WIDGET-ID 278
+     f-rn AT ROW 11.25 COL 10.63 COLON-ALIGNED WIDGET-ID 246
+     Btn_rn AT ROW 11.25 COL 34.25 WIDGET-ID 250
+     f-unit AT ROW 11.25 COL 81.25 COLON-ALIGNED WIDGET-ID 226
+     f-unit-2 AT ROW 11.25 COL 107.25 RIGHT-ALIGNED WIDGET-ID 254
+     br-mark AT ROW 12.25 COL 3.38 WIDGET-ID 200
+     f-loc-key AT ROW 25.21 COL 21 COLON-ALIGNED WIDGET-ID 260
+     f-pn AT ROW 25.21 COL 81 COLON-ALIGNED WIDGET-ID 244
+     Btn_pn AT ROW 25.5 COL 104.75 WIDGET-ID 68
      "Результат online-проверки ГИС МТ:" VIEW-AS TEXT
-          SIZE 36 BY .62 AT ROW 9.24 COL 35 WIDGET-ID 288
-     "online-проверки:" VIEW-AS TEXT
-          SIZE 17 BY .71 AT ROW 9 COL 4.8 WIDGET-ID 284
-     "Игнорировать результат" VIEW-AS TEXT
-          SIZE 22 BY .71 AT ROW 8.29 COL 4.8 WIDGET-ID 276
+          SIZE 36 BY .63 AT ROW 10.25 COL 35 WIDGET-ID 288
      "Статус:" VIEW-AS TEXT
-          SIZE 8 BY .62 AT ROW 3.76 COL 4.4 WIDGET-ID 272
-     RECT-1 AT ROW 7.91 COL 3.8 WIDGET-ID 286
-     SPACE(80.20) SKIP(15.45)
+          SIZE 8 BY .63 AT ROW 3.75 COL 4.38 WIDGET-ID 272
+     "Игнорировать результат" VIEW-AS TEXT
+          SIZE 22 BY .71 AT ROW 9.29 COL 4.75 WIDGET-ID 276
+     "online-проверки:" VIEW-AS TEXT
+          SIZE 17 BY .71 AT ROW 10 COL 4.75 WIDGET-ID 284
+     RECT-1 AT ROW 8.92 COL 3.75 WIDGET-ID 286
+     SPACE(83.24) SKIP(15.44)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Движение марки":L.
@@ -421,6 +459,8 @@ ASSIGN
 
 /* SETTINGS FOR FILL-IN emission_Date IN FRAME d-mark
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN expire_Date IN FRAME d-mark
+   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN f-gds-code IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-gds-name IN FRAME d-mark
@@ -442,6 +482,8 @@ ASSIGN
 /* SETTINGS FOR FILL-IN f-unit IN FRAME d-mark
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-unit-2 IN FRAME d-mark
+   NO-ENABLE ALIGN-R                                                    */
+/* SETTINGS FOR FILL-IN f-weight IN FRAME d-mark
    NO-ENABLE ALIGN-R                                                    */
 /* SETTINGS FOR FILL-IN mrc IN FRAME d-mark
    NO-ENABLE ALIGN-R                                                    */
@@ -467,6 +509,26 @@ DO:
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME Btn_dateOther
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_dateOther d-mark
+ON CHOOSE OF Btn_dateOther IN FRAME d-mark
+DO:
+   define variable kk as integer no-undo .
+   define variable dateOther as character no-undo .
+   define variable dateOtherMes as character no-undo .
+   do kk = 1 to num-entries(expire_DateOther):
+       dateOtherMes = entry(1,entry(kk,expire_DateOther),".") .
+       dateOtherMes = replace(dateOtherMes,"/",".") .
+       if kk = 1 then dateOther = " " + dateOtherMes .
+       else dateOther = dateOther + {&new-line} + dateOtherMes .
+   end.
+
+message dateOther 
+view-as alert-box title "Иные условия хранения".
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &Scoped-define SELF-NAME f-status
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL f-status d-mark
@@ -508,7 +570,7 @@ END.
 
 &Scoped-define SELF-NAME b-exit
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-exit d-mark
-ON CHOOSE OF b-exit IN FRAME d-mark
+ON CHOOSE OF b-exit IN FRAME d-mark /* Выход  */
 DO:
   define buffer b_marking for ub.marking.
   define buffer buf_marking-attr for ub.marking-attr.
@@ -657,6 +719,70 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME b-sostav
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-sostav d-mark
+ON CHOOSE OF b-sostav IN FRAME d-mark /* Состав марки */
+DO:
+  define buffer bf_marking for ub.marking.  
+    
+  if v-mark-2 = "" then return no-apply.
+  
+  if can-find(first bf_marking where bf_marking.mark-parent begins v-mark-2)
+  then do:
+      empty temp-table tt-marking-lines.
+      for first bf_marking no-lock where 
+                bf_marking.mark begins v-mark-2:
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = GdsName(bf_marking.gds-code)
+          tt-marking-lines.mark        = bf_marking.mark
+          tt-marking-lines.gds-code    = bf_marking.gds-code
+          tt-marking-lines.isMark      = IsMark(tt-marking-lines.mark)    
+          tt-marking-lines.sts         = bf_marking.sts
+          tt-marking-lines.unit        = bf_marking.unit
+          tt-marking-lines.unit-ext    = bf_marking.unit-ext
+          tt-marking-lines.box-qnty    = bf_marking.box-qnty  when tt-marking-lines.box-qnty eq 0 or tt-marking-lines.box-qnty eq ?
+          tt-marking-lines.mark-parent = bf_marking.mark-parent
+          tt-marking-lines.stts        = Marking:GetLabel(bf_marking.sts)
+          tt-marking-lines.doc-level   = 1
+        .
+                    
+      end.
+      for each bf_marking no-lock where 
+                bf_marking.mark-parent begins v-mark-2:
+        create tt-marking-lines .
+        assign
+          tt-marking-lines.gds-name    = GdsName(bf_marking.gds-code)
+          tt-marking-lines.mark        = bf_marking.mark
+          tt-marking-lines.gds-code    = bf_marking.gds-code
+          tt-marking-lines.isMark      = IsMark(tt-marking-lines.mark)    
+          tt-marking-lines.sts         = bf_marking.sts
+          tt-marking-lines.unit        = bf_marking.unit
+          tt-marking-lines.unit-ext    = bf_marking.unit-ext
+          tt-marking-lines.box-qnty    = bf_marking.box-qnty  when tt-marking-lines.box-qnty eq 0 or tt-marking-lines.box-qnty eq ?
+          tt-marking-lines.mark-parent = bf_marking.mark-parent
+          tt-marking-lines.stts        = Marking:GetLabel(bf_marking.sts)
+          tt-marking-lines.doc-level   = 2
+        .
+                    
+      end.
+      if available (tt-marking-lines) then 
+      do:
+        run str/mark_browse.w (input parparentproc,
+           input-output table tt-marking-lines by-reference,
+           input {&lookup},
+           input "Состав марки " + v-mark-2,
+           input 0,
+           input ""
+           ) no-error .
+      end.
+  end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK d-mark 
@@ -789,11 +915,15 @@ PROCEDURE enable_mark :
     v-mark-2
     f-loc-key
     mrc
+    f-weight
     produced_Date
     emission_Date
     online-check
+    expire_Date
     with frame {&frame-name} .
-
+  
+  if expire_DateOther <> "" and expire_DateOther <> ? then enable Btn_dateOther with frame {&frame-name} .
+  else disable Btn_dateOther with frame {&frame-name} .
   if available (buf_marking) then do:
     display f-status f-online-result with frame {&frame-name} .
     if canEditStatus then
@@ -857,6 +987,7 @@ PROCEDURE enable_UI :
     br-mark
     b-exit
     b-hist
+    b-sostav
     WITH FRAME {&frame-name}.
   hide B-1 in frame {&frame-name} .
   if p-mark <> "" then 
@@ -927,7 +1058,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE init-temp d-mark 
 PROCEDURE init-temp :
 /* --------------------------------------------------------------------
@@ -944,6 +1074,28 @@ PROCEDURE init-temp :
   empty temp-table X_marking-line.
 
   /*  f-GTIN:screen-value =*/
+  assign
+      f-GTIN = "" 
+      f-gds-code = "" 
+      f-gds-name = "" 
+      f-status = 0 
+      f-last-change = ? 
+      /*соответствие товаров*/
+      f-unit     = ""      
+      f-unit-2   = ""  
+      f-obj-code = ? 
+      f-obj-type = ""    
+      v-mark-2 = "" 
+      f-loc-key = "" 
+      f-pn = "" 
+      f-rn = "" 
+      mrc  = "" 
+      f-weight = "" 
+      emission_Date = "" 
+      produced_Date = ""       
+      f-online-result = -1
+      online-check  = no 
+      .
 
   if v-mark <> "" then 
   do:
@@ -957,127 +1109,93 @@ PROCEDURE init-temp :
     no-error .
     if available (buf_marking) then 
     do:
-      f-status = buf_marking.sts .
-      f-online-result = if buf_marking.online-result = ? then -1 else buf_marking.online-result.
-      f-last-change = buf_marking.last-change .
-      /*соответствие товаров*/
-      f-gds-code = string(buf_marking.gds-code) .
-      f-gds-name = GdsName(buf_marking.gds-code) .
-      f-unit     = buf_marking.unit-ext .     
-      f-GTIN     = buf_marking.gds-ext-id .
-      f-unit-2   = buf_marking.unit . 
-      f-obj-code = buf_marking.obj-code .
-      f-obj-type = buf_marking.obj-type .
-      f-loc-key = buf_marking.loc-key .
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "MRC"
-                                          and buf_marking-attr.mark begins v-marking:
-        mrc = buf_marking-attr.attr-value .                                              
-     end.                                                
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "emissionDate"
-                                          and buf_marking-attr.mark begins v-marking:
-        emission_Date = buf_marking-attr.attr-value .                                              
-     end.                                  
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "producedDate"
-                                          and buf_marking-attr.mark begins v-marking:
-        produced_Date = buf_marking-attr.attr-value .                                              
-     end.                                       
-     for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"
-                                          and buf_marking-attr.mark begins v-marking:
-        online-check = logical(buf_marking-attr.attr-value).                                              
-     end.                                       
-      for each buf_marking-lines no-lock where buf_marking-lines.mark begins v-marking:
-        /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
-        create X_marking-line .
-        buffer-copy buf_marking-lines to X_marking-line .
-        X_marking-line.gds-code = buf_marking.gds-code .
-    
-        find first buf_trn-doc no-lock where buf_trn-doc.doc-code = if buf_marking-lines.out-code <> {&output-code} and buf_marking-lines.out-code <> {&free-code} then buf_marking-lines.out-code else buf_marking-lines.in-code no-error .
-        if available (buf_trn-doc) then do:
-        X_marking-line.date_ = buf_trn-doc.doc-date .
-        X_marking-line.doc-type = func-get-name-from-ext-type(buf_trn-doc.ext-doc-type,no) .
-        if X_marking-line.fact-order = 0 then X_marking-line.fact-order = 1 .
-        end.
+         assign
+           f-status = buf_marking.sts 
+           f-online-result = if buf_marking.online-result = ? then -1 else buf_marking.online-result
+           f-last-change = buf_marking.last-change 
+           /*соответствие товаров*/
+           f-gds-code = string(buf_marking.gds-code) 
+           f-gds-name = GdsName(buf_marking.gds-code) 
+           f-unit     = buf_marking.unit-ext      
+           f-GTIN     = buf_marking.gds-ext-id 
+           f-unit-2   = buf_marking.unit  
+           f-obj-code = buf_marking.obj-code 
+           f-obj-type = buf_marking.obj-type 
+           f-loc-key = buf_marking.loc-key 
+           expire_Date = entry(1,buf_marking.expDate,".") 
+           expire_Date = replace(expire_Date,"/",".")    
+           expire_DateOther = buf_marking.expDateOther                   
+           .
         
-      end.  
-      for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark begins v-marking:
-        for first buf_utd no-lock where buf_utd.doc-id = buf_utd-marking-lines.doc-id and buf_utd.db-num = buf_utd-marking-lines.db-num:  
-        create X_marking-line .
-        assign
-          X_marking-line.doc-type    = EdoTypeName(buf_utd.EDocType)
-          X_marking-line.mark        = buf_marking.mark
-          X_marking-line.out-code    = buf_utd.DocumentNumber
-          X_marking-line.date_       = buf_utd.DocumentDate
-          X_marking-line.sts         = buf_utd-marking-lines.sts
-          X_marking-line.type        = 1
-          X_marking-line.obj-code    = buf_utd.obj-code
-          X_marking-line.obj-type    = buf_utd.obj-type
-          X_marking-line.doc-id      = buf_utd.doc-id
-          X_marking-line.db-num      = buf_utd.db-num
-          X_marking-line.EdocType    = buf_utd.EdocType
-        .
-        end.
-      end.  
-    end.
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "MRC"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            mrc = buf_marking-attr.attr-value .                                              
+         end.                                                
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "emissionDate"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            emission_Date = buf_marking-attr.attr-value .                                              
+         end.                                  
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "producedDate"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            produced_Date = buf_marking-attr.attr-value .                                              
+         end.                                       
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            online-check = logical(buf_marking-attr.attr-value).                                              
+         end.   
+         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "weight"
+                                              and buf_marking-attr.mark = buf_marking.mark:
+            f-weight = if decimal(buf_marking-attr.attr-value) < 1 and  decimal(buf_marking-attr.attr-value) >= 0 
+                          then string(decimal(buf_marking-attr.attr-value),"9.999") 
+                          else buf_marking-attr.attr-value.
+            f-weight = substitute("&1 &2",f-weight, GdsUnit(buf_marking.gds-code)).                                              
+         end.   
+                                          
+         for each buf_marking-lines no-lock where buf_marking-lines.mark begins v-marking:
+            /*      if NumUPD = "" then NumUPD = buf_marking-lines.DocumentExt .*/
+            create X_marking-line .
+            buffer-copy buf_marking-lines to X_marking-line .
+            X_marking-line.gds-code = buf_marking.gds-code .
+        
+            find first buf_trn-doc no-lock where buf_trn-doc.doc-code = if buf_marking-lines.out-code <> {&output-code} 
+                                             and buf_marking-lines.out-code <> {&free-code} then buf_marking-lines.out-code else buf_marking-lines.in-code 
+               no-error .
+            if available (buf_trn-doc) then do:
+                X_marking-line.date_ = buf_trn-doc.doc-date .
+                X_marking-line.doc-type = func-get-name-from-ext-type(buf_trn-doc.ext-doc-type,no) .
+                if X_marking-line.fact-order = 0 then X_marking-line.fact-order = 1 .
+            end.            
+         end.  
+         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.mark begins v-marking:
+            for first buf_utd no-lock where buf_utd.doc-id = buf_utd-marking-lines.doc-id 
+                                        and buf_utd.db-num = buf_utd-marking-lines.db-num:  
+                create X_marking-line .
+                assign
+                  X_marking-line.doc-type    = EdoTypeName(buf_utd.EDocType)
+                  X_marking-line.mark        = buf_marking.mark
+                  X_marking-line.out-code    = buf_utd.DocumentNumber
+                  X_marking-line.date_       = buf_utd.DocumentDate
+                  X_marking-line.sts         = buf_utd-marking-lines.sts
+                  X_marking-line.type        = 1
+                  X_marking-line.obj-code    = buf_utd.obj-code
+                  X_marking-line.obj-type    = buf_utd.obj-type
+                  X_marking-line.doc-id      = buf_utd.doc-id
+                  X_marking-line.db-num      = buf_utd.db-num
+                  X_marking-line.EdocType    = buf_utd.EdocType
+                .
+            end.
+         end.  
+    end. /* available (buf_marking) */
     else do:
-      f-GTIN = getGtinByDM(v-mark) .
-      f-gds-code = string(getGdsCodeByGtin(f-GTIN)) .
-      f-gds-name = GdsName(integer(f-gds-code)) .
-      f-status = 0 .
-      f-last-change = ? .
-      /*соответствие товаров*/
-      f-unit     = "" .     
-      f-unit-2   = "" . 
-      f-obj-code = ? .
-      f-obj-type = "" .     
-      f-loc-key = "" .   
-      f-pn = "" .
-      f-rn = "" .
-      mrc  = "" .
-      emission_Date = "" .
-      produced_Date = "" .
-      f-online-result = -1.
+      assign  
+         f-GTIN = getGtinByDM(v-mark) 
+         f-gds-code = string(getGdsCodeByGtin(f-GTIN)) 
+         f-gds-name = GdsName(integer(f-gds-code)) 
+         .      
     end.  
-  end.   
-  else do:
-      f-GTIN = "" .
-      f-gds-code = "" .
-      f-gds-name = "" .
-      f-status = 0 .
-      f-last-change = ? .
-      /*соответствие товаров*/
-      f-unit     = "" .     
-      f-unit-2   = "" . 
-      f-obj-code = ? .
-      f-obj-type = "" .   
-      f-loc-key = "".
-      f-pn = "" .
-      f-rn = "" .
-      mrc  = "" .
-      emission_Date = "" .
-      produced_Date = "" .      
-      f-online-result = -1.
-  end. 
-  end.  
-  else do:
-      f-GTIN = "" .
-      f-gds-code = "" .
-      f-gds-name = "" .
-      f-status = 0 .
-      f-last-change = ? .
-      /*соответствие товаров*/
-      f-unit     = "" .     
-      f-unit-2   = "" . 
-      f-obj-code = ? .
-      f-obj-type = "" .   
-      v-mark-2 = "" .
-      f-loc-key = "" .
-      f-pn = "" .
-      f-rn = "" .
-      mrc  = "" .
-      emission_Date = "" .
-      produced_Date = "" .      
-      f-online-result = -1.
-  end.      
+  end.   /* v-marking <> "" and v-marking <> ? */  
+  end.  /* v-mark <> "" */
+        
   {&OPEN-QUERY-br-mark}
 END PROCEDURE.
 
@@ -1153,6 +1271,24 @@ FUNCTION GdsName RETURNS CHARACTER
   find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
   if available (buf_goods) then v-gds-name = buf_goods.gds-name .
   RETURN v-gds-name.   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION GdsName d-mark 
+FUNCTION GdsUnit RETURNS CHARACTER
+  ( input p-gds-code as integer ) :
+  /*------------------------------------------------------------------------------
+    Purpose:  
+      Notes:  
+  ------------------------------------------------------------------------------*/
+  define buffer buf_goods for ub.goods .
+  define variable v-gds-unit as character no-undo . 
+  find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+  if available (buf_goods) then v-gds-unit = buf_goods.unit-base .
+  RETURN v-gds-unit.   /* Function return value. */
 
 END FUNCTION.
 

@@ -30,6 +30,8 @@ define variable vss-workfile    as character no-undo initial "$Workfile: trn-doc
 define variable vss-archive     as character no-undo initial "$Archive: trg/trn-docw.p $":U .
 define variable vss-description as character no-undo initial "Триггер на запись документа":U .
 
+&scoped-define IF_MESSAGE if g#news = false and g#esys = false and g#auto = false then
+
 define variable chg-qnty      as   decimal no-undo .
 
 { cmp/vssrevis.i "substitute('&1|&2|&3|&4',ub.trn-doc.doc-code,ub.trn-doc.ext-doc-type,ub.trn-doc.status_,ub.trn-doc.flag_)" }
@@ -189,6 +191,7 @@ do :
   or ub.trn-doc.ext-doc-type = ?
   then do:
     v-message = "Не задан расширенный тип документа" .
+    {&IF_MESSAGE}
     message
       vss-workfile vss-revision vss-description skip
       v-message skip
@@ -208,6 +211,7 @@ do :
   then do:
     /* новое в 16.0 по сравнению с 15.1: расширенный тип документа можно менять с &TDEDT_Pri_Perem на любой, либо с любого на &TDEDT_Pri_Perem */
     v-message = "Расширенный тип документа нельзя менять" .
+    {&IF_MESSAGE}
     message
       vss-workfile vss-revision vss-description skip
       v-message skip
@@ -222,6 +226,15 @@ do :
       view-as alert-box error .
     undo, return error v-message .
   end.
+  else do:
+    if old-doc.ext-doc-type <> ub.trn-doc.ext-doc-type then do:
+      for each buf_doc-line exclusive-lock where
+               buf_doc-line.doc-code = ub.trn-doc.doc-code
+      :
+        buf_doc-line.ext-doc-type = ub.trn-doc.ext-doc-type.  
+      end.  
+    end.  
+  end.
   { gbl/chkextdt.i
     ub.trn-doc
     no-error
@@ -230,11 +243,10 @@ do :
     assign
       v-message = substitute( "&1. Ошибка при проверке типа документа.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
     .
-    if g#news = false then do:
+    {&IF_MESSAGE}
       message
         v-message
         view-as alert-box error .
-    end.
     undo main-block, return error v-message .
   end.
 end . /* end_of проверяем правильность задания типа документа */
@@ -249,11 +261,10 @@ end . /* end_of проверяем правильность задания типа документа */
     assign
       v-message = substitute( "&1. Ошибка при инициализации глобальных переменных.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
     .
-    if g#news = false then do:
+    {&IF_MESSAGE}
       message
         v-message
         view-as alert-box error .
-    end.
     undo main-block, return error v-message .
   end.
 
@@ -303,11 +314,10 @@ end.
     assign
       v-message = substitute( "&1. Ошибка при проверке уникальности кода документа.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
     .
-    if g#news = false then do:
+    {&IF_MESSAGE}
       message
         v-message
         view-as alert-box error .
-    end.
     undo main-block, return error v-message .
   end.
 
@@ -359,6 +369,7 @@ end.
       return .  /* --->>>--- */
     end.
     else do:
+      {&IF_MESSAGE}
       message
         vss-workfile vss-revision vss-description skip
         "Указан неправильный контрагент" skip
@@ -382,6 +393,7 @@ end.
     no-error .
   if not available trn-doc_clients
   then do:
+    {&IF_MESSAGE}
     message
       vss-workfile vss-revision vss-description skip
       "Не найден объект" skip
@@ -433,6 +445,7 @@ end.
       or v-fact-order = ?
       or v-fact-order = 0
       then do:
+        {&IF_MESSAGE}
         message
           vss-workfile vss-revision vss-description skip
           "Ошибка при определении фактического номера складского документа" skip
@@ -505,6 +518,7 @@ end.
     }
     if error-status :error
     then do:
+      {&IF_MESSAGE}
       message
         vss-workfile vss-revision vss-description skip
         "Невозможно запросить признак складского документа (old-doc)" skip
@@ -537,6 +551,7 @@ end.
   }
   if error-status :error
   then do:
+    {&IF_MESSAGE}
     message
       vss-workfile vss-revision vss-description skip
       "Невозможно запросить признак складского документа (trn-doc)" skip
@@ -591,6 +606,7 @@ end.
   and old-doc.status_    = {&fact}
   and ub.trn-doc.status_ <> {&fact}
   then do:
+    {&IF_MESSAGE}
     message
       vss-workfile vss-revision vss-description skip
       "Изменение статуса документа невозможно" skip
@@ -624,6 +640,7 @@ end.
         )
     and ub.trn-doc.obj-type <> {&shop}
     then do:
+      {&IF_MESSAGE}
       message
         vss-workfile vss-revision vss-description skip
         "Продажа через магазин может быть закрыта только на объекте типа магазин" skip
@@ -650,6 +667,7 @@ end.
         ) no-error .
       if error-status :error
       then do:
+        {&IF_MESSAGE}
         message
             vss-workfile vss-revision vss-description skip
             "Ошибка при установке дат, времен, смен в документе (trn-doc)." skip
@@ -672,11 +690,10 @@ end.
       assign
         v-message = substitute( "&1. Не задана фактическая дата документа.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
   end.
@@ -714,17 +731,17 @@ end.
         assign
           v-message = substitute( "&1. fact-num не задан в складском документе.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
         .
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
 
       if ub.trn-doc.fact-order = ?
       or ub.trn-doc.fact-order = 0
       then do:
+        {&IF_MESSAGE}
         message
           vss-workfile vss-revision vss-description skip
           "fact-order не задан в складском документе" skip
@@ -739,6 +756,7 @@ end.
     then do:
       if ub.trn-doc.fact-num > 0
       then do:
+        {&IF_MESSAGE}
         message
           vss-workfile vss-revision vss-description skip
           "Ошибочно задан фактический номер складского документа" skip
@@ -750,6 +768,7 @@ end.
 
       if ub.trn-doc.fact-order > 0
       then do:
+        {&IF_MESSAGE}
         message
           vss-workfile vss-revision vss-description skip
           "Ошибочно задан фактический номер складского документа" skip
@@ -774,6 +793,7 @@ end.
       }
       if error-status :error
       then do:
+        {&IF_MESSAGE}
         message
           vss-workfile vss-revision vss-description skip
           "Ошибка при определении атрибута объекта" skip
@@ -800,6 +820,7 @@ end.
       or v-fact-order = ?
       or v-fact-order = 0
       then do:
+        {&IF_MESSAGE}
         message
           vss-workfile vss-revision vss-description skip
           "Ошибка при определении фактического номера складского документа" skip
@@ -833,11 +854,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при обработке документа запроса.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
     return . /* --->>>--- */
@@ -862,11 +882,10 @@ end.
     assign
       v-message = substitute( "&1. Не удалось наложить блокировку на все товары принадлежащие документу.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
     .
-    if g#news = false and not g#esys then do:
+    {&IF_MESSAGE}
       message
         v-message
         view-as alert-box error .
-    end.
     undo main-block, return error v-message .
   end.
   if  ub.trn-doc.is-back-date
@@ -879,11 +898,10 @@ end.
       assign
         v-message = substitute( "&1. Недопустимо закрытие данного документа.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
   end.
@@ -961,6 +979,7 @@ end.
         }
         if error-status :error
         then do:
+          {&IF_MESSAGE}
           message
             vss-workfile vss-revision vss-description skip
             "Ошибка установки атрибута товара на объекте" skip
@@ -1005,6 +1024,7 @@ end.
   }
   if error-status :error
   then do:
+    {&IF_MESSAGE}
     message
       vss-workfile vss-revision vss-description skip
       "Ошика при определении кода фирмы для объекта" skip
@@ -1017,6 +1037,7 @@ end.
   end.
   if ub.trn-doc.host-code <> v-host-code
   then do:
+    {&IF_MESSAGE}
     message
       vss-workfile vss-revision vss-description skip
       "Неправильно заполнено поле фирма" skip
@@ -1065,11 +1086,10 @@ end.
     assign
       v-message = substitute( "&1. Ошибка при обработке сумм по документу.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
     .
-    if g#news = false then do:
+    {&IF_MESSAGE}
       message
         v-message
         view-as alert-box error .
-    end.
     undo main-block, return error v-message .
   end.
 
@@ -1083,6 +1103,7 @@ end.
     run process-line in this-procedure no-error .
     if error-status :error
     then do:
+      {&IF_MESSAGE}
       message
         vss-workfile vss-revision vss-description skip
         "Ошибка при обработке товара" skip
@@ -1111,11 +1132,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при создании атрибутов партий.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
   end.
@@ -1138,11 +1158,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при создании документа внутреннего прихода/возврата.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
   end.
@@ -1199,11 +1218,10 @@ end.
         assign
           v-message = substitute( "&1. Ошибка при создании документа межфирменного прихода/возврата.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
         .
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
     end.
@@ -1225,11 +1243,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при обработке архивных партий документа.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
 
@@ -1250,11 +1267,10 @@ end.
         assign
           v-message = substitute( "&1. Ошибка при расчете шапки документа.&2Информация об ошибке выведена в файл calc-hd.err&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
         .
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
       /*рассчитываем финансовые архивы*/
@@ -1290,11 +1306,10 @@ end.
         assign
           v-message = substitute( "&1. Ошибка пересчета факт. кол-ва топлива в последующих документах.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
         .
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
     end.
@@ -1311,6 +1326,7 @@ end.
       }
       if error-status :error
       then do:
+        {&IF_MESSAGE}
         message
           vss-workfile vss-revision vss-description skip
           "Ошибка при определении атрибута объекта" skip
@@ -1431,11 +1447,10 @@ end.
                   + substitute('&1':U, return-value)  + {&new-line}
                   + substitute('&1':U, error-status :get-message(1))  + {&new-line}
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
 
@@ -1524,11 +1539,10 @@ end.
         , output v-message
         ) .
       if p-error = true then do:
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
       run show-action in this-procedure
@@ -1543,11 +1557,10 @@ end.
         assign
           v-message = substitute( "&1. Невозможно маршрутизировать документ для отправки в СПН.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
         .
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
       if ub.trn-doc.ext-doc-type = {&TDEDT_Ras_Perem} or ub.trn-doc.ext-doc-type = {&TDEDT_Pri_Perem} then do:
@@ -1581,11 +1594,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при создании бар-кодов партий.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
   end.
@@ -1609,11 +1621,10 @@ end.
                           ,{&new-line}
                           , error-status:get-message(1)
                           , return-value ).
-    if not g#news then do:
+    {&IF_MESSAGE}
       message
       v-message
       view-as alert-box error .
-    end.
     undo main-block,  return error v-message.
   end.
   
@@ -1646,11 +1657,10 @@ end.
     assign
       v-message = substitute( "&1. Ошибка при передаче остатков товара через СПН.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
     .
-    if g#news = false then do:
+    {&IF_MESSAGE}
       message
         v-message
         view-as alert-box error .
-    end.
     undo main-block, return error v-message .
   end.
 
@@ -1670,11 +1680,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при вызове процедуры nu_arh.p.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
 
@@ -1689,11 +1698,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при вызове процедуры nu_ahsp.p.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
 
@@ -1708,11 +1716,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при вызове процедуры nu_aht.p.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
 
@@ -1728,11 +1735,10 @@ end.
         assign
           v-message = substitute( "&1. Ошибка при вызове процедуры nu_hold.p.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
         .
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
     end.
@@ -1765,12 +1771,10 @@ end.
                     + "Невозможно закрыть документ задним числом"  + {&new-line}
                     + substitute('&1':u, return-value)
         .
-        if g#news = false
-        then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo, return error v-message .
       end.
 
@@ -1796,12 +1800,10 @@ end.
                     + "Невозможно закрыть документ задним числом"  + {&new-line}
                     + substitute('&1':u, return-value)
         .
-        if g#news = false
-        then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo, return error v-message .
       end.
 
@@ -1827,12 +1829,10 @@ end.
                     + "Невозможно закрыть документ задним числом"  + {&new-line}
                     + substitute('&1':u, return-value)
         .
-        if g#news = false
-        then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo, return error v-message .
       end.
 
@@ -1856,11 +1856,10 @@ end.
             v-message = substitute( "&1. Документ &3 не может быть закрыт задним числом.&2", vss-workfile, {&new-line}, ub.trn-doc.doc-code ).
           .
         end.
-        if g#news = false then do:
+        {&IF_MESSAGE}
           message
             v-message
             view-as alert-box error .
-        end.
         undo main-block, return error v-message .
       end.
     end.
@@ -1880,11 +1879,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при обновлении остатков по поставщику на фирме.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
 
@@ -1900,11 +1898,10 @@ end.
       assign
         v-message = substitute( "&1. Ошибка при установке признаков клиента.&2Документ &3&2&4&2&5", vss-workfile, {&new-line}, ub.trn-doc.doc-code, return-value, error-status :get-message ( 1 ) ).
       .
-      if g#news = false then do:
+      {&IF_MESSAGE}
         message
           v-message
           view-as alert-box error .
-      end.
       undo main-block, return error v-message .
     end.
 

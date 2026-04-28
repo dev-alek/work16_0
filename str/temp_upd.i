@@ -58,7 +58,7 @@ define temp-table tt-utd-lines-filtr no-undo
 .
 
 define temp-table tt-utd-lines like ub.utd-lines
-  field qnty-scan as integer 
+  field qnty-scan as decimal 
   field qnty-mark as integer
   field stts      as character
   field gds-name  as character
@@ -71,6 +71,12 @@ define temp-table tt-utd-lines like ub.utd-lines
   field UnitCliQnty as decimal
   field isMarking   as logical
   field isArtic     as logical
+  field isWeight    as logical /* весовой товар */
+  field isVarWeight as logical /* товар с переменным весом */
+  field isSelect    as logical
+  field markType    as character /* тип маркировки */
+  field PieceTTH    as character
+  field PieceFact   as character  
   index pi  db-num doc-id LineNum
   index gds-code gds-code
   index sts stts sts
@@ -90,9 +96,11 @@ define temp-table tt-marking-lines no-undo like ub.marking-lines
   field doc-id      as integer
   field LineNum     as integer
   field GrayZone    as logical
-  field isMark      as logical 
+  field isMark      as logical
+  field isWeight    as logical
   field marking-string as character
   field old-sts     as integer
+  field weight      as character
   index pi  doc-level   sts
   index pi2 mark-parent sts
   index pi3 unit-ext
@@ -121,7 +129,7 @@ define temp-table tt-inv-marking no-undo
   field gds-code      as integer
   field gds-name      as character
   field qnty          as decimal
-  field qnty-scan     as integer
+  field qnty-scan     as decimal
   field qnty-confirm  as integer
   field qnty-scan-not as integer
   field qnty-not      as integer

@@ -34,9 +34,10 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
   define property stts-desc       as character    no-undo get. private set.
   define property cert-decl       as character    no-undo get. private set.
   define property sum-nds         as decimal      no-undo get. private set.
-  define property Qnty-accepted   as decimal      no-undo get. private set.
-  define property del-l         as integer      no-undo get. private set.
-  define property del-f         as integer      no-undo get. private set.
+  define property Qnty-accepted   as decimal      no-undo get. private set.  
+  define property del-l           as integer      no-undo get. private set.
+  define property del-f           as integer      no-undo get. private set.
+  define property manual-selection as integer     no-undo get. private set.
 { cmp/str-glbl.i class }
   define override property InitTag as character no-undo init "gd"
     get.
@@ -77,6 +78,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       end.
       when "sum-nds"      then sum-nds          = {&attr-dec} .
       when "Qnty-accepted" then Qnty-accepted   = {&attr-dec} .
+      when "manual-selection" then manual-selection = {&attr-integer} .
       
     end case.
     catch exProErrors as class Progress.Lang.ProError :
@@ -129,6 +131,7 @@ class ibs.th.bge.1crn.subjects.edi-gd inherits ibs.th.bge.1crn.subjects.asubject
       stts-desc          = ?
       sum-nds            = ?
       Qnty-accepted      = ? 
+      manual-selection   = ?
       cert-decl          = ""
     .
     if valid-object(marks)        then delete object marks .

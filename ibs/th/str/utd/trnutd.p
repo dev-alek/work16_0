@@ -1075,7 +1075,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
               if getGtinByDM(ub.utd-marking-lines.mark) <> vGtin
               then next fe1_ .
               
-              if logical (getAttrUtdLinesEx(ub.utd-marking-lines.db-num,ub.utd-marking-lines.doc-id,ub.utd-marking-lines.LineNum,"MarkUtdLine","no"))
+              if logical (getAttrUtdLinesEx(ub.utd-marking-lines.db-num,ub.utd-marking-lines.doc-id,ub.utd-marking-lines.LineNum,"MarkUtdLine","no")) and
+                 ub.utd-marking-lines.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB 
+              /* если лок. статус марки "Проверен", то считаем ее принятой и добавляем в партию */
               then do :
                 find first ub.marking no-lock where 
                            ub.marking.mark = ub.utd-marking-lines.mark 
@@ -1084,6 +1086,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                 if not available (ub.marking)
                 then next fe1_.
               end .
+              else
+                find first ub.marking no-lock where 
+                           ub.marking.mark = ub.utd-marking-lines.mark no-error.
               
               create ub.marking-lines.
               assign
@@ -1101,41 +1106,8 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                  ub.marking.unit-ext = "UNIT" and
                  ub.marking.mark-parent <> "" then
               do:  /* BTS-1690 и BTS-1862 Если это КМ потреб. упаковки и она есть в УПД, то добавим КМ груп. упаковки к партии*/
-                find first ub.marking-lines no-lock where
-                           ub.marking-lines.mark = ub.marking.mark-parent
-                       and ub.marking-lines.obj-type = tt-parts.obj-type
-                       and ub.marking-lines.obj-code = tt-parts.obj-code
-                       and ub.marking-lines.gds-code = temp_doc-line.gds-code
-                       and ub.marking-lines.in-code = tt-parts.in-code
-                       and ub.marking-lines.out-code = tt-parts.out-code
-                       and ub.marking-lines.part-code = tt-parts.part-code no-error.
-                if avail ub.marking-lines 
-                  then next fe1_.              /* уже добавлено */
-                find first buf_marking no-lock where 
-                           buf_marking.mark = ub.marking.mark-parent 
-                       and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
-                       and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
-                if not available (buf_marking)
-                  then next fe1_.
-                find first buf_utd-marking-lines no-lock where 
-                           buf_utd-marking-lines.mark   = buf_marking.mark
-                       and buf_utd-marking-lines.db-num = temp_doc-line.db-num
-                       and buf_utd-marking-lines.doc-id = temp_doc-line.doc-id
-                       and buf_utd-marking-lines.gds-code = temp_doc-line.gds-code
-                       and buf_utd-marking-lines.LineNum = temp_doc-line.line-num no-error.
-                if not available (buf_utd-marking-lines)
-                  then next fe1_.
-                create ub.marking-lines.
-                assign
-                  ub.marking-lines.obj-type = tt-parts.obj-type
-                  ub.marking-lines.obj-code = tt-parts.obj-code
-                  ub.marking-lines.in-code = tt-parts.in-code
-                  ub.marking-lines.out-code = tt-parts.out-code
-                  ub.marking-lines.part-code = tt-parts.part-code
-                  ub.marking-lines.gds-code = temp_doc-line.gds-code
-                  ub.marking-lines.mark = buf_utd-marking-lines.mark
-                  ub.marking-lines.doc-level = buf_utd-marking-lines.doc-level
-                .
+                   /* ZI-701 вынесено в процедуру для рекурсивного вызова, т.к. с коробами появилась многоуровневой вложенностью */
+                run addUpak2MarkingLines in this-procedure (ub.marking.mark-parent). 
               end.
             end.
 /*          end .*/
@@ -1162,7 +1134,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             tt-parts.fact-date      = new_trn-doc.fact-date
             tt-parts.fact-num       = new_trn-doc.fact-num
             tt-parts.VAT-pc         = temp_doc-line.vat-pc
-            tt-parts.part-code      = string(temp_doc-line.line-num)
+            tt-parts.part-code      = if temp_doc-line.gtinline <> "" 
+                                         then (temp_doc-line.gtinline + "_" + string(temp_doc-line.line-num))
+                                         else string(temp_doc-line.line-num)
             tt-parts.PS             = ""
             tt-parts.pay-code       = new_trn-doc.pay-code
             tt-parts.status_        = no
@@ -1215,6 +1189,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
           if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsMarkingForType(v-marking-type)
           or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(new_trn-doc.obj-type, new_trn-doc.obj-code):GetIsEDOForType(v-marking-type)
+          or temp_doc-line.isWeight
           then do:
             fe1_:
             for each ub.utd-marking-lines where 
@@ -1224,12 +1199,16 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
             and ub.utd-marking-lines.LineNum = temp_doc-line.line-num
             :
 
-              find first ub.marking no-lock where 
-                         ub.marking.mark = ub.utd-marking-lines.mark 
-                     and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
-                     and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
-              if not available (ub.marking)
-                then next fe1_.
+              if ub.utd-marking-lines.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then
+              /* если лок. статус марки "Проверен", то считаем ее принятой и добавляем в партию */
+              do:
+                find first ub.marking no-lock where 
+                           ub.marking.mark = ub.utd-marking-lines.mark 
+                       and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
+                       and ub.marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
+                if not available (ub.marking)
+                  then next fe1_.
+              end.
               
               create ub.marking-lines.
               assign
@@ -2222,3 +2201,47 @@ procedure create-line:
   end.
         
 end.
+
+procedure addUpak2MarkingLines:
+/* процедура рекурсивного добавления в marking-lines для UNIT */
+/* всеx упаковок верхнего уровня                              */
+  define input parameter iMark like ub.marking.mark no-undo.
+  
+  find first ub.marking-lines no-lock where
+             ub.marking-lines.mark = iMark
+         and ub.marking-lines.obj-type = tt-parts.obj-type
+         and ub.marking-lines.obj-code = tt-parts.obj-code
+         and ub.marking-lines.gds-code = temp_doc-line.gds-code
+         and ub.marking-lines.in-code = tt-parts.in-code
+         and ub.marking-lines.out-code = tt-parts.out-code
+         and ub.marking-lines.part-code = tt-parts.part-code no-error.
+  if avail ub.marking-lines 
+    then return.              /* уже добавлено */
+  find first buf_marking no-lock where 
+             buf_marking.mark = iMark 
+         and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:NotAvailable:KeyIntDB 
+         and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB no-error.
+  if not available (buf_marking)
+    then return.    
+  find first buf_utd-marking-lines no-lock where 
+             buf_utd-marking-lines.mark   = buf_marking.mark
+         and buf_utd-marking-lines.db-num = temp_doc-line.db-num
+         and buf_utd-marking-lines.doc-id = temp_doc-line.doc-id
+         and buf_utd-marking-lines.gds-code = temp_doc-line.gds-code
+         and buf_utd-marking-lines.LineNum = temp_doc-line.line-num no-error.
+  if not available (buf_utd-marking-lines)
+    then return.
+  create ub.marking-lines.
+  assign
+    ub.marking-lines.obj-type = tt-parts.obj-type
+    ub.marking-lines.obj-code = tt-parts.obj-code
+    ub.marking-lines.in-code = tt-parts.in-code
+    ub.marking-lines.out-code = tt-parts.out-code
+    ub.marking-lines.part-code = tt-parts.part-code
+    ub.marking-lines.gds-code = temp_doc-line.gds-code
+    ub.marking-lines.mark = buf_utd-marking-lines.mark
+    ub.marking-lines.doc-level = buf_utd-marking-lines.doc-level
+  .
+  if buf_marking.mark-parent <> "" then
+    run addUpak2MarkingLines in this-procedure (buf_marking.mark-parent). 
+end procedure.

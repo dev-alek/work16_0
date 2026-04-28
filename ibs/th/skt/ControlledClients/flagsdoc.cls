@@ -19,11 +19,10 @@ class ibs.th.skt.ControlledClients.flagsdoc inherits flags:
   
   define property isDocMarkOn as logical no-undo /*документ включает в себя товары требующие обязательной маркировки*/
     get:
-      return logical (get-bits (FlagsToInt, 1, 1)).
+      return getflag (1).
     end.
     set (arg as log):
-      put-bits (FlagsToInt, 1, 1) = int(arg).
-      isDocMarkOn = arg.
+       setFlag (1,arg).
     end.
 
 end class.

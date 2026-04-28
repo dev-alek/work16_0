@@ -55,7 +55,7 @@ class ibs.th.adm.upd.CheckUpd:
    constructor public CheckUpd (IQS as logical):
       this-object:IQS = IQS.
    end constructor.
-   
+   define variable mupd as logical no-undo init yes.
    method public logical updChceck ():
       define variable isNeedUpd as logical no-undo.
       obsrvdbObj = new observupd ().
@@ -67,11 +67,16 @@ class ibs.th.adm.upd.CheckUpd:
       then
          run utl\chekupd.p (yes,TargetDBShm, output isNeedUpd).
          
-      if not session:batch-mode and IQS and not isRcode and isNeedUpd
-      then
+      if  not session:batch-mode and IQS and not isRcode and isNeedUpd
+      then do:
+         if(mupd) then do:
          message "Необходимо обновить базу с версии " CurrDBShm  " до " TargetDBShm " до запуска процесса. Остновить выполнение?" view-as alert-box question 
              buttons yes-no title "[ ВНИМАНИЕ! ]" update isNeedUpd.
-          
+         mupd = false.
+         end.
+         else
+            isNeedUpd = false.
+      end.    
       delete object obsrvdbObj.
       return isNeedUpd.
    end.

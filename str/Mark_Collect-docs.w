@@ -171,9 +171,6 @@ FUNCTION EdoTypeName RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StatusTHName d-utd 
 FUNCTION StatusTHName RETURNS CHARACTER
     ( input p-stsTH as integer )  FORWARD.
@@ -209,6 +206,14 @@ DEFINE BUTTON b-hist
      LABEL "Ис&тория" 
      SIZE 3 BY 1.
 
+DEFINE BUTTON b-join 
+     LABEL "Объединить" 
+     SIZE 12 BY 1.
+
+DEFINE BUTTON b-mark 
+     LABEL "&*" 
+     SIZE 3 BY 1.
+
 DEFINE BUTTON B-refresh 
      LABEL "Обновить" 
      SIZE 10 BY 1.
@@ -225,6 +230,14 @@ DEFINE BUTTON b-utd
      LABEL "&Просмотр":L 
      SIZE 10 BY 1.
 
+DEFINE BUTTON bt-not-sel-all 
+     LABEL "+" 
+     SIZE 3 BY 1 TOOLTIP "Выбрать все".
+
+DEFINE BUTTON bt-not-sel-desel-all 
+     LABEL "-" 
+     SIZE 3 BY 1 TOOLTIP "Отменить выбор".
+
 DEFINE VARIABLE F-date-from AS DATE FORMAT "99/99/9999":U 
      VIEW-AS FILL-IN 
      SIZE 10.8 BY 1 NO-UNDO.
@@ -238,6 +251,11 @@ DEFINE VARIABLE f-DocumentNumber AS CHARACTER FORMAT "X(256)":U
      LABEL "Номер документа" 
      VIEW-AS FILL-IN 
      SIZE 28 BY 1 NO-UNDO.
+
+DEFINE VARIABLE mark-num AS INTEGER FORMAT "->>>9":U INITIAL 0 
+      VIEW-AS TEXT 
+     SIZE 4 BY 1
+     FGCOLOR 7  NO-UNDO.
 
 DEFINE VARIABLE RADIO-SET-1 AS INTEGER 
      VIEW-AS RADIO-SET HORIZONTAL
@@ -265,16 +283,17 @@ DEFINE QUERY br-utd FOR
 DEFINE BROWSE br-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br-utd d-utd _STRUCTURED
   QUERY br-utd NO-LOCK DISPLAY
+      mark-string(input recid(X_utd), input v-rid-list) column-label "*" format "X(1)":U
       X_utd.DocumentNumber COLUMN-LABEL "Номер!документа" FORMAT "x(32)":U width 14
       X_utd.DocumentDate COLUMN-LABEL "Дата документа" FORMAT "99/99/9999":U
       X_utd.stts COLUMN-LABEL "Статус" FORMAT "X(40)":U width 14
       X_utd.is-initial COLUMN-LABEL "Первоначальный" FORMAT "X(40)":U width 15
-      X_utd.scan-qnty COLUMN-LABEL "Итого просканировано" FORMAT "->>>>>>9"
-      X_utd.free-qnty COLUMN-LABEL "Итого остаток" FORMAT "->>>>>>9"
+      X_utd.scan-qnty COLUMN-LABEL "Итого просканировано" FORMAT "->>>>>>9.<<<"
+      X_utd.free-qnty COLUMN-LABEL "Итого остаток" FORMAT "->>>>>>9.<<<"
       X_utd.comment COLUMN-LABEL "Комментарий" FORMAT "X(256)":U width 40
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 14.76 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 131 BY 18.70 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -293,10 +312,15 @@ DEFINE FRAME d-utd
      RADIO-SET-1 AT ROW 3.52 COL 2.6 NO-LABEL WIDGET-ID 250
      RADIO-SET-2 AT ROW 4.62 COL 2.6 NO-LABEL WIDGET-ID 282
      f-DocumentNumber AT ROW 5.81 COL 49 RIGHT-ALIGNED WIDGET-ID 276
-     br-utd AT ROW 7.19 COL 1.6
+     bt-not-sel-all AT ROW 7.21 COL 5.5 WIDGET-ID 10 NO-TAB-STOP 
+     bt-not-sel-desel-all AT ROW 7.21 COL 8.5 WIDGET-ID 12 NO-TAB-STOP 
+     b-mark AT ROW 7.21 COL 11.5 WIDGET-ID 4 NO-TAB-STOP 
+     b-join AT ROW 7.25 COL 15 WIDGET-ID 234
+     br-utd AT ROW 8.25 COL 1.63
+     mark-num AT ROW 7.21 COL 1.5 NO-LABEL WIDGET-ID 8
      "по" VIEW-AS TEXT
-          SIZE 2.6 BY .67 AT ROW 2.48 COL 27 WIDGET-ID 38
-     SPACE(102.99) SKIP(19.03)
+          SIZE 2.63 BY .67 AT ROW 2.5 COL 27 WIDGET-ID 38
+     SPACE(102.99) SKIP(23.95)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Список сборов марок":L.
@@ -327,8 +351,17 @@ ASSIGN
 ASSIGN 
        br-utd:COLUMN-RESIZABLE IN FRAME d-utd       = TRUE.
 
+/* SETTINGS FOR BUTTON bt-not-sel-all IN FRAME d-utd
+   NO-ENABLE                                                            */
+ASSIGN 
+       bt-not-sel-all:HIDDEN IN FRAME d-utd           = TRUE.
+
+/* SETTINGS FOR BUTTON bt-not-sel-desel-all IN FRAME d-utd
+   NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN f-DocumentNumber IN FRAME d-utd
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN mark-num IN FRAME d-utd
+   ALIGN-L                                                              */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -364,7 +397,7 @@ ASSIGN
 
 &Scoped-define SELF-NAME d-utd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL d-utd d-utd
-ON GO OF FRAME d-utd /* Список УПД */
+ON GO OF FRAME d-utd /* Список сборов марок */
 DO:
 /*    p-rid-list = v-rid-list.*/
 END.
@@ -432,6 +465,7 @@ DO:
               end.
               g#auto = v-auto .
             end.
+
             delete bf_utd .
           end. /*if undelete then*/
         end.
@@ -500,6 +534,222 @@ DO:
         reposition br-utd to rowid row_utd.
     end.
 END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-join
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-join d-utd
+ON CHOOSE OF b-join IN FRAME d-utd /* Объединить */
+DO:
+define variable kk as integer no-undo .
+define variable type-doc as character no-undo .
+define variable vLineNum as integer no-undo .
+define variable v-mark-short     as character no-undo. 
+define variable v-GTIN-child as character no-undo .
+define variable v-GTIN-qnty-child as decimal no-undo .
+define variable v-auto as logical no-undo .
+define variable v-isweighed as logical no-undo .
+  
+define buffer buf_utd for ub.utd .
+define buffer bf_utd for X_utd .
+define buffer buf_utd-attr for ub.utd-attr .
+define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+define buffer buf_utd-lines for ub.utd-lines .
+define buffer bf_utd-marking-lines for ub.utd-marking-lines .
+define buffer bf_utd-lines for ub.utd-lines .
+define buffer buf_marking for ub.marking .
+define buffer buf_marking-child for ub.marking .
+define buffer buf_utd-marking-lines-child for ub.utd-marking-lines .
+define buffer bf_marking for ub.marking .
+
+if num-entries (v-rid-list) > 1 then do:
+    /*Проверка на статус и на тип документа*/
+    do kk = 1 to num-entries (v-rid-list):
+        find first bf_utd no-lock where string(recid(bf_utd)) = entry(kk,v-rid-list) no-error .
+        if available (bf_utd) then do:
+            if bf_utd.sts <> ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB then do:
+                message "Объединению подлежат только документы в статусе «Новый», исключите документы в статусе «Подтвержден»"
+                view-as alert-box.
+                return no-apply .
+            end.
+            if kk = 1 then type-doc = bf_utd.is-initial .
+            else do:
+                if type-doc <> bf_utd.is-initial then do:
+                    message "Объединение документов с разным значением признака Первоначальный сбор марок невозможно. Выберите документы с одинаковым значением признака."
+                    view-as alert-box.
+                    return no-apply .
+                end.    
+            end.
+        end.
+    end.
+    /*Объединение*/
+      create buf_utd .
+      
+      assign
+        buf_utd.DocumentDate = today
+        buf_utd.sts          = ObjSrv:Env:Utd:Sts:TH:NewStatus:KeyIntDB
+        buf_utd.obj-code     = v-cntxt-obj-code
+        buf_utd.obj-type     = v-cntxt-obj-type
+        buf_utd.host-code    = v-cntxt-host-code-obj
+        buf_utd.EDocType     = objSrv:Env:Utd:EDocType:Mark_Collect:KeyIntDB
+      .
+           
+      validate buf_utd .
+      assign buf_utd.DocumentNumber = string(buf_utd.doc-id) + "-" + string(v-cntxt-obj-code) + substring(v-cntxt-obj-type,1,1) .
+          create buf_utd-attr .
+          assign
+            buf_utd-attr.db-num = buf_utd.db-num
+            buf_utd-attr.doc-id = buf_utd.doc-id
+            buf_utd-attr.attr-code = "is-initial-set"
+            .
+            if type-doc = "да" then buf_utd-attr.attr-value = string(true) .
+            else buf_utd-attr.attr-value = string(false)
+            .
+            release buf_utd-attr .      
+      
+    assign vLineNum = 0 .
+    
+    do kk = 1 to num-entries (v-rid-list):
+        for first bf_utd no-lock where recid(bf_utd) = integer(entry(kk,v-rid-list,",")):
+           
+            for each bf_utd-marking-lines no-lock where bf_utd-marking-lines.db-num = bf_utd.db-num and
+                bf_utd-marking-lines.doc-id = bf_utd.doc-id: 
+                    find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = bf_utd-marking-lines.mark and
+                    buf_utd-marking-lines.doc-id = buf_utd.doc-id no-error .
+                    if not available (buf_utd-marking-lines) then do:
+
+                        find first buf_utd-lines exclusive-lock where buf_utd-lines.db-num = buf_utd.db-num and
+                        buf_utd-lines.doc-id = buf_utd.doc-id and
+                        buf_utd-lines.gds-code = bf_utd-marking-lines.gds-code no-error .
+                        if not available (buf_utd-lines) then do:      
+                            find first bf_utd-lines no-lock where bf_utd-lines.db-num = bf_utd.db-num and
+                            bf_utd-lines.doc-id = bf_utd.doc-id no-error .                  
+                            assign vLineNum = vLineNum + 1 .
+                            create buf_utd-lines .
+                            buffer-copy bf_utd-lines except db-num doc-id LineNum Quantity to buf_utd-lines .
+                            assign
+                                buf_utd-lines.db-num   = buf_utd.db-num
+                                buf_utd-lines.doc-id   = buf_utd.doc-id
+                                buf_utd-lines.gds-code = bf_utd-marking-lines.gds-code
+                                buf_utd-lines.LineNum  = vLineNum
+                                .
+                        end.
+                        create buf_utd-marking-lines .
+                        assign
+                            buf_utd-marking-lines.db-num    = buf_utd.db-num
+                            buf_utd-marking-lines.doc-id    = buf_utd.doc-id
+                            buf_utd-marking-lines.gds-code  = buf_utd-lines.gds-code
+                            buf_utd-marking-lines.LineNum   = buf_utd-lines.LineNum
+                            buf_utd-marking-lines.mark      = bf_utd-marking-lines.mark
+                            buf_utd-marking-lines.sts       = bf_utd-marking-lines.sts
+                            buf_utd-marking-lines.doc-level = bf_utd-marking-lines.doc-level
+                            .
+                            for first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark:
+                              v-isweighed = WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, buf_utd-lines.gds-code) .
+                              if v-isweighed
+                              then do :
+                                assign
+                                  buf_utd-lines.Quantity = buf_utd-lines.Quantity + MarkWeight(buf_marking.mark)
+                                .
+                              end .
+                              else do :
+                                assign
+                                  buf_utd-lines.Quantity = buf_utd-lines.Quantity + buf_marking.box-qnty
+                                .
+                              end .
+                            end.
+                              v-mark-short = GetCodeIdent(buf_marking.mark).
+                        for each buf_marking-child no-lock where buf_marking-child.mark-parent begins v-mark-short,
+                            first buf_utd-marking-lines-child no-lock where buf_utd-marking-lines-child.mark = buf_marking-child.mark
+                            and buf_utd-marking-lines-child.db-num  = buf_utd-lines.db-num
+                            and buf_utd-marking-lines-child.doc-id  = buf_utd-lines.doc-id
+                            and buf_utd-marking-lines-child.LineNum = buf_utd-lines.LineNum
+                            :
+                            assign
+                                v-GTIN-child           = getGtinByDM(buf_marking-child.mark)
+                                v-GTIN-qnty-child      = getQntyCodeByGtin(v-GTIN-child)
+                                buf_utd-lines.Quantity = buf_utd-lines.Quantity - v-GTIN-qnty-child
+                                .
+                        end .                                       
+                    end.
+            end.
+            
+        end.
+    end.  
+
+   do kk = 1 to num-entries (v-rid-list):
+       find first X_utd where string(recid(X_utd)) = entry(kk,v-rid-list) no-wait no-error .
+       if available (X_utd) then do:
+       find first buf_utd exclusive-lock where buf_utd.db-num = X_utd.db-num and buf_utd.doc-id = X_utd.doc-id no-wait no-error .
+        if locked buf_utd
+        then do :
+          message "Документ занят другим пользователем!" view-as alert-box .
+          return no-apply .
+        end .
+        delete buf_utd  .
+
+        end.
+        else do:
+          message "Документ " + string (X_utd.DocumentNumber) + " не может быть удален"
+          view-as alert-box.
+        end.                     
+        
+   end.
+   v-rid-list = "" .
+            
+    if num-entries( v-rid-list ) = 0 then 
+    do:
+        hide mark-num in frame {&frame-name}.
+    end.
+
+    run init-sort .
+    {&OPEN-QUERY-br-utd}
+end.
+else do:
+    message "Не выделены документы для объединения"
+    view-as alert-box.
+    return no-apply .
+end.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-mark
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-mark d-utd
+ON CHOOSE OF b-mark IN FRAME d-utd /* * */
+DO:
+        define variable loc#log as logical no-undo .
+      
+        if available X_utd then 
+        do:
+            { gbl/markstrn.i X_utd v-rid-list }
+            row_utd = rowid(X_utd).
+            loc#log = {&browse-name}:refresh() .
+            reposition br-utd to rowid row_utd.
+
+            if last-event:function <> "MOUSE-SELECT-DBLCLICK" then 
+            do:
+                loc#log = {&browse-name}:select-next-row ().
+                apply "VALUE-CHANGED" to {&browse-name} in frame {&frame-name}.
+            end.
+            if num-entries( v-rid-list ) = 0 then 
+            do:
+                hide mark-num in frame {&frame-name}.
+            end.
+            else 
+            do:
+                display
+                    num-entries( v-rid-list ) @ mark-num
+                    with frame {&frame-name}.
+            end.
+        end.
+        apply "entry" to {&browse-name} in frame {&frame-name}.
+
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -693,11 +943,42 @@ end.
 &ANALYZE-RESUME
 
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL br-utd d-utd
-ON value-changed OF br-utd IN FRAME d-utd
+&Scoped-define SELF-NAME bt-not-sel-all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-all d-utd
+ON CHOOSE OF bt-not-sel-all IN FRAME d-utd /* + */
 DO:
-  
-END.
+        define variable loc#log as logical no-undo .
+
+        if available X_utd then 
+        do:
+            v-rid-list = "" .
+            for each X_utd no-lock:
+                { gbl/markstrn.i X_utd v-rid-list }
+                loc#log = {&browse-name}:refresh() .
+            end.
+        end.
+        if num-entries( v-rid-list ) <> 0 then 
+        do:
+            display
+                num-entries( v-rid-list ) @ mark-num
+                with frame {&frame-name}.
+        end.
+/*        v-rid-list = "" .*/
+    END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME bt-not-sel-desel-all
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL bt-not-sel-desel-all d-utd
+ON CHOOSE OF bt-not-sel-desel-all IN FRAME d-utd /* - */
+DO:
+        define variable loc#log as logical no-undo .
+        v-rid-list = "" .
+        loc#log = {&browse-name}:refresh() .
+        hide mark-num in frame {&frame-name}.
+    END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -903,7 +1184,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI d-utd 
 PROCEDURE enable_UI :
 /* --------------------------------------------------------------------
@@ -930,6 +1210,11 @@ PROCEDURE enable_UI :
             F-date-to
             f-DocumentNumber
             radio-set-2
+            b-mark
+            b-join
+            bt-not-sel-desel-all
+            bt-not-sel-desel-all
+            mark-num
             WITH FRAME {&frame-name}.
         display
             F-date-from
@@ -1108,6 +1393,8 @@ PROCEDURE init-sort :
     define variable vInt      as logical   no-undo.
     define variable vi        as integer   no-undo.
     
+    define variable v-isweighed as logical no-undo .
+    
     define buffer buf_utd-attr          for ub.utd-attr .
     define buffer buf_utd-lines         for ub.utd-lines .
     define buffer buf_utd-marking-lines for ub.utd-marking-lines .
@@ -1147,15 +1434,22 @@ PROCEDURE init-sort :
         for each buf_utd-lines no-lock where buf_utd-lines.db-num = buf_utd.db-num 
                                          and buf_utd-lines.doc-id = buf_utd.doc-id
         :
+          v-isweighed = WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, buf_utd-lines.gds-code) .
           for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num 
                                                    and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
                                                    and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
                                                    and buf_utd-marking-lines.doc-level = 1
                                                    and buf_utd-marking-lines.site <> "only-send"
           :
-            vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
-            vGtinQnty = getQntyCodeByGtin(vGtin) .
-            X_utd.scan-qnty = X_utd.scan-qnty + vGtinQnty .
+            if v-isweighed
+            then do :
+              X_utd.scan-qnty = X_utd.scan-qnty + MarkWeight(buf_utd-marking-lines.mark) .
+            end .
+            else do :
+              vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
+              vGtinQnty = getQntyCodeByGtin(vGtin) .
+              X_utd.scan-qnty = X_utd.scan-qnty + vGtinQnty .
+            end .
           end .
           if buf_utd.sts = ObjSrv:Env:Utd:Sts:TH:Confirmed:KeyIntDB
           then do :
@@ -1241,8 +1535,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
 /* ************************  Function Implementations ***************** */
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION CliName d-utd 
@@ -1277,7 +1569,6 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION StatusTHName d-utd 
 FUNCTION StatusTHName RETURNS CHARACTER

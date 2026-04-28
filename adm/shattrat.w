@@ -328,6 +328,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
      .
      hide b-quit in frame {&frame-name} .
   end.
+  if p-obj-type <> '':U then 
+  do:
+    hide maxColMarks  in frame {&frame-name} .
+  end.
 
   WAIT-FOR GO OF FRAME {&FRAME-NAME}.
 END.

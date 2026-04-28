@@ -34,12 +34,13 @@ class ibs.th.skt.Commands.DeferredCommand inherits ICommand:
    method override public void ContinueExecution(input req as IRequest, input resp as IResponse ):
       createfile().
       define variable vParam as longchar no-undo.
-      if search(resp:ParamWait) ne ?
+      define variable vFile as character no-undo.
+      vFile = resp:ParamWait:getParamValue("file").
+      if search(vFile) ne ?
       then do:
          resp:condition = resp:STSlist:WriteResponse:NameProp.
-         vParam = resp:ParamWait.
-         resp:setContent(vParam).
-         os-delete value(resp:ParamWait).
+         resp:setContent(vFile).
+         os-delete value(vFile).
       end.
       
       
@@ -72,7 +73,7 @@ class ibs.th.skt.Commands.DeferredCommand inherits ICommand:
       output close.
       os-command value("start aaa.bat & exit").
       */
-      resp:ParamWait = vfile.
+      resp:ParamWait:setParam("file",vfile).
    end method.
    
    method private void createfile():

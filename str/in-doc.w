@@ -7858,6 +7858,7 @@ end procedure. /* gtd-line */
 FUNCTION deviation-price RETURNS DECIMAL
 (buffer local-doc-line for ub.doc-line) :
 define buffer bf_doc-line for ub.doc-line.
+define buffer bf_trn-doc  for ub.trn-doc.
 
 if local-doc-line.fact-order = 0 then do:
   find last bf_doc-line where bf_doc-line.obj-type     = t-doc.obj-type           and
@@ -7867,7 +7868,11 @@ if local-doc-line.fact-order = 0 then do:
                               bf_doc-line.artic        = local-doc-line.artic     and
                               bf_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh}       and
                               bf_doc-line.status_      = {&fact}                  and
-                              bf_doc-line.fact-order   > 0                        use-index dt-fo no-lock no-error.
+                              bf_doc-line.fact-order   > 0                        and
+                              can-find(first bf_trn-doc where
+                                             bf_trn-doc.doc-code = bf_doc-line.doc-code
+                                         and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh})
+                              use-index dt-fo no-lock no-error.
   if available bf_doc-line then do:
     return (local-doc-line.price-rubl - bf_doc-line.price-rubl) / bf_doc-line.price-rubl * 100.
   end.
@@ -7883,7 +7888,11 @@ else do:
                               bf_doc-line.artic        = local-doc-line.artic      and
                               bf_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh}        and
                               bf_doc-line.status_      = {&fact}                   and
-                              bf_doc-line.fact-order   < local-doc-line.fact-order use-index dt-fo no-lock no-error.
+                              bf_doc-line.fact-order   < local-doc-line.fact-order and
+                              can-find(first bf_trn-doc where
+                                             bf_trn-doc.doc-code = bf_doc-line.doc-code
+                                         and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh})
+                              use-index dt-fo no-lock no-error.
   if available bf_doc-line then do:
     return (local-doc-line.price-rubl - bf_doc-line.price-rubl) / bf_doc-line.price-rubl * 100.
   end.
@@ -7958,6 +7967,7 @@ end function.
 FUNCTION last-price RETURNS DECIMAL
 (buffer local-doc-line for ub.doc-line) :
 define buffer bf_doc-line for ub.doc-line.
+define buffer bf_trn-doc for ub.trn-doc.
 
 if local-doc-line.fact-order = 0 then do:
   find last bf_doc-line where bf_doc-line.obj-type     = t-doc.obj-type           and
@@ -7967,7 +7977,11 @@ if local-doc-line.fact-order = 0 then do:
                               bf_doc-line.artic        = local-doc-line.artic     and
                               bf_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh}       and
                               bf_doc-line.status_      = {&fact}                  and
-                              bf_doc-line.fact-order   > 0                        use-index dt-fo no-lock no-error.
+                              bf_doc-line.fact-order   > 0                        and
+                              can-find(first bf_trn-doc where
+                                             bf_trn-doc.doc-code = bf_doc-line.doc-code
+                                         and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh})
+                              use-index dt-fo no-lock no-error.
   if available bf_doc-line then do:
     return bf_doc-line.price-rubl.
   end.
@@ -7983,7 +7997,11 @@ else do:
                               bf_doc-line.artic        = local-doc-line.artic      and
                               bf_doc-line.ext-doc-type = {&TDEDT_Pri_Vnesh}        and
                               bf_doc-line.status_      = {&fact}                   and
-                              bf_doc-line.fact-order   < local-doc-line.fact-order use-index dt-fo no-lock no-error.
+                              bf_doc-line.fact-order   < local-doc-line.fact-order and
+                              can-find(first bf_trn-doc where
+                                             bf_trn-doc.doc-code = bf_doc-line.doc-code
+                                         and bf_trn-doc.ext-doc-type = {&TDEDT_Pri_Vnesh})
+                              use-index dt-fo no-lock no-error.
   if available bf_doc-line then do:
     return bf_doc-line.price-rubl.
   end.

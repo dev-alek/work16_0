@@ -97,25 +97,25 @@ on backspace of {2} in frame {&frame-name} do:
   return no-apply.
 end.
 
-ON MOUSE-SELECT-DBLCLICK, return OF loc-code IN FRAME {&frame-name} do:
+ON return OF loc-code IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-loc-code in this-procedure   no-error.
   return no-apply.
 end.
 
 &if "{1}" = "bb-list" or "{1}" = "scnblist" &then
-ON MOUSE-SELECT-DBLCLICK, return, Ctrl-J OF loc-b-str IN FRAME {&frame-name} do:
+ON return, Ctrl-J OF loc-b-str IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-loc-b-str in this-procedure   no-error.
   return no-apply.
 end.
 &endif
 
-ON MOUSE-SELECT-DBLCLICK, return, Ctrl-J OF loc-name IN FRAME {&frame-name} do:
+ON return, Ctrl-J OF loc-name IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-loc-name in this-procedure   no-error.
   return no-apply.
 end.
 
 &if "{1}" = "goo-doc" or "{1}" = "gob-doc" &then
-ON MOUSE-SELECT-DBLCLICK, return OF NameContext IN FRAME {&frame-name} do:
+ON return OF NameContext IN FRAME {&frame-name} do:
   run proc-mouse-dbl-click-namec in this-procedure   no-error.
   return no-apply.
 end.
@@ -595,8 +595,95 @@ if not available {1} or recid ({1}) <> {&sch-rec} then do:
     loc-art = "".
 end.
 
-
-
+&if "{5}" = "out-doc" &then
+if available ub.goods
+then do :
+  define variable  p-type     as character no-undo .
+  
+  define variable v-isweighed as logical no-undo .
+  define variable vRightChngQntyCode as character no-undo .
+  define variable vIsExemplarGoods as logical no-undo .
+  define variable vRightChngQnty as logical no-undo .
+  
+  define buffer buf_marking-lines for ub.marking-lines.
+  
+  run lineattr-value (
+    input   t-doc.doc-code ,
+    input   ub.goods.gds-code ,
+    input   {&lineattr-flora_ps},
+    output  flora-ps ,
+    output  p-type      )
+  .
+  
+  display flora-ps with frame {&frame-name} .
+  
+  if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} or 
+     t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} then
+  do:
+      run isExemplarGoods in this-procedure 
+        (t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code, output vIsExemplarGoods).
+      v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code).
+      if vIsExemplarGoods
+      or v-isweighed 
+      then do:
+        if t-doc.ext-doc-type = {&TDEDT_Ras_Perem} and 
+           can-find(first buf_marking-lines no-lock where 
+                            buf_marking-lines.out-code = ub.gds-dtl.doc-code
+                        and buf_marking-lines.gds-code = ub.goods.gds-code) then
+        do:  /* дл€ ѕ≈–≈ћ≈ў≈Ќ»я –ј—’ќƒ проверим есть ли марки по товару, и если есть, то кол-во редактировать нельз€ */
+          vRightChngQnty = false.  
+        end.
+        else
+        do:
+            vRightChngQntyCode = if t-doc.ext-doc-type = {&TDEDT_Spi_Vnesh} 
+                then 'actn_write-off_add-no-mark':U
+                else 'actn_tdedt-ras-perem_add-no-mark':U.
+            { gbl/chk-actg.i
+              v-cntxt-db-num
+              v-cntxt-userid
+              {&action-head-code-main}
+              vRightChngQntyCode
+              {&cntxt-object}
+              t-doc.host-code
+              t-doc.obj-type
+              t-doc.obj-code
+              0
+              0
+              0
+              false
+              vRightChngQnty
+            }
+        end.
+        if not vRightChngQnty then
+        assign
+          ub.gds-dtl.doc-qnty:read-only  in browse {&browse-name} = yes
+          ub.gds-dtl.fact-qnty:read-only  in browse {&browse-name} = yes
+        .
+        else
+        assign
+          ub.gds-dtl.doc-qnty:read-only  in browse {&browse-name} = no
+          ub.gds-dtl.fact-qnty:read-only  in browse {&browse-name} = no
+        .
+        
+      end.
+      else do :
+        assign
+          ub.gds-dtl.doc-qnty:read-only  in browse {&browse-name} = no
+          ub.gds-dtl.fact-qnty:read-only  in browse {&browse-name} = no
+        .
+      end .
+      case t-doc.status_ :
+        when {&wayb} then do:
+           if t-doc.flag_ then assign ub.gds-dtl.doc-qnty:read-only  in browse {&browse-name} = yes.
+           assign ub.gds-dtl.fact-qnty:read-only  in browse {&browse-name} = yes.
+        end.
+        when {&permitted} then assign ub.gds-dtl.doc-qnty:read-only  in browse {&browse-name} = yes.
+        otherwise   assign ub.gds-dtl.doc-qnty:read-only  in browse {&browse-name} = yes
+                          ub.gds-dtl.fact-qnty:read-only in browse {&browse-name} = yes.
+      end case.
+  end.
+end .
+&endif
 /* при вызове данного include - файла здесь дб приписан END */
 
 /* $Workfile$ e n d */

@@ -44,7 +44,7 @@ define variable vss-description as character no-undo init "Сканирование акцизных
 { gbl/waitfram.i noprocess }
 { str/tt-fbr-line.i }
 { gbl/getcntxt.i def }
-
+{ str/utd-typemark.i}
 
 /* Parameters Definitions ---                                           */
 
@@ -147,8 +147,8 @@ DEFINE BROWSE br-fbr-line
     tt-fbr-line.num format ">>>>>9" label "Номер"
     tt-fbr-line.gds-code format ">>>>>>>>>>>>>>9" label "Код"
     tt-fbr-line.gds-name format "X(150)" width 40 label "Наименование"
-    tt-fbr-line.ingr-qnty format ">>>>>>>>>>>9" label "Количество"
-    tt-fbr-line.unit format "X(17)" label "Единица измерения"
+    tt-fbr-line.ingr-qnty format ">>>>>>>>>>>9.999" label "Количество"
+    tt-fbr-line.unit format "X(13)" label "Ед. измерения"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH SEPARATORS SIZE 95 BY 8.
@@ -436,6 +436,8 @@ PROCEDURE CrCheckMark :
   define variable v-num-recipes as integer no-undo .
   define variable v-GTIN as character no-undo .
   define variable v-GTIN-qnty as decimal no-undo .
+  define variable v-mark-weight as decimal no-undo .
+  define variable v-isweighed as logical no-undo .
   define variable v-mark-child-qnty as decimal no-undo .
   define variable v-free-qnty as decimal no-undo .
   define variable v-old-sts as integer no-undo .
@@ -498,8 +500,30 @@ PROCEDURE CrCheckMark :
    output v-par-val,
    output v-par-type
   ).
-  
+  v-isweighed = WeighedProd(buf_goods.gds-code)
+            and v-par-val > ""
+            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
+              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
+  .
+  if v-isweighed
+  then do : 
+    if available buf_marking
+    then do :
+      v-mark-weight = MarkWeight(buf_marking.mark).
+      if v-mark-weight = 0
+      or v-mark-weight = ?
+      then do :
+        run dispmessage ("Марка не может быть добавлена, т.к. в БД отсутствует ее вес.").
+        return.
+      end .
+    end .
+    else do :
+      run dispmessage ("Марка не найдена в БД.").
+      return.
+    end .
+  end.  
   if not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val)
+  and not v-isweighed
   then do :
     run dispmessage ("Сканирование марок данного товара для производства не требуется").
     return.
@@ -672,9 +696,20 @@ PROCEDURE CrCheckMark :
       tt-fbr-line.recipe-type = {&alternative}
       tt-fbr-line.ingr-gds-code = v-ingr-gds-code
       tt-fbr-line.unit = buf_goods.unit-base
+      tt-fbr-line.weighed = v-isweighed
+      tt-fbr-line.mark-weight = v-mark-weight 
     .  
   end .
-  if (tt-fbr-line.ingr-qnty + v-GTIN-qnty) <= v-free-qnty
+  
+  if tt-fbr-line.weighed and 
+     (tt-fbr-line.ingr-qnty + v-mark-weight) <= v-free-qnty
+  then do :
+    assign
+      tt-fbr-line.qnty = tt-fbr-line.qnty + (v-mark-weight * v-koef-qnty)
+      tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty + v-mark-weight
+    .
+  end .
+  else if (tt-fbr-line.ingr-qnty + v-GTIN-qnty) <= v-free-qnty
   then do :
     assign
       tt-fbr-line.qnty = tt-fbr-line.qnty + (v-GTIN-qnty * v-koef-qnty)
@@ -694,7 +729,13 @@ PROCEDURE CrCheckMark :
   find current buf_marking exclusive-lock no-error .
   if locked buf_marking
   then do :
-    assign tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty - v-GTIN-qnty .
+    if tt-fbr-line.weighed
+    then do :
+      assign tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty - v-mark-weight .
+    end .
+    else do :
+      assign tt-fbr-line.ingr-qnty = tt-fbr-line.ingr-qnty - v-GTIN-qnty .
+    end .
     if tt-fbr-line.ingr-qnty = 0
     then do :
       assign v-num-str = v-num-str - 1 .
@@ -720,6 +761,7 @@ PROCEDURE CrCheckMark :
     tt-marking-lines.old-sts  = v-old-sts
     tt-marking-lines.box-qnty = v-GTIN-qnty
     tt-marking-lines.doc-level = 1
+    tt-marking-lines.weight = if v-isweighed then string(v-mark-weight) else ""
   .
   
   for each buf_marking-child exclusive-lock where buf_marking-child.mark-parent = buf_marking.mark :

@@ -37,21 +37,6 @@ define temp-table TempTrnDoc no-undo
   field Flags_       as integer
   index pi line-num ext-doc-code .
 
-define temp-table TempTrnDocMT no-undo
-  field DocName    as character
-  field DocType    as character
-  field Complete_  as logical
-  field Status_    as character
-  field ClientID   as integer
-  field ClientType as character
-  field ObjectID   as integer
-  field ObjectType as character
-  field UserID_    as character
-  field UserName   as character
-  field FactSum    as decimal
-  field StartDate  as character
-  field Flags_     as integer
-  .
   
 define temp-table TempDocLine no-undo
   field line-num     as integer
@@ -71,6 +56,8 @@ define temp-table TempDocLine no-undo
   line-num
   gds-code
   .
+
+define temp-table TempDocLineIsTSD like TempDocLine.
   
 define temp-table TempDocLineTSD no-undo
   field gds-code     as integer
@@ -90,21 +77,7 @@ define temp-table TempDocLineTSD no-undo
   mark
   .
       
-define temp-table TempTrnLineMT no-undo
-  field lineid    as integer 
-  field docname   as character   
-  field pos       as integer
-  field goodsid   as integer 
-  field goodsname as character
-  field UnitBC    as character
-  field BC        as character
-  field Price_    as character
-  field DocQnty   as character
-  field FactQnty  as character
-  field AlcCode   as character
-  field PartIDTH  as character
-  field NotDict   as logical
-  .
+
 
 define temp-table TempMarkLine no-undo
   field DocName    as character
@@ -118,14 +91,14 @@ define temp-table TempMarkLine no-undo
   MarkCode
   .
 
-define temp-table TempMarkLineMT no-undo
-  field LineId   as integer
-  field DocName  as character
-  field MarkCode as character
-  field PartIDTH as character
-  field Sts      as character
-  field MarkParent as character
+
+  
+  define temp-table TempTSDSetting no-undo
+  field sn   as character
+  field obj-code  as integer
+  field obj-type as character
+  field version_ as character
+  field lastDate as datetime
   index pi
-  DocName
-  MarkCode
+  sn
   .

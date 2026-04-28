@@ -60,6 +60,7 @@ define variable vss-description as character no-undo init "Ручной режим работы O
 define variable log-res as logical no-undo .
 define variable v-db-num as integer no-undo .
 define variable v-key-passed-date as date no-undo .
+define variable v-imp-err as character no-undo .
 define buffer buf_db for ub.db .
 define buffer buf_ext-system for ub.ext-system .
 define buffer buf_sys-ctrl for ub.sys-ctrl.
@@ -112,7 +113,7 @@ define buffer buf_sys-ctrl for ub.sys-ctrl.
 
 
 /* Definitions for BROWSE pck-rcvd                                      */
-&Scoped-define FIELDS-IN-QUERY-pck-rcvd X_esys-pck-rcvd.espr-pack-num X_esys-pck-rcvd.espr-rcvd X_esys-pck-rcvd.espr-total-recs X_esys-pck-rcvd.custom-pack-name   
+&Scoped-define FIELDS-IN-QUERY-pck-rcvd X_esys-pck-rcvd.espr-pack-num X_esys-pck-rcvd.espr-rcvd v-imp-err X_esys-pck-rcvd.espr-total-recs X_esys-pck-rcvd.custom-pack-name   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-pck-rcvd   
 &Scoped-define SELF-NAME pck-rcvd
 &Scoped-define QUERY-STRING-pck-rcvd FOR EACH X_esys-pck-rcvd       WHERE X_esys-pck-rcvd.esys-id = X_ext-system.esys-id       and X_esys-pck-rcvd.db-num = X_ext-system.db-num  NO-LOCK     BY X_esys-pck-rcvd.esys-id DESCENDING     BY X_esys-pck-rcvd.db-num DESCENDING     BY X_esys-pck-rcvd.espr-cr-db-num DESCENDING     BY X_esys-pck-rcvd.espr-pack-num DESCENDING INDEXED-REPOSITION
@@ -138,8 +139,8 @@ define buffer buf_sys-ctrl for ub.sys-ctrl.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-quit b-create b-packlist b-help br-esys ~
-pck-sent b-send b-send-all b-conf-pck b-info pck-rcvd b-get-pck b-send-new ~
-b-unsend b-get b-proc-pck b-other oxml-log 
+pck-sent b-send b-send-all b-conf-pck b-info pck-rcvd b-imp-err b-get-pck ~
+b-send-new b-unsend b-get b-proc-pck b-other oxml-log 
 &Scoped-Define DISPLAYED-OBJECTS oxml-log 
 
 /* Custom List Definitions                                              */
@@ -181,6 +182,10 @@ DEFINE BUTTON b-help
      LABEL "Помо&щь" 
      SIZE 3 BY 1
      BGCOLOR 8 .
+
+DEFINE BUTTON b-imp-err DEFAULT 
+     LABEL "&Ошибки" 
+     SIZE 10 BY 1 TOOLTIP "Ошибки импорта по пакету".
 
 DEFINE BUTTON b-info DEFAULT 
      LABEL "&Доп.инфо" 
@@ -256,6 +261,7 @@ DEFINE BROWSE pck-rcvd
   QUERY pck-rcvd NO-LOCK DISPLAY
       X_esys-pck-rcvd.espr-pack-num COLUMN-LABEL "Номер" FORMAT ">>>>>>9":U
       X_esys-pck-rcvd.espr-rcvd COLUMN-LABEL "Подтв." FORMAT "yes/no":U
+      v-imp-err COLUMN-LABEL "Ош." FORMAT "X(1)":U
       X_esys-pck-rcvd.espr-total-recs COLUMN-LABEL "Записей в пакете" FORMAT ">>>>>>>>>9":U
   X_esys-pck-rcvd.custom-pack-name COLUMN-LABEL "Имя пакета в ВС" FORMAT "X(255)":U WIDTH 30
 /* _UIB-CODE-BLOCK-END */
@@ -292,6 +298,7 @@ DEFINE FRAME oxmlhand
      b-conf-pck AT ROW 9 COL 72 WIDGET-ID 2
      b-info AT ROW 9 COL 86.8
      pck-rcvd AT ROW 10 COL 52 WIDGET-ID 100
+     b-imp-err AT ROW 16.48 COL 87 WIDGET-ID 8
      b-get-pck AT ROW 16.52 COL 1
      b-send-new AT ROW 16.52 COL 21
      b-unsend AT ROW 16.52 COL 41
@@ -555,6 +562,21 @@ DO:
     .
     run refresh-brws in this-procedure ( input yes ).
 
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME b-imp-err
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL b-imp-err oxmlhand
+ON CHOOSE OF b-imp-err IN FRAME oxmlhand /* Ошибки */
+DO:
+  run bge/pack-err.w ( input X_esys-pck-rcvd.esys-id
+                      ,input X_esys-pck-rcvd.db-num
+                      ,input X_esys-pck-rcvd.espr-cr-db-num
+                      ,input X_esys-pck-rcvd.espr-pack-num
+                ) no-error.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -855,8 +877,26 @@ END.
 &Scoped-define BROWSE-NAME pck-rcvd
 &Scoped-define SELF-NAME pck-rcvd
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL pck-rcvd oxmlhand
+ON ROW-DISPLAY OF pck-rcvd IN FRAME oxmlhand /* Полученные пакеты */
+DO:
+  define buffer esys-pck-rcvd-err for ub.esys-pck-rcvd-err.
+
+  v-imp-err = if can-find(first esys-pck-rcvd-err where
+                                esys-pck-rcvd-err.esys-id        = X_esys-pck-rcvd.esys-id
+                            AND esys-pck-rcvd-err.db-num         = X_esys-pck-rcvd.db-num
+                            AND esys-pck-rcvd-err.espr-cr-db-num = X_esys-pck-rcvd.espr-cr-db-num
+                            AND esys-pck-rcvd-err.espr-pack-num  = X_esys-pck-rcvd.espr-pack-num)
+              then "+" else "".
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL pck-rcvd oxmlhand
 ON VALUE-CHANGED OF pck-rcvd IN FRAME oxmlhand /* Полученные пакеты */
 DO:
+  define buffer esys-pck-rcvd-err for ub.esys-pck-rcvd-err.
     ASSIGN
     MENU-ITEM m_send-ora-rcpt:SENSITIVE IN MENU MENU-b-other = NO.
 
@@ -880,6 +920,13 @@ DO:
       ELSE DO:
 
       END. /*/*IF AVAILABLE X_esys-pck-rcvd.db-num THEN DO:*/*/
+      if can-find(first esys-pck-rcvd-err where
+                        esys-pck-rcvd-err.esys-id        = X_esys-pck-rcvd.esys-id
+                    AND esys-pck-rcvd-err.db-num         = X_esys-pck-rcvd.db-num
+                    AND esys-pck-rcvd-err.espr-cr-db-num = X_esys-pck-rcvd.espr-cr-db-num
+                    AND esys-pck-rcvd-err.espr-pack-num  = X_esys-pck-rcvd.espr-pack-num) 
+        then enable b-imp-err with frame {&frame-name}.
+        else disable b-imp-err with frame {&frame-name}.
   END. /*else if IF NOT AVAILABLE X_ext-system  THEN DO:*/
 END.
 
@@ -1003,8 +1050,8 @@ PROCEDURE enable_UI :
   DISPLAY oxml-log 
       WITH FRAME oxmlhand.
   ENABLE b-quit b-create b-packlist b-help br-esys pck-sent b-send b-send-all 
-         b-conf-pck b-info pck-rcvd b-get-pck b-send-new b-unsend b-get 
-         b-proc-pck b-other oxml-log 
+         b-conf-pck b-info pck-rcvd b-imp-err b-get-pck b-send-new b-unsend 
+         b-get b-proc-pck b-other oxml-log 
       WITH FRAME oxmlhand.
   {&OPEN-BROWSERS-IN-QUERY-oxmlhand}
 END PROCEDURE.
@@ -1078,6 +1125,7 @@ oxml-log
 WITH FRAME {&frame-name}.
 run Openbr-esys in this-procedure .
 apply "VALUE-CHANGED" to br-esys.
+apply "VALUE-CHANGED" to pck-rcvd.
 
 END PROCEDURE.
 

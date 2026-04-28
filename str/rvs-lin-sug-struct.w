@@ -44,6 +44,7 @@ define output parameter p-dens-pf as decimal no-undo .
 define output parameter p-ok      as logical no-undo .
 /* Local Variable Definitions ---                                       */
 { gbl/cur-time.i }
+{ str/pokmi-dyn.i }
 
 define stream outstream.
 
@@ -69,9 +70,9 @@ define buffer buf_goods for ub.goods .
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS b-cancel b-save f-dens15 f-atm-pressure ~
-r-struct-type f-mmass-pseudo f-dens-pseudo 
+r-struct-type f-mmass-pseudo f-dens-pseudo cb-p_type
 &Scoped-Define DISPLAYED-OBJECTS f-dens15 f-atm-pressure r-struct-type ~
-f-mmass-pseudo f-dens-pseudo 
+f-mmass-pseudo f-dens-pseudo cb-p_type
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -96,7 +97,7 @@ DEFINE BUTTON b-save AUTO-GO
      SIZE 15 BY 1.14
      BGCOLOR 8 .
 
-DEFINE VARIABLE f-atm-pressure AS DECIMAL FORMAT ">>>>>9.99999":U INITIAL 0 
+DEFINE VARIABLE f-atm-pressure AS DECIMAL FORMAT ">>>>>9.999999":U INITIAL 0 
      LABEL "Атмосферное давление, МПа" 
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
@@ -122,6 +123,14 @@ DEFINE VARIABLE r-struct-type AS INTEGER
           "Молярные доли", 1,
 "Массовые доли", 2
      SIZE 43 BY .86 NO-UNDO.
+     
+define variable cb-p_type as integer init 0
+   LABEL "Измеряемое давление" 
+   VIEW-AS COMBO-BOX INNER-LINES 2
+   LIST-ITEM-PAIRS "избыточное",0,
+   "абсолютное",1
+   DROP-DOWN-LIST
+   SIZE 14 BY 1 NO-UNDO.
 
 define query br-sug-struct for tt-sug-struct .
 define browse br-sug-struct query br-sug-struct exclusive-lock
@@ -139,14 +148,15 @@ define browse br-sug-struct query br-sug-struct exclusive-lock
 DEFINE FRAME Dialog-Frame
      b-cancel AT ROW 1.24 COL 2
      b-save AT ROW 1.24 COL 17
-     f-dens15 AT ROW 3 COL 33 COLON-ALIGNED WIDGET-ID 2
-     f-atm-pressure AT ROW 4 COL 33 COLON-ALIGNED WIDGET-ID 4
-     r-struct-type AT ROW 5 COL 2 NO-LABEL WIDGET-ID 6
-     br-sug-struct AT ROW 6 COL 2
-     f-mmass-pseudo AT ROW 23 COL 29.2 COLON-ALIGNED WIDGET-ID 12
-     f-dens-pseudo AT ROW 24 COL 29.2 COLON-ALIGNED WIDGET-ID 10
+     cb-p_type AT ROW 3 COL 33 COLON-ALIGNED WIDGET-ID 16
+     f-dens15 AT ROW 4 COL 33 COLON-ALIGNED WIDGET-ID 2
+     f-atm-pressure AT ROW 5 COL 33 COLON-ALIGNED WIDGET-ID 4
+     r-struct-type AT ROW 6 COL 2 NO-LABEL WIDGET-ID 6
+     br-sug-struct AT ROW 7 COL 2
+     f-mmass-pseudo AT ROW 24 COL 29.2 COLON-ALIGNED WIDGET-ID 12
+     f-dens-pseudo AT ROW 25 COL 29.2 COLON-ALIGNED WIDGET-ID 10
      "Псевдокомпонент:" VIEW-AS TEXT
-          SIZE 23.4 BY .75 AT ROW 22.2 COL 8 WIDGET-ID 14
+          SIZE 23.4 BY .75 AT ROW 23.2 COL 8 WIDGET-ID 14
           FONT 6
      SPACE(1) SKIP(1)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
@@ -207,12 +217,23 @@ do :
   define variable v-sug-struct-val as character no-undo .
   define variable v-proc as character no-undo .
   
+  define variable M as decimal extent 16 .
+  
+  define variable R as decimal no-undo .
+  define variable CTL as decimal no-undo .
+  define variable P_vapor as decimal no-undo .
+  
+  define variable vErr as character no-undo .
+  define variable vWrn as character no-undo .
+  define variable vDllVersion as character no-undo .
+  
   assign
     r-struct-type
     f-dens15
     f-atm-pressure
     f-dens-pseudo
     f-mmass-pseudo
+    cb-p_type
   .
   
   if f-dens15 = ?
@@ -382,6 +403,26 @@ do :
   end.
   rvs-line-attr.attr-value = string(r-struct-type) .
   
+  find first rvs-line-attr exclusive-lock
+       where rvs-line-attr.obj-code  = p-obj-code
+         and rvs-line-attr.obj-type  = p-obj-type
+         and rvs-line-attr.gds-code  = p-gds-code
+         and rvs-line-attr.pl-code   = p-pl-code
+         and rvs-line-attr.rvs-code  = p-rvs-code
+         and rvs-line-attr.attr-code = "p_type" no-error.
+  if not available rvs-line-attr then do :
+    create rvs-line-attr.
+    assign
+      rvs-line-attr.obj-code  = p-obj-code
+      rvs-line-attr.obj-type  = p-obj-type
+      rvs-line-attr.gds-code  = p-gds-code
+      rvs-line-attr.pl-code   = p-pl-code
+      rvs-line-attr.rvs-code  = p-rvs-code
+      rvs-line-attr.attr-code = "p_type"
+    .
+  end.
+  rvs-line-attr.attr-value = string(cb-p_type) .
+  
   v-sug-struct-val = "" .                              
   for each tt-sug-struct no-lock by tt-sug-struct.ii :
     v-sug-struct-val = v-sug-struct-val + string(tt-sug-struct.val, ">>9.9999") + "," . 
@@ -412,61 +453,57 @@ do :
   
   release rvs-line-attr no-error .
   
-  RELEASE OBJECT v-mm55 NO-ERROR.
-  v-mm55 = ?.
+  v-proc = "CMethodOfMetering55" .
   
-  v-proc = "ADMM.CMethodOfMetering55" .
-
-  CREATE value(v-proc) v-mm55 no-error.
-  IF ERROR-STATUS:ERROR
-  OR NOT VALID-HANDLE(v-mm55)
-  THEN DO:
-    RELEASE OBJECT v-mm55 NO-ERROR.
-    v-mm55 = ?.
-    message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) view-as alert-box .
-    return .
-  END.
-  ELSE DO :
-    assign
-      v-mm55:R15      = f-dens15 * 1000
-      v-mm55:T        = p-temp
-    .
-    OUTPUT stream outstream to value ("pomi.log") append.
-    PUT STREAM outstream unformatted
-        "    " SKIP
-        "    " SKIP
-        cur-time-string()           FORMAT "x(16)"    SKIP
-        'Процедура             '    v-proc   SKIP
-        'CODE_PL                = ' p-pl-code                           SKIP
-        'R15                    = ' v-mm55:R15                  SKIP
-        'T                      = ' v-mm55:T                                      SKIP
-            SKIP SKIP 
-    .
-    output stream outstream close.
+  MM55
+    (
+    input f-dens15 * 1000,
+    input p-temp,
+    input 2, /* Round_R */
+    input 2, /* Round_T */
     
-    v-mm55:Exec() no-error.
-    if v-mm55:Result <> 0 then do :
-      error-string = v-mm55:ResultDetail .
-      output stream outstream to value ("pomi.log")  append.
-      put stream outstream error-string format "X(1024)" skip.
-      RELEASE OBJECT v-mm55 NO-ERROR.
-      v-mm55 = ?.
-      output stream outstream close.
-      message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
-      return .
-    end.
-    else do :
-      p-dens = round(v-mm55:R / 1000,4) .
-      OUTPUT stream outstream to value ("pomi.log")  append.
-      PUT STREAM outstream unformatted
-          "MM:R   = " v-mm55:R  SKIP
-          "MM:CTL = " v-mm55:CTL  SKIP
-          'Версия dll: '              v-mm55:DllVersion  SKIP
-      .
-      OUTPUT stream outstream close.
-      RELEASE OBJECT v-mm55 NO-ERROR.
-      v-mm55 = ?.
-    end .
+    output R,
+    output CTL,
+    
+    output vErr,
+    output vWrn,
+    output vDllVersion
+    )
+  .
+
+  OUTPUT stream outstream to value ("pomi.log") append.
+  PUT STREAM outstream unformatted
+      "    " SKIP
+      "    " SKIP
+      cur-time-string()           FORMAT "x(16)"    SKIP
+      'Процедура             '    v-proc   SKIP
+      'CODE_PL                = ' p-pl-code                           SKIP
+      'R15                    = ' f-dens15 * 1000                 SKIP
+      'T                      = ' p-temp                                  SKIP
+      'Round_R                = ' 2                                   SKIP
+      'Round_T                = ' 2                                   SKIP
+          SKIP SKIP 
+  .
+  output stream outstream close.
+  
+  if trim(vErr) > "" then do :
+    error-string = vErr .
+    output stream outstream to value ("pomi.log")  append.
+    put stream outstream error-string format "X(1024)" skip.
+    output stream outstream close.
+    message substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) view-as alert-box .
+    return .
+  end.
+  else do :
+    p-dens = round(R / 1000, 4) .
+    OUTPUT stream outstream to value ("pomi.log")  append.
+    PUT STREAM outstream unformatted
+        "R   = " R  SKIP
+        "CTL = " CTL  SKIP
+        "Warnings = " vWrn SKIP
+        'Версия dll: '   vDllVersion  SKIP
+    .
+    OUTPUT stream outstream close.
   end .
   
   if p-dens = ?
@@ -476,100 +513,117 @@ do :
     return .
   end .
   
-  RELEASE OBJECT v-mm56 NO-ERROR.
-  v-mm56 = ?.
   
-  v-proc = "ADMM.CMethodOfMetering56" .
-
-  CREATE value(v-proc) v-mm56 no-error.
-  IF ERROR-STATUS:ERROR
-  OR NOT VALID-HANDLE(v-mm56)
-  THEN DO:
-    RELEASE OBJECT v-mm56 NO-ERROR.
-    v-mm56 = ?.
-    message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) view-as alert-box .
-    return .
-  END.
-  ELSE DO :
-    assign
-      v-mm56:M_type   = if r-struct-type = 1 then 0 else 1
-      v-mm56:T        = p-temp
-      v-mm56:P_extra  = p-press
-      v-mm56:P_atmosphere = f-atm-pressure
-      v-mm56:M_pseudo = f-mmass-pseudo
-      v-mm56:R_pseudo = f-dens-pseudo
-    .
-    for each buf_sug-struct no-lock by buf_sug-struct.ii :
-      v-mm56:setArrayElementM(input buf_sug-struct.ii, input buf_sug-struct.val_).
-      mmM = mmM + ";" + string(buf_sug-struct.val_, ">>>>9.99<<") .
-    end . 
-    mmM = trim(mmM, ";") .
-    OUTPUT stream outstream to value ("pomi.log") append.
-    PUT STREAM outstream unformatted
-                "    " SKIP
-                "    " SKIP
-                cur-time-string()           FORMAT "x(16)"    SKIP
-                'Процедура             '    v-proc   SKIP
-                'CODE_PL                = ' p-pl-code                           SKIP
-                'M_type                 = ' v-mm56:M_type                  SKIP
-                'M                      = ' mmM                  SKIP
-                'T                      = ' v-mm56:T                       SKIP
-                'P_extra                = ' v-mm56:P_extra                       SKIP
-                'P_atmosphere           = ' v-mm56:P_atmosphere                       SKIP
-                'M_pseudo               = ' v-mm56:M_pseudo                      SKIP
-                'R_pseudo               = ' v-mm56:R_pseudo                       SKIP
-                    SKIP SKIP 
-    .
-    output stream outstream close.
+  v-proc = "CMethodOfMetering56" .
+  
+  for each buf_sug-struct no-lock by buf_sug-struct.ii :
+    M[buf_sug-struct.ii + 1] = buf_sug-struct.val_ .
+    mmM = mmM + ";" + string(buf_sug-struct.val_, ">>>>9.99<<") .
+  end . 
+  mmM = trim(mmM, ";") .
+  
+  MM56
+    (
+    input if r-struct-type = 1 then 0 else 1,
+    input M,
+    input p-temp, /* T */
+    input cb-p_type, /* P_type 0 - избыточное, 1 - абсолютное */
+    input p-press, /* P_extra */
+    input f-atm-pressure, /* P_atmosphere */
+    input f-mmass-pseudo, /* M_pseudo */
+    input f-dens-pseudo, /* R_pseudo */
+    input 2, /* Round_T */
+    input 2, /* Round_R */
     
-    v-mm56:Exec() no-error.
-    if v-mm56:Result <> 0 then do :
-      error-string = v-mm56:ResultDetail .
-      output stream outstream to value ("pomi.log")  append.
-      put stream outstream error-string format "X(1024)" skip.
-      RELEASE OBJECT v-mm56 NO-ERROR.
-      v-mm56 = ?.
-      output stream outstream close.
-      message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
-      return .
-    end.
-    else do :
-      p-dens-pf = round(v-mm56:R / 1000,4) .
-      OUTPUT stream outstream to value ("pomi.log")  append.
-      PUT STREAM outstream unformatted
-          "MM:R   = " v-mm56:R  SKIP
-          "MM:P_Vapor = " v-mm56:P_Vapor  SKIP
-          'Версия dll: '              v-mm56:DllVersion  SKIP
-      .
-      OUTPUT stream outstream close.
-      RELEASE OBJECT v-mm56 NO-ERROR.
-      v-mm56 = ?.
-      if p-dens-pf < 0
+    output R,
+    output P_vapor,
+    
+    output vErr,
+    output vWrn,
+    output vDllVersion
+    )
+  .
+  
+  OUTPUT stream outstream to value ("pomi.log") append.
+  PUT STREAM outstream unformatted
+              "    " SKIP
+              "    " SKIP
+              cur-time-string()           FORMAT "x(16)"    SKIP
+              'Процедура             '    v-proc   SKIP
+              'CODE_PL                = ' p-pl-code                           SKIP
+              'M_type                 = ' if r-struct-type = 1 then 0 else 1                  SKIP
+              'M                      = ' mmM                  SKIP
+              'T                      = ' p-temp                       SKIP
+              'P_type                 = ' cb-p_type                       SKIP
+              'P_extra                = ' p-press                       SKIP
+              'P_atmosphere           = ' f-atm-pressure                       SKIP
+              'M_pseudo               = ' f-mmass-pseudo                      SKIP
+              'R_pseudo               = ' f-dens-pseudo                      SKIP
+              'Round_T                = ' 2                                   SKIP
+              'Round_R                = ' 2                                   SKIP
+                  SKIP SKIP 
+  .
+  output stream outstream close.
+  
+  if trim(vErr) > "" then do :
+    error-string = vErr .
+    output stream outstream to value ("pomi.log")  append.
+    put stream outstream error-string format "X(1024)" skip.
+    output stream outstream close.
+    message substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) view-as alert-box .
+    return .
+  end.
+  else do :
+    p-dens-pf = round(R / 1000, 4) .
+    OUTPUT stream outstream to value ("pomi.log")  append.
+    PUT STREAM outstream unformatted
+        "R   = " R  SKIP
+        "P_Vapor = " P_Vapor  SKIP
+        "Warnings = " vWrn SKIP
+        'Версия dll: '              vDllVersion  SKIP
+    .
+    OUTPUT stream outstream close.
+    if p-dens-pf < 0
+    then do :
+      find first buf_place no-lock where buf_place.obj-type = p-obj-type
+                                     and buf_place.obj-code = p-obj-code
+                                     and buf_place.pl-code = p-pl-code
+                                     no-error .
+      find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
+      if available buf_place
+      and available buf_goods
       then do :
-        find first buf_place no-lock where buf_place.obj-type = p-obj-type
-                                       and buf_place.obj-code = p-obj-code
-                                       and buf_place.pl-code = p-pl-code
-                                       no-error .
-        find first buf_goods no-lock where buf_goods.gds-code = p-gds-code no-error .
-        if available buf_place
-        and available buf_goods
-        then do :
-          message
-            "Ошибка при заполнении данных!" skip
-            "Для резервуара " string(buf_place.pl-code) " (" buf_place.loc1 "  " buf_goods.gds-name ") не определено значение плотности ПГФ. Сохранение результатов расчёта невозможно." skip
-            "Проверьте внесённый компонентный состав СУГ."
-          view-as alert-box .
-          return .
-        end .
-        else do :
-          message "Ошибка при заполнении данных! Проверьте внесённый компонентный состав СУГ." view-as alert-box .
-          return .
-        end .                               
+        message
+          "Ошибка при заполнении данных!" skip
+          "Для резервуара " string(buf_place.pl-code) " (" buf_place.loc1 "  " buf_goods.gds-name ") не определено значение плотности ПГФ. Сохранение результатов расчёта невозможно." skip
+          "Проверьте внесённый компонентный состав СУГ."
+        view-as alert-box .
+        return .
       end .
+      else do :
+        message "Ошибка при заполнении данных! Проверьте внесённый компонентный состав СУГ." view-as alert-box .
+        return .
+      end .                               
     end .
   end .
   
   p-ok = true .
+end .
+
+on value-changed of cb-p_type in frame dialog-frame 
+do:
+  assign cb-p_type .
+  if cb-p_type = 0
+  then do :
+    assign f-atm-pressure = 0.101325 .
+    display f-atm-pressure with frame dialog-frame .
+    disable f-atm-pressure with frame dialog-frame .
+  end .
+  else do :
+    assign f-atm-pressure = 0.0 .
+    display f-atm-pressure with frame dialog-frame .
+    enable f-atm-pressure with frame dialog-frame .
+  end .
 end .
 
 on value-changed of r-struct-type in frame dialog-frame 
@@ -747,9 +801,25 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
          :
     r-struct-type = integer(rvs-line-attr.attr-value) .     
   end .
+  for first rvs-line-attr no-lock
+       where rvs-line-attr.obj-code  = p-obj-code
+         and rvs-line-attr.obj-type  = p-obj-type
+         and rvs-line-attr.gds-code  = p-gds-code
+         and rvs-line-attr.pl-code   = p-pl-code
+         and rvs-line-attr.rvs-code  = p-rvs-code
+         and rvs-line-attr.attr-code = "p_type"
+         :
+    cb-p_type = integer(rvs-line-attr.attr-value) .     
+  end .
   
   run fill-tt .
   RUN enable_UI.
+  if cb-p_type = 0
+  then do :
+    assign f-atm-pressure = 0.101325 .
+    display f-atm-pressure with frame dialog-frame .
+    disable f-atm-pressure with frame dialog-frame .
+  end .
   
   assign r-struct-type .
   if r-struct-type = 1
@@ -899,9 +969,9 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo f-dens-pseudo 
+  DISPLAY f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo f-dens-pseudo cb-p_type
       WITH FRAME Dialog-Frame.
-  ENABLE b-cancel b-save f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo 
+  ENABLE b-cancel b-save f-dens15 f-atm-pressure r-struct-type f-mmass-pseudo cb-p_type
          f-dens-pseudo br-sug-struct
       WITH FRAME Dialog-Frame.
   VIEW FRAME Dialog-Frame.

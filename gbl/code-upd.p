@@ -50,7 +50,10 @@ define variable mfilever as char no-undo init ?.
 define variable m-type as character no-undo.
 define variable mdbver as integer no-undo.
 define variable mdbver_old as integer no-undo.
+define variable f_load as logical no-undo init no.
+define variable mRunTransaction as logical no-undo.
 define stream md5in.
+
 run db-attr-value in this-procedure 
            (input ibs.th.gbl.gbl-var:g#db-num
            ,input {&attr-ver-met}
@@ -80,21 +83,55 @@ do mdbver = mdbver_old + 1 to 999999999:
           input  mfile
          ,output v-md5-signature /* p-md5-signature */
          ) .
+
+
    if mtxt eq {utl/chekmd5.i v-md5-signature } 
    then do:
       vimport:xmldom-load-ver  ( mfile,? ) no-error.
+      mRunTransaction = vimport:mTransaction.
+
       if error-status:error
       then
          return error return-value.
-      
-/*      UPD_TBL:                                            */
-/*      do transaction on error undo UPD_TBL, leave UPD_TBL:*/
-/*      убрана транзакция временно по BTS-1809   */
+
+      /* BTS-1871 03.02.2026 Чтобы не открывать транзакцию при изменения/удаления больших данных    */
+      /* нужно задать тег NoTransaction внутри File-info с любым значением                          */
+      /* <File-info>                                                                                */       
+      /*    <NoTransaction>Yes</NoTransaction>                                                      */
+      /* </File-info>                                                                               */
+      /* В этом случае при возникновении ошибки загрузки восстановление данных необходимо выполнять */
+      /* программным путем или делать копию БД перед накатом обновлений                             */
+      if mRunTransaction then
+      do:
+        UPD_TBL:
+        do transaction on error undo UPD_TBL, leave UPD_TBL:
           vimport:updatetablefordb(this-procedure) no-error.
           if error-status:error
-          then return error return-value.
-            
-/*      end.*/
+            then return error return-value.
+        end.
+      end.
+      else do:
+         vimport:updatetablefordb(this-procedure) no-error.
+         if error-status:error
+           then return error return-value.
+      end.
+
+       CODE_UPD:
+       do transaction on error undo CODE_UPD, leave CODE_UPD:
+
+       create code  no-error.
+         assign 
+         code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+         code.code      = string(now)
+         code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
+         code.misc1     = v-md5-signature
+         code.misc2     = string(mdbver)
+         code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
+         code.nwsgbd    = yes.
+         code.nwsubd    = yes.
+         .
+       f_load = yes.
+       end.      
       return-value = "".
       vimport:xmldom-clear().
    end.
@@ -133,6 +170,7 @@ then do:
    IMP_CODE:
    do transaction on error undo IMP_CODE, leave IMP_CODE:
        vimport:updatetablefordb(this-procedure) no-error.
+
        if error-status:error
        then
           return error return-value + " " + error-status:get-message(1).
@@ -141,9 +179,84 @@ then do:
                                               , input {&attr-ver-code}
                                               , input mfilever
                                               ) no-error .
+
    end.
+
+   CODE_UPD2:
+   do transaction on error undo CODE_UPD2, leave CODE_UPD2:
+
+   find last code no-lock where code.CodeValue = "code.xml" no-error.
+   if available code and code.misc1 <> v-md5-signature
+         then do:
+         create code no-error.
+            assign 
+            code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+            code.code      = string(now)
+            code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
+            code.misc1     = v-md5-signature
+            code.misc2     = string(mdbver)
+            code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
+            code.nwsgbd    = yes.
+            code.nwsubd    = yes.
+            .
+   f_load = yes.
+   end.
+
+   if not available code 
+         then do:
+         create code  no-error.
+            assign 
+            code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+            code.code      = string(now)
+            code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
+            code.misc1     = v-md5-signature
+            code.misc2     = string(mdbver)
+            code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
+            code.nwsgbd    = yes.
+            code.nwsubd    = yes.
+            .
+   f_load = yes.
+   end.
+
+   end.      
+
+   return-value = "".
    vimport:xmldom-clear().
 end.
+
+if f_load = no
+        then do:
+
+   CODE_UPD3:
+   do transaction on error undo CODE_UPD3, leave CODE_UPD3:
+
+/*	find last code no-lock where code.parent = "XML_UPD" no-error. */
+        find last code no-lock where code.parent BEGINS "XML_UPD" no-error.
+        mfile    = search(substitute("upd/&1.xml", string(mdbver_old, "999999999"))).
+        mfilemd5 = search(substitute("upd/&1.md5", string(mdbver_old, "999999999"))).
+        if mfile ne ? and mfilemd5 ne ? then do:
+	        input stream md5in from value(mfilemd5).
+	        import stream md5in mTxt no-error.
+	        input stream md5in close.
+	        run gbl/md5.p (input  mfile, output v-md5-signature) no-error.
+	        if available code and code.misc1 ne v-md5-signature then do:
+		        create code no-error.
+		        assign
+                        code.parent    = substitute("XML_UPD&1 &2",{&delim-par},string(ibs.th.gbl.gbl-var:g#db-num))
+		        code.code      = string(now)
+		        code.CodeValue = entry(num-entries(mfile, "\") , mfile, "\")
+		        code.misc1     = v-md5-signature
+		        code.misc2     = string(mdbver)
+		        code.misc3     = string(ibs.th.gbl.gbl-var:g#db-num)
+                        code.nwsgbd    = yes.                              
+                        code.nwsubd    = yes.
+		        .
+	        end.
+	end.
+   end.
+end.
+
+
 define variable v-err-msg as character no-undo .  
 catch exAppErrors as class Progress.Lang.AppError :
     v-err-msg = exAppErrors:ReturnValue .

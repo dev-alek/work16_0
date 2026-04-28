@@ -36,9 +36,9 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
   { cmp/str-glbl.i class }
   { str/lib-trn.i  class }
   { cmp/library.i  class }
-  { gbl/attr-lib.i class}
+  { str/utd-typemark.i class }
   { str/trdcalib.i class }
-  { utl/gtin.i class }
+  
   &scop create-record find first buf_doc-attr where buf_doc-attr.doc-code = DocCode and buf_doc-attr.attr-code = ~{&~{&attr-code~}~} no-error. ~
   if available (buf_doc-attr) then write-data-element (buf_doc-attr.attr-code, buf_doc-attr.attr-value).
     
@@ -1081,6 +1081,7 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
     define variable vGtin as character no-undo .
     define variable vQnty as integer no-undo .
     define variable vDocQnty as integer no-undo .
+    define variable isVarWeight as logical no-undo init no .
     
     for first buf_doc-line no-lock where buf_doc-line.doc-code = DocCode
                                     and buf_doc-line.line-num = p-line-num,
@@ -1088,12 +1089,15 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
       buf_goods.prod-code = buf_doc-line.prod-code and
       buf_goods.prod-type = buf_doc-line.prod-type  :
     
+      isVarWeight = WghProdVariable(buf_doc-line.obj-type, buf_doc-line.obj-code, buf_goods.gds-code).
+      
       find first buf_doc-line-attr no-lock where buf_doc-line-attr.doc-code = buf_doc-line.doc-code
                                              and buf_doc-line-attr.gds-code = buf_goods.gds-code
                                              and buf_doc-line-attr.attr-code = "GTIN-qnty"
                                              no-error .
       if available buf_doc-line-attr
       and buf_doc-line-attr.attr-value > ""
+      and not isVarWeight
       then do :
         sw:start-element ("marks").
         GT_ :
@@ -1126,13 +1130,14 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
           undo, return error return-value .
         end.
         define variable vAvailMarks as logical no-undo.
-  
+        
         for each buf_parts no-lock where buf_parts.out-code  = buf_doc-line.doc-code
                                      and buf_parts.artic     = buf_doc-line.artic
                                      and buf_parts.prod-type = buf_doc-line.prod-type
                                      and buf_parts.prod-code = buf_doc-line.prod-code:
           if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsMarkingForType(v-gds-attr-value-old)
           or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_parts.obj-type, buf_parts.obj-code):GetIsEDOForType(v-gds-attr-value-old) 
+          or isVarWeight
           then do:
             for each buf_marking-lines no-lock where buf_marking-lines.doc-level = 1 and
               buf_marking-lines.gds-code = buf_goods.gds-code and
@@ -1165,6 +1170,21 @@ class ibs.th.bge.1crn.subjects.trn-gd-doc inherits ibs.th.gbl.sys.objth implemen
               write-data-element ("prt-id", buf_parts.part-code).
               write-data-element ("in-doc-id", buf_parts.in-code).
 /*              end.*/
+/*              if buf_trn-doc.ext-doc-type = {&TDEDT_Ras_Perem}*/
+/*              or buf_trn-doc.ext-doc-type = {&TDEDT_Pri_Perem}*/
+/*              then do:                                        */
+/*                if num-entries(buf_parts.part-code, "_") = 2  */
+/*                then do :                                     */
+/*                  vGtin = entry(1, buf_parts.part-code, "_") .*/
+/*                  if length(vGtin) = 8                        */
+/*                  or length(vGtin) = 12                       */
+/*                  or length(vGtin) = 13                       */
+/*                  or length(vGtin) = 14                       */
+/*                  then do :                                   */
+/*                    write-data-element ("gtin", vGtin) .      */
+/*                  end .                                       */
+/*                end .                                         */
+/*              end .                                           */
               write-data-element ("mark-code", repTegforDm( addBracketForCode(buf_marking-lines.mark))).
               sw:end-element ("mark").
             end.

@@ -1,11 +1,11 @@
 block-level on error undo, throw.
 /*
 
-$Revision: f0098cbc9507, 2545, test $
-$Author: DRuban $
-$Date: Вт авг 04 12:57:23 2020 +0300 $
-$Workfile: libbcrcn.p $
-$Archive: str/libbcrcn.p $
+$Revision$
+$Author$
+$Date$
+$Workfile$
+$Archive$
 
 Библиотека процедур для работы с бар-кодами
 
@@ -16,11 +16,11 @@ Creation date: 03/24/06
 
 Создана: 06/09/2004
 */
-define variable vss-revision    as character no-undo init "$Revision: f0098cbc9507, 2545, test $":U .
-define variable vss-author      as character no-undo init "$Author: DRuban $":U .
-define variable vss-date        as character no-undo init "$Date: Вт авг 04 12:57:23 2020 +0300 $":U .
-define variable vss-workfile    as character no-undo init "$Workfile: libbcrcn.p $":U .
-define variable vss-archive     as character no-undo init "$Archive: str/libbcrcn.p $":U .
+define variable vss-revision    as character no-undo init "$Revision$":U .
+define variable vss-author      as character no-undo init "$Author$":U .
+define variable vss-date        as character no-undo init "$Date$":U .
+define variable vss-workfile    as character no-undo init "$Workfile$":U .
+define variable vss-archive     as character no-undo init "$Archive$":U .
 define variable vss-description as character no-undo init "Библиотека процедур для работы с бар-кодами".
 
 { cmp/vssrevis.i }
@@ -28,6 +28,7 @@ define variable vss-description as character no-undo init "Библиотека процедур д
 { cmp/str-glbl.i }
 { cmp/library.i  }
 { str/libbcrcn.i }
+{utl/gtin.i}
 if valid-handle (g#libbcrcn)
 and g#libbcrcn <> this-procedure :handle
 and g#libbcrcn :get-signature('libbcrcn_bc-rcnz':u) <> ""
@@ -74,20 +75,7 @@ define output parameter parweight   as decimal                  no-undo.
 define parameter buffer bf_bar-code for ub.bar-code.
 define parameter buffer bf_prod-bc  for ub.prod-bc.
 define parameter buffer bf_place    for ub.place.
-      
-      if    length(parstr-code) > 14
-      then do:  
-         if    (length(parstr-code) eq 14 + 7 + 4 + 4
-             or length(parstr-code) eq 14 + 7 + 4 )
-         then 
-            parstr-code = substring(parstr-code,1,14).
-         else if parstr-code begins "01"
-         then
-            parstr-code = substring(parstr-code,3,14).
-         else do:
-            return.
-         end.
-      end.
+      parstr-code = getGtinByDM(parstr-code).
       
 { str/bc-rcnz.i
           parparentproc
@@ -214,16 +202,7 @@ if not paronly-b-code then do:
       vtxt = parstr-code.
       if    length(vtxt) > 14
       then do:  
-         if    (length(vtxt) eq 14 + 7 + 4 + 4
-             or length(vtxt) eq 14 + 7 + 4 )
-         then 
-            vtxt = substring(vtxt,1,14).
-         else if vtxt begins "01"
-         then
-            vtxt = substring(vtxt,3,14).
-         else do:
-            vtxt = "". 
-         end.
+         vtxt = getGtinByDM(parstr-code).
          if vtxt ne ""
          then
             find first bf_prod-bc where

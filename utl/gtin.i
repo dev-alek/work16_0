@@ -352,6 +352,16 @@ function GetCodeIdent return character
    define variable vtegval as character no-undo.
    define variable vGtin as character no-undo.
    define buffer marking for ub.marking.
+   
+   for first marking no-lock where 
+             marking.mark eq iDm
+         and marking.unit-ext = "LEVEL2"
+   :
+     /* если марка есть в базе и это транспортная упаковка, */
+     /* то КМ не определяем */
+     return iDm.  
+   end.
+   
    vGtin  = getGtinByDM (iDm ).
    ChekTypeMarkByDm(idm).
    if iDm begins {&tech-mark-prefix}
@@ -458,7 +468,9 @@ method private logical isMark
 function isMark return logical 
 {utl\comment.i} */ 
 (icodeIdent as character):
-   return length(icodeIdent) > 20 and not isOAD(icodeIdent).
+   define buffer buf_marking for ub.marking.
+   return can-find(first buf_marking where buf_marking.mark begins icodeIdent) or
+          (length(icodeIdent) > 20 and not isOAD(icodeIdent)).
 end.
    
 

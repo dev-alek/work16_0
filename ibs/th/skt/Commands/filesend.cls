@@ -12,8 +12,17 @@ class ibs.th.skt.Commands.Filesend inherits ICommand:
    define override public property vss-description as character no-undo init "Обработка запросов в сокет сервер для отправки файлов" get.
 
    method override public void Execute_( input req as ibs.th.skt.Commands.IRequest, input resp as class IResponse ):
-      resp:setFile(req:queryAdr,req:queryPar).
-      resp:condition = resp:STSlist:WriteResponse:NameProp.
+      sendfile(resp, req:queryAdr,req:queryPar).
    end method.
+   
+   method public void sendfile (input resp as class IResponse, ifilename as char):
+      sendfile(resp, ifilename, "").
+   end.
+      
+   method public void sendfile (input resp as class IResponse, ifilename as char, iparam as char):
+      resp:setFile(ifilename, iparam).
+      resp:condition = resp:STSlist:WriteResponse:NameProp.
+   end.   
+   
   
 end class.

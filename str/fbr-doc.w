@@ -76,7 +76,7 @@ define variable vss-description as character no-undo init "Документ производства
 { ref/gdsoattr.i   }
 { gbl/ggoattr.i  }
 { utl/gtin.i }
-
+{ str/utd-typemark.i }
 
 define shared variable br-handle as handle no-undo.
 define shared buffer f-doc for ub.fbr-doc.
@@ -137,6 +137,9 @@ define variable v-back-date       as logical   no-undo . /* включено ли закрытие
 define variable v-back-date-type  as character no-undo .
 
 define variable is-shift-on       as logical   no-undo. /* включены ли смены на объекте */
+
+define variable v-mark-weight as decimal no-undo .
+define variable v-isweighed as logical no-undo .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -883,11 +886,15 @@ ON CHOOSE OF b-chg IN FRAME D-FBR-DOC /* Изменить */
       define variable v-cancel   as logical no-undo.
       define variable v-old-qnty as decimal no-undo.
       define variable v-mark-qnty as decimal no-undo init ? .
+      
+      define variable v-attr-value as character no-undo .
+      define variable v-attr-type as character no-undo .
 
       define buffer buf_goods for ub.goods .
       define buffer buf_fbr-recipe for ub.fbr-recipe.
       define buffer buf_fbr-line   for ub.fbr-line.
       define buffer buf_marking-lines for ub.marking-lines .
+      define buffer buf_marking for ub.marking .
 
       if not available buf_comp_fbr-line then 
       do:
@@ -903,17 +910,39 @@ ON CHOOSE OF b-chg IN FRAME D-FBR-DOC /* Изменить */
          .
          for first buf_goods no-lock where buf_goods.artic     = buf_comp_fbr-line.artic
                                        and buf_goods.prod-type = buf_comp_fbr-line.prod-type
-                                       and buf_goods.prod-code = buf_comp_fbr-line.prod-code,
-         each buf_marking-lines where buf_marking-lines.gds-code = buf_goods.gds-code
-                                  and buf_marking-lines.obj-type = f-doc.obj-type
-                                  and buf_marking-lines.obj-code = f-doc.obj-code
-                                  and buf_marking-lines.in-code  = "manufacturing"
-                                  and buf_marking-lines.out-code = buf_comp_fbr-line.doc-code
-                                  and buf_marking-lines.part-code = buf_comp_fbr-line.recipe-code
-                                  and buf_marking-lines.prt-code = 0
+                                       and buf_goods.prod-code = buf_comp_fbr-line.prod-code
          :
-           if v-mark-qnty = ? then assign v-mark-qnty = 0 .
-           assign v-mark-qnty = v-mark-qnty + 1 .
+           RUN gds-attr-value (
+              INPUT buf_goods.gds-code,
+              INPUT {&attr-mark-type},
+              OUTPUT v-attr-value,
+              OUTPUT v-attr-type
+              ).
+           v-isweighed = WeighedProd(buf_goods.gds-code)
+                     and v-attr-value > ""
+                     and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-attr-value) or
+                          ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-attr-value))
+           .
+           for each buf_marking-lines where buf_marking-lines.gds-code = buf_goods.gds-code
+                                    and buf_marking-lines.obj-type = f-doc.obj-type
+                                    and buf_marking-lines.obj-code = f-doc.obj-code
+                                    and buf_marking-lines.in-code  = "manufacturing"
+                                    and buf_marking-lines.out-code = buf_comp_fbr-line.doc-code
+                                    and buf_marking-lines.part-code = buf_comp_fbr-line.recipe-code
+                                    and buf_marking-lines.prt-code = 0
+           :
+             if v-mark-qnty = ? then assign v-mark-qnty = 0 .
+             if v-isweighed
+             then do :
+               for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
+                 v-mark-weight = MarkWeight(buf_marking.mark) .
+                 assign v-mark-qnty = v-mark-qnty + v-mark-weight .
+               end .
+             end .
+             else do :
+               assign v-mark-qnty = v-mark-qnty + 1 .
+             end .
+           end .
          end .
          run str/fbr-line.w (
             input p-fbrhist-handle
@@ -3238,7 +3267,13 @@ PROCEDURE add-proc :
                           OUTPUT v-attr-value,
                           OUTPUT v-attr-type
                           ).
+                     v-isweighed = WeighedProd(buf_goods.gds-code)
+                               and v-attr-value > ""
+                               and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-attr-value) or
+                                    ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-attr-value))
+                     .
                      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-attr-value)
+                     or v-isweighed
                      then do : 
                        empty temp-table tt-marking-lines .
                        run str/fbr-doc-dish-marks-add.w (input parparentproc,
@@ -5814,6 +5849,7 @@ FUNCTION need-marks RETURNS logical
   
   define buffer bf_gds for ub.goods.
   define buffer buf_marking-lines      for ub.marking-lines .
+  define buffer buf_marking      for ub.marking .
   
   define variable varvalue as character no-undo .
   define variable vartype as character no-undo .
@@ -5825,13 +5861,20 @@ FUNCTION need-marks RETURNS logical
                       and bf_gds.prod-type  = local-fbr-line.prod-type
                       and bf_gds.prod-code  = local-fbr-line.prod-code
                       .
+  v-isweighed = WeighedProd(bf_gds.gds-code) .
   RUN gds-attr-value (
       INPUT bf_gds.gds-code,
       INPUT {&attr-mark-type},
       OUTPUT varvalue,
       OUTPUT vartype
       ).
+  v-isweighed = WeighedProd(bf_gds.gds-code)
+            and varvalue > ""
+            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(varvalue) or
+                 ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(varvalue))
+  .
   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(varvalue)
+  or v-isweighed
   then do :
     for each buf_marking-lines no-lock where buf_marking-lines.gds-code = bf_gds.gds-code
                                          and buf_marking-lines.obj-type = f-doc.obj-type
@@ -5841,11 +5884,20 @@ FUNCTION need-marks RETURNS logical
                                          and buf_marking-lines.part-code = local-fbr-line.recipe-code
                                          and buf_marking-lines.prt-code = 0
     :
-      v-GTIN = getGtinByDM(buf_marking-lines.mark) .
-      v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
-      if v-GTIN-qnty = 1
+      if v-isweighed
       then do :
-        v-marks-qnty = v-marks-qnty + v-GTIN-qnty .
+        for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
+          v-mark-weight = MarkWeight(buf_marking.mark) .
+          assign v-marks-qnty = v-marks-qnty + v-mark-weight .
+        end .
+      end .
+      else do :
+        v-GTIN = getGtinByDM(buf_marking-lines.mark) .
+        v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
+        if v-GTIN-qnty = 1
+        then do :
+          v-marks-qnty = v-marks-qnty + v-GTIN-qnty .
+        end .
       end .
     end .
     if v-marks-qnty <> local-fbr-line.fact-qnty

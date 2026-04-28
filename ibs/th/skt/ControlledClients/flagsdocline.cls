@@ -18,38 +18,34 @@ class ibs.th.skt.ControlledClients.flagsdocline inherits flags:
   
   define property isEditManualFullQnty as logical no-undo /*в ручную можно установить только полное кол-во раное документарному*/
     get:
-      return logical (get-bits (FlagsToInt, 1, 1)).
+      return getFlag(1).
     end.
     set (arg as log):
-      put-bits (FlagsToInt, 1, 1) = int(arg).
-      isEditManualFullQnty = arg.
+       setFlag(1, arg).
     end.
 
   define property isNotEditManualQnty as logical no-undo /*в ручную устанавливать кол-во запрещено*/
     get:
-      return logical (get-bits (FlagsToInt, 2, 1)).
+      return getFlag(2).
     end.
     set (arg as log):
-      put-bits (FlagsToInt, 2, 1) = int(arg).
-      isNotEditManualQnty = arg.
+      setFlag(2, arg).
     end.
 
     define property isMarkOn as logical no-undo /*Строка с товары требующие обязательной маркировки*/
     get:
-      return logical (get-bits (FlagsToInt, 3, 1)).
+      return getFlag(3).
     end.
     set (arg as log):
-      put-bits (FlagsToInt, 3, 1) = int(arg).
-      isMarkOn = arg.
+       setFlag(3, arg).
     end.
     
     define property isVarietalVolumeOn as logical no-undo /*Строка с товары требующие объемно сортовой учет */
     get:
-      return logical (get-bits (FlagsToInt, 4, 1)).
+      return getFlag(4).
     end.
     set (arg as log):
-      put-bits (FlagsToInt, 4, 1) = int(arg).
-      isVarietalVolumeOn = arg.
+       setFlag(4, arg).
     end.
  
 

@@ -27,6 +27,9 @@ class ibs.th.skt.Commands.ICommandProc inherits ICommand  abstract:
    { gbl/runrepid.i }
    
    method public int64 runProc (icmd as character):
+      return runProc(?, icmd).
+   end.
+   method public int64 runProc (idir as char, icmd as character):
      define variable bat-file as character no-undo.
      define variable v-pid as int64 no-undo.
      run gbl/_tmpfile.p (
@@ -34,17 +37,22 @@ class ibs.th.skt.Commands.ICommandProc inherits ICommand  abstract:
                       , input "bat"
                       , output bat-file) .
      
-     v-pid = runProcFile(icmd, bat-file).                   
+     v-pid = runProcFile(idir,icmd, bat-file).                   
                                  
      return v-pid.
 
      
   end.
-  
   method public int64 runProcFile (icmd as character, iFileName as character):
+      return runProcFile(?, icmd,iFileName).
+  end.
+  method public int64 runProcFile (idir as char,icmd as character, iFileName as character):
      define variable v-pid as int64 no-undo.
      
      output to value(iFileName) convert target "ibm866".
+     if idir ne ?
+     then
+        put  unformatted "cd " idir skip.
      put  unformatted icmd skip.
      output close.
      run gbl/run-gpid.p (input iFileName

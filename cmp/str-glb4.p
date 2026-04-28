@@ -608,6 +608,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 /* коды АИС*/
 { cmp/cr-prep.i 1 attr-gds-code-AIS  gds-code-AIS " " gds-code-AIS }
 
+/* Признак весового товара */
+{ cmp/cr-prep.i 1 attr-weighed-gds  weighed-gds " " weighed-gds }
+
 /* сюда добавлять новые названия атрибутов товаров */
 
 /* список атрибутов товаров */
@@ -656,6 +659,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-weight-of-pallet}~
 ,{&bef-attr-image-list}~
 ,{&bef-attr-MercUnits}~
+,{&bef-attr-weighed-gds}~
 ':U
 run filwrlib_append-new-line in this-procedure ( input "&global-define gds-attr-list {&gds-attr-list}" ).
 

@@ -363,7 +363,7 @@ DEFINE BROWSE br_marking-type
 /*      type-marking.onlySale*/
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 107 BY 12.42 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 107 BY 12.42 .
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -388,6 +388,8 @@ DEFINE FRAME Dialog-Frame
          TITLE "Настройки для Электронного документооборота"
          DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
 
+{ gbl/diasize.i }
+    run diasize_init in this-procedure .
 
 /* *********************** Procedure Settings ************************ */
 

@@ -38,6 +38,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
      field mark as character case-sensitive 
   .
   define stream myProt.
+  define variable isOpenProt as logical no-undo init no.
 /*  define private temp-table tt-operserv no-undo like ub.OperServ .*/
   
   define property Msg as character no-undo
@@ -196,8 +197,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                ,input-output TABLE thbjattr_thbj-attr
                ) no-error .
            if v-value-integer <> ?
-           then
-              GrayZoneQnty = v-value-integer
+           then 
+              /* ЗАПЛАТКА: по ЗИ по коробам не должно быть проверки на "серую зону" */
+              /* на случай, если надо вернуть, просто всегда берем 100              */
+/*              GrayZoneQnty = v-value-integer*/
+              GrayZoneQnty = 100
            . 
 
          find first shop where shop.obj-code eq buf_clients.obj-code
@@ -211,7 +215,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
       no-lock no-error.
       if  not available contract
       then
-         undo, throw new Progress.Lang.AppError(substitute("В &1, указанный в УПД, не нфйден в системе.",utd.contract-code)) .
+         undo, throw new Progress.Lang.AppError(substitute("В &1, указанный в УПД, не найден в системе.",utd.contract-code)) .
       
       if     contract.cli-type  ne utd.cli-type
          or  contract.cli-code  ne utd.cli-code
@@ -305,6 +309,14 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
             if v-gds-gd:Qnty-accepted ne ?
             then
                setattrutdlines(utd-lines.db-num, utd-lines.doc-id, utd-lines.lineNum,"QuantityBarCode",string(v-gds-gd:Qnty-accepted)).
+               
+            /* разрешение ручного выбора */            
+            if v-gds-gd:manual-selection eq 1 
+            then 
+               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"manual-selection","yes").                              
+            else
+               setattrutdlines(utd-lines.db-num,utd-lines.doc-id,utd-lines.LineNum,"manual-selection",""). 
+                
             define variable vqnty as integer no-undo.
             vqnty = 0.
             define variable vGdsCode as integer no-undo.
@@ -378,23 +390,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   if utd-marking-lines.doc-level eq 1
                   then
                      vqnty = vqnty + vQntyMark.
-/*                  define variable vsts as integer no-undo.                                                      */
-/*                                                                                                                */
-/*                  if not can-do(ObjSrv:Env:marking:Sts:mark:EqualChecked,string(utd-marking-lines.sts)) then do:*/
-/*                  /* статус меняем, если марка не проверена, не продана не возвражена на кассу */               */
-/*                      vsts = ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts).                        */
-/*                      if     vsts = ObjSrv:Env:marking:Sts:mark:DeliveryControl:KeyIntDB                        */
-/*                         or  vsts = ObjSrv:Env:marking:Sts:mark:GrayZone:KeyIntDB                               */
-/*                      then                                                                                      */
-/*                         utd-marking-lines.sts = ObjSrv:Env:marking:Sts:mark:PendingVerification:KeyIntDB.      */
-/*                      else                                                                                      */
-/*                         utd-marking-lines.sts = vsts.                                                          */
-/*                  end.                                                                                          */
                   utd-marking-lines.sts = if not avail ub.marking then ObjSrv:Env:marking:Sts:mark:GetKeyIntDB(v-marks-mark:stts)
                                           else 
                                  if can-do(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait,string(ub.marking.sts)) or
                                     can-do(objSrv:Env:Marking:Sts:Mark:Doc_Status,string(ub.marking.sts)) or
-                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or 
+                                    ub.marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB or
                                     ub.marking.sts = objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB
                                  then objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
                                  else ub.marking.sts.
@@ -403,14 +403,8 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                      and available marking
                   then
                      AddUtdErr(utd.db-num,utd.doc-id,buffer utd-marking-lines:handle,"Load1C","stts-desc-mark",v-marks-mark:stts-desc + {&delim-par} + string( utd-lines.LineNum) + {&delim-par} +  vmark).
-/*                  create tt-mark.                        */
-/*                  tt-mark.mark = utd-marking-lines.mark .*/
                   release utd-marking-lines.
                end.
-/*               if     v-gds-gd:stts-desc eq ?                                                                                                                                                      */
-/*                  and utd-lines.Quantity ne vqnty                                                                                                                                                  */
-/*               then                                                                                                                                                                                */
-/*                   AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","Qnty",string(utd-lines.LineNum ) + {&delim-par} + string(utd-lines.Quantity) + {&delim-par} + string(vqnty)).*/
 
                for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                             and utd-marking-lines.doc-id  eq utd-lines.doc-id
@@ -418,14 +412,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                                             and utd-marking-lines.doc-level = 1 
                exclusive-lock:
                   
-/*                  find first tt-mark where tt-mark.mark = utd-marking-lines.mark*/
-/*                  no-error.                                                     */
-/*                  if not available tt-mark                                      */
-/*                  then do:                                                      */
-/*                     delMark(buffer utd-marking-lines).                         */
-/*                     delete utd-marking-lines.                                  */
-/*                  end.                                                          */
-/*                  else*/
                   do:
                      MarkGray(utd-marking-lines.mark, utd.db-num, utd.doc-id).
                      addMark( buffer utd-marking-lines).
@@ -437,7 +423,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                        end. 
 /*out2log(utd.db-num, utd.doc-id, utd-marking-lines.mark, 0).*/
                   end.
-                     
                end.
 /*run gbl/inidebug.p.*/
                if     vGdsCode     eq ?
@@ -447,9 +432,6 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                
             
             end. //
-           /* else
-               AddUtdErr(utd.db-num,utd.doc-id,buffer utd-lines:handle,"loadUtd","NotMarkForLine",string(utd-lines.LineNum ) ).
-      */   
             release utd-lines.
          end.
       end.
@@ -595,7 +577,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
               vAllQnty = marking.box-qnty / buf_marking.box-qnty.
            vQnty = vQnty + 1.
         end.
-        if marking.unit-ext = "LEVEL2"
+        if marking.unit-ext = "LEVEL2" and 
+           v-mark-type <> "tabak" and
+           v-mark-type <> "stiki" and
+           v-mark-type <> "water"
+           /* (ZI-701 по коробам) для табака и воды кол-во по коробу не проверяем*/
         then do :
            if cisGdsCode > 0
            then do :
@@ -643,10 +629,10 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   end .
                   if v-gray-zone
                   then do :
-                     MarkChangeSts(marking.mark, 
-                                   objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB, 
-                                   "", 
-                                   no).                                                         
+                     MarkChangeSts(marking.mark,
+                                   objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,
+                                   "",
+                                   no).
                   end .
                 end .
                 else do :
@@ -782,6 +768,41 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
            end.
         end.
      end.
+     else if available marking 
+     then do:
+        if marking.gds-code > 0
+        then do :
+           cisGdsCode = marking.gds-code . 
+        end .
+        else do :
+           cisGdsCode = getGdsCodeByGtin(marking.gds-ext-id) .
+        end .
+        /* если товар с переменным весом, то у марки должен быть вес */
+        if cisGdsCode > 0 and 
+           WeighedProd(cisGdsCode) and 
+           MarkWeight(marking.mark) = 0 then do:
+            find first bf_utd-marking-lines where bf_utd-marking-lines.db-num eq idb-num
+                                              and bf_utd-marking-lines.doc-id eq idoc-id
+                                              and bf_utd-marking-lines.mark   eq marking.mark
+            no-lock no-error.
+            errMSG = "Марка не содержит информации о весе товара." .
+            MarkChangeSts(marking.mark, 
+                           objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB, 
+                           errMSG, 
+                           yes).                
+            if marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
+               and available bf_utd-marking-lines
+            then             
+                AddUtdErr(idb-num,
+                          idoc-id,
+                          if available bf_utd-marking-lines 
+                          then buffer bf_utd-marking-lines:handle
+                          else buffer marking:handle,
+                          "LoadUtd",
+                          "NoWeightMark",
+                          (marking.mark + {&delim-par} + errMSG)).                                      
+        end.    
+     end.    
   end.
   
   method public void MarkChangeSts(imark as char, ists as int, ierrMSG as char, ichld as log):     
@@ -812,8 +833,11 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
     define buffer bf_utd-marking-lines for ub.utd-marking-lines.
     define buffer bf_marking for ub.marking.
 
-    if iLevel = 0 then
+    if not isOpenProt then
+    do:
       output stream myProt to c:\wrk\impedi-doc.log.
+      isOpenProt = yes.
+    end.
     else
       output stream myProt to c:\wrk\impedi-doc.log append.
     
@@ -825,7 +849,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
               bf_marking.mark = imark
     :
       put stream myProt unformatted
-        fill(" ", iLevel)
+        fill("  ", iLevel)
         bf_utd-marking-lines.gds-code " "
         bf_utd-marking-lines.doc-level " "
         bf_marking.mark " "
@@ -843,7 +867,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
           and bf_utd-marking-lines.doc-id = iDocId
           and bf_utd-marking-lines.mark = bf_marking.mark
     :
-      out2log(iDbNum, iDocId, bf_marking.mark, iLevel + 2).
+      out2log(iDbNum, iDocId, bf_marking.mark, iLevel + 1).
     end.
   end method.
 

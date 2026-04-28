@@ -62,8 +62,10 @@ class ibs.th.ref.code.code_trg final:
   define public variable title  as character no-undo init ?.
   define public variable startlevel as integer no-undo.
   define public variable mViewdel as logical no-undo.
+  define public variable filter   as character no-undo.
   define public variable nwsGbd   as logical no-undo.
   define public variable nwsUbd   as logical no-undo.
+  define public variable extProcView as logical no-undo .
   
   define property curLevel as integer no-undo
   get:
@@ -211,13 +213,19 @@ class ibs.th.ref.code.code_trg final:
             if mode eq {&select}
             then
                rid-keep ().
-            run value( code.procview) (parparentproc, Mode, code.parent , code.code,Code.CodeName).
+            extProcView = yes .
+            run value( code.procview) (parparentproc, Mode, code.parent , code.code,Code.CodeName) no-error.
+            if error-status:error
+            then
+               message return-value skip
+                       error-status:get-message (1) 
+               view-as alert-box.
             if mode eq {&select}
             then
                rid-rest ().
          end.
          else do:
-            
+            extProcView = no .
             if not endLevel
             then do:
                codeProcViewSet(code.parent,code.code).
@@ -332,13 +340,17 @@ class ibs.th.ref.code.code_trg final:
    
    method public handle getQuery (input iNameQuery as character,input iNewQuery as logical ) :
         define variable hQuery   as handle  no-undo .
+        define variable vCodeQry as handle  no-undo .
         define variable vfirst   as logical no-undo .
         define variable vOpen    as logical no-undo init yes.
         define variable vTblName as character no-undo .
         define variable vOpenStr as character no-undo .
         define variable vSchedId as integer no-undo .
-
-         find first tt-Query where tt-Query.NameQuery eq iNameQuery
+        define variable sortFrase as character no-undo .
+        
+        define buffer code    for ub.code.
+        
+        find first tt-Query where tt-Query.NameQuery eq iNameQuery
         no-error.
       if     available tt-Query
          and iNewQuery
@@ -360,18 +372,47 @@ class ibs.th.ref.code.code_trg final:
                   for each tt-code-brw:
                      delete tt-code-brw.
                   end.
-                  for each code where code.parent eq  Parent 
-                                  and if mViewdel then yes  else code.status_ ne {&bef-deleted-status-int} 
-                  no-lock:
-                     create tt-code-brw. 
-                     buffer-copy code to tt-code-brw.
-                     assign
-                        tt-code-brw.Frecid = recid (code)
-                        tt-code-brw.fstatus = getstatus(Code.status_)
-                     .
-                  end.
-                  hQuery:set-buffers(buffer tt-code-brw:HANDLE). 
-                  hQuery:query-prepare("FOR EACH tt-code-brw ").
+                  create query vCodeQry.
+                  vCodeQry:set-buffers(buffer code:handle).
+                  vCodeQry:query-prepare(substitute("for each code where code.parent = &1 &2 and &3",
+                                                    quoter(Parent),
+                                                    filter,
+                                                    if mViewdel then "yes" else "code.status_ <> {&bef-deleted-status-int}", filter)).
+                 vCodeQry:query-open().
+                 vCodeQry:get-first().
+    
+                 QRY-BLOCK:
+                 repeat while not vCodeQry:query-off-end:
+                   create tt-code-brw.
+                   buffer-copy code to tt-code-brw.
+                   assign
+                     tt-code-brw.Frecid = recid (code)
+                     tt-code-brw.fstatus = getstatus(Code.status_)
+                   .
+                   vCodeQry:get-next().
+                 end.
+                 vCodeQry:query-close().
+                 delete object vCodeQry.
+                 
+                 case entry(1, Parent, {&delim-par}) :
+                   when "CashParamHash"
+                   then do :
+                     if num-entries(Parent, {&delim-par}) = 1
+                     then do :
+                       sortFrase = "by datetime(tt-code-brw.codeName) desc".
+                     end .
+                   end .
+                   when "XML_UPD"
+                   then do :
+                     if num-entries(Parent, {&delim-par}) = 2
+                     then do :
+                       sortFrase = "by datetime(tt-code-brw.code) desc".
+                     end .
+                   end .
+                 end case .
+                 
+                 hQuery:set-buffers(buffer tt-code-brw:HANDLE). 
+                 hQuery:query-prepare("FOR EACH tt-code-brw " + sortFrase).
               end.
               when "currentcode" 
               then do:
@@ -476,6 +517,7 @@ class ibs.th.ref.code.code_trg final:
           then do:
              formLable(1, 1, "Код").
              formLable(1, 2, "Наименование на чеке").
+             formLable(1, 3, "Код топлива").
              formLable(1, 4, "Альтернативное наименование").
              formLable(1, 5, "НДС в ПЦ").
              formLable(1, 6, "ЕИ в ПЦ").
@@ -489,6 +531,29 @@ class ibs.th.ref.code.code_trg final:
              chek-erpRN = yes.
              isVisibleStatus = false.
           end.
+          else if icode eq "XML_UPD"
+          then do:
+             MaxLevel = MaxLevel + 2.
+             formLable(1, 1,"БД ").
+
+             formLable(2, 1, "Код").
+             formLable(2, 3, "Файл").
+             formLable(2, 4, "Хеш").
+             formLable(2, 5, "Версия метаданных").
+             formLable(2, 6, "БД").
+             
+          end.
+
+          else if icode eq "XML_BACKUP"
+          then do:
+             MaxLevel = MaxLevel + 2.
+             formLable(1, 1,"Код ").
+             formLable(1, 3,"Файл").
+             formLable(1, 4,"Хеш "). 
+             formLable(1, 6, " ").
+           
+          end.
+
        end.
     end.
     

@@ -1051,6 +1051,12 @@ END. /*   if BufHandle:table = "chk-doc" then do:   */
              and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num :      
         insw:write-data-element (  "rrn",  buf_chk-pay-attr.attr-value  ) . /* RNN платежа (Строка) */
       end.
+      for first buf_chk-pay-attr no-lock
+           where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code
+             and buf_chk-pay-attr.attr-code = "QRPay":U
+             and buf_chk-pay-attr.line-num  = buf_chk-pay.line-num :      
+        insw:write-data-element (  "qrpay",  buf_chk-pay-attr.attr-value  ) . /* QRPay  платежа (Строка) */
+      end.
       
       find first buf_chk-pay-attr no-lock
            where buf_chk-pay-attr.doc-code  = buf_chk-pay.doc-code

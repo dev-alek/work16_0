@@ -53,5 +53,14 @@ class ibs.th.gbl.collection.paramCol inherits TypeMap:
    method public character getParamValue (iName as char):
       return GetLabel(iName).
    end.
+
+   method public character getParams(  ):
+      define variable VStr as character no-undo.
+      define variable vI as integer no-undo. 
+      do vi = 1 to mapType:GetItemByLab(vi):
+         VStr = VStr + ', ' + CurrProp:NameProp + ': "' + CurrProp:Label_ + '"' .
+      end.
+      return substitute ("Params : ~{&1}",substring (vstr,3)).
+   end.
    
 end class.

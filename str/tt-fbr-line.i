@@ -23,6 +23,8 @@ define temp-table tt-fbr-line no-undo
   field recipe-type like ub.recipe.recipe-type
   field ingr-gds-code as integer
   field unit as character
+  field mark-weight as decimal 
+  field weighed as logical 
 .
 
 /* ********************  Preprocessor Definitions  ******************** */

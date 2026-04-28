@@ -734,6 +734,29 @@ end.
       
                 end.
             end.               
+            else do:
+              run ref/barcode1.p (
+                 input {&update} 
+                ,input yes /*p-silent*/
+                ,input ""
+                ,input ub.goods.gds-code
+                ,input ub.gds-prt.node-code
+                ,input base-bar-code.part-code
+                ,input base-bar-code.in-code
+                ,input v-barcode:unit-code
+                ,input v-barcode:coeff
+                ,output v-bc-rid
+              ) no-error.
+              if error-status :error
+              then do :
+                 v-err-mess = substitute("Ошибка при обновлении бар-кода &1&2&3&2&4"
+                                        , v-barcode:bcode
+                                        , {&new-line}
+                                        , error-status:get-message(1)
+                                        , return-value ).
+                 undo, return error v-err-mess .
+              end.
+            end.             
             v-b-str = v-barcode:bcode .
             run trg/prod-bc2.p (
                                  input  parparentproc
@@ -1100,6 +1123,16 @@ end.
   else if p-GdsObj:enbl-exc = 0
   then do :
     RUN gds-attr-delete (v-nbc, {&attr-ban-bonus}, output v-attr-del).     
+  end.
+  
+  if p-GdsObj:weighed-product = 1
+  then do :
+    RUN gds-attr-write (v-nbc, {&attr-weighed-gds}, "yes").  
+  end.
+  else if p-GdsObj:weighed-product = 0
+       or p-GdsObj:weighed-product = ?
+  then do :
+    RUN gds-attr-delete (v-nbc, {&attr-weighed-gds}, output v-attr-del).     
   end.
   
   /* Картинки */

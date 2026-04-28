@@ -15,6 +15,8 @@ Creation date: 01/30/15
 
 */
 
+using ibs.th.gbl.collection.paramCol.
+using ibs.th.skt.Commands.ICommandStatus.
 block-level on error undo, throw.
 class ibs.th.skt.Commands.IResponse abstract: 
 
@@ -22,10 +24,15 @@ class ibs.th.skt.Commands.IResponse abstract:
     Purpose:
     Notes:
    ------------------------------------------------------------------------------*/
-   define public variable STSlist as ibs.th.skt.Commands.ICommandStatus no-undo.   
+   define public variable STSlist as class ICommandStatus no-undo.   
+   define public property ParamWait as class paramCol no-undo 
+   get.
+   set.
+   
    constructor public IResponse (  ):
       super ().
-      STSlist = new ibs.th.skt.Commands.ICommandStatus().
+      STSlist   = new ICommandStatus(). 
+      ParamWait = new paramCol().
    end constructor.
  
   
@@ -45,40 +52,46 @@ class ibs.th.skt.Commands.IResponse abstract:
    define public property content-disposition as character  no-undo 
    get.
    set.
+  define public property content-Md5 as character  no-undo 
+  get.
+  set.
   
    define public property saveFile as character  no-undo 
    set (arg as char):
       content-disposition = substitute ('attachment; filename="&1"',arg).
    end.
    
-   define variable mAddctrf as logical no-undo.
    
-   define public property ConvertPage as character  no-undo 
-   get.
-   set.
    define public property ContentLongChar as longchar no-undo 
    get.
    private set .
+   
+   define public property ConvertPage as character  no-undo 
+   get.
+   set(arg as char):
+      ConvertPage = arg.
+      if arg begins "windows-"
+      then
+         arg = substring (arg,9).
+      FIX-CODEPAGE(ContentLongChar) = arg. 
+   end.
    define public property Content as memptr no-undo 
    get.
    set(arg as memptr):
       Content = arg.
-      mAddctrf = no.
    end.
    define public property ContentLength as int64 no-undo 
-   get : return get-size(Content) - if mAddctrf then 2 else 0 . end.
+   get : return get-size(Content) 
+   . 
+   end.
    
-   define public property ParamWait as char no-undo 
-   get.
-   set.
    method public void setContent(arg as longchar ):
       setContent(arg, false).
    end.
-   method public void setContent(arg as longchar, addNull as logical ):
+   method public void setContent(arg as longchar, saveOrigin as logical ):
       set-size(Content) = 0.
-      arg = arg + chr(13) + chr(10).
       ContentLongChar = arg.
-      set-size(Content) = length(arg,"raw") + if addNull then 1 else 0.
+      set-size(Content) = 1.
       if ConvertPage eq ""
       then
          copy-lob
@@ -92,34 +105,16 @@ class ibs.th.skt.Commands.IResponse abstract:
          else
             pagecode = ConvertPage.
          copy-lob
-         from object arg
-         to object Content OVERLAY AT 1 convert target codepage pagecode.
+         from object ContentLongChar
+         to object Content 
+         convert target codepage pagecode.
       end.
-      mAddctrf = not addNull.
    end.
    
    method public void setContent(arg as char ):
-      set-size(Content) = 0.
-      ContentLongChar = arg + chr(13) + chr(10).
-      set-size(Content) = length(ContentLongChar,"raw").
-      if ConvertPage eq ""
-      then
-         copy-lob
-         from object ContentLongChar
-         to object Content.
-      else do:
-         define variable pagecode as character no-undo.
-         if ConvertPage begins "windows-"
-         then
-            pagecode = substring (ConvertPage,9).
-         else
-            pagecode = ConvertPage.
-         copy-lob
-         from object ContentLongChar
-         to object Content convert target codepage ConvertPage.
-      end.
-      mAddctrf = yes.
+      setContent(arg, false).
    end.
+  
    method public void setFile(arg as char ):
       setFile(arg,"").
    end.
@@ -127,13 +122,20 @@ class ibs.th.skt.Commands.IResponse abstract:
       define variable vtype    as character no-undo.
       define variable vConType as character no-undo.
       define variable vRas     as character no-undo.
-      file-information:file-name = "cmp/" + arg.
+      file-information:file-name =  arg.
       vtype = file-information:file-type.
       if    file-information:file-name eq "" 
          or vtype eq ?
          or index( vtype, "F") = 0
-      then
-         file-information:file-name = "cmp/dontknow.jpg".
+      then do:
+         file-information:file-name = "cmp/" + arg.
+         vtype = file-information:file-type.
+         if    file-information:file-name eq "" 
+            or vtype eq ?
+            or index( vtype, "F") = 0
+         then
+            file-information:file-name = "cmp/dontknow.jpg".
+      end.
       vRas = entry(2,file-information:file-name,".").
       case vRas:
          when "icon" then vConType = "image/vnd.microsoft.icon". 
@@ -144,8 +146,13 @@ class ibs.th.skt.Commands.IResponse abstract:
       or when "xml"  then vConType = "text/xml".
          when "json" then vConType = "application/json".
          when "html" then vConType = "text/html".
+         otherwise vConType = "raw".
       end.
       set-size(Content) = 0.
+      run gbl/md5.p (
+          input  file-information:full-pathname
+         ,output content-Md5 /* p-md5-signature */
+         ) .
       set-size(Content) = file-information:file-size + 1.    
       copy-lob from file file-information:full-pathname to Content.
       Content-Type = vConType.
@@ -165,8 +172,16 @@ class ibs.th.skt.Commands.IResponse abstract:
 	 Notes:
 	------------------------------------------------------------------------------*/
 	destructor public IResponse ( ):
+	   define variable vFiles as character no-undo.
+	   define variable vi     as integer no-undo.
+	   vFiles = paramWait:getParamValue("DeleteFile").
+	   if vFiles ne ?
+	   then do vi = 1 to num-entries(vFiles):
+	      os-delete value(entry(vi,vFiles)) recursive.
+	   end.
+	   delete object ParamWait.
 	   set-size(Content) = 0.
-      delete object STSlist.
+           delete object STSlist.
 	end destructor.
  
     

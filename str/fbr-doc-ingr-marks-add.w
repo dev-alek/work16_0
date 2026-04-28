@@ -41,7 +41,7 @@ define variable vss-description as character no-undo init "Сканирование акцизных
 { utl/gtin.i     }
 { gbl/waitfram.i noprocess }
 { gbl/getcntxt.i def }
-
+{ str/utd-typemark.i }
 
 /* Parameters Definitions ---                                           */
 
@@ -82,8 +82,11 @@ define variable marking    as class ibs.th.skt.ControlledClients.marking.
 
 define variable v-free-qnty as decimal no-undo .
 define variable v-doc-qnty as decimal no-undo .
-define variable v-scan-qnty as integer no-undo .
+define variable v-scan-qnty as decimal no-undo .
 define variable v-status-message as character no-undo .
+
+define variable v-mark-weight as decimal no-undo .
+define variable v-isweighed as logical no-undo .
 
 define stream str-err .
 define stream in-stream.
@@ -287,6 +290,9 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 :
   define variable v-GTIN as character no-undo .
   define variable v-GTIN-qnty as decimal no-undo .  
+  
+  define variable v-par-type as character no-undo.
+  define variable v-par-val  as character no-undo.
     
   { gbl/getcntxt.i get }
   assign v-num-str = 0 .
@@ -304,6 +310,19 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                  and buf_goods.prod-type  = buf_fbr-line.prod-type
                                  and buf_goods.prod-code  = buf_fbr-line.prod-code
                                  .
+  &scop proc-name gds-attr-value
+  {&run_proc_attr-lib}
+  ( buf_goods.gds-code,
+   {&attr-mark-type},
+   output v-par-val,
+   output v-par-type
+  ).
+  v-isweighed = WeighedProd(buf_goods.gds-code)
+            and v-par-val > ""
+            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
+              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
+  .
+  
   assign v-free-qnty = 0 .
   find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
                                    and buf_gds-obj.obj-code  = v-cntxt-obj-code
@@ -325,11 +344,20 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                        and buf_marking-lines.part-code = buf_fbr-line.recipe-code
                                        and buf_marking-lines.prt-code = 0
   :
-    v-GTIN = getGtinByDM(buf_marking-lines.mark) .
-    v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
-    if v-GTIN-qnty = 1
+    if v-isweighed
     then do :
-      v-scan-qnty = v-scan-qnty + v-GTIN-qnty .
+      for first buf_marking no-lock where buf_marking.mark begins buf_marking-lines.mark :
+        v-mark-weight = MarkWeight(buf_marking.mark) .
+        assign v-scan-qnty = v-scan-qnty + v-mark-weight .
+      end .
+    end .
+    else do :
+      v-GTIN = getGtinByDM(buf_marking-lines.mark) .
+      v-GTIN-qnty = getQntyCodeByGtin(v-GTIN) .
+      if v-GTIN-qnty = 1
+      then do :
+        v-scan-qnty = v-scan-qnty + v-GTIN-qnty .
+      end .
     end .
   end . 
   
@@ -492,8 +520,32 @@ PROCEDURE CrCheckMark :
    output v-par-val,
    output v-par-type
   ).
-  
+  v-isweighed = WeighedProd(v-gds-code)
+            and v-par-val > ""
+            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
+              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
+  .
+  if v-isweighed
+  then do :
+    if available buf_marking
+    then do :
+      v-mark-weight = MarkWeight(buf_marking.mark) .
+      if v-mark-weight = 0
+      or v-mark-weight = ?
+      then do :
+        message ("Марка не может быть добавлена, т.к. в БД отсутствует ее вес.")
+        view-as alert-box .
+        return.
+      end .
+    end .
+    else do :
+      message ("Марка не найдена в БД.")
+      view-as alert-box .
+      return.
+    end .
+  end .
   if not ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val)
+  and not v-isweighed
   then do :
     message ("Сканирование марок данного товара для производства не требуется")
     view-as alert-box .
@@ -662,8 +714,13 @@ PROCEDURE CrCheckMark :
     assign buf_marking-parent.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB .
   end .
   
-  assign v-scan-qnty = v-scan-qnty + integer(v-GTIN-qnty) .
-  
+  if v-isweighed
+  then do :
+    assign v-scan-qnty = v-scan-qnty + v-mark-weight .
+  end .
+  else do : 
+    assign v-scan-qnty = v-scan-qnty + integer(v-GTIN-qnty) .
+  end .
   
 end.
 

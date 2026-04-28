@@ -388,6 +388,7 @@ ON CHOOSE OF b-goods-much IN FRAME Dialog-Frame
 
       run ref/dtseasons.p
         (input  parparentproc
+        , ?
         ,output rid
         ) no-error.
       if rid <> ? then 

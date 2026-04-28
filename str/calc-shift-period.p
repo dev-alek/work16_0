@@ -35,7 +35,7 @@ define variable vss-description as character no-undo initial "КОНТРОЛЬ ПЛОТНОСТИ
 { ref/gds-attr.i }
 { gbl/ptrlprop.i def }
 { str/placelib.i }
-{ str/get-pokmi-dll-version.i }
+{ str/pokmi-dyn.i }
 { str/calibrationbelt.i }
 { gbl/cur-time.i }
 
@@ -1502,6 +1502,32 @@ procedure pomi-calc :
   define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
   
   define variable v-POkMI-result          as character no-undo.
+  
+  define variable vErr as character no-undo .
+  define variable vWrn as character no-undo .
+  define variable vDllVersion as character no-undo .
+  
+  define variable V_total      as decimal no-undo .
+  define variable V_water      as decimal no-undo .
+  define variable DeltaV       as decimal no-undo .
+  define variable Vcy          as decimal no-undo .
+  define variable Rcy          as decimal no-undo .
+  define variable V_product    as decimal no-undo .
+  define variable V            as decimal no-undo .
+  define variable Rv           as decimal no-undo .
+  define variable M            as decimal no-undo .
+  define variable CTL_base_alt as decimal no-undo .
+  define variable CPL_base_alt as decimal no-undo .
+  define variable CTPL_base_alt as decimal no-undo .
+  define variable Fp_base_alt  as decimal no-undo .
+  define variable CTL_obs_base as decimal no-undo .
+  define variable CPL_obs_base as decimal no-undo .
+  define variable CTPL_obs_base as decimal no-undo .
+  define variable Fp_obs_base  as decimal no-undo .
+  define variable DeltaOtn_Vcy as decimal no-undo .
+  define variable DeltaOtn_Vm  as decimal no-undo .
+  define variable DeltaOtn_M   as decimal no-undo .
+  define variable VolumetricExpansion as decimal no-undo .
 
   find first cur_rvs-line no-lock where cur_rvs-line.rvs-code = cur_rvs-doc.rvs-code
                                     and cur_rvs-line.obj-type = cur_rvs-doc.obj-type
@@ -1516,7 +1542,7 @@ procedure pomi-calc :
   
   _trpomi :
   do on error undo, return :
-    /*данные по резервуару для ПО МИ*/
+    /*данные по резервуару для ПОкМИ*/
     find first bf_place no-lock where bf_place.pl-code = cur_rvs-line.pl-code no-error .
     
     do ii = 1 to num-entries({&list-place-attr},','):
@@ -1540,9 +1566,9 @@ procedure pomi-calc :
         when {&place-dens-prov} then do :
           if v-ok then dens-prov = decimal(v-value) .
         end.
-        when {&place-temp-coef} then do :
-          if v-ok then A_Reservoir = decimal(v-value) .
-        end.
+/*        when {&place-temp-coef} then do :              */
+/*          if v-ok then A_Reservoir = decimal(v-value) .*/
+/*        end.                                           */
         when {&place-dead-high} then do :
           if v-ok then DeadZone_Reservoir = decimal(v-value) .
         end.
@@ -1568,7 +1594,7 @@ procedure pomi-calc :
     end.
     /*..........................................*/
   
-    /*градуировочная таблица резервуара для ПО МИ*/
+    /*градуировочная таблица резервуара для ПОкМИ*/
     if cur_rvs-line.state-level-water > 0
     then do :
       find last water1_pl-level no-lock where water1_pl-level.pl-code  = cur_rvs-line.pl-code
@@ -1638,10 +1664,17 @@ procedure pomi-calc :
     end .  
     CalibTable = CalibTable + Substitute("&1=&2", total1_pl-level.pl-level, (total1_pl-level.pl-qnty / 1000)) + {&new-line} . 
     CalibTable = CalibTable + Substitute("&1=&2", total2_pl-level.pl-level, (total2_pl-level.pl-qnty / 1000)) .
-  
+    
+    CalibBelt = getCalibrationBelt(
+        cur_rvs-line.obj-type, 
+        cur_rvs-line.obj-code,
+        cur_rvs-line.pl-code,
+        cur_rvs-line.state-level-total,
+        if cur_rvs-line.state-level-water <> ? then cur_rvs-line.state-level-water else 0
+    ).
     /*..........................................*/
     
-    /*данные по средству измерения резервуара для ПО МИ*/
+    /*данные по средству измерения резервуара для ПОкМИ*/
     
     find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = place-si no-error.
     if error-status :error or not available buf_sr-izmerenia then do :
@@ -1862,77 +1895,51 @@ procedure pomi-calc :
     
     if cur_rvs-line.state-level-water = 0
     then do :
-      ToolAutomationLevel_H_Water = 0 .
-      DeltaAbs_H_Water_CalcType = 0 .
+      ToolAutomationLevel_H_Water = 3 .
+      DeltaAbs_H_Water_CalcType = 1 .
       DeltaAbs_H_Water = 0 .
+      DeltaOtn_H_Water = 0 .
     end .
     
     /*..........................................*/
     
-    v-pokmi-dll-version = get-pokmi-dll-version() .
-    if v-pokmi-dll-version = "error"
-    then do :
-      release object v-mm no-error.
-      v-mm = ?.
-      message
-        substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) skip
-      view-as alert-box error.
-      undo _trpomi, return "pomi-error" .
-    end .
-    
     if LevelToolType > 0
     then do :
-      RELEASE OBJECT v-mm57 NO-ERROR.
-      v-mm57 = ?.
-
-      CREATE value("ADMM.CMethodOfMetering57") v-mm57 no-error.
-      IF ERROR-STATUS:ERROR
-      OR NOT VALID-HANDLE(v-mm57)
-      THEN DO:
-        RELEASE OBJECT v-mm57 NO-ERROR.
-        v-mm57 = ?.
-        undo _trpomi, return error ( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) .
-      END.
-      ELSE DO :
-        assign
-          v-mm57:H        = cur_rvs-line.state-level-total * 10
-          v-mm57:ToolType = LevelToolType
-        .
-        OUTPUT stream s-pomi to value ("pomi.log") append.
-        PUT STREAM s-pomi unformatted
-                    "    " SKIP
-                    "    " SKIP
-                    cur-time-string()           FORMAT "x(16)"    SKIP
-                    'Процедура             "Rosneft.MethodOfMetering57"'       SKIP
-                    'Версия dll: '            v-pokmi-dll-version   skip
-                    'CODE_PL                = ' cur_rvs-line.pl-code                           SKIP
-                    'H                      = ' v-mm57:H                  SKIP
-                    'ToolType               = ' v-mm57:ToolType                                      SKIP
-                        SKIP SKIP 
-        .
-        output stream s-pomi close.
+      MM57
+        (input cur_rvs-line.state-level-total * 10,
+         input LevelToolType,
+         output DeltaAbs_H,
+         output vErr,
+         output vWrn,
+         output vDllVersion)
+      .  
+      OUTPUT stream s-pomi to value ("pomi.log") append.
+      PUT STREAM s-pomi unformatted
+                  "    " SKIP
+                  "    " SKIP
+                  cur-time-string()           FORMAT "x(16)"    SKIP
+                  'Процедура             "CMethodOfMetering57"'       SKIP
+                  'Версия dll: '            vDllVersion   skip
+                  'CODE_PL                = ' cur_rvs-line.pl-code                           SKIP
+                  'H                      = ' cur_rvs-line.state-level-total * 10                  SKIP
+                  'ToolType               = ' LevelToolType                                      SKIP
+                      SKIP SKIP 
+      .
+      output stream s-pomi close.
         
-        v-mm57:Exec() no-error.
-        if v-mm57:Result <> 0 then do :
-          error-string = v-mm57:ResultDetail .
-          output stream s-pomi to value ("pomi.log")  append.
-          put stream s-pomi error-string format "X(1024)" skip.
-          RELEASE OBJECT v-mm57 NO-ERROR.
-          v-mm57 = ?.
-          output stream s-pomi close.
-          message substitute('Ошибка работы библиотеки ПО МИ &1',error-string) view-as alert-box .
-          undo _trpomi, return "pomi-error" .
-        end.
-        else do :
-          DeltaAbs_H = v-mm57:DeltaAbs_H .
-          OUTPUT stream s-pomi to value ("pomi.log")  append.
-          PUT STREAM s-pomi unformatted
-              "v-mm:DeltaAbs_H = " v-mm57:DeltaAbs_H  SKIP
-          .
-          OUTPUT stream s-pomi close.
-          RELEASE OBJECT v-mm57 NO-ERROR.
-          v-mm57 = ?.
-        end .
+      if trim(vErr) > "" then do :
+        output stream s-pomi to value ("pomi.log")  append.
+        put stream s-pomi vErr format "X(1024)" skip.
+        output stream s-pomi close.
+        message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
+        undo _trpomi, return "pomi-error" .
+      end.
+      else do :
+        OUTPUT stream s-pomi to value ("pomi.log")  append.
+        PUT STREAM s-pomi unformatted
+            "DeltaAbs_H = " DeltaAbs_H  SKIP
+        .
+        OUTPUT stream s-pomi close.
       end .
     end .
     /*..........................................*/
@@ -1955,186 +1962,228 @@ procedure pomi-calc :
     
     if place-type = 1
     then do :
-      v-proc = "ADMM.CMethodOfMetering13" .
+      v-proc = "CMethodOfMetering13" .
+      MM13
+        (input 0.0, /*(if place-ponton then place-ponton-mass else 0.0)*/
+         input 0.0, /*(if place-ponton then dens-prov * 1000 else 0.0)*/
+         input 0.0,
+         input 0.0, /*(if place-ponton then place-ponton-height else 0.0)*/
+         input cur_rvs-line.state-level-total * 10,
+         input (if cur_rvs-line.state-level-water <> ? then cur_rvs-line.state-level-water * 10 else 0.0),
+         input CalibTable,
+         input CalibBelt,
+         input 0.0, /* P0 */
+         input 0.0, /* PV */
+         input (if temp-izm-vol <> ? then temp-izm-vol else new_shift-period.sales-temperature),
+         input new_shift-period.sales-temperature,
+         input new_shift-period.sales-density * 1000,
+         input temp-for-pomi,
+         input ToolType,
+         input DeltaOtn_K,
+         input DeadZone_Reservoir,
+         input A_Reservoir,
+         input A_LevelMeasurementTool,
+         input ToolAutomationLevel_H,
+         input ToolAutomationLevel_H_Water,
+         input ToolAutomationLevel_R,
+         input ToolAutomationLevel_Tv,
+         input ToolAutomationLevel_Tr,
+         input DeltaAbs_H_CalcType,
+         input DeltaAbs_H_Water_CalcType,
+         input DeltaAbs_H,
+         input DeltaAbs_H_Water,
+         input DeltaAbs_R,
+         input DeltaAbs_Tv,
+         input DeltaAbs_Tr,
+         input DeltaOtn_N,
+         input 1, /* Round_M */
+         input 2, /* Round_T */
+         input 2, /* Round_R */
+         
+         output V_total,
+         output V_water,
+         output DeltaV,
+         output V_product,
+         output Vcy,
+         output Rcy,
+         output V,
+         output CTL_base_alt,
+         output CPL_base_alt,
+         output CTPL_base_alt,
+         output Fp_base_alt,
+         output CTL_obs_base,
+         output CPL_obs_base,
+         output CTPL_obs_base,
+         output Fp_obs_base,
+         output Rv,
+         output DeltaOtn_Vcy,
+         output DeltaOtn_Vm,
+         output M,
+         output DeltaOtn_M,
+         output VolumetricExpansion,
+         
+         output vErr,
+         output vWrn,
+         output vDllVersion)
+      no-error .
     end.
     else do :
-      v-proc = "ADMM.CMethodOfMetering6" .
+      v-proc = "CMethodOfMetering6" .
+      MM6
+        (input cur_rvs-line.state-level-total * 10,
+         input (if cur_rvs-line.state-level-water <> ? then cur_rvs-line.state-level-water * 10 else 0.0),
+         input CalibTable,
+         input CalibBelt,
+         input 0.0, /* P0 */
+         input (if temp-izm-vol <> ? then temp-izm-vol else new_shift-period.sales-temperature),
+         input new_shift-period.sales-temperature,
+         input new_shift-period.sales-density * 1000,
+         input temp-for-pomi,
+         input ToolType,
+         input DeltaOtn_K,
+         input DeadZone_Reservoir,
+         input A_Reservoir,
+         input A_LevelMeasurementTool,
+         input ToolAutomationLevel_H,
+         input ToolAutomationLevel_H_Water,
+         input ToolAutomationLevel_R,
+         input ToolAutomationLevel_Tv,
+         input ToolAutomationLevel_Tr,
+         input DeltaAbs_H_CalcType,
+         input DeltaAbs_H_Water_CalcType,
+         input DeltaAbs_H,
+         input DeltaAbs_H_Water,
+         input DeltaAbs_R,
+         input DeltaAbs_Tv,
+         input DeltaAbs_Tr,
+         input DeltaOtn_N,
+         input 1, /* Round_M */
+         input 2, /* Round_T */
+         input 2, /* Round_R */
+         
+         output V_total,
+         output V_water,
+         output DeltaV,
+         output V_product,
+         output Vcy,
+         output Rcy,
+         output V,
+         output CTL_base_alt,
+         output CPL_base_alt,
+         output CTPL_base_alt,
+         output Fp_base_alt,
+         output CTL_obs_base,
+         output CPL_obs_base,
+         output CTPL_obs_base,
+         output Fp_obs_base,
+         output Rv,
+         output DeltaOtn_Vcy,
+         output DeltaOtn_Vm,
+         output M,
+         output DeltaOtn_M,
+         output VolumetricExpansion,
+         
+         output vErr,
+         output vWrn,
+         output vDllVersion)
+      no-error .
     end.
     
-    RELEASE OBJECT v-mm NO-ERROR.
-    v-mm = ?.
 
-    CREATE value(v-proc) v-mm no-error.
-    IF ERROR-STATUS:ERROR
-    OR NOT VALID-HANDLE(v-mm)
-    THEN DO:
-      RELEASE OBJECT v-mm NO-ERROR.
-      v-mm = ?.
-      undo _trpomi, return error ( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) .
-    END.
-    ELSE DO :
-      ASSIGN
-        v-mm:H                      = cur_rvs-line.state-level-total * 10
-        v-mm:H_water                = cur_rvs-line.state-level-water * 10 when cur_rvs-line.state-level-water <> ?
-        v-mm:CalibrationTable       = CalibTable
-        v-mm:Tr                     = new_shift-period.sales-temperature
-        v-mm:Tv                     = if temp-izm-vol <> ? then temp-izm-vol else new_shift-period.sales-temperature
-        v-mm:R                      = ( new_shift-period.sales-density * 1000 )
-        v-mm:Tcy                    = temp-for-pomi
-        v-mm:ToolType               = ToolType
-        v-mm:DeltaOtn_K             = DeltaOtn_K
-        v-mm:DeadZone_Reservoir     = DeadZone_Reservoir
-        v-mm:A_LevelMeasurementTool = A_LevelMeasurementTool
-        v-mm:DeltaAbs_H             = DeltaAbs_H
-        v-mm:DeltaAbs_H_Water       = DeltaAbs_H_Water
-        v-mm:DeltaAbs_R             = DeltaAbs_R
-        v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
-        v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
-        v-mm:DeltaOtn_H             = DeltaOtn_H
-        v-mm:DeltaOtn_H_Water       = DeltaOtn_H_Water
-        v-mm:DeltaOtn_R             = DeltaOtn_R
-        v-mm:DeltaOtn_N             = DeltaOtn_N
-      .
-/*      v-mm:Set_A_Reservoir(replace(string(A_Reservoir), ".", ",")).*/
-
-      OUTPUT stream s-pomi to value ("pomi.log") append.
-              PUT STREAM s-pomi unformatted
-              "    " SKIP
-              "    " SKIP
-              cur-time-string()           FORMAT "x(16)"    SKIP
-              'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
-              'Версия dll: '              v-pokmi-dll-version                           SKIP
-              'CODE_PL                     = ' cur_rvs-line.pl-code                      SKIP
-              'H                           = ' v-mm:H                                   SKIP
-              'H_water                     = ' v-mm:H_water                             SKIP
-              'CalibrationTable            = ' v-mm:CalibrationTable                    SKIP
-      .
-      if v-pokmi-dll-version = "1.0.5.6"
-      then do :
-        CalibBelt = getCalibrationBelt(
-            cur_rvs-line.obj-type, 
-            cur_rvs-line.obj-code,
-            cur_rvs-line.pl-code,
-            cur_rvs-line.state-level-total,
-            if cur_rvs-line.state-level-water <> ? then cur_rvs-line.state-level-water else 0
-        ).
-        assign
-          v-mm:CalibrationBelt        = CalibBelt
-          v-mm:ToolAutomationLevel_H  = ToolAutomationLevel_H
-          v-mm:ToolAutomationLevel_H_Water = ToolAutomationLevel_H_Water
-          v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
-          v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
-          v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
-          v-mm:DeltaAbs_H_CalcType    = DeltaAbs_H_CalcType
-          v-mm:DeltaAbs_H_Water_CalcType = DeltaAbs_H_Water_CalcType
-          
-          v-mm:A_LevelMeasurementTool = 0
-        .
-        v-mm:Set_A_LevelMeasurementTool(replace(string(A_LevelMeasurementTool), ".", ",")) no-error .
-        if string(v-mm:A_LevelMeasurementTool) = ".0000000000"
-        then do :
-          v-mm:Set_A_LevelMeasurementTool(string(A_LevelMeasurementTool)) no-error .
-        end .
-        PUT STREAM s-pomi unformatted
-          'DeltaOtn_N            = ' v-mm:DeltaOtn_N                SKIP
-          'CalibrationBelt             = ' v-mm:CalibrationBelt           SKIP
-          'ToolAutomationLevel_H       = ' v-mm:ToolAutomationLevel_H     SKIP
-          'ToolAutomationLevel_H_Water = ' ToolAutomationLevel_H_Water    SKIP
-          'ToolAutomationLevel_R       = ' v-mm:ToolAutomationLevel_R     SKIP
-          'ToolAutomationLevel_Tv      = ' v-mm:ToolAutomationLevel_Tv    SKIP
-          'ToolAutomationLevel_Tr      = ' v-mm:ToolAutomationLevel_Tr    SKIP
-          'DeltaAbs_H_CalcType         = ' v-mm:DeltaAbs_H_CalcType       SKIP
-          'DeltaAbs_H_Water_CalcType   = ' v-mm:DeltaAbs_H_Water_CalcType SKIP
-          
-        .
-      end .
+    OUTPUT stream s-pomi to value ("pomi.log") append.
+    PUT STREAM s-pomi unformatted
+      "    " SKIP
+      "    " SKIP
+      cur-time-string()           FORMAT "x(16)"    SKIP
+      'Процедура'                 v-proc                      FORMAT "x(128)"   SKIP
+      'Версия dll: '              vDllVersion                           SKIP
+      'CODE_PL                     = ' cur_rvs-line.pl-code                      SKIP
+      'H                           = ' cur_rvs-line.state-level-total * 10 SKIP
+      'H_water                     = ' (if cur_rvs-line.state-level-water <> ? then cur_rvs-line.state-level-water * 10 else 0.0) SKIP
+      'CalibrationTable            = ' CalibTable                    SKIP
+      'CalibrationBelt             = ' CalibBelt                    SKIP
+      'ToolAutomationLevel_H       = ' ToolAutomationLevel_H     SKIP
+      'ToolAutomationLevel_H_Water = ' ToolAutomationLevel_H_Water    SKIP
+      'ToolAutomationLevel_R       = ' ToolAutomationLevel_R     SKIP
+      'ToolAutomationLevel_Tv      = ' ToolAutomationLevel_Tv    SKIP
+      'ToolAutomationLevel_Tr      = ' ToolAutomationLevel_Tr    SKIP
+      'DeltaAbs_H_CalcType         = ' DeltaAbs_H_CalcType       SKIP
+      'DeltaAbs_H_Water_CalcType   = ' DeltaAbs_H_Water_CalcType SKIP
+      'Tr                          = ' (if temp-izm-vol <> ? then temp-izm-vol else new_shift-period.sales-temperature) SKIP
+      'Tv                          = ' new_shift-period.sales-temperature  SKIP
+      'R                           = ' trim(string(new_shift-period.sales-density * 1000, ">>>9.9<"))  SKIP
+      'Tcy                         = ' temp-for-pomi                       SKIP
+      'ToolType                    = ' ToolType                            SKIP
+      'DeadZone_Reservoir          = ' DeadZone_Reservoir                  SKIP
+      'DeltaOtn_K                  = ' DeltaOtn_K                          SKIP
+      'A_Reservoir                 = ' A_Reservoir                         SKIP
+      'A_LevelMeasurementTool      = ' A_LevelMeasurementTool              skip
+      'DeltaAbs_H                  = ' DeltaAbs_H                          SKIP
+      'DeltaAbs_H_Water            = ' DeltaAbs_H_Water                    SKIP
+      'DeltaAbs_R                  = ' DeltaAbs_R                          SKIP
+      'DeltaAbs_Tv                 = ' DeltaAbs_Tv                         SKIP
+      'DeltaAbs_Tr                 = ' DeltaAbs_Tr                         SKIP
+      'DeltaOtn_N                  = ' DeltaOtn_N                          SKIP
+      'Round_M                     = ' 1                                   SKIP
+      'Round_T                     = ' 2                                   SKIP
+      'Round_R                     = ' 2                                   SKIP
+    .
       
-      PUT STREAM s-pomi unformatted
-              'Tr                          = ' v-mm:Tr                                  SKIP
-              'Tv                          = ' v-mm:Tv                                  SKIP
-              'R                           = ' v-mm:R                                   SKIP
-              'Tcy                         = ' v-mm:Tcy                                 SKIP
-              'ToolType                    = ' v-mm:ToolType                            SKIP
-              'DeadZone_Reservoir          = ' v-mm:DeadZone_Reservoir                  SKIP
-              'DeltaOtn_K                  = ' v-mm:DeltaOtn_K                          SKIP
-              'A_Reservoir                 = ' v-mm:A_Reservoir                         SKIP
-              'A_LevelMeasurementTool      = ' v-mm:A_LevelMeasurementTool              skip
-              'DeltaAbs_H                  = ' v-mm:DeltaAbs_H                          SKIP
-              'DeltaAbs_H_Water            = ' v-mm:DeltaAbs_H_Water                    SKIP
-              'DeltaAbs_R                  = ' v-mm:DeltaAbs_R                          SKIP
-              'DeltaAbs_Tv                 = ' v-mm:DeltaAbs_Tv                         SKIP
-              'DeltaAbs_Tr                 = ' v-mm:DeltaAbs_Tr                         SKIP
-              'DeltaOtn_H                  = ' v-mm:DeltaOtn_H                          SKIP
-              'DeltaOtn_H_Water            = ' v-mm:DeltaOtn_H_Water                    SKIP
-              'DeltaOtn_R                  = ' v-mm:DeltaOtn_R                          SKIP
-              'DeltaOtn_N                  = ' v-mm:DeltaOtn_N                          SKIP
+    if place-type = 1
+    and place-ponton
+    then do :
+      put stream s-pomi unformatted
+        "Rprov                  = " 0.0 skip
+        "Mpokr                  = " 0.0 skip
+        "Vdisp                  = " 0.0 skip
+        "CoverFloatingHeight    = " 0.0 skip
       .
+    end.
       
-      if place-type = 1
-      and place-ponton
-      then do :
-        v-mm:Rprov = ( dens-prov * 1000 ) .
-        v-mm:Mpokr = place-ponton-mass .
-        v-mm:CoverFloatingHeight = place-ponton-height .
-        put stream s-pomi unformatted
-          "Rprov                  = " v-mm:Rprov                    skip
-          "Mpokr                  = " v-mm:Mpokr                    skip
-          "CoverFloatingHeight    = " v-mm:CoverFloatingHeight      skip
-        .
-      end.
-      
+    output stream s-pomi close.
+    
+    if trim(vErr) > "" then do :
+      error-string = substitute("~nРезервуар: &1.~n", if avail buf_place then buf_place.loc1 else "") 
+                   + replace(vErr,";0x","~n0x") .
+      output stream s-pomi to value ("pomi.log")  append.
+      put stream s-pomi error-string format "X(1024)" skip.
+      message
+      substitute('Ошибка работы библиотеки ПОкМИ. &1',error-string)
+      view-as alert-box error.
       output stream s-pomi close.
-      v-mm:Exec() .
-      if v-mm:Result <> 0 then do :
-        error-string = substitute("~nРезервуар: &1.~n", if avail buf_place then buf_place.loc1 else "") 
-                     + replace(v-mm:ResultDetail,";0x","~n0x") .
-        output stream s-pomi to value ("pomi.log")  append.
-        put stream s-pomi error-string format "X(1024)" skip.
-        message
-        substitute('Ошибка работы библиотеки ПО МИ. &1',error-string)
-        view-as alert-box error.
-        RELEASE OBJECT v-mm NO-ERROR.
-        v-mm = ?.
-        output stream s-pomi close.
-        undo _trpomi, return "pomi-error" .
-      end.
-      else do :
-        assign new_shift-period.sales-density15 = (v-mm:Rcy / 1000) .
-        
-        assign
-          v-POkMI-result =
-            "MM:V_total             = " + v-mm:V_total     + {&new-line} +
-            "MM:V_water             = " + v-mm:V_water     + {&new-line} +
-            "MM:DeltaV              = " + v-mm:DeltaV     + {&new-line} +
-            "MM:Vcy                 = " + v-mm:Vcy     + {&new-line} +
-            "MM:Rcy                 = " + v-mm:Rcy          + {&new-line} +
-            (if v-pokmi-dll-version <> "1.0.5.6" then 
-              "MM:Mcy                 = " + v-mm:Mcy + {&new-line}
-             else "") +
-            "MM:V_product           = " + v-mm:V_product  + {&new-line} +
-            "MM:V                   = " + v-mm:V  + {&new-line} + 
-            "MM:Rv                  = " + v-mm:Rv  + {&new-line} +
-            "MM:M                   = " + v-mm:M  + {&new-line} +
-            "MM:CTL_base_alt        = " + v-mm:CTL_base_alt  + {&new-line} +
-            "MM:CPL_base_alt        = " + v-mm:CPL_base_alt + {&new-line} +
-            "MM:CTPL_base_alt       = " + v-mm:CTPL_base_alt  + {&new-line} +
-            "MM:Fp_base_alt         = " + v-mm:Fp_base_alt  + {&new-line} +
-            "MM:CTL_obs_base        = " + v-mm:CTL_obs_base + {&new-line} +
-            "MM:CPL_obs_base        = " + v-mm:CPL_obs_base  + {&new-line} +
-            "MM:CTPL_obs_base       = " + v-mm:CTPL_obs_base  + {&new-line} +
-            "MM:Fp_obs_base         = " + v-mm:Fp_obs_base  + {&new-line} +
-            "MM:DeltaOtn_Vcy        = " + v-mm:DeltaOtn_Vcy  + {&new-line} +
-            "MM:DeltaOtn_Vm         = " + v-mm:DeltaOtn_Vm  + {&new-line} +
-            "MM:DeltaOtn_M          = " + v-mm:DeltaOtn_M  + {&new-line} +
-            "MM:VolumetricExpansion = " + v-mm:VolumetricExpansion
-        .
-        OUTPUT stream s-pomi to value ("pomi.log")  append.
-        PUT STREAM s-pomi unformatted v-POkMI-result skip .
-        OUTPUT stream s-pomi close.
-        
-        RELEASE OBJECT v-mm NO-ERROR.
-        v-mm = ?.
-      end .
+      undo _trpomi, return "pomi-error" .
+    end.
+    else do :
+      assign new_shift-period.sales-density15 = (Rcy / 1000) .
+      
+      assign
+        v-POkMI-result =
+          "V_total             = " + string(V_total)       + {&new-line} +
+          "V_water             = " + string(V_water)       + {&new-line} +
+          "DeltaV              = " + string(DeltaV)         + {&new-line} +
+          "Vcy                 = " + string(Vcy)           + {&new-line} +
+          "Rcy                 = " + string(Rcy)            + {&new-line} +
+          "V_product           = " + string(V_product)      + {&new-line} +
+          "V                   = " + string(V)              + {&new-line} + 
+          "Rv                  = " + string(Rv)               + {&new-line} +
+          "M                   = " + string(M)                 + {&new-line} +
+          "CTL_base_alt        = " + string(CTL_base_alt)  + {&new-line} +
+          "CPL_base_alt        = " + string(CPL_base_alt)  + {&new-line} +
+          "CTPL_base_alt       = " + string(CTPL_base_alt)  + {&new-line} +
+          "Fp_base_alt         = " + string(Fp_base_alt)   + {&new-line} +
+          "CTL_obs_base        = " + string(CTL_obs_base)  + {&new-line} +
+          "CPL_obs_base        = " + string(CPL_obs_base)  + {&new-line} +
+          "CTPL_obs_base       = " + string(CTPL_obs_base)  + {&new-line} +
+          "Fp_obs_base         = " + string(Fp_obs_base)   + {&new-line} +
+          "DeltaOtn_Vcy        = " + string(DeltaOtn_Vcy)  + {&new-line} +
+          "DeltaOtn_Vm         = " + string(DeltaOtn_Vm)   + {&new-line} +
+          "DeltaOtn_M          = " + string(DeltaOtn_M)       + {&new-line} +
+          "VolumetricExpansion = " + string(VolumetricExpansion)  + {&new-line} +
+          "Warnings            = " + string(vWrn)
+      .
+      OUTPUT stream s-pomi to value ("pomi.log")  append.
+      PUT STREAM s-pomi unformatted v-POkMI-result skip .
+      OUTPUT stream s-pomi close.
     end .
   end . /* _trpomi */
 end procedure .

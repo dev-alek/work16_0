@@ -412,6 +412,21 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
                and marking.sts eq objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB 
             then
                run sendmark(marking.mark).
+            /* выгружаем марку, если добавили ее в УПД вручную */
+            else if available marking then 
+            do:
+                find first ub.utd-marking-lines-attr no-lock where 
+                           ub.utd-marking-lines-attr.db-num     = utd-marking-lines.db-num
+                       and ub.utd-marking-lines-attr.doc-id     = utd-marking-lines.doc-id
+                       and ub.utd-marking-lines-attr.LineNum    = utd-marking-lines.LineNum
+                       and ub.utd-marking-lines-attr.mark       = utd-marking-lines.mark
+                       and ub.utd-marking-lines-attr.attr-code  = "AddMarkWeight"
+                       and ub.utd-marking-lines-attr.attr-value = "yes"
+                       no-error.
+                if available ub.utd-marking-lines-attr
+                then         
+                   run sendmark(marking.mark).
+            end.       
          end.
        end .  
     end.

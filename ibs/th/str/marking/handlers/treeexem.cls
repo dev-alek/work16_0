@@ -87,7 +87,7 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
       for each buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
         and buf_utd-marking-lines.mark = buf_marking.mark:
           if LevelDownUTD(buf_utd-marking-lines.mark, buf_utd-marking-lines.doc-id, buf_utd-marking-lines.db-num) then do:
-            vOk =  StatusDownUTD(buf_utd-marking-lines.mark,buf_utd-marking-lines.doc-id,buf_utd-marking-lines.db-num,buf_utd-marking-lines.sts) .
+            vOk =  StatusDownUTD(buf_utd-marking-lines.mark,buf_utd-marking-lines.doc-id,buf_utd-marking-lines.db-num,sts) .
           end.
           else 
              vOk = yes.
@@ -126,6 +126,34 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
     end.
     return not vBad .    
   end method. 
+
+  method public logical StatusUpUTD(iMark as char, iDbNum as integer, iDocId as integer, iSts as integer):
+    define buffer buf_utd-marking-lines for ub.utd-marking-lines .
+    define buffer buf_marking           for ub.marking .
+
+    if iMark = "" then
+      return no.
+
+    if checkedAllMarksOfUpakUTD(iMark, iDbNum, iDocId)
+    then do:
+      for first buf_utd-marking-lines exclusive-lock where 
+                buf_utd-marking-lines.mark = iMark 
+            and buf_utd-marking-lines.db-num = buf_utd-marking-lines.db-num 
+            and buf_utd-marking-lines.doc-id = buf_utd-marking-lines.doc-id
+      :
+        buf_utd-marking-lines.sts   = iSts.
+        for first buf_marking no-lock where
+                  buf_marking.mark begins buf_utd-marking-lines.mark
+        :
+          StatusUpUTD(buf_marking.mark-parent, iDbNum, iDocId, iSts). 
+        end.   
+      end. 
+      return yes. 
+   end.
+    
+  return no.    
+  end method. 
+
 
   method public integer StatusDownDoc(mark as char, obj-code as integer, obj-type as character, in-code as character, out-code as character, sts as integer):
     do trans:
@@ -179,18 +207,19 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
     
     for first marking where marking.mark = mark no-lock:
       for first buf_marking exclusive-lock where buf_marking.mark = marking.mark-parent:
-        for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:
+/*        for each bf_marking no-lock where bf_marking.mark-parent = buf_marking.mark:
           for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
             and buf_utd-marking-lines.mark = bf_marking.mark:
             buf_utd-marking-lines.doc-level = buf_utd-marking-lines.doc-level - 1 .          
           end.
-        end.
+        end.   */
         buf_marking.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB. .
         for first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.db-num = db-num and buf_utd-marking-lines.doc-id = doc-id
             and buf_utd-marking-lines.mark = buf_marking.mark:
               buf_utd-marking-lines.sts = ObjSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB. .
-              buf_utd-marking-lines.doc-level = 0 .
+/*              buf_utd-marking-lines.doc-level = 0 . */
         end.       
+        UnGroupUTD(buf_marking.mark, doc-id, db-num).
         v-is = yes .
       end.
     end.
@@ -390,6 +419,27 @@ class ibs.th.str.marking.handlers.treeexem inherits objth:
      end.
      return v-q.
   end method. 
+
+  /* Метод проверяет все ли дочерние марки проверены в УПД */
+  method public logical checkedAllMarksOfUpakUTD(iMarkUpak as character, iDbNum as integer, iDocId as integer):
+
+     define buffer upak_marking                for ub.marking .
+     define buffer upak_utd-marking-lines      for ub.utd-marking-lines .
+     define variable Marking as class mark no-undo .
+     Marking = ObjSrv:Env:Marking:Sts:Mark.
+
+     for each upak_marking no-lock where
+              upak_marking.mark-parent = iMarkUpak
+         ,first upak_utd-marking-lines no-lock where 
+                upak_utd-marking-lines.mark   = upak_marking.mark 
+            and upak_utd-marking-lines.db-num = iDbNum 
+            and upak_utd-marking-lines.doc-id = iDocId
+            and upak_utd-marking-lines.sts   <> Marking:Checked_:KeyIntDB
+     :
+       return no.
+     end.
+     return yes.
+  end method.
  
   {utl/gtin.i class }
 end class.

@@ -859,7 +859,7 @@ on error undo, return error return-value
         
         sw:start-element ("GC-ERPRN") .
         
-        sw:insert-attribute ("xmlns", "http://www.rosneft.ru/GasComplex/Retail/10.0") .
+        sw:insert-attribute ("xmlns", "http://www.rosneft.ru/GasComplex/Retail/11.0") .
         sw:insert-attribute ("xmlns:xs", "http://www.w3.org/2001/XMLSchema") .
         sw:insert-attribute ("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance") .
 

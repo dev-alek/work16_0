@@ -66,6 +66,7 @@ class ibs.th.bge.1crn.subjects.exp-mark inherits send1cerpsub:
   ------------------------------------------------------------------------------*/
 method override public void CrContentToSW (insw as handle):
 
+
    find first marking where marking.mark eq string(oldbh:buffer-field( "mark":U  ):buffer-value)
    no-lock no-error.
    if available marking
@@ -78,7 +79,8 @@ method override public void CrContentToSW (insw as handle):
       insw:write-data-element (  "qnty-box":U,        if marking.box-qnty eq ? then "" else string( marking.box-qnty )   ).
       insw:write-data-element (  "stts":U,       ObjSrv:Env:marking:sts:mark:GetNameProp(marking.sts)).
       insw:write-data-element (  "mark-parent":U,     repSpecSimbforXlm(  addBracketForCode( marking.mark-parent ))  ).
-      insw:write-data-element (  "GTIN":U,       marking.gds-ext-id   ).
+      if marking.gds-ext-id <> "" and marking.gds-ext-id <> ? then
+        insw:write-data-element (  "GTIN":U,       marking.gds-ext-id   ).
       insw:write-data-element (  "gds-code":U,       if marking.gds-code eq ? then "" else string(marking.gds-code)   ).
       find first marking-attr where marking-attr.mark eq marking.mark
                                 and marking-attr.attr-code eq "mrc"  
@@ -90,6 +92,14 @@ method override public void CrContentToSW (insw as handle):
          insw:write-data-element (  "mrc":U,       marking-attr.attr-value   ).
       /*else
          insw:write-data-element (  "mrc":U,       ""   ).*/
+      find first marking-attr where marking-attr.mark eq marking.mark
+                                and marking-attr.attr-code eq "weight"  
+                                and marking-attr.attr-value <> '0'
+                                and marking-attr.attr-value <> ''
+      no-lock no-error.
+      if available marking-attr
+      then
+         insw:write-data-element (  "weight":U,       marking-attr.attr-value   ).   
       insw:end-element ({&tag-mark}) .
 /*      insw:end-element ({&tag-marks}) .*/
    end.

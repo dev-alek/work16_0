@@ -415,6 +415,12 @@ define buffer buf_temp-esys-pck-sent for THpck-sent.
     buf_esys-pck-rcvd.custom-pack-name = v-filename
     .
 
+    ibs.th.bge.1crn.import.impmsgs:writeError2Db(
+       p-esys-id
+      ,p-db-num
+      ,p-cr-db-num
+      ,p-pack-num).
+
     run str/callnews.p
       (input {&table_esys-pck-rcvd}
       ,input (buffer buf_esys-pck-rcvd:handle)

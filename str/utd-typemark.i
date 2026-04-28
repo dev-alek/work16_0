@@ -1,7 +1,7 @@
 { str/utd-attr.i {1} }
-{ gbl/attr-lib.i }
-{ utl/gtin.i }
-{ str/utd-err.i }
+{ gbl/attr-lib.i {1} }
+{ utl/gtin.i {1} }
+{ str/utd-err.i {1} }
 &if "{1}" = "class"
 &then
 
@@ -278,3 +278,105 @@ function CheckMarkForType return logical
       end.
    end.
 end.
+
+&if "{1}" = "class"
+&then
+method public logical WeighedProd
+&else
+function WeighedProd return logical 
+&endif
+   ( input p-gds-code as integer) :
+   /*------------------------------------------------------------------------------
+     Purpose:  
+       Notes:  Весовой товар
+   ------------------------------------------------------------------------------*/
+   define variable v-par-val  as character no-undo.
+   define variable v-par-type as character no-undo.
+   &scop proc-name gds-attr-value
+        {&run_proc_attr-lib}
+            ( p-gds-code,
+              {&attr-weighed-gds},
+               output v-par-val,
+               output v-par-type
+            ).
+  
+   return logical(v-par-val).   /* Function return value. */
+
+end.
+
+&if "{1}" = "class"
+&then
+method public logical WghProdVariable
+&else
+function WghProdVariable return logical 
+&endif
+    (input p-obj-type as char,
+     input p-obj-code as integer,
+     input p-gds-code as integer) :
+   /*------------------------------------------------------------------------------
+     Purpose:  
+       Notes:  Товар с переменным весом
+   ------------------------------------------------------------------------------*/
+   define variable v-wgh-val  as character no-undo.
+   define variable v-par-val  as character no-undo.
+   define variable v-par-type as character no-undo.
+   define variable vMarking        as logical no-undo.
+   define variable vArtic          as logical no-undo.
+   define variable vTransitional   as logical no-undo.
+   define variable EDOParSec as class ibs.th.gbl.env.prmtrs.edo .
+   &scop proc-name gds-attr-value
+   {&run_proc_attr-lib}
+        ( p-gds-code,
+          {&attr-weighed-gds},
+           output v-wgh-val,
+           output v-par-type
+        ).
+    if logical(v-wgh-val) = yes then do:                
+        {&run_proc_attr-lib}
+            ( p-gds-code,
+              {&attr-mark-type},
+               output v-par-val,
+               output v-par-type
+            ).
+        if v-par-val <> "" then do:
+            EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(p-obj-type, p-obj-code). 
+            assign
+               vMarking = EDOParSec:GetIsEDOForType(v-par-val)  
+               vArtic = not vMarking and EDOParSec:GetIsArticForType(v-par-val)
+               .
+        end.   
+   end.
+   if v-wgh-val > "" and (vMarking or vArtic)
+   then return yes.
+   else return no.
+end.
+
+&if "{1}" = "class"
+&then
+method public decimal MarkWeight
+&else
+function MarkWeight return decimal 
+&endif
+   ( input p-mark as character) :
+              
+   define buffer  buf_marking-attr for  ub.marking-attr.
+   define variable vMarkWeight as decimal no-undo.
+   
+   vMarkWeight = 0.   
+   if p-mark <> "" and p-mark <> ?
+   then do:                    
+       find first buf_marking-attr where buf_marking-attr.mark      eq p-mark 
+                                     and buf_marking-attr.attr-code eq "weight"
+          no-lock no-error.
+       if not available buf_marking-attr
+       then do :
+         find first buf_marking-attr where buf_marking-attr.mark  begins p-mark 
+                                       and buf_marking-attr.attr-code eq "weight"
+            no-lock no-error.
+       end .
+       if avail buf_marking-attr
+       then vMarkWeight = dec(buf_marking-attr.attr-value).    
+   end.
+   
+   return vMarkWeight.
+end.                 

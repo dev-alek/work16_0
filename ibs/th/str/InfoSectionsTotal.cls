@@ -1065,6 +1065,18 @@ class ibs.th.str.InfoSectionsTotal:
         buf_doc-line-attr.gds-code = GdsCode
         buf_doc-line-attr.attr-code = 'KPnoMeas' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
       buf_doc-line-attr.attr-value = string ( InfoSectionCurr:KPnoMeas ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'pokmi-warnings' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:PokmiWarnings ).
+      create buf_doc-line-attr.
+      assign
+        buf_doc-line-attr.doc-code = TrnDocNum
+        buf_doc-line-attr.gds-code = GdsCode
+        buf_doc-line-attr.attr-code = 'pokmi-warnings-rvs' + if SectionNum > 1 then {&delim-par} + string (ii) else "".
+      buf_doc-line-attr.attr-value = string ( InfoSectionCurr:PokmiWarningsRVS ).
       release buf_doc-line-attr.
       
     end.
@@ -1600,6 +1612,7 @@ class ibs.th.str.InfoSectionsTotal:
   method public void CalcWeight ():  
     define variable ToolType                as integer no-undo.
     define variable DeltaAbs_R              as decimal no-undo.
+    define variable DeltaOtn_R              as decimal no-undo.
     define variable DeltaAbs_Tv             as decimal no-undo.
     define variable DeltaAbs_Tr             as decimal no-undo.
     define variable NeckType                as integer no-undo.
@@ -1610,24 +1623,39 @@ class ibs.th.str.InfoSectionsTotal:
     define variable ToolAutomationLevel_Tv  as integer no-undo.
     define variable ToolAutomationLevel_Tr  as integer no-undo.
     define variable error-string            as character no-undo.
-    define variable v-mm as com-handle.
     define variable v-proc as character no-undo.
     define variable v-TankVol-m3            as decimal decimals 10 no-undo .
-    define variable v-pokmi-dll-version as character no-undo .
     define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
-  /*  define buffer buf_clob-bind    for ub.clob-bind.*/
     define buffer buf_sr-izmerenia    for ub.sr-izmerenia .
-/*    run save-page.*/
-/*    assign        */
-/*    f-car-vol     */
-/*    f-tank-vol    */
-/*    f-a-b-tarir   */
-/*    v-size        */
-/*    f-tank-temp   */
-/*    f-tank-density*/
-/*    f-dens-temp   */
-/*    f-place-si    */
-/*    .             */
+    
+    define variable A_Reservoir             as decimal no-undo init 0.0000125 .
+    
+    define variable DeltaOtn_N               as decimal no-undo init 0.05 .
+    define variable V_real as decimal no-undo.
+    
+    define variable vErr as character no-undo .
+    define variable vWrn as character no-undo .
+    define variable vDllVersion as character no-undo .
+    
+    define variable DeltaV_GT as decimal no-undo.          
+    define variable DeltaV as decimal no-undo.            
+    define variable Vcy as decimal no-undo.              
+    define variable Rcy as decimal no-undo.      
+    define variable Rcy20 as decimal no-undo.    
+    define variable V as decimal no-undo.      
+    define variable CTL_base_alt as decimal no-undo.   
+    define variable CPL_base_alt as decimal no-undo.
+    define variable CTPL_base_alt as decimal no-undo.
+    define variable Fp_base_alt as decimal no-undo. 
+    define variable CTL_obs_base as decimal no-undo.
+    define variable CPL_obs_base as decimal no-undo.
+    define variable CTPL_obs_base as decimal no-undo.
+    define variable Fp_obs_base as decimal no-undo. 
+    define variable VolumetricExpansion as decimal no-undo.
+    define variable Rv as decimal no-undo.         
+    define variable DeltaOtn_Vcy as decimal no-undo.
+    define variable M as decimal no-undo.            
+    define variable DeltaOtn_M as decimal no-undo.
 
     case RdcDnstvalue:
       when "pomi-rn" then do:
@@ -1635,7 +1663,7 @@ class ibs.th.str.InfoSectionsTotal:
           do on error undo, return no-apply :
     
   
-            /*данные по средству измерения резервуара для ПО МИ*/
+            /*данные по средству измерения резервуара для ПОкМИ*/
           find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSi no-error.
           if not available buf_sr-izmerenia then do :
             message
@@ -1656,10 +1684,12 @@ class ibs.th.str.InfoSectionsTotal:
             assign
               ToolType               = buf_sr-izmerenia.sr-type-id
               DeltaAbs_R             = buf_sr-izmerenia.sr-abs-err-dens
+              DeltaOtn_R             = buf_sr-izmerenia.sr-relative-err-dens
               ToolAutomationLevel_R  = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
               ToolAutomationLevel_Tv = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1].
               ToolAutomationLevel_Tr = vAutomationDegree[buf_sr-izmerenia.sr-type-izm + 1]
             .
+            if DeltaOtn_R = ? then DeltaOtn_R = 0 .
           end.
           
           find first buf_sr-izmerenia no-lock where buf_sr-izmerenia.node-code = InfoSectionCurr:PlaceSiTemp no-error.
@@ -1679,284 +1709,290 @@ class ibs.th.str.InfoSectionsTotal:
           end.
           
           /*..........................................*/
-          v-pokmi-dll-version = get-pokmi-dll-version() .
-          if v-pokmi-dll-version = "error"
-          then do :
-            release object v-mm no-error.
-            v-mm = ?.
-            message
-              substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) skip
-            view-as alert-box error.
-            undo _trpomi, return no-apply .
-          end .
           
-          v-proc = "ADMM.CMethodOfMetering31N" .
+          v-proc = "CMethodOfMetering31N" .
     
-          release object v-mm no-error.
-          v-mm = ?.
-    
-          create value(v-proc) v-mm no-error.
-          if error-status:error
-          or not VALID-HANDLE(v-mm)
-          then do:
-            release object v-mm no-error.
-            v-mm = ?.
-            message
-              substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) skip
+          if InfoSectionCurr:Pour = "" then do :
+            message 
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Введите тип налива"  skip
             view-as alert-box error.
             undo _trpomi, return no-apply .
           end.
-          else do :
-            if InfoSectionCurr:Pour = "" then do :
-              message 
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Введите тип налива"  skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply .
-            end.
-            
-            if InfoSectionCurr:Shape = "" then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Укажите форму горловины"  skip
-              view-as alert-box error.
-            end.
-            if InfoSectionCurr:CarVol = ? or InfoSectionCurr:CarVol = 0 then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Введите Объем по свидетельству о поверке в литрах"  skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply  .
-            end.
-            
-            if InfoSectionCurr:ABTarir = ? then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Введите Уровень цистерны относительно тарировочной планки"  skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply  .
-            end.
+          
+          if InfoSectionCurr:Shape = "" then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Укажите форму горловины"  skip
+            view-as alert-box error.
+          end.
+          if InfoSectionCurr:CarVol = ? or InfoSectionCurr:CarVol = 0 then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Введите Объем по свидетельству о поверке в литрах"  skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          
+          if InfoSectionCurr:ABTarir = ? then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Введите Уровень цистерны относительно тарировочной планки"  skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
 /*              assign                                         */
 /*              f-size              = string (decimal (f-size))*/
 /*              f-size:screen-value = string (decimal (f-size))*/
 /*              no-error.                                      */
-            decimal(InfoSectionCurr:Diameter) no-error .
-            if error-status:error then 
-            do:
-              assign
-                NeckType = 1
-                NeckWidth = decimal (entry (1, replace(InfoSectionCurr:Diameter, "\", "/"), "/")) 
-                NeckHeight = decimal (entry (2, replace(InfoSectionCurr:Diameter, "\", "/"), "/"))
-                Dgor = 0
-              no-error .
-            end.
-            else do: 
-            assign 
-              NeckType = 0 
-              Dgor = decimal (InfoSectionCurr:Diameter).
-            end.  
+          decimal(InfoSectionCurr:Diameter) no-error .
+          if error-status:error then 
+          do:
+            assign
+              NeckType = 1
+              NeckWidth = decimal (entry (1, replace(InfoSectionCurr:Diameter, "\", "/"), "/")) 
+              NeckHeight = decimal (entry (2, replace(InfoSectionCurr:Diameter, "\", "/"), "/"))
+              Dgor = 0
+            no-error .
+          end.
+          else do: 
+          assign 
+            NeckType = 0 
+            Dgor = decimal (InfoSectionCurr:Diameter).
+          end.  
 /*            if InfoSectionCurr:Diameter = ? or InfoSectionCurr:Diameter = "0" then do :*/
 /*              message                                                                  */
 /*                "Заполнены не все поля, необходимые " skip                             */
-/*                "для работы библиотеки ПО МИ"         skip                             */
+/*                "для работы библиотеки ПОкМИ"         skip                             */
 /*                "Введите Внутренний диаметр горловины"  skip                           */
 /*              view-as alert-box error.                                                 */
 /*              undo _trpomi, return no-apply  .                                         */
 /*            end.                                                                       */
-            if InfoSectionCurr:TankTemp = ? then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Введите Температуру"  skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply  .
-            end.
-            if InfoSectionCurr:DensTemp = ? then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПОкМИ"         skip
-                "Введите Температуру"  skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply  .
-            end.
-            if InfoSectionCurr:TankDensity = ? or InfoSectionCurr:TankDensity = 0 then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Введите Плотность топлива для ПО МИ"  skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply .
-            end.
+          if InfoSectionCurr:TankTemp = ? then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Введите Температуру"  skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          if InfoSectionCurr:DensTemp = ? then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Введите Температуру"  skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          if InfoSectionCurr:TankDensity = ? or InfoSectionCurr:TankDensity = 0 then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Введите Плотность топлива для ПОкМИ"  skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply .
+          end.
 
-            if  InfoSectionCurr:ListTank = "" then do :
-              message
-                "Заполнены не все поля, необходимые " skip
-                "для работы библиотеки ПО МИ"         skip
-                "Выберите резервуар"  skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply .
-            end.
+          if  InfoSectionCurr:ListTank = "" then do :
+            message
+              "Заполнены не все поля, необходимые " skip
+              "для работы библиотеки ПОкМИ"         skip
+              "Выберите резервуар"  skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply .
+          end.
 
-            define variable v-auto-error as decimal no-undo.
-            find first ub.auto-tank-attr no-lock
-                 where ub.auto-tank-attr.auto-num = CarNum
-                   and ub.auto-tank-attr.attr-code = "auto-error" no-error.
-            
-            if available (ub.auto-tank-attr)
-            then do:
-              assign v-auto-error = decimal (ub.auto-tank-attr.attr-value) no-error.
-              if error-status:error
-                then v-auto-error = 0.4 .
-            end.
-            else do:
-              v-auto-error = 0.4 .
-            end.
+          define variable v-auto-error as decimal no-undo.
+          find first ub.auto-tank-attr no-lock
+               where ub.auto-tank-attr.auto-num = CarNum
+                 and ub.auto-tank-attr.attr-code = "auto-error" no-error.
+          
+          if available (ub.auto-tank-attr)
+          then do:
+            assign v-auto-error = decimal (ub.auto-tank-attr.attr-value) no-error.
+            if error-status:error
+              then v-auto-error = 0.4 .
+          end.
+          else do:
+            v-auto-error = 0.4 .
+          end.
+          
+          find first ub.auto-tank-attr no-lock
+               where ub.auto-tank-attr.auto-num = CarNum
+                 and ub.auto-tank-attr.attr-code = "auto-temp" no-error.
+          
+          if available (ub.auto-tank-attr)
+          then do:
+            assign A_Reservoir = decimal (ub.auto-tank-attr.attr-value) no-error.
+            if error-status:error
+              then A_Reservoir = 0.0000125 .
+          end.
+          else do:
+            A_Reservoir = 0.0000125 .
+          end.
+          if A_Reservoir <> 0.0000125
+          and A_Reservoir <> 0.000023
+          then do :
+            A_Reservoir = 0.0000125 .
+          end .
 
-            if infoSectionCurr:Pour = "Нижний налив"
-            then do:
-              assign
-                v-mm:V_real = (InfoSectionCurr:CarVol + (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then InfoSectionCurr:Mouth else 0) + InfoSectionCurr:DopVolume) / 1000.
-            end.
-            else do:
-              assign
-                v-mm:V_real = (InfoSectionCurr:CarVol + (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then InfoSectionCurr:Mouth else 0)) / 1000.
-            end.
-
+          if infoSectionCurr:Pour = "Нижний налив"
+          then do:
             assign
-              v-mm:DeltaH                 = if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:ABTarir
-              v-mm:NeckArea               = if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea
-              v-mm:Tv                     = infoSectionCurr:TankTemp
-              v-mm:Tr                     = InfoSectionCurr:DensTemp
-              v-mm:R                      = ( InfoSectionCurr:TankDensity * 1000 )
-              v-mm:Tcy                    = TempForPomi
-              v-mm:ToolType               = ToolType
-/*              v-mm:A_Reservoir            = 0.0000125*/
-              v-mm:DeltaOtn_V             = 0.4
-              v-mm:DeltaAbs_R             = DeltaAbs_R
-              v-mm:DeltaAbs_Tv            = DeltaAbs_Tv
-              v-mm:DeltaAbs_Tr            = DeltaAbs_Tr
+              V_real = (InfoSectionCurr:CarVol + InfoSectionCurr:DopVolume) / 1000
             .
-            if v-pokmi-dll-version = "1.0.5.6"
-            then do :
-              assign
-                v-mm:ToolAutomationLevel_R  = ToolAutomationLevel_R
-                v-mm:ToolAutomationLevel_Tv = ToolAutomationLevel_Tv
-                v-mm:ToolAutomationLevel_Tr = ToolAutomationLevel_Tr
-              .  
-            end .
+          end.
+          else do:
+            assign
+              V_real = InfoSectionCurr:CarVol / 1000
+            .
+          end.
+   
+          if InfoSectionCurr:Shape = entry (1, {&list-shape})
+          then do :
+            InfoSectionCurr:GetCalibTable(InfoSectionCurr:ABTarir) .
+          end .
+          
+          MM31N
+            (
+            input V_real,
+            input if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 2 else 1, /* DeltaCorrectionType */
+            input InfoSectionCurr:CalibTable, /* CalibrationTable */
+            input InfoSectionCurr:ABTarir, /* DeltaH */
+            input if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea,
+            input infoSectionCurr:TankTemp,
+            input InfoSectionCurr:DensTemp,
+            input InfoSectionCurr:TankDensity * 1000,
+            input TempForPomi,
+            input 0.0, /* Pr */
+            input 0.0, /* Pv */
+            input ToolType,
+            input A_Reservoir, /* A_Reservoir */
+            input v-auto-error, /* DeltaOtn_V */
+            input ToolAutomationLevel_R,
+            input ToolAutomationLevel_Tv,
+            input ToolAutomationLevel_Tr,
+            input DeltaAbs_R,
+            input DeltaOtn_R,
+            input DeltaAbs_Tv,
+            input DeltaAbs_Tr,
+            input DeltaOtn_N,
+            input 1, /* Round_M */
+            input 2, /* Round_T */
+            input 2, /* Round_R */
             
-            v-mm:Exec() .
+            output DeltaV_GT,
+            output DeltaV,
+            output Vcy,
+            output Rcy,
+            output Rcy20,
+            output V,
+            output CTL_base_alt,
+            output CPL_base_alt,
+            output CTPL_base_alt,
+            output Fp_base_alt,
+            output CTL_obs_base,
+            output CPL_obs_base,
+            output CTPL_obs_base,
+            output Fp_obs_base,
+            output VolumetricExpansion,
+            output Rv,
+            output DeltaOtn_Vcy,
+            output M,
+            output DeltaOtn_M,
+            
+            output vErr,
+            output vWrn,
+            output vDllVersion
+            )
+          .
+          
+          output stream outstream to value ("pomi.log") append.
+          put stream outstream unformatted
+            {&new-line}
+                                       now                     skip
+            'Процедура: '              v-proc                  skip
+            'Версия dll: '             vDllVersion     skip
+            'V_real                 = ' V_real            skip
+            'DeltaCorrectionType    = ' if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 2 else 1 skip
+            'CalibrationTable       = ' InfoSectionCurr:CalibTable skip
+            'DeltaH                 = ' InfoSectionCurr:ABTarir skip
+            'NeckArea               = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea) skip
+            'Tv                     = ' InfoSectionCurr:TankTemp skip
+            'Tr                     = ' InfoSectionCurr:DensTemp skip
+            'R                      = ' trim(string(( InfoSectionCurr:TankDensity * 1000 ), ">>>9.9<")) skip
+            'Tcy                    = ' TempForPomi skip
+            'ToolType               = ' ToolType                skip
+            'A_Reservoir            = ' string (A_Reservoir)    skip
+            'DeltaOtn_V             = ' string (v-auto-error)   skip
+            'ToolAutomationLevel_R  = ' ToolAutomationLevel_R skip
+            'ToolAutomationLevel_Tv = ' ToolAutomationLevel_Tv skip
+            'ToolAutomationLevel_Tr = ' ToolAutomationLevel_Tr skip
+            'DeltaAbs_R             = ' DeltaAbs_R              skip
+            'DeltaOtn_R             = ' DeltaOtn_R              skip
+            'DeltaAbs_Tv            = ' DeltaAbs_Tv             skip
+            'DeltaAbs_Tr            = ' DeltaAbs_Tr             skip
+            'DeltaOtn_N             = ' DeltaOtn_N              skip
+            'Round_M                = ' 1                       skip
+            'Round_T                = ' 2                       skip
+            'Round_R                = ' 2                       skip
+            'DeltaV_GT              = ' DeltaV_GT         skip  
+            'DeltaV                 = ' DeltaV            skip  
+            'Vcy                    = ' Vcy               skip 
+            'Rcy                    = ' Rcy               skip
+            'Rcy20                  = ' Rcy20             skip
+            'V                      = ' V                 skip
+            'CTL_base_alt           = ' CTL_base_alt      skip 
+            'CPL_base_alt           = ' CPL_base_alt      skip 
+            'CTPL_base_alt          = ' CTPL_base_alt     skip
+            'Fp_base_alt            = ' Fp_base_alt       skip
+            'CTL_obs_base           = ' CTL_obs_base      skip
+            'CPL_obs_base           = ' CPL_obs_base      skip
+            'CTPL_obs_base          = ' CTPL_obs_base     skip
+            'VolumetricExpansion    = ' VolumetricExpansion skip
+            'Fp_obs_base            = ' Fp_obs_base       skip
+            'Rv                     = ' Rv                skip
+            'DeltaOtn_Vcy           = ' DeltaOtn_Vcy      skip 
+            'M                      = ' M                 skip
+            'DeltaOtn_M             = ' DeltaOtn_M        skip
+            'Warnings               = ' vWrn              skip
+          .    
 
-/*            assign                                                                */
-/*              v-mm:V_real                 = v-TankVol-m3                          */
-/*              v-mm:DeltaH                 = InfoSectionCurr:ABTarir               */
-/*              v-mm:Dgor                   = Dgor                                  */
-/*              v-mm:NeckType               = NeckType                              */
-/*              v-mm:NeckWidth              = NeckWidth                             */
-/*              v-mm:NeckHeight             = NeckHeight                            */
-/*              v-mm:Tv                     = InfoSectionCurr:TankTemp              */
-/*              v-mm:Tr                     = InfoSectionCurr:DensTemp              */
-/*              v-mm:R                      = ( InfoSectionCurr:TankDensity * 1000 )*/
-/*              v-mm:Tcy                    = TempForPomi                           */
-/*              v-mm:ToolType               = ToolType                              */
-/*              v-mm:A_Reservoir            = 0.0000125                             */
-/*              v-mm:DeltaOtn_V             = 0.4                                   */
-/*              v-mm:DeltaAbs_R             = DeltaAbs_R                            */
-/*              v-mm:DeltaAbs_Tv            = DeltaAbs_Tv                           */
-/*              v-mm:DeltaAbs_Tr            = DeltaAbs_Tr                           */
-/*            .                                                                     */
-/*            v-mm:Exec() .                                                         */
+          output stream outstream close.
+          if trim(vErr) > "" then do :
+            error-string = replace(vErr,";0x","~n0x") .
             output stream outstream to value ("pomi.log") append.
-            put stream outstream unformatted
-              {&new-line}
-                                         now                     skip
-              'Процедура: '              v-proc                  skip
-              'Версия dll: '             v-pokmi-dll-version     skip
-              'V_real                 = ' v-mm:V_real            skip
-              'DeltaH                 = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:ABTarir) skip
-              'NeckArea               = ' (if InfoSectionCurr:Shape = entry (1, {&list-shape}) then 0 else InfoSectionCurr:NeckArea) skip
-              'Tv                     = ' InfoSectionCurr:TankTemp skip
-              'Tr                     = ' InfoSectionCurr:DensTemp skip
-              'R                      = ' ( InfoSectionCurr:TankDensity ) skip
-              'Tcy                    = ' TempForPomi skip
-              'ToolType               = ' ToolType                skip
-              'A_Reservoir            = ' string (0.0000125)      skip
-              'DeltaOtn_V             = ' string (v-auto-error)   skip
-              'DeltaAbs_R             = ' DeltaAbs_R              skip
-              'DeltaAbs_Tv            = ' DeltaAbs_Tv             skip
-              'DeltaAbs_Tr            = ' DeltaAbs_Tr             skip
-              'Vcy                    = ' v-mm:Vcy               skip 
-              'Rcy                    = ' v-mm:Rcy               skip
-              'V                      = ' v-mm:V                 skip
-              'CTL_base_alt           = ' v-mm:CTL_base_alt      skip 
-              'CPL_base_alt           = ' v-mm:CPL_base_alt      skip 
-              'CTPL_base_alt          = ' v-mm:CTPL_base_alt     skip
-              'Fp_base_alt            = ' v-mm:Fp_base_alt       skip
-              'CTL_obs_base           = ' v-mm:CTL_obs_base      skip
-              'CPL_obs_base           = ' v-mm:CPL_obs_base      skip
-              'CTPL_obs_base          = ' v-mm:CTPL_obs_base     skip
-              'VolumetricExpansion    = ' v-mm:VolumetricExpansion skip
-              'Fp_obs_base            = ' v-mm:Fp_obs_base       skip
-              'Rv                     = ' v-mm:Rv                skip
-              'DeltaOtn_Vcy           = ' v-mm:DeltaOtn_Vcy      skip 
-              'M                      = ' v-mm:M                 skip
-              'DeltaOtn_M             = ' v-mm:DeltaOtn_M        skip
-            .    
-            if v-pokmi-dll-version = '1.0.5.6' then
-              put stream outstream unformatted
-                'ToolAutomationLevel_R  =' v-mm:ToolAutomationLevel_R skip
-                'ToolAutomationLevel_Tv =' v-mm:ToolAutomationLevel_Tv skip
-                'ToolAutomationLevel_Tr =' v-mm:ToolAutomationLevel_Tr skip
-                'Rcy20                  =' v-mm:Rcy20 skip
-              .
-            else
-              put stream outstream unformatted
-                'Mcy                    =' v-mm:Mcy skip.
+            put stream outstream error-string format "x(1024)" skip.
 
             output stream outstream close.
-            if v-mm:Result <> 0 then do :
-              error-string = replace(v-mm:ResultDetail,";0x","~n0x") .
-              output stream outstream to value ("pomi.log") append.
-                put stream outstream error-string format "x(1024)" skip.
-              output stream outstream close.
-              release object v-mm no-error.
-              v-mm = ?.
-              message
-                substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
-              view-as alert-box error.
-              undo _trpomi, return no-apply  .
-            end.
-            else do :
-              assign
-                InfoSectionCurr:cmom-nb = replace(v-proc, "ADMM.", "")
-                InfoSectionCurr:TankDensityPomi = decimal(v-mm:Rcy) / 1000
-                InfoSectionCurr:TankVolPomi     = v-mm:Vcy * 1000
-                InfoSectionCurr:TankWeight      = v-mm:M
+            message
+              substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) skip
+            view-as alert-box error.
+            undo _trpomi, return no-apply  .
+          end.
+          else do :
+            assign
+              InfoSectionCurr:cmom-nb = v-proc
+              InfoSectionCurr:TankDensityPomi = Rcy / 1000
+              InfoSectionCurr:TankVolPomi     = Vcy * 1000
+              InfoSectionCurr:TankWeight      = M
 /*                InfoSectionCurr:AccPomi         = round (v-mm:DeltaOtn_M, 3) ZI-2815*/
-                InfoSectionCurr:AccPomi         = 0.65
-                InfoSectionCurr:AccPomiReal     = round(v-mm:DeltaOtn_M, 2)
-                InfoSectionCurr:TankVolPomiReal = v-mm:V * 1000
-              .
-/*              display                  */
-/*                f-tank-density-pomi    */
-/*                f-tank-vol-pomi        */
-/*                f-tank-weight          */
-/*                f-acc-weight           */
-/*              with frame {&frame-name}.*/
-              output stream outstream to value ("pomi.log") append.
-                put stream outstream
-                "v-mm:Rcy" InfoSectionCurr:TankDensityPomi       skip
-                "v-mm:Vcy" InfoSectionCurr:TankVolPomi           skip
-                "v-mm:Mcy" InfoSectionCurr:TankWeight            skip 
-                "v-mm:DeltaOtn_M" InfoSectionCurr:AccPomi skip .
-              output stream outstream close.
-              release object v-mm no-error.
-              v-mm = ?.
-            end.
+              InfoSectionCurr:AccPomi         = 0.65
+              InfoSectionCurr:AccPomiReal     = round(DeltaOtn_M, 2)
+              InfoSectionCurr:TankVolPomiReal = V * 1000
+              InfoSectionCurr:PokmiWarnings   = vWrn
+            .
+/*            output stream outstream to value ("pomi.log") append.*/
+/*              put stream outstream                               */
+/*              "Rcy" InfoSectionCurr:TankDensityPomi       skip   */
+/*              "Vcy" InfoSectionCurr:TankVolPomi           skip   */
+/*              "Mcy" InfoSectionCurr:TankWeight            skip   */
+/*              "DeltaOtn_M" InfoSectionCurr:AccPomi skip .        */
+/*            output stream outstream close.                       */
           end.
         end.
       end.
@@ -2127,6 +2163,16 @@ class ibs.th.str.InfoSectionsTotal:
     define variable v-proc as character no-undo.
     define variable error-string as character no-undo.
     
+    define variable vErr as character no-undo .
+    define variable vWrn as character no-undo .
+    define variable vDllVersion as character no-undo .
+    
+    define variable Diameter      as decimal no-undo .
+    define variable Length        as decimal no-undo .
+    define variable Width         as decimal no-undo .
+    define variable Circumference as decimal no-undo .
+    define variable Wall          as decimal no-undo .
+    
     if not RdcDnstvalue = "pomi-rn" 
     then do:
       case v-boxshape:
@@ -2150,40 +2196,29 @@ class ibs.th.str.InfoSectionsTotal:
       v-size = "////" .
     end .
     
-    v-proc = "ADMM.CMethodOfMetering26A" .
-  
-    create value(v-proc) v-mm no-error.
-    if error-status:error
-    or not VALID-HANDLE(v-mm)
-    then do:
-      release object v-mm no-error.
-      v-mm = ?.
-      message
-        substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПО МИ ' ) skip
-      view-as alert-box error.
-      undo, return no-apply .
-    end.
+    v-proc = "CMethodOfMetering26A" .
+    
     def var v-diameter as decimal no-undo.
     def var v-circumference as decimal no-undo.
     def var v-wall as decimal no-undo.
     case v-boxshape:
       when 1 then do:
         assign
-          v-mm:Diameter      = 0.0
-          v-mm:Length        = decimal (entry (3, v-size, "/"))
-          v-mm:Width         = decimal (entry (4, v-size, "/"))
-          v-mm:Circumference = 0.0
-          v-mm:Wall          = decimal (entry (2, v-size, "/"))
-          .
+          Diameter      = 0.0
+          Length        = decimal (entry (3, v-size, "/"))
+          Width         = decimal (entry (4, v-size, "/"))
+          Circumference = 0.0
+          Wall          = decimal (entry (2, v-size, "/"))
+        .
       end.
       when 2 then do:
         assign
-          v-mm:Diameter      = 0.0
-          v-mm:Length        = decimal (entry (3, v-size, "/"))
-          v-mm:Width         = decimal (entry (4, v-size, "/"))
-          v-mm:Circumference = 0.0
-          v-mm:Wall          = decimal (entry (2, v-size, "/"))
-          .
+          Diameter      = 0.0
+          Length        = decimal (entry (3, v-size, "/"))
+          Width         = decimal (entry (4, v-size, "/"))
+          Circumference = 0.0
+          Wall          = decimal (entry (2, v-size, "/"))
+        .
       end.
       when 3 then do:
         case true:
@@ -2211,12 +2246,12 @@ class ibs.th.str.InfoSectionsTotal:
         end case.
   
         assign
-          v-mm:Diameter      = v-diameter
-          v-mm:Length        = 0.0
-          v-mm:Width         = 0.0
-          v-mm:Circumference = v-circumference
-          v-mm:Wall          = v-wall
-          .
+          Diameter      = v-diameter
+          Length        = 0.0
+          Width         = 0.0
+          Circumference = v-circumference
+          Wall          = v-wall
+        .
       end.
       when 0 then do:
         NeckArea = 0.
@@ -2229,42 +2264,51 @@ class ibs.th.str.InfoSectionsTotal:
         undo, return no-apply .
       end.
     end case.
-    v-mm:Type = v-boxshape.
+    
+    MM26A
+      (
+      input v-boxshape,
+      input Diameter,
+      input Length,
+      input Width,
+      input Circumference,
+      input Wall,
+      
+      output NeckArea,
+      
+      output vErr,
+      output vWrn,
+      output vDllVersion
+      )
+    .
     output stream outstream to value ("pomi.log") append.
-    v-mm:Exec() .
     put stream outstream unformatted
       {&new-line}
-      now
+      now skip
       'Процедура: '             v-proc             skip
       'Type                 = ' v-boxshape         skip
-      'Diameter             = ' v-mm:Diameter      skip
-      'Length               = ' v-mm:Length        skip
-      'Width                = ' v-mm:Width         skip
-      'Circumference        = ' v-mm:Circumference skip
-      'Wall                 = ' v-mm:Wall          skip
+      'Diameter             = ' Diameter      skip
+      'Length               = ' Length        skip
+      'Width                = ' Width         skip
+      'Circumference        = ' Circumference skip
+      'Wall                 = ' Wall          skip
     .
     output stream outstream close.
-    if v-mm:Result <> 0 then do :
-      error-string = v-mm:ResultDetail .
+    if trim(vErr) > "" then do :
+      error-string = vErr .
       output stream outstream to value ("pomi.log") append.
         put stream outstream error-string format "x(1024)" skip.
       output stream outstream close.
-      release object v-mm no-error.
-      v-mm = ?.
       message
-        substitute('Ошибка работы библиотеки ПО МИ &1',error-string) skip
+        substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) skip
       view-as alert-box error.
       undo, return no-apply  .
     end.
     else do :
-    
-      NeckArea = v-mm:Area.
       output stream outstream to value ("pomi.log") append.
         put stream outstream
-        "v-mm:Area             = " string (NeckArea)      skip.
+        "Area             = " string (NeckArea)      skip.
       output stream outstream close.
-      release object v-mm no-error.
-      v-mm = ?.
     end.
     
   end method.
@@ -2279,7 +2323,7 @@ class ibs.th.str.InfoSectionsTotal:
 
   end destructor.
   
-  { str/get-pokmi-dll-version.i class }
+  { str/pokmi-dyn.i class }
   { str/calibrationbelt.i class }
   
   method public void CalcPomiRvs(
@@ -2388,10 +2432,7 @@ class ibs.th.str.InfoSectionsTotal:
     define variable v-is-meas               as logical no-undo.
     define variable v-mm-density            as decimal no-undo.
     
-    define variable v-mm as com-handle.
     define variable v-proc as character no-undo.
-    define variable v-mm57 as com-handle.
-    define variable v-pokmi-dll-version as character no-undo .
     define variable vAutomationDegree as integer no-undo extent 3 init [2,1,3].
     
     define variable v-com-tanks    as character no-undo init "":U .
@@ -2405,23 +2446,23 @@ class ibs.th.str.InfoSectionsTotal:
     
     define variable v-value as character no-undo .
     
+    define variable vErr as character no-undo .
+    define variable vWrn as character no-undo .
+    define variable vDllVersion as character no-undo .
+    
+    define variable V_total1   as decimal no-undo .
+    define variable V_total2   as decimal no-undo .
+    define variable V_water1   as decimal no-undo .
+    define variable V_water2   as decimal no-undo .
+    define variable Delta_V1   as decimal no-undo .
+    define variable Delta_V2   as decimal no-undo .
+    define variable M          as decimal no-undo . 
+    define variable DeltaOtn_M as decimal no-undo .
+    
+    define variable v-warnings as character no-undo .
+    
     _trpomi :
     do on error undo, return error :
-      
-      v-pokmi-dll-version = get-pokmi-dll-version() .
-      if v-pokmi-dll-version = "error"
-      then do :
-        message 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' skip
-        view-as alert-box error.
-        undo _trpomi, return error .
-      end .
-      if v-pokmi-dll-version = "1.0.2.7"
-      then do :
-        message 'Данный функционал доступен только для библиотеки ПОкМИ MM.dll не ниже версии 1.0.5.6 !' skip
-                'У вас установлена библиотека версии 1.0.2.7'
-        view-as alert-box error.
-        undo _trpomi, return error .
-      end .
       
       infoSecObj = infoSectionTotal:GetInfoSectionProp(p-sec-num) .
         
@@ -2507,6 +2548,7 @@ class ibs.th.str.InfoSectionsTotal:
         p-tank-vol-pomi-rvs = 0.0
       .
       
+      place_ :
       do ii = 1 to num-entries(v-pl-code-list) :
         find first buf_place no-lock where buf_place.pl-code = integer(entry(ii, v-pl-code-list)) no-error .
         if not available buf_place
@@ -2529,11 +2571,11 @@ class ibs.th.str.InfoSectionsTotal:
           v-ok = yes .
         end.
         
-        v-proc = "ADMM.CMethodOfMetering7" .
+        v-proc = "CMethodOfMetering7" .
         if v-ok
         and v-place-type = 1
         then
-          v-proc = "ADMM.CMethodOfMetering14"
+          v-proc = "CMethodOfMetering14"
         .
         
         v-ok = no .
@@ -2617,6 +2659,11 @@ class ibs.th.str.InfoSectionsTotal:
             message "Не заполнена сверка После!" view-as alert-box error .
           end .
           undo _trpomi, return error .
+        end .
+        
+        if bf_bef_rvs-line.state-measure-cli-qnty = bf_aft_rvs-line.state-measure-cli-qnty
+        then do :
+          next place_ .
         end .
         
         for first bf_rvs-line-attr no-lock where bf_rvs-line-attr.rvs-code  = bf_aft_rvs-line.rvs-code
@@ -3288,132 +3335,83 @@ class ibs.th.str.InfoSectionsTotal:
         
         if LevelToolType1 > 0
         then do :
-          release object v-mm57 no-error .
-          v-mm57 = ?.
-    
-          create value("ADMM.CMethodOfMetering57") v-mm57 no-error.
-          if error-status:error
-          or not valid-handle(v-mm57)
-          then do:
-            release object v-mm57 no-error .
-            v-mm57 = ?.
-            message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) view-as alert-box .
-            undo _trpomi, return error  .
-          end .
-          else do :
-            assign
-              v-mm57:H        = bf_bef_rvs-line.state-level-total * 10
-              v-mm57:ToolType = LevelToolType1
-            .
-            output stream outstream to value ("pomi.log") append.
-            put stream outstream unformatted
-                        "    " skip
-                        "    " skip
-                        now   skip
-                        'Процедура             "ADMM.MethodOfMetering57"'       skip
-                        'Версия dll: '            v-pokmi-dll-version   skip
-                        'CODE_PL                = ' buf_place.pl-code                           skip
-                        'H                      = ' v-mm57:H                  skip
-                        'ToolType               = ' v-mm57:ToolType                                      skip
-                            skip skip 
-            .
-            output stream outstream close.
+          MM57
+            (input bf_bef_rvs-line.state-level-total * 10,
+             input LevelToolType1,
+             output DeltaAbs_H1,
+             output vErr,
+             output vWrn,
+             output vDllVersion)
+          .  
+          OUTPUT stream outstream to value ("pomi.log") append.
+          PUT STREAM outstream unformatted
+                      "    " SKIP
+                      "    " SKIP
+                      now   SKIP
+                      'Процедура             "CMethodOfMetering57"'       SKIP
+                      'Версия dll: '            vDllVersion   skip
+                      'CODE_PL                = ' buf_place.pl-code                           SKIP
+                      'H                      = ' bf_bef_rvs-line.state-level-total * 10                  SKIP
+                      'ToolType               = ' LevelToolType1                                      SKIP
+                          SKIP SKIP 
+          .
+          output stream outstream close.
             
-            v-mm57:Exec() no-error.
-            if v-mm57:Result <> 0 then do :
-              error-string = v-mm57:ResultDetail .
-              output stream outstream to value ("pomi.log")  append.
-              put stream outstream error-string format "X(1024)" skip.
-              release object v-mm57 no-error .
-              v-mm57 = ?.
-              output stream outstream close.
-              message substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) view-as alert-box .
-              undo _trpomi, return error .
-            end.
-            else do :
-              DeltaAbs_H1 = v-mm57:DeltaAbs_H .
-              output stream outstream to value ("pomi.log")  append.
-              put stream outstream unformatted
-                  "v-mm:DeltaAbs_H = " v-mm57:DeltaAbs_H  skip
-              .
-              output stream outstream close .
-              release object v-mm57 no-error .
-              v-mm57 = ?.
-            end .
+          if trim(vErr) > "" then do :
+            output stream outstream to value ("pomi.log")  append.
+            put stream outstream vErr format "X(1024)" skip.
+            output stream outstream close.
+            message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
+            undo _trpomi, return error .
+          end.
+          else do :
+            OUTPUT stream outstream to value ("pomi.log")  append.
+            PUT STREAM outstream unformatted
+                "DeltaAbs_H = " DeltaAbs_H1  SKIP
+            .
+            OUTPUT stream outstream close.
           end .
         end . /* LevelToolType1 > 0 */
         
         if LevelToolType2 > 0
         then do :
-          release object v-mm57 no-error .
-          v-mm57 = ?.
-    
-          create value("ADMM.CMethodOfMetering57") v-mm57 no-error.
-          if error-status:error
-          or not valid-handle(v-mm57)
-          then do :
-            release object v-mm57 no-error .
-            v-mm57 = ?.
-            message substitute( 'Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ ' ) view-as alert-box .
-            undo _trpomi, return error  .
-          end .
-          else do :
-            assign
-              v-mm57:H        = bf_aft_rvs-line.state-level-total * 10
-              v-mm57:ToolType = LevelToolType2
-            .
-            output stream outstream to value ("pomi.log") append.
-            put stream outstream unformatted
-                        "    " skip
-                        "    " skip
-                        now   skip
-                        'Процедура             "ADMM.MethodOfMetering57"'       skip
-                        'Версия dll: '            v-pokmi-dll-version   skip
-                        'CODE_PL                = ' buf_place.pl-code                           skip
-                        'H                      = ' v-mm57:H                  skip
-                        'ToolType               = ' v-mm57:ToolType                                      skip
-                            skip skip 
-            .
-            output stream outstream close.
+          MM57
+            (input bf_aft_rvs-line.state-level-total * 10,
+             input LevelToolType2,
+             output DeltaAbs_H2,
+             output vErr,
+             output vWrn,
+             output vDllVersion)
+          .  
+          OUTPUT stream outstream to value ("pomi.log") append.
+          PUT STREAM outstream unformatted
+                      "    " SKIP
+                      "    " SKIP
+                      now   SKIP
+                      'Процедура             "CMethodOfMetering57"'       SKIP
+                      'Версия dll: '            vDllVersion   skip
+                      'CODE_PL                = ' buf_place.pl-code                           SKIP
+                      'H                      = ' bf_aft_rvs-line.state-level-total * 10                  SKIP
+                      'ToolType               = ' LevelToolType2                                      SKIP
+                          SKIP SKIP 
+          .
+          output stream outstream close.
             
-            v-mm57:Exec() no-error.
-            if v-mm57:Result <> 0 then do :
-              error-string = v-mm57:ResultDetail .
-              output stream outstream to value ("pomi.log")  append.
-              put stream outstream error-string format "X(1024)" skip.
-              release object v-mm57 no-error .
-              v-mm57 = ?.
-              output stream outstream close.
-              message substitute('Ошибка работы библиотеки ПОкМИ &1',error-string) view-as alert-box .
-              undo _trpomi, return error .
-            end.
-            else do :
-              DeltaAbs_H2 = v-mm57:DeltaAbs_H .
-              output stream outstream to value ("pomi.log")  append.
-              put stream outstream unformatted
-                  "v-mm:DeltaAbs_H = " v-mm57:DeltaAbs_H  skip
-              .
-              output stream outstream close.
-              release object v-mm57 no-error .
-              v-mm57 = ?.
-            end .
+          if trim(vErr) > "" then do :
+            output stream outstream to value ("pomi.log")  append.
+            put stream outstream vErr format "X(1024)" skip.
+            output stream outstream close.
+            message substitute('Ошибка работы библиотеки ПОкМИ &1', vErr) view-as alert-box .
+            undo _trpomi, return error .
+          end.
+          else do :
+            OUTPUT stream outstream to value ("pomi.log")  append.
+            PUT STREAM outstream unformatted
+                "DeltaAbs_H = " DeltaAbs_H2  SKIP
+            .
+            OUTPUT stream outstream close.
           end .
         end . /* LevelToolType2 > 0 */
-        
-        release object v-mm no-error .
-        v-mm = ?.
-    
-        create value(v-proc) v-mm no-error.
-        if error-status:error
-        or not valid-handle(v-mm)
-        then do:
-          message
-          "Не удается подключиться к COM-серверу библиотеки для работы с ПОкМИ "
-          view-as alert-box error.
-          release object v-mm no-error .
-          v-mm = ?.
-          undo _trpomi, return error .
-        end.
         
         assign
           Tr1 = bf_bef_rvs-line.state-temperature
@@ -3481,273 +3479,237 @@ class ibs.th.str.InfoSectionsTotal:
           assign R2 = decimal(bf_rvs-line-attr.attr-value) * 1000 .
         end .
         
-        assign
-          v-mm:M1                      = bf_bef_rvs-line.state-measure-cli-qnty
-          v-mm:M2                      = bf_aft_rvs-line.state-measure-cli-qnty
-          v-mm:H1                      = bf_bef_rvs-line.state-level-total * 10
-          v-mm:H2                      = bf_aft_rvs-line.state-level-total * 10
-          v-mm:H1_water                = bf_bef_rvs-line.state-level-water * 10 when bf_bef_rvs-line.state-level-water <> ?
-          v-mm:H2_water                = bf_aft_rvs-line.state-level-water * 10 when bf_aft_rvs-line.state-level-water <> ?
-          v-mm:CalibrationTable        = CalibTable
-          v-mm:CalibrationBelt         = CalibBelt
-  /*        v-mm:Tv1                     = Tv1*/
-  /*        v-mm:Tv2                     = Tv2*/
-  /*        v-mm:Tr1                     = Tr1*/
-  /*        v-mm:Tr2                     = Tr2*/
-  /*        v-mm:R1                      = R1 */
-  /*        v-mm:R2                      = R2 */
-          v-mm:ToolType1               = ToolType1
-          v-mm:ToolType2               = ToolType2
-          v-mm:DeltaOtn_K              = DeltaOtn_K
-          v-mm:OperDirection           = 2 /* приём продукта */
-          v-mm:ToolAutomationLevel_H1  = ToolAutomationLevel_H1
-          v-mm:ToolAutomationLevel_H2  = ToolAutomationLevel_H2
-          v-mm:ToolAutomationLevel_H_Water1 = ToolAutomationLevel_H_Water1
-          v-mm:ToolAutomationLevel_H_Water2 = ToolAutomationLevel_H_Water2
-          v-mm:ToolAutomationLevel_R1  = ToolAutomationLevel_R1
-          v-mm:ToolAutomationLevel_R2  = ToolAutomationLevel_R2
-          v-mm:ToolAutomationLevel_Tv1 = ToolAutomationLevel_Tv1
-          v-mm:ToolAutomationLevel_Tv2 = ToolAutomationLevel_Tv2
-          v-mm:ToolAutomationLevel_Tr1 = ToolAutomationLevel_Tr1
-          v-mm:ToolAutomationLevel_Tr2 = ToolAutomationLevel_Tr2
-          v-mm:DeltaAbs_H_CalcType1    = DeltaAbs_H_CalcType1
-          v-mm:DeltaAbs_H_CalcType2    = DeltaAbs_H_CalcType2
-          v-mm:DeltaAbs_H_Water_CalcType1 = DeltaAbs_H_Water_CalcType1
-          v-mm:DeltaAbs_H_Water_CalcType2 = DeltaAbs_H_Water_CalcType2
-          v-mm:DeltaAbs_H1             = DeltaAbs_H1
-          v-mm:DeltaAbs_H2             = DeltaAbs_H2
-          v-mm:DeltaAbs_H_Water1       = DeltaAbs_H_Water1
-          v-mm:DeltaAbs_H_Water2       = DeltaAbs_H_Water2
-          v-mm:DeltaAbs_R1             = DeltaAbs_R1
-          v-mm:DeltaAbs_R2             = DeltaAbs_R2
-          v-mm:DeltaAbs_Tv1            = DeltaAbs_Tv1
-          v-mm:DeltaAbs_Tv2            = DeltaAbs_Tv2
-          v-mm:DeltaAbs_Tr1            = DeltaAbs_Tr1
-          v-mm:DeltaAbs_Tr2            = DeltaAbs_Tr2
-          v-mm:DeltaOtn_H1             = DeltaOtn_H1
-          v-mm:DeltaOtn_H2             = DeltaOtn_H2
-          v-mm:DeltaOtn_H_Water1       = DeltaOtn_H_Water1
-          v-mm:DeltaOtn_H_Water2       = DeltaOtn_H_Water2
-          v-mm:DeltaOtn_R1             = DeltaOtn_R1
-          v-mm:DeltaOtn_R2             = DeltaOtn_R2
-          v-mm:DeltaOtn_N              = DeltaOtn_N
-        .
-        
-        v-mm:Set_Tv1(replace(string(Tv1), ".", ",")) no-error .
-        if string(v-mm:Tv1) = ".0000000000"
-        and Tv1 <> 0
+        if v-proc = "CMethodOfMetering14"
         then do :
-          v-mm:Set_Tv1(string(Tv1)) no-error .
+          MM14
+          (input bf_bef_rvs-line.state-measure-cli-qnty,
+           input bf_aft_rvs-line.state-measure-cli-qnty,
+           input bf_bef_rvs-line.state-level-total * 10,
+           input bf_aft_rvs-line.state-level-total * 10,
+           input if bf_bef_rvs-line.state-level-water <> ? then bf_bef_rvs-line.state-level-water * 10 else 0.0,
+           input if bf_aft_rvs-line.state-level-water <> ? then bf_aft_rvs-line.state-level-water * 10 else 0.0,
+           input CalibTable,
+           input CalibBelt,
+           input Tv1,
+           input Tv2,
+           input Tr1,
+           input Tr2,
+           input R1,
+           input R2,
+           input ToolType1,
+           input ToolType2,
+           input DeltaOtn_K,
+           input 2,  /* OperDirection 2 = приём продукта */
+           input ToolAutomationLevel_H1,
+           input ToolAutomationLevel_H2,
+           input ToolAutomationLevel_H_Water1,
+           input ToolAutomationLevel_H_Water2,
+           input ToolAutomationLevel_R1,
+           input ToolAutomationLevel_R2,
+           input ToolAutomationLevel_Tv1,
+           input ToolAutomationLevel_Tv2,
+           input ToolAutomationLevel_Tr1,
+           input ToolAutomationLevel_Tr2,
+           input DeltaAbs_H_CalcType1,
+           input DeltaAbs_H_CalcType2,
+           input DeltaAbs_H_Water_CalcType1,
+           input DeltaAbs_H_Water_CalcType2,
+           input DeltaAbs_H1,
+           input DeltaAbs_H2,
+           input DeltaAbs_H_Water1,
+           input DeltaAbs_H_Water2,
+           input DeltaAbs_R1,
+           input DeltaAbs_R2,
+           input DeltaAbs_Tv1,
+           input DeltaAbs_Tv2,
+           input DeltaAbs_Tr1,
+           input DeltaAbs_Tr2,
+           input DeltaOtn_N,
+           input 1, /* Round_M */
+           input 2, /* Round_T */
+           input 2, /* Round_R */
+           
+           output V_total1,
+           output V_total2,
+           output V_water1,
+           output V_water2,
+           output Delta_V1,
+           output Delta_V2,
+           output M,
+           output DeltaOtn_M,
+           
+           output vErr,
+           output vWrn,
+           output vDllVersion)
+          no-error .
         end .
-        if string(v-mm:Tv1) = ".0000000000"
-        and Tv1 <> 0
-        then do :
-          assign v-mm:Tv1 = Tv1 .
+        else do :
+          MM7
+          (input bf_bef_rvs-line.state-measure-cli-qnty,
+           input bf_aft_rvs-line.state-measure-cli-qnty,
+           input bf_bef_rvs-line.state-level-total * 10,
+           input bf_aft_rvs-line.state-level-total * 10,
+           input if bf_bef_rvs-line.state-level-water <> ? then bf_bef_rvs-line.state-level-water * 10 else 0.0,
+           input if bf_aft_rvs-line.state-level-water <> ? then bf_aft_rvs-line.state-level-water * 10 else 0.0,
+           input CalibTable,
+           input CalibBelt,
+           input Tv1,
+           input Tv2,
+           input Tr1,
+           input Tr2,
+           input R1,
+           input R2,
+           input ToolType1,
+           input ToolType2,
+           input DeltaOtn_K,
+           input 2,  /* OperDirection 2 = приём продукта */
+           input ToolAutomationLevel_H1,
+           input ToolAutomationLevel_H2,
+           input ToolAutomationLevel_H_Water1,
+           input ToolAutomationLevel_H_Water2,
+           input ToolAutomationLevel_R1,
+           input ToolAutomationLevel_R2,
+           input ToolAutomationLevel_Tv1,
+           input ToolAutomationLevel_Tv2,
+           input ToolAutomationLevel_Tr1,
+           input ToolAutomationLevel_Tr2,
+           input DeltaAbs_H_CalcType1,
+           input DeltaAbs_H_CalcType2,
+           input DeltaAbs_H_Water_CalcType1,
+           input DeltaAbs_H_Water_CalcType2,
+           input DeltaAbs_H1,
+           input DeltaAbs_H2,
+           input DeltaAbs_H_Water1,
+           input DeltaAbs_H_Water2,
+           input DeltaAbs_R1,
+           input DeltaAbs_R2,
+           input DeltaAbs_Tv1,
+           input DeltaAbs_Tv2,
+           input DeltaAbs_Tr1,
+           input DeltaAbs_Tr2,
+           input DeltaOtn_N,
+           input 1, /* Round_M */
+           input 2, /* Round_T */
+           input 2, /* Round_R */
+           
+           output V_total1,
+           output V_total2,
+           output V_water1,
+           output V_water2,
+           output Delta_V1,
+           output Delta_V2,
+           output M,
+           output DeltaOtn_M,
+           
+           output vErr,
+           output vWrn,
+           output vDllVersion)
+          no-error .
         end .
-        if substring(string(v-mm:Tv1), length(string(v-mm:Tv1)) - 2) = "999"
-        then do :
-          v-mm:Set_Tv1(replace(string(Tv1 + 0.0000000001), ".", ",")) no-error .
-          if string(v-mm:Tv1) = ".0000000000"
-          and Tv1 <> 0
-          then do :
-            v-mm:Set_Tv1(string(Tv1 + 0.0000000001)) no-error .
-          end .
-        end .
-        
-        v-mm:Set_Tv2(replace(string(Tv2), ".", ",")) no-error .
-        if string(v-mm:Tv2) = ".0000000000"
-        and Tv2 <> 0
-        then do :
-          v-mm:Set_Tv2(string(Tv2)) no-error .
-        end .
-        if string(v-mm:Tv2) = ".0000000000"
-        and Tv2 <> 0
-        then do :
-          assign v-mm:Tv2 = Tv2 .
-        end .
-        if substring(string(v-mm:Tv2), length(string(v-mm:Tv2)) - 2) = "999"
-        then do :
-          v-mm:Set_Tv2(replace(string(Tv2 + 0.0000000001), ".", ",")) no-error .
-          if string(v-mm:Tv2) = ".0000000000"
-          and Tv2 <> 0
-          then do :
-            v-mm:Set_Tv2(string(Tv2 + 0.0000000001)) no-error .
-          end .
-        end .
-        
-        v-mm:Set_Tr1(replace(string(Tr1), ".", ",")) no-error .
-        if string(v-mm:Tr1) = ".0000000000"
-        and Tr1 <> 0
-        then do :
-          v-mm:Set_Tr1(string(Tr1)) no-error .
-        end .
-        if string(v-mm:Tr1) = ".0000000000"
-        and Tr1 <> 0
-        then do :
-          assign v-mm:Tr1 = Tr1 .
-        end .
-        if substring(string(v-mm:Tr1), length(string(v-mm:Tr1)) - 2) = "999"
-        then do :
-          v-mm:Set_Tr1(replace(string(Tr1 + 0.0000000001), ".", ",")) no-error .
-          if string(v-mm:Tr1) = ".0000000000"
-          and Tr1 <> 0
-          then do :
-            v-mm:Set_Tr1(string(Tr1 + 0.0000000001)) no-error .
-          end .
-        end .
-        
-        v-mm:Set_Tr2(replace(string(Tr2), ".", ",")) no-error .
-        if string(v-mm:Tr2) = ".0000000000"
-        and Tr2 <> 0
-        then do :
-          v-mm:Set_Tr2(string(Tr2)) no-error .
-        end .
-        if string(v-mm:Tr2) = ".0000000000"
-        and Tr2 <> 0
-        then do :
-          assign v-mm:Tr2 = Tr2 .
-        end .
-        if substring(string(v-mm:Tr2), length(string(v-mm:Tr2)) - 2) = "999"
-        then do :
-          v-mm:Set_Tr2(replace(string(Tr2 + 0.0000000001), ".", ",")) no-error .
-          if string(v-mm:Tr2) = ".0000000000"
-          and Tr2 <> 0
-          then do :
-            v-mm:Set_Tr2(string(Tr2 + 0.0000000001)) no-error .
-          end .
-        end .
-        
-        v-mm:Set_R1(replace(string(R1), ".", ",")) no-error .
-        if string(v-mm:R1) = ".0000000000"
-        then do :
-          v-mm:Set_R1(string(R1)) no-error .
-        end .
-        if string(v-mm:R1) = ".0000000000"
-        then do :
-          assign v-mm:R1 = R1 .
-        end .
-        
-        v-mm:Set_R2(replace(string(R2), ".", ",")) no-error .
-        if string(v-mm:R2) = ".0000000000"
-        then do :
-          v-mm:Set_R2(string(R2)) no-error .
-        end .
-        if string(v-mm:R2) = ".0000000000"
-        then do :
-          assign v-mm:R2 = R2 .
-        end .
-    
+         
         output stream outstream to value ("pomi.log") append.
         put stream outstream unformatted
-          "    " skip
-          "    " skip
-          now    skip
-          'Процедура'                 v-proc                      format "x(128)"    skip
-          'Версия dll: '              v-pokmi-dll-version                            skip
-          'CODE_PL                      = ' buf_place.pl-code                        skip
-          'M1                           = ' v-mm:M1                                  skip
-          'M2                           = ' v-mm:M2                                  skip
-          'H1                           = ' v-mm:H1                                  skip
-          'H2                           = ' v-mm:H2                                  skip
-          'H1_water                     = ' v-mm:H1_water                            skip
-          'H2_water                     = ' v-mm:H2_water                            skip
-          'CalibrationTable             = ' v-mm:CalibrationTable                    skip
-          'CalibrationBelt              = ' v-mm:CalibrationBelt                     skip
-          'Tv1                          = ' v-mm:Tv1                                 skip
-          'Tv2                          = ' v-mm:Tv2                                 skip
-          'Tr1                          = ' v-mm:Tr1                                 skip
-          'Tr2                          = ' v-mm:Tr2                                 skip
-          'R1                           = ' v-mm:R1                                  skip
-          'R2                           = ' v-mm:R2                                  skip
-          'ToolType1                    = ' v-mm:ToolType1                           skip
-          'ToolType2                    = ' v-mm:ToolType2                           skip
-          'DeltaOtn_K                   = ' v-mm:DeltaOtn_K                          skip
-          'OperDirection                = ' v-mm:OperDirection                       skip
-          'ToolAutomationLevel_H1       = ' v-mm:ToolAutomationLevel_H1              skip
-          'ToolAutomationLevel_H2       = ' v-mm:ToolAutomationLevel_H2              skip
-          'ToolAutomationLevel_H_Water1 = ' v-mm:ToolAutomationLevel_H_Water1        skip
-          'ToolAutomationLevel_H_Water2 = ' v-mm:ToolAutomationLevel_H_Water2        skip
-          'ToolAutomationLevel_R1       = ' v-mm:ToolAutomationLevel_R1              skip
-          'ToolAutomationLevel_R2       = ' v-mm:ToolAutomationLevel_R2              skip
-          'ToolAutomationLevel_Tv1      = ' v-mm:ToolAutomationLevel_Tv1             skip 
-          'ToolAutomationLevel_Tv2      = ' v-mm:ToolAutomationLevel_Tv2             skip 
-          'ToolAutomationLevel_Tr1      = ' v-mm:ToolAutomationLevel_Tr1             skip 
-          'ToolAutomationLevel_Tr2      = ' v-mm:ToolAutomationLevel_Tr2             skip 
-          'DeltaAbs_H_CalcType1         = ' v-mm:DeltaAbs_H_CalcType1                skip 
-          'DeltaAbs_H_CalcType2         = ' v-mm:DeltaAbs_H_CalcType2                skip 
-          'DeltaAbs_H_Water_CalcType1   = ' v-mm:DeltaAbs_H_Water_CalcType1          skip 
-          'DeltaAbs_H_Water_CalcType2   = ' v-mm:DeltaAbs_H_Water_CalcType2          skip 
-          'DeltaAbs_H1                  = ' v-mm:DeltaAbs_H1                         skip 
-          'DeltaAbs_H2                  = ' v-mm:DeltaAbs_H2                         skip 
-          'DeltaAbs_H_Water1            = ' v-mm:DeltaAbs_H_Water1                   skip 
-          'DeltaAbs_H_Water2            = ' v-mm:DeltaAbs_H_Water2                   skip 
-          'DeltaAbs_R1                  = ' v-mm:DeltaAbs_R1                         skip 
-          'DeltaAbs_R2                  = ' v-mm:DeltaAbs_R2                         skip 
-          'DeltaAbs_Tv1                 = ' v-mm:DeltaAbs_Tv1                        skip 
-          'DeltaAbs_Tv2                 = ' v-mm:DeltaAbs_Tv2                        skip 
-          'DeltaAbs_Tr1                 = ' v-mm:DeltaAbs_Tr1                        skip 
-          'DeltaAbs_Tr2                 = ' v-mm:DeltaAbs_Tr2                        skip 
-          'DeltaOtn_H1                  = ' v-mm:DeltaOtn_H1                         skip 
-          'DeltaOtn_H2                  = ' v-mm:DeltaOtn_H2                         skip 
-          'DeltaOtn_H_Water1            = ' v-mm:DeltaOtn_H_Water1                   skip 
-          'DeltaOtn_H_Water2            = ' v-mm:DeltaOtn_H_Water2                   skip 
-          'DeltaOtn_R1                  = ' v-mm:DeltaOtn_R1                         skip 
-          'DeltaOtn_R2                  = ' v-mm:DeltaOtn_R2                         skip 
-          'DeltaOtn_N                   = ' v-mm:DeltaOtn_N                          skip 
+          "    " SKIP
+          "    " SKIP
+          now   SKIP
+          'Процедура'                 v-proc                      FORMAT "x(128)"    SKIP
+          'Версия dll: '              vDllVersion                            SKIP
+          'CODE_PL                      = ' buf_place.pl-code                        SKIP
+          'M1                           = ' bf_bef_rvs-line.state-measure-cli-qnty  SKIP
+          'M2                           = ' bf_aft_rvs-line.state-measure-cli-qnty  SKIP
+          'H1                           = ' bf_bef_rvs-line.state-level-total * 10  SKIP
+          'H2                           = ' bf_aft_rvs-line.state-level-total * 10  SKIP
+          'H1_water                     = ' if bf_bef_rvs-line.state-level-water <> ? then bf_bef_rvs-line.state-level-water * 10 else 0.0 SKIP
+          'H2_water                     = ' if bf_aft_rvs-line.state-level-water <> ? then bf_aft_rvs-line.state-level-water * 10 else 0.0 SKIP
+          'CalibrationTable             = ' CalibTable                    SKIP
+          'CalibrationBelt              = ' CalibBelt                     SKIP
+          'Tv1                          = ' Tv1                                 SKIP
+          'Tv2                          = ' Tv2                                 SKIP
+          'Tr1                          = ' Tr1                                 SKIP
+          'Tr2                          = ' Tr2                                 skip
+          'R1                           = ' trim(string(R1, ">>>9.9<"))         SKIP
+          'R2                           = ' trim(string(R2, ">>>9.9<"))         SKIP
+          'ToolType1                    = ' ToolType1                           SKIP
+          'ToolType2                    = ' ToolType2                           SKIP
+          'DeltaOtn_K                   = ' DeltaOtn_K                          SKIP
+          'OperDirection                = ' 2                                   SKIP
+          'ToolAutomationLevel_H1       = ' ToolAutomationLevel_H1              SKIP
+          'ToolAutomationLevel_H2       = ' ToolAutomationLevel_H2              SKIP
+          'ToolAutomationLevel_H_Water1 = ' ToolAutomationLevel_H_Water1        SKIP
+          'ToolAutomationLevel_H_Water2 = ' ToolAutomationLevel_H_Water2        SKIP
+          'ToolAutomationLevel_R1       = ' ToolAutomationLevel_R1              SKIP
+          'ToolAutomationLevel_R2       = ' ToolAutomationLevel_R2              SKIP
+          'ToolAutomationLevel_Tv1      = ' ToolAutomationLevel_Tv1             SKIP 
+          'ToolAutomationLevel_Tv2      = ' ToolAutomationLevel_Tv2             SKIP 
+          'ToolAutomationLevel_Tr1      = ' ToolAutomationLevel_Tr1             SKIP 
+          'ToolAutomationLevel_Tr2      = ' ToolAutomationLevel_Tr2             SKIP 
+          'DeltaAbs_H_CalcType1         = ' DeltaAbs_H_CalcType1                SKIP 
+          'DeltaAbs_H_CalcType2         = ' DeltaAbs_H_CalcType2                SKIP 
+          'DeltaAbs_H_Water_CalcType1   = ' DeltaAbs_H_Water_CalcType1          SKIP 
+          'DeltaAbs_H_Water_CalcType2   = ' DeltaAbs_H_Water_CalcType2          SKIP 
+          'DeltaAbs_H1                  = ' DeltaAbs_H1                         SKIP 
+          'DeltaAbs_H2                  = ' DeltaAbs_H2                         SKIP 
+          'DeltaAbs_H_Water1            = ' DeltaAbs_H_Water1                   SKIP 
+          'DeltaAbs_H_Water2            = ' DeltaAbs_H_Water2                   SKIP 
+          'DeltaAbs_R1                  = ' DeltaAbs_R1                         SKIP 
+          'DeltaAbs_R2                  = ' DeltaAbs_R2                         SKIP 
+          'DeltaAbs_Tv1                 = ' DeltaAbs_Tv1                        SKIP 
+          'DeltaAbs_Tv2                 = ' DeltaAbs_Tv2                        SKIP 
+          'DeltaAbs_Tr1                 = ' DeltaAbs_Tr1                        SKIP 
+          'DeltaAbs_Tr2                 = ' DeltaAbs_Tr2                        SKIP 
+          'DeltaOtn_N                   = ' DeltaOtn_N                          SKIP 
         .
         output stream outstream close.
         
-        v-mm:Exec() .
-        if v-mm:Result <> 0 then do :
-          error-string = v-mm:ResultDetail .
+        if trim(vErr) > "" then do :
+          error-string = vErr .
           output stream outstream to value ("pomi.log")  append.
           put stream outstream error-string format "X(1024)" skip.
           error-string = replace(error-string, ";", (";" + {&new-line})) .
           message
           substitute('Ошибка работы библиотеки ПОкМИ. &1&2', {&new-line}, error-string)
           view-as alert-box error.
-          release object v-mm no-error .
-          v-mm = ?.
           output stream outstream close .
           undo _trpomi, return error .
         end.  
         
         output stream outstream to value ("pomi.log") append.
-        if not (string(v-mm:M) = ".0000000000")
+        if not (M = 0.0)
         then do :
           put stream outstream unformatted
-            'V_total1                   = ' v-mm:V_total1                          SKIP 
-            'V_total2                   = ' v-mm:V_total2                          SKIP 
-            'V_water1                   = ' v-mm:V_water1                          SKIP 
-            'V_water2                   = ' v-mm:V_water2                          SKIP
-            'Delta_V1                   = ' v-mm:Delta_V1                          SKIP 
-            'Delta_V2                   = ' v-mm:Delta_V2                          SKIP 
-            'M                          = ' v-mm:M                                 SKIP 
-            'DeltaOtn_M                 = ' v-mm:DeltaOtn_M                        SKIP 
+            'V_total1                   = ' V_total1                          SKIP 
+            'V_total2                   = ' V_total2                          SKIP 
+            'V_water1                   = ' V_water1                          SKIP 
+            'V_water2                   = ' V_water2                          SKIP
+            'Delta_V1                   = ' Delta_V1                          SKIP 
+            'Delta_V2                   = ' Delta_V2                          SKIP 
+            'M                          = ' M                                 SKIP 
+            'DeltaOtn_M                 = ' DeltaOtn_M                        SKIP 
+            'Warnings                   = ' vWrn                              SKIP
           .
         end .
         else do :
           put stream outstream unformatted
-            'V_total1                   = ' v-mm:V_total1                          SKIP 
-            'V_total2                   = ' v-mm:V_total2                          SKIP 
-            'V_water1                   = ' v-mm:V_water1                          SKIP 
-            'V_water2                   = ' v-mm:V_water2                          SKIP
-            'Delta_V1                   = ' v-mm:Delta_V1                          SKIP 
-            'Delta_V2                   = ' v-mm:Delta_V2                          SKIP 
-            'M                          = ' v-mm:M                                 SKIP 
-            'DeltaOtn_M                 = ' "?"                                    SKIP 
+            'V_total1                   = ' V_total1                          SKIP 
+            'V_total2                   = ' V_total2                          SKIP 
+            'V_water1                   = ' V_water1                          SKIP 
+            'V_water2                   = ' V_water2                          SKIP
+            'Delta_V1                   = ' Delta_V1                          SKIP 
+            'Delta_V2                   = ' Delta_V2                          SKIP 
+            'M                          = ' M                                 SKIP 
+            'DeltaOtn_M                 = ' "?"                               SKIP 
+            'Warnings                   = ' vWrn                              SKIP
           .
         end .
         output stream outstream close.
         
         assign
-          p-tank-weight-rvs   = p-tank-weight-rvs + v-mm:M
-          p-tank-vol-pomi-rvs = p-tank-vol-pomi-rvs + (((v-mm:V_total2 - v-mm:V_water2) - (v-mm:V_total1 - v-mm:V_water1)) * 1000)
+          p-tank-weight-rvs   = p-tank-weight-rvs + M
+          p-tank-vol-pomi-rvs = p-tank-vol-pomi-rvs + (((V_total2 - V_water2) - (V_total1 - V_water1)) * 1000)
           v-avg-temp          = v-avg-temp + ((bf_bef_rvs-line.state-temperature + bf_aft_rvs-line.state-temperature) / 2)
         .
         
-        release object v-mm no-error .
-        v-mm = ?.
+        assign v-warnings = (if v-warnings = "" then vWrn else v-warnings + {&new-line} + vWrn) .
         
       end . /* do ii = 1 to num-entries(v-pl-code-list) */
       
@@ -3756,6 +3718,7 @@ class ibs.th.str.InfoSectionsTotal:
       infoSecObj:TankWeightRvs = p-tank-weight-rvs .
       infoSecObj:TankVolPomiRvs = p-tank-vol-pomi-rvs .
       infoSecObj:AvgTempRvs = v-avg-temp .
+      infoSecObj:PokmiWarningsRVS = v-warnings .
       
       def var dMP  as decimal no-undo.
       def var MF   as decimal no-undo.

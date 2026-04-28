@@ -79,6 +79,7 @@ do:
   def buffer buf_utd-attr for ub.utd-attr.
   def buffer buf_utd-lines for ub.utd-lines.
   def buffer buf_utd-marking-lines for ub.utd-marking-lines.
+  def buffer buf_utd-marking-lines-attr for ub.utd-marking-lines-attr.
   def buffer buf_mark-lines for ub.marking-lines.
   def buffer buf_marking for ub.marking.
   def buffer buf_bar-code for ub.bar-code.
@@ -94,6 +95,7 @@ do:
   define variable vGtinSumDocQnty as integer no-undo .
   define variable vOrder as integer no-undo .
   define variable vIsMarkLine as logical no-undo .
+  define variable vIsWeight as logical no-undo .
   define variable vMaxDocLevel as integer no-undo .
   
   define variable vunit     as int no-undo.
@@ -101,7 +103,6 @@ do:
   define variable vCount     as int no-undo.
    
   { gbl/objsrv.i  }
-  
 /*  logWrite = new LogWrite().*/
   
   find first buf_utd where buf_utd.db-num = p-db-num and buf_utd.doc-id = p-doc-id no-error.
@@ -140,7 +141,6 @@ do:
   end.
   
   
-
 
   create temp_trn-doc.
   assign
@@ -206,15 +206,26 @@ do:
         vunitCode = units.unit-name.
       
     end.
-
+    
+    vIsWeight = WghProdVariable(buf_utd.obj-type, buf_utd.obj-code, buf_utd-lines.gds-code).
+    
     if logical (getAttrUtdLinesEx(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.LineNum,"MarkUtdLine","no"))
     then do :
-      vIsMarkLine = yes .
-      
+      vIsMarkLine = yes .      
       if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsMarkingForType(v-par-val)
       then do:
-        v-q = Tree:GetQntyStsUnit(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum,objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
-        
+        if vIsWeight then do:
+           for each buf_utd-marking-lines where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
+                and buf_utd-marking-lines.doc-level = 1                
+              no-lock:              
+              if buf_utd-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then     
+              v-q = v-q + MarkWeight(buf_utd-marking-lines.mark).              
+           end.
+        end.   
+        else 
+        v-q = Tree:GetQntyStsUnit(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum,objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).        
       end.
       else do:
         LABEL_1:
@@ -223,19 +234,31 @@ do:
           and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum
           and buf_utd-marking-lines.doc-level = 1
           no-lock:
+            if vIsWeight then do:               
+               if buf_utd-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB then 
+               v-q = v-q + MarkWeight(buf_utd-marking-lines.mark).               
+            end.   
+            else do: 
              find first buf_marking where buf_marking.mark = buf_utd-marking-lines.mark no-lock no-error.
-             if avail buf_marking and buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB then
-             do: /* если марка разгруппирована, то кол-во берем из марки и не смотрим состав  */
-               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Ungrouped:KeyIntDB).
-               next LABEL_1.
+             if buf_utd-marking-lines.sts = objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB and
+                buf_marking.box-qnty <> ? then
+             do:   
+               /* Попробум в fact брать из кол-ва по марке, если марка в статусе "Проверен", */
+               /* т.к. когда лок. статус марки "Ошибка", а глоб. статус - "Проверен",        */
+               /* то она не попадает в fact, хотя считается принятой                         */
+               v-q = v-q + buf_marking.box-qnty.
              end.
+             else do:
+               /* в fact считаем марки из упаковки проверенные, проданные и добавленные в док-т */
                v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB).
-             do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait):
-               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait))).  
+               do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait):
+                 v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Sale_Return_Wait))).  
+               end.
+               do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Doc_Status):
+                 v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Doc_Status))).  
+               end.
              end.
-             do vCount = 1 to num-entries(objSrv:Env:Marking:Sts:Mark:Doc_Status):
-               v-q = v-q + Tree:GetQntySts(buf_utd-marking-lines.mark, int(entry(vCount,objSrv:Env:Marking:Sts:Mark:Doc_Status))).  
-             end.
+            end.
         end.      
       end.
       
@@ -250,14 +273,14 @@ do:
         v-q-doc = v-q-doc-base / (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1) .
       end .
     end .
-    else do :
-      vIsMarkLine = no .
-               
+    else do :         
+      vIsMarkLine = no .              
       find first buf_bar-code where 
                  buf_bar-code.gds-code = buf_utd-lines.gds-code
              and buf_bar-code.unit-cli = vUnitCode
       no-lock no-error.
-      v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")).
+      v-q = decimal(GetAttrUtdlines(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"QuantityBarCode")).      
+                                   
       if v-q = ? then v-q = 0.
       v-q-doc = decimal(GetAttrUtdlinesex(buf_utd-lines.db-num,buf_utd-lines.doc-id,buf_utd-lines.linenum,"Quantity",string(buf_utd-lines.Quantity))) .
       v-q-doc-base = v-q-doc * (if avail buf_bar-code then buf_bar-code.cli-base-rate else 1).
@@ -270,8 +293,7 @@ do:
     if CheckErrForLine(buffer buf_utd-lines:handle)
     then
       v-q = 0.
-    sum-vat = (buf_utd-lines.Total - buf_utd-lines.TotalWithVatExcluded) / v-q-doc. 
-  
+    sum-vat = (buf_utd-lines.Total - buf_utd-lines.TotalWithVatExcluded) / v-q-doc.      
     create temp_doc-line.
     assign
       temp_doc-line.line-num   = buf_utd-lines.LineNum
@@ -286,6 +308,7 @@ do:
       temp_doc-line.price-rubl = buf_utd-lines.Total / (if vMarkUtd then buf_utd-lines.Quantity else temp_doc-line.cli-qnty)
       temp_doc-line.doc-code   = temp_trn-doc.doc-code
       temp_doc-line.vat-pc     = 100 * sum-vat / (buf_utd-lines.TotalWithVatExcluded / temp_doc-line.cli-qnty)
+      temp_doc-line.isWeight   = vIsWeight
     .
     
     if buf_utd-lines.TaxRate <> round ( temp_doc-line.vat-pc, 1 )
@@ -293,12 +316,24 @@ do:
     and abs(buf_utd-lines.TaxRate - temp_doc-line.vat-pc) < 1
     then do :
       temp_doc-line.vat-pc = buf_utd-lines.TaxRate .
-    end .
-    
-    if (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
-    or logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "ArticUtdLine", "no")))
+    end .          
+                                     
+    if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(buf_utd.obj-type, buf_utd.obj-code):GetIsArticForType(v-par-val)
+    or logical(getattrutdlinesex(buf_utd-lines.db-num, buf_utd-lines.doc-id, buf_utd-lines.LineNum, "ArticUtdLine", "no"))    
     then do:
-      
+      if vIsWeight then do:
+         uml_: 
+         for each buf_utd-marking-lines no-lock where buf_utd-marking-lines.db-num = buf_utd-lines.db-num
+                                                  and buf_utd-marking-lines.doc-id = buf_utd-lines.doc-id
+                                                  and buf_utd-marking-lines.LineNum = buf_utd-lines.LineNum,
+             first buf_marking no-lock where buf_marking.mark = buf_utd-marking-lines.mark                                                 
+         :
+             vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
+             temp_doc-line.gtinline = vGtin. 
+             leave uml_.
+         end.               
+      end.
+      else do:    
       assign
         vGtinList = ""
         vGtinDocQntyList = ""
@@ -336,6 +371,7 @@ do:
         end.
         
         vGtin = getGtinByDM(buf_utd-marking-lines.mark) .
+        
         if vGtin > ""
         then do :
           vGtinQnty = 0 .
@@ -381,8 +417,8 @@ do:
       
       vGtinList = trim(vGtinList, ",") .
       vGtinDocQntyList = trim(vGtinDocQntyList, ",") .
-      vGtinFactQntyList = trim(vGtinFactQntyList, ",") .
-      
+      vGtinFactQntyList = trim(vGtinFactQntyList, ",") .      
+                                                                   
       if temp_doc-line.fact-qnty <> temp_doc-line.doc-qnty
       and temp_doc-line.fact-qnty > 0
       then do : /* Частичная приёмка */
@@ -490,8 +526,9 @@ do:
         temp_doc-line.gtinDocQntyList = vGtinDocQntyList
         temp_doc-line.gtinFactQntyList = vGtinFactQntyList
       .
-    end .
-    
+      
+      end .
+    end.
   end.
   
   if not can-find (first temp_doc-line no-lock where temp_doc-line.fact-qnty > 0)
