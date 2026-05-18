@@ -7224,6 +7224,7 @@ PROCEDURE add-mark-weight :
     define variable vChkWeight as logical no-undo.
     define variable vUnitCode  as character no-undo.
     define variable vMarkShort as character no-undo.
+    define variable vGdsCode  as integer   no-undo.
     /*define variable vRecKey as character no-undo.*/
         
     define buffer bX_utd-lines for X_utd-lines.
@@ -7234,8 +7235,11 @@ PROCEDURE add-mark-weight :
     define buffer buf_marking-attr for ub.marking-attr.
     define buffer buf_utd-lines-attr for ub.utd-lines-attr.
     
-    vChkWeight = no.
-    vMarkShort = GetCodeIdent(iMark).
+    assign
+        vChkWeight = no
+        vMarkShort = GetCodeIdent(iMark)
+        vGdsCode = getGdsCodeByGtin(m-gds-code)
+        .
     
     /* проверяем если марка есть ее статус */
     find first buf_marking no-lock where buf_marking.mark begins vMarkShort no-error .
@@ -7266,7 +7270,7 @@ PROCEDURE add-mark-weight :
        then do:
           vWeight = decimal(buf_marking-attr.attr-value) no-error.
           if vWeight <> 0 and vWeight <> ? then do:
-              vUnitCode = gdsunit (getGdsCodeByGtin(iGTIN)).
+              vUnitCode = gdsunit (vGdsCode).
               MESSAGE "Масса товара равна "
                   (if vWeight < 1  and vWeight >= 0
                       then string(vWeight,"9.999")
@@ -7288,12 +7292,12 @@ PROCEDURE add-mark-weight :
               end.    
           end.
           /* к другому УПД привязан, но вес нулевой или ошибочный на марке */
-          else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).    
+          else run str/add-weight.w (vGdsCode, output vWeight).    
        end.
        /* к другому УПД привязан, но вес не задан на марке */
-       else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).
+       else run str/add-weight.w (vGdsCode, output vWeight).
     end.            
-    else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).
+    else run str/add-weight.w (vGdsCode, output vWeight).
     if vWeight = 0 then do:
         MESSAGE "Вес товара обязательный"        
         VIEW-AS ALERT-BOX.
@@ -7310,14 +7314,12 @@ PROCEDURE add-mark-weight :
                      output vRecKey).*/
                              
     utline:
-    for each tt-utd-lines-filtr where 
-             tt-utd-lines-filtr.bar-code = iGTIN,
-       first bX_utd-lines where 
-             bX_utd-lines.doc-id = tt-utd-lines-filtr.doc-id 
-         and bX_utd-lines.db-num = tt-utd-lines-filtr.db-num 
-         and bX_utd-lines.LineNum = tt-utd-lines-filtr.linenum 
+    for each bX_utd-lines where 
+             bX_utd-lines.doc-id = iDocId
+         and bX_utd-lines.db-num = iDbNum
+         and bX_utd-lines.gds-code = vGdsCode
          and bX_utd-lines.isArtic = yes   
-         :       
+         by bX_utd-lines.LineNum :                      
          vFnd = yes.      
          if bX_utd-lines.PieceFact < bX_utd-lines.PieceTTH
          and bX_utd-lines.qnty-scan + vWeight <= bX_utd-lines.Quantity 
