@@ -461,18 +461,7 @@ PROCEDURE CrCheckMark :
     return.
   end .
   
-  &scop proc-name gds-attr-value
-  {&run_proc_attr-lib}
-  ( buf_goods.gds-code,
-   {&attr-mark-type},
-   output v-par-val,
-   output v-par-type
-  ).
-  v-isweighed = WeighedProd(buf_goods.gds-code)
-            and v-par-val > ""
-            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
-              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
-  .
+  v-isweighed = WghProdVariable(v-cntxt-obj-type, v-cntxt-obj-code, buf_goods.gds-code) .
   if v-isweighed
   then do :
     v-mark-weight = MarkWeight(buf_marking.mark) .

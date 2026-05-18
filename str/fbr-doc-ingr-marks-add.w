@@ -310,18 +310,7 @@ DO ON ERROR UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
                                  and buf_goods.prod-type  = buf_fbr-line.prod-type
                                  and buf_goods.prod-code  = buf_fbr-line.prod-code
                                  .
-  &scop proc-name gds-attr-value
-  {&run_proc_attr-lib}
-  ( buf_goods.gds-code,
-   {&attr-mark-type},
-   output v-par-val,
-   output v-par-type
-  ).
-  v-isweighed = WeighedProd(buf_goods.gds-code)
-            and v-par-val > ""
-            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
-              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
-  .
+  v-isweighed = WghProdVariable(v-cntxt-obj-type, v-cntxt-obj-code, buf_goods.gds-code) .
   
   assign v-free-qnty = 0 .
   find first buf_gds-obj no-lock where buf_gds-obj.obj-type  = v-cntxt-obj-type
@@ -520,11 +509,7 @@ PROCEDURE CrCheckMark :
    output v-par-val,
    output v-par-type
   ).
-  v-isweighed = WeighedProd(v-gds-code)
-            and v-par-val > ""
-            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-par-val)
-              or ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-par-val))
-  .
+  v-isweighed = WghProdVariable(v-cntxt-obj-type, v-cntxt-obj-code, buf_goods.gds-code) .
   if v-isweighed
   then do :
     if available buf_marking

@@ -912,17 +912,7 @@ ON CHOOSE OF b-chg IN FRAME D-FBR-DOC /* Изменить */
                                        and buf_goods.prod-type = buf_comp_fbr-line.prod-type
                                        and buf_goods.prod-code = buf_comp_fbr-line.prod-code
          :
-           RUN gds-attr-value (
-              INPUT buf_goods.gds-code,
-              INPUT {&attr-mark-type},
-              OUTPUT v-attr-value,
-              OUTPUT v-attr-type
-              ).
-           v-isweighed = WeighedProd(buf_goods.gds-code)
-                     and v-attr-value > ""
-                     and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-attr-value) or
-                          ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-attr-value))
-           .
+           v-isweighed = WghProdVariable(v-cntxt-obj-type, v-cntxt-obj-code, buf_goods.gds-code) .
            for each buf_marking-lines where buf_marking-lines.gds-code = buf_goods.gds-code
                                     and buf_marking-lines.obj-type = f-doc.obj-type
                                     and buf_marking-lines.obj-code = f-doc.obj-code
@@ -3267,11 +3257,7 @@ PROCEDURE add-proc :
                           OUTPUT v-attr-value,
                           OUTPUT v-attr-type
                           ).
-                     v-isweighed = WeighedProd(buf_goods.gds-code)
-                               and v-attr-value > ""
-                               and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(v-attr-value) or
-                                    ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-attr-value))
-                     .
+                     v-isweighed = WghProdVariable(v-cntxt-obj-type, v-cntxt-obj-code, buf_goods.gds-code) .
                      if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(v-attr-value)
                      or v-isweighed
                      then do : 
@@ -5861,18 +5847,13 @@ FUNCTION need-marks RETURNS logical
                       and bf_gds.prod-type  = local-fbr-line.prod-type
                       and bf_gds.prod-code  = local-fbr-line.prod-code
                       .
-  v-isweighed = WeighedProd(bf_gds.gds-code) .
+  v-isweighed = WghProdVariable(v-cntxt-obj-type, v-cntxt-obj-code, bf_gds.gds-code) .
   RUN gds-attr-value (
       INPUT bf_gds.gds-code,
       INPUT {&attr-mark-type},
       OUTPUT varvalue,
       OUTPUT vartype
       ).
-  v-isweighed = WeighedProd(bf_gds.gds-code)
-            and varvalue > ""
-            and (ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsArticForType(varvalue) or
-                 ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(varvalue))
-  .
   if ObjSrv:Env:ParametrsOfSection:GetSectionEDO(v-cntxt-obj-type, v-cntxt-obj-code):GetIsEDOForType(varvalue)
   or v-isweighed
   then do :
