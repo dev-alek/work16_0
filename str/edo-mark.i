@@ -145,25 +145,26 @@ function addMarkforUtd returns recid
             or*/ (     iUtdType eq "UniversalTransferDocument"
                   and marking.sts = objSrv:Env:marking:Sts:Mark:NotAvailable:KeyIntDB)
          then
-            marking.sts = ?.                  
-         vMRC =  getMRCByDM (iMark).
-         if     vMRC ne 0 
-            and vMRC ne ?
-         then do:
-            find first marking-attr where marking-attr.mark      =  iMark
-                                      and marking-attr.attr-code = "MRC"
-            no-lock no-error.
-            if not available marking-attr
-            then do:
-               create marking-attr.
-               assign
-                  marking-attr.mark =  iMark
-                  marking-attr.attr-code = "MRC"
-                  marking-attr.attr-value = string(vMRC)
-               .
-            end.
-            release marking-attr no-error.
-         end.
+            marking.sts = ?.
+/* BTS-2503                                                                */                              
+/*         vMRC =  getMRCByDM (iMark).                                     */
+/*         if     vMRC ne 0                                                */
+/*            and vMRC ne ?                                                */
+/*         then do:                                                        */
+/*            find first marking-attr where marking-attr.mark      =  iMark*/
+/*                                      and marking-attr.attr-code = "MRC" */
+/*            no-lock no-error.                                            */
+/*            if not available marking-attr                                */
+/*            then do:                                                     */
+/*               create marking-attr.                                      */
+/*               assign                                                    */
+/*                  marking-attr.mark =  iMark                             */
+/*                  marking-attr.attr-code = "MRC"                         */
+/*                  marking-attr.attr-value = string(vMRC)                 */
+/*               .                                                         */
+/*            end.                                                         */
+/*            release marking-attr no-error.                               */
+/*         end.                                                            */
       end.
       
    end.
