@@ -57,6 +57,7 @@ define output parameter p-mark                as character            no-undo .
 { utl/gtin.i }
 { rep/gn-extp.i }
 { ref/gds-attr.i    }
+{ str/utd-typemark.i }
 /*{ str/fbrlib.i }*/
 define temp-table tt-mark no-undo
   field alcmark as character.
@@ -773,6 +774,8 @@ PROCEDURE save_update :
   define buffer b_marking-lines   for ub.marking-lines.
   define buffer b_trn-doc         for ub.trn-doc.
   define buffer buf_mark_goods    for ub.goods.
+  define variable v-mark-weight   as decimal no-undo .
+  define variable v-isweighed     as logical no-undo .
    
    if v-mark:screen-value in frame {&frame-name} = ""
     then do:
@@ -846,6 +849,21 @@ PROCEDURE save_update :
         run dispmessage ("Марка групповой упаковки не может быть добавлена в документ, т.к. будет превышено количество товара по документу.~nСканируйте потребительские упаковки").
         return.
       end.
+      v-isweighed = WghProdVariable(v-cntxt-obj-type, v-cntxt-obj-code, v-cis-gds-code) .
+      if v-isweighed then do:
+         if not avail marking 
+         then do:
+            run dispmessage ("Марка не найдена в БД").
+            return .    
+         end.    
+         v-mark-weight = MarkWeight(marking.mark).
+         if v-mark-weight = 0
+         or v-mark-weight = ?
+         then do :
+            run dispmessage ("Марка не может быть добавлена, т.к. в БД отсутствует ее вес.").
+            return .
+         end .
+       end.         
     end.
 
     if can-find(bf_marking-lines no-lock where bf_marking-lines.mark = p-mark
