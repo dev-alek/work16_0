@@ -240,7 +240,7 @@ DEFINE BROWSE BR-docs
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-docs Dialog-Frame _FREEFORM
    QUERY BR-docs DISPLAY
    c-doc.pay-desk FORMAT ">>>9"  COLUMN-LABEL "Номер!АРМ Кассира":U
-   c-doc.obj-code FORMAT ">>>9" COLUMN-LABEL "Номер!магазина":U
+   c-doc.obj-code FORMAT ">>>>9" COLUMN-LABEL "Номер!магазина":U
    shift-name-no-err(buffer c-doc) COLUMN-LABEL "№ смены" FORMAT "X(6)":U
    c-doc.chk-date FORMAT "99/99/9999" COLUMN-LABEL "Дата чека на!АРМ Кассира":U               
    (string (c-doc.chk-time, "HH:MM")) COLUMN-LABEL "Время чека на!АРМ Кассира":U 

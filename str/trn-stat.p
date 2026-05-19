@@ -71,6 +71,7 @@ define variable vss-description as character no-undo initial "Изменение статуса 
 { str/fbrhist.i main }
 { str/tt-fbr-line.i }
 { str/temp_upd.i }
+{ str/utd-typemark.i }
 define output parameter table for gds-list.
 
 define buffer bf_trn-doc      for ub.trn-doc.
@@ -3840,6 +3841,7 @@ vartechproliv = no
           define variable v-recipe-code like ub.recipe.recipe-code .
           define variable v-ingr-gds-code as integer no-undo .
           define variable v-koef-qnty as decimal no-undo .
+          define variable v-isweighed as logical no-undo .
           
           EDOParSec = ObjSrv:Env:ParametrsOfSection:GetSectionEDO(bf_trn-doc.obj-type, bf_trn-doc.obj-code).
           
@@ -3905,14 +3907,16 @@ vartechproliv = no
                   tt-fbr-line.ingr-gds-code = v-ingr-gds-code
                 .  
               
+                v-isweighed = WghProdVariable(bf_trn-doc.obj-type, bf_trn-doc.obj-code, bf_goods.gds-code) .
                 RUN gds-attr-value (
                                     INPUT bf_goods.gds-code,
                                     INPUT {&attr-mark-type},
                                     OUTPUT varvalue,
                                     OUTPUT vartype
                                     ).
-                if varvalue > ""
-                and EDOParSec:GetIsEdoForType(varvalue)
+                if (varvalue > ""
+                and EDOParSec:GetIsEdoForType(varvalue))
+                or v-isweighed
                 then do:
                   mark-lines_ :
                   for each buf_marking-lines no-lock where buf_marking-lines.out-code   = bf_doc-line.doc-code

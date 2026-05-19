@@ -1558,7 +1558,7 @@ ON row-leave OF br-utd IN FRAME d-utd
                else X_utd-lines.stts = "Ожидает проверку" .
          
                recid_utd = recid (X_utd-lines) .
-               run mark-temp .               
+               run mark-temp (?).               
                {&OPEN-QUERY-br-utd}             
                br-utd :refresh() no-error.
                reposition br-utd to recid recid_utd no-error .                  
@@ -1606,7 +1606,7 @@ ON row-leave OF br-utd IN FRAME d-utd
                else X_utd-lines.stts = "Ожидает проверку" .
          
                   recid_utd = recid (X_utd-lines) .
-                  run mark-temp .
+                  run mark-temp (?).
                   {&OPEN-QUERY-br-utd}             
                   br-utd :refresh() no-error.
                   reposition br-utd to recid recid_utd no-error .
@@ -1626,7 +1626,7 @@ ON row-leave OF br-utd IN FRAME d-utd
                else X_utd-lines.stts = "Ожидает проверку" .
          
                recid_utd = recid (X_utd-lines) .
-               run mark-temp .
+               run mark-temp (?).
                {&OPEN-QUERY-br-utd}             
                br-utd :refresh() no-error.
                reposition br-utd to recid recid_utd no-error .
@@ -1645,7 +1645,7 @@ ON row-leave OF br-utd IN FRAME d-utd
                else X_utd-lines.stts = "Ожидает проверку" .
                                                                             
                recid_utd = recid (X_utd-lines) .
-               run mark-temp .
+               run mark-temp (?).
                {&OPEN-QUERY-br-utd}             
                br-utd :refresh() no-error.
                reposition br-utd-nomark to recid recid_utd no-error .                  
@@ -1700,7 +1700,7 @@ ON row-leave OF br-utd IN FRAME d-utd
                then  
                   setattrUtdlines(p-db-num, p-doc-id,X_utd-lines.lineNum, "ScanGtin",m-gds-code ).
                recid_utd = recid (X_utd-lines).     
-               run mark-temp .
+               run mark-temp (?).
                {&OPEN-QUERY-br-utd}
                br-utd :refresh() no-error.
                reposition br-utd to recid recid_utd no-error .
@@ -1769,7 +1769,7 @@ ON CHOOSE OF b_back-check IN FRAME d-utd /* Продолжить проверку */
      
       display f-info c-status c-status-edi f-comment with frame {&frame-name} .
       run enable_UI in this-procedure .
-      run mark-temp .
+      run mark-temp (?).
       {&OPEN-QUERY-br-utd}
       disable          
          b_recheck
@@ -1898,7 +1898,7 @@ ON CHOOSE OF b_anul IN FRAME d-utd /* Аннулировать */
      
             display f-info c-status c-status-edi f-comment with frame {&frame-name} .
             run enable_UI in this-procedure .
-            run mark-temp .
+            run mark-temp (?).
 /*            if upd_mark*/
 /*               then    */
 /*            do:        */
@@ -2037,7 +2037,7 @@ ON CHOOSE OF menu-item m_marks-lines  /* Марки */
               &line-num= 5
             }
             empty temp-table tt-marking-lines .
-            run mark-temp .
+            run mark-temp (?).
             {&OPEN-QUERY-br-utd}
             run enable_BUTTON .
             if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
@@ -2096,7 +2096,7 @@ ON CHOOSE OF menu-item m_marks-utd /* Марки по документу */
             input "" /*тип продукции*/
             ) no-error .
          empty temp-table tt-marking-lines .
-         run mark-temp .
+         run mark-temp (?).
          run enable_BUTTON .
          if c-status = ObjSrv:Env:Utd:Sts:TH:AwaitingDelivery:KeyIntDB then 
          do:
@@ -2402,7 +2402,7 @@ ON CHOOSE OF b_recheck IN FRAME d-utd /* Повторно проверить */
                .  
             display f-info c-status c-status-edi f-comment with frame {&frame-name} .
             run enable_UI in this-procedure .
-            run mark-temp .
+            run mark-temp (?).
 /*            if upd_mark*/
 /*               then    */
 /*            do:        */
@@ -2755,17 +2755,13 @@ ON CHOOSE OF MENU-ITEM m_reset_row_data /* Сбросить данные по строке */
                 /*if available buf_utd then UnLockUTDMarkbuf(buffer buf_utd,yes).*/    
                 delete cancel_utd-marking-lines.
              end.                                           
-         end.               
-         X_utd-lines.qnty-scan = 0 .
-         X_utd-lines.sts_err = CheckErrForLine(buffer X_utd-lines:handle).
-         X_utd-lines.stts = if X_utd-lines.sts_err then "Ошибка по строке"  else "Ожидает проверку" .         
-         if x_utd-lines.isMarking then 
-         do:
-            setattrUtdlines(X_utd-lines.db-num, X_utd-lines.doc-id, X_utd-lines.LineNum, "QuantityBarCode", string(X_utd-lines.qnty-scan)).
-         end.
-         else 
+         end.  
+
+         X_utd-lines.qnty-scan = 0 .     
+         setattrUtdlines(X_utd-lines.db-num, X_utd-lines.doc-id, X_utd-lines.LineNum, "QuantityBarCode", string(X_utd-lines.qnty-scan)).
+
+         if not x_utd-lines.isMarking then 
          do:               
-            setattrUtdlines(X_utd-lines.db-num, X_utd-lines.doc-id, X_utd-lines.LineNum, "QuantityBarCode", string(X_utd-lines.qnty-scan)).            
             /* Для типа учета ВО */
             if x_utd-lines.isArtic and x_utd-lines.isWeight then 
             do:
@@ -2773,6 +2769,7 @@ ON CHOOSE OF MENU-ITEM m_reset_row_data /* Сбросить данные по строке */
                setattrUtdlines(X_utd-lines.db-num, X_utd-lines.doc-id, X_utd-lines.LineNum, "QuantityPiece", X_utd-lines.PieceFact).                                
             end.    
          end.
+         run mark-temp in this-procedure (X_utd-lines.LineNum).
       end.      
       {&OPEN-QUERY-br-utd}      
    END.
@@ -3015,7 +3012,7 @@ ON CHOOSE OF MENU-ITEM m_check-akt /* Проверить по Акту приема-передачи */
             end.
          end.
       end.
-      run mark-temp .
+      run mark-temp (?).
       {&OPEN-QUERY-br-utd}
 
    END.
@@ -4923,7 +4920,7 @@ PROCEDURE init-temp :
       f-comment
       with frame {&frame-name}.
 
-   run mark-temp .
+   run mark-temp (?).
 
 /*   if not upd_mark then {&OPEN-QUERY-br-utd-nomark}*/
 /*   else                                            */
@@ -4969,6 +4966,7 @@ PROCEDURE mark-temp :
                                             Settings" section of the widget Property Sheets.
                                 -------------------------------------------------------------------- */
    /*  define input parameter p-id as integer no-undo .*/
+   define input parameter iLine as integer no-undo.
 
    define buffer buf_marking           for ub.marking .
    define buffer buf_utd-marking-lines for ub.utd-marking-lines .
@@ -4987,7 +4985,10 @@ PROCEDURE mark-temp :
                   ?  ,
                   ? ,
                   "нет товара").
-   for each buf_utd-lines no-lock where buf_utd-lines.doc-id = buf_utd.doc-id and buf_utd-lines.db-num = buf_utd.db-num:        
+   for each buf_utd-lines no-lock where 
+            buf_utd-lines.doc-id = buf_utd.doc-id and 
+            buf_utd-lines.db-num = buf_utd.db-num and
+            (if iLine <> ? then buf_utd-lines.LineNum = iLine else true):        
       find first X_utd-lines EXCLUSIVE-LOCK where buf_utd-lines.doc-id = X_utd-lines.doc-id and buf_utd-lines.db-num = X_utd-lines.db-num and buf_utd-lines.LineNum = X_utd-lines.LineNum no-error . 
       buffer-copy buf_utd-lines to X_utd-lines .
       define variable vper as logical no-undo.
@@ -5861,7 +5862,7 @@ PROCEDURE save_mark :
             /*            end.                                                                               */
             end.
             /*          end.*/
-            run mark-temp .
+            run mark-temp (?).
 
             find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark begins v-marking and buf_utd-marking-lines.db-num = p-db-num 
                and buf_utd-marking-lines.doc-id = buf_utd.doc-id 
@@ -6802,7 +6803,7 @@ PROCEDURE save_bar-code :
          /*               buf_utd-marking-lines.sts = Marking:Checked_:KeyIntDB .                                                                       */
 
          X_utd-lines.qnty-scan:COLUMN-READ-ONLY IN BROWSE br-utd = FALSE.
-/*         run mark-temp .*/
+/*         run mark-temp (?).*/
 
          /*               find first buf_utd-marking-lines exclusive-lock where buf_utd-marking-lines.mark = v-bar-code and buf_utd-marking-lines.db-num = p-db-num*/
          /*                  and buf_utd-marking-lines.doc-id = buf_utd.doc-id                                                                                     */
@@ -7223,6 +7224,7 @@ PROCEDURE add-mark-weight :
     define variable vChkWeight as logical no-undo.
     define variable vUnitCode  as character no-undo.
     define variable vMarkShort as character no-undo.
+    define variable vGdsCode  as integer   no-undo.
     /*define variable vRecKey as character no-undo.*/
         
     define buffer bX_utd-lines for X_utd-lines.
@@ -7233,8 +7235,11 @@ PROCEDURE add-mark-weight :
     define buffer buf_marking-attr for ub.marking-attr.
     define buffer buf_utd-lines-attr for ub.utd-lines-attr.
     
-    vChkWeight = no.
-    vMarkShort = GetCodeIdent(iMark).
+    assign
+        vChkWeight = no
+        vMarkShort = GetCodeIdent(iMark)
+        vGdsCode = getGdsCodeByGtin(m-gds-code)
+        .
     
     /* проверяем если марка есть ее статус */
     find first buf_marking no-lock where buf_marking.mark begins vMarkShort no-error .
@@ -7265,7 +7270,7 @@ PROCEDURE add-mark-weight :
        then do:
           vWeight = decimal(buf_marking-attr.attr-value) no-error.
           if vWeight <> 0 and vWeight <> ? then do:
-              vUnitCode = gdsunit (getGdsCodeByGtin(iGTIN)).
+              vUnitCode = gdsunit (vGdsCode).
               MESSAGE "Масса товара равна "
                   (if vWeight < 1  and vWeight >= 0
                       then string(vWeight,"9.999")
@@ -7287,12 +7292,12 @@ PROCEDURE add-mark-weight :
               end.    
           end.
           /* к другому УПД привязан, но вес нулевой или ошибочный на марке */
-          else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).    
+          else run str/add-weight.w (vGdsCode, output vWeight).    
        end.
        /* к другому УПД привязан, но вес не задан на марке */
-       else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).
+       else run str/add-weight.w (vGdsCode, output vWeight).
     end.            
-    else run str/add-weight.w (getGdsCodeByGtin(iGTIN), output vWeight).
+    else run str/add-weight.w (vGdsCode, output vWeight).
     if vWeight = 0 then do:
         MESSAGE "Вес товара обязательный"        
         VIEW-AS ALERT-BOX.
@@ -7309,14 +7314,12 @@ PROCEDURE add-mark-weight :
                      output vRecKey).*/
                              
     utline:
-    for each tt-utd-lines-filtr where 
-             tt-utd-lines-filtr.bar-code = iGTIN,
-       first bX_utd-lines where 
-             bX_utd-lines.doc-id = tt-utd-lines-filtr.doc-id 
-         and bX_utd-lines.db-num = tt-utd-lines-filtr.db-num 
-         and bX_utd-lines.LineNum = tt-utd-lines-filtr.linenum 
+    for each bX_utd-lines where 
+             bX_utd-lines.doc-id = iDocId
+         and bX_utd-lines.db-num = iDbNum
+         and bX_utd-lines.gds-code = vGdsCode
          and bX_utd-lines.isArtic = yes   
-         :       
+         by bX_utd-lines.LineNum :                      
          vFnd = yes.      
          if bX_utd-lines.PieceFact < bX_utd-lines.PieceTTH
          and bX_utd-lines.qnty-scan + vWeight <= bX_utd-lines.Quantity 
@@ -7399,7 +7402,7 @@ PROCEDURE add-mark-weight :
                             bX_utd-lines.PieceFact).      
             /*if bX_utd-lines.Quantity = bX_utd-lines.qnty-scan then bX_utd-lines.stts = "Проверен" .*/                                                                                            
             recid_utd = recid (bX_utd-lines) .
-            run mark-temp .                                                                   
+            run mark-temp (?).                                                                   
             leave utline.                                
          end.
     end.    

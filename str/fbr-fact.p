@@ -212,10 +212,7 @@ fact-close:
                         output varvalue,
                         output vartype
                         ).
-    v-isweighed = WeighedProd(buf_goods.gds-code)
-              and varvalue > ""
-              and (EDOParSec:GetIsArticForType(varvalue) or EDOParSec:GetIsEDOForType(varvalue))
-    .
+    v-isweighed = WghProdVariable(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code, buf_goods.gds-code) .
     if not v-isweighed
     then do :
       if varvalue > "" then do:
@@ -239,6 +236,7 @@ fact-close:
   define variable v-marks-qnty as decimal no-undo .
   define variable vGtin as character no-undo .
   define variable vGtinQnty as decimal no-undo .
+  
   for each buf_fbr-line no-lock where buf_fbr-line.doc-code = buf_fbr-doc.doc-code,
   first buf_goods no-lock where buf_goods.artic     = buf_fbr-line.artic
                             and buf_goods.prod-type = buf_fbr-line.prod-type
@@ -251,10 +249,7 @@ fact-close:
                         OUTPUT varvalue,
                         OUTPUT vartype
                         ).
-    v-isweighed = WeighedProd(buf_goods.gds-code)
-              and varvalue > ""
-              and (EDOParSec:GetIsArticForType(varvalue) or EDOParSec:GetIsEDOForType(varvalue))
-    .
+    v-isweighed = WghProdVariable(buf_fbr-doc.obj-type, buf_fbr-doc.obj-code, buf_goods.gds-code) .
     if (varvalue > "" and EDOParSec:GetIsEdoForType(varvalue))
     or v-isweighed
     then do:

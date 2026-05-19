@@ -2557,7 +2557,13 @@ do:
   
       run check-place-rsrv in this-procedure
         no-error .
-      if error-status :error then do:
+      if error-status :error
+      then do:
+        tanksForm:dispose() .
+        if valid-object(tanksForm)
+        and tanksForm:isDisposed
+        then
+          delete object tanksForm .
         return no-apply  .
       end.
   
