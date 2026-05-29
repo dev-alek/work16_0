@@ -485,8 +485,14 @@ function addBracketForCode return character
    define variable vteg as character no-undo.
    define variable vtegval as character no-undo.
    
+   define buffer marking for ub.marking.
+   
+   find first marking no-lock where 
+              marking.mark begins icodeIdent no-error.  
+   
    if    not ChekTypeMarkByDm(icodeIdent)
       or length(icodeIdent) le 24
+      or (avail marking and marking.unit-ext = "LEVEL2")
    then
       oTeg = icodeIdent.  
    else do: 
