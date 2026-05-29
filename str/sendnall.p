@@ -188,6 +188,10 @@ then do:
    end.
 end.
 
+assign
+   vrec-cur = ""
+   vrec-del = ""
+   .
 
 for each buf_clients no-lock
       where buf_clients.obj-type = {&shop}
