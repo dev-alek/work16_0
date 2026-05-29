@@ -1,5 +1,6 @@
 block-level on error undo, throw.
-output to "upd-rc.txt" convert target "ibm866".
+define stream mProt.
+output stream mProt to "upd-rc.txt" convert target "ibm866".
 
 
 /*
@@ -139,7 +140,7 @@ CheckUpd = new ibs.th.adm.upd.CheckUpd ().
 CheckUpd:workStop ().
 run waitfram-show in this-procedure ( input "Идет обновление программ ТН. Ждите..." ).
 
-put unformatted "Каталог обновлений: " p0-source-dir skip.
+put stream mProt unformatted "Каталог обновлений: " p0-source-dir skip.
 
 /* Ищем где лежат r-коды   */
 assign
@@ -150,13 +151,13 @@ if p0-pathrc = ? then do:
     p0-pathrc = search( "adm/upd-rc.p":U )
   .
   if p0-pathrc = ? then do:
-    put unformatted "Не найден путь на программы ТН" skip.
+    put stream mProt unformatted "Не найден путь на программы ТН" skip.
     return error "Не найден путь на программы ТН".
   end.
 end.
 
 
-put unformatted "Путь к программам: " p0-pathrc skip.
+put stream mProt unformatted "Путь к программам: " p0-pathrc skip.
 
 /* Есть ли архиватор  */
 assign
@@ -168,12 +169,12 @@ assign
 .
 end.
 if v-arc = ? then do:
-  put unformatted "Не найдена программа 7z.exe" skip.
+  put stream mProt unformatted "Не найдена программа 7z.exe" skip.
   return error "Не найдена программа 7z.exe, раскрыть обновления невозможно" .
 end.
 
 
-put unformatted "Архиватор: " v-arc skip.
+put stream mProt unformatted "Архиватор: " v-arc skip.
 
 assign
   v-pathrc = substring(p0-pathrc, 1, r-index(p0-pathrc, "\") - 1 )
@@ -188,16 +189,16 @@ assign
   add-log-file-name = mFileLog
 .
 
-put unformatted "путь к rc: " v-pathrc skip.
-put unformatted "v-pathrc: " v-pathrc skip.
-put unformatted "p0-pathrc: " p0-pathrc skip.
-put unformatted "mFileLog: " mFileLog skip.
+put stream mProt unformatted "путь к rc: " v-pathrc skip.
+put stream mProt unformatted "v-pathrc: " v-pathrc skip.
+put stream mProt unformatted "p0-pathrc: " p0-pathrc skip.
+put stream mProt unformatted "mFileLog: " mFileLog skip.
 
 /* Выбираем из каталога с новостями файлы апгрейда r-кодов  */
 input stream flstream from os-dir ( p0-source-dir ) .
 
-put unformatted " " skip.
-put unformatted "обработка файлов из " p0-source-dir " " skip.
+put stream mProt unformatted " " skip.
+put stream mProt unformatted "обработка файлов из " p0-source-dir " " skip.
 
 repeat
 on error undo, return error
@@ -218,20 +219,20 @@ on error undo, return error
       v-rc-filename       = p0-pathrc + "\" + v-filename
     .
     
-    put unformatted "найден файл: " v-filename skip.
-    put unformatted "копирование " v-fullfilename " " v-rc-filename skip.
+    put stream mProt unformatted "найден файл: " v-filename skip.
+    put stream mProt unformatted "копирование " v-fullfilename " " v-rc-filename skip.
     os-command silent
       value( "copy" )
       value( v-fullfilename )
       value( v-rc-filename )
     .
     if os-error <> 0 or search(v-rc-filename) = ? then do:
-      put unformatted "Невозможно скопировать файл: " v-fullfilename "в каталог" p0-pathrc skip.
+      put stream mProt unformatted "Невозможно скопировать файл: " v-fullfilename "в каталог" p0-pathrc skip.
       return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, p0-pathrc) .
     end.
     
 
-    put unformatted "Скопирован: " v-filename " в " v-rc-filename skip.
+    put stream mProt unformatted "Скопирован: " v-filename " в " v-rc-filename skip.
     v-date = date( integer(substring(v-txt,5,2)), integer(substring(v-txt,7,2)), integer(substring(v-filename, index(v-filename, "_") + 1, 4)) ) no-error.
     if error-status:error or v-date < 01/01/2000 then
     do:
@@ -240,7 +241,7 @@ on error undo, return error
            {&PREFIX_LOG}, 
            v-filename
        )).
-       put unformatted "Имя файла не соответствует шаблону update_20YYMMDD" v-filename skip.
+       put stream mProt unformatted "Имя файла не соответствует шаблону update_20YYMMDD" v-filename skip.
     end.
     else
     do:
@@ -256,14 +257,14 @@ on error undo, return error
             upgfile-tbl.fullnameupgfile = v-rc-filename
             upgfile-tbl.type            = v-type
           .
-          put unformatted "Добавлен в таблицу обновлений: " v-filename " дата: " v-date skip.
+          put stream mProt unformatted "Добавлен в таблицу обновлений: " v-filename " дата: " v-date skip.
        end.
     end.
     
     /* Удаление апгрейдного файла из каталога новостей */
     os-delete value ( v-fullfilename ) recursive.
     /* Лог: удален исходный файл */
-    put unformatted "Удален  файл: " v-fullfilename skip.
+    put stream mProt unformatted "Удален  файл: " v-fullfilename skip.
   end.  /*   if v-filetype begins "f" and  */
   
   /* Для кассы */
@@ -271,7 +272,7 @@ on error undo, return error
   and ( v-filename begins "UFO-")
   then do:
 
-      put unformatted "Найден UFO файл: " v-filename skip.
+      put stream mProt unformatted "Найден UFO файл: " v-filename skip.
      
       os-command silent
         value( "copy" )
@@ -279,11 +280,11 @@ on error undo, return error
         value( p0-pathrc )
       .
       if os-error <> 0  or search(p0-pathrc + "/" + v-filename) = ? then do:
-        put unformatted "Невозможно скопировать: " v-fullfilename " в каталог" p0-pathrc  skip.
+        put stream mProt unformatted "Невозможно скопировать: " v-fullfilename " в каталог" p0-pathrc  skip.
         return error substitute("Невозможно скопировать файл &1 в каталог &2", v-fullfilename, p0-pathrc) .
       end.
       
-      put unformatted "Скопирован UFO: " v-filename skip.
+      put stream mProt unformatted "Скопирован UFO: " v-filename skip.
       
       if search (p0-pathrc + "/" + v-filename) = ?
       then
@@ -295,10 +296,10 @@ on error undo, return error
       if file-info:file-type = ? then do:
           os-create-dir value( p0-pathrc  + "\ufo_update" ). 
           if os-error <> 0 then do:
-              put unformatted "Невозможно создать папку: " p0-pathrc + "\ufo_update" skip.
+              put stream mProt unformatted "Невозможно создать папку: " p0-pathrc + "\ufo_update" skip.
               return error string ( "Невозможно создать папку " + p0-pathrc  + "\ufo_update" ).
           end.
-          put unformatted "Создана папка: " p0-pathrc + "\ufo_update" skip.
+          put stream mProt unformatted "Создана папка: " p0-pathrc + "\ufo_update" skip.
       end.
       else do :
           assign
@@ -309,7 +310,7 @@ on error undo, return error
               if os-error <> 0 then do:
                   os-rename  value ( p0-pathrc + "\ufo_update-old" ) value ( p0-pathrc + "\ufo_update-old1" ). 
                   if os-error <> 0 then do:
-                      put unformatted "Невозможно удалить папку " skip.
+                      put stream mProt unformatted "Невозможно удалить папку " skip.
                       return error string ( "Невозможно удалить папку " + p0-pathrc + "\ufo_update-old, удалите ее сами" ).
                   end.
               end.
@@ -317,20 +318,20 @@ on error undo, return error
         
           os-rename  value ( p0-pathrc + "\ufo_update" ) value ( p0-pathrc + "\ufo_update-old" ). 
           if os-error <> 0 then do:
-              put unformatted "Невозможно переименовать папку "  p0-pathrc skip.
+              put stream mProt unformatted "Невозможно переименовать папку "  p0-pathrc skip.
               return error string(( "Невозможно переименовать папку " + p0-pathrc + "\ufo_update для сохранности" )).
           end.
 
-          put unformatted "Папка переименована: " p0-pathrc + "\ufo_update -> " p0-pathrc + "\ufo_update-old" skip.
+          put stream mProt unformatted "Папка переименована: " p0-pathrc + "\ufo_update -> " p0-pathrc + "\ufo_update-old" skip.
 
-          put unformatted "создаем rc папку " p0-pathrc  "\ufo_update" skip.          
+          put stream mProt unformatted "создаем rc папку " p0-pathrc  "\ufo_update" skip.          
           os-create-dir value( p0-pathrc  + "\ufo_update" ). /* создаем rc */
           if os-error <> 0 then do:
               os-rename  value ( p0-pathrc  + "\ufo_update-old") value ( p0-pathrc  + "\ufo_update" ). /* переименовываем rc-old в rc при ошибке создания  rc*/
-              put unformatted "Невозможно создать папку " p0-pathrc  "\ufo_update" skip.
+              put stream mProt unformatted "Невозможно создать папку " p0-pathrc  "\ufo_update" skip.
               return error string ( "Невозможно создать папку " + p0-pathrc  + "\ufo_update" ).
           end.
-          put unformatted "Создана новая папка: " p0-pathrc + "\ufo_update" skip.
+          put stream mProt unformatted "Создана новая папка: " p0-pathrc + "\ufo_update" skip.
       end. 
       
       if not v-copy-err
@@ -343,20 +344,20 @@ on error undo, return error
       end.
 
 
-      put unformatted "разархивирование UFO: " v-txt skip.
+      put stream mProt unformatted "разархивирование UFO: " v-txt skip.
       os-command silent value ( v-txt ) .
      
       v-pathrc = search( p0-source-dir + "/" + v-filename ).
       os-delete value ( v-pathrc ) recursive.
-      put unformatted "Удален UFO файл: " v-pathrc skip.
+      put stream mProt unformatted "Удален UFO файл: " v-pathrc skip.
       
   end.
   
 end.  /*  repeat  on error undo   */
 input stream flstream close.
 
-put unformatted "обраб. файлы из " p0-source-dir skip.
-put unformatted " " skip.
+put stream mProt unformatted "обраб. файлы из " p0-source-dir skip.
+put stream mProt unformatted " " skip.
 
 
 UPDATE_CYCLE:
@@ -364,7 +365,7 @@ for each upgfile-tbl no-lock
 on error undo, return error return-value
 :
 
-    put unformatted "начало процесса обновления: " UpgFile-tbl.NameUpgFile " " skip.
+    put stream mProt unformatted "начало процесса обновления: " UpgFile-tbl.NameUpgFile " " skip.
     
     run write-to-log (substitute("&1начало процесса обновления &2", {&PREFIX_LOG}, UpgFile-tbl.NameUpgFile)).
     mIsError = upgfile-tbl.dateupg <= v-compile-date.
@@ -377,7 +378,7 @@ on error undo, return error return-value
                       ).
     if mIsError then
     do: 
-      put unformatted "Пропуск дата <= текущей: " UpgFile-tbl.NameUpgFile skip.
+      put stream mProt unformatted "Пропуск дата <= текущей: " UpgFile-tbl.NameUpgFile skip.
       delete upgfile-tbl.
       next UPDATE_CYCLE.
     end.
@@ -398,7 +399,7 @@ on error undo, return error return-value
                       , v-PathRC
                       , UpgFile-tbl.FullNameUpgFile
                       ) .
-    put unformatted "распаковка BAT: " v-txt skip.
+    put stream mProt unformatted "распаковка BAT: " v-txt skip.
     os-command silent value ( v-txt ) .
     mIsError = os-error <> 0 
              or SearchFile ("!beforeTH.bat") = ? 
@@ -412,17 +413,17 @@ on error undo, return error return-value
                           else "успешно")
                       ).
     if mIsError then do:
-      put unformatted "ошибка распаковки BAT " skip.
+      put stream mProt unformatted "ошибка распаковки BAT " skip.
       next UPDATE_CYCLE.
     end.
     
 
-    put unformatted "BAT файлы распакованы " skip.
+    put stream mProt unformatted "BAT файлы распакованы " skip.
 
     mRunFile = SearchFile ("!beforeTH.bat").
     if mRunFile ne ?
     then do:
-       put unformatted "Запуск !beforeTH.bat" skip.
+       put stream mProt unformatted "Запуск !beforeTH.bat" skip.
        run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
        os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
        mIsError = os-error <> 0 .
@@ -434,7 +435,7 @@ on error undo, return error return-value
                              then "ошибка" 
                              else "успешно")
                          ).
-       put unformatted "Результат !beforeTH.bat: " (if mIsError then "ошибка" else "успешно") skip.
+       put stream mProt unformatted "Результат !beforeTH.bat: " (if mIsError then "ошибка" else "успешно") skip.
        if mIsError then next UPDATE_CYCLE.
     end.
     
@@ -444,7 +445,7 @@ on error undo, return error return-value
     mRunFile = SearchFile ("!upd-rc-before.bat").
     if mRunFile ne ?
     then do:
-       put unformatted "Выполнение !upd-rc-before.bat" skip.
+       put stream mProt unformatted "Выполнение !upd-rc-before.bat" skip.
        run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
        os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
        mIsError = os-error <> 0.
@@ -456,7 +457,7 @@ on error undo, return error return-value
                              then "ошибка" 
                              else "успешно")
                          ).
-       put unformatted "Результат !upd-rc-before.bat: " (if mIsError then "ошибка" else "успешно") skip.
+       put stream mProt unformatted "Результат !upd-rc-before.bat: " (if mIsError then "ошибка" else "успешно") skip.
        if mIsError then next UPDATE_CYCLE.
     end.
                                       
@@ -469,7 +470,7 @@ on error undo, return error return-value
           if os-error <> 0 then do:
               os-rename  value ( v-pathrc + "-old" ) value ( v-pathrc + "-old1" ). /* переименовываем rc в rc-old */
               if os-error <> 0 then do:
-                  put unformatted "ошибка удаления папки rc-old" skip.
+                  put stream mProt unformatted "ошибка удаления папки rc-old" skip.
                   return error string ( "Невозможно удалить папку " + v-pathrc + "-old, удалите ее сами" ).
               end.
           end.
@@ -477,34 +478,34 @@ on error undo, return error return-value
 
       os-rename  value ( v-pathrc ) value ( v-pathrc + "-old" ). /* переименовываем rc в rc-old */
       if os-error <> 0 then do:
-          put unformatted "ошибка переименования rc" skip.
+          put stream mProt unformatted "ошибка переименования rc" skip.
           return error string(( "Невозможно переименовать папку " + v-pathrc + " для сохранности" )).
       end.
       /* Лог: папка переименована */
-      put unformatted "Папка переименована: " v-pathrc " -> " v-pathrc + "-old" skip.
+      put stream mProt unformatted "Папка переименована: " v-pathrc " -> " v-pathrc + "-old" skip.
       
       os-create-dir value( v-pathrc ). /* создаем rc */
       if os-error <> 0 then do:
           os-rename  value ( v-pathrc  + "-old") value ( v-pathrc ). /* переименовываем rc-old в rc при ошибке создания  rc*/
-          put unformatted "ошибка создания папки rc" skip.
+          put stream mProt unformatted "ошибка создания папки rc" skip.
           return error string ( "Невозможно создать папку " + v-pathrc ).
       end.
 
-      put unformatted "Создана папка: " v-pathrc skip.
+      put stream mProt unformatted "Создана папка: " v-pathrc skip.
 
       v-txt = "".
       v-txt = /* v-arc */ v-PathRC + "-old\exe\7z.exe" + " x -y -o" + v-PathRC + " " +  UpgFile-tbl.FullNameUpgFile.
       /* Лог: команда распаковки */
-      put unformatted "Команда распаковки RC: " v-txt skip.
+      put stream mProt unformatted "Команда распаковки RC: " v-txt skip.
       os-command silent value ( v-txt ) .
       /* Лог: результат распаковки */
-      put unformatted "Распаковка RC выполнена, код ошибки: " STRING(os-error) skip.
+      put stream mProt unformatted "Распаковка RC выполнена, код ошибки: " STRING(os-error) skip.
     end.
 
     v-delfile = search( "!delfile.bat" ).
     if v-delfile <> ? then do:
         /* Лог: найден файл удаления */
-        put unformatted "Найден !delfile.bat, выполнение удаления" skip.
+        put stream mProt unformatted "Найден !delfile.bat, выполнение удаления" skip.
         input from value ( v-delfile ) .
         repeat :
            import unformatted v-txt.
@@ -512,14 +513,14 @@ on error undo, return error return-value
            v-txt = trim(substring ( v-txt, r-index(v-txt, " ") )).
            if trim (v-txt) = "" then next.
            v-txt = search( v-txt ).
-           put unformatted "Удаление файла: " v-txt skip.
+           put stream mProt unformatted "Удаление файла: " v-txt skip.
            os-delete value ( v-txt ) recursive.
         end.
         input close.
     end.  /*  if v-delfile <> ? then do:  */
 
     os-delete value ( v-delfile ) recursive. /* удаляем файл !delfile.bat */
-    put unformatted "Удален !delfile.bat" skip.
+    put stream mProt unformatted "Удален !delfile.bat" skip.
  
 
 
@@ -527,12 +528,12 @@ end.  /*  for each upgfile-tbl where  */
 
 
 /* запускаем обновления из /updck */
-put unformatted "запуск code-updck.p " skip.
+put stream mProt unformatted "запуск code-updck.p " skip.
 run waitfram-show in this-procedure ("Выполнение xml-файлов обновления" ).
 run gbl/code-updck.p(input  this-procedure)  no-error .
 if error-status:error then
 do:
-   put unformatted "ошибка запуска code-updck.p: " return-value skip.
+   put stream mProt unformatted "ошибка запуска code-updck.p: " return-value skip.
    run write-to-log (substitute(
                        "&1&2", 
                        {&PREFIX_LOG}, 
@@ -540,7 +541,7 @@ do:
                      ).
 end.
 else do:
-   put unformatted "code-updck.p выполнен " skip.
+   put stream mProt unformatted "code-updck.p выполнен " skip.
 end.
 
 def var v-file-name as character no-undo.
@@ -549,7 +550,7 @@ mRunFile = SearchFile ("!upd-rc-after.bat").
 
 if mRunFile ne ?
 then do:
-   put unformatted "Выполнение !upd-rc-after.bat" skip.
+   put stream mProt unformatted "Выполнение !upd-rc-after.bat" skip.
    run waitfram-show in this-procedure ("Выполнение " + mRunFile ).
    os-command value (substitute ("&2 &1 exit" ,{&ampersand}, mRunFile)).
    mIsError = os-error <> 0.
@@ -561,7 +562,7 @@ then do:
                          then "ошибка" 
                          else "успешно")
                      ).
-   put unformatted "Результат !upd-rc-after.bat: " (if mIsError then "ошибка" else "успешно") skip.
+   put stream mProt unformatted "Результат !upd-rc-after.bat: " (if mIsError then "ошибка" else "успешно") skip.
 end.
 
 /* копирование лога в каталог новостей*/
@@ -592,7 +593,7 @@ for each upgfile-tbl :
 end.
 
 
-put unformatted (if can-find(first upgfile-tbl) then 
+put stream mProt unformatted (if can-find(first upgfile-tbl) then 
          "Установлены обновления Тrade Нouse. Для их применения необходимо закрыть все программы TH и запустить их снова." 
        else "Новых обновлений нет.") skip.
 

@@ -1294,6 +1294,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     define variable vartype         as character no-undo .
     define variable v-mark-weight as decimal no-undo .
     define variable v-isweighed as logical no-undo .
+    define variable v-recid as recid no-undo .
     
     if lookup( string(t-doc.reason-code), v-reasons-for-return) > 0
     and t-doc.ext-doc-type = {&TDEDT_Ras_Vnesh}
@@ -1314,6 +1315,8 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
       message "Сначала добавьте товар в документ" view-as alert-box .
       return no-apply.
     end.
+    
+    v-recid = recid (ub.doc-line) .
     
     v-isweighed = WghProdVariable(t-doc.obj-type, t-doc.obj-code, ub.goods.gds-code) .
         
@@ -1449,6 +1452,7 @@ ON CHOOSE OF MENU-ITEM m_add-marks /* Добавить марки */
     end.
 
     run ui-on in this-procedure ( input "line" ).
+    reposition br-dtl to recid v-recid no-error.
 
     end.
   END.
