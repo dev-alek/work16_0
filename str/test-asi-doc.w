@@ -1681,14 +1681,14 @@ define variable VolumetricExpansion as decimal no-undo .
       view-as alert-box error.
       undo _trpomi, return "need-data" .
     end.
-    if calc_r-line.level-water = ? then do :
-      message
-        "Заполнены не все поля, необходимые" skip
-        "для работы библиотеки ПОкМИ"        skip
-        "Введите факт. уровень воды"
-      view-as alert-box error.
-      undo _trpomi, return "need-data" .
-    end.
+/*    if calc_r-line.level-water = ? then do :     */
+/*      message                                    */
+/*        "Заполнены не все поля, необходимые" skip*/
+/*        "для работы библиотеки ПОкМИ"        skip*/
+/*        "Введите факт. уровень воды"             */
+/*      view-as alert-box error.                   */
+/*      undo _trpomi, return "need-data" .         */
+/*    end.                                         */
     if calc_r-line.temperature = ?
     then do :
       message
