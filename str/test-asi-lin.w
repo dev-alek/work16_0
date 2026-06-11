@@ -4306,6 +4306,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
           with frame Dialog-Frame.
         end .
         
+        if tt-rvs-line.state-level-water = ?
+        then do :
+          assign tt-rvs-line.state-level-water = 0 .
+          display tt-rvs-line.state-level-water with frame Dialog-Frame.
+        end .
+        
         display tt-rvs-line.asi-pomi-density with frame Dialog-Frame.
         
         vLabel = tt-rvs-line.izmer-density:SIDE-LABEL-HANDLE.
