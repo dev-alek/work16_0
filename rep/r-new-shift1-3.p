@@ -2152,7 +2152,7 @@ procedure add-chk :
     :
     for each buf_chk-gds
       where buf_chk-gds.doc-code = p-doc-code 
-      and buf_chk-gds.loc1 = p-loc1
+/*      and buf_chk-gds.loc1 = p-loc1*/
       no-lock,
       first buf_bar-code
       where buf_bar-code.b-code = buf_chk-gds.b-code
@@ -2160,7 +2160,7 @@ procedure add-chk :
       no-lock
       :
       find first temp-line-pump WHERE temp-line-pump.gds-code = buf_bar-code.gds-code
-        and temp-line-pump.loc1 = buf_chk-gds.loc1 and temp-line-pump.pump-code = buf_chk-gds.pump and
+        and temp-line-pump.pump-code = buf_chk-gds.pump and
         temp-line-pump.nozzle-code  = buf_chk-gds.nozzle-code
         no-error .
       if not available (temp-line-pump) then 
