@@ -406,6 +406,7 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
                   release utd-marking-lines.
                end.
 
+run gbl/inidebug.p.
                for each utd-marking-lines where utd-marking-lines.db-num  eq utd-lines.db-num
                                             and utd-marking-lines.doc-id  eq utd-lines.doc-id
                                             and utd-marking-lines.LineNum eq utd-lines.LineNum
@@ -577,92 +578,93 @@ class ibs.th.bge.1crn.import.imp{&impclass} inherits ibs.th.gbl.sys.objth implem
               vAllQnty = marking.box-qnty / buf_marking.box-qnty.
            vQnty = vQnty + 1.
         end.
-        if marking.unit-ext = "LEVEL2" and 
-           v-mark-type <> "tabak" and
-           v-mark-type <> "stiki" and
-           v-mark-type <> "water"
-           /* (ZI-701 по коробам) дл€ табака и воды кол-во по коробу не провер€ем*/
-        then do :
-           if cisGdsCode > 0
-           then do :
-              v-must-be-childs = 50 .
-              find first bf_bar-code no-lock where bf_bar-code.gds-code = cisGdsCode
-                                               and bf_bar-code.unit-cli = "кор"
-                                               and bf_bar-code.stts_ = 0
-              no-error .
-              if available bf_bar-code
-              then do :
-                v-must-be-childs = bf_bar-code.cli-base-rate .
-                find first bf2_bar-code no-lock where bf2_bar-code.gds-code = cisGdsCode
-                                                  and bf2_bar-code.unit-cli = "бл"
-                                                  and bf2_bar-code.stts_ = 0
-                no-error .
-                if available bf2_bar-code
-                then do :
-                  v-must-be-childs = v-must-be-childs / bf2_bar-code.cli-base-rate .
-                end .
-                else do :
-                  errMSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'бл'" .
-                  v-err-childs = true .
-                end .
-              end .
-              else do :
-                errMSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'кор'" .
-                v-err-childs = true .
-              end .
-              if not v-err-childs
-              then do :
-                if v-mark-type = "tabak"
-                or v-mark-type = "stiki"
-                then do :
-                  if vQnty <> v-must-be-childs
-                  then do:
-                    if GrayZoneQnty = 100
-                    then do :
-                      v-gray-zone = true .
-                    end .
-                    else do :
-                      if (v-must-be-childs - vQnty) <= GrayZoneQnty
-                      then v-gray-zone = true .
-                      else v-err-childs = true .
-                    end .
-                  end .
-                  if v-gray-zone
-                  then do :
-                     MarkChangeSts(marking.mark,
-                                   objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,
-                                   "",
-                                   no).
-                  end .
-                end .
-                else do :
-                  if vQnty <> v-must-be-childs then v-err-childs = true .
-                end .
-                if v-err-childs
-                then do :
-                  errMSG = "¬ коробе " + string(vQnty) + " блоков." .
-                end .
-              end .
-              if v-err-childs
-              then do :
-                 MarkChangeSts(marking.mark, 
-                               objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB, 
-                               errMSG, 
-                               yes).                  
-                 if marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB
-                 then 
-                 AddUtdErr(idb-num,
-                           idoc-id,
-                           if available bf_utd-marking-lines 
-                           then buffer bf_utd-marking-lines:handle
-                           else buffer marking:handle,
-                           "CheckMOTP",
-                           "MotpMarkErr",
-                           (marking.mark + {&delim-par} + errMSG)).
-              end .
-           end .
-        end .
-        else
+/*        BTS-2564 ”бираем проверку LEVEL2 дл€ всех типов маркировки                                        */
+/*        if marking.unit-ext = "LEVEL2" and                                                                */
+/*           v-mark-type <> "tabak" and                                                                     */
+/*           v-mark-type <> "stiki" and                                                                     */
+/*           v-mark-type <> "water"                                                                         */
+/*           /* (ZI-701 по коробам) дл€ табака и воды кол-во по коробу не провер€ем*/                       */
+/*        then do :                                                                                         */
+/*           if cisGdsCode > 0                                                                              */
+/*           then do :                                                                                      */
+/*              v-must-be-childs = 50 .                                                                     */
+/*              find first bf_bar-code no-lock where bf_bar-code.gds-code = cisGdsCode                      */
+/*                                               and bf_bar-code.unit-cli = "кор"                           */
+/*                                               and bf_bar-code.stts_ = 0                                  */
+/*              no-error .                                                                                  */
+/*              if available bf_bar-code                                                                    */
+/*              then do :                                                                                   */
+/*                v-must-be-childs = bf_bar-code.cli-base-rate .                                            */
+/*                find first bf2_bar-code no-lock where bf2_bar-code.gds-code = cisGdsCode                  */
+/*                                                  and bf2_bar-code.unit-cli = "бл"                        */
+/*                                                  and bf2_bar-code.stts_ = 0                              */
+/*                no-error .                                                                                */
+/*                if available bf2_bar-code                                                                 */
+/*                then do :                                                                                 */
+/*                  v-must-be-childs = v-must-be-childs / bf2_bar-code.cli-base-rate .                      */
+/*                end .                                                                                     */
+/*                else do :                                                                                 */
+/*                  errMSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'бл'" .*/
+/*                  v-err-childs = true .                                                                   */
+/*                end .                                                                                     */
+/*              end .                                                                                       */
+/*              else do :                                                                                   */
+/*                errMSG = "ƒл€ товара с кодом " + string(cisGdsCode) + " не найден код с ед. изм. 'кор'" . */
+/*                v-err-childs = true .                                                                     */
+/*              end .                                                                                       */
+/*              if not v-err-childs                                                                         */
+/*              then do :                                                                                   */
+/*                if v-mark-type = "tabak"                                                                  */
+/*                or v-mark-type = "stiki"                                                                  */
+/*                then do :                                                                                 */
+/*                  if vQnty <> v-must-be-childs                                                            */
+/*                  then do:                                                                                */
+/*                    if GrayZoneQnty = 100                                                                 */
+/*                    then do :                                                                             */
+/*                      v-gray-zone = true .                                                                */
+/*                    end .                                                                                 */
+/*                    else do :                                                                             */
+/*                      if (v-must-be-childs - vQnty) <= GrayZoneQnty                                       */
+/*                      then v-gray-zone = true .                                                           */
+/*                      else v-err-childs = true .                                                          */
+/*                    end .                                                                                 */
+/*                  end .                                                                                   */
+/*                  if v-gray-zone                                                                          */
+/*                  then do :                                                                               */
+/*                     MarkChangeSts(marking.mark,                                                          */
+/*                                   objSrv:Env:Marking:Sts:Mark:GrayZone:KeyIntDB,                         */
+/*                                   "",                                                                    */
+/*                                   no).                                                                   */
+/*                  end .                                                                                   */
+/*                end .                                                                                     */
+/*                else do :                                                                                 */
+/*                  if vQnty <> v-must-be-childs then v-err-childs = true .                                 */
+/*                end .                                                                                     */
+/*                if v-err-childs                                                                           */
+/*                then do :                                                                                 */
+/*                  errMSG = "¬ коробе " + string(vQnty) + " блоков." .                                     */
+/*                end .                                                                                     */
+/*              end .                                                                                       */
+/*              if v-err-childs                                                                             */
+/*              then do :                                                                                   */
+/*                 MarkChangeSts(marking.mark,                                                              */
+/*                               objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB,                            */
+/*                               errMSG,                                                                    */
+/*                               yes).                                                                      */
+/*                 if marking.sts = objSrv:Env:Marking:Sts:Mark:MarkError:KeyIntDB                          */
+/*                 then                                                                                     */
+/*                 AddUtdErr(idb-num,                                                                       */
+/*                           idoc-id,                                                                       */
+/*                           if available bf_utd-marking-lines                                              */
+/*                           then buffer bf_utd-marking-lines:handle                                        */
+/*                           else buffer marking:handle,                                                    */
+/*                           "CheckMOTP",                                                                   */
+/*                           "MotpMarkErr",                                                                 */
+/*                           (marking.mark + {&delim-par} + errMSG)).                                       */
+/*              end .                                                                                       */
+/*           end .                                                                                          */
+/*        end .                                                                                             */
+/*        else*/
         if marking.unit-ext = "LEVEL1"
         or marking.unit-ext = "GROUP"
         then do :
