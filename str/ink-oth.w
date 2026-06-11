@@ -1069,6 +1069,7 @@ b-print
 B-help
 BR-INKAS-PAY
 BR-pay-desk
+BR-cash-desk
 WITH FRAME {&frame-name}.
 {&OPEN-BROWSERS-IN-QUERY-DIALOG-1}
 END PROCEDURE.
