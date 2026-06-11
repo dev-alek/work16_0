@@ -760,6 +760,7 @@ class ibs.th.skt.Commands.TSDCommand inherits ICommandProc:
         assign
         ub.Code.code = mSN
         ub.Code.parent = "TSDversion"
+        ub.Code.nwsubd = yes 
         .
     end.
     if mVersion <> "" then ub.Code.misc1 = mVersion .
