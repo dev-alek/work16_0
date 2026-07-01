@@ -1439,7 +1439,7 @@ DO:
     ,  input bf_trn-doc.obj-code
     ,  input bf_goods.gds-code
     ,  input bf_doc-line.doc-code
-    ,  input pardoc-mode                /* p-edit-mode  */
+    ,  input {&LOOKUP} /*pardoc-mode  BTS-2570  */            /* p-edit-mode  */
     ,  input {&parts-l_parts-document} /* p-r-parts    */
     ,  input {&parts-l_object-current} /* p-one-all    */
     , input {&parts-l_call-document}
