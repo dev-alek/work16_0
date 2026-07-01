@@ -1547,7 +1547,7 @@ procedure print-total:
             '<td text_wrap="true" rowspan="2" num="0.0" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>>>9.9",1) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol19 <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol19,"->>>>>>>>>>>9.9",1) + '</td>' else "" + '</td>' skip
             '<td text_wrap="true" rowspan="2" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol20-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol20-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip
          /* '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21_nebal,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21_nebal <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21_nebal,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip */
-			'<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
+            '<td text_wrap="true" num="0.00" val="' + fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>>>9.99",2) + '" style="text-align: right;">' + if bf_temp-rvs-line.pol21-kg <> ? then fnc-convert-dot-to-colon(bf_temp-rvs-line.pol21-kg,"->>>>>>>>>>>9.99",2) + '</td>' else "" + '</td>' skip 
             '<td text_wrap="true" style="text-align: right;"></td>' skip
             '</tr>' skip
             '<tr>' skip 
@@ -2152,7 +2152,7 @@ procedure add-chk :
     :
     for each buf_chk-gds
       where buf_chk-gds.doc-code = p-doc-code 
-/*      and buf_chk-gds.loc1 = p-loc1*/
+      and buf_chk-gds.pl-code = p-pl-code
       no-lock,
       first buf_bar-code
       where buf_bar-code.b-code = buf_chk-gds.b-code
@@ -2161,14 +2161,15 @@ procedure add-chk :
       :
       find first temp-line-pump WHERE temp-line-pump.gds-code = buf_bar-code.gds-code
         and temp-line-pump.pump-code = buf_chk-gds.pump and
-        temp-line-pump.nozzle-code  = buf_chk-gds.nozzle-code
+        temp-line-pump.nozzle-code  = buf_chk-gds.nozzle-code and
+        temp-line-pump.pl-code = buf_chk-gds.pl-code
         no-error .
       if not available (temp-line-pump) then 
       do:
         create temp-line-pump.
         assign
           temp-line-pump.gds-code    = buf_bar-code.gds-code
-          temp-line-pump.pl-code     = p-pl-code
+          temp-line-pump.pl-code     = buf_chk-gds.pl-code
           temp-line-pump.loc1        = buf_chk-gds.loc1
           temp-line-pump.pump-code   = buf_chk-gds.pump
           temp-line-pump.nozzle-code = buf_chk-gds.nozzle-code
