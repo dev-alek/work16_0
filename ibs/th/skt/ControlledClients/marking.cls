@@ -340,8 +340,12 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         FIND FIRST buf_marking EXCLUSIVE-LOCK WHERE buf_marking.mark BEGINS mark-short NO-WAIT NO-ERROR.
         IF action = cashSts:SaleLock:NameProp THEN 
         DO:
-           mCheckGisMT = 0.
+           assign
+              mCheckGisMT = 0
+              mTypeMark = ""
+              .
            ChekTypeMarkByDm(mark).
+           
            /* если на кассе уже была проверка онлайн/офлайн */ 
            if statusPOS <> ? then do:
                dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ была на кассе. Статус: &1 Проверка в ЛМЧЗ &2", 
@@ -373,7 +377,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                    /* проверка офлайн на кассе пройдена */
                    IF AVAIL buf_marking AND buf_marking.online-result = 0 
                    THEN DO:
-                       vAccMarkCheck = "Выполнить текущую онлайн-проверку не удалось. Продажа заблокирована по результату ранее выполненной проверки. Снимите с продажи и передайте товар управляющему/старшему смены".
+                       vAccMarkCheck = "Выполнить текущую онлайн-проверку не удалось. Продажа заблокирована по результату ранее выполненной проверки.".
                        vLC = getJson(0, vAccMarkCheck, mark).
                        sendContent(vLC).
                        RETURN.
@@ -2706,7 +2710,15 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
             
       /* Перевычисляем тип, потому что может быть вызов извне - проверка ТОЛЬКО по сроку годности! */             
       IF AVAILABLE buf_marking THEN
+      DO:
+         mTypeMark = "".
          ChekTypeMarkByDm(buf_marking.mark) .
+      END.   
+            
+      dbgPrint("marking.log", SUBSTITUTE("Проверка срока годности для типа марки &1 марка &2",
+                                         mTypeMark,
+                                         (IF AVAILABLE buf_marking then buf_marking.mark else mark))). 
+                                                  
       if mTypeMark = ""
       then do :
          ASSIGN
@@ -2720,9 +2732,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                    p-obj-code,
                                    {&attr-marking_checkDate},
                                    mTypeMark).
-       dbgPrint("marking.log", SUBSTITUTE("Проверка срока годности для типа марки &1 vCheckDate &2",
-                                               mTypeMark,
-                                               vCheckDate)).                              
+      dbgPrint("marking.log", SUBSTITUTE("Требуется ли проверять срок годности &1", vCheckDate)).                              
       /* если по данному типу марки включена настройка проверять срок годности */                              
       IF vCheckDate THEN DO:
          /* могли еще не считывать настройки подключения к ГИС МТ (когда была проверка в ТС ПИоТ) */            
