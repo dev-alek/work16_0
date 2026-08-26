@@ -62,6 +62,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
   define property calories      as decimal      no-undo get. private set.
   define property vad-gds       as integer      no-undo get. private set.
   define property pay-flag      as integer      no-undo get. private set.
+  define property is18plus      as integer      no-undo get. private set.
   define property method-flag   as character    no-undo get. private set.
   define property code-AIS      as character    no-undo get. private set.
   define property production-use as integer      no-undo get. private set.
@@ -125,6 +126,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
       when "code-ais"      then code-AIS      = {&attr-str} .
       when "vad-gds"       then vad-gds       = {&attr-integer} .
       when "pay-flag"      then pay-flag      = {&attr-integer} .
+      when "is18plus"      then is18plus      = {&attr-integer} .
       when "method-flag"   then method-flag   = {&attr-str} .
       when "production-use" then production-use = {&attr-integer} .
       when "weighed-product" then weighed-product = {&attr-integer} .
@@ -226,6 +228,7 @@ class ibs.th.bge.1crn.subjects.goods inherits ibs.th.bge.1crn.subjects.asubject:
         CommodityCode = ?
         vad-gds       = ?
         pay-flag      = ?
+        is18plus      = ?
         method-flag   = ?
         code-AIS      = ?
         production-use = ?

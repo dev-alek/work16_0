@@ -261,6 +261,17 @@ end.
                                             input string(if cash-gds.is-gas then 1 else 0), input 1 ).
     run bgelib-tag-put in this-procedure ( input 4, input "ISFuelAsUnit" ,
                                             input string(if cash-gds.ptrl-as-good then 1 else 0), input 1 ).
+
+/*IS18*/
+  find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code 
+         and buf_goods-attr.attr-code = "is18plus" 
+         and buf_goods-attr.attr-value = "1"
+         no-lock no-error. 
+  if available buf_goods-attr then do:   
+      run bgelib-tag-put in this-procedure ( input 4, input "is18plus", input 1, input 1 ). 
+  end.
+
+
 /*Алкоголь*/
 
   find first buf_goods-attr where buf_goods-attr.gds-code = cash-gds.gds-code and buf_goods-attr.attr-code = "alcohol-prod" no-lock no-error. 
