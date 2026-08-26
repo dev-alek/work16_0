@@ -721,6 +721,8 @@ Action-role-item
           define variable mImp2CdH as handle no-undo.
           run str/imp2cdgeth.p(output mImp2CdH).
           run fill-setting in mImp2CdH ({&TABLE_THBJ-ATTR},
+                                     {&shop},
+                                     v-obj-code, 
                                      thbjattr_thbj-attr.upper-prop-code,
                                      thbjattr_thbj-attr.prop-code).
         end.

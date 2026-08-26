@@ -46,6 +46,7 @@ procedure send-to-cash:
     or can-find(first ext-classif-list no-lock)
     or can-find(first c-ext-classif-list no-lock)
     or can-find(first PromoAction-list no-lock)
+    or can-find(first thbjattr-list no-lock)
     or sendEMRC
     or settingUpd
     or sendMarkType
@@ -67,10 +68,34 @@ procedure send-to-cash:
 end procedure.
 
 procedure fill-setting :
-   define input parameter i-obj    as character no-undo .
-   define input parameter i-parent as character no-undo .
-   define input parameter i-code   as character no-undo .
+   define input parameter i-obj      as character no-undo .
+   define input parameter i-obj-type as character no-undo .
+   define input parameter i-obj-code as integer   no-undo .
+   define input parameter i-parent   as character no-undo .
+   define input parameter i-code     as character no-undo .
    settingUpd = yes.
+   if i-obj = "thbj-attr" and 
+      (i-parent = {&attr-gisMT} or i-parent = {&attr-marking}) 
+   then do:
+      sendGisMt = yes.
+      if not can-find(first thbjattr-list where 
+                            thbjattr-list.obj-type = i-obj-type
+                        and thbjattr-list.obj-code = i-obj-code
+                        and thbjattr-list.upper-prop-code = i-parent
+                        and thbjattr-list.prop-code = i-code)
+      then do:
+          create thbjattr-list.
+          assign
+             thbjattr-list.obj-type = i-obj-type
+             thbjattr-list.obj-code = i-obj-code
+             thbjattr-list.upper-prop-code = i-parent
+             thbjattr-list.prop-code = i-code
+             .
+      end.                      
+   end.   
+   
+   /*run utl/dbgprint.p (substitute("imp2cd.i fill-setting i-obj &1 i-obj-type &2 i-obj-code &3 i-parent &4 i-code &5 sendGisMt &6", 
+                                  i-obj, i-obj-type, i-obj-code, i-parent, i-code, sendGisMt)).  */                             
 end procedure.
 
 procedure fill-code :

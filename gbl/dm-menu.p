@@ -4838,6 +4838,20 @@ procedure m-cash-marktype-exe :
   ) no-error.
 
 end procedure. /* m-cash-marktype-exe */
+
+procedure m-cash-gismt-exe :
+
+ run str/diallog.w (
+        input parparentproc
+      , input this-procedure
+      , input "str/sendgismt.p":U
+      , input ( v-cntxt-obj-type + {&delim-par} + string(v-cntxt-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'gismt':U + {&delim-par} + 'Передача настроек для проверки КМ':U)
+      , input ? /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка настроек для проверки КМ")
+  ) no-error.
+
+end procedure. /* m-cash-marktype-exe */
  { utl/cashparamHash.i }
 procedure m-cash-param-exe :
    define variable v-current-db-num as integer   no-undo .

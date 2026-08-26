@@ -69,6 +69,7 @@ define variable vss-description as character no-undo init "Редактирование секции
 { gbl/thbjattr.i }
 { gbl/color.i        }
 { gbl/objsrv.i }
+{ str/def-thbjattr-list.i "new shared" }  
 define variable Types as ibs.th.str.marking.Types no-undo.
 Types = ObjSrv:Env:Marking:Types.
    
@@ -1082,6 +1083,9 @@ ASSIGN FRAME {&FRAME-NAME}
   S-type-checkOwner = "".
   S-type-checkStatusKM = "".
   S-type-checkTracking = "".
+  for each thbjattr-list :
+      delete thbjattr-list.
+  end.    
   for each type-marking:
 /*    if type-marking.mark = true then S-type-mark = S-type-mark + "," + type-marking.mark-orig .*/
     if type-marking.edo = true then S-type-EDO = S-type-edo + "," + type-marking.mark-orig .
@@ -1132,17 +1136,59 @@ ASSIGN FRAME {&FRAME-NAME}
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_rus-key} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
   IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-logical = t-rus-key.  
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkBlock} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkBlock,",").  
+  IF AVAILABLE temp-thbj-attr THEN DO:
+     IF temp-thbj-attr.property-value-character <> trim(S-type-checkBlock,",")
+     THEN DO:
+         create thbjattr-list.
+         buffer-copy temp-thbj-attr to thbjattr-list.           
+     END.
+     temp-thbj-attr.property-value-character = trim(S-type-checkBlock,",").
+  END.     
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkDate} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkDate,",").  
+  IF AVAILABLE temp-thbj-attr THEN DO:
+     IF temp-thbj-attr.property-value-character <> trim(S-type-checkDate,",")
+     THEN DO:
+         create thbjattr-list.
+         buffer-copy temp-thbj-attr to thbjattr-list.           
+     END. 
+     temp-thbj-attr.property-value-character = trim(S-type-checkDate,",").
+  END.     
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkMRC} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkMRC,",").  
-  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkOwner} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkOwner,",").  
+  IF AVAILABLE temp-thbj-attr THEN DO:
+     IF temp-thbj-attr.property-value-character <> trim(S-type-checkMRC,",")
+     THEN DO:
+         create thbjattr-list.
+         buffer-copy temp-thbj-attr to thbjattr-list.           
+     END. 
+     temp-thbj-attr.property-value-character = trim(S-type-checkMRC,",").
+  END.     
+  find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkOwner} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.  
+  IF AVAILABLE temp-thbj-attr THEN DO:
+     IF temp-thbj-attr.property-value-character <> trim(S-type-checkOwner,",")
+     THEN DO:
+         create thbjattr-list.
+         buffer-copy temp-thbj-attr to thbjattr-list.           
+     END.  
+     temp-thbj-attr.property-value-character = trim(S-type-checkOwner,",").
+  END.     
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkStatusKM} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkStatusKM,",").
+  IF AVAILABLE temp-thbj-attr THEN DO:
+     IF temp-thbj-attr.property-value-character <> trim(S-type-checkStatusKM,",")
+     THEN DO:
+         create thbjattr-list.
+         buffer-copy temp-thbj-attr to thbjattr-list.           
+     END.
+     temp-thbj-attr.property-value-character = trim(S-type-checkStatusKM,",").
+  END.   
   find first temp-thbj-attr where temp-thbj-attr.prop-code = {&attr-marking_checkTracking} and temp-thbj-attr.obj-code = p-obj-code and temp-thbj-attr.obj-type = p-obj-type.
-  IF AVAILABLE temp-thbj-attr THEN temp-thbj-attr.property-value-character = trim(S-type-checkTracking,",").  
+  IF AVAILABLE temp-thbj-attr THEN DO:
+     IF temp-thbj-attr.property-value-character <> trim(S-type-checkTracking,",")
+     THEN DO:
+         create thbjattr-list.
+         buffer-copy temp-thbj-attr to thbjattr-list.           
+     END. 
+     temp-thbj-attr.property-value-character = trim(S-type-checkTracking,",").
+  END.     
 
   do transaction:
     RUN thbjattr_set-section IN THIS-PROCEDURE (
@@ -1157,6 +1203,16 @@ ASSIGN FRAME {&FRAME-NAME}
         view-as alert-box.
       undo, return error.
     end.
+    if can-find(first thbjattr-list) then 
+        run str/diallog.w (
+            input parparentproc
+          , input this-procedure
+          , input "str/send-all.p":U
+          , input ( p-obj-type + {&delim-par} + string(p-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'gismt':U + {&delim-par} + 'Передача параметров работы с ТСПИоТ':U)
+          , input ? /*p-auto-go*/
+          , input "":U
+          , input substitute("Отсылка параметров работы с ТСПИоТ")
+          ) no-error.
   end.
 
 

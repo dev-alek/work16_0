@@ -371,9 +371,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                      
                   if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" 
                   then vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
-                  else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
-                  
-                  
+                  else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.                                    
               END.
               
            END.                 

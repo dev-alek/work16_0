@@ -1442,7 +1442,7 @@ end.
       end.
       v-prop-code = "{&bef-attr-gisMT_waitTime}".
 &scop ptype decimal
-&scop prop-value 1.5
+&scop prop-value 4
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
@@ -1523,7 +1523,42 @@ end.
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
+      end.      
+      v-prop-code = "{&bef-attr-gisMT_MACC_Timeout}".
+&scop ptype decimal
+&scop prop-value 0
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
       end. 
+      v-prop-code = "{&bef-attr-gisMT_Resp_TH_required}".
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_LmCHzPort}".
+&scop ptype character
+&scop prop-value '5995'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_TH_IP}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end. 
+      v-prop-code = "{&bef-attr-gisMT_TH_Port}".
+&scop ptype character
+&scop prop-value '1500'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.  
     end.    
     when {&attr-marking} then do:
       v-prop-code = "{&bef-attr-marking_marking-EDO}".
