@@ -499,12 +499,12 @@ end.
   end.
  
 
-  if p-GdsObj:is18plus = 1
+  if p-GdsObj:IS18Plus = 1
   then do:
-    RUN gds-attr-write (v-nbc, {&attr-is18plus}, p-GdsObj:is18plus).
+    RUN gds-attr-write (v-nbc, {&attr-IS18Plus}, p-GdsObj:IS18Plus).
   end.  
   else do:
-    RUN gds-attr-delete (v-nbc, {&attr-is18plus}, output v-attr-del).
+    RUN gds-attr-delete (v-nbc, {&attr-IS18Plus}, output v-attr-del).
   end.  
 
  

@@ -471,7 +471,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 { cmp/cr-prep.i 1 attr-emrc-type       emrc-type     " " emrc-type     }
 
 /* Признак продажи is18+ */
-{ cmp/cr-prep.i 1 attr-is18plus           is18plus         " " is18plus    }
+{ cmp/cr-prep.i 1 attr-IS18Plus           IS18Plus         " " IS18Plus    }
 
 
 /* Признак предмета расчета */
@@ -625,7 +625,7 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define clntattr-
 ,{&bef-attr-office-type}~
 ,{&bef-attr-mark-type}~
 ,{&bef-attr-emrc-type}~
-,{&bef-attr-is18plus}~
+,{&bef-attr-IS18Plus}~
 ,{&bef-attr-item-matter-mark}~
 ,{&bef-attr-type-method-calc}~
 ,{&bef-attr-group-np}~

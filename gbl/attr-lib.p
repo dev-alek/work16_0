@@ -6751,17 +6751,17 @@ end procedure.
 
 
 /*Признак продажи 18+ */
-&scop type-attr-is18plus {&type-int}
-&scop format-attr-is18plus  ">9"
-&scop label-attr-is18plus   "Наличие возрастных ограничений"
-&scop tooltip-attr-is18plus "Наличие возрастных ограничений"
-&glob user-can-edit-attr-is18plus  true
-&glob output-display-attr-is18plus  true
-&glob other-attr-is18plus  ""
-&glob news-attr-is18plus true
-&glob copy-attr-is18plus  true
-&scop manual-edit-attr-is18plus 4
-&scop batch-edit-attr-is18plus  4
+&scop type-attr-IS18Plus {&type-int}
+&scop format-attr-IS18Plus  ">9"
+&scop label-attr-IS18Plus   "Наличие возрастных ограничений"
+&scop tooltip-attr-IS18Plus "Наличие возрастных ограничений"
+&glob user-can-edit-attr-IS18Plus  true
+&glob output-display-attr-IS18Plus  true
+&glob other-attr-IS18Plus  ""
+&glob news-attr-IS18Plus true
+&glob copy-attr-IS18Plus  true
+&scop manual-edit-attr-IS18Plus 4
+&scop batch-edit-attr-IS18Plus  4
 
 
 
@@ -6923,7 +6923,7 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-weighed-gds
       {&attr-temp-full-code}
-      &scop attr-code attr-is18plus
+      &scop attr-code attr-IS18Plus
       {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -7041,7 +7041,7 @@ do
       {&attr-temp-code}
       &scop attr-code attr-weighed-gds
       {&attr-temp-code}
-      &scop attr-code attr-is18plus
+      &scop attr-code attr-IS18Plus
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -7409,7 +7409,7 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-weighed-gds
       {&attr-news-code}
-      &scop attr-code attr-is18plus
+      &scop attr-code attr-IS18Plus
       {&attr-news-code}
       
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -7521,7 +7521,7 @@ procedure gds-attr-copy :
       {&attr-copy-code}
       &scop attr-code attr-weighed-gds
       {&attr-copy-code}
-      &scop attr-code attr-is18plus      
+      &scop attr-code attr-IS18Plus      
       {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -8289,7 +8289,7 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-weighed-gds
       {&attr-manual-edit-code}
-      &scop attr-code attr-is18plus          
+      &scop attr-code attr-IS18Plus          
       {&attr-manual-edit-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
