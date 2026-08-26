@@ -21,7 +21,7 @@ define variable vss-workfile    as character no-undo init "$Workfile:$":U .
 define variable vss-archive     as character no-undo init "$Archive:$":U .
 define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
-{ utl/runpro.i}
+/*{ utl/runpro.i}*/
 
 define variable vfileLog as character no-undo init "Log_THIPImp.log".
 define variable mFileName as character no-undo init "THIPImp.xslx".
