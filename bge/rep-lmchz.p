@@ -398,6 +398,7 @@ procedure GetArchFromKassa:
            run GetArchFromOneKassa (entry(1, for-cash-desk.addr-path, {&delim-par}) 
                                     + '://' + entry(1,entry(2, for-cash-desk.addr-path, {&delim-par}),":"),
                                     substitute("&1&3&2",vFolder,for-cash-desk.cash-num,vDirDelim),
+                                    for-cash-desk.cash-num,
                                     output vOneImpSts ).
            if vOneImpSts then
            run write-log-and-file in p-log-handle ( input 1                              
@@ -417,8 +418,9 @@ end procedure.
 
 /* получение данных с одной кассы */    
 procedure GetArchFromOneKassa:
-    define input param iAddrPath as char no-undo.
-    define input param iCashFolder  as char no-undo.
+    define input param iAddrPath   as char no-undo.
+    define input param iCashFolder as char no-undo.
+    define input param iCashNum    as char no-undo.
     define output param oOneImpSts as logical no-undo.
     
     define buffer buf_code for code.
@@ -445,10 +447,11 @@ procedure GetArchFromOneKassa:
     
     /* ищем временную метку */
     FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
-                          AND buf_code.code   EQ "ArchDate"
+                          AND buf_code.code   EQ substitute("ArchDate:&1",iCashNum)
          NO-LOCK NO-ERROR.
     if avail buf_code then 
        vTimeStart = int64(buf_code.CodeValue) no-error.
+    else vTimeStart = 0.   
     if vTimeStart = ? then vTimeStart = 0.
     
     vConnectTime = 30.
@@ -540,21 +543,59 @@ procedure GetArchFromOneKassa:
                copy-lob from file(vFileReqPath) to file(vFileArh) no-error.   
                if error-status:error then do:
                    return error "Ошибка записи файла в папку архивов".
-               end.         
-               find first buf_code exclusive-lock where 
-                          buf_code.parent eq "GisMt"
-                      and buf_code.code   eq "ArchDate"
-                 no-wait no-error.
-               if avail buf_code then 
-                  buf_code.CodeValue = ttfiles-inf.timestamp no-error.
-                  run DelTmpFiles (substitute("&2&1&3",
-                                              {&delim-par},vFileReqErrPath,vFileReqPath)).                                    
+               end.                        
+               /* Сохраняем время */
+               run SaveArchDate (iCashNum, ttfiles-inf.timestamp).
+               /* удаляем временные файлы */                 
+               run DelTmpFiles (substitute("&2&1&3",
+                                           {&delim-par},vFileReqErrPath,vFileReqPath)).                                    
             end.    
        end.            
     END. 
+    /* удаляем временные файлы */
     run DelTmpFiles (substitute("&2&1&3",
                                 {&delim-par},vFileResult,vFileResultErr)).                 
-end procedure.    
+end procedure.  
+
+/* сохранение времени последней загрузки */
+procedure SaveArchDate.
+    define input parameter iCashNum   as character no-undo.
+    define input parameter iTimeStamp as character no-undo.
+    
+    def buffer buf_code for ub.code.
+    
+    do transaction:
+       find first buf_code exclusive-lock where 
+                  buf_code.parent eq "GisMt"
+              and buf_code.code   eq substitute("ArchDate:&1",iCashNum)
+         no-wait no-error.
+       if avail buf_code then 
+          buf_code.CodeValue = ttfiles-inf.timestamp no-error.
+       else if not ambiguous buf_code then do:
+          /* создаем верхний уровень, если его нет */
+          FIND FIRST buf_code WHERE buf_code.parent EQ ""
+                                AND buf_code.code   EQ "GisMt"
+          NO-LOCK NO-ERROR.
+          IF NOT AVAILABLE buf_code THEN DO:
+            CREATE buf_code.
+            ASSIGN
+               buf_code.parent = ""
+               buf_code.code = "GisMt"
+               buf_code.codename = "Онлайн проверка КМ"
+               .
+            RELEASE buf_code NO-ERROR.   
+          END.
+          create buf_code.
+          assign
+             buf_code.parent = "GisMt"
+             buf_code.code = substitute("ArchDate:&1",iCashNum)
+             buf_code.codename = substitute("Время последнего загруженного архива с кассы № &1 (unixtime)", iCashNum)
+             buf_code.CodeValue = ttfiles-inf.timestamp
+          .
+          release buf_code no-error.
+       end.      
+    end.    
+end procedure.  
 
 /* Удаление временных файлов */
 procedure DelTmpFiles.
