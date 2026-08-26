@@ -156,12 +156,12 @@ X_marking-line.mark-parent X_marking-line.mark X_marking-line.unit X_marking-lin
     ~{&OPEN-QUERY-br-mark}
     
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark RECT-1 b-hist b-sostav v-mark-2 ~
-f-last-change f-status emission_Date Btn_dateOther expire_Date online-check ~
+&Scoped-Define ENABLED-OBJECTS b-exit B-1 v-mark b-hist b-sostav v-mark-2 ~
+f-last-change f-status emission_Date Btn_dateOther expire_Date ~
 f-online-result Btn_rn br-mark Btn_pn 
 &Scoped-Define DISPLAYED-OBJECTS v-mark f-GTIN v-mark-2 f-last-change ~
 f-status f-gds-name f-gds-code mrc f-obj-code f-obj-type f-weight ~
-produced_Date emission_Date expire_Date online-check f-online-result f-rn ~
+produced_Date emission_Date expire_Date f-online-result f-rn ~
 f-unit f-unit-2 f-loc-key f-pn 
 
 /* Custom List Definitions                                              */
@@ -352,10 +352,6 @@ DEFINE VARIABLE online-check AS LOGICAL INITIAL no
      VIEW-AS TOGGLE-BOX
     SIZE 5 BY .81 NO-UNDO.
 
-DEFINE RECTANGLE RECT-1
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 26 BY 2.14.
-
 
 { gbl/objsrv.i }
 def var Marking as class mark no-undo .
@@ -423,11 +419,6 @@ DEFINE FRAME d-mark
           SIZE 36 BY .63 AT ROW 10.25 COL 35 WIDGET-ID 288
      "Статус:" VIEW-AS TEXT
           SIZE 8 BY .63 AT ROW 3.75 COL 4.38 WIDGET-ID 272
-     "Игнорировать результат" VIEW-AS TEXT
-          SIZE 22 BY .71 AT ROW 9.29 COL 4.75 WIDGET-ID 276
-     "online-проверки:" VIEW-AS TEXT
-          SIZE 17 BY .71 AT ROW 10 COL 4.75 WIDGET-ID 284
-     RECT-1 AT ROW 8.92 COL 3.75 WIDGET-ID 286
      SPACE(83.24) SKIP(15.44)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
@@ -918,9 +909,10 @@ PROCEDURE enable_mark :
     f-weight
     produced_Date
     emission_Date
-    online-check
     expire_Date
     with frame {&frame-name} .
+  
+  hide online-check in frame {&frame-name} .
   
   if expire_DateOther <> "" and expire_DateOther <> ? then enable Btn_dateOther with frame {&frame-name} .
   else disable Btn_dateOther with frame {&frame-name} .
@@ -929,7 +921,7 @@ PROCEDURE enable_mark :
     if canEditStatus then
       enable f-status with frame {&frame-name} .
     if canEditOnlineCheck then
-      enable online-check f-online-result with frame {&frame-name} .
+      enable f-online-result with frame {&frame-name} .
   end.
   else do:
     hide f-status f-online-result in frame {&frame-name} .
@@ -1139,10 +1131,10 @@ PROCEDURE init-temp :
                                               and buf_marking-attr.mark = buf_marking.mark:
             produced_Date = buf_marking-attr.attr-value .                                              
          end.                                       
-         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"
-                                              and buf_marking-attr.mark = buf_marking.mark:
-            online-check = logical(buf_marking-attr.attr-value).                                              
-         end.   
+/*         for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "notOnlineCheck"*/
+/*                                              and buf_marking-attr.mark = buf_marking.mark:    */
+/*            online-check = logical(buf_marking-attr.attr-value).                               */
+/*         end.                                                                                  */
          for first buf_marking-attr no-lock where buf_marking-attr.attr-code = "weight"
                                               and buf_marking-attr.mark = buf_marking.mark:
             f-weight = if decimal(buf_marking-attr.attr-value) < 1 and  decimal(buf_marking-attr.attr-value) >= 0 

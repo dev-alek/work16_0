@@ -2632,7 +2632,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
    Purpose:
    Notes:  Проверка срока годности  
   ------------------------------------------------------------------------------*/
-  METHOD PRIVATE CHARACTER ChekExpirationDate (       
+  METHOD PUBLIC CHARACTER ChekExpirationDate (       
       p-obj-type  AS CHARACTER, 
       p-obj-code  AS INTEGER,
       buffer buf_marking for ub.marking):
