@@ -12,37 +12,36 @@ function ThbjattrCr return logical
      input p-prop-type as character):
      
     define variable vOk as logical no-undo.    
-    define buffer thbj-attr for ub.thbj-attr.         
+    define buffer buf_thbj-attr for ub.thbj-attr.
+    
     vOk = true.
-    do trans:          
-        for each x_thbj-attr:
-            find first thbj-attr where thbj-attr.upper-prop-code eq {&attr-gisMT}
-                                 and thbj-attr.obj-type        eq x_thbj-attr.obj-type
-                                 and thbj-attr.obj-code        eq x_thbj-attr.obj-code
-                                 and thbj-attr.prop-code       eq p-prop-code                          
-            exclusive-lock no-wait no-error.
-            if not available thbj-attr and
-               not locked thbj-attr 
-            then do:
-               create thbj-attr.
-               assign
-                  thbj-attr.obj-type = x_thbj-attr.obj-type
-                  thbj-attr.obj-code  = x_thbj-attr.obj-code
-                  thbj-attr.upper-prop-code = {&attr-gisMT}
-                  thbj-attr.prop-code = p-prop-code 
-                  thbj-attr.prop-value-type = p-prop-type
-                  . 
-               case p-prop-type:
-                   when "character"
-                      then thbj-attr.property-value-character = p-prop-val.
-                   when "decimal"
-                      then  thbj-attr.property-value-decimal = decimal(p-prop-val).
-                   when "logical"     
-                      then  thbj-attr.property-value-logical = logical(p-prop-val).
-               end.   
-            end.
-           /* else if locked thbj-attr then vOk = false.*/
-        end.
+
+    for each x_thbj-attr:        
+        if not can-find( first buf_thbj-attr no-lock where 
+                               buf_thbj-attr.upper-prop-code eq {&attr-gisMT}
+                           and buf_thbj-attr.obj-type        eq x_thbj-attr.obj-type
+                           and buf_thbj-attr.obj-code        eq x_thbj-attr.obj-code
+                           and buf_thbj-attr.prop-code       eq p-prop-code                          
+                       )        
+        then do:                                    
+           create buf_thbj-attr.
+           assign
+              buf_thbj-attr.obj-type = x_thbj-attr.obj-type
+              buf_thbj-attr.obj-code  = x_thbj-attr.obj-code
+              buf_thbj-attr.upper-prop-code = {&attr-gisMT}
+              buf_thbj-attr.prop-code = p-prop-code 
+              buf_thbj-attr.prop-value-type = p-prop-type
+              no-error.
+           if avail buf_thbj-attr then     
+           case p-prop-type:
+               when "character"
+                  then buf_thbj-attr.property-value-character = p-prop-val.
+               when "decimal"
+                  then  buf_thbj-attr.property-value-decimal = decimal(p-prop-val).
+               when "logical"     
+                  then  buf_thbj-attr.property-value-logical = logical(p-prop-val).
+           end.                                 
+        end.           
     end.
     return vOk.
 end.
@@ -51,17 +50,16 @@ PROCEDURE ObjCodeList:
    define buffer buf_thbj-attr for ub.thbj-attr.
    for each buf_thbj-attr no-lock where                           
             buf_thbj-attr.upper-prop-code = {&attr-gisMT}
-        and buf_thbj-attr.prop-code       = '' :
+        and buf_thbj-attr.prop-code       = '' :       
       if buf_thbj-attr.obj-type = {&db} or 
-         (buf_thbj-attr.obj-type = "" and x_thbj-attr.obj-code = 0)
+         (buf_thbj-attr.obj-type = "" and buf_thbj-attr.obj-code = 0)
       then do:         
           find first x_thbj-attr where
               x_thbj-attr.obj-type = buf_thbj-attr.obj-type and
-              x_thbj-attr.obj-code = buf_thbj-attr.obj-code no-error .
-    
+              x_thbj-attr.obj-code = buf_thbj-attr.obj-code no-error .   
           if not available x_thbj-attr then do:
             create  x_thbj-attr.
-            buffer-copy buf_thbj-attr to X_thbj-attr.        
+            buffer-copy buf_thbj-attr to X_thbj-attr.                    
           end.    
       end.
    end.          
