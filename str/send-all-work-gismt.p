@@ -22,11 +22,13 @@ define variable vss-description as character no-undo init "Передача настроек для
 
 { cmp/str-glbl.i }
 &Scoped-define source "1"
-define variable mdb-num   as integer   no-undo.
-define variable mObjType  as character no-undo.
-define variable mObjCode  as integer   no-undo.
-define variable mPostType as character no-undo.
-define variable mCashNum  as integer   no-undo.
+define variable mdb-num     as integer   no-undo.
+define variable mObjType    as character no-undo.
+define variable mObjCode    as integer   no-undo.
+define variable mPostType   as character no-undo.
+define variable mCashNum    as integer   no-undo.
+define variable mDeviceKind as integer   no-undo. /* код типа кассы */
+define variable mSend       as logical   no-undo. /* есть ли что посылать */
 
 { gbl/cd-attr.i}
 { str/def-thbjattr-list.i "shared" }  
@@ -99,6 +101,7 @@ procedure putc :
       vTH_Port = ""
       vLmCHzPort = ""
       vMaxApiToken = ""
+      mSend = no.
    .    
    { gbl/regcode.i {&db} mdb-num v-reg-code }
    
@@ -124,20 +127,6 @@ procedure putc :
                          and buf_thbj-attr.upper-prop-code = thbjattr-list.upper-prop-code
                          and buf_thbj-attr.prop-code = thbjattr-list.prop-code)  
           then next thlist.  
-     /*if thbjattr-list.upper-prop-code = {&attr-gisMT}
-     or thbjattr-list.upper-prop-code = {&attr-marking}
-     then do:
-         /* пропускаем изменение глобальных параметров, если есть параметр по секции */
-         if thbjattr-list.obj-code = 0 and mdb-num <> 0 then do:
-             find first buf_thbj-attr no-lock where  
-                        buf_thbj-attr.obj-type = (if thbjattr-list.upper-prop-code = {&attr-gisMT} then {&db} else mObjType)
-                    and buf_thbj-attr.obj-code = (if thbjattr-list.upper-prop-code = {&attr-gisMT} then mdb-num else mObjCode)
-                    and buf_thbj-attr.upper-prop-code = thbjattr-list.upper-prop-code
-                    and buf_thbj-attr.prop-code = thbjattr-list.prop-code
-               no-error.
-             if available buf_thbj-attr then next thlist.
-         end.
-     end.  */
      find first buf_thbj-attr no-lock where  
                buf_thbj-attr.obj-type = thbjattr-list.obj-type
            and buf_thbj-attr.obj-code = thbjattr-list.obj-code
@@ -148,71 +137,71 @@ procedure putc :
 
      case buf_thbj-attr.prop-code:              
         when {&attr-marking_checkBlock} then do:        
-           run put-xml-data(iSAXWriter,"checkBlock",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки блокировок контролирующих органов").      
+           run put-xml-data(iSAXWriter,"GS1","checkBlock",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки блокировок контролирующих органов").      
         end.
         when {&attr-marking_checkDate} then do:                                                  
-           run put-xml-data(iSAXWriter,"checkDate",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки срока годности").      
+           run put-xml-data(iSAXWriter,"GS1","checkDate",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки срока годности").      
         end.
         when {&attr-marking_checkMRC} then do:           
-           run put-xml-data(iSAXWriter,"checkMRC",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки МРЦ").      
+           run put-xml-data(iSAXWriter,"GS1","checkMRC",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки МРЦ").      
         end.
         when {&attr-marking_checkOwner} then do:      
-           run put-xml-data(iSAXWriter,"checkOwner",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки владельца").
+           run put-xml-data(iSAXWriter,"GS1","checkOwner",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки владельца").
         end.
         when {&attr-marking_checkStatusKM} then do:      
-           run put-xml-data(iSAXWriter,"checkStatusKM",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки статуса КМ").        
+           run put-xml-data(iSAXWriter,"GS1","checkStatusKM",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки статуса КМ").        
         end.
         when {&attr-marking_checkTracking} then do:       
-           run put-xml-data(iSAXWriter,"checkTracking",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки флага прослеживаемости").  
+           run put-xml-data(iSAXWriter,"GS1","checkTracking",get-list-code-typemark(buf_thbj-attr.property-value-character),"Типы маркированной продукции для проверки флага прослеживаемости").  
         end.
         when {&attr-gisMT_maxTime} then do:           
-           run put-xml-data(iSAXWriter,"Max_allowed_time",string(buf_thbj-attr.property-value-integer),"Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)"). 
+           run put-xml-data(iSAXWriter,"GS1","Max_allowed_time",string(buf_thbj-attr.property-value-integer),"Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)"). 
         end.
         when {&attr-gisMT_timeFalStart} then do:           
-           run put-xml-data(iSAXWriter,"Failure_time",string(buf_thbj-attr.property-value-integer),"Время с момента сбоя до начала уведомления персонала (часы)"). 
+           run put-xml-data(iSAXWriter,"GS1","Failure_time",string(buf_thbj-attr.property-value-integer),"Время с момента сбоя до начала уведомления персонала (часы)"). 
         end.
         when {&attr-gisMT_crashSituat} then do:           
-           run put-xml-data(iSAXWriter,"emergencyMode",(if buf_thbj-attr.property-value-logical then "1" else "0"),"Признак аварийной ситуации в ГИС МТ").     
+           run put-xml-data(iSAXWriter,"GS1","emergencyMode",(if buf_thbj-attr.property-value-logical then "1" else "0"),"Признак аварийной ситуации в ГИС МТ").     
         end.
         when {&attr-gisMT_banDate} then do:           
-           run put-xml-data(iSAXWriter,"Before_Expiration",string(buf_thbj-attr.property-value-integer),"Опережение срабатывания запрета по сроку годности в минутах"). 
+           run put-xml-data(iSAXWriter,"GS1","Before_Expiration",string(buf_thbj-attr.property-value-integer),"Опережение срабатывания запрета по сроку годности в минутах"). 
         end.             
         when {&attr-gisMT_adressPort} then do:            
-            run put-xml-data(iSAXWriter,"Proxy_IP",buf_thbj-attr.property-value-character,"Адрес и порт прокси"). 
+            run put-xml-data(iSAXWriter,"GS1","Proxy_IP",buf_thbj-attr.property-value-character,"Адрес и порт прокси"). 
         end.
         when {&attr-gisMT_proxyLogin} then do:            
-           run put-xml-data(iSAXWriter,"Proxy_Login",buf_thbj-attr.property-value-character,"Логин для подключения к прокси-серверу"). 
+           run put-xml-data(iSAXWriter,"GS1","Proxy_Login",buf_thbj-attr.property-value-character,"Логин для подключения к прокси-серверу"). 
         end.
         when {&attr-gisMT_proxyPswd} then do:            
-            run put-xml-data(iSAXWriter,"Proxy_Pass",buf_thbj-attr.property-value-character,"Пароль для подключения к прокси-серверу"). 
+            run put-xml-data(iSAXWriter,"GS1","Proxy_Pass",buf_thbj-attr.property-value-character,"Пароль для подключения к прокси-серверу"). 
         end.                                 
         when {&attr-gisMT_waitTime} then do:            
-            run put-xml-data(iSAXWriter,"MACC_TimeoutGISMT",string(buf_thbj-attr.property-value-decimal),"Длительность ожидания ответа ТС ПИоТ"). 
+            run put-xml-data(iSAXWriter,"GS1","MACC_TimeoutGISMT",string(buf_thbj-attr.property-value-decimal),"Длительность ожидания ответа ТС ПИоТ"). 
         end.
         when {&attr-gisMT_MACC_Timeout} then do:                                     
            if buf_thbj-attr.property-value-decimal <> 0 then 
-              run put-xml-data(iSAXWriter,"MACC_Timeout",string(buf_thbj-attr.property-value-decimal),"Длительность ожидания ответа ТН"). 
+              run put-xml-data(iSAXWriter,"GS1","MACC_Timeout",string(buf_thbj-attr.property-value-decimal),"Длительность ожидания ответа ТН"). 
         end.
         when {&attr-gisMT_OflineLogin} then do:            
-            run put-xml-data(iSAXWriter,"LmCHzLogin",buf_thbj-attr.property-value-character,"Логин для доступа ЛМ ЧЗ"). 
+            run put-xml-data(iSAXWriter,"GS1","LmCHzLogin",buf_thbj-attr.property-value-character,"Логин для доступа ЛМ ЧЗ"). 
          END.
         when {&attr-gisMT_OflinePswd} then do:            
-            run put-xml-data(iSAXWriter,"LmCHzPass",buf_thbj-attr.property-value-character,"Пароль для доступа ЛМ ЧЗ"). 
+            run put-xml-data(iSAXWriter,"GS1","LmCHzPass",buf_thbj-attr.property-value-character,"Пароль для доступа ЛМ ЧЗ"). 
         end.        
         when {&attr-gisMT_Resp_TH_required} then do:            
-            run put-xml-data(iSAXWriter,"Resp_TH_required",string(buf_thbj-attr.property-value-integer),"Обязательность получения результатов проверки КМ в ТН"). 
+            run put-xml-data(iSAXWriter,"GS1","Resp_TH_required",string(buf_thbj-attr.property-value-integer),"Обязательность получения результатов проверки КМ в ТН"). 
         end.
         when {&attr-gisMT_TH_IP} then vTH_IP = buf_thbj-attr.property-value-character.                
         when {&attr-gisMT_TH_Port} then vTH_Port = buf_thbj-attr.property-value-character.
         when {&attr-gisMT_LmCHzPort} then vLmCHzPort = buf_thbj-attr.property-value-character.
         when {&attr-gisMT_AddTimeoutPIoT} then do:
-             run put-xml-data(iSAXWriter,"MACC_additionalTimeoutPIoT",string(buf_thbj-attr.property-value-decimal),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").
+             run put-xml-data(iSAXWriter,"GS1","MACC_additionalTimeoutPIoT",string(buf_thbj-attr.property-value-decimal),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").
         end.    
         when {&attr-gisMT_MaxApiToken} then do:                     
-           run put-xml-data(iSAXWriter,"MaxApiToken",buf_thbj-attr.property-value-character,"Токен авторизации MAX").                      
+           run put-xml-data(iSAXWriter,"GS1","MaxApiToken",buf_thbj-attr.property-value-character,"Токен авторизации MAX").                      
         end.
-        when {&attr-gisMT_AgeConfirm} then do:
-            run put-xml-data-ui(iSAXWriter,"NeedUserSimpleAgeConfirm",buf_thbj-attr.property-value-integer,"Проверка возраста при продаже НП").            
+        when {&attr-gisMT_AgeConfirm} then do:            
+            run put-xml-data(iSAXWriter,"UiSettings","NeedUserSimpleAgeConfirm",buf_thbj-attr.property-value-integer,"Проверка возраста при продаже НП").            
         end.    
      end case. 
          
@@ -225,7 +214,7 @@ procedure putc :
        if vTH_IP <> "" and vTH_Port = "" then vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port}).
        if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).       
        if vMACC_IP <> "" then
-         run put-xml-data(iSAXWriter,"MACC_IP",vMACC_IP,"Адрес и порт для отправки запроса проверки марки в ТН").
+         run put-xml-data(iSAXWriter,"GS1","MACC_IP",vMACC_IP,"Адрес и порт для отправки запроса проверки марки в ТН").
        /* если MACC_IP не меняли, но поменяли ЛМЧЗ порт, то что бы понять, надо ли его посылать на кассу, вычисляем MACC_IP */  
        IF vTH_IP = "" and vTH_Port = "" and vLmCHzPort <> "" 
        then do:
@@ -234,7 +223,7 @@ procedure putc :
            if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).                                    
        end.       
        if vMACC_IP <> "" and vLmCHzPort <> "" then
-         run put-xml-data(iSAXWriter,"LmCHzPort",vLmCHzPort,"Порт для отправки запроса проверки марки в ЛМ ЧЗ ").  
+         run put-xml-data(iSAXWriter,"GS1","LmCHzPort",vLmCHzPort,"Порт для отправки запроса проверки марки в ЛМ ЧЗ ").  
    end.    
    /* временной таблице со списком нет - выгружаем все */
    else do:           
@@ -264,88 +253,85 @@ procedure putc :
              
       if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).
       if vCheckBlock <> ? then
-      run put-xml-data(iSAXWriter,"checkBlock",vCheckBlock,"Типы маркированной продукции для проверки блокировок контролирующих органов").
+      run put-xml-data(iSAXWriter,"GS1","checkBlock",vCheckBlock,"Типы маркированной продукции для проверки блокировок контролирующих органов").
       if vCheckDate <> ? then
-      run put-xml-data(iSAXWriter,"checkDate",vCheckDate,"Типы маркированной продукции для проверки срока годности").
+      run put-xml-data(iSAXWriter,"GS1","checkDate",vCheckDate,"Типы маркированной продукции для проверки срока годности").
       if vCheckMRC <> ? then
-      run put-xml-data(iSAXWriter,"checkMRC",vCheckMRC,"Типы маркированной продукции для проверки МРЦ").
+      run put-xml-data(iSAXWriter,"GS1","checkMRC",vCheckMRC,"Типы маркированной продукции для проверки МРЦ").
       if vCheckOwner <> ? then
-      run put-xml-data(iSAXWriter,"checkOwner",vCheckOwner,"Типы маркированной продукции для проверки владельца").
+      run put-xml-data(iSAXWriter,"GS1","checkOwner",vCheckOwner,"Типы маркированной продукции для проверки владельца").
       if vCheckStatusKM <> ? then
-      run put-xml-data(iSAXWriter,"checkStatusKM",vCheckStatusKM,"Типы маркированной продукции для проверки статуса КМ").
+      run put-xml-data(iSAXWriter,"GS1","checkStatusKM",vCheckStatusKM,"Типы маркированной продукции для проверки статуса КМ").
       if vCheckTracking <> ? then 
-      run put-xml-data(iSAXWriter,"checkTracking",vCheckTracking,"Типы маркированной продукции для проверки флага прослеживаемости").
+      run put-xml-data(iSAXWriter,"GS1","checkTracking",vCheckTracking,"Типы маркированной продукции для проверки флага прослеживаемости").
       if vMACC_IP <> "" and vMACC_IP <> ? then
-         run put-xml-data(iSAXWriter,"MACC_IP",vMACC_IP,"Адрес и порт для отправки запроса проверки марки в ТН").
+         run put-xml-data(iSAXWriter,"GS1","MACC_IP",vMACC_IP,"Адрес и порт для отправки запроса проверки марки в ТН").
       if gismt-OflineLogin <> ? then   
-      run put-xml-data(iSAXWriter,"LmCHzLogin",gismt-OflineLogin,"Логин для доступа ЛМ ЧЗ").
+      run put-xml-data(iSAXWriter,"GS1","LmCHzLogin",gismt-OflineLogin,"Логин для доступа ЛМ ЧЗ").
       if gismt-OflinePswd <> ? then 
-      run put-xml-data(iSAXWriter,"LmCHzPass",gismt-OflinePswd,"Пароль для доступа ЛМ ЧЗ").
+      run put-xml-data(iSAXWriter,"GS1","LmCHzPass",gismt-OflinePswd,"Пароль для доступа ЛМ ЧЗ").
       if gismt-AdressPort <> ? then 
-      run put-xml-data(iSAXWriter,"Proxy_IP",gismt-AdressPort,"Адрес и порт прокси").
+      run put-xml-data(iSAXWriter,"GS1","Proxy_IP",gismt-AdressPort,"Адрес и порт прокси").
       if gismt-ProxyLogin <> ? then
-      run put-xml-data(iSAXWriter,"Proxy_Login",gismt-ProxyLogin,"Логин для подключения к прокси-серверу").
+      run put-xml-data(iSAXWriter,"GS1","Proxy_Login",gismt-ProxyLogin,"Логин для подключения к прокси-серверу").
       if gismt-ProxyPswd <> ? then 
-      run put-xml-data(iSAXWriter,"Proxy_Pass",gismt-ProxyPswd,"Пароль для подключения к прокси-серверу").  
+      run put-xml-data(iSAXWriter,"GS1","Proxy_Pass",gismt-ProxyPswd,"Пароль для подключения к прокси-серверу").  
       if vMACC_IP <> "" and vLmCHzPort <> "" 
          and vMACC_IP <> ? and vLmCHzPort <> ? then
-         run put-xml-data(iSAXWriter,"LmCHzPort",vLmCHzPort,"Порт для отправки запроса проверки марки в ЛМ ЧЗ ").
+         run put-xml-data(iSAXWriter,"GS1","LmCHzPort",vLmCHzPort,"Порт для отправки запроса проверки марки в ЛМ ЧЗ ").
       if gismt-WaitTime <> ? then  
-      run put-xml-data(iSAXWriter,"MACC_TimeoutGISMT",string(gismt-WaitTime),"Длительность ожидания на стороне ТС ПИоТ ответа от ГИС МТ").
+      run put-xml-data(iSAXWriter,"GS1","MACC_TimeoutGISMT",string(gismt-WaitTime),"Длительность ожидания на стороне ТС ПИоТ ответа от ГИС МТ").
       if vAddTimeoutPIoT <> ? then
-      run put-xml-data(iSAXWriter,"MACC_additionalTimeoutPIoT",string(vAddTimeoutPIoT),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").
+      run put-xml-data(iSAXWriter,"GS1","MACC_additionalTimeoutPIoT",string(vAddTimeoutPIoT),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").
       if gismt-BanDate <> ? then      
-      run put-xml-data(iSAXWriter,"Before_Expiration",string(gismt-BanDate),"Опережение срабатывания запрета по сроку годности в минутах").
+      run put-xml-data(iSAXWriter,"GS1","Before_Expiration",string(gismt-BanDate),"Опережение срабатывания запрета по сроку годности в минутах").
       if gismt-MaxTime <> ? then  
-      run put-xml-data(iSAXWriter,"Max_allowed_time",string(gismt-MaxTime),"Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)").
+      run put-xml-data(iSAXWriter,"GS1","Max_allowed_time",string(gismt-MaxTime),"Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)").
       if gismt-TimeFalStart <> ? then 
-      run put-xml-data(iSAXWriter,"Failure_time",string(gismt-TimeFalStart),"Время с момента сбоя до начала уведомления персонала (часы)").
+      run put-xml-data(iSAXWriter,"GS1","Failure_time",string(gismt-TimeFalStart),"Время с момента сбоя до начала уведомления персонала (часы)").
       if gismt-CrashSituat <> ? then       
-      run put-xml-data(iSAXWriter,"emergencyMode",(if gismt-CrashSituat then "1" else "0"),"Признак аварийной ситуации в ГИС МТ").                    
+      run put-xml-data(iSAXWriter,"GS1","emergencyMode",(if gismt-CrashSituat then "1" else "0"),"Признак аварийной ситуации в ГИС МТ").                    
       if vMACC_Timeout <> 0 and vMACC_Timeout <> ? then 
-         run put-xml-data(iSAXWriter,"MACC_Timeout",string(vMACC_Timeout),"Длительность ожидания ответа ТН").
+         run put-xml-data(iSAXWriter,"GS1","MACC_Timeout",string(vMACC_Timeout),"Длительность ожидания ответа ТН").
       if vResp_TH_requiredr <> ? then   
-      run put-xml-data(iSAXWriter,"Resp_TH_required",string(vResp_TH_requiredr),"Обязательность получения результатов проверки КМ в ТН").      
-      run put-xml-data(iSAXWriter,"MaxApiToken",vMaxApiToken,"Токен авторизации MAX").   
+      run put-xml-data(iSAXWriter,"GS1","Resp_TH_required",string(vResp_TH_requiredr),"Обязательность получения результатов проверки КМ в ТН").      
+      run put-xml-data(iSAXWriter,"GS1","MaxApiToken",vMaxApiToken,"Токен авторизации MAX").   
       if vAgeConfirm <> ? then                   
-      run put-xml-data-ui(iSAXWriter,"NeedUserSimpleAgeConfirm",string(vAgeConfirm),"Проверка возраста при продаже НП").   
+      run put-xml-data(iSAXWriter,"UiSettings","NeedUserSimpleAgeConfirm",string(vAgeConfirm),"Проверка возраста при продаже НП").   
    end.                                   
    
    for each thbjattr-list:
        delete thbjattr-list.
    end.    
-   oSend = true.
+   oSend = mSend.
 end procedure.
 
 procedure put-xml-data:
     define input parameter iSAXWriter  as handle    no-undo .
+    define input parameter p-group     as character no-undo.
     define input parameter p-prop-code as character no-undo.
     define input parameter p-value     as character no-undo.
-    define input parameter p-discr     as character no-undo.
+    define input parameter p-discr     as character no-undo.    
+       
+    define buffer buf_code for ub.code.
     
-    iSAXWriter:start-element("Param") .
-    iSAXWriter:insert-attribute("ctrl", "ADD").
-    iSAXWriter:insert-attribute("group", "GS1").
-    iSAXWriter:insert-attribute("key", p-prop-code).
-    iSAXWriter:write-data-element("ParamValue" , p-value ) .
-    iSAXWriter:write-data-element("ParamDesc" , p-discr).
-    iSAXWriter:end-element("Param" ). 
+    find first buf_code no-lock where
+               buf_code.parent = substitute("cash-param&1&2&1&3&1&4",{&delim-par},mDeviceKind,{&source},p-group)
+           and buf_code.code  = p-prop-code
+      no-error.              
+    if available buf_code       
+    then do:        
+        iSAXWriter:start-element("Param") .
+        iSAXWriter:insert-attribute("ctrl", "ADD").
+        iSAXWriter:insert-attribute("group", p-group).
+        iSAXWriter:insert-attribute("key", p-prop-code).
+        iSAXWriter:write-data-element("ParamValue" , p-value ) .
+        iSAXWriter:write-data-element("ParamDesc" , p-discr).
+        iSAXWriter:end-element("Param" ). 
+        mSend = yes.
+    end.
 end procedure.       
 
-procedure put-xml-data-ui:
-    define input parameter iSAXWriter  as handle    no-undo .
-    define input parameter p-prop-code as character no-undo.
-    define input parameter p-value     as character no-undo.
-    define input parameter p-discr     as character no-undo.
-    
-    iSAXWriter:start-element("Param") .
-    iSAXWriter:insert-attribute("ctrl", "ADD").
-    iSAXWriter:insert-attribute("group", "UiSettings").
-    iSAXWriter:insert-attribute("key", p-prop-code).
-    iSAXWriter:write-data-element("ParamValue" , p-value ) .
-    iSAXWriter:write-data-element("ParamDesc" , p-discr).
-    iSAXWriter:end-element("Param" ). 
-end procedure. 
 
 procedure set-cash-info:
    define input         parameter iDB-num        as integer     no-undo.
@@ -353,6 +339,9 @@ procedure set-cash-info:
    define input         parameter iObjCode       as integer     no-undo.
    define input         parameter iPostType      as character   no-undo.
    define input         parameter iCashNum       as integer     no-undo.
+   
+   define buffer buf_cash-desk-attr for ub.cash-desk-attr .
+   
    assign
       mDB-num       = iDB-num
       mObjType      = iObjType
@@ -360,6 +349,23 @@ procedure set-cash-info:
       mPostType     = iPostType
       mCashNum      = iCashNum
    .
+   
+   /* определяем тип кассы */   
+   find first buf_cash-desk-attr no-lock
+       where buf_cash-desk-attr.db-num   = mDB-num 
+         and buf_cash-desk-attr.obj-code = mObjCode         
+         and buf_cash-desk-attr.pos-type = mPostType
+         and buf_cash-desk-attr.cash-num = mCashNum
+         and buf_cash-desk-attr.upper-attr-code = mPostType + "_operative":U
+         and buf_cash-desk-attr.attr-code       = "device-kind":U no-error .
+   if available buf_cash-desk-attr then
+       mDeviceKind = buf_cash-desk-attr.attr-value-integer .
+   else 
+      mDeviceKind = 0 .              
+end.
+
+procedure get-cash-types:
+   define output parameter otypes as character no-undo init "{&bef-cd-type-IBM-XML}".
 end.
 
 procedure get-root-teg:
