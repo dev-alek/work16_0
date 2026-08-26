@@ -98,6 +98,11 @@ define variable v-last-hostname-obj-type  like ub.price-doc.obj-type  no-undo .
 define variable v-last-hostname-obj-code  like ub.price-doc.obj-code  no-undo .
 define variable v-last-hostname-host-name like ub.clients.obj-name    no-undo .
 
+define variable l-last-regcode-exist     as logical    no-undo initial false .
+define variable v-last-regcode-obj-type  as character  no-undo .
+define variable v-last-regcode-obj-code  as integer    no-undo .
+define variable v-last-regcode-reg-code  as integer    no-undo .
+
 define stream librout .
 
 procedure library_testproc :
@@ -13780,6 +13785,70 @@ on endkey undo main-block, return error substitute( "&1. endkey", vss-workfile )
   end.
 end.
 end procedure. /* calltree */
+
+procedure regcode :
+do
+on error undo, return error return-value
+:
+  define input  parameter p-obj-type  as character no-undo .
+  define input  parameter p-obj-code  as integer   no-undo .
+  define output parameter p-reg-code  as integer   no-undo .
+
+  define variable vss-description as character no-undo initial "regcode-01: код региона для БД".
+  define variable v-db-attr-type  as character no-undo.
+/*
+  if  l-last-regcode-exist = true
+  and p-obj-type           = v-last-regcode-obj-type
+  and p-obj-code           = v-last-regcode-obj-code
+  then do:
+    assign
+      p-reg-code = v-last-regcode-reg-code
+    .
+    return . /* --->>>--- */
+  end.
+*/
+  define buffer buf_db   for ub.db .
+  
+  case p-obj-type :
+    when {&db}
+    then do:
+      find first buf_db no-lock
+        where buf_db.db-num = p-obj-code
+        no-error .
+      if not available buf_db
+      then do:
+        message
+          vss-workfile vss-revision vss-description skip
+          "Не найдена БД" skip
+          "p-obj-type" p-obj-type skip
+          "p-obj-code" p-obj-code skip
+          view-as alert-box error .
+        undo, return error return-value .
+      end.
+      run db-attr-value in this-procedure (buf_db.db-num, 
+                                           "reg-code", 
+                                           output p-reg-code,
+                                           output v-db-attr-type) no-error.
+    end.    
+    otherwise do:
+      message
+        vss-workfile vss-revision vss-description skip
+        "Неизвестный тип объекта" skip
+        "p-obj-type" p-obj-type skip
+        "p-obj-code" p-obj-code skip
+        view-as alert-box error .
+      undo, return error return-value .
+    end.
+  end.
+
+  assign
+    l-last-regcode-exist     = true
+    v-last-regcode-obj-type  = p-obj-type
+    v-last-regcode-obj-code  = p-obj-code
+    v-last-regcode-reg-code  = p-reg-code
+  .
+end.
+end procedure. /* regcode */
 
 { gbl/conf-enc.i }
 

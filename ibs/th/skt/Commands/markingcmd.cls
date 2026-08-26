@@ -55,8 +55,15 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
   method public override void Execute_( input req as ibs.th.skt.Commands.IRequest, resp as class IResponse ):
     def buffer buf_code for ub.code.
     def var vNeedUpd as integer no-undo.
+    def var vMarkOnlineResult as char no-undo.
+    def var vMark as char no-undo.
+    def var vOnlineResult as int no-undo.
+    
+    def buffer buf_marking for ub.marking.
     
     empty temp-table tt-code.
+           
+    vMarkOnlineResult = "".
     
     do transaction:
        hndlsocket = req:HndlSocket.
@@ -75,7 +82,8 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
                   buf_code.parent = "CDN_GisMt":
              create tt-code.
              buffer-copy buf_code to tt-code.         
-         end.                                    
+         end. 
+         vMarkOnlineResult = marking:GetMarkOnlineResult().                                   
          undo.
        end.                     
     end.
@@ -88,7 +96,23 @@ class ibs.th.skt.Commands.markingcmd inherits ICommand:
            if avail buf_code then do:
                buffer-copy tt-code to buf_code no-error.
            end.    
-        end.    
+        end. 
+        if vMarkOnlineResult <> ""
+           and num-entries(vMarkOnlineResult,chr(9)) = 2
+        then do:
+            assign
+               vMark = entry(1,vMarkOnlineResult,chr(9))
+               vOnlineResult = int(entry(2,vMarkOnlineResult,chr(9)))
+               no-error.
+            if vMark <> "" and vOnlineResult <> ? 
+            then do:   
+                find first buf_marking exclusive-lock where 
+                           buf_marking.mark begins vMark 
+                   no-wait no-error.
+                if avail buf_marking then
+                   buf_marking.online-result = vOnlineResult .
+            end.      
+        end.      
     end.
     /* обновляем, если надо, CDN площадки */
     vNeedUpd = marking:CheckCdnNeedUpd().              

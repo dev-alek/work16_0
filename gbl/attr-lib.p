@@ -2503,6 +2503,7 @@ end procedure.
 &scop shop-attr-autosale true
 &scop store-attr-autosale false
 &scop db-attr-autosale false
+&scop region-attr-autosale false
 &scop batch-edit-attr-autosale  0
 &scop level-way-attr-autosale "obj,host,global"
 &scop up-way-attr-autosale "autosale,autosale,autosale"
@@ -2536,6 +2537,7 @@ end procedure.
 &scop shop-attr-get-chk true
 &scop store-attr-get-chk false
 &scop db-attr-get-chk false
+&scop region-attr-get-chk false
 &scop batch-edit-attr-get-chk  0
 &scop level-way-attr-get-chk "obj,host,global"
 &scop up-way-attr-get-chk "get-chk,get-chk,get-chk"
@@ -2562,6 +2564,7 @@ end procedure.
 &scop shop-attr-chk-view true
 &scop store-attr-chk-view false
 &scop db-attr-chk-view false
+&scop region-attr-chk-view false
 &scop batch-edit-attr-chk-view  0
 &scop level-way-attr-chk-view "obj,host,"
 &scop up-way-attr-chk-view "chk-view,chk-view,chk-view"
@@ -2590,6 +2593,7 @@ end procedure.
 &scop shop-attr-cd-sending true
 &scop store-attr-cd-sending false
 &scop db-attr-cd-sending false
+&scop region-attr-cd-sending false
 &scop batch-edit-attr-cd-sending  0
 &scop prop-tooltip-list-attr-cd-sending ",,,,В маске цифрами указывается префикс, который отрезается при передаче кодов на кассы , а звездочками количество символов короткого кода . Пример ввода 777***"
 &scop level-way-attr-cd-sending "obj,host,global"
@@ -2622,6 +2626,7 @@ end procedure.
 &scop shop-attr-cd-inf-send true
 &scop store-attr-cd-inf-send false
 &scop db-attr-cd-inf-send false
+&scop region-attr-cd-inf-send false
 &scop batch-edit-attr-cd-inf-send  0
 &scop level-way-attr-cd-inf-send "obj,host,global"
 &scop up-way-attr-cd-inf-send "cd-inf-send,cd-inf-send,cd-inf-send"
@@ -2649,6 +2654,7 @@ end procedure.
 &scop shop-attr-scale-inf true
 &scop store-attr-scale-inf false
 &scop db-attr-scale-inf false
+&scop region-attr-scale-inf false
 &scop batch-edit-attr-scale-inf  0
 &scop level-way-attr-scale-inf "obj,,"
 &scop up-way-attr-scale-inf "scale-inf,,"
@@ -2678,6 +2684,7 @@ end procedure.
 &scop shop-attr-cd-type-ibm true
 &scop store-attr-cd-type-ibm false
 &scop db-attr-cd-type-ibm false
+&scop region-attr-cd-type-ibm false
 &scop batch-edit-attr-cd-type-ibm  0
 &scop level-way-attr-cd-type-ibm "obj,host,global"
 &scop up-way-attr-cd-type-ibm "cd-type-ibm,cd-type-ibm,cd-type-ibm"
@@ -2708,6 +2715,7 @@ end procedure.
 &scop shop-attr-cd-type-ipc-servispl true
 &scop store-attr-cd-type-ipc-servispl false
 &scop db-attr-cd-type-ipc-servispl false
+&scop region-attr-cd-type-ipc-servispl false
 &scop batch-edit-attr-cd-type-ipc-sevispl  0
 &scop level-way-attr-cd-type-ipc-servispl "obj,host,global"
 &scop up-way-attr-cd-type-ipc-servispl "cd-type-ipc-servispl,cd-type-ipc-servispl,cd-type-ipc-servispl"
@@ -2734,6 +2742,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-ncr-gm true
 &scop store-attr-cd-type-ncr-gm false
 &scop db-attr-cd-type-ncr-gm false
+&scop region-attr-cd-type-ncr-gm false
 &scop batch-edit-attr-cd-type-NCR-GM  0
 &scop level-way-attr-cd-type-ncr-gm "obj,host,global"
 &scop up-way-attr-cd-type-ncr-gm "cd-type-ncr-gm,cd-type-ncr-gm,cd-type-ncr-gm"
@@ -2759,6 +2768,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-ncr-as-r true
 &scop store-attr-cd-type-ncr-as-r false
 &scop db-attr-cd-type-ncr-as-r false
+&scop region-attr-cd-type-ncr-as-r false
 &scop batch-edit-attr-cd-type-NCR-AS-R  0
 &scop level-way-attr-cd-type-ncr-as-r "obj,host,global"
 &scop up-way-attr-cd-type-ncr-as-r "cd-type-ncr-as-r,cd-type-ncr-as-r,cd-type-ncr-as-r"
@@ -2788,6 +2798,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-magia-xml true
 &scop store-attr-cd-type-magia-xml false
 &scop db-attr-cd-type-magia-xml false
+&scop region-attr-cd-type-magia-xml false
 &scop batch-edit-attr-magia-XML  0
 &scop level-way-attr-cd-type-magia-xml "obj,host,global"
 &scop up-way-attr-cd-type-magia-xml "cd-type-magia-xml,cd-type-magia-xml,cd-type-magia-xml"
@@ -2813,6 +2824,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-omron true
 &scop store-attr-cd-type-omron false
 &scop db-attr-cd-type-omron false
+&scop region-attr-cd-type-omron false
 &scop batch-edit-attr-cd-type-omron  0
 &scop level-way-attr-cd-type-omron "obj,host,global"
 &scop up-way-attr-cd-type-omron "cd-type-omron,cd-type-omron,cd-type-omron"
@@ -2837,6 +2849,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-omron-new true
 &scop store-attr-cd-type-omron-new false
 &scop db-attr-cd-type-omron-new false
+&scop region-attr-cd-type-omron-new false
 &scop batch-edit-attr-cd-type-omron-new  0
 &scop level-way-attr-cd-type-omron-new "obj,host,gloabl"
 &scop up-way-attr-cd-type-omron-new "cd-type-omron-new,cd-type-omron-new,cd-type-omron-new"
@@ -2864,6 +2877,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-ibm-XML true
 &scop store-attr-cd-type-ibm-XML false
 &scop db-attr-cd-type-ibm-XML false
+&scop region-attr-cd-type-ibm-XML false
 &scop batch-edit-attr-cd-type-IBM-XML  0
 &scop level-way-attr-cd-type-ibm-xml "obj,host,global"
 &scop up-way-attr-cd-type-ibm-xml "cd-type-ibm-xml,cd-type-ibm-xml,cd-type-ibm-xml"
@@ -2887,6 +2901,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-r-keeper true
 &scop store-attr-cd-type-r-keeper false
 &scop db-attr-cd-type-r-keeper false
+&scop region-attr-cd-type-r-keeper false
 &scop batch-edit-attr-cd-type-r-keeper  0
 &scop level-way-attr-cd-type-r-keeper "obj,host,global"
 &scop up-way-attr-cd-type-r-keeper "cd-type-r-keeper,cd-type-r-keeper,cd-type-r-keeper"
@@ -2912,6 +2927,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-maria true
 &scop store-attr-cd-type-maria false
 &scop db-attr-cd-type-maria false
+&scop region-attr-cd-type-maria false
 &scop batch-edit-attr-cd-type-maria 0
 &scop level-way-attr-cd-type-maria "obj,host,global"
 &scop up-way-attr-cd-type-maria "cd-type-maria,cd-type-maria,cd-type-maria"
@@ -2936,6 +2952,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cd-type-autotank true
 &scop store-attr-cd-type-autotank false
 &scop db-attr-cd-type-autotank false
+&scop region-attr-cd-type-autotank false
 &scop batch-edit-attr-cd-type-autotank  0
 &scop level-way-attr-cd-type-autotank "obj,host,global"
 &scop up-way-attr-cd-type-autotank "cd-type-autotank,cd-type-autotank,cd-type-autotank"
@@ -2957,6 +2974,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-alias-tpsi true
 &scop store-attr-alias-tpsi true
 &scop db-attr-alias-tpsi false
+&scop region-attr-alias-tpsi false
 &scop batch-edit-attr-alias-tpsi  0
 &scop level-way-attr-alias-tpsi "obj,host,global"
 &scop up-way-attr-alias-tpsi "alias-tpsi,alias-tpsi,alias-tpsi"
@@ -2977,6 +2995,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-abc-sale-day true
 &scop store-attr-abc-sale-day true
 &scop db-attr-abc-sale-day false
+&scop region-attr-abc-sale-day false
 &scop batch-edit-attr-abc-sale-day  0
 &scop level-way-attr-abc-sale-day "obj,host,global"
 &scop up-way-attr-abc-sale-day "abc-sale-day,abc-sale-day,abc-sale-day"
@@ -2998,6 +3017,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-abc-global false
 &scop store-attr-abc-global false
 &scop db-attr-abc-global false
+&scop region-attr-abc-global false
 &scop batch-edit-attr-abc-global  0
 &scop attr-abc-global-abc-mode_tooltip Способ проведения АВС : простой и двухпроходный (анализ в два прохода; первый проход деление на две группы; второй проход - простой анализ 1й группы и отсечение низкого процента во 2й группе)
 &scop attr-abc-global-abc-type_tooltip Количество уровней ранжирования для ABC-анализа
@@ -3024,6 +3044,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-ord-global false
 &scop store-attr-ord-global false
 &scop db-attr-ord-global false
+&scop region-attr-ord-global false
 &scop batch-edit-attr-ord-global  0
 &scop attr-ord-global-ord-log_tooltip  (ord-log) Логировать расчет заказа в файл рабочей директории order_raschet.txt
 &scop attr-ord-global-ord-ofof_tooltip (ord-ofof) Если - да` то заявки типа ОФ формируются только в офисе`а не на объектах
@@ -3053,6 +3074,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-ord-obj true
 &scop store-attr-ord-obj true
 &scop db-attr-ord-obj false
+&scop region-attr-ord-obj false
 &scop batch-edit-attr-ord-obj  0
 &scop attr-ord-obj-ord-askp_tooltip   (ord-askp) В ОРЦ спрашивать по какой цене формировать заказ: по цене объекта или объекта поставщика
 &scop attr-ord-obj-ord-obj-rc_tooltip (ord-obj-rc) Номер объекта ОРЦ по умолчанию
@@ -3080,6 +3102,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-fin-global            false
 &scop store-attr-fin-global           false
 &scop db-attr-fin-global           false
+&scop region-attr-fin-global          false
 &scop batch-edit-attr-fin-global      0
 &scop attr-fin-global-fo-buyer-nws_tooltip (fo-buyer-nws) Где могут создаваться ФО покупателей
 &scop attr-fin-global-fo-supp-nws_tooltip  (fo-supp-nws) Как ходят ФО поставщиков по новостям
@@ -3107,6 +3130,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-fin-doc            true
 &scop store-attr-fin-doc           false
 &scop db-attr-fin-doc              false
+&scop region-attr-fin-doc          false
 &scop batch-edit-attr-fin-doc      0
 &scop prop-label-list-attr-fin-doc '~
 Суффикс для автоматич.генерации № ПКО~
@@ -3146,6 +3170,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-contr-in true
 &scop store-attr-contr-in true
 &scop db-attr-contr-in false
+&scop region-attr-contr-in false
 &scop batch-edit-attr-contr-in  0
 &scop attr-contr-in_contr-in-income-NP_tooltip  Обязательная ссылка на договор в приходной накладной с НП
 &scop attr-contr-in_contr-in-income-CPT_tooltip  Обязательная ссылка на договор в приходной накладной с СТ
@@ -3202,6 +3227,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-nakl_par   true
 &scop store-attr-nakl_par  true
 &scop db-attr-nakl_par  false
+&scop region-attr-nakl_par false
 &scop batch-edit-attr-nakl_par  0
 &scop attr-nakl_par_date-close-period_tooltip (date-close-period) Дата закрытия периода` нельзя удалять или корректировать на факт документы раньше этой даты
 &scop attr-nakl_par_stfactdt_tooltip (stfactdt) При добавлении документов внешнего ПН` РН и межфирменного перемещения устанавливается дата факт равной дате документа. Объект должен быть несменным
@@ -3275,6 +3301,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-fin-plan true
 &scop store-attr-fin-plan true
 &scop db-attr-fin-plan false
+&scop region-attr-fin-plan false
 &scop batch-edit-attr-fin-plan  0
 &scop level-way-attr-fin-plan "obj,,"
 &scop up-way-attr-fin-plan "fin-plan,,"
@@ -3293,6 +3320,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-rt-trn-doc true
 &scop store-attr-rt-trn-doc true
 &scop db-attr-rt-trn-doc false
+&scop region-attr-rt-trn-doc false
 &scop batch-edit-attr-rt-trn-doc  0
 &scop level-way-attr-rt-trn-doc "obj,host,global"
 &scop up-way-attr-rt-trn-doc "rt-trn-doc,rt-trn-doc,rt-trn-doc"
@@ -3326,6 +3354,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-gds-ref false
 &scop store-attr-gds-ref false
 &scop db-attr-gds-ref false
+&scop region-attr-gds-ref false
 &scop batch-edit-attr-gds-ref  0
 &scop level-way-attr-gds-ref ",,"
 &scop up-way-attr-gds-ref ",,gds-ref"
@@ -3349,6 +3378,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-gds-ref_obj true
 &scop store-attr-gds-ref_obj true
 &scop db-attr-gds-ref_obj false
+&scop region-attr-gds-ref_obj false
 &scop batch-edit-attr-gds-ref_obj  0
 &scop level-way-attr-gds-ref_obj "obj,,global"
 &scop up-way-attr-gds-ref_obj "gds-ref_obj,,gds-ref"
@@ -3372,6 +3402,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-dc-ref true
 &scop store-attr-dc-ref false
 &scop db-attr-dc-ref false
+&scop region-attr-dc-ref false
 &scop batch-edit-attr-dc-ref  0
 &scop level-way-attr-dc-ref "obj,,global"
 &scop up-way-attr-dc-ref "dc-ref,,dc-ref"
@@ -3391,6 +3422,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cli-all false
 &scop store-attr-cli-all false
 &scop db-attr-cli-all false
+&scop region-attr-cli-all false
 &scop batch-edit-attr-cli-all  0
 &scop level-way-attr-cli-all ",,global"
 &scop up-way-attr-cli-all ",,cli-all"
@@ -3411,6 +3443,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-cashpays false
 &scop store-attr-cashpays false
 &scop db-attr-cashpays false
+&scop region-attr-cashpays false
 &scop batch-edit-attr-cashpays  0
 &scop level-way-attr-cashpays ",,global"
 &scop up-way-attr-cashpays ",,cashpays"
@@ -3432,6 +3465,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-wthdoc false
 &scop store-attr-wthdoc false
 &scop db-attr-wthdoc false
+&scop region-attr-wthdoc false
 &scop batch-edit-attr-wthdoc  0
 &scop level-way-attr-wthdoc ",,global"
 &scop up-way-attr-wthdoc ",,wthdoc"
@@ -3458,6 +3492,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-wthdoc_obj true
 &scop store-attr-wthdoc_obj true
 &scop db-attr-wthdoc_obj false
+&scop region-attr-wthdoc_obj false
 &scop batch-edit-attr-wthdoc_obj  0
 &scop attr-wthdoc_obj_stfactpref_tooltip stfactpref Префикс номера счета-фактуры при автоматической генерации номера в документах МЦ
 &scop attr-wthdoc_obj_numsfact_tooltip   numsfact   Последний сгенерированный номер счет-фактуры
@@ -3492,6 +3527,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-wthrep false
 &scop store-attr-wthrep false
 &scop db-attr-wthrep false
+&scop region-attr-wthrep false
 &scop batch-edit-attr-wthrep 0
 &scop attr-wthrep_cligrplist_tooltip Список групп клиентов для формирования сводных отчетов
 &scop prop-tooltip-list-attr-wthrep {&attr-wthrep_cligrplist_tooltip},Не передавать по СПН документы уничтожения и перемещения в зоне погашения на УБД
@@ -3526,6 +3562,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-rum false
 &scop store-attr-rum false
 &scop db-attr-rum false
+&scop region-attr-rum false
 &scop batch-edit-attr-rum  0
 &scop manual-edit-attr-rum  '0,0,0,0,1,1,0,0,0,1,0,0,0,0'
 &scop level-way-attr-rum ",,global"
@@ -3549,6 +3586,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-rum_obj true
 &scop store-attr-rum_obj false
 &scop db-attr-rum_obj false
+&scop region-attr-rum_obj false
 &scop batch-edit-attr-rum_obj  0
 &scop manual-edit-attr-rum_obj  '1,1,1'
 &scop level-way-attr-rum_obj "obj,,global"
@@ -3571,6 +3609,7 @@ ipcsbasc,ipcspayn,ipcsdobc,ipcscpfx,ipcsccrd,ipcstcrd,ipcscurc,ipcpgfx */
 &scop shop-attr-easyfuel true
 &scop store-attr-easyfuel false
 &scop db-attr-easyfuel false
+&scop region-attr-easyfuel false
 &scop batch-edit-attr-easyfuel  0
 &scop level-way-attr-easyfuel "obj,,"
 &scop up-way-attr-easyfuel "easyfuel,,"
@@ -3659,6 +3698,7 @@ pr-nogds0~
 &scop shop-attr-overval true
 &scop store-attr-overval true
 &scop db-attr-overval false
+&scop region-attr-overval false
 &scop batch-edit-attr-overval  0
 &scop attr-overval_pr-abs-d_tooltip (pr-abs-d) При закрытии переоценки удалять строки` факт остаток товара по которым = 0 (главные цены удаляются только если нет специальных или неосновных)
 &scop attr-overval_pr-altex_tooltip (pr-altex) При добавлении главной цены в переоценку автоматически добавлять строки для всех существующих в данных момент неосновных цен данного товара (в т.ч. на партии и признаки).
@@ -3729,6 +3769,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th true
 &scop store-attr-cd-type-ibs-th false
 &scop db-attr-cd-type-ibs-th false
+&scop region-attr-cd-type-ibs-th false
 &scop batch-edit-attr-cd-type-ibs-th  0
 &scop level-way-attr-cd-type-ibs-th "obj,,global"
 &scop up-way-attr-cd-type-ibs-th "cd-type-ibs-th,,cd-type-ibs-th"
@@ -3755,6 +3796,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th_ibs-th_main true
 &scop store-attr-cd-type-ibs-th_ibs-th_main false
 &scop db-attr-cd-type-ibs-th_ibs-th_main false
+&scop region-attr-cd-type-ibs-th_ibs-th_main false
 &scop batch-edit-attr-cd-type-ibs-th_ibs-th_main  0
 &scop level-way-attr-cd-type-ibs-th_ibs-th_main "obj,,global"
 &scop up-way-attr-cd-type-ibs-th_ibs-th_main "ibs-th_main,,ibs-th_main"
@@ -3790,6 +3832,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th_ibs-th_devices true
 &scop store-attr-cd-type-ibs-th_ibs-th_devices false
 &scop db-attr-cd-type-ibs-th_ibs-th_devices false
+&scop region-attr-cd-type-ibs-th_ibs-th_devices false
 &scop batch-edit-attr-cd-type-ibs-th_ibs-th_devices  0
 &scop level-way-attr-cd-type-ibs-th_ibs-th_devices "obj,,global"
 &scop up-way-attr-cd-type-ibs-th_ibs-th_devices "ibs-th_devices,,ibs-th_devices"
@@ -3813,6 +3856,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th_ibs-th_fisreg true
 &scop store-attr-cd-type-ibs-th_ibs-th_fisreg false
 &scop db-attr-cd-type-ibs-th_ibs-th_fisreg false
+&scop region-attr-cd-type-ibs-th_ibs-th_fisreg false
 &scop batch-edit-attr-cd-type-ibs-th_ibs-th_fisreg  0
 &scop level-way-attr-cd-type-ibs-th_ibs-th_fisreg "obj,,global"
 &scop up-way-attr-cd-type-ibs-th_ibs-th_fisreg "ibs-th_fisreg,,ibs-th_fisreg"
@@ -3839,6 +3883,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th_ibs-th_rec-print true
 &scop store-attr-cd-type-ibs-th_ibs-th_rec-print false
 &scop db-attr-cd-type-ibs-th_ibs-th_rec-print false
+&scop region-attr-cd-type-ibs-th_ibs-th_rec-print false
 &scop batch-edit-attr-cd-type-ibs-th_ibs-th_rec-print  0
 &scop level-way-attr-cd-type-ibs-th_ibs-th_rec-print "obj,,global"
 &scop up-way-attr-cd-type-ibs-th_ibs-th_rec-print "ibs-th_rec-print,,ibs-th_rec-print"
@@ -3859,6 +3904,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th_ibs-th_interface true
 &scop store-attr-cd-type-ibs-th_ibs-th_interface false
 &scop db-attr-cd-type-ibs-th_ibs-th_interface false
+&scop region-attr-cd-type-ibs-th_ibs-th_interface false
 &scop batch-edit-attr-cd-type-ibs-th_ibs-th_interface  0
 &scop level-way-attr-cd-type-ibs-th_ibs-th_interface "obj,,global"
 &scop up-way-attr-cd-type-ibs-th_ibs-th_interface "ibs-th_interface,,ibs-th_interface"
@@ -3879,6 +3925,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th-mob true
 &scop store-attr-cd-type-ibs-th-mob false
 &scop db-attr-cd-type-ibs-th-mob false
+&scop region-attr-cd-type-ibs-th-mob false
 &scop batch-edit-attr-cd-type-ibs-th-mob  0
 &scop level-way-attr-cd-type-ibs-th-mob "obj,,global"
 &scop up-way-attr-cd-type-ibs-th-mob "cd-type-ibs-th-mob,,cd-type-ibs-th-mob"
@@ -3899,6 +3946,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th-mob_ibs-th-mob_main true
 &scop store-attr-cd-type-ibs-th-mob_ibs-th-mob_main false
 &scop db-attr-cd-type-ibs-th-mob_ibs-th-mob_main false
+&scop region-attr-cd-type-ibs-th-mob_ibs-th-mob_main false
 &scop batch-edit-attr-cd-type-ibs-th-mob_ibs-th-mob_main  0
 &scop level-way-attr-cd-type-ibs-th-mob_ibs-th-mob_main "obj,,global"
 &scop up-way-attr-cd-type-ibs-th-mob_ibs-th-mob_main "ibs-th-mob_main,,ibs-th-mob_main"
@@ -3919,6 +3967,7 @@ pr-nogds0~
 &scop shop-attr-cd-type-ibs-th-mob_ibs-th-mob_rec-print true
 &scop store-attr-cd-type-ibs-th-mob_ibs-th-mob_rec-print false
 &scop db-attr-cd-type-ibs-th-mob_ibs-th-mob_rec-print false
+&scop region-attr-cd-type-ibs-th-mob_ibs-th-mob_rec-print false
 &scop batch-edit-attr-cd-type-ibs-th-mob_ibs-th-mob_rec-print  0
 &scop level-way-attr-cd-type-ibs-th-mob_ibs-th-mob_rec-print "obj,,global"
 &scop up-way-attr-cd-type-ibs-th-mob_ibs-th-mob_rec-print "ibs-th-mob_rec-print,,ibs-th-mob_rec-print"
@@ -3944,6 +3993,7 @@ pr-nogds0~
 &scop shop-attr-inv-global false
 &scop store-attr-inv-global false
 &scop db-attr-inv-global false
+&scop region-attr-inv-global false
 &scop batch-edit-attr-inv-global  0
 &scop attr-inv-global-invclcas_tooltip (invclcas) Начальная установка атрибута ПЕРЕСЧИТЫВАТЬ ДОПОЛНИТЕЛЬНЫЕ СУММЫ ON-LINE в документы инвентаризации
 &scop attr-inv-global-invclcwt_tooltip (invclcwt) Начальная установка атрибута ПЕРЕСЧИТЫВАТЬ ЕСТЕСТВЕННУЮ УБЫЛЬ ON-LINE в документе инвентаризации
@@ -3995,6 +4045,7 @@ logical~
 &scop shop-attr-inv-obj true
 &scop store-attr-inv-obj true
 &scop db-attr-inv-obj false
+&scop region-attr-inv-obj false
 &scop batch-edit-attr-inv-obj  0
 &scop attr-inv-obj-invclcsp_tooltip  (invclcsp) УСТАНОВКА В YES ЗАМЕДЛЯЕТ РАСЧЕТ ИНВЕНТАРИЗАЦИИ В ДВА РАЗА. Реально нужен только для отдела ЦУМа для обсчета золота
 &scop attr-inv-obj-invdnull_tooltip  (invdnull) Удаление нулевых строк (с количествами <было> и <стало> равными 0) в документе инвентаризации в момент закрытия документа до статуса <факт> (для сокращения объемов документа инвентаризации)
@@ -4027,6 +4078,7 @@ logical~
 &scop shop-attr-srv-auth-ASU true
 &scop store-attr-srv-auth-ASU true
 &scop db-attr-srv-auth-ASU false
+&scop region-attr-srv-auth-ASU false
 &scop batch-edit-attr-srv-auth-ASU  0
 &scop level-way-attr-srv-auth-ASU "obj,host,global"
 &scop up-way-attr-srv-auth-ASU "srv-auth-ASU,srv-auth-ASU,srv-auth-ASU"
@@ -4048,6 +4100,7 @@ logical~
 &scop shop-attr-egais-host true
 &scop store-attr-egais-host true
 &scop db-attr-egais-host false
+&scop region-attr-egais-host false
 /*&scop batch-edit-attr-egais-host  0*/
 &scop level-way-attr-egais-host "obj,,global"
 &scop up-way-attr-egais-host "egais,egais,egais,egais,egais"
@@ -4060,18 +4113,23 @@ logical~
 &scop user-can-edit-attr-gisMT   true
 &scop output-display-attr-gisMT  true
 &scop other-attr-gisMT           'spr-ext=gbl\gis.w':U
-&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical,character,character,character':U
+&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical,~
+character,character,character,decimal,integer,character,character,character,decimal,character,integer':U
 &scop prop-label-list-attr-gisMT 'Адрес и порт проски-сервера,Дополнительные параметры запроса,Адрес ГИС МТ,Логин,Пароль,Макс.допуст. время разрешения продажи при сбое,ключ авторизации,~
 Время с момента сбоя до начала уведомления персонала,Длительность ожидания ответа ГИС МТ,Аварийная ситуация в ГИС МТ,Опережение срабатывания запрета по сроку годности в минутах,~
-Работа с cdn-площадками,Адрес cdn,Повторный опрос площадки,Смена площадки,Период обновления списка CDN-площадок,Обновление параметров при запросе КМ,Адрес ЛМ ЧЗ,Логин в ЛМ ЧЗ,Пароль в ЛМ ЧЗ'
-&scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,UpdateRequest,OflineAdress,OflineLogin,OflinePswd'
+Работа с cdn-площадками,Адрес cdn,Повторный опрос площадки,Смена площадки,Период обновления списка CDN-площадок,Обновление параметров при запросе КМ,Адрес ЛМ ЧЗ,Логин в ЛМ ЧЗ,Пароль в ЛМ ЧЗ,~
+Время ожидания ответа ТН,Обязательность получения результатов проверки КМ в ТН,Порт для отправки запроса проверки марки в ЛМ ЧЗ,Адрес для отправки запроса проверки марки в ТН,~
+Порт для отправки запроса проверки марки в ТН,Длительность обработки ответа ГИС МТ в ТС ПИоТ,Токен авторизации MAX,Проверка возраста при продаже НП'
+&scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,~
+UpdateRequest,OflineAdress,OflineLogin,OflinePswd,MACC_Timeout,Resp_TH_required,LmCHzPort,TH_IP,TH_Port,AddTimeoutPIoT,MaxApiToken,AgeConfirm'
 &scop global-attr-gisMT true
 &scop host-attr-gisMT false
 &scop shop-attr-gisMT false
 &scop store-attr-gisMT false
 &scop db-attr-gisMT true
-&scop level-way-attr-gisMT ",db,global"
-&scop up-way-attr-gisMT ",gisMT,gisMT"
+&scop region-attr-gisMT true
+&scop level-way-attr-gisMT "db,region,global"
+&scop up-way-attr-gisMT "gisMT,gisMT,gisMT"
 
 /* Общие параметры по АРХИВАМ */
 &scop type-attr-arh-global            {&type-char}
@@ -4091,6 +4149,7 @@ logical~
 &scop shop-attr-arh-global false
 &scop store-attr-arh-global false
 &scop db-attr-arh-global false
+&scop region-attr-arh-global false
 &scop batch-edit-attr-arh-global  0
 &scop attr-arh-global-apusharh_tooltip (apusharh) Автоматический запуск расчета арховов после приема новостей
 &scop attr-arh-global-btprskip_tooltip (btprskip) Заблокировать выполнение некоторых типов отложенных заданий. Типы необходимо перечислить через запятую. Возможные типы: trntx - расчет trn-tax` trnhd - расчет шапки документов` arh - расчет архивов
@@ -4115,6 +4174,7 @@ logical~
 &scop shop-attr-rezerv-global false
 &scop store-attr-rezerv-global false
 &scop db-attr-rezerv-global false
+&scop region-attr-rezerv-global false
 &scop batch-edit-attr-rezerv-global  0
 &scop attr-rezerv-global-parts-bc_tooltip (parts-bc) Глобальный. При закрытии накладной в статус накл+ на партии создается бар-код
 &scop prop-tooltip-list-attr-rezerv-global {&attr-rezerv-global-parts-bc_tooltip},
@@ -4163,6 +4223,7 @@ logical~
 &scop shop-attr-rezerv-obj true
 &scop store-attr-rezerv-obj true
 &scop db-attr-rezerv-obj false
+&scop region-attr-rezerv-obj false
 &scop batch-edit-attr-rezerv-obj  0
 &scop attr-rezerv-obj-invngbeg_tooltip   (invngbeg) Начало диапазона для резервирования отрицательных партии по функции -Партии
 &scop attr-rezerv-obj-invngend_tooltip   (invngend) Конец диапазона для резервирования отрицательных партии по функции -Партии
@@ -4204,6 +4265,7 @@ logical~
 &scop shop-attr-images false
 &scop store-attr-images false
 &scop db-attr-images false
+&scop region-attr-images false
 &scop batch-edit-attr-images  0
 &scop level-way-attr-images ",,global"
 &scop up-way-attr-images ",,images"
@@ -4255,6 +4317,7 @@ logical~
 &scop shop-attr-nakl-glob false
 &scop store-attr-nakl-glob false
 &scop db-attr-nakl-glob false
+&scop region-attr-nakl-glob false
 &scop batch-edit-attr-nakl-glob  0
 &scop attr-nakl-glob-nocurbas_tooltip   (nocurbas) no - запрещает закрывать документ  без текущей продажной цены по товару` yes - разрешает закрывать документ без текущей продажной цены по товару` no_today - запрещает закрывать документы сегодняшним числом без текущей пр. цены и  задает вопрос по заднему  числу` question - запрашивает подтверждение на закрытие документов с товарами без продажной цены
 &scop attr-nakl-glob-chk-prs_tooltip    (chk-prs)  Проверять менеджера и исполнителя в документах
@@ -4321,6 +4384,7 @@ logical~
 &scop shop-attr-prt-glob false
 &scop store-attr-prt-glob false
 &scop db-attr-prt-glob false
+&scop region-attr-prt-glob false
 &scop batch-edit-attr-prt-glob  0
 &scop attr-prt-glob-invprn0_tooltip    (invprn0)   Глобальный. Печатать строки с 0 до и после инвентаризации в инвент. описи
 &scop attr-prt-glob-outprncd_tooltip   (outprncd)  Глобальный. В печатных формах печатать после названия фирмы или клиента в скобках код фирмы или клиента
@@ -4365,6 +4429,7 @@ logical~
 &scop shop-attr-prt-firm false
 &scop store-attr-prt-firm false
 &scop db-attr-prt-firm false
+&scop region-attr-prt-firm false
 &scop batch-edit-attr-prt-firm  0
 &scop attr-prt-firm-factur01_tooltip   (factur01) По фирме. yes - впервые для Грин-Лайна
 &scop attr-prt-firm-incurrat_tooltip   (incurrat) По фирме. Печать приходной накладной в нац.вал. по текущему курсу
@@ -4437,6 +4502,7 @@ character~
 &scop shop-attr-prt-obj true
 &scop store-attr-prt-obj true
 &scop db-attr-prt-obj false
+&scop region-attr-prt-obj false
 &scop batch-edit-attr-prt-obj  0
 &scop attr-prt-obj-FGdsNinD_tooltip   (FGdsNinD) Наименование товара в накладных печатать полностью (в несколько строчек)
 &scop attr-prt-obj-in-docpr_tooltip   (in-docpr) Вызывается процедура печати внешней накладной. Если пусто вызывается стандартная приходная накладна
@@ -4530,6 +4596,7 @@ logical~
 &scop shop-attr-report-glob true
 &scop store-attr-report-glob true
 &scop db-attr-report-glob false
+&scop region-attr-report-glob false
 &scop batch-edit-attr-report-glob  0
 &scop attr-report-glob-actuate_tooltip    (actuate)   Глобальный. Есть возможность формирования отчетов через внешнюю программу Actuate
 &scop attr-report-glob-ardecldt_tooltip   (ardecldt)  Глобальный. Дата начала формирования отчета Декларация об объемах розничной продажи алк
@@ -4583,6 +4650,7 @@ character~
 &scop shop-attr-report-firm false
 &scop store-attr-report-firm false
 &scop db-attr-report-firm false
+&scop region-attr-report-firm false
 &scop batch-edit-attr-report-firm  0
 &scop attr-report-firm-xl-delim_tooltip   (xl-delim) По фирме. Разделитель колонок при старом экспорте в Excel
 &scop prop-tooltip-list-attr-report-firm  {&attr-report-firm-xl-delim_tooltip}
@@ -4613,6 +4681,7 @@ character~
 &scop shop-attr-report-obj true
 &scop store-attr-report-obj true
 &scop db-attr-report-obj false
+&scop region-attr-report-obj false
 &scop batch-edit-attr-report-obj  0
 &scop attr-report-obj-prt-z-no_tooltip   (prt-z-no) Печатать или нет номера Z-отчетов в 1 - 4 листах сменного отчета
 &scop attr-report-obj-shft-qty_tooltip   (shft-qty) Какое количество (в кг) из сверки брать для 1-го листа сменного отчета system-cli-qnty или state-cli-qnty (расчетно-книжный остаток)
@@ -4649,6 +4718,7 @@ character~
 &scop shop-attr-code-range false
 &scop store-attr-code-range false
 &scop db-attr-code-range true
+&scop region-attr-code-range false
 &scop batch-edit-attr-code-range  0
 &scop level-way-attr-code-range ",db,global"
 &scop up-way-attr-code-range ",code-range,code-range"
@@ -4676,6 +4746,7 @@ character~
 &scop shop-attr-bge-export false
 &scop store-attr-bge-export false
 &scop db-attr-bge-export true
+&scop region-attr-bge-export false
 &scop batch-edit-attr-bge-export  0
 &scop level-way-attr-bge-export ",db,global"
 &scop up-way-attr-bge-export ",bge-export,bge-export"
@@ -4695,6 +4766,7 @@ character~
 &scop shop-attr-auto-task false
 &scop store-attr-auto-task false
 &scop db-attr-auto-task true
+&scop region-attr-auto-task false
 &scop batch-edit-attr-auto-task  0
 &scop level-way-attr-auto-task ",db,global"
 &scop up-way-attr-auto-task ",auto-task,auto-task"
@@ -4716,6 +4788,7 @@ character~
 &scop shop-attr-ass-obj true
 &scop store-attr-ass-obj true
 &scop db-attr-ass-obj false
+&scop region-attr-ass-obj false
 &scop batch-edit-attr-ass-obj  0
 &scop attr-ass-obj-ass-srokiztdel_tooltip  (ass-srokiztdel) По ИЖТ в статусе на вывод из ассортимента` анализируется дата последнего изменения ИЖТ` сравнивается с текущей и если срок больше или равен заданному параметру` товар выводится из ассортимента
 &scop attr-ass-obj-crit-srokgod_tooltip    (crit-srokgod) Критический срок годности товара  в днях` для вывода из "Основной группы"
@@ -4742,6 +4815,7 @@ character~
 &scop shop-attr-wnd-size false
 &scop store-attr-wnd-size false
 &scop db-attr-wnd-size false
+&scop region-attr-wnd-size false
 &scop batch-edit-attr-wnd-size  0
 &scop level-way-attr-wnd-size ",,global"
 &scop up-way-attr-wnd-size ",,wnd-size"
@@ -4767,6 +4841,7 @@ character~
 &scop shop-attr-obj-date TRUE
 &scop store-attr-obj-date TRUE
 &scop db-attr-obj-date false
+&scop region-attr-obj-date false
 &scop batch-edit-attr-obj-date  0
 &scop level-way-attr-obj-date "obj,host,global"
 &scop up-way-attr-obj-date "obj-date,obj-date,obj-date"
@@ -4787,6 +4862,7 @@ character~
 &scop shop-attr-mercur true
 &scop store-attr-mercur true
 &scop db-attr-mercur false
+&scop region-attr-mercur false
 &scop batch-edit-attr-mercur  0
 &scop level-way-attr-mercur "obj,host,global"
 &scop up-way-attr-mercur "mercur,mercur,mercur"
@@ -4812,6 +4888,7 @@ character~
 &scop shop-attr-fbrattr TRUE
 &scop store-attr-fbrattr TRUE
 &scop db-attr-fbrattr FALSE
+&scop region-attr-fbrattr FALSE
 &scop batch-edit-attr-fbrattr  0
 &scop level-way-attr-fbrattr "obj,host,global"
 &scop up-way-attr-fbrattr "fbrattr,fbrattr,fbrattr"
@@ -4864,6 +4941,7 @@ Timeout ожидания подтверждения блокировки пистолетов,~
 &scop shop-attr-petrol true
 &scop store-attr-petrol true
 &scop db-attr-petrol false
+&scop region-attr-petrol false
 &scop batch-edit-attr-petrol  0
 &scop level-way-attr-petrol "obj,host,global"
 &scop up-way-attr-petrol "petrol,petrol,petrol"
@@ -4890,6 +4968,7 @@ Timeout ожидания подтверждения блокировки пистолетов,~
 '
 &scop prop-list-attr-staff-options 'noanshftstaff,obyznumbukv,obyznumbukvadm,minparol,minparoladm,TimeAvail,TimeAvailadm,TimeBlock,TimeBlockAdm,LastPaswd,LastPaswdAdm':U
 &scop db-attr-staff-options  false
+&scop region-attr-staff-options  false
 &scop global-attr-staff-options true
 &scop host-attr-staff-options false
 &scop shop-attr-staff-options false
@@ -4912,6 +4991,7 @@ Timeout ожидания подтверждения блокировки пистолетов,~
 &scop shop-attr-izt-rul false
 &scop store-attr-izt-rul false
 &scop db-attr-izt-rul  false
+&scop region-attr-izt-rul  false
 &scop batch-edit-attr-izt-rul  0
 &scop level-way-attr-izt-rul ",,global"
 &scop up-way-attr-izt-rul ",,izt-rul"
@@ -4936,6 +5016,7 @@ Timeout ожидания подтверждения блокировки пистолетов,~
 &scop shop-attr-marking true
 &scop store-attr-marking true
 &scop db-attr-marking false
+&scop region-attr-marking false
 &scop level-way-attr-marking "obj,,global"
 &scop up-way-attr-marking "marking,marking,marking"
 
@@ -4978,6 +5059,7 @@ end.
     p-prop-list = ~{&prop-list-~{&attr-code~}~}  ~
     p-prop-type-list = ~{&prop-type-list-~{&attr-code~}~}  ~
     p-prop-label-list = ~{&prop-label-list-~{&attr-code~}~}  ~
+    p-region = ~{&region-~{&attr-code~}~} ~
     . ~
   end.
 
@@ -5000,7 +5082,8 @@ procedure thbjattr_code :
     define output parameter p-shop           as logical no-undo .    /*может ли быть задан в контексте маг*/
     define output parameter p-store          as logical no-undo .    /*может ли быть задан в контексте склад*/
     define output parameter p-db             as logical no-undo .    /*может ли быть задан в контексте БД*/
-
+    define output parameter p-region         as logical no-undo .    /*может ли быть задан в контексте региона*/
+           
     if index(p-code, {&delim-par}) > 0 then do:
       p-upper-code = entry(1, p-upper-code, {&delim-par}).
       p-code = entry(1, p-code, {&delim-par}).
@@ -5393,7 +5476,7 @@ procedure thbjattr_value :
     define variable v-shop as logical no-undo .
     define variable v-store as logical no-undo .
     define variable v-db as logical no-undo .
-
+    define variable v-region as logical no-undo .
 
     run thbjattr_code in this-procedure
       (input  p-upper-code      /* p-code           */
@@ -5410,6 +5493,7 @@ procedure thbjattr_value :
       ,output v-shop
       ,output v-store
       ,output v-db
+      ,output v-region
       ) no-error .
     if error-status :error then do:
       undo, return error return-value .
@@ -5468,6 +5552,7 @@ procedure thbjattr_write :
     define variable v-store as logical no-undo .
     define variable v-db as logical no-undo .
     define variable v-dop as character no-undo .
+    define variable v-region as logical no-undo .
 
 
     run thbjattr_code in this-procedure
@@ -5485,6 +5570,7 @@ procedure thbjattr_write :
       ,output v-shop
       ,output v-store
       ,output v-db
+      ,output v-region
       ) no-error .
     if error-status :error then do:
       undo, return error return-value .
@@ -5572,6 +5658,7 @@ procedure thbjattr_delete :
     define variable v-shop as logical no-undo .
     define variable v-store as logical no-undo .
     define variable v-db as logical no-undo .
+    define variable v-region as logical no-undo .
 
 
     run thbjattr_code in this-procedure
@@ -5589,6 +5676,7 @@ procedure thbjattr_delete :
       ,output v-shop
       ,output v-store
       ,output v-db
+      ,output v-region
       ) no-error .
     if error-status :error then do:
       undo, return error return-value .
@@ -5639,6 +5727,7 @@ define variable v-host as logical no-undo .
 define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-db as logical no-undo .
+define variable v-region as logical no-undo .
 define variable v-jj as integer no-undo .
 define variable v-all-found as decimal no-undo .
 
@@ -5664,6 +5753,7 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
     ,output v-shop
     ,output v-store
     ,output v-db
+    ,output v-region
     ) no-error .
   if error-status :error then do:
     undo, return error return-value .
@@ -5701,6 +5791,7 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
     .
     assign
     v-jj = v-jj + 1.
+                                
     if buf_thbj-attr.prop-value-type = {&abl-datatype-void} then do:
       v-all-found = 0.
       run thbjattr_get-section in this-procedure (
@@ -5743,6 +5834,7 @@ define variable v-host as logical no-undo .
 define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-db as logical no-undo .
+define variable v-region as logical no-undo .
 define variable v-jj as integer no-undo .
 define variable v-created as logical no-undo .
 
@@ -5768,6 +5860,7 @@ on error  undo main-block, return error substitute( "&1. &2&3&4", vss-workfile, 
     ,output v-shop
     ,output v-store
     ,output v-db
+    ,output v-region
     ) no-error .
   if error-status :error then do:
     undo, return error return-value .
@@ -6750,6 +6843,22 @@ end procedure.
 &scop batch-edit-attr-weighed-gds  1
 
 
+/*Признак продажи 18+ */
+&scop type-attr-IS18Plus {&type-int}
+&scop format-attr-IS18Plus  ">9"
+&scop label-attr-IS18Plus   "Наличие возрастных ограничений"
+&scop tooltip-attr-IS18Plus "Наличие возрастных ограничений"
+&glob user-can-edit-attr-IS18Plus  true
+&glob output-display-attr-IS18Plus  true
+&glob other-attr-IS18Plus  ""
+&glob news-attr-IS18Plus true
+&glob copy-attr-IS18Plus  true
+&scop manual-edit-attr-IS18Plus 4
+&scop batch-edit-attr-IS18Plus  4
+
+
+
+
 /* сюда добавлять новые параметры атрибутов товаров */
 
 &scop attr-temp-code ~
@@ -6907,6 +7016,8 @@ procedure gds-attr-name :
       {&attr-temp-full-code}
       &scop attr-code attr-weighed-gds
       {&attr-temp-full-code}
+      &scop attr-code attr-IS18Plus
+      {&attr-temp-full-code}
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный глобальный атрибут товара &1", p-code ).
@@ -7022,6 +7133,8 @@ do
       &scop attr-code attr-MercUnits
       {&attr-temp-code}
       &scop attr-code attr-weighed-gds
+      {&attr-temp-code}
+      &scop attr-code attr-IS18Plus
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -7389,6 +7502,8 @@ procedure gds-attr-news :
       {&attr-news-code}
       &scop attr-code attr-weighed-gds
       {&attr-news-code}
+      &scop attr-code attr-IS18Plus
+      {&attr-news-code}
       
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
@@ -7498,6 +7613,8 @@ procedure gds-attr-copy :
       &scop attr-code attr-MercUnits
       {&attr-copy-code}
       &scop attr-code attr-weighed-gds
+      {&attr-copy-code}
+      &scop attr-code attr-IS18Plus      
       {&attr-copy-code}
 
       /* сюда добавлять новые параметры атрибутов товаров */
@@ -8265,6 +8382,9 @@ do
       {&attr-manual-edit-code}
       &scop attr-code attr-weighed-gds
       {&attr-manual-edit-code}
+      &scop attr-code attr-IS18Plus          
+      {&attr-manual-edit-code}
+
       /* сюда добавлять новые параметры атрибутов товаров */
       otherwise do:
         undo, return error substitute("неизвестный атрибут товара &1", p-code ).
@@ -14363,6 +14483,18 @@ end procedure.
 &scop news-attr-ASItype no
 &scop manual-edit-attr-ASItype 0
 &scop batch-edit-attr-ASItype 0
+
+ /* Регион */
+&scop type-attr-reg-code {&type-int}
+&scop format-attr-reg-code "999999999"
+&scop label-attr-reg-code "Регион"
+&scop tooltip-attr-reg-code "Регион"
+&scop user-can-edit-attr-reg-code false
+&scop output-display-attr-reg-code true
+&scop other-attr-reg-code '':u
+&scop news-attr-reg-code true
+&scop manual-edit-attr-reg-code 0
+&scop batch-edit-attr-reg-code 0
 /* сюда добавлять новые параметры атрибутов баз данных */
 
 &scop attr-temp-code ~
@@ -14485,9 +14617,11 @@ procedure db-attr-code :
       {&attr-temp-full-code}
       &scop attr-code attr-asitype
       {&attr-temp-full-code}
-
+      &scop attr-code attr-reg-code
+      {&attr-temp-full-code}
+      
       /* сюда добавлять новые параметры атрибутов баз данных */
-      otherwise do:
+      otherwise do:          
         undo, return error substitute("неизвестный атрибут БД &1", p-code) .
       end.
     end.
@@ -14569,6 +14703,8 @@ procedure db-attr-tooltip :
       &scop attr-code attr-asiport
       {&attr-temp-code}
       &scop attr-code attr-asitype
+      {&attr-temp-code}
+      &scop attr-code attr-reg-code
       {&attr-temp-code}
 
       /* сюда добавлять новые параметры атрибутов баз данных */
@@ -14842,7 +14978,9 @@ procedure db-attr-news :
       {&attr-news-code}
       &scop attr-code attr-asitype
       {&attr-news-code}
-
+      &scop attr-code attr-reg-code
+      {&attr-news-code}
+      
       /* сюда добавлять новые параметры атрибутов баз данных */
       otherwise do:
         undo, return error substitute("неизвестный атрибут БД &1", p-code) .
@@ -15803,6 +15941,8 @@ procedure ext-system-attr-news :
       &scop attr-code attr-esys-diadoc-lastload
       {&attr-news-code}
       &scop attr-code attr-esys-diadoc-ssl
+      {&attr-news-code}
+      &scop attr-code attr-reg-code
       {&attr-news-code}
       
 

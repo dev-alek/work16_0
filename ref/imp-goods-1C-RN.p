@@ -497,7 +497,19 @@ end.
   else do :
     RUN gds-attr-delete (v-nbc, {&attr-emrc-type}, output v-attr-del).     
   end.
-  
+ 
+
+  if p-GdsObj:IS18Plus = 1
+  then do:
+    RUN gds-attr-write (v-nbc, {&attr-IS18Plus}, p-GdsObj:IS18Plus).
+  end.  
+
+  if p-GdsObj:IS18Plus = 0 or p-GdsObj:IS18Plus = ? 
+  then do:
+     RUN gds-attr-delete (v-nbc, {&attr-IS18Plus}, output v-attr-del).
+  end.  
+
+ 
   if p-GdsObj:oil-grp <> ?
   then do:
     RUN gds-attr-write (v-nbc, {&attr-group-np}, p-GdsObj:oil-grp).

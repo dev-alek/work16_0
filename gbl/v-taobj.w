@@ -375,7 +375,8 @@ for each buf_thbj-attr no-lock where
        when {&ABL-datatype-character} then do:
             if      buf_thbj-attr.upper-prop-code eq "gismt"
             and (   buf_thbj-attr.prop-code eq "oflinepswd"
-                 or buf_thbj-attr.prop-code eq "proxypswd")
+                 or buf_thbj-attr.prop-code eq "proxypswd"
+                 or buf_thbj-attr.prop-code eq "MaxApiToken")
             then
                x_thbj-attr.d1 = fill("*",length (buf_thbj-attr.property-value-character)).
              else

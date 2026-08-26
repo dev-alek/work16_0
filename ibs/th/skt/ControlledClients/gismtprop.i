@@ -74,27 +74,44 @@ end.
 (input p-obj-type as char,
  input p-obj-code as int,
  input p-upper-prop-code as char,
- input p-prop-code as char, 
- input p-prop-type as char
+ input p-prop-code as char
  ):       
  
     define buffer buf_thbj-attr for ub.thbj-attr.
-
+    define variable v-reg-code as integer no-undo. 
+            
     find first buf_thbj-attr no-lock where  
                buf_thbj-attr.obj-type = p-obj-type
            and buf_thbj-attr.obj-code = p-obj-code
            and buf_thbj-attr.upper-prop-code = p-upper-prop-code
            and buf_thbj-attr.prop-code = p-prop-code
+    no-error.
+    if not available buf_thbj-attr and p-obj-type = {&db} then 
+    do:
+       /* ищем в регионе, если у БД задан регион */
+       { gbl/regcode.i p-obj-type p-obj-code v-reg-code }
+       if v-reg-code <> ? and v-reg-code <> 0 then do:
+           find first buf_thbj-attr no-lock where  
+                      buf_thbj-attr.obj-type = {&region}
+                  and buf_thbj-attr.obj-code = v-reg-code
+                  and buf_thbj-attr.upper-prop-code = p-upper-prop-code
+                  and buf_thbj-attr.prop-code = p-prop-code
            no-error.
-    if not available buf_thbj-attr and p-obj-type <> "" then 
+       end.
+    end.
+         
+    if not available buf_thbj-attr and p-obj-type <> "" 
+    then do:
        find first buf_thbj-attr no-lock where  
-               buf_thbj-attr.obj-type = ""
-           and buf_thbj-attr.obj-code = 0
-           and buf_thbj-attr.upper-prop-code = p-upper-prop-code
-           and buf_thbj-attr.prop-code = p-prop-code
-           no-error.  
+                  buf_thbj-attr.obj-type = ""
+              and buf_thbj-attr.obj-code = 0
+              and buf_thbj-attr.upper-prop-code = p-upper-prop-code
+              and buf_thbj-attr.prop-code = p-prop-code
+       no-error.
+    end.        
+             
     if avail buf_thbj-attr then do:
-        case p-prop-type: 
+        case buf_thbj-attr.prop-value-type: 
             when "character"
                then return buf_thbj-attr.property-value-character.
             when "integer"
@@ -104,7 +121,8 @@ end.
             when "logical"
                then return string(buf_thbj-attr.property-value-logical).         
         end case.     
-    end.       
+    end. 
+    return "".      
 end.
 
 { def/funcmet.i get-gismt-prop character }
@@ -114,26 +132,26 @@ end.
     define buffer buf_thbj-attr for ub.thbj-attr.
 
     assign             
-       gismt-AdressPort = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_AdressPort},"character")
-       gismt-DopParam   = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_dopParam},"character")
-       gismt-GisAdress  = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_gisAdress},"character")         
-       gismt-ProxyLogin = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_proxyLogin},"character")        
-       gismt-ProxyPswd  = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_proxyPswd},"character")
-       gismt-MaxTime    = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_maxTime},"integer"))        
-       gismt-RegKey     = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_regKey},"character")        
-       gismt-TimeFalStart = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_timeFalStart},"integer"))        
-       gismt-WaitTime    = decimal(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_waitTime},"decimal"))        
-       gismt-CrashSituat = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_crashSituat},"logical"))        
-       gismt-BanDate     = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_banDate},"integer"))        
-       gismt-cdnTurnOn   = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnTurnOn},"logical"))                   
-       gismt-cdnAdress   = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnAdress},"character")                   
-       gismt-cdnRepeat   = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnRepeat},"logical"))                   
-       gismt-cdnChange   = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnChange},"logical"))                   
-       gismt-cdnTimeUpd  = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnTimeUpdate},"integer"))                   
-       gismt-UpdateRequest = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_UpdateRequest},"logical"))                   
-       gismt-OflineAdress  = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_OflineAdress},"character")                   
-       gismt-OflineLogin   = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_OflineLogin},"character")                   
-       gismt-OflinePswd    = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_OflinePswd},"character")           
+       gismt-AdressPort = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_AdressPort})
+       gismt-DopParam   = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_dopParam})
+       gismt-GisAdress  = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_gisAdress})         
+       gismt-ProxyLogin = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_proxyLogin})        
+       gismt-ProxyPswd  = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_proxyPswd})
+       gismt-MaxTime    = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_maxTime}))        
+       gismt-RegKey     = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_regKey})        
+       gismt-TimeFalStart = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_timeFalStart}))        
+       gismt-WaitTime    = decimal(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_waitTime}))        
+       gismt-CrashSituat = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_crashSituat}))        
+       gismt-BanDate     = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_banDate}))        
+       gismt-cdnTurnOn   = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnTurnOn}))                   
+       gismt-cdnAdress   = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnAdress})                   
+       gismt-cdnRepeat   = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnRepeat}))                   
+       gismt-cdnChange   = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnChange}))                   
+       gismt-cdnTimeUpd  = integer(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_cdnTimeUpdate}))                   
+       gismt-UpdateRequest = logical(get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_UpdateRequest}))                   
+       gismt-OflineAdress  = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_OflineAdress})                   
+       gismt-OflineLogin   = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_OflineLogin})                   
+       gismt-OflinePswd    = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-gisMT},{&attr-gisMT_OflinePswd})           
        .
                      
     if gismt-OflineLogin <> "" and gismt-OflinePswd <> "" 

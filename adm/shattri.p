@@ -59,6 +59,7 @@ define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-global as logical no-undo .
 define variable v-db as logical no-undo .
+define variable v-region as logical no-undo .
 define variable v-prop-list as character no-undo .
 define variable v-prop-type-list as character no-undo .
 define variable v-prop-label-list as character no-undo .
@@ -98,6 +99,7 @@ define variable v-dflt-level-way as character no-undo . /*типа "obj,host,global"
 define variable v-dflt-up-way as character no-undo .     /*соответ список названий секций*/
 define variable v-start as integer no-undo .
 define variable v-step as integer no-undo .
+define variable v-reg-code as integer no-undo .
 
 define buffer buf_scales for ub.scales.
 define buffer buf_cash-pay for ub.cash-pay.
@@ -120,6 +122,7 @@ on error undo, return error
   and p-obj-type <> {&shop}
   and p-obj-type <> {&stock}
   and p-obj-type <> {&db}
+  and p-obj-type <> {&region}
   then do:
     undo, return error substitute( "&1 &2 &3 Неверное значение p-obj-type &4"
                                   , vss-workfile
@@ -138,33 +141,40 @@ on error undo, return error
     end.
     return.
   end.
-  case p-obj-type:
-    when {&shop} or
-    when {&stock} then do:
-      v-start = 1.
-    end.
-    when {&db} or
-    when {&stock} then do:
-      v-start = 2.
-    end.
-    when {&cmp}
-    then do:
-      v-start = 2.
-    end.
-    when '' then do:
-      v-start = 3.
-    end.
-  end case.
+  
   assign
   v-obj-type = p-obj-type
   v-obj-code = p-obj-code
   .
+  
   if p-mode = "get":U
   or p-mode = "init":U
   then do:
     run thbjattr_legacy in this-procedure ( input p-upper-param-code
                                            ,output v-dflt-level-way
                                            ,output v-dflt-up-way).
+    case p-obj-type:
+        when {&shop} or
+        when {&stock} then do:
+          v-start = 1.
+        end.    
+        when {&db} then do:
+          if lookup("db", v-dflt-level-way) = 1 
+          then v-start = 1.            
+          else v-start = 2.   
+        end.    
+        when {&region} then do:
+          v-start = 2.
+        end.
+        when {&cmp}
+        then do:
+          v-start = 2.
+        end.
+        when '' then do:
+          v-start = 3.
+        end.
+    end case.                                       
+                                            
     _step:
     do v-step = v-start to 3:
       if  entry(v-step, v-dflt-level-way) = '' then do:
@@ -190,6 +200,8 @@ on error undo, return error
             when {&cmp} then do:
             end.
             when {&db} then do:
+              v-obj-type = {&db}.
+              v-obj-code = p-obj-code.
             end.
             when '' then do:
             end.
@@ -211,7 +223,19 @@ on error undo, return error
               v-obj-code = p-obj-code.
             end.
             when {&db} then do:
-              v-obj-type = {&db}.
+              if lookup("region", v-dflt-level-way) = 2  
+              then do:
+                  v-obj-type = {&region}.
+                  { gbl/regcode.i p-obj-type p-obj-code v-reg-code }
+                  v-obj-code = v-reg-code.
+              end.
+              else do:      
+                  v-obj-type = {&db}.
+                  v-obj-code = p-obj-code.
+              end.
+            end.
+            when {&region} then do:
+              v-obj-type = {&region}.
               v-obj-code = p-obj-code.
             end.
             when '' then do:
@@ -228,7 +252,7 @@ on error undo, return error
       v-level-way = v-level-way + (if v-level-way = '' then '' else chr(44)) + v-obj-type.
       v-level-way-2 = v-level-way-2 + (if v-level-way-2 = '' then '' else {&comma-char})  + string(v-obj-code).
       v-up-way = v-up-way + (if v-up-way = "" then "" else {&comma-char}) +  entry(v-step, v-dflt-up-way).
-
+      
       if p-param-code = '':U then do:
         run thbjattr_get-section  in this-procedure (
                                              input v-obj-type
@@ -237,7 +261,7 @@ on error undo, return error
                                             ,input p-mode
                                             ,input-output table tt0-thbj-attr
                                             ,output v-found
-                                            ) no-error.
+                                            ) no-error.                                            
       end.
       else do:
         run thbjattr_value  in this-procedure (
@@ -263,13 +287,14 @@ on error undo, return error
                                       , return-value ).
 
       end.
+                                           
       if v-found = 1.0
       and v-step = v-start
       then do:
        /*нашли все prop*/
         return.
       end.
-        run thbjattr_code in this-procedure (
+        run thbjattr_code_reg in this-procedure (
          input  v-upper-param-code
         ,input p-param-code
         ,output attr-label
@@ -284,6 +309,7 @@ on error undo, return error
         ,output v-shop
         ,output v-store
         ,output v-db
+        ,output v-region
         ) no-error .
       if error-status:error then do:
         undo, return error substitute( "&1 &2 &3 Неверное значение v-upper-param-code &4 или p-param-code &5"
@@ -297,7 +323,7 @@ on error undo, return error
       v-need-prop-list = v-prop-list.
       v-num-need = num-entries(v-prop-list).
       /*нашли начальное значение из вышестоящего*/
-      if v-found = 1.0 then do:
+      if v-found = 1.0 or (v-found > 0 and v-step <> v-start) then do:
         if p-param-code <> '' then return.
         if p-param-code = '':U
         and p-obj-type <> v-obj-type then do:
@@ -316,10 +342,12 @@ on error undo, return error
                                               entry(2, p-upper-param-code, "_") = "host"
                                               or
                                               entry(2, p-upper-param-code, "_") = "db"
+                                              or
+                                              entry(2, p-upper-param-code, "_") = "region"
                                               )
                                         then p-upper-param-code
                                         else tt0-thbj-attr.upper-prop-code
-                                        ).
+                                        ).                                        
             find first buf_tt0-thbj-attr where
                     buf_tt0-thbj-attr.obj-type = p-obj-type
                 and buf_tt0-thbj-attr.obj-code = p-obj-code
@@ -1442,7 +1470,7 @@ end.
       end.
       v-prop-code = "{&bef-attr-gisMT_waitTime}".
 &scop ptype decimal
-&scop prop-value 1.5
+&scop prop-value 4
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
@@ -1523,7 +1551,63 @@ end.
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
+      end.      
+      v-prop-code = "{&bef-attr-gisMT_MACC_Timeout}".
+&scop ptype decimal
+&scop prop-value 0
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
       end. 
+      v-prop-code = "{&bef-attr-gisMT_Resp_TH_required}".
+&scop ptype integer
+&scop prop-value 1
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_LmCHzPort}".
+&scop ptype character
+&scop prop-value '5995'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_TH_IP}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end. 
+      v-prop-code = "{&bef-attr-gisMT_TH_Port}".
+&scop ptype character
+&scop prop-value '1500'
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.  
+      v-prop-code = "{&bef-attr-gisMT_AddTimeoutPIoT}".
+&scop ptype decimal
+&scop prop-value 1
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_MaxApiToken}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end. 
+      v-prop-code = "{&bef-attr-gisMT_AgeConfirm}".
+&scop ptype integer
+&scop prop-value 0
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.  
     end.    
     when {&attr-marking} then do:
       v-prop-code = "{&bef-attr-marking_marking-EDO}".
@@ -3308,12 +3392,13 @@ define variable v-host as logical no-undo .
 define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-db as logical   no-undo .
+define variable v-region as logical   no-undo .
 
   do
   on error undo, return error
   :
     if p-param-code <> "":U then do:
-      run thbjattr_code  in this-procedure (
+      run thbjattr_code_reg  in this-procedure (
                                              input v-upper-param-code
                                             ,input '':U
                                             ,output attr-label
@@ -3328,6 +3413,7 @@ define variable v-db as logical   no-undo .
                                             ,output v-shop
                                             ,output v-store
                                             ,output v-db
+                                            ,output v-region
                                           ) no-error.
       if error-status:error then do:
         undo, return error substitute( "&1 &2 &3 &4"
@@ -3354,13 +3440,14 @@ define variable v-host as logical no-undo .
 define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-db as logical   no-undo .
+define variable v-region as logical   no-undo .
 define variable v-jj as integer no-undo .
 define buffer buf_tt0-thbj-attr for tt0-thbj-attr.
   do
   on error undo, return error
   :
     if attr-other = '':U then do:
-      run thbjattr_code  in this-procedure (
+      run thbjattr_code_reg  in this-procedure (
                                              input v-upper-param-code
                                             ,input '':U
                                             ,output attr-label
@@ -3375,6 +3462,7 @@ define buffer buf_tt0-thbj-attr for tt0-thbj-attr.
                                             ,output v-shop
                                             ,output v-store
                                             ,output v-db
+                                            ,output v-region
                                           ) no-error.
       if error-status:error then do:
         undo, return error substitute( "&1 &2 &3 &4"
@@ -3387,6 +3475,7 @@ define buffer buf_tt0-thbj-attr for tt0-thbj-attr.
       or p-obj-type = {&stock} and not v-store
       or p-obj-type = {&cmp} and not v-host
       or p-obj-type = {&db} and not v-db
+      or p-obj-type = {&region} and not v-region
       or p-obj-type = '' and not v-global then do:
         undo, return error substitute( "&1 &2 &3 &4 Не предусмотрено создание секции параметров &5 для объекта TH тип &6"
                                       , vss-workfile

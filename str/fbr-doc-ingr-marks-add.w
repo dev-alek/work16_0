@@ -432,6 +432,7 @@ PROCEDURE CrCheckMark :
   define variable v-old-sts as integer no-undo .
   define variable v-recipe-code like ub.recipe.recipe-code no-undo .
   define variable v-ingr-gds-code as integer no-undo .
+  define variable v-exp-date-txt as character no-undo .
   
   define variable v-GisMTcheckStatus as integer no-undo .
   define variable v-is-off-line as logical no-undo .
@@ -539,78 +540,89 @@ PROCEDURE CrCheckMark :
   
   run waitfram-show in this-procedure (input "Идет проверка марки, пожалуйста, подождите..." ).
  
-  v-GisMTcheckStatus = marking:checkScanMark(v-cntxt-obj-code
-                                            , v-mark
-                                            , v-mark-short
-                                            , available buf_marking
-                                            , output v-is-off-line)
-                                            no-error.
-  if not v-is-off-line
-  and v-GisMTcheckStatus = 0
-  then do :
-    run waitfram-hide in this-procedure .
-    message ("Онлайн-проверка вернула отрицательный результат, марка не может быть добавлена в производство")
-    view-as alert-box .
-    return.
-  end .  
-  
-  if v-is-off-line 
-  and v-GisMTcheckStatus = 0
-  then do :
-    run waitfram-hide in this-procedure .
-    message ("Использование товара запрещено контролирующими органами, марка не может быть добавлена в производство")
-    view-as alert-box .
-    return.
-  end . 
-  
-  if v-is-off-line 
-  and v-GisMTcheckStatus = 3
-  then do :
-    run waitfram-hide in this-procedure .
-    message ("Онлайн и офлайн – проверки не выполнены, товар не может быть добавлен в производство")
-    view-as alert-box .
-    return.
-  end .
-    
-  if not v-is-off-line 
-  and v-GisMTcheckStatus = 2
-  then do :
-    run waitfram-hide in this-procedure .
-    message ("Онлайн проверка не выполнена, товар не может быть добавлен в производство")
-    view-as alert-box .
-    return.
-  end . 
+/*  v-GisMTcheckStatus = marking:checkScanMark(v-cntxt-obj-code                                                        */
+/*                                            , v-mark                                                                 */
+/*                                            , v-mark-short                                                           */
+/*                                            , available buf_marking                                                  */
+/*                                            , output v-is-off-line)                                                  */
+/*                                            no-error.                                                                */
+/*  if not v-is-off-line                                                                                               */
+/*  and v-GisMTcheckStatus = 0                                                                                         */
+/*  then do :                                                                                                          */
+/*    run waitfram-hide in this-procedure .                                                                            */
+/*    message ("Онлайн-проверка вернула отрицательный результат, марка не может быть добавлена в производство")        */
+/*    view-as alert-box .                                                                                              */
+/*    return.                                                                                                          */
+/*  end .                                                                                                              */
+/*                                                                                                                     */
+/*  if v-is-off-line                                                                                                   */
+/*  and v-GisMTcheckStatus = 0                                                                                         */
+/*  then do :                                                                                                          */
+/*    run waitfram-hide in this-procedure .                                                                            */
+/*    message ("Использование товара запрещено контролирующими органами, марка не может быть добавлена в производство")*/
+/*    view-as alert-box .                                                                                              */
+/*    return.                                                                                                          */
+/*  end .                                                                                                              */
+/*                                                                                                                     */
+/*  if v-is-off-line                                                                                                   */
+/*  and v-GisMTcheckStatus = 3                                                                                         */
+/*  then do :                                                                                                          */
+/*    run waitfram-hide in this-procedure .                                                                            */
+/*    message ("Онлайн и офлайн – проверки не выполнены, товар не может быть добавлен в производство")                 */
+/*    view-as alert-box .                                                                                              */
+/*    return.                                                                                                          */
+/*  end .                                                                                                              */
+/*                                                                                                                     */
+/*  if not v-is-off-line                                                                                               */
+/*  and v-GisMTcheckStatus = 2                                                                                         */
+/*  then do :                                                                                                          */
+/*    run waitfram-hide in this-procedure .                                                                            */
+/*    message ("Онлайн проверка не выполнена, товар не может быть добавлен в производство")                            */
+/*    view-as alert-box .                                                                                              */
+/*    return.                                                                                                          */
+/*  end .                                                                                                              */
   
   
 
   if available buf_marking
   then do :
+    v-exp-date-txt = marking:ChekExpirationDate(v-cntxt-obj-type, v-cntxt-obj-code, buffer buf_marking).
+    
     if buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:FreeZone:KeyIntDB
     and buf_marking.sts <> objSrv:Env:Marking:Sts:Mark:Checked_:KeyIntDB
     then do :
       run waitfram-hide in this-procedure .
-      if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB
-      or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReservedFromProduction:KeyIntDB
-      then do :
-        message (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)))
-        view-as alert-box .
-      end .
-      else do :
-        message  substitute("КМ в статусе <&1>, марка не может быть использована в производство", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts))
-        view-as alert-box .
-      end .
+      message (substitute("Операция невозможна. Статус марки – <&1>. ", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)) + v-exp-date-txt)
+      view-as alert-box .
+/*      if buf_marking.sts = objSrv:Env:Marking:Sts:Mark:Reserved:KeyIntDB                                                                                */
+/*      or buf_marking.sts = objSrv:Env:Marking:Sts:Mark:ReservedFromProduction:KeyIntDB                                                                  */
+/*      then do :                                                                                                                                         */
+/*        message (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts)))        */
+/*        view-as alert-box .                                                                                                                             */
+/*      end .                                                                                                                                             */
+/*      else do :                                                                                                                                         */
+/*        message  substitute("КМ в статусе <&1>, марка не может быть использована в производство", objSrv:Env:Marking:Sts:Mark:GetLabel(buf_marking.sts))*/
+/*        view-as alert-box .                                                                                                                             */
+/*      end .                                                                                                                                             */
       return.
+    end .
+    if v-exp-date-txt > ""
+    then do :
+      run waitfram-hide in this-procedure .
+      message (v-exp-date-txt)
+      view-as alert-box .
+      return .
     end .
   end .
   else do :
-    if v-GisMTcheckStatus = 2
-/*    or (v-GisMTcheckStatus = 0 and v-is-off-line)  выше уже есть такое условие */
-    then do :
-      run waitfram-hide in this-procedure .
-      message ("Марка не найдена в БД и онлайн проверка не выполнена, товар не может быть добавлен в производство")
-      view-as alert-box .
-      return.
-    end .
+/*    if v-GisMTcheckStatus = 2                                                                                      */
+/*/*    or (v-GisMTcheckStatus = 0 and v-is-off-line)  выше уже есть такое условие */                                */
+/*    then do :                                                                                                      */
+/*      run waitfram-hide in this-procedure .                                                                        */
+/*      message ("Марка не найдена в БД и онлайн проверка не выполнена, товар не может быть добавлен в производство")*/
+/*      view-as alert-box .                                                                                          */
+/*      return.                                                                                                      */
+/*    end .                                                                                                          */
     create buf_marking .
     assign
       buf_marking.mark = v-mark-short

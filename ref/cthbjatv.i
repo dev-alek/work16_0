@@ -98,7 +98,8 @@ on error undo, return error
       when {&abl-datatype-character} then do:
          if     current_c-thbj-attr.upper-prop-code eq "gismt"
             and (current_c-thbj-attr.prop-code eq "oflinepswd"
-                 or current_c-thbj-attr.prop-code eq "proxypswd")
+                 or current_c-thbj-attr.prop-code eq "proxypswd"
+                 or current_c-thbj-attr.prop-code eq "MaxApiToken")
          then v-label-param = "property-value-character" + {&delim-par} + "Значение(строк.)" + {&delim-par} + "getpswd" + {&delim-flf} +
                       v-label-param.
          else assign

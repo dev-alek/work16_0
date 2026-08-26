@@ -88,8 +88,45 @@ end procedure. /* get-thbj-version */
 
 
 { gbl/thbj-def.i }
-
 procedure thbjattr_code :
+   define input  parameter p-upper-code     as character no-undo . /* код атрибута                           */
+   define input  parameter p-code           as character no-undo . /* код атрибута                           */
+   define output parameter p-label          as character no-undo . /* лэйбл атрибута                         */
+   define output parameter p-user-can-edit  as logical   no-undo . /* пользователь может изменять в браузере */
+   define output parameter p-output-display as logical   no-undo . /* виден в браузере                       */
+   define output parameter p-other          as character no-undo . /* еще чего - нибудь                      */
+   define output parameter p-prop-list      as character no-undo . /*список членов секции*/
+   define output parameter p-prop-type-list as character no-undo . /*список типов членов секции*/
+   define output parameter p-prop-label-list as character no-undo . /*список лейблов членов секции*/
+   define output parameter p-global          as logical no-undo .   /*может ли быть задан в глобальном контексте*/
+   define output parameter p-host           as logical no-undo .    /*может ли быть задан в контексте фирмы*/
+   define output parameter p-shop           as logical no-undo .    /*может ли быть задан в контексте маг*/
+   define output parameter p-store          as logical no-undo .    /*может ли быть задан в контексте склад*/
+   define output parameter p-db             as logical no-undo .    /*может ли быть задан в контексте БД*/
+    
+   define variable p-region as logical no-undo.  
+ 
+   run thbjattr_code_reg in this-procedure (
+                                            p-upper-code,
+                                            p-code,
+                                            output p-label,
+                                            output p-user-can-edit,
+                                            output p-output-display,
+                                            output p-other,
+                                            output p-prop-list,
+                                            output p-prop-type-list,
+                                            output p-prop-label-list,
+                                            output p-global,
+                                            output p-host,
+                                            output p-shop,
+                                            output p-store,
+                                            output p-db,
+                                            output p-region  
+                                            ).                     
+
+end procedure.
+
+procedure thbjattr_code_reg :
 define input  parameter p-upper-code     as character no-undo . /* код атрибута                           */
 define input  parameter p-code           as character no-undo . /* код атрибута                           */
 define output parameter p-label          as character no-undo . /* лэйбл атрибута                         */
@@ -104,6 +141,7 @@ define output parameter p-host           as logical no-undo .    /*может ли быть
 define output parameter p-shop           as logical no-undo .    /*может ли быть задан в контексте маг*/
 define output parameter p-store          as logical no-undo .    /*может ли быть задан в контексте склад*/
 define output parameter p-db             as logical no-undo .    /*может ли быть задан в контексте БД*/
+define output parameter p-region         as logical no-undo .    /*может ли быть задан в контексте региона*/
 
 do
 on error undo, return error return-value
@@ -124,11 +162,12 @@ on error undo, return error return-value
     ,output p-shop
     ,output p-store
     ,output p-db
+    ,output p-region
     ) no-error .
   if error-status :error
-  then do:
+  then do:      
     undo, return error substitute( "&1. &2&3&4", vss-include-info{&vssseq}, return-value, {&new-line}, error-status :get-message (1)).
-  end.
+  end. 
 end.
 end procedure.
 

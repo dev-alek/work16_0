@@ -754,6 +754,7 @@ PROCEDURE save_update :
   define variable ungroup      as logical   no-undo . 
   define variable chg-qnty     as integer   no-undo .
   define variable v-level      as integer   no-undo .
+  define variable v-exp-date-txt as character no-undo .
   
   define buffer buf_doc-line for ub.doc-line .
   define buffer buf_parts    for ub.parts .
@@ -1018,9 +1019,12 @@ PROCEDURE save_update :
 
     if available marking
     then do:
+      v-exp-date-txt = "" .
+/*      v-exp-date-txt = marking:ChekExpirationDate(t_doc.obj-type, t_doc.obj-code, buffer marking).*/
+      
       if marking.sts = thMarkSts:Reserved:KeyIntDB then
       do:
-        run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",thMarkSts:GetLabel(marking.sts))).
+        run dispmessage (substitute("Операция невозможна. Статус марки – <&1>. ", thMarkSts:GetLabel(marking.sts)) + v-exp-date-txt).
         return.
       end.
       
@@ -1038,9 +1042,7 @@ PROCEDURE save_update :
            marking.sts <> thMarkSts:FreeZone:KeyIntDB and
            marking.sts <> thMarkSts:Checked_:KeyIntDB then 
         do:
-          run dispmessage (substitute("Марка в статусе <&1> не может быть добавлена в документ внешнего расхода.",
-                           thMarkSts:GetLabel(marking.sts))
-                          ).
+          run dispmessage (substitute("Операция невозможна. Статус марки – <&1>. ", thMarkSts:GetLabel(marking.sts)) + v-exp-date-txt).
           return.
         end.  
                 
@@ -1071,9 +1073,7 @@ PROCEDURE save_update :
       do:
         if marking.sts <> thMarkSts:FreeZone:KeyIntDB then 
         do:
-          run dispmessage (substitute("Марка в статусе <&1> не может быть перемещена.",
-                           thMarkSts:GetLabel(marking.sts))
-                          ).
+          run dispmessage (substitute("Операция невозможна. Статус марки – <&1>. ", thMarkSts:GetLabel(marking.sts)) + v-exp-date-txt).
           return.
         end.  
       end.
@@ -1081,17 +1081,17 @@ PROCEDURE save_update :
       do:
         if marking.sts = thMarkSts:WrittenOff:KeyIntDB then 
         do:
-          run dispmessage ("Товар списан ранее.").
+          run dispmessage ("Товар списан ранее." + v-exp-date-txt).
           return.
         end.  
         if marking.sts = thMarkSts:DeliveryControl:KeyIntDB then 
         do:
-          run dispmessage ("Товар еще не оприходован.").
+          run dispmessage ("Товар еще не оприходован." + v-exp-date-txt).
           return.
         end.  
         if marking.sts = thMarkSts:Ungrouped:KeyIntDB then 
         do:
-          run dispmessage ("Упаковка разгруппирована. Необходимо сканировать индивидуальные товары.").
+          run dispmessage ("Упаковка разгруппирована. Необходимо сканировать индивидуальные товары." + v-exp-date-txt).
           return.
         end.  
         if marking.sts = thMarkSts:UsedInProduction:KeyIntDB then 
@@ -1103,7 +1103,7 @@ PROCEDURE save_update :
         end.  
         if marking.sts = thMarkSts:Moved:KeyIntDB then
         do:
-          run dispmessage ("Товар перемещен на другой АЗК.").
+          run dispmessage ("Товар перемещен на другой АЗК." + v-exp-date-txt).
           return.
         end. 
         if marking.sts <> thMarkSts:OutZone:KeyIntDB and
@@ -1114,9 +1114,7 @@ PROCEDURE save_update :
            marking.sts <> thMarkSts:Moved:KeyIntDB and
            marking.sts <> thMarkSts:OutOfInventory:KeyIntDB then
         do:
-          run dispmessage (
-            substitute("Марка в статусе <&1> не может быть списана.",thMarkSts:GetLabel(marking.sts))
-            ).
+          run dispmessage (substitute("Операция невозможна. Статус марки – <&1>. ",thMarkSts:GetLabel(marking.sts)) + v-exp-date-txt).
           return.
         end.
         if marking.sts = thMarkSts:OutZone:KeyIntDB or
@@ -1132,7 +1130,7 @@ PROCEDURE save_update :
                     b_trn-doc.doc-code     =  b_marking-lines.out-code
                 and b_trn-doc.ext-doc-type =  {&TDEDT_Spi_Vnesh}
                 and b_trn-doc.status_      <> {&fact}:
-              run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно",thMarkSts:GetLabel(marking.sts))).
+              run dispmessage (substitute("КМ в статусе <&1>, марка не может быть добавлена повторно. ",thMarkSts:GetLabel(marking.sts)) + v-exp-date-txt).
               return.
           end.
         end.    
@@ -1155,6 +1153,12 @@ PROCEDURE save_update :
           return.
         end.
       end.
+      
+      if v-exp-date-txt > ""
+      then do :
+        run dispmessage (v-exp-date-txt) .
+        return .
+      end .
 
 /*      RUN gds-attr-value (                                                                         */
 /*      INPUT v-cis-gds-code,                                                                        */
@@ -1212,28 +1216,28 @@ PROCEDURE save_update :
           return.
       end.
 
-      vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, no, output vRunedOffLineCheck) no-error.
-      if error-status:error then
-      do:
-          run dispmessage (
-            substitute("Марка не найдена в базе ТН и не может быть списана,~nт.к. возникла ошибка при проверке: &1.",error-status:get-message(1))
-            ).
-          return.
-      end.
-      if vStatusCheckMark = 2 then
-      do:
-          run dispmessage (
-            "Проверка марки не выполнена, марка отсутствует в БД и не может быть добавлена в документ."
-            ).
-          return.
-      end.
-      if vStatusCheckMark = 0 then
-      do:
-          run dispmessage (
-            "Проверка марки дала отрицательный результат, марка не может быть добавлена в документ."
-            ).
-          return.
-      end.
+/*      vStatusCheckMark = marking:checkScanMark(t_doc.obj-code, v-mark, vcodident, no, output vRunedOffLineCheck) no-error.                       */
+/*      if error-status:error then                                                                                                                 */
+/*      do:                                                                                                                                        */
+/*          run dispmessage (                                                                                                                      */
+/*            substitute("Марка не найдена в базе ТН и не может быть списана,~nт.к. возникла ошибка при проверке: &1.",error-status:get-message(1))*/
+/*            ).                                                                                                                                   */
+/*          return.                                                                                                                                */
+/*      end.                                                                                                                                       */
+/*      if vStatusCheckMark = 2 then                                                                                                               */
+/*      do:                                                                                                                                        */
+/*          run dispmessage (                                                                                                                      */
+/*            "Проверка марки не выполнена, марка отсутствует в БД и не может быть добавлена в документ."                                          */
+/*            ).                                                                                                                                   */
+/*          return.                                                                                                                                */
+/*      end.                                                                                                                                       */
+/*      if vStatusCheckMark = 0 then                                                                                                               */
+/*      do:                                                                                                                                        */
+/*          run dispmessage (                                                                                                                      */
+/*            "Проверка марки дала отрицательный результат, марка не может быть добавлена в документ."                                             */
+/*            ).                                                                                                                                   */
+/*          return.                                                                                                                                */
+/*      end.                                                                                                                                       */
       create ub.marking.
       assign
         ub.marking.mark     = vcodident

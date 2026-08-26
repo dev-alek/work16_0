@@ -137,6 +137,7 @@ FOR EACH gds-list by order-num:
     end.
     if return-value = "NEXT":U then NEXT _gds-list.
     ACCUMULATE gds-list.artic (COUNT).
+    if cdpcknum = 0 then cdpcknum = 1. /* иначе ошибка деления на ноль */
     if NOT alllstcs AND ( (accum count gds-list.artic)  modulo cdpcknum)  = 0 then do:
       run get-stop-state in p-log-handle (output v-stop).
       if v-stop then do:

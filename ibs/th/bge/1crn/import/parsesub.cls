@@ -232,6 +232,9 @@ class ibs.th.bge.1crn.import.parsesub:
   define variable Doc-ReasonSubj                        as class doc-reason              no-undo .
   define variable impDoc-Reason                         as class impdoc-reason           no-undo .
   
+  define variable settingsSubjectObj                    as class settings                no-undo.
+  define variable impSettingsEventHndlrObj              as class impsettings             no-undo.
+  
   define variable good             as logical   no-undo.
   define variable nameChildrenCurr as character no-undo.
   define variable iNum             as integer   no-undo. /* примерный счетчик элемента */
@@ -756,6 +759,17 @@ class ibs.th.bge.1crn.import.parsesub:
           end .
           v-iSubject = ordanswSubjectObj .
           v-iImpSub  = impordanswEventHndlrObj .
+          // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
+          GetChildrenSub (hNoderef, (level + 1), v-iSubject).
+          ReceivedSubjectPublish(v-iSubject, v-iImpSub).
+        end.
+        when "setting" then do:
+          if not valid-object(settingsSubjectObj) then settingsSubjectObj = new settings ().
+          if not valid-object(impSettingsEventHndlrObj) then do :
+            impSettingsEventHndlrObj = new impsettings ().
+          end .
+          v-iSubject = settingsSubjectObj .
+          v-iImpSub  = impSettingsEventHndlrObj .
           // внести new внутрь остальных case, и потом вынести GetChildrenSub и ReceivedSubjectPublish вниз под case
           GetChildrenSub (hNoderef, (level + 1), v-iSubject).
           ReceivedSubjectPublish(v-iSubject, v-iImpSub).

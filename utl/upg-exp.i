@@ -63,7 +63,8 @@ procedure upg-exp :
              and  p-tbl-handle::upper-prop-code eq "gismt"
              and  v-fh:name                     eq "property-value-character"
              and (    p-tbl-handle::prop-code eq "oflinepswd"
-                   or p-tbl-handle::prop-code eq "proxypswd")
+                   or p-tbl-handle::prop-code eq "proxypswd"
+                   or p-tbl-handle::prop-code eq "MaxApiToken")
           then 
              v-str = fill("*",length(v-str)).
       end.

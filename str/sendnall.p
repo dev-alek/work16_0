@@ -502,7 +502,7 @@ if can-find (first  pdf-list ) then do:
                       ,input "N"
                       ) no-error.
 end.
-if sendEMRC or sendMarkType then do:
+if sendEMRC or sendMarkType or sendGisMt then do:
 for each buf_clients no-lock
       where buf_clients.obj-type = {&shop}
         and buf_clients.db-num   = p-db-num,
@@ -534,6 +534,15 @@ for each buf_clients no-lock
                           ,input this-procedure:handle
                           ,input p-log-handle
                           ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'MarkType':U + {&delim-par} + 'Передача типов маркировки':U
+                          ) no-error.
+   end.
+   if sendGisMt then
+   do:
+       run str/send-all.p (
+                           input parparentproc
+                          ,input this-procedure:handle
+                          ,input p-log-handle
+                          ,input buf_clients.obj-type + {&delim-par} + string(buf_clients.obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'gismt':U + {&delim-par} + 'Передача параметров работы с ТСПИоТ':U
                           ) no-error.
    end.
 end.

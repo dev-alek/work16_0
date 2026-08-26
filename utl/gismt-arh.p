@@ -24,6 +24,7 @@ define variable vss-description as character no-undo init "".
 
 { nws/nws-def.i  }  
 { utl/search.i   }
+{ cmp/trg-def.i }
 
 define variable vFileReq1     as character no-undo. /* имя файла с логом */
 define variable vFileReq2     as character no-undo. /* имя файла с логом */
@@ -58,9 +59,12 @@ define variable vDelFileType as character no-undo.
 define variable vZipName     as character no-undo.
 define variable vZipDate     as date      no-undo.
 define variable vNumDate     as integer   no-undo.
+define variable vZipDateChar as character no-undo.
+define variable vFolderCash  as character no-undo.
 
 define variable vDate as date no-undo.
-
+define buffer for-cash-desk for ub.cash-desk.
+ 
 assign
    vDate     = today - 1
    vFileReq1 = "GisMtReq-" + replace(string(vDate),"/","-") + ".log"   
@@ -164,17 +168,38 @@ end.
 
 /* удаляем старые архивы */
 vPathFolder = objExists(vFolder,"D").
-if vPathFolder <> ? then do:    
-    input stream FLStream from os-dir (vPathFolder).
+if vPathFolder <> ? then do:       
+    run DelOldArch (vPathFolder, vPref).
+    /* удаляем старые архивы */
+    for each for-cash-desk no-lock where
+             for-cash-desk.db-num   eq g#db-num:
+       assign
+          vFolderCash = substitute("&1/&2",vFolder,for-cash-desk.cash-num).
+          vPathFolder = objExists(vFolderCash,"D").   
+       if vPathFolder <> ? then       
+          run DelOldArch (vPathFolder,"GisMTreq").           
+    end.         
+end.    
+else run write-to-log( substitute("Не найден каталог архивов проверки марок &1", vFolder) ).
+
+procedure DelOldArch:
+    define input param iPathFolder as character no-undo.
+    define input param iPref as character no-undo.     
+    
+    define variable vFileEx as char no-undo.
+    
+    input stream FLStream from os-dir (iPathFolder).
     repeat
        on error  undo, return  
        on stop   undo, return  
        :
        import stream FLStream vDelFileName vDelFullName vDelFileType.
+       
+       vFileEx = if num-entries(vDelFileName, ".") >= 2 then entry(num-entries(vDelFileName, "."),vDelFileName, ".") else "".               
        if vDelFileType begins "F"
-         and vDelFileName begins vPref
+         and vDelFileName begins iPref
          and num-entries( vDelFileName, "." ) > 1
-         and entry(2,vDelFileName, "." ) = "zip" 
+         and (vFileEx = "zip" or vFileEx = "gz") 
        then do:
          /* проверяем, что прошло больше заданного кол-ва дней */
          assign
@@ -182,19 +207,21 @@ if vPathFolder <> ? then do:
             vZipDate = ?
             .
          if num-entries(vZipName,"-") = 4 then 
-         vZipDate = date(entry(2,vZipName,"-") + "/" + entry(3,vZipName,"-") + "/" + entry(4,vZipName,"-")) no-error.
+             vZipDate = date(entry(2,vZipName,"-") + "/" + entry(3,vZipName,"-") + "/" + entry(4,vZipName,"-")) no-error.
+         else if num-entries(vZipName,"-") >= 2 then do:
+             vZipDateChar = entry(2,vZipName,"-").
+             vZipDate = date(substitute("&1/&2/&3",substring(vZipDateChar,7,2),substring(vZipDateChar,5,2),substring(vZipDateChar,1,4))) no-error.
+         end.                   
          if vZipDate <> ? and (vDate - vZipDate + 1) >= vNumDate 
-         then do:
+         then do:             
             /* удаляем этот файл */
-            run write-to-log( substitute("Удаление архива &1.zip", entry(1,vDelFullName,"."))) .
-            os-delete value (vDelFullName) no-error .
+            run write-to-log( substitute("Удаление архива &1.&2", entry(1,vDelFullName,"."),vFileEx)) .
+            os-delete value (vDelFullName) no-error .            
             if searchFile(vDelFullName) = ? 
-            then  run write-to-log( "Архив успешно удален" ) .
-            else  run write-to-log( substitute("Не удалось удалить архив &1.zip", entry(1,vDelFullName,"."))) .
+            then  run write-to-log(substitute("Архив &1.&2 успешно удален", entry(1,vDelFullName,"."),vFileEx)) .
+            else  run write-to-log( substitute("Не удалось удалить архив &1.&2", entry(1,vDelFullName,"."),vFileEx)) .
          end.
        end.
     end.
     input stream FLStream close.
-
-end.    
-else run write-to-log( substitute("Не найден каталог архивов проверки марок &1", vFolder) ).
+end procedure.    

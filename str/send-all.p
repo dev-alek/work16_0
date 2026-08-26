@@ -128,17 +128,31 @@ no-error
 .
 if i-Type eq "?"
 then
-   return error "Ќезадан тип дл€ send-all.p".
+   return error "Ќе задан тип дл€ send-all.p".
 define variable mValue   as character no-undo.
 define variable mNumPar  as integer no-undo.
 define variable mSendAll as logical no-undo.
 define variable mCashNum as integer no-undo init ?.
+define variable mCashAll as logical no-undo.
+define variable mNumCashAll as integer no-undo.
 mValue = replace(i-value,",","=").
 mNumPar = lookup("cash-send",mValue,"=").
+
+
 if mNumPar > 0
 then do:
    mSendAll = entry(mNumPar + 1,mValue,"=") eq "all" no-error.
    mCashNum = int(entry(mNumPar + 1,mValue,"=")) no-error.
+   if mCashNum <> ? and not mSendAll then do:
+      /* провер€ем параметр, надо ли посылать на указанный номер кассы, даже если она 
+      ** выключена в справочнике касс */
+      mNumCashAll = lookup("cash-all",mValue,"="). 
+      if mNumCashAll > 0 then do: 
+          mCashAll = entry(mNumCashAll + 1,mValue,"=") eq "all" no-error.
+          if mCashNum <> ? and mCashNum <> 0 and mCashAll 
+          then mSendAll = yes.
+      end.
+   end.   
 end.
 mNumPar = lookup("SocetLog",mValue,"=").
 if mNumPar > 0

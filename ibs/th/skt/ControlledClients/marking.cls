@@ -33,6 +33,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   DEFINE OVERRIDE PUBLIC PROPERTY vss-description AS CHARACTER NO-UNDO INIT "Обработчик запросов по маркам с кассы" GET.
 
   {cmp\str-glbl.i class}
+  { cmp\library.i class}
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10)  + chr(13) + chr(10)  
   DEFINE PRIVATE VARIABLE cashSts    AS CLASS cash     NO-UNDO.
@@ -50,15 +51,20 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   DEFINE PRIVATE VARIABLE action    AS CHARACTER NO-UNDO.
   DEFINE PRIVATE VARIABLE shift_tbeg AS DATE NO-UNDO.
   DEFINE PRIVATE VARIABLE shift_num  AS INTEGER NO-UNDO.
+  DEFINE PRIVATE VARIABLE statusPOS  AS INTEGER NO-UNDO.
+  DEFINE PRIVATE VARIABLE isCheckedOffline  AS LOGICAL NO-UNDO.
   
   DEFINE PRIVATE VARIABLE mMarkOrig     AS CHARACTER NO-UNDO.
   DEFINE PRIVATE VARIABLE mCheckSts     AS INTEGER   NO-UNDO.
   DEFINE PRIVATE VARIABLE mCheckStsOff  AS INTEGER   NO-UNDO.
+  DEFINE PRIVATE VARIABLE mCheckStsSave AS INTEGER   NO-UNDO.
   DEFINE PRIVATE VARIABLE mReqId        AS CHARACTER NO-UNDO. 
   DEFINE PRIVATE VARIABLE mReqTimestamp AS CHARACTER NO-UNDO.
   DEFINE PRIVATE VARIABLE mInst         AS CHARACTER NO-UNDO. 
   DEFINE PRIVATE VARIABLE mVersion      AS CHARACTER NO-UNDO.
-  DEFINE PRIVATE VARIABLE mCheckGisMT   AS INTEGER NO-UNDO. /* 0 - проверки не было, 1 - проверка была, 2 - аварийная ситуация */
+  DEFINE PRIVATE VARIABLE mCheckGisMT   AS INTEGER NO-UNDO. /* 0 - проверки не было, 1 - проверка была, 2 - аварийная ситуация */  
+  DEFINE PRIVATE VARIABLE mSaveOnlineResult AS LOGICAL NO-UNDO.
+  
     
   DEF STREAM out_s.
   DEF STREAM out_data.
@@ -199,6 +205,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       shift_tbeg = ?
       shift_num  = 0 
       gismt-WaitTimePlus = 0
+      statusPOS = ?
+      mSaveOnlineResult = no
     .
     
     
@@ -285,6 +293,14 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
           DO:
             shift_num = int (val) NO-ERROR.
           END.
+        WHEN "StatusPos" THEN 
+          DO:
+            statusPOS = int (val) NO-ERROR.
+          END.
+        WHEN "isCheckedOffline" THEN 
+          DO:
+            isCheckedOffline = logical (val) NO-ERROR.
+          END.          
       END CASE.
     END.
     IF cash = "" OR action = ""
@@ -325,57 +341,113 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
         FIND FIRST buf_marking EXCLUSIVE-LOCK WHERE buf_marking.mark BEGINS mark-short NO-WAIT NO-ERROR.
         IF action = cashSts:SaleLock:NameProp THEN 
         DO:
-           mCheckGisMT    = 0. 
-           vAccMarkCheck = ChekAccessMark({&shop},obj-code,mark,mark-short).           
-           dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ: &1 Статус: &2 mReqId &3 mReqTimeStamp &4 mCheckGisMT &5", 
-                                              vAccMarkCheck, 
-                                              mCheckSts,
-                                              mReqId,
-                                              mReqTimeStamp,
-                                              mCheckGisMT)).
-           IF mCheckSts = 0 OR 
-              mCheckSts = 3 /* faund = false */
-           THEN DO:
-              /* если марки нет в ГИС МТ или не прошла проверку в ГИС МТ, то ее создадим ниже, но продавать нельзя */
-              vAccMarkCheck = vAccMarkCheck + "Снимите с продажи и передайте товар управляющему/старшему смены".
-           END.
-           /* Если прошло более 72ч с момента аварии ГИС МТ */
-           IF mCheckSts = 4 THEN DO:
-              vLC = getJson(0, vAccMarkCheck, mark).
-              sendContent(vLC).
-              RETURN.
-           END.     
-           /* если марку не удалось проверить онлайн */
-           IF (mCheckSts = 2 AND mCheckGisMT <> 1) OR mCheckGisMT = 2 THEN DO:
-              /* проверим значение online-result марки (? - если марки в ТН нет)*/
-              dbgPrint("marking.log", SUBSTITUTE("Считываем online-result: &1.", 
-                                                IF NOT AVAIL buf_marking THEN "marking не найдена"
-                                                ELSE STRING(buf_marking.online-result))).
-              IF AVAIL buf_marking AND buf_marking.online-result = 0 
-              THEN DO:
-                  vAccMarkCheck = "Выполнить текущую онлайн-проверку не удалось. Продажа заблокирована по результату ранее выполненной проверки. Снимите с продажи и передайте товар управляющему/старшему смены".
+           assign
+              mCheckGisMT = 0
+              mTypeMark = ""
+              .
+           ChekTypeMarkByDm(mark).
+           
+           /* если на кассе уже была проверка онлайн/офлайн */ 
+           if statusPOS <> ? then do:
+               dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ была на кассе. Статус: &1 Проверка в ЛМЧЗ &2", 
+                                                  statusPOS, 
+                                                  isCheckedOffline
+                                                  )).
+               assign
+                  vCheckLocalMark = isCheckedOffline 
+                  mCheckSts = statusPOS
+                  .
+               /* была проверка онлайн */
+               if not isCheckedOffline
+               then do:                   
+                   mCheckGisMT = 1.
+                   /* проверка онлайн не пройдена */
+                   if mCheckSts = 0 then
+                      vAccMarkCheck = "Запрет онлайн".   
+                   mCheckStsSave = mCheckSts .                          
+               end.     
+               /* была проверка офлайн */
+               else do:               
+                   /* проверка офлайн не пройдена */
+                   if mCheckSts = 0 then do:
+                      /*vAccMarkCheck = vAccMarkCheck + "Снимите с продажи и передайте товар управляющему/старшему смены".*/
+                      vLC = getJson(0, vAccMarkCheck, mark).
+                      sendContent(vLC).
+                      RETURN.
+                   end.
+                   /* проверка офлайн на кассе пройдена */
+                   IF AVAIL buf_marking AND buf_marking.online-result = 0 
+                   THEN DO:
+                       vAccMarkCheck = "Выполнить текущую онлайн-проверку не удалось. Продажа заблокирована по результату ранее выполненной проверки.".
+                       vLC = getJson(0, vAccMarkCheck, mark).
+                       sendContent(vLC).
+                       RETURN.
+                   END.          
+               end.
+               /* проверяем срок годности */
+               if mCheckSts = 1 or mCheckSts = 2 
+               then do:
+                   /* Проверяем срок годности */
+                   vAccMarkCheckOff = ChekExpirationDate({&shop},obj-code,buffer buf_marking).                       
+                   vAccMarkCheck = vAccMarkCheckOff. 
+               end.
+               dbgPrint("marking.log", SUBSTITUTE("Результат после обработки статуса с кассы: Комментарий: &1 Статус: &2 Проверка в ЛМЧЗ &3 mCheckGisMT &4 ", 
+                                                  vAccMarkCheck, 
+                                                  mCheckSts,
+                                                  vCheckLocalMark,
+                                                  mCheckGisMT
+                                                  )).
+           end.    
+           else do:
+               vAccMarkCheck = ChekAccessMark({&shop},obj-code,mark,mark-short).           
+               dbgPrint("marking.log", SUBSTITUTE("Проверка ГИС МТ: &1 Статус: &2 mReqId &3 mReqTimeStamp &4 mCheckGisMT &5", 
+                                                  vAccMarkCheck, 
+                                                  mCheckSts,
+                                                  mReqId,
+                                                  mReqTimeStamp,
+                                                  mCheckGisMT)).
+                                              
+               IF mCheckSts = 0 OR 
+                  mCheckSts = 3 /* faund = false */
+               THEN DO:
+                  /* если марки нет в ГИС МТ или не прошла проверку в ГИС МТ, то ее создадим ниже, но продавать нельзя */
+                  vAccMarkCheck = vAccMarkCheck + "Снимите с продажи и передайте товар управляющему/старшему смены".
+               END.
+               /* Если прошло более 72ч с момента аварии ГИС МТ */
+               IF mCheckSts = 4 THEN DO:
                   vLC = getJson(0, vAccMarkCheck, mark).
                   sendContent(vLC).
                   RETURN.
-              END.
-              ELSE DO:
-                  /* Проверяем офлайн */
-                  vAccMarkCheckOff = ChekLocalMark(mark-short).
-                  vCheckLocalMark = TRUE.
-                  /* Проверяем срок годности по дате из 1С */
-                  if vAccMarkCheckOff = "" and 
-                     mCheckSts = 2 and 
-                     available buf_marking 
-                  then 
-                     vAccMarkCheckOff = ChekExpirationDate({&shop},obj-code,buffer buf_marking).
-                     
-                  if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" 
-                  then vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
-                  else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.
-                  
-                  
-              END.
-              
+               END.     
+               /* если марку не удалось проверить онлайн */
+               IF (mCheckSts = 2 AND mCheckGisMT <> 1) OR mCheckGisMT = 2 THEN DO:
+                  /* проверим значение online-result марки (? - если марки в ТН нет)*/
+                  dbgPrint("marking.log", SUBSTITUTE("Считываем online-result: &1.", 
+                                                    IF NOT AVAIL buf_marking THEN "marking не найдена"
+                                                    ELSE STRING(buf_marking.online-result))).
+                  IF AVAIL buf_marking AND buf_marking.online-result = 0 
+                  THEN DO:
+                      vAccMarkCheck = "Выполнить текущую онлайн-проверку не удалось. Продажа заблокирована по результату ранее выполненной проверки. Снимите с продажи и передайте товар управляющему/старшему смены".
+                      vLC = getJson(0, vAccMarkCheck, mark).
+                      sendContent(vLC).
+                      RETURN.
+                  END.
+                  ELSE DO:
+                      /* Проверяем офлайн */
+                      vAccMarkCheckOff = ChekLocalMark(mark-short).
+                      vCheckLocalMark = TRUE.
+                      /* Проверяем срок годности по дате из 1С */
+                      if vAccMarkCheckOff = "" and 
+                         mCheckSts = 2 and 
+                         available buf_marking 
+                      then 
+                         vAccMarkCheckOff = ChekExpirationDate({&shop},obj-code,buffer buf_marking).
+                         
+                      if vAccMarkCheckOff <> "" and vAccMarkCheck begins "Сообщите" 
+                      then vAccMarkCheck = vAccMarkCheckOff + " Также с" + substring(vAccMarkCheck,2). 
+                      else vAccMarkCheck = vAccMarkCheckOff + vAccMarkCheck.                                    
+                  END.
+              END.   
            END.                 
         END.
   
@@ -391,6 +463,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
             DO:
               createMark(mark-short, buffer buf_marking).
               IF NOT vCheckLocalMark 
+                 AND AVAILABLE buf_marking
               THEN DO:   /* online-result устанавливаем, если offline-проверка не запускалась */
                 setOnlineResult(BUFFER buf_marking).
               END.
@@ -946,7 +1019,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      ):      
       DEFINE VARIABLE v-value-character AS CHARACTER NO-UNDO.
               
-      v-value-character = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-marking},p-param-code,"character").
+      v-value-character = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-marking},p-param-code).
       dbgPrint("marking.log", SUBSTITUTE("Тип маркировки: p-param-code &1 v-value-character &2 тип маркировки &3", 
                                          p-param-code, 
                                          v-value-character,
@@ -2624,7 +2697,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
    Purpose:
    Notes:  Проверка срока годности  
   ------------------------------------------------------------------------------*/
-  METHOD PRIVATE CHARACTER ChekExpirationDate (       
+  METHOD PUBLIC CHARACTER ChekExpirationDate (       
       p-obj-type  AS CHARACTER, 
       p-obj-code  AS INTEGER,
       buffer buf_marking for ub.marking):
@@ -2636,48 +2709,83 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       
       DEFINE BUFFER buf_sys-ctrl     FOR ub.sys-ctrl.            
             
-      IF AVAILABLE buf_marking
-         AND buf_marking.expDate <> ?           
-      THEN DO: 
-         vExpireDate = datetime-tz(ENTRY(1,buf_marking.expDate,"Z")) NO-ERROR.
+      /* Перевычисляем тип, потому что может быть вызов извне - проверка ТОЛЬКО по сроку годности! */             
+      IF AVAILABLE buf_marking THEN
+      DO:
+         mTypeMark = "".
+         ChekTypeMarkByDm(buf_marking.mark) .
+      END.   
+            
+      dbgPrint("marking.log", SUBSTITUTE("Проверка срока годности для типа марки &1 марка &2",
+                                         mTypeMark,
+                                         (IF AVAILABLE buf_marking then buf_marking.mark else mark))). 
+                                                  
+      if mTypeMark = ""
+      then do :
+         ASSIGN
+           vErrTxt = "Не опредлен тип маркировки товара. "
+           mCheckSts = 0
+           . 
+      end .
+                   
+      IF mTypeMark > "" THEN
+         vCheckDate = GetMarkProp (p-obj-type,
+                                   p-obj-code,
+                                   {&attr-marking_checkDate},
+                                   mTypeMark).
+      dbgPrint("marking.log", SUBSTITUTE("Требуется ли проверять срок годности &1", vCheckDate)).                              
+      /* если по данному типу марки включена настройка проверять срок годности */                              
+      IF vCheckDate THEN DO:
+         /* могли еще не считывать настройки подключения к ГИС МТ (когда была проверка в ТС ПИоТ) */            
+         /*IF gismt-UpdateRequest AND StatusPOS = ? THEN DO:
+            FIND FIRST buf_sys-ctrl NO-LOCK NO-ERROR.
+            IF AVAILABLE buf_sys-ctrl AND buf_sys-ctrl.db-num <> 0 
+            THEN          
+                vRetProp = get-gismt-prop ({&db},
+                                           buf_sys-ctrl.db-num) NO-ERROR.                                          
+         END.*/                               
          
-         ChekTypeMarkByDm(buf_marking.mark).
-         
-         IF mTypeMark <> "" THEN
-             vCheckDate = GetMarkProp (p-obj-type,
-                                       p-obj-code,
-                                       {&attr-marking_checkDate},
-                                       mTypeMark).
-         /* если по данному типу марки включена настройка проверять срок годности */                              
-         IF vCheckDate THEN DO:
-             /* могли еще не считывать настройки подключения к ГИС МТ (когда была проверка в ТС ПИоТ) */            
-             IF gismt-UpdateRequest THEN DO:
-                FIND FIRST buf_sys-ctrl NO-LOCK NO-ERROR.
-                IF AVAILABLE buf_sys-ctrl AND buf_sys-ctrl.db-num <> 0 
-                THEN          
-                    vRetProp = get-gismt-prop ({&db},
-                                               buf_sys-ctrl.db-num) NO-ERROR.                                          
-             END.                               
-             
-             /* срок годности прошел */
-             IF vExpireDate <> ? AND 
-                vExpireDate < NOW + gismt-BanDate * 60 * 1000
-             THEN DO:
-                ASSIGN
-                   vErrTxt   = substitute("Срок годности товара истек &1.", string(vExpireDate,"99/99/9999 HH:MM"))
-                   mCheckSts = 0
-                   .
-                LogWrite:WriteFileToLog(SUBSTITUTE("Проверка срока годности не прошла: марка &1 срок годности &2",buf_marking.mark,string(vExpireDate,"99/99/9999 HH:MM"))).   
-                dbgPrint("marking.log", SUBSTITUTE("Срок годности по данным из 1С: &1 . Товар просрочен, заблокирован к продаже.",
-                                                   vExpireDate)). 
-             END.
-             ELSE DO:
-                LogWrite:WriteFileToLog(SUBSTITUTE("Проверка срока годности прошла успешно: марка &1 срок годности &2",buf_marking.mark,string(vExpireDate,"99/99/9999 HH:MM"))). 
-                dbgPrint("marking.log", SUBSTITUTE("Срок годности по данным из 1С: &1 . Проверка прошла успешно.",
-                                                    vExpireDate)).
-             END.                                   
-         END.                                   
-      END.                                   
+         IF AVAILABLE buf_marking
+             AND buf_marking.expDate <> ?           
+         THEN vExpireDate = datetime-tz(ENTRY(1,buf_marking.expDate,".")) NO-ERROR.
+     
+         /* срок годности не задан на марке */
+         IF vExpireDate = ?
+         THEN DO:
+            /* если была проверка на кассе, то при отсутствии даты меняем статус на 2 */
+            IF (StatusPos = 1 OR StatusPos = 2)
+               AND mCheckSts = 1 
+            THEN mCheckSts = 2 .  
+            dbgPrint("marking.log", SUBSTITUTE("Срок годности для марки &1 по данным из 1С отсутствует. Дата &2. Проверить срок годности не удалось.",
+                                               (IF AVAILABLE buf_marking then buf_marking.mark ELSE "<не найдена>"),
+                                               (IF AVAILABLE buf_marking then buf_marking.expDate ELSE ""))). 
+         END.    
+         /* срок годности прошел */
+         ELSE IF vExpireDate < NOW + gismt-BanDate * 60 * 1000
+         THEN DO:
+            ASSIGN
+               vErrTxt   = substitute("Срок годности товара истек &1.", substring(string(vExpireDate,"99/99/9999 HH:MM+HH:MM"), 1, 16))
+               mCheckSts = 0
+               .
+            LogWrite:WriteFileToLog(SUBSTITUTE("Проверка срока годности не прошла: марка &1 срок годности &2",buf_marking.mark,string(vExpireDate,"99/99/9999 HH:MM"))).   
+            dbgPrint("marking.log", SUBSTITUTE("Срок годности по данным из 1С: &1 . Товар просрочен, заблокирован к продаже.",
+                                               vExpireDate)). 
+         END.
+         ELSE DO:
+            /* если была проверка на кассе, то при успешной проверке даты меняем статус на 1 */
+            IF (StatusPos = 1 OR StatusPos = 2)
+               AND mCheckSts = 2 
+            THEN mCheckSts = 1 . 
+            LogWrite:WriteFileToLog(SUBSTITUTE("Проверка срока годности прошла успешно: марка &1 срок годности &2",buf_marking.mark,string(vExpireDate,"99/99/9999 HH:MM"))). 
+            dbgPrint("marking.log", SUBSTITUTE("Срок годности по данным из 1С: &1 . Проверка прошла успешно.",
+                                                vExpireDate)).
+         END.
+                                            
+      END.                                         
+      /* если была проверка на кассе, то при не нужности проверки даты меняем статус на 1 */
+      ELSE IF (StatusPos = 2 AND mCheckSts = 2)
+           THEN mCheckSts = 1.               
+                                
       RETURN vErrTxt.
   END METHOD.
    
@@ -2686,18 +2794,40 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
    Notes:  устанавливает online-result 
   ------------------------------------------------------------------------------*/
   METHOD PRIVATE VOID setOnlineResult(buffer buf_marking for ub.marking):
-   
-    IF (mCheckSts = 0 AND mCheckGisMT = 1) OR mCheckSts = 3    /* Оборот запрещен ошибки errorcode (1, …11) */
-    THEN
-      buf_marking.online-result = 0.  
-    ELSE IF mCheckSts = 2 AND mCheckGisMT = 1  /* нет срока годности, а проверка его включена */
-    THEN  
-      buf_marking.online-result = 2.
-    ELSE IF mCheckSts = 1 AND mCheckGisMT = 1  /* Оборот разрешен */
-    THEN
-      buf_marking.online-result = 1.
+      
+    /* если была онлайн проверка на кассе, то сохраняем результат проверки пришедший от кассы
+    ** (потом он меняется при проверке срока годности 1С */
+    IF statusPOS <> ? AND mCheckGisMT = 1
+    THEN ASSIGN
+            buf_marking.online-result = mCheckStsSave
+            mSaveOnlineResult = yes
+            .
+    /* иначе старый алгоритм */   
+    ELSE DO:   
+       IF (mCheckSts = 0 AND mCheckGisMT = 1) OR mCheckSts = 3    /* Оборот запрещен ошибки errorcode (1, …11) */
+       THEN
+         buf_marking.online-result = 0.  
+       ELSE IF mCheckSts = 2 AND mCheckGisMT = 1  /* нет срока годности, а проверка его включена */
+       THEN  
+         buf_marking.online-result = 2.
+       ELSE IF mCheckSts = 1 AND mCheckGisMT = 1  /* Оборот разрешен */
+       THEN
+         buf_marking.online-result = 1.
+    END.  
     dbgprint("marking.log", SUBSTITUTE("Установка марке &1 результата проверки онлайн &2, mCheckSts &3 mCheckGisMT &4 ",
                                        buf_marking.mark, buf_marking.online-result, mCheckSts, mCheckGisMT )). 
+  END METHOD.
+  
+  /* возвращает результат сохраненного ответа онлайн */
+  METHOD PUBLIC CHARACTER GetMarkOnlineResult():
+    define variable mark-short as character no-undo. 
+    
+    mark-short = GetCodeIdent(mark).   
+    IF mSaveOnlineResult = yes THEN             
+       RETURN substitute("&1&2&3",mark-short,chr(9),mCheckStsSave).
+    ELSE 
+       RETURN "".
+    
   END METHOD.
       
 	/*------------------------------------------------------------------------------

@@ -730,6 +730,12 @@ define variable vss-description as character no-undo init "Информация об объекте
   "yes"
 }
 
+{ gbl/menuload.i
+  {&bef-menuload_adm_function}
+  "'Загрузка перечня IP TH'"
+  "'utl/thipimp.p'"
+}
+
 /* -------------------------------------------------------------------------- */
 /* {&bef-menuload_adm_check}                                                      */
 /* АРМ Администратор   Утилиты/Проверки                                       */
