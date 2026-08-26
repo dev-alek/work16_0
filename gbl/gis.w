@@ -621,7 +621,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  if p-obj-type ne {&db}
+  if p-obj-type = "" and p-obj-code = 0 
   then do:
       DISPLAY gisAdress cdnTurnOn cdnAdress Copy-cdnAdress registrationKey 
             Copy-registrationKey adressPort Copy-adressPort login password 
@@ -647,6 +647,39 @@ PROCEDURE enable_UI :
       MACC_IP:VISIBLE = false.      
       VIEW FRAME Dialog-Frame.
   end.
+  else if p-obj-type = {&region} then do:
+     DISPLAY gisAdress cdnTurnOn cdnAdress Copy-cdnAdress registrationKey 
+            Copy-registrationKey adressPort Copy-adressPort login password 
+            Copy-LogPass dopParam Copy-dopParam OflineAdress Copy-OflineAdress 
+            OflineLogin waitTime Copy-waitTime 
+            Resp_TH_required Copy-Resp MACC_Timeout Copy-Timeout  
+            MACC_PORT Copy-THport LMCHzPort Copy-LMCHzPort addTimeoutPIoT 
+            Copy-addTimeoutPIoT crashSituat TxtCopy TxtCopy-2 Proxytext 
+            MaxApiToken Copy-MaxApiToken AgeConfirmBox Copy-AgeConfirm
+      WITH FRAME Dialog-Frame.
+      ENABLE B-exit RECT-1 RECT-2 RECT-3 B-quit B-Help gisAdress cdnTurnOn 
+             cdnAdress Copy-cdnAdress registrationKey Copy-registrationKey 
+             adressPort Copy-adressPort login password Copy-LogPass dopParam 
+             Copy-dopParam OflineAdress Copy-OflineAdress OflineLogin OflinePswd 
+             waitTime Copy-waitTime Resp_TH_required Copy-Resp 
+             MACC_Timeout Copy-Timeout MACC_PORT Copy-THport LMCHzPort 
+             Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT 
+             crashSituat Proxytext MaxApiToken Copy-MaxApiToken 
+             AgeConfirmBox Copy-AgeConfirm
+      WITH FRAME Dialog-Frame.
+           
+      ASSIGN
+         maxTime:VISIBLE = false
+         timeFalStart:VISIBLE = false 
+         banDate:VISIBLE = false 
+         cdnTimeUpdate:VISIBLE = false 
+         cdnRepeat:VISIBLE = false          
+         cdnChange:VISIBLE = false
+         UpdateRequest:VISIBLE = false    
+         MACC_IP:VISIBLE = false     
+      .
+      VIEW FRAME Dialog-Frame. 
+  end.    
   else do:
       DISPLAY OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
               cdnAdress registrationKey adressPort login password
@@ -732,7 +765,7 @@ end.
 
 FOR EACH temp-thbj-attr
   :                                       
-    if p-obj-type ne {&db}
+    if p-obj-type eq "" and p-obj-code = 0
     then do:
         IF temp-thbj-attr.prop-code = {&attr-gisMT_maxTime} THEN DO:
            maxTime = temp-thbj-attr.property-value-integer.
@@ -854,7 +887,7 @@ FOR EACH temp-thbj-attr
     else if temp-thbj-attr.prop-code = {&attr-gisMT_AgeConfirm} then do:                     
        AgeConfirm = temp-thbj-attr.property-value-integer.      
     end.
-    else if p-obj-type eq {&db}
+    else if p-obj-type ne ""
     then do:
        delete temp-thbj-attr.
     end.   
@@ -870,6 +903,12 @@ END.
    AgeConfirmBox =  entry((AgeConfirm + 1), AgeConfirmBox:LIST-ITEMS,",").
    display AgeConfirmBox  with frame {&frame-name} .
    /*disable AgeConfirm  with frame {&frame-name} .*/
+   if p-mode = {&lookup} then do:
+      disable all WITH FRAME {&frame-name} .
+      ENABLE B-quit b-help WITH FRAME {&frame-name}.
+      B-quit:label = "Вы&ход"  .
+      hide B-exit in frame {&frame-name} .
+   end.   
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1210,13 +1249,27 @@ ASSIGN FRAME {&FRAME-NAME}
 
 END PROCEDURE.
 
-PROCEDURE ObjCodeCreate:
+PROCEDURE ObjCodeCreate:    
    define buffer buf_thbj-attr for ub.thbj-attr.
+   define variable v-reg-code as integer no-undo.
+   bth:
    for each buf_thbj-attr no-lock where  
-            buf_thbj-attr.obj-type = {&db}     
+           (buf_thbj-attr.obj-type = {&db}    
         and buf_thbj-attr.prop-code       = ''                 
-        and buf_thbj-attr.upper-prop-code = {&attr-gisMT}:
+        and buf_thbj-attr.upper-prop-code = {&attr-gisMT}
+            )
+        or (p-obj-type = "" 
+        and buf_thbj-attr.obj-type = {&region}    
+        and buf_thbj-attr.prop-code       = ''                 
+        and buf_thbj-attr.upper-prop-code = {&attr-gisMT})
+        :
             
+      /* проверяем, что если копируем с региона, то только на БД этого региона */
+      if p-obj-type = {&region} then do:
+          { gbl/regcode.i buf_thbj-attr.obj-type buf_thbj-attr.obj-code v-reg-code }
+          if v-reg-code <> p-obj-code then next bth.
+      end.    
+           
       find first x_thbj-attr where
           x_thbj-attr.obj-type = buf_thbj-attr.obj-type and
           x_thbj-attr.obj-code = buf_thbj-attr.obj-code no-error .
@@ -1225,7 +1278,8 @@ PROCEDURE ObjCodeCreate:
         create  x_thbj-attr.
         buffer-copy buf_thbj-attr to X_thbj-attr.        
       end.    
-   end.          
+   end.    
+       
 END PROCEDURE.    
 
 PROCEDURE PropCopy:   
@@ -1241,9 +1295,9 @@ PROCEDURE PropCopy:
          no-lock no-error.
     if avail thbj-attr then 
     do transaction:   
-        for each x_thbj-attr:              
+        for each x_thbj-attr:                         
            find first buf_thbj-attr exclusive-lock where  
-                      buf_thbj-attr.obj-type = {&db}        
+                      buf_thbj-attr.obj-type = x_thbj-attr.obj-type
                   and buf_thbj-attr.obj-code = x_thbj-attr.obj-code          
                   and buf_thbj-attr.upper-prop-code = {&attr-gisMT}
                   and buf_thbj-attr.prop-code = p-prop-code 

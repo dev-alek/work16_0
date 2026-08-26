@@ -15,6 +15,7 @@ DEFINE TEMP-TABLE section_thbj-attr NO-UNDO LIKE thbj-attr
        field shop_ as logical
        field store_ as logical
        field db_ as logical
+       field region_ as logical
        .
 DEFINE TEMP-TABLE X_thbj-attr LIKE thbj-attr
        field ind1 as char
@@ -66,6 +67,7 @@ define variable vss-description as character no-undo init "ДЕРЕВО параметров IBS
 { gbl/thbjattr.i }
 { gbl/get-regf.i }
 { gbl/getcntxt.i def }
+{ gbl/db-attr.i }
 DEFINE VARIABLE v-value AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-2value AS CHARACTER NO-UNDO.
 define variable add-region as character no-undo .
@@ -105,7 +107,7 @@ X_thbj-attr_v
 
 
 /* Definitions for BROWSE BR-section                                    */
-&Scoped-define FIELDS-IN-QUERY-BR-section section_thbj-attr.upper-prop-name SECTION_thbj-attr.GLOBAL_ SECTION_thbj-attr.host_ SECTION_thbj-attr.shop_ SECTION_thbj-attr.store_ SECTION_thbj-attr.db_   
+&Scoped-define FIELDS-IN-QUERY-BR-section section_thbj-attr.upper-prop-name SECTION_thbj-attr.GLOBAL_ SECTION_thbj-attr.host_ SECTION_thbj-attr.shop_ SECTION_thbj-attr.store_ SECTION_thbj-attr.db_ SECTION_thbj-attr.region_   
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BR-section   
 &Scoped-define SELF-NAME BR-section
 &Scoped-define QUERY-STRING-BR-section FOR EACH section_thbj-attr NO-LOCK INDEXED-REPOSITION
@@ -167,7 +169,8 @@ FUNCTION get-thbjattr-l-and-v RETURNS CHARACTER
 /* Define a dialog box                                                  */
 
 /* Menu Definitions                                                     */
-DEFINE MENU MENU-B-add 
+DEFINE MENU MENU-B-add
+       MENU-ITEM m_region       LABEL "Регион" 
        MENU-ITEM m_db           LABEL "БД"            
        MENU-ITEM m_firm         LABEL "Фирма"         
        MENU-ITEM m_shop         LABEL "Магазин"       
@@ -258,8 +261,9 @@ v-2value FORMAT "X(255)" WIDTH 40  NO-LABEL
 DEFINE BROWSE BR-section
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BR-section Dialog-Frame _FREEFORM
   QUERY BR-section NO-LOCK DISPLAY
-      section_thbj-attr.upper-prop-name FORMAT "X(255)":U WIDTH 100 COLUMN-LABEL "Название секции"
+      section_thbj-attr.upper-prop-name FORMAT "X(255)":U WIDTH 97 COLUMN-LABEL "Название секции"
 SECTION_thbj-attr.GLOBAL_ FORMAT "+/" COLUMN-LABEL "Глоб"
+SECTION_thbj-attr.region_ FORMAT "+/" COLUMN-LABEL "Рег"
 SECTION_thbj-attr.host_ FORMAT "+/" COLUMN-LABEL "Фирма"
 SECTION_thbj-attr.shop_ FORMAT "+/" COLUMN-LABEL "Маг"
 SECTION_thbj-attr.store_ FORMAT "+/" COLUMN-LABEL "Скл"
@@ -329,6 +333,7 @@ DEFINE FRAME Dialog-Frame
           field shop_ as logical
           field store_ as logical
           field db_ as logical
+          field region_ as logical
           
       END-FIELDS.
       TABLE: X_thbj-attr T "?" ? ub thbj-attr
@@ -465,6 +470,7 @@ if add-region = '':U then do:
    run gbl/pop-up.p ( input self:handle, input no) no-error.
 end.
 if add-region = '':U then return no-apply.
+
 RUN proc-add IN THIS-PROCEDURE ( INPUT add-region
                                  ,INPUT section_thbj-attr.upper-prop-code
                                  ,OUTPUT v-add-obj-type
@@ -865,6 +871,18 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME m_stock
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_region Dialog-Frame
+ON CHOOSE OF MENU-ITEM m_region /* Регион */
+DO:
+  ASSIGN
+  add-region = {&region}.
+  APPLY "CHOOSE" to b-add  in frame {&frame-name}.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &Scoped-define BROWSE-NAME BR-2values
 &UNDEFINE SELF-NAME
@@ -965,6 +983,7 @@ define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-global as logical no-undo .
 define variable v-db as logical no-undo .
+define variable v-region as logical no-undo .
 define variable v-prop-list as character no-undo .
 define variable v-prop-type-list as character no-undo .
 define variable v-prop-label-list as character no-undo .
@@ -974,7 +993,7 @@ FOR EACH buf_SECTION:
   DELETE buf_SECTION.
 END.
 DO v-ii = 1 TO NUM-ENTRIES({&thbjattr-list-all}):
-   RUN thbjattr_code IN THIS-PROCEDURE (
+   RUN thbjattr_code_reg IN THIS-PROCEDURE (
                                          input ENTRY(v-ii, {&thbjattr-list-all}) /*   код секции */
                                         ,input '' /* код атрибута */
                                         ,OUTPUT v-label
@@ -989,6 +1008,7 @@ DO v-ii = 1 TO NUM-ENTRIES({&thbjattr-list-all}):
                                         ,OUTPUT v-shop
                                         ,OUTPUT v-store
                                         ,OUTPUT v-db
+                                        ,OUTPUT v-region
                                         ) NO-ERROR.
   IF v-user-can-edit
   and index(v-other, "spr-ext=") > 0 THEN DO:
@@ -1001,6 +1021,7 @@ DO v-ii = 1 TO NUM-ENTRIES({&thbjattr-list-all}):
       buf_SECTION.shop_ = v-shop
       buf_SECTION.store_ = v-store
       buf_SECTION.db_ = v-db
+      buf_SECTION.region_ = v-region
       .
   END.
 END.
@@ -1013,6 +1034,8 @@ END PROCEDURE.
 PROCEDURE init-tt :
 DEFINE INPUT PARAMETER p-upper-prop-code AS CHARACTER NO-UNDO.
 DEFINE VARIABLE v-host-code AS INTEGER NO-UNDO.
+DEFINE VARIABLE v-region-code AS INTEGER NO-UNDO.
+DEFINE VARIABLE v-db-attr-type AS CHARACTER NO-UNDO.
 define buffer buf_thbj-attr for ub.thbj-attr .
 empty TEMP-TABLE  x_thbj-attr .
 
@@ -1036,14 +1059,26 @@ for each buf_thbj-attr no-lock where
     x_thbj-attr.ind1 =  "0" + string( 0,"999999999") + "   " + string( 0 ,"999999999" )
     .
   END.
-  if buf_thbj-attr.obj-type  = {&cmp} THEN DO:
+  else if buf_thbj-attr.obj-type  = {&cmp} THEN DO:
     assign
     x_thbj-attr.ind1 =  "0" + string(buf_thbj-attr.obj-code,"999999999") + "   " + string( 0 ,"999999999" )
     .
   END.
-  if buf_thbj-attr.obj-type  <> {&cmp} and buf_thbj-attr.obj-type  <> ""
-  and buf_thbj-attr.obj-type <> {&db}
-  then do:
+  else if buf_thbj-attr.obj-type  = {&region} THEN DO:     
+    assign
+    x_thbj-attr.ind1 =  "0" + string(buf_thbj-attr.obj-code,"999999999") + "   " + string( 0 ,"999999999" )
+    .
+  END.
+  ELSE IF buf_thbj-attr.obj-type = {&db} THEN DO:
+      run db-attr-value in this-procedure (buf_thbj-attr.obj-code, 
+                                           "reg-code", 
+                                           output v-region-code,
+                                           output v-db-attr-type) no-error.
+      if v-region-code = ? then v-region-code = 0.                                     
+      x_thbj-attr.ind1 =  "0" + string(v-region-code,"999999999") + "region" + string(buf_thbj-attr.obj-code ,":999999999" ).
+     /*X_thbj-attr.ind1 = "0" + string( buf_thbj-attr.obj-code,":999999999") + "   " + string( 0 ,"999999999" ).*/
+  END.  
+  else do:
     { gbl/hostcode.i
       buf_thbj-attr.obj-type
       buf_thbj-attr.obj-code
@@ -1051,9 +1086,7 @@ for each buf_thbj-attr no-lock where
       }
      x_thbj-attr.ind1 =  "0" + string(v-host-code,"999999999") + buf_thbj-attr.obj-type + string(buf_thbj-attr.obj-code ,"999999999" ).
    end.
-   IF buf_thbj-attr.obj-type = {&db} THEN DO:
-     X_thbj-attr.ind1 = "0" + string( buf_thbj-attr.obj-code,":999999999") + "   " + string( 0 ,"999999999" ).
-   END.
+   
 END.
 
 END PROCEDURE.
@@ -1147,11 +1180,12 @@ define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-global as logical no-undo .
 define variable v-db as logical no-undo .
+define variable v-region as logical no-undo .
 define variable v-prop-list as character no-undo .
 define variable v-prop-type-list as character no-undo .
 define variable v-prop-label-list as character no-undo .
 /*найдем какие регионы доступны*/
-RUN thbjattr_code IN THIS-PROCEDURE (
+RUN thbjattr_code_reg IN THIS-PROCEDURE (
                                       input p-upper-prop-code /*   код секции */
                                     ,input '' /* код атрибута */
                                     ,OUTPUT v-label
@@ -1166,12 +1200,15 @@ RUN thbjattr_code IN THIS-PROCEDURE (
                                     ,OUTPUT v-shop
                                     ,OUTPUT v-store
                                     ,output v-db
+                                    ,output v-region
                                     ) NO-ERROR.
+                                    
 assign
 menu-item m_firm:sensitive in menu menu-b-add = v-host
 menu-item m_shop:sensitive in menu menu-b-add = v-shop
 menu-item m_stock:sensitive in menu menu-b-add = v-store
 menu-item m_db:sensitive in menu menu-b-add = v-db
+menu-item m_region:sensitive in menu menu-b-add = v-region
 .
 RUN init-tt IN THIS-PROCEDURE ( INPUT p-upper-prop-code) NO-ERROR.
 OPEN QUERY br-tree
@@ -1231,9 +1268,11 @@ define output parameter v-add-obj-type as character no-undo .
 define output parameter v-add-obj-code as integer no-undo .
 define variable v-recids as character no-undo .
 define variable v-firm-code as integer no-undo .
+define variable v-reg-code as integer no-undo .
 define buffer buf_clients for ub.clients.
 define buffer buf_sysconf for ub.sysconf.
 define buffer buf_db      for ub.db.
+define buffer buf_regions for ub.regions.
 add-region = ''.
 case p-region:
   when {&db} then do:
@@ -1244,6 +1283,7 @@ case p-region:
      if v-recids = '' then return.
      find first buf_db no-lock
                        where recid(buf_db) = integer(entry(1, v-recids)).
+     if available buf_db then                  
      assign
         v-add-obj-type = {&db}
         v-add-obj-code = buf_db.db-num
@@ -1302,6 +1342,22 @@ case p-region:
     v-add-obj-type = buf_clients.obj-type
     v-add-obj-code = buf_clients.obj-code
     .
+  end.
+  when {&region} then do:
+     run ref/regions.w ( input  parparentproc
+                        , input  {&choose}
+                        , output v-reg-code
+                        ).
+  
+     if v-reg-code = ? then return.
+     find first buf_regions no-lock
+          where buf_regions.reg-code = v-reg-code
+     no-error .
+     if available buf_regions then
+     assign
+        v-add-obj-type = {&region}
+        v-add-obj-code = buf_regions.reg-code
+     .
   end.
 end case.
 run proc-upd-lkp in this-procedure (
@@ -1474,11 +1530,12 @@ define variable v-host as logical no-undo .
 define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-db as logical no-undo .
+define variable v-region as logical no-undo .
 define variable v-spr as character no-undo .
 DEFINE VARIABLE ii AS INTEGER NO-UNDO.
 
 
-  run thbjattr_code  in this-procedure (
+  run thbjattr_code_reg  in this-procedure (
        input p-upper-prop-code
       ,input   '':U
       ,output v-label          /* лабел атрибута */
@@ -1493,6 +1550,7 @@ DEFINE VARIABLE ii AS INTEGER NO-UNDO.
       ,output v-shop
       ,output v-store
       ,output v-db
+      ,output v-region
   ).
   do ii = 1 to num-entries(v-other, {&slash-char}):
     if entry(ii, v-other, {&slash-char}) begins "spr-ext=":U then do:
@@ -1500,6 +1558,7 @@ DEFINE VARIABLE ii AS INTEGER NO-UNDO.
       v-spr = entry(2, entry(ii, v-other, {&slash-char}), "=").
     end.
   end.
+
   run value(v-spr) (
                    input parparentproc
                   ,input p-mode
@@ -1529,10 +1588,11 @@ define variable v-shop as logical no-undo .
 define variable v-store as logical no-undo .
 define variable v-global as logical no-undo .
 define variable v-db as logical no-undo .
+define variable v-region as logical no-undo .
 define variable v-prop-list as character no-undo .
 define variable v-prop-type-list as character no-undo .
 define variable v-prop-label-list as character no-undo .
-RUN thbjattr_code IN THIS-PROCEDURE (
+RUN thbjattr_code_reg IN THIS-PROCEDURE (
                                     input buf_thbj-attr.upper-prop-code
                                    ,input buf_thbj-attr.prop-code
                                    ,OUTPUT v-label
@@ -1547,6 +1607,7 @@ RUN thbjattr_code IN THIS-PROCEDURE (
                                    ,OUTPUT v-shop
                                    ,OUTPUT v-store
                                    ,output v-db
+                                   ,OUTPUT v-region
                                           ) NO-ERROR.
 IF lookup(buf_thbj-attr.prop-code,v-prop-list) > 0 THEN DO:
 case entry(lookup(buf_thbj-attr.prop-code,v-prop-list) , v-prop-type-list):

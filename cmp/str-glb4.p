@@ -1146,6 +1146,9 @@ run filwrlib_append-new-line in this-procedure ( input "&global-define gdshattr-
 /* Ќомер MessageID дл€ видеонаблюдени€ */
 { cmp/cr-prep.i 1 attr-asiport          asiport         " " asiport        }
 
+/*  од региона reg-code */
+{ cmp/cr-prep.i 1 attr-reg-code         reg-code        " " reg-code        }
+
 /* сюда добавл€ть новые названи€ атрибутов баз данных */
 
 &glob db-attr-list '~
