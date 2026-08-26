@@ -90,7 +90,7 @@ else if mobjsend eq "gismt" or mobjsend eq "posonline" then do:
         &endif
       , input ?
       , input "str/sendgismt.p":U
-      , input substitute ("&2&1&3&1&4&1&5&1&6&1cash-send=&7,&8", 
+      , input substitute ("&2&1&3&1&4&1&5&1&6&1cash-send=&7,&8,&9", 
                                    {&delim-par}, 
                                    {&shop}, 
                                    mshop,
@@ -98,7 +98,8 @@ else if mobjsend eq "gismt" or mobjsend eq "posonline" then do:
                                    "gismt",
                                    'Передача настроек для проверки КМ':U,
                                    mCashNum,
-                                   "SocetLog=" + mSocetLog
+                                   "SocetLog=" + mSocetLog,
+                                   "cash-all=all"
                                    )
       , input ? /*p-auto-go*/
       , input "":U

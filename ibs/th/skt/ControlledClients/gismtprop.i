@@ -103,7 +103,8 @@ end.
             when "logical"
                then return string(buf_thbj-attr.property-value-logical).         
         end case.     
-    end.       
+    end. 
+    return "".      
 end.
 
 { def/funcmet.i get-gismt-prop character }
