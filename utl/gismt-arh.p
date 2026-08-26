@@ -185,16 +185,21 @@ else run write-to-log( substitute("Не найден каталог архивов проверки марок &1",
 procedure DelOldArch:
     define input param iPathFolder as character no-undo.
     define input param iPref as character no-undo.     
+    
+    define variable vFileEx as char no-undo.
+    
     input stream FLStream from os-dir (iPathFolder).
     repeat
        on error  undo, return  
        on stop   undo, return  
        :
-       import stream FLStream vDelFileName vDelFullName vDelFileType.        
+       import stream FLStream vDelFileName vDelFullName vDelFileType.
+       
+       vFileEx = if num-entries(vDelFileName, ".") >= 2 then entry(num-entries(vDelFileName, "."),vDelFileName, ".") else "".               
        if vDelFileType begins "F"
          and vDelFileName begins iPref
          and num-entries( vDelFileName, "." ) > 1
-         and entry(2,vDelFileName, "." ) = "zip" 
+         and (vFileEx = "zip" or vFileEx = "gz") 
        then do:
          /* проверяем, что прошло больше заданного кол-ва дней */
          assign
@@ -206,15 +211,15 @@ procedure DelOldArch:
          else if num-entries(vZipName,"-") >= 2 then do:
              vZipDateChar = entry(2,vZipName,"-").
              vZipDate = date(substitute("&1/&2/&3",substring(vZipDateChar,7,2),substring(vZipDateChar,5,2),substring(vZipDateChar,1,4))) no-error.
-         end.          
+         end.                   
          if vZipDate <> ? and (vDate - vZipDate + 1) >= vNumDate 
          then do:             
             /* удаляем этот файл */
-            run write-to-log( substitute("Удаление архива &1.zip", entry(1,vDelFullName,"."))) .
-            os-delete value (vDelFullName) no-error .
+            run write-to-log( substitute("Удаление архива &1.&2", entry(1,vDelFullName,"."),vFileEx)) .
+            os-delete value (vDelFullName) no-error .            
             if searchFile(vDelFullName) = ? 
-            then  run write-to-log(substitute("Архив &1.zip успешно удален", entry(1,vDelFullName,"."))) .
-            else  run write-to-log( substitute("Не удалось удалить архив &1.zip", entry(1,vDelFullName,"."))) .
+            then  run write-to-log(substitute("Архив &1.&2 успешно удален", entry(1,vDelFullName,"."),vFileEx)) .
+            else  run write-to-log( substitute("Не удалось удалить архив &1.&2", entry(1,vDelFullName,"."),vFileEx)) .
          end.
        end.
     end.
