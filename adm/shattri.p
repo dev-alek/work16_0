@@ -1565,7 +1565,21 @@ end.
 &scop prop-code  entry(v-ii,v-prop-code)
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
+      end.
+      v-prop-code = "{&bef-attr-gisMT_MaxApiToken}".
+&scop ptype character
+&scop prop-value ''
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
       end. 
+      v-prop-code = "{&bef-attr-gisMT_AgeConfirm}".
+&scop ptype integer
+&scop prop-value 0
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end.  
     end.    
     when {&attr-marking} then do:
       v-prop-code = "{&bef-attr-marking_marking-EDO}".

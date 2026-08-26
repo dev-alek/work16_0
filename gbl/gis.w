@@ -68,14 +68,15 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 RECT-2 RECT-3 ~
+&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 RECT-2 RECT-3 B-quit B-Help ~
 gisAdress cdnTurnOn cdnAdress Copy-cdnAdress registrationKey ~
 Copy-registrationKey adressPort Copy-adressPort login password Copy-LogPass ~
 dopParam Copy-dopParam OflineAdress Copy-OflineAdress OflineLogin ~
 OflinePswd waitTime Copy-waitTime Resp_TH_required Copy-Resp MACC_Timeout ~
 Copy-Timeout maxTime timeFalStart banDate cdnTimeUpdate MACC_IP MACC_PORT ~
 Copy-THport LMCHzPort Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT ~
-UpdateRequest crashSituat cdnChange cdnRepeat Proxytext 
+UpdateRequest crashSituat cdnChange cdnRepeat MaxApiToken Copy-MaxApiToken ~
+AgeConfirmBox Copy-AgeConfirm Proxytext 
 &Scoped-Define DISPLAYED-OBJECTS gisAdress cdnTurnOn cdnAdress ~
 Copy-cdnAdress registrationKey Copy-registrationKey adressPort ~
 Copy-adressPort login password Copy-LogPass dopParam Copy-dopParam ~
@@ -83,7 +84,8 @@ OflineAdress Copy-OflineAdress OflineLogin OflinePswd waitTime ~
 Copy-waitTime Resp_TH_required Copy-Resp MACC_Timeout Copy-Timeout maxTime ~
 timeFalStart banDate cdnTimeUpdate MACC_IP MACC_PORT Copy-THport LMCHzPort ~
 Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT UpdateRequest crashSituat ~
-cdnChange cdnRepeat TxtCopy TxtCopy-2 Proxytext 
+cdnChange cdnRepeat MaxApiToken Copy-MaxApiToken AgeConfirmBox  ~
+Copy-AgeConfirm TxtCopy TxtCopy-2 Proxytext 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -110,6 +112,13 @@ DEFINE BUTTON B-quit AUTO-END-KEY
      LABEL "&Отмена" 
      SIZE 10 BY 1.
 
+DEFINE VARIABLE AgeConfirmBox AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Проверка возраста при продаже НП" 
+     VIEW-AS COMBO-BOX INNER-LINES 3
+     LIST-ITEMS "Проверка отключена","Проверка при помощи соглашения оферты","Проверка при помощи MAX" 
+     DROP-DOWN-LIST
+     SIZE 40 BY 1 NO-UNDO.
+
 DEFINE VARIABLE Resp_TH_required AS CHARACTER FORMAT "X(256)":U INITIAL "Да" 
      LABEL "Обязательность получения результатов проверки КМ в ТН" 
      VIEW-AS COMBO-BOX INNER-LINES 2
@@ -126,6 +135,8 @@ DEFINE VARIABLE adressPort AS CHARACTER FORMAT "X(256)":U
      LABEL "Адрес и порт" 
      VIEW-AS FILL-IN 
      SIZE 71 BY 1 NO-UNDO.
+
+DEFINE VARIABLE AgeConfirm AS INTEGER FORMAT ">9":U INITIAL 0.
 
 DEFINE VARIABLE banDate AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 5 
      LABEL "Опережение срабатывания запрета по сроку годности в минутах" 
@@ -177,6 +188,11 @@ DEFINE VARIABLE MACC_Timeout AS DECIMAL FORMAT ">,>>>,>>9.99":U INITIAL 0
      VIEW-AS FILL-IN 
      SIZE 8 BY 1 NO-UNDO.
 
+DEFINE VARIABLE MaxApiToken AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Токен авторизации MAX" 
+     VIEW-AS FILL-IN 
+     SIZE 40 BY 1 NO-UNDO.
+
 DEFINE VARIABLE maxTime AS INTEGER FORMAT ">,>>>,>>9":U INITIAL 72 
      LABEL "Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)" 
      VIEW-AS FILL-IN 
@@ -218,11 +234,11 @@ DEFINE VARIABLE timeFalStart AS INTEGER FORMAT "->,>>>,>>9":U INITIAL 2
 
 DEFINE VARIABLE TxtCopy AS CHARACTER FORMAT "X(256)":U INITIAL "Копир." 
       VIEW-AS TEXT 
-     SIZE 7 BY .62 NO-UNDO.
+     SIZE 7 BY .63 NO-UNDO.
 
 DEFINE VARIABLE TxtCopy-2 AS CHARACTER FORMAT "X(256)":U INITIAL "в ЛС" 
       VIEW-AS TEXT 
-     SIZE 5 BY .62 NO-UNDO.
+     SIZE 5 BY .63 NO-UNDO.
 
 DEFINE VARIABLE waitTime AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 1.5 
      LABEL "Длительность ожидания ответа ГИС МТ (секунды)" 
@@ -231,100 +247,110 @@ DEFINE VARIABLE waitTime AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 1.5
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 104 BY 27.14.
+     SIZE 108.5 BY 30.04.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 93 BY 3.1.
+     SIZE 93 BY 3.08.
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 9 BY 24.05.
+     SIZE 9 BY 29.33.
 
 DEFINE VARIABLE cdnChange AS LOGICAL INITIAL no 
      LABEL "Смена площадки" 
      VIEW-AS TOGGLE-BOX
-     SIZE 23 BY .81 NO-UNDO.
+     SIZE 23 BY .79 NO-UNDO.
 
 DEFINE VARIABLE cdnRepeat AS LOGICAL INITIAL no 
      LABEL "Повторный опрос площадки" 
      VIEW-AS TOGGLE-BOX
-     SIZE 33 BY .81 NO-UNDO.
+     SIZE 33 BY .79 NO-UNDO.
 
 DEFINE VARIABLE cdnTurnOn AS LOGICAL INITIAL no 
      LABEL "Работа с cdn-площадками" 
      VIEW-AS TOGGLE-BOX
-     SIZE 32 BY .81 NO-UNDO.
+     SIZE 32 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-addTimeoutPIoT AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-adressPort AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 3 BY .81 NO-UNDO.
+     SIZE 3 BY .79 NO-UNDO.
+
+DEFINE VARIABLE Copy-AgeConfirm AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-cdnAdress AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-dopParam AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-LMCHzPort AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-LogPass AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 3 BY .81 NO-UNDO.
+     SIZE 3 BY .79 NO-UNDO.
+
+DEFINE VARIABLE Copy-MaxApiToken AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-OflineAdress AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-registrationKey AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-Resp AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-THport AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-Timeout AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE Copy-waitTime AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
+     SIZE 4 BY .79 NO-UNDO.
 
 DEFINE VARIABLE crashSituat AS LOGICAL INITIAL no 
      LABEL "Аварийная ситуация в ГИС МТ" 
      VIEW-AS TOGGLE-BOX
-     SIZE 35 BY .81 NO-UNDO.
+     SIZE 35 BY .79 NO-UNDO.
 
 DEFINE VARIABLE UpdateRequest AS LOGICAL INITIAL no 
      LABEL "Обновление параметров при запросе КМ" 
      VIEW-AS TOGGLE-BOX
-     SIZE 47 BY .81 NO-UNDO.
+     SIZE 47 BY .79 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -333,48 +359,48 @@ DEFINE FRAME Dialog-Frame
      B-exit AT ROW 1 COL 1
      B-quit AT ROW 1 COL 11
      B-Help AT ROW 1 COL 92
-     gisAdress AT ROW 2.43 COL 21 COLON-ALIGNED WIDGET-ID 118
-     cdnTurnOn AT ROW 3.62 COL 23 WIDGET-ID 174
-     cdnAdress AT ROW 4.57 COL 21 COLON-ALIGNED WIDGET-ID 118
-     Copy-cdnAdress AT ROW 4.57 COL 97 HELP
+     gisAdress AT ROW 2.42 COL 21 COLON-ALIGNED WIDGET-ID 118
+     cdnTurnOn AT ROW 3.63 COL 23 WIDGET-ID 174
+     cdnAdress AT ROW 4.58 COL 21 COLON-ALIGNED WIDGET-ID 118
+     Copy-cdnAdress AT ROW 4.58 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 192
-     registrationKey AT ROW 5.76 COL 21 COLON-ALIGNED WIDGET-ID 142
-     Copy-registrationKey AT ROW 5.76 COL 97 HELP
+     registrationKey AT ROW 5.75 COL 21 COLON-ALIGNED WIDGET-ID 142
+     Copy-registrationKey AT ROW 5.75 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 194
-     adressPort AT ROW 7.81 COL 22 COLON-ALIGNED WIDGET-ID 144
-     Copy-adressPort AT ROW 7.91 COL 97 HELP
+     adressPort AT ROW 7.79 COL 22 COLON-ALIGNED WIDGET-ID 144
+     Copy-adressPort AT ROW 7.92 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 196
      login AT ROW 9 COL 22 COLON-ALIGNED WIDGET-ID 146
      password AT ROW 9 COL 94 RIGHT-ALIGNED WIDGET-ID 148 PASSWORD-FIELD 
-     Copy-LogPass AT ROW 9.1 COL 97 HELP
+     Copy-LogPass AT ROW 9.08 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 198
-     dopParam AT ROW 10.76 COL 42 COLON-ALIGNED WIDGET-ID 154
-     Copy-dopParam AT ROW 10.86 COL 97 HELP
+     dopParam AT ROW 10.75 COL 42 COLON-ALIGNED WIDGET-ID 154
+     Copy-dopParam AT ROW 10.88 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 200
-     OflineAdress AT ROW 11.95 COL 22 COLON-ALIGNED WIDGET-ID 180
-     Copy-OflineAdress AT ROW 12.05 COL 97 HELP
+     OflineAdress AT ROW 11.96 COL 22 COLON-ALIGNED WIDGET-ID 180
+     Copy-OflineAdress AT ROW 12.04 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 202
-     OflineLogin AT ROW 13.14 COL 22 COLON-ALIGNED WIDGET-ID 182
-     OflinePswd AT ROW 13.14 COL 94 RIGHT-ALIGNED WIDGET-ID 184
-     waitTime AT ROW 14.57 COL 94 RIGHT-ALIGNED WIDGET-ID 156
+     OflineLogin AT ROW 13.13 COL 22 COLON-ALIGNED WIDGET-ID 182
+     OflinePswd AT ROW 13.13 COL 94 RIGHT-ALIGNED WIDGET-ID 184
+     waitTime AT ROW 14.58 COL 94 RIGHT-ALIGNED WIDGET-ID 156
      Copy-waitTime AT ROW 14.67 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 206
-     Resp_TH_required AT ROW 15.76 COL 94 RIGHT-ALIGNED WIDGET-ID 212
-     Copy-Resp AT ROW 15.86 COL 97 HELP
+     Resp_TH_required AT ROW 15.75 COL 94 RIGHT-ALIGNED WIDGET-ID 212
+     Copy-Resp AT ROW 15.88 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 208
-     MACC_Timeout AT ROW 16.95 COL 94 RIGHT-ALIGNED WIDGET-ID 186
-     Copy-Timeout AT ROW 16.95 COL 97 HELP
+     MACC_Timeout AT ROW 16.96 COL 94 RIGHT-ALIGNED WIDGET-ID 186
+     Copy-Timeout AT ROW 16.96 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 210
-     maxTime AT ROW 18.14 COL 94 RIGHT-ALIGNED WIDGET-ID 168
+     maxTime AT ROW 18.13 COL 94 RIGHT-ALIGNED WIDGET-ID 168
      timeFalStart AT ROW 19.33 COL 94 RIGHT-ALIGNED WIDGET-ID 170
-     banDate AT ROW 20.52 COL 94 RIGHT-ALIGNED WIDGET-ID 172
+     banDate AT ROW 20.5 COL 94 RIGHT-ALIGNED WIDGET-ID 172
      cdnTimeUpdate AT ROW 21.71 COL 94 RIGHT-ALIGNED WIDGET-ID 168
-     MACC_IP AT ROW 22.91 COL 22 COLON-ALIGNED WIDGET-ID 214
-     MACC_PORT AT ROW 22.91 COL 85 COLON-ALIGNED WIDGET-ID 216
-     Copy-THport AT ROW 22.91 COL 97 HELP
+     MACC_IP AT ROW 22.92 COL 22 COLON-ALIGNED WIDGET-ID 214
+     MACC_PORT AT ROW 22.92 COL 85 COLON-ALIGNED WIDGET-ID 216
+     Copy-THport AT ROW 22.92 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 226
-     LMCHzPort AT ROW 24.1 COL 85 COLON-ALIGNED WIDGET-ID 224
-     Copy-LMCHzPort AT ROW 24.1 COL 97 HELP
+     LMCHzPort AT ROW 24.08 COL 85 COLON-ALIGNED WIDGET-ID 224
+     Copy-LMCHzPort AT ROW 24.08 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 228
      addTimeoutPIoT AT ROW 25.29 COL 94 RIGHT-ALIGNED WIDGET-ID 230
      Copy-addTimeoutPIoT AT ROW 25.29 COL 97 HELP
@@ -384,19 +410,25 @@ DEFINE FRAME Dialog-Frame
      crashSituat AT ROW 26.71 COL 59 WIDGET-ID 174
      cdnChange AT ROW 27.67 COL 11 WIDGET-ID 174
      cdnRepeat AT ROW 27.67 COL 59 WIDGET-ID 174
-     TxtCopy AT ROW 2.67 COL 95 COLON-ALIGNED NO-LABEL WIDGET-ID 220
-     TxtCopy-2 AT ROW 3.38 COL 95 COLON-ALIGNED NO-LABEL WIDGET-ID 222
-     Proxytext AT ROW 6.95 COL 39 COLON-ALIGNED NO-LABEL WIDGET-ID 152
+     MaxApiToken AT ROW 29 COL 94 RIGHT-ALIGNED WIDGET-ID 234  
+     Copy-MaxApiToken AT ROW 29 COL 97 HELP
+          "Наследовать изменения на все секции" WIDGET-ID 240
+     AgeConfirmBox AT ROW 30.25 COL 94 RIGHT-ALIGNED WIDGET-ID 242
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
-DEFINE FRAME Dialog-Frame
-     RECT-1 AT ROW 2.19 COL 2 WIDGET-ID 116
-     RECT-2 AT ROW 7.19 COL 3 WIDGET-ID 150
-     RECT-3 AT ROW 2.43 COL 96 WIDGET-ID 218
-     SPACE(1.79) SKIP(3.03)
+DEFINE FRAME Dialog-Frame     
+     Copy-AgeConfirm AT ROW 30.25 COL 97 HELP
+          "Наследовать изменения на все секции" WIDGET-ID 236
+     TxtCopy AT ROW 2.67 COL 95 COLON-ALIGNED NO-LABEL WIDGET-ID 220
+     TxtCopy-2 AT ROW 3.38 COL 95 COLON-ALIGNED NO-LABEL WIDGET-ID 222
+     Proxytext AT ROW 6.96 COL 39 COLON-ALIGNED NO-LABEL WIDGET-ID 152
+     RECT-1 AT ROW 2.21 COL 1.5 WIDGET-ID 116
+     RECT-2 AT ROW 7.21 COL 3 WIDGET-ID 150
+     RECT-3 AT ROW 2.42 COL 96 WIDGET-ID 218
+     SPACE(5.00) SKIP(0.60)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для подключения к ГИС МТ и проверки КМ"
@@ -425,11 +457,15 @@ ASSIGN
 
 /* SETTINGS FOR FILL-IN addTimeoutPIoT IN FRAME Dialog-Frame
    ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN AgeConfirm IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN banDate IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN cdnTimeUpdate IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN MACC_Timeout IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
+/* SETTINGS FOR FILL-IN MaxApiToken IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN maxTime IN FRAME Dialog-Frame
    ALIGN-R                                                              */
@@ -503,6 +539,26 @@ END.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&Scoped-define SELF-NAME MaxApiToken
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL MaxApiToken Dialog-Frame
+ON ENTRY OF MaxApiToken IN FRAME Dialog-Frame /* Пароль */
+DO:
+   self:SET-SELECTION(1,length (MaxApiToken:screen-value) + 1).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&Scoped-define SELF-NAME AgeConfirmBox
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL AgeConfirmBox Dialog-Frame
+ON VALUE-CHANGED OF AgeConfirmBox IN FRAME Dialog-Frame /* Пароль */
+DO:
+   assign AgeConfirmBox.   
+   AgeConfirm = lookup(AgeConfirmBox, AgeConfirmBox:LIST-ITEMS,",") - 1.      
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &UNDEFINE SELF-NAME
 
@@ -575,7 +631,8 @@ PROCEDURE enable_UI :
             timeFalStart banDate cdnTimeUpdate MACC_PORT Copy-THport 
             LMCHzPort Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT 
             UpdateRequest crashSituat cdnChange cdnRepeat 
-            TxtCopy TxtCopy-2 Proxytext 
+            TxtCopy TxtCopy-2 Proxytext MaxApiToken Copy-MaxApiToken 
+            AgeConfirmBox Copy-AgeConfirm
       WITH FRAME Dialog-Frame.
       ENABLE B-exit RECT-1 RECT-2 RECT-3 B-quit B-Help gisAdress cdnTurnOn 
              cdnAdress Copy-cdnAdress registrationKey Copy-registrationKey 
@@ -584,9 +641,10 @@ PROCEDURE enable_UI :
              waitTime Copy-waitTime Resp_TH_required Copy-Resp 
              MACC_Timeout Copy-Timeout maxTime timeFalStart banDate cdnTimeUpdate 
              MACC_PORT Copy-THport LMCHzPort Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT 
-             UpdateRequest crashSituat cdnChange cdnRepeat Proxytext 
+             UpdateRequest crashSituat cdnChange cdnRepeat Proxytext MaxApiToken Copy-MaxApiToken 
+             AgeConfirmBox Copy-AgeConfirm
       WITH FRAME Dialog-Frame.                  
-      MACC_IP:VISIBLE = false.
+      MACC_IP:VISIBLE = false.      
       VIEW FRAME Dialog-Frame.
   end.
   else do:
@@ -594,13 +652,13 @@ PROCEDURE enable_UI :
               cdnAdress registrationKey adressPort login password
               dopParam waitTime Proxytext crashSituat
               MACC_Timeout Resp_TH_required MACC_IP MACC_PORT LMCHzPort
-              addTimeoutPIoT 
+              addTimeoutPIoT MaxApiToken AgeConfirmBox  
           WITH FRAME Dialog-Frame.
       
       ENABLE B-exit B-quit OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
               cdnAdress registrationKey adressPort login password
               dopParam waitTime crashSituat MACC_Timeout Resp_TH_required
-              MACC_IP MACC_PORT LMCHzPort addTimeoutPIoT 
+              MACC_IP MACC_PORT LMCHzPort addTimeoutPIoT MaxApiToken AgeConfirmBox   
           WITH FRAME Dialog-Frame.      
       ASSIGN
          maxTime:VISIBLE = false
@@ -625,6 +683,8 @@ PROCEDURE enable_UI :
          TxtCopy:VISIBLE = false 
          TxtCopy-2:VISIBLE = false
          RECT-3:VISIBLE = false
+         Copy-AgeConfirm:VISIBLE = false
+         Copy-MaxApiToken:VISIBLE = false
       .
       VIEW FRAME Dialog-Frame.
   end.
@@ -706,7 +766,7 @@ FOR EACH temp-thbj-attr
            UpdateRequest = temp-thbj-attr.property-value-logical.
            display UpdateRequest with frame {&frame-name} .
         END.
-    end.
+    end.    
     IF temp-thbj-attr.prop-code = {&attr-gisMT_adressPort} THEN DO:
         adressPort = temp-thbj-attr.property-value-character.
         display adressPort with frame {&frame-name} .
@@ -787,6 +847,13 @@ FOR EACH temp-thbj-attr
        AddTimeoutPIoT = temp-thbj-attr.property-value-decimal.
        display AddTimeoutPIoT with frame {&frame-name} .
     end.
+    else if temp-thbj-attr.prop-code = {&attr-gisMT_MaxApiToken} then do:
+       MaxApiToken = fill("*",length (temp-thbj-attr.property-value-character)).                            
+       display MaxApiToken with frame {&frame-name} .
+    end.
+    else if temp-thbj-attr.prop-code = {&attr-gisMT_AgeConfirm} then do:                     
+       AgeConfirm = temp-thbj-attr.property-value-integer.      
+    end.
     else if p-obj-type eq {&db}
     then do:
        delete temp-thbj-attr.
@@ -800,7 +867,9 @@ END.
       enable gisAdress with frame {&frame-name} .
       disable cdnAdress with frame {&frame-name} .
    end.    
-    
+   AgeConfirmBox =  entry((AgeConfirm + 1), AgeConfirmBox:LIST-ITEMS,",").
+   display AgeConfirmBox  with frame {&frame-name} .
+   /*disable AgeConfirm  with frame {&frame-name} .*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -869,6 +938,7 @@ ASSIGN FRAME {&FRAME-NAME}
     MACC_PORT 
     LMCHzPort
     AddTimeoutPIoT
+    MaxApiToken    
     Copy-cdnAdress 
     Copy-registrationKey 
     Copy-adressPort 
@@ -881,6 +951,8 @@ ASSIGN FRAME {&FRAME-NAME}
     Copy-THport 
     Copy-LMCHzPort
     Copy-addTimeoutPIoT
+    Copy-AgeConfirm
+    Copy-MaxApiToken
     .
     for each temp-thbj-attr where 
              temp-thbj-attr.obj-type = p-obj-type and
@@ -1045,6 +1117,25 @@ ASSIGN FRAME {&FRAME-NAME}
               end.   
               temp-thbj-attr.property-value-decimal = AddTimeoutPIoT.
            end.
+           when {&attr-gisMT_MaxApiToken} then do:   
+              if (MaxApiToken eq "" or (replace(MaxApiToken,"*","") ne "" and MaxApiToken ne ?)) then
+              do:   
+                  if temp-thbj-attr.property-value-character <> MaxApiToken
+                  then do: 
+                     create thbjattr-list.
+                     buffer-copy temp-thbj-attr to thbjattr-list.
+                  end.                 
+                  temp-thbj-attr.property-value-character = MaxApiToken.
+              end.               
+           end.
+           when {&attr-gisMT_AgeConfirm} then do:
+              if temp-thbj-attr.property-value-integer <> AgeConfirm
+              then do: 
+                 create thbjattr-list.
+                 buffer-copy temp-thbj-attr to thbjattr-list.
+              end.                        
+              temp-thbj-attr.property-value-integer = AgeConfirm.           
+           end.
        end. /* case */    
     end. /* for each */              
 
@@ -1085,8 +1176,10 @@ ASSIGN FRAME {&FRAME-NAME}
             Copy-Timeout         or 
             Copy-THport          or
             Copy-LMCHzPort       or
-            Copy-addTimeoutPIoT) then do:
-                
+            Copy-addTimeoutPIoT  or
+            Copy-MaxApiToken     or
+            Copy-AgeConfirm) 
+        then do:                
             MESSAGE "Подтверждаете изменение значений в локальных секциях?" 
                 VIEW-AS ALERT-BOX QUESTION 
                 BUTTONS YES-NO 
@@ -1108,6 +1201,8 @@ ASSIGN FRAME {&FRAME-NAME}
                if Copy-THport then run PropCopy({&attr-gisMT_TH_Port}).
                if Copy-LMCHzPort then run PropCopy({&attr-gisMT_LmCHzPort}).
                if Copy-addTimeoutPIoT then run PropCopy({&attr-gisMT_addTimeoutPIoT}).
+               if Copy-MaxApiToken then run PropCopy({&attr-gisMT_MaxApiToken}).
+               if Copy-AgeConfirm then run PropCopy({&attr-gisMT_AgeConfirm}).
             end.          
          end.        
     end.

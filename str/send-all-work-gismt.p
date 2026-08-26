@@ -86,7 +86,9 @@ procedure putc :
    define variable vLmCHzPort      as character no-undo.
    define variable vTH_IP          as character no-undo.
    define variable vTH_Port        as character no-undo.  
-   define variable vAddTimeoutPIoT as decimal   no-undo.   
+   define variable vAddTimeoutPIoT as decimal   no-undo.  
+   define variable vMaxApiToken     as character no-undo.
+   define variable vAgeConfirm      as integer   no-undo.
    
    assign
       vAll = yes   
@@ -94,6 +96,7 @@ procedure putc :
       vTH_IP = ""
       vTH_Port = ""
       vLmCHzPort = ""
+      vMaxApiToken = ""
    . 
    
    thlist: 
@@ -183,10 +186,16 @@ procedure putc :
         when {&attr-gisMT_LmCHzPort} then vLmCHzPort = buf_thbj-attr.property-value-character.
         when {&attr-gisMT_AddTimeoutPIoT} then do:
              run put-xml-data(iSAXWriter,"MACC_additionalTimeoutPIoT",string(buf_thbj-attr.property-value-decimal),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").
-        end.     
+        end.    
+        when {&attr-gisMT_MaxApiToken} then do:                     
+           run put-xml-data(iSAXWriter,"MaxApiToken",buf_thbj-attr.property-value-character,"Токен авторизации MAX").                      
+        end.
+        when {&attr-gisMT_AgeConfirm} then do:
+            run put-xml-data(iSAXWriter,"NeedUserSimpleAgeConfirm",buf_thbj-attr.property-value-integer,"Проверка возраста при продаже НП").            
+        end.    
      end case. 
          
-   end.
+   end.   
    if not vAll then do:
        if vTH_IP = ? then vTH_IP = "".
        if vTH_Port = ? then vTH_Port = "".
@@ -223,11 +232,14 @@ procedure putc :
         vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port})
         vLmCHzPort = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_LmCHzPort})        
         vAddTimeoutPIoT = DEC(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_AddTimeoutPIoT}))    
+        vMaxApiToken = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_MaxApiToken})
+        vAgeConfirm = INT(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_AgeConfirm}))
         no-error.  
       if vTH_IP = ? then vTH_IP = "".
       if vTH_Port = ? then vTH_Port = "".
       if vLmCHzPort = ? then vLmCHzPort = "".
-            
+      if vMaxApiToken = ? then vMaxApiToken = "".
+             
       if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).
       if vCheckBlock <> ? then
       run put-xml-data(iSAXWriter,"checkBlock",vCheckBlock,"Типы маркированной продукции для проверки блокировок контролирующих органов").
@@ -271,7 +283,10 @@ procedure putc :
       if vMACC_Timeout <> 0 and vMACC_Timeout <> ? then 
          run put-xml-data(iSAXWriter,"MACC_Timeout",string(vMACC_Timeout),"Длительность ожидания ответа ТН").
       if vResp_TH_requiredr <> ? then   
-      run put-xml-data(iSAXWriter,"Resp_TH_required",string(vResp_TH_requiredr),"Обязательность получения результатов проверки КМ в ТН").         
+      run put-xml-data(iSAXWriter,"Resp_TH_required",string(vResp_TH_requiredr),"Обязательность получения результатов проверки КМ в ТН").      
+      run put-xml-data(iSAXWriter,"MaxApiToken",vMaxApiToken,"Токен авторизации MAX").   
+      if vAgeConfirm <> ? then                   
+      run put-xml-data(iSAXWriter,"NeedUserSimpleAgeConfirm",string(vAgeConfirm),"Проверка возраста при продаже НП").   
    end.                                   
    
    for each thbjattr-list:

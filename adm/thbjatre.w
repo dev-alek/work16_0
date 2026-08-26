@@ -1574,7 +1574,8 @@ case entry(lookup(buf_thbj-attr.prop-code,v-prop-list) , v-prop-type-list):
   END CASE.
   if buf_thbj-attr.upper-prop-code = "gisMT" and
     (buf_thbj-attr.prop-code = "proxyPswd" or 
-     buf_thbj-attr.prop-code = "OflinePswd") and 
+     buf_thbj-attr.prop-code = "OflinePswd" or
+     buf_thbj-attr.prop-code = "MaxApiToken") and 
      p-value > ""
   then p-value = fill("*",length(p-value)).
   RETURN entry(lookup(buf_thbj-attr.prop-code,v-prop-list),  v-prop-label-list).
