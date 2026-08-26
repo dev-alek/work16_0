@@ -499,11 +499,14 @@ end.
   end.
  
 
- if p-GdsObj:is18plus <> ?
+  if p-GdsObj:is18plus = 1
   then do:
     RUN gds-attr-write (v-nbc, {&attr-is18plus}, p-GdsObj:is18plus).
   end.  
- 
+  else do:
+    RUN gds-attr-delete (v-nbc, {&attr-is18plus}, output v-attr-del).
+  end.  
+
  
   if p-GdsObj:oil-grp <> ?
   then do:
