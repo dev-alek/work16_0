@@ -1014,6 +1014,11 @@ ASSIGN FRAME {&FRAME-NAME}
               temp-thbj-attr.property-value-character = gisAdress.
            when {&attr-gisMT_proxyLogin} 
            then do:
+               if temp-thbj-attr.property-value-character <> login
+              then do: 
+                 create thbjattr-list.
+                 buffer-copy temp-thbj-attr to thbjattr-list.
+              end.  
               temp-thbj-attr.property-value-character = login.
            end.   
            when  {&attr-gisMT_proxyPswd} 

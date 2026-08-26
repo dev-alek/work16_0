@@ -33,6 +33,9 @@ define variable Mfirst as logical no-undo.
 function getValueConvert returns character  (igroup as char,
                                              iparam as char,
                                              ivalue as char):
+   define variable v-param-empty as character no-undo.
+   v-param-empty = "MACC_IP,MaxApiToken,Proxy_*,LmCHzLogin,LmCHzPass,TspiotHostAddr".
+
    if igroup eq "FUCO"
    then do:
       if iparam eq "TrkDispAdr"
@@ -41,7 +44,7 @@ function getValueConvert returns character  (igroup as char,
    end.
    else if igroup eq "GS1"
    then do:
-      if iparam eq "MACC_IP"
+      if can-do(v-param-empty, iparam)
       then 
          ivalue = "".
    end.
