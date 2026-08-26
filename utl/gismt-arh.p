@@ -177,7 +177,7 @@ if vPathFolder <> ? then do:
           vFolderCash = substitute("&1/&2",vFolder,for-cash-desk.cash-num).
           vPathFolder = objExists(vFolderCash,"D").   
        if vPathFolder <> ? then       
-          run DelOldArch (vPathFolder,"GisMTreq-").           
+          run DelOldArch (vPathFolder,"GisMTreq").           
     end.         
 end.    
 else run write-to-log( substitute("Ќе найден каталог архивов проверки марок &1", vFolder) ).
