@@ -340,7 +340,7 @@ procedure put-xml-data-ui:
     
     iSAXWriter:start-element("Param") .
     iSAXWriter:insert-attribute("ctrl", "ADD").
-    iSAXWriter:insert-attribute("group", "UISettings").
+    iSAXWriter:insert-attribute("group", "UiSettings").
     iSAXWriter:insert-attribute("key", p-prop-code).
     iSAXWriter:write-data-element("ParamValue" , p-value ) .
     iSAXWriter:write-data-element("ParamDesc" , p-discr).
