@@ -30,6 +30,7 @@ define variable mCashNum  as integer   no-undo.
 
 { gbl/cd-attr.i}
 { str/def-thbjattr-list.i "shared" }  
+{ cmp/library.i class}
 { ibs/th/skt/controlledclients/gismtprop.i def}
 
 function get-code-typemark return character
@@ -72,7 +73,7 @@ procedure putc :
    DEFINE VARIABLE vRetProp AS CHARACTER NO-UNDO.
    DEFINE VARIABLE vCdnAdr AS CHARACTER NO-UNDO.
    define variable vCount        as integer   no-undo.   
-   define variable vAll as logical no-undo.
+   define variable vAll as logical no-undo. /* признак, выгружать ли все настройки */
    
    define variable vCheckBlock    as character no-undo.        
    define variable vCheckDate     as character no-undo.                                                
@@ -87,8 +88,9 @@ procedure putc :
    define variable vTH_IP          as character no-undo.
    define variable vTH_Port        as character no-undo.  
    define variable vAddTimeoutPIoT as decimal   no-undo.  
-   define variable vMaxApiToken     as character no-undo.
-   define variable vAgeConfirm      as integer   no-undo.
+   define variable vMaxApiToken    as character no-undo.
+   define variable vAgeConfirm     as integer   no-undo.
+   define variable v-reg-code      as integer   no-undo.
    
    assign
       vAll = yes   
@@ -97,13 +99,32 @@ procedure putc :
       vTH_Port = ""
       vLmCHzPort = ""
       vMaxApiToken = ""
-   . 
+   .    
+   { gbl/regcode.i {&db} mdb-num v-reg-code }
    
    thlist: 
    for each thbjattr-list :
+       /* есть список для выгрузки, выгружаем не все настройки, а только которые есть в списке */
      if vAll = yes then vAll = no.
-     
-     if thbjattr-list.upper-prop-code = {&attr-gisMT}
+       /* пропускаем региональную настройку, если есть настройка по БД */ 
+       if    thbjattr-list.obj-type = {&region}
+         and (thbjattr-list.obj-code <> v-reg-code 
+              or can-find(first buf_thbj-attr no-lock where 
+                                buf_thbj-attr.obj-type = {&db}
+                            and buf_thbj-attr.obj-code = mdb-num 
+                            and buf_thbj-attr.upper-prop-code = thbjattr-list.upper-prop-code
+                            and buf_thbj-attr.prop-code = thbjattr-list.prop-code)  )
+          then next thlist.
+       /* пропускаем глобальную настройку, если есть региональная настройка (то, что нет по БД, уже проверили раньше) */
+       if thbjattr-list.upper-prop-code = {&attr-gisMT} 
+          and thbjattr-list.obj-type = ""
+          and can-find(first buf_thbj-attr no-lock where 
+                             buf_thbj-attr.obj-type = {&region}
+                         and buf_thbj-attr.obj-code = v-reg-code
+                         and buf_thbj-attr.upper-prop-code = thbjattr-list.upper-prop-code
+                         and buf_thbj-attr.prop-code = thbjattr-list.prop-code)  
+          then next thlist.  
+     /*if thbjattr-list.upper-prop-code = {&attr-gisMT}
      or thbjattr-list.upper-prop-code = {&attr-marking}
      then do:
          /* пропускаем изменение глобальных параметров, если есть параметр по секции */
@@ -116,7 +137,7 @@ procedure putc :
                no-error.
              if available buf_thbj-attr then next thlist.
          end.
-     end.  
+     end.  */
      find first buf_thbj-attr no-lock where  
                buf_thbj-attr.obj-type = thbjattr-list.obj-type
            and buf_thbj-attr.obj-code = thbjattr-list.obj-code
@@ -215,6 +236,7 @@ procedure putc :
        if vMACC_IP <> "" and vLmCHzPort <> "" then
          run put-xml-data(iSAXWriter,"LmCHzPort",vLmCHzPort,"Порт для отправки запроса проверки марки в ЛМ ЧЗ ").  
    end.    
+   /* временной таблице со списком нет - выгружаем все */
    else do:           
       assign
         vCheckBlock     = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkBlock}))        

@@ -20,8 +20,7 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 {str/imp2cd_def.i new }
 { ref/extclass.i }
-/*{ gbl/getcntxt.i def }  
-{ str/getctxtp.i def }*/
+{ cmp/library.i }
 
 procedure send-to-cash:
   if not can-find(first ub.cash-desk where
@@ -81,7 +80,8 @@ procedure fill-setting :
    
    define variable v-db-num    as integer no-undo. 
    define variable v-shop-code as integer no-undo.
-         
+   define variable v-reg-code  as integer no-undo.
+            
    settingUpd = yes.
    sendGisMt = no.
    if i-obj = "thbj-attr" 
@@ -101,14 +101,19 @@ procedure fill-setting :
       (i-parent = {&attr-gisMT} or i-parent = {&attr-marking})  
    then do:       
        /* если изменился глобальный атрибут, то его отсылаем только если нет локального */
-      if i-parent = {&attr-gisMT} and i-obj-type = "" and i-obj-code = 0 then do:
+      if i-parent = {&attr-gisMT} and i-obj-type = "" and i-obj-code = 0 then do:          
           if not can-find(first buf_thbj-attr no-lock where 
                                 buf_thbj-attr.obj-type = {&db}
                             and buf_thbj-attr.obj-code = v-db-num
                             and buf_thbj-attr.upper-prop-code = i-parent
                             and buf_thbj-attr.prop-code = i-code)  
           then sendGisMt = yes.
-      end.     
+      end.  
+      /* изменился регион */
+      if i-parent = {&attr-gisMT} and i-obj-type = {&region} then do:
+          /* у БД мог измениться код региона, поэтому посылать ли эту настройку определяем потом */
+          sendGisMt = yes.          
+      end.   
       /* изменился локальный атрибут */
       else if (i-parent = {&attr-gisMT} and i-obj-type = {&db} and i-obj-code = v-db-num)       
          then sendGisMt = yes.  

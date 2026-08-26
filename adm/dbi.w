@@ -359,7 +359,7 @@ DO:
 
   define variable ret-val as integer no-undo .
   define variable v-db-attr-del as logical   no-undo .
-  define variable v-reg-attr as integer no-undo.
+  define variable v-reg-attr as integer no-undo.  
 
   define buffer buf1_db     for ub.db .
   define buffer buf_clients for ub.clients .
@@ -489,6 +489,11 @@ DO:
            view-as alert-box error.
          undo, return no-apply. 
       end.    
+  end.    
+  else do:
+      run db-attr-exist in this-procedure (ub.db.db-num, "reg-code", output v-db-attr-del) no-error.
+      if v-db-attr-del then
+        run db-attr-delete in this-procedure (ub.db.db-num, "reg-code", output v-db-attr-del) no-error.
   end.    
 
 END.

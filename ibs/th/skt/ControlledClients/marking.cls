@@ -33,6 +33,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   DEFINE OVERRIDE PUBLIC PROPERTY vss-description AS CHARACTER NO-UNDO INIT "Обработчик запросов по маркам с кассы" GET.
 
   {cmp\str-glbl.i class}
+  { cmp\library.i class}
   &scop CRLF chr(13) + chr(10)
   &scop HdEnd chr(13) + chr(10)  + chr(13) + chr(10)  
   DEFINE PRIVATE VARIABLE cashSts    AS CLASS cash     NO-UNDO.

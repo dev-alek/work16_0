@@ -13796,7 +13796,7 @@ on error undo, return error return-value
 
   define variable vss-description as character no-undo initial "regcode-01: код региона для БД".
   define variable v-db-attr-type  as character no-undo.
-
+/*
   if  l-last-regcode-exist = true
   and p-obj-type           = v-last-regcode-obj-type
   and p-obj-code           = v-last-regcode-obj-code
@@ -13806,7 +13806,7 @@ on error undo, return error return-value
     .
     return . /* --->>>--- */
   end.
-
+*/
   define buffer buf_db   for ub.db .
   
   case p-obj-type :

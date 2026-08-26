@@ -78,20 +78,38 @@ end.
  ):       
  
     define buffer buf_thbj-attr for ub.thbj-attr.
-
+    define variable v-reg-code as integer no-undo. 
+            
     find first buf_thbj-attr no-lock where  
                buf_thbj-attr.obj-type = p-obj-type
            and buf_thbj-attr.obj-code = p-obj-code
            and buf_thbj-attr.upper-prop-code = p-upper-prop-code
            and buf_thbj-attr.prop-code = p-prop-code
+    no-error.
+    if not available buf_thbj-attr and p-obj-type = {&db} then 
+    do:
+       /* ищем в регионе, если у БД задан регион */
+       { gbl/regcode.i p-obj-type p-obj-code v-reg-code }
+       if v-reg-code <> ? and v-reg-code <> 0 then do:
+           find first buf_thbj-attr no-lock where  
+                      buf_thbj-attr.obj-type = {&region}
+                  and buf_thbj-attr.obj-code = v-reg-code
+                  and buf_thbj-attr.upper-prop-code = p-upper-prop-code
+                  and buf_thbj-attr.prop-code = p-prop-code
            no-error.
-    if not available buf_thbj-attr and p-obj-type <> "" then 
+       end.
+    end.
+         
+    if not available buf_thbj-attr and p-obj-type <> "" 
+    then do:
        find first buf_thbj-attr no-lock where  
-               buf_thbj-attr.obj-type = ""
-           and buf_thbj-attr.obj-code = 0
-           and buf_thbj-attr.upper-prop-code = p-upper-prop-code
-           and buf_thbj-attr.prop-code = p-prop-code
-           no-error.  
+                  buf_thbj-attr.obj-type = ""
+              and buf_thbj-attr.obj-code = 0
+              and buf_thbj-attr.upper-prop-code = p-upper-prop-code
+              and buf_thbj-attr.prop-code = p-prop-code
+       no-error.
+    end.        
+             
     if avail buf_thbj-attr then do:
         case buf_thbj-attr.prop-value-type: 
             when "character"

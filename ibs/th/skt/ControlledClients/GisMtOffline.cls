@@ -98,6 +98,7 @@ class ibs.th.skt.ControlledClients.GisMtOffline inherits objth :
        
   { cmp/str-glbl.i class }
   { utl/search.i  class }
+  { cmp/library.i class}
   { ibs/th/skt/controlledclients/gismtprop.i def}   
    
    method public character GetParam ():     

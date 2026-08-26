@@ -141,27 +141,7 @@ on error undo, return error
     end.
     return.
   end.
-  case p-obj-type:
-    when {&shop} or
-    when {&stock} then do:
-      v-start = 1.
-    end.    
-    when {&db} then do:
-      if v-region then
-         v-start = 1.
-      else v-start = 2.   
-    end.    
-    when {&region} then do:
-      v-start = 2.
-    end.
-    when {&cmp}
-    then do:
-      v-start = 2.
-    end.
-    when '' then do:
-      v-start = 3.
-    end.
-  end case.
+  
   assign
   v-obj-type = p-obj-type
   v-obj-code = p-obj-code
@@ -173,6 +153,28 @@ on error undo, return error
     run thbjattr_legacy in this-procedure ( input p-upper-param-code
                                            ,output v-dflt-level-way
                                            ,output v-dflt-up-way).
+    case p-obj-type:
+        when {&shop} or
+        when {&stock} then do:
+          v-start = 1.
+        end.    
+        when {&db} then do:
+          if lookup("db", v-dflt-level-way) = 1 
+          then v-start = 1.            
+          else v-start = 2.   
+        end.    
+        when {&region} then do:
+          v-start = 2.
+        end.
+        when {&cmp}
+        then do:
+          v-start = 2.
+        end.
+        when '' then do:
+          v-start = 3.
+        end.
+    end case.                                       
+                                            
     _step:
     do v-step = v-start to 3:
       if  entry(v-step, v-dflt-level-way) = '' then do:
@@ -221,7 +223,8 @@ on error undo, return error
               v-obj-code = p-obj-code.
             end.
             when {&db} then do:
-              if v-region then do:
+              if lookup("region", v-dflt-level-way) = 2  
+              then do:
                   v-obj-type = {&region}.
                   { gbl/regcode.i p-obj-type p-obj-code v-reg-code }
                   v-obj-code = v-reg-code.
@@ -258,7 +261,7 @@ on error undo, return error
                                             ,input p-mode
                                             ,input-output table tt0-thbj-attr
                                             ,output v-found
-                                            ) no-error.
+                                            ) no-error.                                            
       end.
       else do:
         run thbjattr_value  in this-procedure (
@@ -320,7 +323,7 @@ on error undo, return error
       v-need-prop-list = v-prop-list.
       v-num-need = num-entries(v-prop-list).
       /*нашли начальное значение из вышестоящего*/
-      if v-found = 1.0 then do:
+      if v-found = 1.0 or v-step <> v-start then do:
         if p-param-code <> '' then return.
         if p-param-code = '':U
         and p-obj-type <> v-obj-type then do:
@@ -344,7 +347,7 @@ on error undo, return error
                                               )
                                         then p-upper-param-code
                                         else tt0-thbj-attr.upper-prop-code
-                                        ).
+                                        ).                                        
             find first buf_tt0-thbj-attr where
                     buf_tt0-thbj-attr.obj-type = p-obj-type
                 and buf_tt0-thbj-attr.obj-code = p-obj-code

@@ -852,7 +852,7 @@ FOR EACH temp-thbj-attr
        crashSituat = temp-thbj-attr.property-value-logical.
        display crashSituat with frame {&frame-name} .
     END.       
-    else if temp-thbj-attr.prop-code = {&attr-gisMT_MACC_Timeout} then do:    
+    else if temp-thbj-attr.prop-code = {&attr-gisMT_MACC_Timeout} then do:            
        MACC_Timeout = temp-thbj-attr.property-value-decimal.       
        display MACC_Timeout with frame {&frame-name} .
     end.   
@@ -892,14 +892,16 @@ FOR EACH temp-thbj-attr
        delete temp-thbj-attr.
     end.   
 END.
-   if cdnTurnOn then do:
-      disable gisAdress with frame {&frame-name} .
-      enable cdnAdress with frame {&frame-name} .
-   end.    
-   else do:
-      enable gisAdress with frame {&frame-name} .
-      disable cdnAdress with frame {&frame-name} .
-   end.    
+   if p-mode NE {&lookup} then do:
+       if cdnTurnOn then do:
+          disable gisAdress with frame {&frame-name} .
+          enable cdnAdress with frame {&frame-name} .
+       end.    
+       else do:
+          enable gisAdress with frame {&frame-name} .
+          disable cdnAdress with frame {&frame-name} .
+       end.    
+   end.   
    AgeConfirmBox =  entry((AgeConfirm + 1), AgeConfirmBox:LIST-ITEMS,",").
    display AgeConfirmBox  with frame {&frame-name} .
    /*disable AgeConfirm  with frame {&frame-name} .*/
