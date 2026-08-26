@@ -2704,14 +2704,18 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       
       DEFINE BUFFER buf_sys-ctrl     FOR ub.sys-ctrl.            
             
-      /* тип маркировки вычисляется заранее */       
+      /* тип маркировки вычисляется заранее (но не для проверки ТОЛЬКО по сроку годности!) */       
       IF mTypeMark = "" THEN DO:
-         ASSIGN
-           vErrTxt = "Не опредлен тип маркировки товара. "
-           mCheckSts = 0
-           . 
+        ChekTypeMarkByDm(buf_marking.mark) .
+        if mTypeMark = ""
+        then do :
+           ASSIGN
+             vErrTxt = "Не опредлен тип маркировки товара. "
+             mCheckSts = 0
+             . 
+        end .
       END.             
-      ELSE
+      IF mTypeMark > "" THEN
          vCheckDate = GetMarkProp (p-obj-type,
                                    p-obj-code,
                                    {&attr-marking_checkDate},
