@@ -30,6 +30,7 @@ class ibs.th.skt.Commands.HelpSkt inherits ICommand:
       
       addMethod("",         "SendCash",     "Отправка данных на кассу").
       addMethod("SendCash", "goods",        "Отправка товаров на кассу").
+      addMethod("SendCash", "posonline",    "Отправка настроек для проверки КМ на кассу").
       
       addMethod("",          "TableMenu",   "TableMenu").
       addMethod("TableMenu", "grp",         "Группы товаров").

@@ -386,7 +386,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                /* проверяем срок годности */
                if mCheckSts = 1 or mCheckSts = 2 
                then do:
-                   /* Проверяем офлайн */
+                   /* Проверяем срок годности */
                    vAccMarkCheckOff = ChekExpirationDate({&shop},obj-code,buffer buf_marking).                       
                    vAccMarkCheck = vAccMarkCheckOff. 
                end.
@@ -2780,8 +2780,11 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
                                                 vExpireDate)).
          END.
                                             
-      END.                                   
-                                         
+      END.                                         
+      /* если была проверка на кассе, то при не нужности проверки даты меняем статус на 1 */
+      ELSE IF (StatusPos = 2 AND mCheckSts = 2)
+           THEN mCheckSts = 1.               
+                                
       RETURN vErrTxt.
   END METHOD.
    
