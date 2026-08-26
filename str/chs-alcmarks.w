@@ -1019,7 +1019,8 @@ PROCEDURE save_update :
 
     if available marking
     then do:
-      v-exp-date-txt = marking:ChekExpirationDate(t_doc.obj-type, t_doc.obj-code, buffer marking).
+      v-exp-date-txt = "" .
+/*      v-exp-date-txt = marking:ChekExpirationDate(t_doc.obj-type, t_doc.obj-code, buffer marking).*/
       
       if marking.sts = thMarkSts:Reserved:KeyIntDB then
       do:
