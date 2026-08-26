@@ -271,9 +271,9 @@ end.
       run bgelib-tag-put in this-procedure ( input 4, input "IS18Plus", input 1, input 1 ). 
   end.
 
-  if not available buf_goods-attr then do:   
+/*  if not available buf_goods-attr then do:   
       run bgelib-tag-put in this-procedure ( input 4, input "IS18Plus", input 0, input 1 ). 
-  end. 
+  end. */
 
 /*Алкоголь*/
 
