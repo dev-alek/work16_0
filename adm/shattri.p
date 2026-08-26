@@ -1559,6 +1559,13 @@ end.
       do v-ii = 1 to num-entries(v-prop-code):
         {&create-thbj-attr}.
       end.  
+      v-prop-code = "{&bef-attr-gisMT_AddTimeoutPIoT}".
+&scop ptype decimal
+&scop prop-value 1
+&scop prop-code  entry(v-ii,v-prop-code)
+      do v-ii = 1 to num-entries(v-prop-code):
+        {&create-thbj-attr}.
+      end. 
     end.    
     when {&attr-marking} then do:
       v-prop-code = "{&bef-attr-marking_marking-EDO}".

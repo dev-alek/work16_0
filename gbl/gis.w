@@ -42,6 +42,7 @@ define variable vss-description as character no-undo init "Редактирование секции
 { str/def-thbjattr-list.i "new shared" }  
 
 define temp-table temp-thbj-attr no-undo like ub.thbj-attr.
+define temp-table x_thbj-attr no-undo like ub.thbj-attr.
 
 define variable v-tth     as handle no-undo .
 
@@ -67,22 +68,22 @@ v-tth      = buffer temp-thbj-attr:table-handle .
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS B-exit RECT-1 RECT-2 RECT-3 B-quit B-Help ~
+&Scoped-Define ENABLED-OBJECTS B-exit B-quit B-Help RECT-1 RECT-2 RECT-3 ~
 gisAdress cdnTurnOn cdnAdress Copy-cdnAdress registrationKey ~
 Copy-registrationKey adressPort Copy-adressPort login password Copy-LogPass ~
 dopParam Copy-dopParam OflineAdress Copy-OflineAdress OflineLogin ~
-OflinePswd Copy-OflineLogPswd waitTime Copy-waitTime Resp_TH_required ~
-Copy-Resp MACC_Timeout Copy-Timeout maxTime timeFalStart banDate ~
-cdnTimeUpdate MACC_IP MACC_PORT Copy-THport LMCHzPort Copy-LMCHzPort ~
+OflinePswd waitTime Copy-waitTime Resp_TH_required Copy-Resp MACC_Timeout ~
+Copy-Timeout maxTime timeFalStart banDate cdnTimeUpdate MACC_IP MACC_PORT ~
+Copy-THport LMCHzPort Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT ~
 UpdateRequest crashSituat cdnChange cdnRepeat Proxytext 
 &Scoped-Define DISPLAYED-OBJECTS gisAdress cdnTurnOn cdnAdress ~
 Copy-cdnAdress registrationKey Copy-registrationKey adressPort ~
 Copy-adressPort login password Copy-LogPass dopParam Copy-dopParam ~
-OflineAdress Copy-OflineAdress OflineLogin OflinePswd Copy-OflineLogPswd ~
-waitTime Copy-waitTime Resp_TH_required Copy-Resp MACC_Timeout Copy-Timeout ~
-maxTime timeFalStart banDate cdnTimeUpdate MACC_IP MACC_PORT Copy-THport ~
-LMCHzPort Copy-LMCHzPort UpdateRequest crashSituat cdnChange cdnRepeat ~
-TxtCopy TxtCopy-2 Proxytext 
+OflineAdress Copy-OflineAdress OflineLogin OflinePswd waitTime ~
+Copy-waitTime Resp_TH_required Copy-Resp MACC_Timeout Copy-Timeout maxTime ~
+timeFalStart banDate cdnTimeUpdate MACC_IP MACC_PORT Copy-THport LMCHzPort ~
+Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT UpdateRequest crashSituat ~
+cdnChange cdnRepeat TxtCopy TxtCopy-2 Proxytext 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -114,6 +115,11 @@ DEFINE VARIABLE Resp_TH_required AS CHARACTER FORMAT "X(256)":U INITIAL "Да"
      VIEW-AS COMBO-BOX INNER-LINES 2
      LIST-ITEMS "Да","Нет" 
      DROP-DOWN-LIST
+     SIZE 8 BY 1 NO-UNDO.
+
+DEFINE VARIABLE addTimeoutPIoT AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 1 
+     LABEL "Длительность обработки ответа ГИС МТ в ТС ПИоТ (секунды)" 
+     VIEW-AS FILL-IN 
      SIZE 8 BY 1 NO-UNDO.
 
 DEFINE VARIABLE adressPort AS CHARACTER FORMAT "X(256)":U 
@@ -219,13 +225,13 @@ DEFINE VARIABLE TxtCopy-2 AS CHARACTER FORMAT "X(256)":U INITIAL "в ЛС"
      SIZE 5 BY .62 NO-UNDO.
 
 DEFINE VARIABLE waitTime AS DECIMAL FORMAT "->>,>>9.99":U INITIAL 1.5 
-     LABEL "Длительность ожидания ответа ГИС МТ / ТС ПИоТа (секунды)" 
+     LABEL "Длительность ожидания ответа ГИС МТ (секунды)" 
      VIEW-AS FILL-IN 
      SIZE 8 BY 1 NO-UNDO.
 
 DEFINE RECTANGLE RECT-1
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 104 BY 25.48.
+     SIZE 104 BY 27.14.
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -233,7 +239,7 @@ DEFINE RECTANGLE RECT-2
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 9 BY 23.1.
+     SIZE 9 BY 24.05.
 
 DEFINE VARIABLE cdnChange AS LOGICAL INITIAL no 
      LABEL "Смена площадки" 
@@ -249,6 +255,11 @@ DEFINE VARIABLE cdnTurnOn AS LOGICAL INITIAL no
      LABEL "Работа с cdn-площадками" 
      VIEW-AS TOGGLE-BOX
      SIZE 32 BY .81 NO-UNDO.
+
+DEFINE VARIABLE Copy-addTimeoutPIoT AS LOGICAL INITIAL no 
+     LABEL "" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 4 BY .81 NO-UNDO.
 
 DEFINE VARIABLE Copy-adressPort AS LOGICAL INITIAL no 
      LABEL "" 
@@ -276,11 +287,6 @@ DEFINE VARIABLE Copy-LogPass AS LOGICAL INITIAL no
      SIZE 3 BY .81 NO-UNDO.
 
 DEFINE VARIABLE Copy-OflineAdress AS LOGICAL INITIAL no 
-     LABEL "" 
-     VIEW-AS TOGGLE-BOX
-     SIZE 4 BY .81 NO-UNDO.
-
-DEFINE VARIABLE Copy-OflineLogPswd AS LOGICAL INITIAL no 
      LABEL "" 
      VIEW-AS TOGGLE-BOX
      SIZE 4 BY .81 NO-UNDO.
@@ -350,8 +356,6 @@ DEFINE FRAME Dialog-Frame
           "Наследовать изменения на все секции" WIDGET-ID 202
      OflineLogin AT ROW 13.14 COL 22 COLON-ALIGNED WIDGET-ID 182
      OflinePswd AT ROW 13.14 COL 94 RIGHT-ALIGNED WIDGET-ID 184
-     Copy-OflineLogPswd AT ROW 13.24 COL 97 HELP
-          "Наследовать изменения на все секции" WIDGET-ID 204
      waitTime AT ROW 14.57 COL 94 RIGHT-ALIGNED WIDGET-ID 156
      Copy-waitTime AT ROW 14.67 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 206
@@ -372,24 +376,27 @@ DEFINE FRAME Dialog-Frame
      LMCHzPort AT ROW 24.1 COL 85 COLON-ALIGNED WIDGET-ID 224
      Copy-LMCHzPort AT ROW 24.1 COL 97 HELP
           "Наследовать изменения на все секции" WIDGET-ID 228
-     UpdateRequest AT ROW 25.29 COL 4 HELP
+     addTimeoutPIoT AT ROW 25.29 COL 94 RIGHT-ALIGNED WIDGET-ID 230
+     Copy-addTimeoutPIoT AT ROW 25.29 COL 97 HELP
+          "Наследовать изменения на все секции" WIDGET-ID 232
+     UpdateRequest AT ROW 26.71 COL 11 HELP
           "Обновление параметров при запросе КМ" WIDGET-ID 176
-     crashSituat AT ROW 25.29 COL 52 WIDGET-ID 174
-     cdnChange AT ROW 26.24 COL 4 WIDGET-ID 174
-     cdnRepeat AT ROW 26.24 COL 52 WIDGET-ID 174
+     crashSituat AT ROW 26.71 COL 59 WIDGET-ID 174
+     cdnChange AT ROW 27.67 COL 11 WIDGET-ID 174
+     cdnRepeat AT ROW 27.67 COL 59 WIDGET-ID 174
      TxtCopy AT ROW 2.67 COL 95 COLON-ALIGNED NO-LABEL WIDGET-ID 220
      TxtCopy-2 AT ROW 3.38 COL 95 COLON-ALIGNED NO-LABEL WIDGET-ID 222
      Proxytext AT ROW 6.95 COL 39 COLON-ALIGNED NO-LABEL WIDGET-ID 152
-     RECT-1 AT ROW 2.19 COL 2 WIDGET-ID 116
-     RECT-2 AT ROW 7.19 COL 3 WIDGET-ID 150
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          DEFAULT-BUTTON B-exit CANCEL-BUTTON B-quit WIDGET-ID 100.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
+     RECT-1 AT ROW 2.19 COL 2 WIDGET-ID 116
+     RECT-2 AT ROW 7.19 COL 3 WIDGET-ID 150
      RECT-3 AT ROW 2.43 COL 96 WIDGET-ID 218
-     SPACE(1.79) SKIP(2.22)
+     SPACE(1.79) SKIP(3.03)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Настройки для подключения к ГИС МТ и проверки КМ"
@@ -416,6 +423,8 @@ ASSIGN
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE.
 
+/* SETTINGS FOR FILL-IN addTimeoutPIoT IN FRAME Dialog-Frame
+   ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN banDate IN FRAME Dialog-Frame
    ALIGN-R                                                              */
 /* SETTINGS FOR FILL-IN cdnTimeUpdate IN FRAME Dialog-Frame
@@ -561,21 +570,22 @@ PROCEDURE enable_UI :
       DISPLAY gisAdress cdnTurnOn cdnAdress Copy-cdnAdress registrationKey 
             Copy-registrationKey adressPort Copy-adressPort login password 
             Copy-LogPass dopParam Copy-dopParam OflineAdress Copy-OflineAdress 
-            OflineLogin Copy-OflineLogPswd waitTime Copy-waitTime 
+            OflineLogin waitTime Copy-waitTime 
             Resp_TH_required Copy-Resp MACC_Timeout Copy-Timeout maxTime 
-            timeFalStart banDate cdnTimeUpdate /*MACC_IP*/ MACC_PORT Copy-THport 
-            LMCHzPort Copy-LMCHzPort UpdateRequest crashSituat cdnChange cdnRepeat 
+            timeFalStart banDate cdnTimeUpdate MACC_PORT Copy-THport 
+            LMCHzPort Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT 
+            UpdateRequest crashSituat cdnChange cdnRepeat 
             TxtCopy TxtCopy-2 Proxytext 
       WITH FRAME Dialog-Frame.
       ENABLE B-exit RECT-1 RECT-2 RECT-3 B-quit B-Help gisAdress cdnTurnOn 
              cdnAdress Copy-cdnAdress registrationKey Copy-registrationKey 
              adressPort Copy-adressPort login password Copy-LogPass dopParam 
              Copy-dopParam OflineAdress Copy-OflineAdress OflineLogin OflinePswd 
-             Copy-OflineLogPswd waitTime Copy-waitTime Resp_TH_required Copy-Resp 
+             waitTime Copy-waitTime Resp_TH_required Copy-Resp 
              MACC_Timeout Copy-Timeout maxTime timeFalStart banDate cdnTimeUpdate 
-             /*MACC_IP*/ MACC_PORT Copy-THport LMCHzPort Copy-LMCHzPort UpdateRequest 
-             crashSituat cdnChange cdnRepeat Proxytext 
-      WITH FRAME Dialog-Frame.      
+             MACC_PORT Copy-THport LMCHzPort Copy-LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT 
+             UpdateRequest crashSituat cdnChange cdnRepeat Proxytext 
+      WITH FRAME Dialog-Frame.                  
       MACC_IP:VISIBLE = false.
       VIEW FRAME Dialog-Frame.
   end.
@@ -584,12 +594,13 @@ PROCEDURE enable_UI :
               cdnAdress registrationKey adressPort login password
               dopParam waitTime Proxytext crashSituat
               MACC_Timeout Resp_TH_required MACC_IP MACC_PORT LMCHzPort
+              addTimeoutPIoT Copy-addTimeoutPIoT
           WITH FRAME Dialog-Frame.
       
       ENABLE B-exit B-quit OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
               cdnAdress registrationKey adressPort login password
               dopParam waitTime crashSituat MACC_Timeout Resp_TH_required
-              MACC_IP MACC_PORT LMCHzPort
+              MACC_IP MACC_PORT LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT
           WITH FRAME Dialog-Frame.      
       ASSIGN
          maxTime:VISIBLE = false
@@ -604,8 +615,7 @@ PROCEDURE enable_UI :
          Copy-adressPort:VISIBLE = false 
          Copy-LogPass:VISIBLE = false
          Copy-dopParam:VISIBLE = false 
-         Copy-OflineAdress:VISIBLE = false
-         Copy-OflineLogPswd:VISIBLE = false 
+         Copy-OflineAdress:VISIBLE = false          
          Copy-waitTime:VISIBLE = false 
          Copy-Resp:VISIBLE = false 
          Copy-Timeout:VISIBLE = false 
@@ -617,7 +627,7 @@ PROCEDURE enable_UI :
       .
       VIEW FRAME Dialog-Frame.
   end.
-  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
+  {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}   
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -758,7 +768,9 @@ FOR EACH temp-thbj-attr
        Resp_TH_required = if temp-thbj-attr.property-value-integer = 1 then "Да" else "Нет".
        display Resp_TH_required with frame {&frame-name} .
     end.    
-    else if temp-thbj-attr.prop-code = {&attr-gisMT_TH_IP} then do:                               
+    else if temp-thbj-attr.prop-code = {&attr-gisMT_TH_IP}
+            and p-obj-type = {&db} 
+    then do:                               
        MACC_IP = temp-thbj-attr.property-value-character.
        display MACC_IP with frame {&frame-name} . 
     end.
@@ -769,6 +781,10 @@ FOR EACH temp-thbj-attr
     else if temp-thbj-attr.prop-code = {&attr-gisMT_LmCHzPort} then do:                     
        LMCHzPort = temp-thbj-attr.property-value-character.
        display LMCHzPort with frame {&frame-name} .
+    end.
+    else if temp-thbj-attr.prop-code = {&attr-gisMT_AddTimeoutPIoT} then do:                     
+       AddTimeoutPIoT = temp-thbj-attr.property-value-decimal.
+       display AddTimeoutPIoT with frame {&frame-name} .
     end.
     else if p-obj-type eq {&db}
     then do:
@@ -851,18 +867,19 @@ ASSIGN FRAME {&FRAME-NAME}
     MACC_IP 
     MACC_PORT 
     LMCHzPort
+    AddTimeoutPIoT
     Copy-cdnAdress 
     Copy-registrationKey 
     Copy-adressPort 
     Copy-LogPass
     Copy-dopParam 
-    Copy-OflineAdress
-    Copy-OflineLogPswd 
+    Copy-OflineAdress    
     Copy-waitTime 
     Copy-Resp 
     Copy-Timeout 
     Copy-THport 
     Copy-LMCHzPort
+    Copy-addTimeoutPIoT
     .
     for each temp-thbj-attr where 
              temp-thbj-attr.obj-type = p-obj-type and
@@ -996,7 +1013,7 @@ ASSIGN FRAME {&FRAME-NAME}
                temp-thbj-attr.property-value-integer = if Resp_TH_required = "Да" then 1 else 0.
            end.
            when {&attr-gisMT_TH_IP} then do:               
-              if temp-thbj-attr.property-value-character <> MACC_IP
+              if MACC_IP <> "" and temp-thbj-attr.property-value-character <> MACC_IP
               then do: 
                  create thbjattr-list.
                  buffer-copy temp-thbj-attr to thbjattr-list.
@@ -1018,6 +1035,14 @@ ASSIGN FRAME {&FRAME-NAME}
                  buffer-copy temp-thbj-attr to thbjattr-list.
               end.   
               temp-thbj-attr.property-value-character = LMCHzPort.
+           end.
+           when {&attr-gisMT_AddTimeoutPIoT} then do:               
+              if temp-thbj-attr.property-value-decimal <> AddTimeoutPIoT
+              then do: 
+                 create thbjattr-list.
+                 buffer-copy temp-thbj-attr to thbjattr-list.
+              end.   
+              temp-thbj-attr.property-value-decimal = AddTimeoutPIoT.
            end.
        end. /* case */    
     end. /* for each */              
@@ -1053,19 +1078,20 @@ ASSIGN FRAME {&FRAME-NAME}
             Copy-adressPort      or 
             Copy-LogPass         or 
             Copy-dopParam        or
-            Copy-OflineAdress    or
-            Copy-OflineLogPswd   or
+            Copy-OflineAdress    or            
             Copy-waitTime        or
             Copy-Resp            or
             Copy-Timeout         or 
             Copy-THport          or
-            Copy-LMCHzPort) then do:
+            Copy-LMCHzPort       or
+            Copy-addTimeoutPIoT) then do:
                 
             MESSAGE "Подтверждаете изменение значений в локальных секциях?" 
                 VIEW-AS ALERT-BOX QUESTION 
                 BUTTONS YES-NO 
                 UPDATE v-copy AS LOGICAL.
             if v-copy then do:
+               run ObjCodeCreate.
                if Copy-cdnAdress then run PropCopy({&attr-gisMT_cdnAdress}).
                if Copy-registrationKey then run PropCopy({&attr-gisMT_regKey}).
                if Copy-adressPort then run PropCopy({&attr-gisMT_adressPort}).
@@ -1074,22 +1100,37 @@ ASSIGN FRAME {&FRAME-NAME}
                   run PropCopy({&attr-gisMT_proxyPswd}).
                end.   
                if Copy-dopParam then run PropCopy({&attr-gisMT_dopParam}).
-               if Copy-OflineAdress then run PropCopy({&attr-gisMT_OflineAdress}).
-               if Copy-OflineLogPswd then do:
-                  run PropCopy({&attr-gisMT_OflineLogin}).
-                  run PropCopy({&attr-gisMT_OflinePswd}).
-               end.    
+               if Copy-OflineAdress then run PropCopy({&attr-gisMT_OflineAdress}).                   
                if Copy-waitTime then run PropCopy({&attr-gisMT_waitTime}).
                if Copy-Resp then run PropCopy({&attr-gisMT_Resp_TH_required}).
                if Copy-Timeout then run PropCopy({&attr-gisMT_MACC_Timeout}).
                if Copy-THport then run PropCopy({&attr-gisMT_TH_Port}).
                if Copy-LMCHzPort then run PropCopy({&attr-gisMT_LmCHzPort}).
+               if Copy-addTimeoutPIoT then run PropCopy({&attr-gisMT_addTimeoutPIoT}).
             end.          
          end.        
     end.
 
 
 END PROCEDURE.
+
+PROCEDURE ObjCodeCreate:
+   define buffer buf_thbj-attr for ub.thbj-attr.
+   for each buf_thbj-attr no-lock where  
+            buf_thbj-attr.obj-type = {&db}     
+        and buf_thbj-attr.prop-code       = ''                 
+        and buf_thbj-attr.upper-prop-code = {&attr-gisMT}:
+            
+      find first x_thbj-attr where
+          x_thbj-attr.obj-type = buf_thbj-attr.obj-type and
+          x_thbj-attr.obj-code = buf_thbj-attr.obj-code no-error .
+
+      if not available x_thbj-attr then do:
+        create  x_thbj-attr.
+        buffer-copy buf_thbj-attr to X_thbj-attr.        
+      end.    
+   end.          
+END PROCEDURE.    
 
 PROCEDURE PropCopy:   
     define input parameter p-prop-code as character no-undo. 
@@ -1103,15 +1144,28 @@ PROCEDURE PropCopy:
            and thbj-attr.prop-code = p-prop-code
          no-lock no-error.
     if avail thbj-attr then 
-    do transaction:     
-        for each  buf_thbj-attr exclusive-lock where  
-                  buf_thbj-attr.obj-type = {&db}              
-              and buf_thbj-attr.upper-prop-code = {&attr-gisMT}
-              and buf_thbj-attr.prop-code = p-prop-code:
+    do transaction:   
+        for each x_thbj-attr:              
+           find first buf_thbj-attr exclusive-lock where  
+                      buf_thbj-attr.obj-type = {&db}        
+                  and buf_thbj-attr.obj-code = x_thbj-attr.obj-code          
+                  and buf_thbj-attr.upper-prop-code = {&attr-gisMT}
+                  and buf_thbj-attr.prop-code = p-prop-code 
+           no-wait no-error.
+           if not avail buf_thbj-attr 
+              and not locked buf_thbj-attr 
+           then do:
+               create buf_thbj-attr.
+               assign
+                  buf_thbj-attr.obj-type = {&db}  
+                  buf_thbj-attr.obj-code = x_thbj-attr.obj-code
+                  .
+           end.   
+           if avail buf_thbj-attr then         
            buffer-copy  thbj-attr except obj-type obj-code to buf_thbj-attr.      
         end.
     end.            
-END PROCEDURE.    
+END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

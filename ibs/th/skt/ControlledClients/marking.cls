@@ -50,6 +50,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
   DEFINE PRIVATE VARIABLE action    AS CHARACTER NO-UNDO.
   DEFINE PRIVATE VARIABLE shift_tbeg AS DATE NO-UNDO.
   DEFINE PRIVATE VARIABLE shift_num  AS INTEGER NO-UNDO.
+  DEFINE PRIVATE VARIABLE statusPOS  AS INTEGER NO-UNDO.
+  DEFINE PRIVATE VARIABLE isCheckedOffline  AS LOGICAL NO-UNDO.
   
   DEFINE PRIVATE VARIABLE mMarkOrig     AS CHARACTER NO-UNDO.
   DEFINE PRIVATE VARIABLE mCheckSts     AS INTEGER   NO-UNDO.
@@ -285,6 +287,14 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
           DO:
             shift_num = int (val) NO-ERROR.
           END.
+        WHEN "StatusPos" THEN 
+          DO:
+            statusPOS = int (val) NO-ERROR.
+          END.
+        WHEN "isCheckedOffline" THEN 
+          DO:
+            isCheckedOffline = logical (val) NO-ERROR.
+          END.          
       END CASE.
     END.
     IF cash = "" OR action = ""
@@ -944,7 +954,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
      ):      
       DEFINE VARIABLE v-value-character AS CHARACTER NO-UNDO.
               
-      v-value-character = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-marking},p-param-code,"character").
+      v-value-character = get-thbj-attr-prop(p-obj-type,p-obj-code,{&attr-marking},p-param-code).
       dbgPrint("marking.log", SUBSTITUTE("Тип маркировки: p-param-code &1 v-value-character &2 тип маркировки &3", 
                                          p-param-code, 
                                          v-value-character,

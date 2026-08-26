@@ -4060,13 +4060,13 @@ logical~
 &scop user-can-edit-attr-gisMT   true
 &scop output-display-attr-gisMT  true
 &scop other-attr-gisMT           'spr-ext=gbl\gis.w':U
-&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical,character,character,character,decimal,integer,character,character,character':U
+&scop prop-type-list-attr-gisMT  'character,character,character,character,character,integer,character,integer,decimal,logical,integer,logical,character,logical,logical,integer,logical,character,character,character,decimal,integer,character,character,character,decimal':U
 &scop prop-label-list-attr-gisMT 'Адрес и порт проски-сервера,Дополнительные параметры запроса,Адрес ГИС МТ,Логин,Пароль,Макс.допуст. время разрешения продажи при сбое,ключ авторизации,~
 Время с момента сбоя до начала уведомления персонала,Длительность ожидания ответа ГИС МТ,Аварийная ситуация в ГИС МТ,Опережение срабатывания запрета по сроку годности в минутах,~
 Работа с cdn-площадками,Адрес cdn,Повторный опрос площадки,Смена площадки,Период обновления списка CDN-площадок,Обновление параметров при запросе КМ,Адрес ЛМ ЧЗ,Логин в ЛМ ЧЗ,Пароль в ЛМ ЧЗ,~
-Время ожидания ответа ТН,Обязательность получения результатов проверки КМ в ТН,Порт для отправки запроса проверки марки в ЛМ ЧЗ,Адрес для отправки запроса проверки марки в ТН,Порт для отправки запроса проверки марки в ТН'
+Время ожидания ответа ТН,Обязательность получения результатов проверки КМ в ТН,Порт для отправки запроса проверки марки в ЛМ ЧЗ,Адрес для отправки запроса проверки марки в ТН,Порт для отправки запроса проверки марки в ТН,Длительность обработки ответа ГИС МТ в ТС ПИоТ'
 &scop prop-list-attr-gisMT       'adressPort,dopParam,gisAdress,proxyLogin,proxyPswd,maxTime,regKey,timeFalStart,waitTime,crashSituat,banDate,cdnTurnOn,cdnAdress,cdnRepeat,cdnChange,cdnTimeUpdate,~
-UpdateRequest,OflineAdress,OflineLogin,OflinePswd,MACC_Timeout,Resp_TH_required,LmCHzPort,TH_IP,TH_Port'
+UpdateRequest,OflineAdress,OflineLogin,OflinePswd,MACC_Timeout,Resp_TH_required,LmCHzPort,TH_IP,TH_Port,AddTimeoutPIoT'
 &scop global-attr-gisMT true
 &scop host-attr-gisMT false
 &scop shop-attr-gisMT false

@@ -85,7 +85,8 @@ procedure putc :
    define variable vMACC_IP        as character no-undo.
    define variable vLmCHzPort      as character no-undo.
    define variable vTH_IP          as character no-undo.
-   define variable vTH_Port        as character no-undo.     
+   define variable vTH_Port        as character no-undo.  
+   define variable vAddTimeoutPIoT as decimal   no-undo.   
    
    assign
       vAll = yes   
@@ -180,21 +181,24 @@ procedure putc :
         when {&attr-gisMT_TH_IP} then vTH_IP = buf_thbj-attr.property-value-character.                
         when {&attr-gisMT_TH_Port} then vTH_Port = buf_thbj-attr.property-value-character.
         when {&attr-gisMT_LmCHzPort} then vLmCHzPort = buf_thbj-attr.property-value-character.
+        when {&attr-gisMT_AddTimeoutPIoT} then do:
+             run put-xml-data(iSAXWriter,"MACC_additionalTimeoutPIoT",string(buf_thbj-attr.property-value-decimal),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").
+        end.     
      end case. 
          
    end.
    if not vAll then do:
        /* возможно изменили только одно из двух полей, надо тогда вычислить MACC_IP */
-       if vTH_IP = "" and vTH_Port <> "" then vTH_IP = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_IP},"character").
-       if vTH_IP <> "" and vTH_Port = "" then vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port},"character").
+       if vTH_IP = "" and vTH_Port <> "" then vTH_IP = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_IP}).
+       if vTH_IP <> "" and vTH_Port = "" then vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port}).
        if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).       
        if vMACC_IP <> "" then
          run put-xml-data(iSAXWriter,"MACC_IP",vMACC_IP,"Адрес и порт для отправки запроса проверки марки в ТН").
        /* если MACC_IP не меняли, но поменяли ЛМЧЗ порт, то что бы понять, надо ли его посылать на кассу, вычисляем MACC_IP */  
        IF vTH_IP = "" and vTH_Port = "" and vLmCHzPort <> "" 
        then do:
-           vTH_IP = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_IP},"character").
-           vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port},"character").
+           vTH_IP = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_IP}).
+           vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port}).
            if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).                                    
        end.       
        if vMACC_IP <> "" and vLmCHzPort <> "" then
@@ -202,21 +206,23 @@ procedure putc :
    end.    
    else do: 
       assign
-        vCheckBlock     = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkBlock},"character"))        
-        vCheckDate      = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkDate},"character"))                                            
-        vCheckMRC       = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkMRC},"character"))   
-        vCheckOwner     = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkOwner},"character"))
-        vCheckStatusKM  = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkStatusKM},"character"))
-        vCheckTracking  = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkTracking},"character"))                       
+        vCheckBlock     = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkBlock}))        
+        vCheckDate      = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkDate}))                                            
+        vCheckMRC       = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkMRC}))   
+        vCheckOwner     = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkOwner}))
+        vCheckStatusKM  = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkStatusKM}))
+        vCheckTracking  = get-list-code-typemark(get-thbj-attr-prop(mObjType,mObjCode,{&attr-marking},{&attr-marking_checkTracking}))                               
         .                                            
       vRetProp = get-gismt-prop ({&db}, mdb-num) NO-ERROR.
       assign
-        vMACC_TimeOut   = DEC(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_MACC_Timeout},"decimal"))
-        vResp_TH_requiredr = INT(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_Resp_TH_required},"integer"))
-        vTH_IP = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_IP},"character")
-        vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port},"character")
-        vLmCHzPort = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_LmCHzPort},"character")        
-        .      
+        vMACC_TimeOut   = DEC(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_MACC_Timeout}))
+        vResp_TH_requiredr = INT(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_Resp_TH_required}))
+        vTH_IP = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_IP})
+        vTH_Port = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_TH_Port})
+        vLmCHzPort = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_LmCHzPort})        
+        vAddTimeoutPIoT = DEC(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_AddTimeoutPIoT}))    
+        .  
+      if vAddTimeoutPIoT = ? then vAddTimeoutPIoT = 0.      
       if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).
       
       run put-xml-data(iSAXWriter,"checkBlock",vCheckBlock,"Типы маркированной продукции для проверки блокировок контролирующих органов").
@@ -234,7 +240,8 @@ procedure putc :
       run put-xml-data(iSAXWriter,"Proxy_Pass",gismt-ProxyPswd,"Пароль для подключения к прокси-серверу").  
       if vMACC_IP <> "" and vLmCHzPort <> "" then
          run put-xml-data(iSAXWriter,"LmCHzPort",vLmCHzPort,"Порт для отправки запроса проверки марки в ЛМ ЧЗ ").
-      run put-xml-data(iSAXWriter,"MACC_TimeoutPIoT",string(gismt-WaitTime),"Длительность ожидания ответа ТС ПИоТ").      
+      run put-xml-data(iSAXWriter,"MACC_TimeOutGisMT",string(gismt-WaitTime),"Длительность ожидания на стороне ТС ПИоТ ответа от ГИС МТ").
+      run put-xml-data(iSAXWriter,"MACC_additionalTimeoutPIoT",string(vAddTimeoutPIoT),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").      
       run put-xml-data(iSAXWriter,"Before_Expiration",string(gismt-BanDate),"Опережение срабатывания запрета по сроку годности в минутах"). 
       run put-xml-data(iSAXWriter,"Max_allowed_time",string(gismt-MaxTime),"Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)"). 
       run put-xml-data(iSAXWriter,"Failure_time",string(gismt-TimeFalStart),"Время с момента сбоя до начала уведомления персонала (часы)").       
