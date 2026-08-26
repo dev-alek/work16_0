@@ -2753,7 +2753,7 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
          ELSE IF vExpireDate < NOW + gismt-BanDate * 60 * 1000
          THEN DO:
             ASSIGN
-               vErrTxt   = substitute("—рок годности товара истек &1.", string(vExpireDate,"99/99/9999 HH:MM"))
+               vErrTxt   = substitute("—рок годности товара истек &1.", substring(string(vExpireDate,"99/99/9999 HH:MM+HH:MM"), 1, 16))
                mCheckSts = 0
                .
             LogWrite:WriteFileToLog(SUBSTITUTE("ѕроверка срока годности не прошла: марка &1 срок годности &2",buf_marking.mark,string(vExpireDate,"99/99/9999 HH:MM"))).   

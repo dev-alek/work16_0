@@ -608,6 +608,7 @@ PROCEDURE CrCheckMark :
     end .
     if v-exp-date-txt > ""
     then do :
+      run waitfram-hide in this-procedure .
       message (v-exp-date-txt)
       view-as alert-box .
       return .
