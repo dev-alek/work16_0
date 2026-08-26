@@ -55,7 +55,7 @@ run str/send-all.p (
                            input parparentproc
                           ,input this-procedure:handle
                           ,input p-log-handle
-                          ,input p-obj-type + {&delim-par} + string(p-obj-code) + {&delim-par} + 'U':U + {&delim-par} + 'gismt':U + {&delim-par} + 'Ïונוהאקא ןאנאלוענמג נאבמעû ס ÒÑÏÈמÒ':U
+                          ,input p-parameter
                           ) no-error.
 
 

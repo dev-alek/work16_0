@@ -76,8 +76,19 @@ DEFINE TEMP-TABLE ttreport-header NO-UNDO
    INDEX reqidpar reqid 
    .
    
- DEFINE DATASET gismt-report-body  XML-NODE-NAME "report-lmchzsts" FOR ttreport-header, ttreplicationStatus.      
+ DEFINE DATASET gismt-report-body  XML-NODE-NAME "report-lmchzsts" FOR ttreport-header, ttreplicationStatus.         
+     
+  define temp-table ttfiles-inf  no-undo serialize-name  "files" 
+   field md5            as char
+   field name           as char
+   field timestamp      as char 
+   index timestamp timestamp.
+       
+  define dataset data-files-adr SERIALIZE-HIDDEN  for ttfiles-inf .
 
+  define stream out_data.
+  define variable vImpArchSts as logical no-undo.
+  
 DO
 ON ERROR UNDO, RETURN ERROR RETURN-VALUE
 :   
@@ -164,6 +175,29 @@ ON ERROR UNDO, RETURN ERROR RETURN-VALUE
 
       {&display-message}.
     END.
+    RUN GetArchFromKassa (OUTPUT vImpArchSts) NO-ERROR.
+    IF ERROR-STATUS:ERROR THEN DO:
+&scop my-message   substitute("!!!Ошибка при загрузке архива с кассы &3&1&3&2&3" ~
+                                     , return-value ~
+                                     , error-status:get-message(1) ~
+                                     , ~{&new-line~})
+
+      {&display-message}.
+    END.    
+    ELSE IF vImpArchSts THEN DO:
+&scop my-message   substitute("!!!Архивы с касс загружены.&1" ~
+                                     , ~{&new-line~})
+
+      {&display-message}.
+    END.
+    ELSE DO:
+&scop my-message   substitute("!!!Архивы для загрузки с касс отсутствуют.&1" ~
+                                     , ~{&new-line~})
+
+      {&display-message}.        
+        
+    END.    
+    
 END.
 
 DELETE OBJECT thGisMtOff NO-ERROR.  
@@ -334,3 +368,174 @@ PROCEDURE GenFileName:
   then oFileNameGen = v-name.
   
 END PROCEDURE.    
+
+/* перебор по всем кассам */
+procedure GetArchFromKassa:   
+   define output param oImpSts as logical no-undo.
+   
+   define buffer for-cash-desk for ub.cash-desk.
+   
+   define variable vOneImpSts as logical no-undo.
+   define variable vFolder as character no-undo.
+   define variable vDirDelim    as character no-undo init "\":u.
+      
+   vFolder   = "Архивы взаимодействия с ГИС МТ" .
+   
+   if objExists(vFolder,"D") eq ?  
+       then os-create-dir VALUE(vFolder).   
+       
+   oImpSts = no.
+   for each for-cash-desk no-lock where
+            for-cash-desk.db-num   eq g#db-num                                   
+        and for-cash-desk.cash-on  eq yes
+        :
+        if num-entries(for-cash-desk.addr-path, {&delim-par}) >= 2 then
+           run GetArchFromOneKassa (entry(1, for-cash-desk.addr-path, {&delim-par}) 
+                                    + '://' + entry(1,entry(2, for-cash-desk.addr-path, {&delim-par}),":"),
+                                    substitute("&1&3&2",vFolder,for-cash-desk.cash-num,vDirDelim),
+                                    output vOneImpSts ).
+        oImpSts = oImpSts or vOneImpSts.                              
+   end.        
+
+end procedure. 
+
+/* получение данных с одной кассы */    
+procedure GetArchFromOneKassa:
+    define input param iAddrPath as char no-undo.
+    define input param iCashFolder  as char no-undo.
+    define output param oOneImpSts as logical no-undo.
+    
+    def buffer buf_code for code.
+    def var vTimeStart as int64 no-undo.
+    def var vCmd as char no-undo.
+    def var vFileResult as char no-undo.
+    def var vFileResultErr as char no-undo.
+    def var vFileResArch as char no-undo.
+    def var vFileResArchErr as char no-undo.
+    def var vConnectTime as dec no-undo.
+    define variable vlongJson as longchar no-undo.
+    define variable hDS as handle no-undo.
+    define variable vRetOk as logical no-undo.    
+    def var v-chk-sum-signature as char no-undo.
+    def var vFileCmd as char no-undo.
+    define variable vFileReqPath as character no-undo.    
+    define variable vMyWorkDir   as character no-undo. /* Путь к каталогу */
+    define variable vFolder      as character no-undo. /* Каталог с архивом */
+    define variable vFolderPath  as character no-undo.
+    define variable vDirDelim    as character no-undo init "\":u.
+    define variable vFileArh     as character no-undo. /* имя файла архива */
+    define variable vFileReqErrPath as character no-undo.
+    
+    /* ищем временную метку */
+    FIND FIRST buf_code WHERE buf_code.parent EQ "GisMt"
+                          AND buf_code.code   EQ "ArchDate"
+         NO-LOCK NO-ERROR.
+    if avail buf_code then 
+       vTimeStart = int64(buf_code.CodeValue) no-error.
+    if vTimeStart = ? then vTimeStart = 0.
+    
+    vConnectTime = 30.
+    empty temp-table ttfiles-inf.
+     
+    RUN gbl/_tmpfile.p ( "PiotLogList", ".txt", OUTPUT vFileResult ) .              
+    RUN gbl/_tmpfile.p ( "PiotLogListErr", ".txt", OUTPUT vFileResultErr ) .          
+           
+    /*--location --request GET "http://127.0.0.1:1501/PiotLogList?archDate=0" --header "Accept: application/json"*/
+    vCmd = SUBSTITUTE ('&1  --connect-timeout &6 --max-time &6 --location --request GET "&2:1501/PiotLogList?archDate=&3" --header "Accept: application/json" >&4 --stderr &5',
+                      SEARCH ("exe/curl.exe"), /*1*/
+                      iAddrPath,             /*2*/   
+                      vTimeStart,   /*3*/
+                      vFileResult, /*4*/                      
+                      vFileResultErr, /*5*/
+                      vConnectTime /*6*/
+                      ).                                 
+                 
+    os-command silent value(vCmd).
+        
+    IF searchFile(vFileResult) <> ?
+    THEN DO :                             
+       if objExists(iCashFolder,"D") eq ?  
+       then os-create-dir VALUE(iCashFolder).
+       
+       copy-lob from file vFileResult to vlongJson no-error.          
+       hDS = dataset data-files-adr:handle.                         
+       vRetOk  = hDS:read-json("longchar":U, vlongJson) no-error.
+              
+       for each ttfiles-inf:
+           oOneImpSts = yes .           
+           vFileResArch = ttfiles-inf.name.
+           vFileResArchErr = "Err" + entry(1,ttfiles-inf.name,".") + ".txt".           
+           vCmd = SUBSTITUTE ('&1  --connect-timeout &6 --max-time &6 --location --request GET "&2:1501/PiotLogArch?archName=&3" --header "Accept: application/octet-stream" --output &4 --stderr &5',
+                              SEARCH ("exe/curl.exe"), /*1*/
+                              iAddrPath,             /*2*/                      
+                              ttfiles-inf.name,   /*3*/
+                              vFileResArch, /*4*/                      
+                              vFileResArchErr, /*5*/
+                              vConnectTime  /*6*/
+                              ).                                 
+            
+            os-command silent value(vCmd).
+                                   
+            if searchFile(vFileResArch) = ? then do:                
+                run DelTmpFiles (substitute("&2&1&3&1&4",
+                                            {&delim-par},vFileResult,vFileResultErr,vFileResArchErr)). 
+                return error substitute("Не удалось загрузить архив &1", 
+                                        vFileResArch).
+            end.    
+            run gbl/md5.p
+                (input  searchFile(vFileResArch)
+                ,output v-chk-sum-signature
+                ) .                                   
+            /* не совпал кэш */
+            if v-chk-sum-signature <> ttfiles-inf.md5 
+            then do:                                
+                run DelTmpFiles (substitute("&2&1&3&1&4&1&5",
+                                            {&delim-par},vFileResult,vFileResultErr,vFileResArchErr,vFileResArch)). 
+                return error substitute("Не совпадает проверочная сумма архива: Проверочная контрольная сумма: &1 сумма архива: &2", 
+                                        ttfiles-inf.md5, v-chk-sum-signature).
+            end.
+            /* архив успешно скачен, сохраняем время и переходим к следующему */    
+            else do 
+            transaction:
+               assign
+                   vFileReqPath = searchFile(vFileResArch) 
+                   vFileReqErrPath = searchFile(vFileResArchErr)
+                   vMyWorkDir = substring(vFileReqPath,1,index(vFileReqPath,vFileResArch) - 1)
+                   vFolderPath  = vMyWorkDir + iCashFolder   
+                   vFileArh = vFolderPath + vDirDelim + vFileResArch              
+                   .
+               
+               /* перекладываем файл в папку архивов */                         
+               copy-lob from file(vFileReqPath) to file(vFileArh) no-error.   
+               if error-status:error then do:
+                   return error "Ошибка записи файла в папку архивов".
+               end.         
+               find first buf_code exclusive-lock where 
+                          buf_code.parent eq "GisMt"
+                      and buf_code.code   eq "ArchDate"
+                 no-wait no-error.
+               if avail buf_code then 
+                  buf_code.CodeValue = ttfiles-inf.timestamp no-error.
+                  run DelTmpFiles (substitute("&2&1&3",
+                                              {&delim-par},vFileReqErrPath,vFileReqPath)).                                    
+            end.    
+       end.            
+    END. 
+    run DelTmpFiles (substitute("&2&1&3",
+                                {&delim-par},vFileResult,vFileResultErr)).                 
+end procedure.    
+
+/* Удаление временных файлов */
+procedure DelTmpFiles.
+   define input param iListFile as char no-undo.
+   def var vCount as int no-undo.
+   def var vFileName as char no-undo.
+         
+   do vCount = 1 to num-entries(iListFile,{&delim-par}):    
+      vFileName = entry(vCount,iListFile,{&delim-par}).
+      if vFileName <> ""  then vFileName = searchFile(vFileName).               
+      if vFileName <> "" and vFileName <> ?
+         then os-delete silent value(vFileName)     no-error.                 
+   end.
+   
+end procedure.

@@ -26,6 +26,7 @@ define variable mError as logical no-undo.
 { cmp/trg-def.i }
 { str/auto2dia.i &highest-window-handle = this-procedure}
 { cmp/gds-list.i gds-list def "new shared" }
+
 define variable mSocetLog as character no-undo.
 define variable mobjsend as character no-undo.
 define variable mshop as integer no-undo.
@@ -79,7 +80,31 @@ then do:
                         ,input yes /*p-auto-go*/
                         ,input '':U
                         ,input 'Отправка информации на кассу') no-error .
-   end.
+end.
+else if mobjsend eq "gismt" or mobjsend eq "posonline" then do:
+    run str/diallog.w (
+        &if "{&imp2cd_parparentproc}" <> '' &then
+        input {&imp2cd_parparentproc}
+        &else
+        input ?
+        &endif
+      , input ?
+      , input "str/sendgismt.p":U
+      , input substitute ("&2&1&3&1&4&1&5&1&6&1cash-send=&7,&8", 
+                                   {&delim-par}, 
+                                   {&shop}, 
+                                   mshop,
+                                   'U':U,
+                                   "gismt",
+                                   'Передача настроек для проверки КМ':U,
+                                   mCashNum,
+                                   "SocetLog=" + mSocetLog
+                                   )
+      , input ? /*p-auto-go*/
+      , input "":U
+      , input substitute("Отсылка настроек для проверки КМ")
+  ) no-error.
+end.       
 else
    run str/send-all.p(?, 
                       this-procedure,

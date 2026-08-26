@@ -210,7 +210,7 @@ procedure   for-cash-cycle:
                            ,  g#db-num, ub.cash-desk.pos-type,i-obj-code).
       if mCashNum ne ?
       then
-         vqry = vqry + substitute("for-cash-desk.cash-num eq &1", mCashNum).
+         vqry = vqry + substitute(" and for-cash-desk.cash-num eq &1", mCashNum).
       else
          vqry = vqry + " and for-cash-desk.is-del   ne  true
                          and for-cash-desk.autonomy ne {&bef-cd-slave}". 

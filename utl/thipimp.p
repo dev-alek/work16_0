@@ -23,7 +23,7 @@ define variable vss-description as character no-undo init "".
 { cmp/vssrevis.i }
 { utl/runpro.i}
 
-define variable vfileLog as character no-undo init "Log_THIPImp.txt".
+define variable vfileLog as character no-undo init "Log_THIPImp.log".
 define variable mFileName as character no-undo init "THIPImp.xslx".
 
 { cmp/str-glbl.i }
@@ -32,9 +32,9 @@ define variable mFileName as character no-undo init "THIPImp.xslx".
 { gbl/is-num.i }
 
 define temp-table tt-th_ip no-undo
-    field object-info as character label "Объект"  
-    field th_ip   as character   label "IP адрес"  
-    index object-info object-info.
+    field th_obj  as character label "Объект"  
+    field th_ip   as character label "IP адрес"  
+    index th_obj th_obj.
 
 if g#db-num ne 0
 then do:
@@ -105,6 +105,7 @@ procedure WorkLineExel:
    define output parameter oDelRec as logical no-undo.
    
    define variable vdb-num as integer   no-undo.
+      
    /* будем считать что запись нам больше не нужна */
    oDelRec = yes.
    mStrAll = mStrAll + 1.
@@ -112,7 +113,7 @@ procedure WorkLineExel:
    if not iBuffer:available then return.
    /* Первую строку пропускаем - это заголовок */
    if mStrAll = 1 then return .
-   vdb-num = int(iBuffer::object-info) no-error. 
+   vdb-num = int(iBuffer::th_obj) no-error. 
    /* ищем БД */
    if vdb-num <> 0 then do: 
        
