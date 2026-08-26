@@ -383,17 +383,33 @@ procedure GetArchFromKassa:
    
    if objExists(vFolder,"D") eq ?  
        then os-create-dir VALUE(vFolder).   
-       
+              
    oImpSts = no.
    for each for-cash-desk no-lock where
             for-cash-desk.db-num   eq g#db-num                                   
         and for-cash-desk.cash-on  eq yes
         :
         if num-entries(for-cash-desk.addr-path, {&delim-par}) >= 2 then
+        do:
+           run write-log-and-file in p-log-handle ( input 1                              
+                                          , input log-file-name                  
+                                          , input 1                              
+                                          , input substitute("Запрос архивов кассы номер &1", for-cash-desk.cash-num)). 
            run GetArchFromOneKassa (entry(1, for-cash-desk.addr-path, {&delim-par}) 
                                     + '://' + entry(1,entry(2, for-cash-desk.addr-path, {&delim-par}),":"),
                                     substitute("&1&3&2",vFolder,for-cash-desk.cash-num,vDirDelim),
                                     output vOneImpSts ).
+           if vOneImpSts then
+           run write-log-and-file in p-log-handle ( input 1                              
+                                          , input log-file-name                  
+                                          , input 1                              
+                                          , input substitute("Архивы с кассы номер &1 загружены", for-cash-desk.cash-num)).                          
+        end.
+        else 
+           run write-log-and-file in p-log-handle ( input 1                              
+                                          , input log-file-name                  
+                                          , input 1                              
+                                          , input substitute("!!!В справочнике для кассы номер &1 некорректно задан адрес и порт кассы", for-cash-desk.cash-num)).                            
         oImpSts = oImpSts or vOneImpSts.                              
    end.        
 
@@ -405,25 +421,26 @@ procedure GetArchFromOneKassa:
     define input param iCashFolder  as char no-undo.
     define output param oOneImpSts as logical no-undo.
     
-    def buffer buf_code for code.
-    def var vTimeStart as int64 no-undo.
-    def var vCmd as char no-undo.
-    def var vFileResult as char no-undo.
-    def var vFileResultErr as char no-undo.
-    def var vFileResArch as char no-undo.
-    def var vFileResArchErr as char no-undo.
-    def var vConnectTime as dec no-undo.
-    define variable vlongJson as longchar no-undo.
-    define variable hDS as handle no-undo.
-    define variable vRetOk as logical no-undo.    
-    def var v-chk-sum-signature as char no-undo.
-    def var vFileCmd as char no-undo.
-    define variable vFileReqPath as character no-undo.    
-    define variable vMyWorkDir   as character no-undo. /* Путь к каталогу */
-    define variable vFolder      as character no-undo. /* Каталог с архивом */
-    define variable vFolderPath  as character no-undo.
-    define variable vDirDelim    as character no-undo init "\":u.
-    define variable vFileArh     as character no-undo. /* имя файла архива */
+    define buffer buf_code for code.
+    define variable vTimeStart      as int64 no-undo.
+    define variable vCmd            as character no-undo.
+    define variable vFileResult     as character no-undo.
+    define variable vFileResultErr  as character no-undo.
+    define variable vFileResArch    as character no-undo.
+    define variable vFileResArchErr as character no-undo.
+    define variable vConnectTime    as decimal no-undo.
+    define variable vlongJson       as longchar no-undo.
+    define variable hDS             as handle no-undo.
+    define variable vRetOk          as logical no-undo.    
+    define variable v-chk-sum-signature as char no-undo.
+    define variable vFileListCmd    as character no-undo.
+    define variable vFileArhCmd     as character no-undo.
+    define variable vFileReqPath    as character no-undo.    
+    define variable vMyWorkDir      as character no-undo. /* Путь к каталогу */
+    define variable vFolder         as character no-undo. /* Каталог с архивом */
+    define variable vFolderPath     as character no-undo.
+    define variable vDirDelim       as character no-undo init "\":u.
+    define variable vFileArh        as character no-undo. /* имя файла архива */
     define variable vFileReqErrPath as character no-undo.
     
     /* ищем временную метку */
@@ -439,6 +456,7 @@ procedure GetArchFromOneKassa:
      
     RUN gbl/_tmpfile.p ( "PiotLogList", ".txt", OUTPUT vFileResult ) .              
     RUN gbl/_tmpfile.p ( "PiotLogListErr", ".txt", OUTPUT vFileResultErr ) .          
+    if session:debug-alert then run gbl/_tmpfile.p ("PiotLogListCmd", ".bat", output vFileListCmd) .
            
     /*--location --request GET "http://127.0.0.1:1501/PiotLogList?archDate=0" --header "Accept: application/json"*/
     vCmd = SUBSTITUTE ('&1  --connect-timeout &6 --max-time &6 --location --request GET "&2:1501/PiotLogList?archDate=&3" --header "Accept: application/json" >&4 --stderr &5',
@@ -449,7 +467,13 @@ procedure GetArchFromOneKassa:
                       vFileResultErr, /*5*/
                       vConnectTime /*6*/
                       ).                                 
-                 
+    if session:debug-alert then 
+     do:
+         OUTPUT STREAM out_data TO value(vFileListCmd).        
+         PUT STREAM out_data UNFORMATTED  
+          vCmd .
+         OUTPUT STREAM out_data CLOSE.
+     end.             
     os-command silent value(vCmd).
         
     IF searchFile(vFileResult) <> ?
@@ -473,7 +497,14 @@ procedure GetArchFromOneKassa:
                               vFileResArchErr, /*5*/
                               vConnectTime  /*6*/
                               ).                                 
-            
+            if session:debug-alert then run gbl/_tmpfile.p ("PiotLogArhCmd", ".bat", output vFileArhCmd) .
+            if session:debug-alert then 
+             do:
+                 OUTPUT STREAM out_data TO value(vFileArhCmd).        
+                 PUT STREAM out_data UNFORMATTED  
+                  vCmd .
+                 OUTPUT STREAM out_data CLOSE.
+             end.
             os-command silent value(vCmd).
                                    
             if searchFile(vFileResArch) = ? then do:                
@@ -530,7 +561,8 @@ procedure DelTmpFiles.
    define input param iListFile as char no-undo.
    def var vCount as int no-undo.
    def var vFileName as char no-undo.
-         
+   
+   if not session:debug-alert then      
    do vCount = 1 to num-entries(iListFile,{&delim-par}):    
       vFileName = entry(vCount,iListFile,{&delim-par}).
       if vFileName <> ""  then vFileName = searchFile(vFileName).               
