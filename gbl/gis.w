@@ -235,7 +235,7 @@ DEFINE RECTANGLE RECT-1
 
 DEFINE RECTANGLE RECT-2
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 98 BY 3.1.
+     SIZE 93 BY 3.1.
 
 DEFINE RECTANGLE RECT-3
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -594,13 +594,13 @@ PROCEDURE enable_UI :
               cdnAdress registrationKey adressPort login password
               dopParam waitTime Proxytext crashSituat
               MACC_Timeout Resp_TH_required MACC_IP MACC_PORT LMCHzPort
-              addTimeoutPIoT Copy-addTimeoutPIoT
+              addTimeoutPIoT 
           WITH FRAME Dialog-Frame.
       
       ENABLE B-exit B-quit OflineAdress OflineLogin OflinePswd gisAdress cdnTurnOn
               cdnAdress registrationKey adressPort login password
               dopParam waitTime crashSituat MACC_Timeout Resp_TH_required
-              MACC_IP MACC_PORT LMCHzPort addTimeoutPIoT Copy-addTimeoutPIoT
+              MACC_IP MACC_PORT LMCHzPort addTimeoutPIoT 
           WITH FRAME Dialog-Frame.      
       ASSIGN
          maxTime:VISIBLE = false
@@ -621,6 +621,7 @@ PROCEDURE enable_UI :
          Copy-Timeout:VISIBLE = false 
          Copy-THport:VISIBLE = false 
          Copy-LMCHzPort:VISIBLE = false
+         Copy-addTimeoutPIoT:VISIBLE = false
          TxtCopy:VISIBLE = false 
          TxtCopy-2:VISIBLE = false
          RECT-3:VISIBLE = false

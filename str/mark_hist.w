@@ -566,33 +566,35 @@ DO:
   define buffer b_marking for ub.marking.
   define buffer buf_marking-attr for ub.marking-attr.
 
-  if available buf_marking and online-check:sensitive then
+  if available buf_marking then
   do:
-    assign online-check.
-    find first buf_marking-attr where 
-               buf_marking-attr.attr-code = "notOnlineCheck"
-           and buf_marking-attr.mark begins buf_marking.mark
-         exclusive-lock no-error.
-    if (available buf_marking-attr and buf_marking-attr.attr-value <> string(online-check))
-       or (not available buf_marking-attr and online-check) then
-    do:
-      if available buf_marking-attr and not online-check then 
-      do:
-        delete buf_marking-attr.
-      end.
-      else do:
-        if not available buf_marking-attr then
+    if online-check:sensitive then
+    do:  
+        assign online-check.
+        find first buf_marking-attr where 
+                   buf_marking-attr.attr-code = "notOnlineCheck"
+               and buf_marking-attr.mark begins buf_marking.mark
+             exclusive-lock no-error.
+        if (available buf_marking-attr and buf_marking-attr.attr-value <> string(online-check))
+           or (not available buf_marking-attr and online-check) then
         do:
-          create buf_marking-attr.
-          assign
-            buf_marking-attr.mark = buf_marking.mark
-            buf_marking-attr.attr-code = "notOnlineCheck"
-          .
+          if available buf_marking-attr and not online-check then 
+          do:
+            delete buf_marking-attr.
+          end.
+          else do:
+            if not available buf_marking-attr then
+            do:
+              create buf_marking-attr.
+              assign
+                buf_marking-attr.mark = buf_marking.mark
+                buf_marking-attr.attr-code = "notOnlineCheck"
+              .
+            end.
+            buf_marking-attr.attr-value = string(online-check).
+          end.
         end.
-        buf_marking-attr.attr-value = string(online-check).
-      end.
     end.
-
     if buf_marking.sts <> f-status then do:
       message "У марки был изменен статус.~nСохранить?" view-as alert-box question buttons yes-no 
         update isSave as logical.

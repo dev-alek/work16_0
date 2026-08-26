@@ -148,7 +148,7 @@ procedure putc :
            run put-xml-data(iSAXWriter,"Failure_time",string(buf_thbj-attr.property-value-integer),"Время с момента сбоя до начала уведомления персонала (часы)"). 
         end.
         when {&attr-gisMT_crashSituat} then do:           
-           run put-xml-data(iSAXWriter,"emergencyMode",string(buf_thbj-attr.property-value-logical),"Признак аварийной ситуации в ГИС МТ").     
+           run put-xml-data(iSAXWriter,"emergencyMode",(if buf_thbj-attr.property-value-logical then "1" else "0"),"Признак аварийной ситуации в ГИС МТ").     
         end.
         when {&attr-gisMT_banDate} then do:           
            run put-xml-data(iSAXWriter,"Before_Expiration",string(buf_thbj-attr.property-value-integer),"Опережение срабатывания запрета по сроку годности в минутах"). 
@@ -163,7 +163,7 @@ procedure putc :
             run put-xml-data(iSAXWriter,"Proxy_Pass",buf_thbj-attr.property-value-character,"Пароль для подключения к прокси-серверу"). 
         end.                                 
         when {&attr-gisMT_waitTime} then do:            
-            run put-xml-data(iSAXWriter,"MACC_TimeoutPIoT",string(buf_thbj-attr.property-value-decimal),"Длительность ожидания ответа ТС ПИоТ"). 
+            run put-xml-data(iSAXWriter,"MACC_TimeoutGISMT",string(buf_thbj-attr.property-value-decimal),"Длительность ожидания ответа ТС ПИоТ"). 
         end.
         when {&attr-gisMT_MACC_Timeout} then do:                                     
            if buf_thbj-attr.property-value-decimal <> 0 then 
@@ -222,32 +222,50 @@ procedure putc :
         vLmCHzPort = get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_LmCHzPort})        
         vAddTimeoutPIoT = DEC(get-thbj-attr-prop({&db},mdb-num,{&attr-gisMT},{&attr-gisMT_AddTimeoutPIoT}))    
         .  
-      if vAddTimeoutPIoT = ? then vAddTimeoutPIoT = 0.      
+            
       if vTH_IP <> "" and vTH_Port <> "" then vMACC_IP = substitute("&1:&2",vTH_IP,vTH_Port).
-      
+      if vCheckBlock <> ? then
       run put-xml-data(iSAXWriter,"checkBlock",vCheckBlock,"Типы маркированной продукции для проверки блокировок контролирующих органов").
+      if vCheckDate <> ? then
       run put-xml-data(iSAXWriter,"checkDate",vCheckDate,"Типы маркированной продукции для проверки срока годности").
+      if vCheckMRC <> ? then
       run put-xml-data(iSAXWriter,"checkMRC",vCheckMRC,"Типы маркированной продукции для проверки МРЦ").
+      if vCheckOwner <> ? then
       run put-xml-data(iSAXWriter,"checkOwner",vCheckOwner,"Типы маркированной продукции для проверки владельца").
+      if vCheckStatusKM <> ? then
       run put-xml-data(iSAXWriter,"checkStatusKM",vCheckStatusKM,"Типы маркированной продукции для проверки статуса КМ").
+      if vCheckTracking <> ? then 
       run put-xml-data(iSAXWriter,"checkTracking",vCheckTracking,"Типы маркированной продукции для проверки флага прослеживаемости").
-      if vMACC_IP <> "" then
+      if vMACC_IP <> "" and vMACC_IP <> ? then
          run put-xml-data(iSAXWriter,"MACC_IP",vMACC_IP,"Адрес и порт для отправки запроса проверки марки в ТН").
-      run put-xml-data(iSAXWriter,"LmCHzLogin",gismt-OflineLogin,"Логин для доступа ЛМ ЧЗ"). 
-      run put-xml-data(iSAXWriter,"LmCHzPass",gismt-OflinePswd,"Пароль для доступа ЛМ ЧЗ"). 
+      if gismt-OflineLogin <> ? then   
+      run put-xml-data(iSAXWriter,"LmCHzLogin",gismt-OflineLogin,"Логин для доступа ЛМ ЧЗ").
+      if gismt-OflinePswd <> ? then 
+      run put-xml-data(iSAXWriter,"LmCHzPass",gismt-OflinePswd,"Пароль для доступа ЛМ ЧЗ").
+      if gismt-AdressPort <> ? then 
       run put-xml-data(iSAXWriter,"Proxy_IP",gismt-AdressPort,"Адрес и порт прокси").
-      run put-xml-data(iSAXWriter,"Proxy_Login",gismt-ProxyLogin,"Логин для подключения к прокси-серверу"). 
+      if gismt-ProxyLogin <> ? then
+      run put-xml-data(iSAXWriter,"Proxy_Login",gismt-ProxyLogin,"Логин для подключения к прокси-серверу").
+      if gismt-ProxyPswd <> ? then 
       run put-xml-data(iSAXWriter,"Proxy_Pass",gismt-ProxyPswd,"Пароль для подключения к прокси-серверу").  
-      if vMACC_IP <> "" and vLmCHzPort <> "" then
+      if vMACC_IP <> "" and vLmCHzPort <> "" 
+         and vMACC_IP <> ? and vLmCHzPort <> ? then
          run put-xml-data(iSAXWriter,"LmCHzPort",vLmCHzPort,"Порт для отправки запроса проверки марки в ЛМ ЧЗ ").
-      run put-xml-data(iSAXWriter,"MACC_TimeOutGisMT",string(gismt-WaitTime),"Длительность ожидания на стороне ТС ПИоТ ответа от ГИС МТ").
-      run put-xml-data(iSAXWriter,"MACC_additionalTimeoutPIoT",string(vAddTimeoutPIoT),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").      
-      run put-xml-data(iSAXWriter,"Before_Expiration",string(gismt-BanDate),"Опережение срабатывания запрета по сроку годности в минутах"). 
-      run put-xml-data(iSAXWriter,"Max_allowed_time",string(gismt-MaxTime),"Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)"). 
-      run put-xml-data(iSAXWriter,"Failure_time",string(gismt-TimeFalStart),"Время с момента сбоя до начала уведомления персонала (часы)").       
-      run put-xml-data(iSAXWriter,"emergencyMode",string(gismt-CrashSituat),"Признак аварийной ситуации в ГИС МТ").                    
-      if vMACC_Timeout <> 0 then 
+      if gismt-WaitTime <> ? then  
+      run put-xml-data(iSAXWriter,"MACC_TimeoutGISMT",string(gismt-WaitTime),"Длительность ожидания на стороне ТС ПИоТ ответа от ГИС МТ").
+      if vAddTimeoutPIoT <> ? then
+      run put-xml-data(iSAXWriter,"MACC_additionalTimeoutPIoT",string(vAddTimeoutPIoT),"Длительность обработки ответа ГИС МТ в ТС ПИоТ").
+      if gismt-BanDate <> ? then      
+      run put-xml-data(iSAXWriter,"Before_Expiration",string(gismt-BanDate),"Опережение срабатывания запрета по сроку годности в минутах").
+      if gismt-MaxTime <> ? then  
+      run put-xml-data(iSAXWriter,"Max_allowed_time",string(gismt-MaxTime),"Макс. допустимое время разрешения продажи при сбое онлайн проверки (часы)").
+      if gismt-TimeFalStart <> ? then 
+      run put-xml-data(iSAXWriter,"Failure_time",string(gismt-TimeFalStart),"Время с момента сбоя до начала уведомления персонала (часы)").
+      if gismt-CrashSituat <> ? then       
+      run put-xml-data(iSAXWriter,"emergencyMode",(if gismt-CrashSituat then "1" else "0"),"Признак аварийной ситуации в ГИС МТ").                    
+      if vMACC_Timeout <> 0 and vMACC_Timeout <> ? then 
          run put-xml-data(iSAXWriter,"MACC_Timeout",string(vMACC_Timeout),"Длительность ожидания ответа ТН").
+      if vResp_TH_requiredr <> ? then   
       run put-xml-data(iSAXWriter,"Resp_TH_required",string(vResp_TH_requiredr),"Обязательность получения результатов проверки КМ в ТН").         
    end.                                   
    
