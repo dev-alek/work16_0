@@ -212,7 +212,7 @@ procedure putc :
            run put-xml-data(iSAXWriter,"MaxApiToken",buf_thbj-attr.property-value-character,"Токен авторизации MAX").                      
         end.
         when {&attr-gisMT_AgeConfirm} then do:
-            run put-xml-data(iSAXWriter,"NeedUserSimpleAgeConfirm",buf_thbj-attr.property-value-integer,"Проверка возраста при продаже НП").            
+            run put-xml-data-ui(iSAXWriter,"NeedUserSimpleAgeConfirm",buf_thbj-attr.property-value-integer,"Проверка возраста при продаже НП").            
         end.    
      end case. 
          
@@ -308,7 +308,7 @@ procedure putc :
       run put-xml-data(iSAXWriter,"Resp_TH_required",string(vResp_TH_requiredr),"Обязательность получения результатов проверки КМ в ТН").      
       run put-xml-data(iSAXWriter,"MaxApiToken",vMaxApiToken,"Токен авторизации MAX").   
       if vAgeConfirm <> ? then                   
-      run put-xml-data(iSAXWriter,"NeedUserSimpleAgeConfirm",string(vAgeConfirm),"Проверка возраста при продаже НП").   
+      run put-xml-data-ui(iSAXWriter,"NeedUserSimpleAgeConfirm",string(vAgeConfirm),"Проверка возраста при продаже НП").   
    end.                                   
    
    for each thbjattr-list:
@@ -331,6 +331,21 @@ procedure put-xml-data:
     iSAXWriter:write-data-element("ParamDesc" , p-discr).
     iSAXWriter:end-element("Param" ). 
 end procedure.       
+
+procedure put-xml-data-ui:
+    define input parameter iSAXWriter  as handle    no-undo .
+    define input parameter p-prop-code as character no-undo.
+    define input parameter p-value     as character no-undo.
+    define input parameter p-discr     as character no-undo.
+    
+    iSAXWriter:start-element("Param") .
+    iSAXWriter:insert-attribute("ctrl", "ADD").
+    iSAXWriter:insert-attribute("group", "UISettings").
+    iSAXWriter:insert-attribute("key", p-prop-code).
+    iSAXWriter:write-data-element("ParamValue" , p-value ) .
+    iSAXWriter:write-data-element("ParamDesc" , p-discr).
+    iSAXWriter:end-element("Param" ). 
+end procedure. 
 
 procedure set-cash-info:
    define input         parameter iDB-num        as integer     no-undo.

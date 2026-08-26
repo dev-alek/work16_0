@@ -323,7 +323,7 @@ on error undo, return error
       v-need-prop-list = v-prop-list.
       v-num-need = num-entries(v-prop-list).
       /*нашли начальное значение из вышестоящего*/
-      if v-found = 1.0 or v-step <> v-start then do:
+      if v-found = 1.0 or (v-found > 0 and v-step <> v-start) then do:
         if p-param-code <> '' then return.
         if p-param-code = '':U
         and p-obj-type <> v-obj-type then do:
