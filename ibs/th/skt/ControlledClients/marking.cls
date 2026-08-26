@@ -2705,7 +2705,8 @@ CLASS ibs.th.skt.ControlledClients.marking INHERITS ICommandProc:
       DEFINE BUFFER buf_sys-ctrl     FOR ub.sys-ctrl.            
             
       /* Перевычисляем тип, потому что может быть вызов извне - проверка ТОЛЬКО по сроку годности! */             
-      ChekTypeMarkByDm(buf_marking.mark) .
+      IF AVAILABLE buf_marking THEN
+         ChekTypeMarkByDm(buf_marking.mark) .
       if mTypeMark = ""
       then do :
          ASSIGN
