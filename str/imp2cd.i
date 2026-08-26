@@ -20,6 +20,8 @@ define variable vss-include-info{&vssseq} as character format "x(65)" no-undo in
 
 {str/imp2cd_def.i new }
 { ref/extclass.i }
+/*{ gbl/getcntxt.i def }  
+{ str/getctxtp.i def }*/
 
 procedure send-to-cash:
   if not can-find(first ub.cash-desk where
@@ -73,29 +75,71 @@ procedure fill-setting :
    define input parameter i-obj-code as integer   no-undo .
    define input parameter i-parent   as character no-undo .
    define input parameter i-code     as character no-undo .
-   settingUpd = yes.
-   if i-obj = "thbj-attr" and 
-      (i-parent = {&attr-gisMT} or i-parent = {&attr-marking}) 
-   then do:
-      sendGisMt = yes.
-      if not can-find(first thbjattr-list where 
-                            thbjattr-list.obj-type = i-obj-type
-                        and thbjattr-list.obj-code = i-obj-code
-                        and thbjattr-list.upper-prop-code = i-parent
-                        and thbjattr-list.prop-code = i-code)
-      then do:
-          create thbjattr-list.
-          assign
-             thbjattr-list.obj-type = i-obj-type
-             thbjattr-list.obj-code = i-obj-code
-             thbjattr-list.upper-prop-code = i-parent
-             thbjattr-list.prop-code = i-code
-             .
-      end.                      
-   end.   
+   define buffer buf_thbj-attr for ub.thbj-attr.
+   define buffer buf_sys-ctrl for ub.sys-ctrl.
+   define buffer buf_clients for ub.clients.
    
-   /*run utl/dbgprint.p (substitute("imp2cd.i fill-setting i-obj &1 i-obj-type &2 i-obj-code &3 i-parent &4 i-code &5 sendGisMt &6", 
-                                  i-obj, i-obj-type, i-obj-code, i-parent, i-code, sendGisMt)).  */                             
+   define variable v-db-num    as integer no-undo. 
+   define variable v-shop-code as integer no-undo.
+         
+   settingUpd = yes.
+   sendGisMt = no.
+   if i-obj = "thbj-attr" 
+   then do:         
+      v-db-num  = ibs.th.gbl.gbl-var:g#db-num.
+      if v-db-num <> 0 then do:
+          find first buf_clients no-lock
+               where buf_clients.obj-type = {&shop}
+                 and buf_clients.db-num   = v-db-num
+             no-error.
+          if available buf_clients then v-shop-code = buf_clients.obj-code.   
+      end.                                       
+   end.
+   /* если это настройки, то проверяем, относятся ли они к нашей секции (магазину, БД, глобальные) 
+   ** и еще в ГБД на кассу не посылаем */    
+   if i-obj = "thbj-attr" and 
+      (i-parent = {&attr-gisMT} or i-parent = {&attr-marking})  
+   then do:       
+       /* если изменился глобальный атрибут, то его отсылаем только если нет локального */
+      if i-parent = {&attr-gisMT} and i-obj-type = "" and i-obj-code = 0 then do:
+          if not can-find(first buf_thbj-attr no-lock where 
+                                buf_thbj-attr.obj-type = {&db}
+                            and buf_thbj-attr.obj-code = v-db-num
+                            and buf_thbj-attr.upper-prop-code = i-parent
+                            and buf_thbj-attr.prop-code = i-code)  
+          then sendGisMt = yes.
+      end.     
+      /* изменился локальный атрибут */
+      else if (i-parent = {&attr-gisMT} and i-obj-type = {&db} and i-obj-code = v-db-num)       
+         then sendGisMt = yes.  
+      else if i-parent = {&attr-marking} and i-obj-type = {&shop} and i-obj-code = v-shop-code 
+         then sendGisMt = yes.      
+      else if i-parent = {&attr-marking} and i-obj-type = "" then do:  
+          if not can-find(first buf_thbj-attr no-lock where 
+                                buf_thbj-attr.obj-type = {&shop}
+                            and buf_thbj-attr.obj-code = v-shop-code
+                            and buf_thbj-attr.upper-prop-code = i-parent
+                            and buf_thbj-attr.prop-code = i-code)  
+          then sendGisMt = yes.
+      end.                  
+      if sendGisMt = yes then do:                
+          if not can-find(first thbjattr-list where 
+                                thbjattr-list.obj-type = i-obj-type
+                            and thbjattr-list.obj-code = i-obj-code
+                            and thbjattr-list.upper-prop-code = i-parent
+                            and thbjattr-list.prop-code = i-code)
+          then do:
+              create thbjattr-list.
+              assign
+                 thbjattr-list.obj-type = i-obj-type
+                 thbjattr-list.obj-code = i-obj-code
+                 thbjattr-list.upper-prop-code = i-parent
+                 thbjattr-list.prop-code = i-code
+                 .
+          end.    
+      end.                  
+   end.   
+                                
 end procedure.
 
 procedure fill-code :
