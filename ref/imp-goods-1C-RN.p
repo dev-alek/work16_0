@@ -503,8 +503,10 @@ end.
   then do:
     RUN gds-attr-write (v-nbc, {&attr-IS18Plus}, p-GdsObj:IS18Plus).
   end.  
-  else do:
-    RUN gds-attr-delete (v-nbc, {&attr-IS18Plus}, output v-attr-del).
+
+  if p-GdsObj:IS18Plus = 0 or p-GdsObj:IS18Plus = ? 
+  then do:
+     RUN gds-attr-delete (v-nbc, {&attr-IS18Plus}, output v-attr-del).
   end.  
 
  
